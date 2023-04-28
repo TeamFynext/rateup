@@ -1,9 +1,9 @@
-import { Welcome } from '../components/Welcome/Welcome';
+import { HomePage } from '../components/HomePage/HomePage';
 
-export default function HomePage() {
+export default function Home() {
     return (
         <>
-            <Welcome />
+            <HomePage />
         </>
     );
 }
