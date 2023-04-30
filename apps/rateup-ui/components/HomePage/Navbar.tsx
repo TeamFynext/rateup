@@ -18,7 +18,7 @@ import {
     ScrollArea,
     rem,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import {useDisclosure} from '@mantine/hooks';
 import {
     IconNotification,
     IconCode,
@@ -28,8 +28,8 @@ import {
     IconCoin,
     IconChevronDown,
 } from '@tabler/icons-react';
-import { IconStar } from '@tabler/icons';
-import { useRouter } from 'next/router';
+import {IconStar} from '@tabler/icons';
+import {useRouter} from 'next/router';
 
 const useStyles = createStyles((theme) => ({
     link: {
@@ -125,16 +125,16 @@ const mockdata = [
 ];
 
 export function HomeNavbar() {
-    const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
-    const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
-    const { classes, theme } = useStyles();
+    const [drawerOpened, {toggle: toggleDrawer, close: closeDrawer}] = useDisclosure(false);
+    const [linksOpened, {toggle: toggleLinks}] = useDisclosure(false);
+    const {classes, theme} = useStyles();
     const router = useRouter();
 
     const links = mockdata.map((item) => (
         <UnstyledButton className={classes.subLink} key={item.title}>
             <Group noWrap align="flex-start">
                 <ThemeIcon size={34} variant="default" radius="md">
-                    <item.icon size={rem(22)} color={theme.fn.primaryColor()} />
+                    <item.icon size={rem(22)} color={theme.fn.primaryColor()}/>
                 </ThemeIcon>
                 <div>
                     <Text size="sm" fw={500}>
@@ -151,10 +151,10 @@ export function HomeNavbar() {
     return (
         <Box pb={120}>
             <Header height={60} px="md">
-                <Group position="apart" sx={{ height: '100%' }}>
-                    <IconStar size={30} />
+                <Group position="apart" sx={{height: '100%'}}>
+                    <IconStar size={30}/>
 
-                    <Group sx={{ height: '100%' }} spacing={0} className={classes.hiddenMobile}>
+                    <Group sx={{height: '100%'}} spacing={0} className={classes.hiddenMobile}>
                         <a href="#" className={classes.link}>
                             Home
                         </a>
@@ -165,12 +165,12 @@ export function HomeNavbar() {
                                         <Box component="span" mr={5}>
                                             Features
                                         </Box>
-                                        <IconChevronDown size={16} color={theme.fn.primaryColor()} />
+                                        <IconChevronDown size={16} color={theme.fn.primaryColor()}/>
                                     </Center>
                                 </a>
                             </HoverCard.Target>
 
-                            <HoverCard.Dropdown sx={{ overflow: 'hidden' }}>
+                            <HoverCard.Dropdown sx={{overflow: 'hidden'}}>
                                 <Group position="apart" px="md">
                                     <Text fw={500}>Features</Text>
                                     <Anchor href="#" fz="xs">
@@ -179,9 +179,9 @@ export function HomeNavbar() {
                                 </Group>
 
                                 <Divider
-                                  my="sm"
-                                  mx="-md"
-                                  color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}
+                                    my="sm"
+                                    mx="-md"
+                                    color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}
                                 />
 
                                 <SimpleGrid cols={2} spacing={0}>
@@ -213,34 +213,39 @@ export function HomeNavbar() {
 
                     <Group className={classes.hiddenMobile}>
                         <Button
-                          variant="default"
-                          onClick={() => {
-                                router.push('/login');
+                            variant="default"
+                            onClick={() => {
+                                router.push({
+                                    pathname: '/auth',
+                                    query: {type: 'sign_in'},
+                                });
                             }}
                         >Log in
                         </Button>
                         <Button onClick={() => {
-                            router.push('/login');
+                            router.push({
+                                pathname: '/auth',
+                                query: {type: 'sign_up'},
+                            });
                         }}
                         >Sign up
                         </Button>
                     </Group>
-
-                    <Burger opened={drawerOpened} onClick={toggleDrawer} className={classes.hiddenDesktop} />
+                    <Burger opened={drawerOpened} onClick={toggleDrawer} className={classes.hiddenDesktop}/>
                 </Group>
             </Header>
 
             <Drawer
-              opened={drawerOpened}
-              onClose={closeDrawer}
-              size="100%"
-              padding="md"
-              title="Navigation"
-              className={classes.hiddenDesktop}
-              zIndex={1000000}
+                opened={drawerOpened}
+                onClose={closeDrawer}
+                size="100%"
+                padding="md"
+                title="Navigation"
+                className={classes.hiddenDesktop}
+                zIndex={1000000}
             >
                 <ScrollArea h={`calc(100vh - ${rem(60)})`} mx="-md">
-                    <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'} />
+                    <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}/>
 
                     <a href="#" className={classes.link}>
                         Home
@@ -250,7 +255,7 @@ export function HomeNavbar() {
                             <Box component="span" mr={5}>
                                 Features
                             </Box>
-                            <IconChevronDown size={16} color={theme.fn.primaryColor()} />
+                            <IconChevronDown size={16} color={theme.fn.primaryColor()}/>
                         </Center>
                     </UnstyledButton>
                     <Collapse in={linksOpened}>{links}</Collapse>
@@ -260,9 +265,7 @@ export function HomeNavbar() {
                     <a href="/dashboard" className={classes.link}>
                         Dashboard
                     </a>
-
-                    <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'} />
-
+                    <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}/>
                     <Group position="center" grow pb="xl" px="md">
                         <Button variant="default">Log in</Button>
                         <Button>Sign up</Button>

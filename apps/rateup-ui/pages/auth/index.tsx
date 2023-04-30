@@ -3,11 +3,16 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
 import { Button, Card, Flex, Text } from '@mantine/core';
+import {useRouter} from "next/router";
 
 const LoginPage = () => {
     const supabaseClient = useSupabaseClient();
     const user = useUser();
     const [data, setData] = useState();
+    const router= useRouter();
+    const viewType= router.query?.type;
+    console.log('Viewtype', viewType)
+
 
     useEffect(() => {
         async function loadData() {
@@ -34,6 +39,7 @@ const LoginPage = () => {
                   supabaseClient={supabaseClient}
                   providers={['google']}
                   socialLayout="horizontal"
+                  view={viewType}
                 />
             </Card>
         );
