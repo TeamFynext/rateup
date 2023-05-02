@@ -4,6 +4,8 @@ import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
 import { Button, Card, Flex, Text } from '@mantine/core';
 import {useRouter} from "next/router";
+import { AuthChangeEvent } from '@supabase/supabase-js';
+
 
 const LoginPage = () => {
     const supabaseClient = useSupabaseClient();
@@ -24,7 +26,25 @@ const LoginPage = () => {
         if (user) loadData();
     }, [user]);
 
-    if (!user) {
+
+  useEffect(() => {
+    const handleAuthStateChange = async (event: AuthChangeEvent, session: any) => {
+      if (event === 'SIGNED_IN') {
+        window.location.href = '/dashboard';
+      }
+    };
+
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange(
+      handleAuthStateChange
+    );
+
+    // Clean up the listener when the component unmounts
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!user) {
         return (
             <Card
               shadow="sm"
@@ -34,7 +54,7 @@ const LoginPage = () => {
               sx={{ maxWidth: '25rem', margin: 'auto', marginTop: '2rem' }}
             >
                 <Auth
-                  redirectTo="http://localhost:3000/"
+              redirectTo="/dashboard"
                   appearance={{ theme: ThemeSupa }}
                   supabaseClient={supabaseClient}
                   providers={['google']}
