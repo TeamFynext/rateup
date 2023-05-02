@@ -4,6 +4,10 @@ import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
 import { Button, Card, Flex, Text } from '@mantine/core';
 import {useRouter} from "next/router";
+import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { GetServerSidePropsContext } from 'next';
+
+type ViewType = 'sign_in' | 'sign_up' | 'forgotten_password' | 'magic_link' | 'update_password';
 
 const LoginPage = () => {
     const supabaseClient = useSupabaseClient();
@@ -24,7 +28,14 @@ const LoginPage = () => {
         if (user) loadData();
     }, [user]);
 
-    if (!user) {
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+      }
+  }, [user, router]);
+
+  if (!user) {
         return (
             <Card
               shadow="sm"
@@ -34,7 +45,7 @@ const LoginPage = () => {
               sx={{ maxWidth: '25rem', margin: 'auto', marginTop: '2rem' }}
             >
                 <Auth
-                  redirectTo="http://localhost:3000/"
+              redirectTo="/dashboard"
                   appearance={{ theme: ThemeSupa }}
                   supabaseClient={supabaseClient}
                   providers={['google']}
@@ -78,4 +89,31 @@ const LoginPage = () => {
     );
 };
 
+
 export default LoginPage;
+
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  const supabase = createServerSupabaseClient(ctx);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    return {
+      redirect: {
+        destination: '/dashboard',
+        permanent: false,
+      },
+    };
+  }
+
+  // Pass viewType from the query to the component as a prop
+  const viewType = ctx.query?.type as ViewType | undefined;
+
+  return {
+    props: {
+      viewType,
+    },
+  };
+};
