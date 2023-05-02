@@ -4,8 +4,10 @@ import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
 import { Button, Card, Flex, Text } from '@mantine/core';
 import {useRouter} from "next/router";
-import { AuthChangeEvent } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { GetServerSidePropsContext } from 'next';
 
+type ViewType = 'sign_in' | 'sign_up' | 'forgotten_password' | 'magic_link' | 'update_password';
 
 const LoginPage = () => {
     const supabaseClient = useSupabaseClient();
@@ -28,21 +30,10 @@ const LoginPage = () => {
 
 
   useEffect(() => {
-    const handleAuthStateChange = async (event: AuthChangeEvent, session: any) => {
-      if (event === 'SIGNED_IN') {
-        window.location.href = '/dashboard';
+    if (user) {
+      router.push('/dashboard');
       }
-    };
-
-    const { data: authListener } = supabaseClient.auth.onAuthStateChange(
-      handleAuthStateChange
-    );
-
-    // Clean up the listener when the component unmounts
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+  }, [user, router]);
 
   if (!user) {
         return (
@@ -98,4 +89,31 @@ const LoginPage = () => {
     );
 };
 
+
 export default LoginPage;
+
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  const supabase = createServerSupabaseClient(ctx);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    return {
+      redirect: {
+        destination: '/dashboard',
+        permanent: false,
+      },
+    };
+  }
+
+  // Pass viewType from the query to the component as a prop
+  const viewType = ctx.query?.type as ViewType | undefined;
+
+  return {
+    props: {
+      viewType,
+    },
+  };
+};
