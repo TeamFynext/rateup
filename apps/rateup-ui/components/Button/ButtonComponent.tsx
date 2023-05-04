@@ -4,11 +4,12 @@ import { IconSquarePlus } from '@tabler/icons';
 
 interface Props {
     title: string;
+    disabled?: boolean
 }
 
-const ButtonComponent = ({ title }: Props) => {
+const ButtonComponent = ({ title, disabled }: Props) => {
     return (
-        <Button component="a" href="#" variant="outline" leftIcon={<IconSquarePlus size="1rem" />}>
+        <Button disabled={disabled} component="a" href="#" variant="outline" leftIcon={<IconSquarePlus size="1rem" />}>
             {title}
         </Button>
     )

@@ -717,7 +717,7 @@
     "@mantine/ssr" "6.0.2"
     "@mantine/styles" "6.0.2"
 
-"@mantine/notifications@6.0.2":
+"@mantine/notifications@^6.0.2":
   version "6.0.2"
   resolved "https://registry.npmjs.org/@mantine/notifications/-/notifications-6.0.2.tgz"
   integrity sha512-EpQgTl5j925N88WY05etFe5ov71UnJRep6nGwv+CVATXmNV8E8z4b+2R6B5ofg4bW9VkS2BJKT2TgKRzaCMLeg==
@@ -2114,12 +2114,6 @@ chokidar@^2.1.8, chokidar@^3.4.0:
     readdirp "~3.6.0"
   optionalDependencies:
     fsevents "~2.3.2"
-
-"chokidar2@file:./chokidar2":
-  version "2.0.0"
-  resolved "file:node_modules/webpack/node_modules/watchpack/chokidar2"
-  dependencies:
-    chokidar "^2.1.8"
 
 chownr@^1.1.1:
   version "1.1.4"
