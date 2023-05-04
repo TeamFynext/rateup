@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from "@supabase/auth-helpers-react";
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconCircleX } from '@tabler/icons-react';
+import { IconSquarePlus } from '@tabler/icons';
 
 export default function DashboardHome() {
     const user = useUser()
@@ -64,7 +65,7 @@ export default function DashboardHome() {
     return (
         <>
             <Modal opened={opened} onClose={close} title="Create Organization" centered>
-                    <Box>
+                <Box>
                     <TextInput
                         required
                         label="Name"
@@ -72,14 +73,14 @@ export default function DashboardHome() {
                         value={name}
                         onChange={(event) => setName(event.target.value)}
                     />
-                    </Box>
-                <Box pt={20} onClick={handleSubmit} >
-                    <ButtonComponent title={"Create"} disabled={!isNameValid} />
+                </Box>
+                <Box pt={20} >
+                    <ButtonComponent onClick={handleSubmit} title={"Create"} disabled={!isNameValid} />
                 </Box>
             </Modal>
 
             <span onClick={open}  >
-                <ButtonComponent title={"Create Organization"} />
+                <ButtonComponent title={"Create Organization"} leftIcon={<IconSquarePlus size="1rem" />} />
             </span>
         </>
     );
