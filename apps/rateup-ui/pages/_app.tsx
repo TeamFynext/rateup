@@ -31,6 +31,7 @@ export default function App({
                 initialSession={pageProps.initialSession}
             >
                 <MantineProvider withGlobalStyles withNormalizeCSS>
+                    <Notifications />
                     <LayoutComponent>
                         <Component {...pageProps} />
                     </LayoutComponent>

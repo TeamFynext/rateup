@@ -21,12 +21,15 @@ export default async function createOrganization(req: NextApiRequest, res: NextA
         }
 
         // Create new org
-        const {rows: newOrg} = await db.query('INSERT INTO org (name, owner, role) VALUES ($1, $2) RETURNING id', [name, user_id, 'ORG_ADMIN']);
+        const {rows: newOrg} = await db.query('INSERT INTO org (name, owner) VALUES ($1, $2) RETURNING id', [name, user_id]);
         if (newOrg && newOrg.length > 0) {
             const orgId = newOrg[0].id;
 
             // Map new org to org_users table
-            await db.query('INSERT INTO org_users (org_id, user_id) VALUES ($1, $2)', [orgId, user_id]);
+            await db.query('INSERT INTO org_users (org_id, user_id, role) VALUES ($1, $2, $3)', [orgId,user_id,'ORG_ADMIN']);
+            
+            // Update user's current org,role to profile table
+            await db.query('UPDATE profile SET name = $2, current_org = $3, org_role = $4 WHERE id = $1', [user_id, name, orgId, 'ORG_ADMIN']);
             db.release();
 
             res.status(201).json({created_Org_id: newOrg[0].id});

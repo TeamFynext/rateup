@@ -1,14 +1,21 @@
 import { Button } from '@mantine/core';
-import { IconSquarePlus } from '@tabler/icons';
-
-
 interface Props {
     title: string;
+    disabled?: boolean
+    onClick?: () => void;
+    leftIcon?: React.ReactNode;
 }
 
-const ButtonComponent = ({ title }: Props) => {
+const ButtonComponent = ({ title, disabled, onClick, leftIcon = null }: Props) => {
     return (
-        <Button component="a" href="#" variant="outline" leftIcon={<IconSquarePlus size="1rem" />}>
+        <Button
+            disabled={disabled}
+            component="a"
+            href="#"
+            variant="outline"
+            leftIcon={leftIcon}
+            onClick={onClick}
+        >
             {title}
         </Button>
     )
