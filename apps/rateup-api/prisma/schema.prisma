@@ -26,6 +26,7 @@ model Question {
   survey      Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId    String  @db.Uuid
   description Json    @default("{}")
+  choices     Json    @default("{}")
   required    Boolean @default(false)
   type        String
   order       Int

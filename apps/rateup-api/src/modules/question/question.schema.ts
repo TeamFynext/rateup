@@ -23,6 +23,7 @@ const questionCore = {
   order: z.number(),
   required: z.boolean().optional(),
   type: z.nativeEnum(QuestionType),
+  choices: z.record(z.string(), z.array(z.string())).optional(),
 };
 
 const createQuestionRequestSchema = z.object({

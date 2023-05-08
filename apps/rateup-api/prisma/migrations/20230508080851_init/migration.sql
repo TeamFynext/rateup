@@ -16,6 +16,7 @@ CREATE TABLE "Question" (
     "title" JSONB NOT NULL,
     "surveyId" UUID NOT NULL,
     "description" JSONB NOT NULL DEFAULT '{}',
+    "choices" JSONB NOT NULL DEFAULT '{}',
     "required" BOOLEAN NOT NULL DEFAULT false,
     "type" TEXT NOT NULL,
     "order" INTEGER NOT NULL,
