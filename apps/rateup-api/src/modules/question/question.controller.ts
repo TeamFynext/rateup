@@ -6,7 +6,7 @@ import {
   getQuestionById,
   getQuestionsBySurveyId,
 } from "./question.service";
-import { getSurveyById } from "../survey/survey.service";
+import { Prisma } from "@prisma/client";
 
 export async function createQuestionHandler(
   request: FastifyRequest<{
@@ -14,21 +14,20 @@ export async function createQuestionHandler(
   }>,
   reply: FastifyReply
 ) {
+  const body = request.body;
   try {
-    const body = request.body;
-    const survey = await getSurveyById(body.surveyId);
-    if (!survey) {
-      return reply
-        .code(404)
-        .send({
-          message: `Could not find survey with surveyId=${body.surveyId}`,
-        });
-    }
     const question = await createQuestion(body);
-    return reply.code(201).send(question);
+    reply.code(201).send(question);
   } catch (e) {
-    console.error(e);
-    return reply.code(500);
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === "P2003") {
+        reply.code(404).send({
+          message: `Could not find survey with surveyId ${body.surveyId}`,
+        });
+        return;
+      }
+    }
+    reply.code(500);
   }
 }
 
