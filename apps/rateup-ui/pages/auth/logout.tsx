@@ -1,26 +1,19 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { LoadingOverlay, Paper, Text } from '@mantine/core';
-
+import { signOut } from "supertokens-auth-react/recipe/session";
 
 const Logout = () => {
     const router = useRouter();
-    const supabaseClient = useSupabaseClient();
-
-
     useEffect(() => {
-        const signOut = async () => {
-            const { error } = await supabaseClient.auth.signOut();
-            if (!error) {
-                router.push('/'); // Redirect to the desired page after successful sign out
-            } else {
-                console.error('Error during sign out:', error.message);
-            }
-        };
-
-        signOut();
+        handleSignOut();
+        router.push('/auth')
     }, [router]);
+
+    async function handleSignOut() {
+        await signOut();
+        router.push('/auth');
+    }
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

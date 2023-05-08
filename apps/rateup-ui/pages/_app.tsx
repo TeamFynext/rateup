@@ -2,19 +2,22 @@ import React, {useState} from 'react';
 import {AppProps} from 'next/app';
 import Head from 'next/head';
 import {MantineProvider} from '@mantine/core';
-import {Notifications} from '@mantine/notifications';
-import {createBrowserSupabaseClient} from '@supabase/auth-helpers-nextjs';
-import {Session, SessionContextProvider} from '@supabase/auth-helpers-react';
+import { Notifications } from '@mantine/notifications';
 import Layout from "../components/Layout/Layout";
+import SuperTokensReact, { SuperTokensWrapper } from 'supertokens-auth-react'
+
+import { frontendConfig } from '../config/frontendConfig'
+
+if (typeof window !== 'undefined') {
+    // we only want to call this init function on the frontend, so we check typeof window !== 'undefined'
+    SuperTokensReact.init(frontendConfig())
+}
 
 export default function App({
                                 Component,
                                 pageProps,
                                 ...appProps
-                            }: AppProps<{
-    initialSession: Session
-}>) {
-    const [supabaseClient] = useState(() => createBrowserSupabaseClient());
+}: AppProps) {
     console.log("route=", appProps.router.pathname)
     const isLayoutNeeded = appProps.router.pathname.includes("/dashboard")
     const LayoutComponent = isLayoutNeeded ? Layout : React.Fragment;
@@ -26,10 +29,7 @@ export default function App({
                 <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width"/>
                 <link rel="shortcut icon" href="/favicon.svg"/>
             </Head>
-            <SessionContextProvider
-                supabaseClient={supabaseClient}
-                initialSession={pageProps.initialSession}
-            >
+            <SuperTokensWrapper>
                 <MantineProvider withGlobalStyles withNormalizeCSS>
                     <Notifications />
                     <LayoutComponent>
@@ -37,7 +37,7 @@ export default function App({
                     </LayoutComponent>
                     <Notifications/>
                 </MantineProvider>
-            </SessionContextProvider>
+            </SuperTokensWrapper>
         </>
     );
 }
