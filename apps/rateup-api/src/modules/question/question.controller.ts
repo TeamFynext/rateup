@@ -6,6 +6,7 @@ import {
   getQuestionById,
   getQuestionsBySurveyId,
 } from "./question.service";
+import { getSurveyById } from "../survey/survey.service";
 
 export async function createQuestionHandler(
   request: FastifyRequest<{
@@ -15,7 +16,14 @@ export async function createQuestionHandler(
 ) {
   try {
     const body = request.body;
-    // TODO: check if surveyId is valid
+    const survey = await getSurveyById(body.surveyId);
+    if (!survey) {
+      return reply
+        .code(404)
+        .send({
+          message: `Could not find survey with surveyId=${body.surveyId}`,
+        });
+    }
     const question = await createQuestion(body);
     return reply.code(201).send(question);
   } catch (e) {
