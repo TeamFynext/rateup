@@ -46,7 +46,7 @@ export async function getQuestionByIdHandler(
     }
   } catch (e) {
     console.log(e);
-    return reply.code(500);
+    reply.code(500);
   }
 }
 
@@ -65,7 +65,7 @@ export async function getQuestionBySurveyIdHandler(
     }
   } catch (e) {
     console.log(e);
-    return reply.code(500);
+    reply.code(500);
   }
 }
 

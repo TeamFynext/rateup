@@ -15,11 +15,11 @@ export async function createSurveyHandler(
   const body = request.body;
   try {
     const survey = await createSurvey(body);
-    return reply.code(201).send(survey);
+    reply.code(201).send(survey);
   } catch (e) {
     // TODO
     console.error(e);
-    return reply.code(500);
+    reply.code(500);
   }
 }
 
