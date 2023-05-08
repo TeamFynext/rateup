@@ -1,9 +1,10 @@
 -- CreateTable
 CREATE TABLE "Survey" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
     "languages" TEXT[],
 
     CONSTRAINT "Survey_pkey" PRIMARY KEY ("id")
@@ -11,9 +12,9 @@ CREATE TABLE "Survey" (
 
 -- CreateTable
 CREATE TABLE "Question" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "title" JSONB NOT NULL,
-    "surveyId" TEXT NOT NULL,
+    "surveyId" UUID NOT NULL,
     "description" JSONB NOT NULL DEFAULT '{}',
     "required" BOOLEAN NOT NULL DEFAULT false,
     "type" TEXT NOT NULL,

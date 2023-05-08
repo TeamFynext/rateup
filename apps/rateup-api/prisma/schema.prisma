@@ -10,21 +10,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// TODO: Should id be number?
 model Survey {
-  id        String     @id @default(uuid())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  title     String
-  questions Question[]
-  languages String[]
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  title       String
+  description String     @default("")
+  questions   Question[]
+  languages   String[]
 }
 
 model Question {
-  id          String  @id @default(uuid())
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       Json
   survey      Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId    String
+  surveyId    String  @db.Uuid
   description Json    @default("{}")
   required    Boolean @default(false)
   type        String
