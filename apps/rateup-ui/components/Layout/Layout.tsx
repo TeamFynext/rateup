@@ -30,6 +30,7 @@ const useStyles = createStyles((theme) => ({
     },
 }));
 
+// @ts-ignore
 export default ({ children }) => {
     const theme = useMantineTheme();
     const { classes } = useStyles();
