@@ -31,3 +31,16 @@ model Question {
   type        String
   order       Int
 }
+enum OrgRole {
+  ORG_ADMIN
+  TEAM_ADMIN
+}
+
+model User {
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  email       String
+  currentOrg  String?
+  orgRole     OrgRole?
+}
+
