@@ -1,26 +1,39 @@
-import React, {useState} from 'react';
+import React, {useEffect} from 'react';
 import {AppProps} from 'next/app';
 import Head from 'next/head';
 import {MantineProvider} from '@mantine/core';
-import { Notifications } from '@mantine/notifications';
+import {Notifications} from '@mantine/notifications';
 import Layout from "../components/Layout/Layout";
-import SuperTokensReact, { SuperTokensWrapper } from 'supertokens-auth-react'
-
-import { frontendConfig } from '../config/frontendConfig'
+import SuperTokensReact, {redirectToAuth, SuperTokensWrapper} from 'supertokens-auth-react';
+import {frontendConfig} from '../config/frontendConfig';
+import Session from 'supertokens-auth-react/recipe/session'
 
 if (typeof window !== 'undefined') {
-    // we only want to call this init function on the frontend, so we check typeof window !== 'undefined'
-    SuperTokensReact.init(frontendConfig())
+    SuperTokensReact.init(frontendConfig());
 }
+export default function App({Component, pageProps, ...appProps}: AppProps) {
 
-export default function App({
-                                Component,
-                                pageProps,
-                                ...appProps
-}: AppProps) {
-    console.log("route=", appProps.router.pathname)
-    const isLayoutNeeded = appProps.router.pathname.includes("/dashboard")
+    console.log("route=", appProps.router.pathname);
+    const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
     const LayoutComponent = isLayoutNeeded ? Layout : React.Fragment;
+
+    useEffect(() => {
+        async function doRefresh() {
+            if (pageProps.fromSupertokens === 'needs-refresh') {
+                if (await Session.attemptRefreshingSession()) {
+                    location.reload()
+                } else {
+                    // user has been logged out
+                    redirectToAuth()
+                }
+            }
+        }
+
+        doRefresh()
+    }, [pageProps.fromSupertokens])
+    if (pageProps.fromSupertokens === 'needs-refresh') {
+        return null
+    }
 
     return (
         <>
@@ -31,7 +44,7 @@ export default function App({
             </Head>
             <SuperTokensWrapper>
                 <MantineProvider withGlobalStyles withNormalizeCSS>
-                    <Notifications />
+                    <Notifications/>
                     <LayoutComponent>
                         <Component {...pageProps} />
                     </LayoutComponent>
