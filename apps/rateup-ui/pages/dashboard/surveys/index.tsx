@@ -26,9 +26,10 @@ import {
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { getSurveys } from "../../../api";
-import { timeSince } from "../../../utils";
+import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
+import { useEffect, useState } from "react";
 
 
 export default function Surveys({surveys}) {
@@ -57,7 +58,7 @@ export default function Surveys({surveys}) {
         </Paper>
 
         {surveys.map((s) => (
-          <SurveyCard survey={s} />
+          <SurveyCard key={s.id} survey={s} />
         ))}
       </SimpleGrid>
       <CreateSurveyModal open={createSurveyOpened} close={close} />
@@ -67,8 +68,15 @@ export default function Surveys({surveys}) {
 
 function SurveyCard({ survey }): JSX.Element {
   const theme = useMantineTheme();
+  const [timeSince, setTimeSince] = useState('');
+  useEffect(() => {
+    setTimeSince(getTimeSince(survey.createdAt))
+    const timeoutID = setInterval(() => setTimeSince(getTimeSince(survey.createdAt)), 5000);
+    return () => clearInterval(timeoutID)
+  },[])
+
   return (
-    <Paper p="md">
+    <Paper p="md" sx={{cursor: "pointer"}}>
       <Flex justify={"space-between"}>
         <Text mr={"sm"} truncate size="xl">
           {survey.title}
@@ -78,12 +86,11 @@ function SurveyCard({ survey }): JSX.Element {
       <Group align={"center"} mt="sm" spacing="xs">
         <Avatar radius={"xl"} />
         <Text size="sm" c="dimmed">
-          Created {timeSince(survey.createdAt)}
+          Created {timeSince}
         </Text>
       </Group>
       <Flex justify={"space-between"} mt="lg">
         <StatusBadge isActive={survey.isActive} />
-        {/*TODO: add styles to link */}
         <Link href="#" style={{color: theme.colors.blue[9]}}>
           <Group spacing="4px">
             <IconMessage />

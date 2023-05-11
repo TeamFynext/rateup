@@ -1,4 +1,4 @@
-export function timeSince(date: string) {
+export function getTimeSince(date: string) {
   //@ts-ignore
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   let interval = Math.floor(seconds / 31536000);
