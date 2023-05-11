@@ -12,6 +12,7 @@ import {
     useMantineTheme,
 } from '@mantine/core';
 import { SidebarNav } from './SidebarNav';
+import { SessionAuth } from "supertokens-auth-react/recipe/session";
 
 const useStyles = createStyles((theme) => ({
     title: {
@@ -37,6 +38,7 @@ export default ({ children }) => {
 
     const [opened, setOpened] = useState(false);
     return (
+        <SessionAuth>
         <AppShell
           styles={{
                 main: {
@@ -86,5 +88,6 @@ export default ({ children }) => {
         >
             {children}
         </AppShell>
+        </SessionAuth>
     );
 };
