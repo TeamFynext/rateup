@@ -1,3 +1,5 @@
+//index.ts
+
 import Fastify from "fastify";
 import { surveyRoutes } from "./modules/survey/survey.route";
 import { logger } from "./utils/logger";
@@ -8,9 +10,11 @@ import { questionRoutes } from "./modules/question/question.route";
 import supertokens from "supertokens-node";
 import cors from "@fastify/cors";
 import { plugin } from "supertokens-node/framework/fastify";
-import formDataPlugin from "@fastify/formbody";
+
 import { errorHandler } from "supertokens-node/framework/fastify";
 import { SuperTokensConfig } from "./config";
+import { orgRoutes } from "./modules/org/org.route";
+import { orgSchemas } from "./modules/org/org.schema";
 
 const server = Fastify({
   logger,
@@ -19,7 +23,7 @@ const server = Fastify({
 supertokens.init(SuperTokensConfig);
 
 server.register(cors, {
-  origin: process.env.FRONTEND_URL,
+  origin: "http://localhost:3000",
   allowedHeaders: ['Content-Type', ...supertokens.getAllCORSHeaders()],
   credentials: true,
 });
@@ -30,7 +34,7 @@ server.get("/ping", async () => {
 
 async function main() {
   //TODO move this schema stuff to somewhere else
-  const modules = [surveySchemas, questionSchemas];
+  const modules = [surveySchemas, questionSchemas,orgSchemas];
   for (const module of modules) {
     for (const schema of module) {
       server.addSchema(schema);
@@ -38,8 +42,9 @@ async function main() {
   }
   server.register(surveyRoutes, { prefix: "api/survey" });
   server.register(questionRoutes, { prefix: "api/question" });
+  server.register(orgRoutes, { prefix: "api/org" });
 
-  await server.register(formDataPlugin);
+ // await server.register(formDataPlugin);
   await server.register(plugin);
   server.setErrorHandler(errorHandler());
 
