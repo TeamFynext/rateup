@@ -39,7 +39,9 @@ export async function getSurvey(surveyId) {
 export async function createSurvey(survey) {
     return postJson(SURVEYURL, survey)
 }
-
+export async function deleteSurvey(surveyId) {
+  return DELETE(`${SURVEYURL}/${surveyId}`)
+}
 
 const QUESTION_URL = `${server}/api/question`
 export async function getQuestions(surveyId) {

@@ -23,14 +23,16 @@ import {
   IconPlayerPlay,
   IconPlus,
   IconShare,
+  IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { getSurveys } from "../../../api";
+import { deleteSurvey, getSurveys } from "../../../api";
 import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { notifications } from "@mantine/notifications";
 
 
 export default function Surveys({surveys}) {
@@ -106,6 +108,10 @@ function SurveyCard({ survey }): JSX.Element {
 }
 
 function SurveyMenu({ survey }) {
+  const router = useRouter();
+  const refreshData = () => {
+    router.replace(router.asPath);
+  }
   return (
     <Menu width={200}>
       <Menu.Target>
@@ -117,6 +123,15 @@ function SurveyMenu({ survey }) {
         <Menu.Item icon={<IconEdit />}>Edit</Menu.Item>
         <Menu.Item icon={<IconShare />}>Share</Menu.Item>
         <Menu.Item icon={<IconCopy />}>Clone</Menu.Item>
+        <Menu.Item icon={<IconTrash />} onClick={() => {
+          deleteSurvey(survey.id).then(r => {
+            notifications.show({message: "Deleted Successfully"});
+          }).catch(e => {
+            console.log(e);
+            notifications.show({message: "Could not delete"})
+          })
+          refreshData();
+        }}>Delete</Menu.Item>
         <Menu.Item icon={<IconMessage />}>View Responses</Menu.Item>
         <Menu.Item
           icon={survey.isActive ? <IconPlayerPause /> : <IconPlayerPlay />}
