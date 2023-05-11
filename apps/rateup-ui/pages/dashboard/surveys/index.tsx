@@ -30,6 +30,7 @@ import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 
 export default function Surveys({surveys}) {
@@ -74,9 +75,11 @@ function SurveyCard({ survey }): JSX.Element {
     const timeoutID = setInterval(() => setTimeSince(getTimeSince(survey.createdAt)), 5000);
     return () => clearInterval(timeoutID)
   },[])
+  
+  const router = useRouter();
 
   return (
-    <Paper p="md" sx={{cursor: "pointer"}}>
+    <Paper p="md" sx={{cursor: "pointer"}} onClick={() => {router.push(`surveys/${survey.id}`)}}>
       <Flex justify={"space-between"}>
         <Text mr={"sm"} truncate size="xl">
           {survey.title}
@@ -91,7 +94,7 @@ function SurveyCard({ survey }): JSX.Element {
       </Group>
       <Flex justify={"space-between"} mt="lg">
         <StatusBadge isActive={survey.isActive} />
-        <Link href="#" style={{color: theme.colors.blue[9]}}>
+        <Link href="#" style={{color: theme.colors.blue[9]}} onClick={(e) => {e.stopPropagation()}}>
           <Group spacing="4px">
             <IconMessage />
             <Text>{99} Responses</Text>
@@ -106,11 +109,11 @@ function SurveyMenu({ survey }) {
   return (
     <Menu width={200}>
       <Menu.Target>
-        <ActionIcon>
+        <ActionIcon onClick={(e) => {e.stopPropagation()}}>
           <IconDots />
         </ActionIcon>
       </Menu.Target>
-      <Menu.Dropdown>
+      <Menu.Dropdown onClick={(e) => {e.stopPropagation()}}>
         <Menu.Item icon={<IconEdit />}>Edit</Menu.Item>
         <Menu.Item icon={<IconShare />}>Share</Menu.Item>
         <Menu.Item icon={<IconCopy />}>Clone</Menu.Item>
