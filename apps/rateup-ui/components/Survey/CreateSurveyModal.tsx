@@ -36,6 +36,10 @@ const onSubmit = (e) => {
     return
   }
   createSurvey(form.values).then(r => {
+    if(r.status !== 201) {
+      // TODO: why 'then' block executing with error response?
+      return;
+    }
     notifications.show({
       message: "Created!"
     })
@@ -70,7 +74,7 @@ const onSubmit = (e) => {
         {...form.getInputProps('languages')}
         />
         <Group position="right">
-          <Button variant="subtle">Cancel</Button>
+          <Button variant="subtle" onClick={close}>Cancel</Button>
           <Button variant="filled" type="submit">Submit</Button>
         </Group>
         </Stack>

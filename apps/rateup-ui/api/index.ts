@@ -1,3 +1,5 @@
+import { axiosClient } from "./apiClient"
+
 const server = process.env.NEXT_PUBLIC_SERVER
 if(!server) {
   throw new Error("'SERVER' var not found in env")
@@ -37,7 +39,7 @@ export async function getSurvey(surveyId) {
   return GET(`${SURVEYURL}/${surveyId}`)
 }
 export async function createSurvey(survey) {
-    return postJson(SURVEYURL, survey)
+    return axiosClient.post(SURVEYURL, survey);
 }
 export async function deleteSurvey(surveyId) {
   return DELETE(`${SURVEYURL}/${surveyId}`)
@@ -46,4 +48,12 @@ export async function deleteSurvey(surveyId) {
 const QUESTION_URL = `${server}/api/question`
 export async function getQuestions(surveyId) {
   return GET(`${QUESTION_URL}/all/${surveyId}`)
+}
+
+// TODO: somehow import types from backend?
+export async function createQuestion(data) {
+  return postJson(`${QUESTION_URL}`, data)
+}
+export async function deleteQuestion(questionId) {
+  return DELETE(`${QUESTION_URL}/${questionId}`)
 }
