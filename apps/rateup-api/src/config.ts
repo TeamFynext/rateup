@@ -3,6 +3,7 @@ import Session from "supertokens-node/recipe/session";
 import { TypeInput } from "supertokens-node/types";
 import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createUser } from "./modules/user/user.service";
+import Dashboard from "supertokens-node/recipe/dashboard";
 
 export const SuperTokensConfig: TypeInput = {
     framework: "fastify",
@@ -48,6 +49,8 @@ export const SuperTokensConfig: TypeInput = {
                 }
             }
           }),
-        Session.init() // initializes session features
+        Session.init(), // initializes session features
+        Dashboard.init(),
+
     ]
   }
