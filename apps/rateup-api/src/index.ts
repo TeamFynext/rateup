@@ -15,6 +15,8 @@ import { errorHandler } from "supertokens-node/framework/fastify";
 import { SuperTokensConfig } from "./config";
 import { orgRoutes } from "./modules/org/org.route";
 import { orgSchemas } from "./modules/org/org.schema";
+import { teamRoutes } from "./modules/team/team.route";
+import { teamSchemas } from "./modules/team/team.schema";
 
 const server = Fastify({
   logger,
@@ -34,7 +36,7 @@ server.get("/ping", async () => {
 
 async function main() {
   //TODO move this schema stuff to somewhere else
-  const modules = [surveySchemas, questionSchemas,orgSchemas];
+  const modules = [surveySchemas, questionSchemas,orgSchemas, teamSchemas];
   for (const module of modules) {
     for (const schema of module) {
       server.addSchema(schema);
@@ -43,6 +45,8 @@ async function main() {
   server.register(surveyRoutes, { prefix: "api/survey" });
   server.register(questionRoutes, { prefix: "api/question" });
   server.register(orgRoutes, { prefix: "api/org" });
+  server.register(teamRoutes, { prefix: "api/team" });
+
 
  // await server.register(formDataPlugin);
   await server.register(plugin);

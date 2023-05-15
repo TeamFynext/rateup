@@ -2,7 +2,7 @@ import EmailPassword from "supertokens-node/recipe/emailpassword";
 import Session from "supertokens-node/recipe/session";
 import { TypeInput } from "supertokens-node/types";
 import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createUser } from "./modules/user/user.service";
+import { createUser, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 
 export const SuperTokensConfig: TypeInput = {
@@ -49,7 +49,29 @@ export const SuperTokensConfig: TypeInput = {
                 }
             }
           }),
-        Session.init(), // initializes session features
+          Session.init({
+            antiCsrf: "VIA_TOKEN",
+            override: {
+                functions: (originalImplementation) => {
+                    return {
+                        ...originalImplementation,
+                        createNewSession: async function (input) {
+                            let userId = input.userId;
+
+                            const user = await getOrgIdAndRole({id: userId});
+                            // This goes in the access token, and is availble to read on the frontend.
+                            input.accessTokenPayload = {
+                                ...input.accessTokenPayload,
+                                orgId: user.orgId,
+                                role: user.role,
+                            };
+
+                            return originalImplementation.createNewSession(input);
+                        },
+                    };
+                },
+            },
+        }), // initializes session features
         Dashboard.init(),
 
     ]
