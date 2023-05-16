@@ -52,7 +52,7 @@ export default ({ children }) => {
                     <SidebarNav />
                     <Navbar.Section style={{ marginTop: 'auto' }}>
                         <a href="#" onClick={(event) => event.preventDefault()}>
-                            <Image src="resolve.png" />
+                          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icon.svg`} alt="RateUp Logo" width={30} height={30} />
                         </a>
                     </Navbar.Section>
                 </Navbar>
@@ -77,10 +77,10 @@ export default ({ children }) => {
                               inherit
                               variant="gradient"
                               gradient={{ from: 'cyan', to: 'blue' }}
-                            >
-                                Rateup
+                          >
                             </Text>{' '}
 
+                          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
                         </Title>
                     </div>
                 </Header>

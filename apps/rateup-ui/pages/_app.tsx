@@ -7,10 +7,20 @@ import Layout from "../components/Layout/Layout";
 import SuperTokensReact, {redirectToAuth, SuperTokensWrapper} from 'supertokens-auth-react';
 import {frontendConfig} from '../config/frontendConfig';
 import Session from 'supertokens-auth-react/recipe/session'
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+    QueryClient,
+    QueryClientProvider,
+} from '@tanstack/react-query'
 
 if (typeof window !== 'undefined') {
     SuperTokensReact.init(frontendConfig());
 }
+
+const queryClient = new QueryClient()
+
 export default function App({Component, pageProps, ...appProps}: AppProps) {
 
     console.log("route=", appProps.router.pathname);
@@ -45,9 +55,11 @@ export default function App({Component, pageProps, ...appProps}: AppProps) {
             <SuperTokensWrapper>
                 <MantineProvider withGlobalStyles withNormalizeCSS>
                     <Notifications/>
-                    <LayoutComponent>
-                        <Component {...pageProps} />
-                    </LayoutComponent>
+                    <QueryClientProvider client={queryClient}>
+                        <LayoutComponent>
+                            <Component {...pageProps} />
+                        </LayoutComponent>
+                    </QueryClientProvider>
                     <Notifications/>
                 </MantineProvider>
             </SuperTokensWrapper>
