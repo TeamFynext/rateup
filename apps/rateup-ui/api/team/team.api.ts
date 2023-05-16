@@ -1,4 +1,4 @@
-import { axiosClient } from './apiClient'
+import { axiosClient } from '../apiClient'
 
 export interface ICreateTeam {
     name: string; 
@@ -6,7 +6,7 @@ export interface ICreateTeam {
     userId: string;
 }
 
-export const postTeam = (data: ICreateTeam) => axiosClient({
+export const createTeam = (data: ICreateTeam) => axiosClient({
     url: `/team`,
     method: 'POST',
     data: data

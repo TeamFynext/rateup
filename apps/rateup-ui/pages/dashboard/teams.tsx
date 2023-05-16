@@ -9,7 +9,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { useMutation } from "@tanstack/react-query";
 import { IconCheck } from '@tabler/icons-react';
 import { getOrgIdRole, getUserID } from "../../utils/userInfo"
-import { postTeam } from "../../API/team.axios";
+import { createTeam } from "../../api/team/team.api";
 
 export default function Teams() {
     const sessionContext = useSessionContext();
@@ -21,17 +21,16 @@ export default function Teams() {
         setName('')
     }, [opened])
 
-    const createTeam = async () => {
+    const handleCreateTeam = async () => {
         const { orgId } = await getOrgIdRole()
         const { userId } = await getUserID()
         const data = { name, orgId, userId }
 
-        postTeam(data)
+        return createTeam(data)
     };
 
-    const addResourceMutation = useMutation(() => createTeam(), {
+    const addResourceMutation = useMutation(() => handleCreateTeam(), {
         onSuccess: () => {
-            //queryClient.invalidateQueries(["teamData"]);
             notifications.update({
                 id: 'load-data',
                 color: 'teal',
@@ -71,9 +70,6 @@ export default function Teams() {
     if (sessionContext.loading === true) {
         return null;
     }
-
-    // console.log("Userrr:" + JSON.stringify(sessionContext.userId))
-
     return (
         <><Modal opened={opened} onClose={close} title="Create Team" centered>
             <Box>
@@ -106,5 +102,4 @@ export default function Teams() {
             </Flex >
         </>
     );
-
 }

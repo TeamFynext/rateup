@@ -1,5 +1,4 @@
 import Session from 'supertokens-auth-react/recipe/session';
-//import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 export async function getOrgIdRole() {
     let orgId, role;
@@ -15,10 +14,6 @@ export async function getOrgIdRole() {
 export async function getUserID() {
     let userId ;
     userId = await Session.getUserId();
-    // const sessionContext = useSessionContext();
-    // if (sessionContext.loading !== true)
-    //  userId = sessionContext.userId
-
     return { userId };
 }
   
