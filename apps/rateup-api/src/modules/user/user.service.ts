@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { CreateUserParams, userInfoParams } from './user.schema';
+import { PrismaClient } from "@prisma/client";
+import { CreateUserParams, userInfoParams } from "./user.schema";
 const prisma = new PrismaClient();
 
 async function createUser({ id, email }: CreateUserParams) {
@@ -14,16 +14,13 @@ async function createUser({ id, email }: CreateUserParams) {
 
 async function getOrgIdAndRole({ id }: userInfoParams) {
   const orgMember = await prisma.orgMember.findFirst({
-    where: { userId : id },
+    where: { userId: id },
     select: {
       orgId: true,
       role: true,
     },
   });
 
-  if (!orgMember) {
-    throw new Error(`No OrgMember found for user ID ${id}`);
-  }
   return orgMember;
 }
 
