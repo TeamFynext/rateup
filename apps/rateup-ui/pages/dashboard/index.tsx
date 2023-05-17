@@ -1,6 +1,6 @@
 ﻿import ButtonComponent from "../../components/Button/ButtonComponent";
 import {useDisclosure} from '@mantine/hooks';
-import {Box, Modal, TextInput} from '@mantine/core';
+import {Box, Modal, TextInput, Title, Space} from '@mantine/core';
 import {useEffect, useState} from 'react';
 import {notifications} from '@mantine/notifications';
 import {IconSquarePlus} from '@tabler/icons';
@@ -29,6 +29,8 @@ export default function DashboardHome() {
     
     return (
         <>
+        <Title order={1}>Dashboard</Title>
+        <Space h="xl" />
             <Modal opened={opened} onClose={close} title="Create Organization" centered>
                 <Box>
                     <TextInput

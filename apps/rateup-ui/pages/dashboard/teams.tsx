@@ -1,5 +1,5 @@
 ﻿import ButtonComponent from "../../components/Button/ButtonComponent";
-import { Flex } from '@mantine/core';
+import { Flex, Title, Space } from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
@@ -86,14 +86,16 @@ export default function Teams() {
                     title={"Create"} disabled={!isNameValid} />
             </Box>
         </Modal>
-            <Flex
+
+        <Flex
                 gap="xl"
                 justify="flex-start"
                 align="center"
                 direction="row"
                 wrap="wrap"
             >
-            <h2>Teams</h2>
+                    <Title order={1}>Teams</Title>
+        <Space h="xl" />
                 <ButtonComponent
                     onClick={open}
                     title={"Create Team"}
