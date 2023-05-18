@@ -7,15 +7,16 @@ import { useEffect } from "react";
 import { mockQuestion } from "../../utils/mock";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { createQuestion } from "../../api/surveys/questions/questions.api";
+import { createQuestion, reorderQuestions } from "../../api/surveys/questions/questions.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
+import { reorder } from "../../utils/questions";
 
 //TODO: update order on change
 export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }) {
   const router = useRouter();
-  const {surveyId} = router.query;
-  const [state, handlers] = useListState(questions);
+  const { surveyId } = router.query;
+  const [questionsState, handlers] = useListState(questions);
 
   useEffect(() => {
     handlers.setState(questions)
@@ -26,16 +27,15 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
     setTypeSelectionOpen(false);
   }
 
-  const items = state.map((question, index) => (
+  const items = questionsState.map((question, index) => (
     <DraggableQuestionCard
+      key={question.id}
       question={question}
       index={index}
       handleOpenQuestion={handleOpenQuestion}
-
     />
   ))
 
-  // add mutate function to createQuestion api call and invalidate ['questions', surveyId]
   const queryClient = useQueryClient();
   const questionCreateMutation = useMutation({
     mutationFn: createQuestion,
@@ -46,18 +46,25 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
       });
     }
   })
-    
+  const questionsReorderMutation = useMutation({
+    mutationFn: (reorderedQuestions) => reorderQuestions(surveyId, reorderedQuestions.map(q => q.id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['questions', surveyId])
+    }
+  })
 
   return (
     <DragDropContext
-      onDragEnd={({ destination, source }) =>
-        handlers.reorder({ from: source.index, to: destination?.index || 0 })
-      }
+      onDragEnd={({ destination, source }) => {
+        const reorderedQuestions = reorder(questionsState, source.index, destination?.index || 0)
+        handlers.setState(reorderedQuestions);
+        questionsReorderMutation.mutate(reorderedQuestions)
+      }}
     >
       <Button onClick={() => {
         setTypeSelectionOpen(true);
         // TODO: remove
-        questionCreateMutation.mutate({...mockQuestion(), surveyId, order: questions.length+1 /* assuming 'thank you' isn't a question */})
+        questionCreateMutation.mutate({ ...mockQuestion(), surveyId, order: questions.length + 1 /* assuming 'thank you' isn't a question */ })
       }}>Add Question</Button>
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (

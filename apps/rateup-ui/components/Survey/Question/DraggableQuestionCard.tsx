@@ -49,7 +49,7 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}) {
   const {selectedLanguage} = useContext(SelectedLanguageContext)
   const queryClient = useQueryClient();
 
-  // create questionDeleteMutation using useMutation
+
   const questionDeleteMutation = useMutation({
     mutationFn: deleteQuestion,
     onSuccess: () => {

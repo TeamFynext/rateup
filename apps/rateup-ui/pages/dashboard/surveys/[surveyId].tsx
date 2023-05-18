@@ -12,7 +12,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 
 export default () => {
-  // Get survey id from url
   const router = useRouter()
   const {surveyId} = router.query
 
@@ -32,7 +31,6 @@ export default () => {
   const [typeSelectionOpen, setTypeSelectionOpen] = useState(true);
   const [selectedQ, setSelectedQ] = useState(null)
 
-  // create useEffect and if survey not null set selectedLanguage to surveys.languages[0]
   useEffect(() => {
     if(survey) {
       setSelectedLanguage(survey.languages[0])
