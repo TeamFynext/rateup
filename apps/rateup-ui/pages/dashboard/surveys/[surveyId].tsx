@@ -54,11 +54,13 @@ export default () => {
       onChange={setSelectedLanguage}
       />
     </Group>
-    <Box sx={{display: "flex", gap: 8, height: "100%"}}>
+    {/** TODO: Remove fixed height and make this responsive */}
+    <Box sx={{display: "flex", gap: 8, height: "70vh"}}>
         <Paper p={"sm"} sx={{flex: 2}}>
           <Stack>
             <QuestionsSideBar
-             questions={questions} setTypeSelectionOpen={setTypeSelectionOpen}
+             questions={questions.sort((a, b) => a.order - b.order)}
+             setTypeSelectionOpen={setTypeSelectionOpen}
              setSelectedQ={setSelectedQ} />
           </Stack>
         </Paper>

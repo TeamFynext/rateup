@@ -20,3 +20,7 @@ export async function deleteQuestion(questionId) {
 export async function reorderQuestions(surveyId: string, newOrder: string[]) {
     return axiosClient.put(`${QUESTION_URL}/reorder/${surveyId}`, newOrder)
 }
+
+export async function updateQuestion(questionId: string, data) {
+    return axiosClient.put(`${QUESTION_URL}/${questionId}`, data)
+}
