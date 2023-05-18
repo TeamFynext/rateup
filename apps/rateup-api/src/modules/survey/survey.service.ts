@@ -1,9 +1,9 @@
 import prisma from "../../utils/prisma";
 import { CreateSurveyInput } from "./survey.schema";
 
-export async function createSurvey(input: CreateSurveyInput) {
+export async function createSurvey(input: CreateSurveyInput, createdBy: string) {
   const survey = await prisma.survey.create({
-    data: input,
+    data: { ...input, createdBy },
   });
   return survey;
 }
@@ -14,6 +14,12 @@ export async function getSurveyById(id: string) {
       id,
     },
   });
+  return survey;
+}
+
+// TODO: only return surveys belonging to the user
+export async function getSurveys() {
+  const survey = await prisma.survey.findMany();
   return survey;
 }
 

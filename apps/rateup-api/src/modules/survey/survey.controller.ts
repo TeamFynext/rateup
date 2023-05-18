@@ -3,8 +3,10 @@ import {
   createSurvey,
   deleteSurveyById,
   getSurveyById,
+  getSurveys,
 } from "./survey.service";
 import { CreateSurveyInput, GetSurveyByIdParams } from "./survey.schema";
+import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -12,14 +14,22 @@ export async function createSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  const body = request.body;
+  const data = request.body;
   try {
-    const survey = await createSurvey(body);
+    // TODO add types for session
+    const userId = request.session.getUserId();
+    const teamId = data.teamId;
+
+    if(! await hasAccessToTeam(teamId, userId)) {
+      reply.code(403).send();
+      return;
+    }
+
+    const survey = await createSurvey(data, userId);
     reply.code(201).send(survey);
   } catch (e) {
-    // TODO
     console.error(e);
-    reply.code(500);
+    reply.code(500).send();
   }
 }
 
@@ -37,7 +47,19 @@ export async function getSurveyByIdHandler(
       reply.send(survey);
     }
   } catch (e) {
-    reply.send(500);
+    reply.code(500);
+  }
+}
+
+export async function getSurveysHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const surveys = await getSurveys();
+    reply.send(surveys);
+  } catch (e) {
+    reply.code(500);
   }
 }
 

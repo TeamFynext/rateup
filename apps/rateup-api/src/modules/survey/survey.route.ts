@@ -3,9 +3,13 @@ import {
   createSurveyHandler,
   deleteSurveyByIdHandler,
   getSurveyByIdHandler,
+  getSurveysHandler,
 } from "./survey.controller";
+import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
 export async function surveyRoutes(server: FastifyInstance) {
+  server.addHook("preHandler", verifySession());
+
   // create survey
   server.post(
     "/",
@@ -19,6 +23,9 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     createSurveyHandler
   );
+
+  // get all surveys from user
+  server.get("/", getSurveysHandler);
 
   // get survey by id
   server.get(
