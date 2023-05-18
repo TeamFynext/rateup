@@ -13,6 +13,7 @@ import {
   ActionIcon,
   useMantineTheme,
   Group,
+  Loader,
 } from "@mantine/core";
 import {
   IconCopy,
@@ -45,9 +46,8 @@ export default function Surveys() {
     queryFn: getSurveys
   })
 
-  if (isLoading) return 'Loading...'
-
-  if (error) return 'An error has occurred: ' + error.message
+  if (isLoading) return <Loader />
+  if (error) return 'An error has occurred'
 
   return (
     <Container fluid>

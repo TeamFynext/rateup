@@ -43,7 +43,12 @@ const onSubmit = (e) => {
     console.log(form.errors)
     return
   }
-  createSurveyMutation.mutate(form.values);
+  
+  const teamId =  undefined; // replace with a teamId. Goto Teams page to view teamId
+  if(!teamId) {
+    throw new Error ("TeamId is not defined")
+  }
+  createSurveyMutation.mutate({...form.values, teamId });
 }
   return (
     <Modal opened={open} onClose={() => {close(); form.reset()}} title="Create Survey" centered>

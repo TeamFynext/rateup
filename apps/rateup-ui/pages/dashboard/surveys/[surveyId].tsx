@@ -1,4 +1,4 @@
-import { Box, Group, Paper, Select, Stack, Title } from "@mantine/core"
+import { Box, Group, Loader, Paper, Select, Stack, Title } from "@mantine/core"
 import {  IconLetterCase, IconMail, IconPhone, IconStar } from '@tabler/icons-react';
 import { useEffect, useState } from "react";
 import { QuestionType as Q } from "../../../types";
@@ -39,9 +39,12 @@ export default () => {
     }
   }, [survey])
 
-  if(isLoading || isSurveyLoading) return 'Loading...'
-  if(error || surveyError) return 'An error has occurred: ' + error.message
-
+  if(isLoading || isSurveyLoading) return <Loader />
+  if(error || surveyError) {
+    console.log(error, surveyError)
+    return 'An error has occurred'
+  }
+  
   return (
   <SelectedLanguageContext.Provider value={{selectedLanguage}}>
   <Stack sx={{height: "100%"}} >
