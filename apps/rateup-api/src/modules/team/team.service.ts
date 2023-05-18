@@ -1,5 +1,5 @@
 import prisma from "../../utils/prisma";
-import { CreateTeamInput } from "./team.schema";
+import { CreateTeamInput, GetTeamsByOrgInput } from "./team.schema";
 
 export async function createTeam(input: CreateTeamInput) {
 
@@ -50,4 +50,24 @@ export async function createTeam(input: CreateTeamInput) {
       await prisma.$disconnect();
     }
   }
-  
+
+export function getTeamsByOrgId(input: GetTeamsByOrgInput) {
+  return prisma.team.findMany({
+    where: {
+      orgId: input.orgId
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+}
+
+export async function deleteTeamById(id: string) {
+  const team = await prisma.team.delete({
+    where: {
+      id,
+    },
+  });
+  return team;
+}

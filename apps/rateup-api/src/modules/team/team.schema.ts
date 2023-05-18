@@ -23,12 +23,25 @@ const createTeamResponseSchema = z.object({
     })
 });
 
+const getTeamsByOrgRequestSchema = z.object({
+  orgId: z.string(),
+});
+
+const deleteTeamByIdRequestSchema = z.object({
+  id: z.string(),
+});
+
 
 export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     {
         createTeamRequestSchema,
         createTeamResponseSchema,
+        getTeamsByOrgRequestSchema,
+        deleteTeamByIdRequestSchema
     },
     { $id: "teamSchema" }
   );
   export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
+  export type GetTeamsByOrgInput = z.infer<typeof getTeamsByOrgRequestSchema>;
+  export type DeleteTeamInput = z.infer<typeof deleteTeamByIdRequestSchema>;
+

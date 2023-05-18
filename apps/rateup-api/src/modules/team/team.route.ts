@@ -1,15 +1,16 @@
 import { FastifyInstance } from "fastify";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import {
-  createTeamHandler,
+  createTeamHandler, deleteTeamByIdHandler, getAllTeamsByOrgHandler,
 } from "./team.controller";
 import { $Tref } from "./team.schema";
+import { checkRoleHandler } from "../../utils/checkRoleHandler";
 export async function teamRoutes(server: FastifyInstance) {
-  // create team
+
   server.post(
     "/",
     {
-      preHandler: verifySession(),
+      preHandler: [verifySession(), checkRoleHandler],
       schema: {
         body: $Tref("createTeamRequestSchema"),
         response: {
@@ -18,6 +19,28 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     createTeamHandler
+  );
+
+  server.get(
+    "/:orgId",
+    {
+      preHandler: [verifySession(), checkRoleHandler],
+        schema: {
+          params: $Tref("getTeamsByOrgRequestSchema"),
+        },
+    },
+    getAllTeamsByOrgHandler
+  );
+
+  server.delete(
+    "/:id",
+    {
+      preHandler: [verifySession(), checkRoleHandler],
+        schema: {
+          params: $Tref("deleteTeamByIdRequestSchema"),
+        },
+    },
+    deleteTeamByIdHandler
   );
 
   server.get("/", async () => {

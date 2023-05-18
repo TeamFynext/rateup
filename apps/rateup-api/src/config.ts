@@ -58,15 +58,17 @@ export const SuperTokensConfig: TypeInput = {
             ...originalImplementation,
             createNewSession: async function (input) {
               let userId = input.userId;
+              let userInfo = await EmailPassword.getUserById(userId);
 
               const user = await getOrgIdAndRole({ id: userId });
               // This goes in the access token, and is availble to read on the frontend.
               input.accessTokenPayload = {
                 ...input.accessTokenPayload,
+                email: userInfo?.email,
                 orgId: user?.orgId,
                 role: user?.role,
               };
-
+              console.log(input.accessTokenPayload)
               return originalImplementation.createNewSession(input);
             },
           };
