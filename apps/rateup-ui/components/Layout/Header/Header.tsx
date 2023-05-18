@@ -70,7 +70,7 @@ export function HeaderTabs() {
     },
     {
       icon: <IconLogout size="0.9rem" stroke={1.5} />,
-      href: "/logout",
+      href: "/auth/logout",
       text: "Logout",
       isDivider: true,
       color: "red",
@@ -111,7 +111,7 @@ export function HeaderTabs() {
           >
             <Menu.Target>
               <Paper shadow="sm"
-                className={cx(classes.user, { [classes.userActive]: userMenuOpened })}
+                className={cx(classes.user, { [classes.userActive]: userMenuOpened }, classes.cursor)}
               >
 
                 <Group>
