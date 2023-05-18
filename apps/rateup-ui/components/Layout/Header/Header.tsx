@@ -64,7 +64,7 @@ export function HeaderTabs() {
   const menuItems = [
     {
       icon: <IconCheckupList size="0.9rem" color={theme.colors.yellow[6]} stroke={1.5} />,
-      href: "/dashboard/",
+      href: "/dashboard/surveys",
       text: "Surveys",
     },
     {

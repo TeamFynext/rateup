@@ -26,17 +26,28 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { deleteSurvey, getSurveys } from "../../../api";
 import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSurveys, deleteSurvey } from "../../../api/surveys/survey.api";
 
 
-export default function Surveys({surveys}) {
+export default function Surveys() {
   const [createSurveyOpened, {open, close}] = useDisclosure(false)
+  
+  const queryClient = useQueryClient();
+  const {isLoading, error, data: surveys} = useQuery({
+    queryKey: ['surveys'],
+    queryFn: getSurveys
+  })
+
+  if (isLoading) return 'Loading...'
+
+  if (error) return 'An error has occurred: ' + error.message
 
   return (
     <Container fluid>
@@ -108,10 +119,18 @@ function SurveyCard({ survey }): JSX.Element {
 }
 
 function SurveyMenu({ survey }) {
-  const router = useRouter();
-  const refreshData = () => {
-    router.replace(router.asPath);
-  }
+
+  const queryClient = useQueryClient();
+  const surveyDeleteMutation = useMutation({
+    mutationFn: deleteSurvey,
+    onSuccess: () => {
+      notifications.show({
+        message: "Deleted!"
+      });
+      queryClient.invalidateQueries(['surveys']);
+    }
+  })
+
   return (
     <Menu width={200}>
       <Menu.Target>
@@ -124,13 +143,7 @@ function SurveyMenu({ survey }) {
         <Menu.Item icon={<IconShare />}>Share</Menu.Item>
         <Menu.Item icon={<IconCopy />}>Clone</Menu.Item>
         <Menu.Item icon={<IconTrash />} onClick={() => {
-          deleteSurvey(survey.id).then(r => {
-            notifications.show({message: "Deleted Successfully"});
-          }).catch(e => {
-            console.log(e);
-            notifications.show({message: "Could not delete"})
-          })
-          refreshData();
+          surveyDeleteMutation.mutate(survey.id)
         }}>Delete</Menu.Item>
         <Menu.Item icon={<IconMessage />}>View Responses</Menu.Item>
         <Menu.Item
@@ -149,12 +162,4 @@ function StatusBadge({ isActive }) {
       {isActive ? "Active" : "Paused"}
     </Badge>
   );
-}
-
-export async function getServerSideProps(context) {
-  return {
-    props: {
-      surveys: await getSurveys()
-    }
-  }
 }

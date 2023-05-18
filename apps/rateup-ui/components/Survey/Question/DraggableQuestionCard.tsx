@@ -4,9 +4,10 @@ import { notifications } from "@mantine/notifications";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useContext } from "react";
-import { deleteQuestion } from "../../../api";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {Draggable } from 'react-beautiful-dnd';
+import { deleteQuestion } from "../../../api/surveys/questions/questions.api";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 
 const useStyles = createStyles((theme) => ({
   item: {
@@ -44,19 +45,23 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}) {
   // TODO: ref lost when card is dragged to new place
   const {hovered, ref: hoverRef} = useHover();
   const router = useRouter()
+  const {surveyId} = router.query
   const {selectedLanguage} = useContext(SelectedLanguageContext)
+  const queryClient = useQueryClient();
+
+  // create questionDeleteMutation using useMutation
+  const questionDeleteMutation = useMutation({
+    mutationFn: deleteQuestion,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['questions', surveyId])
+      notifications.show({message: "Deleted"})
+    }
+  })
+
 
   const handleDelete = (e, qId) => {
     e.stopPropagation();
-    deleteQuestion(qId)
-      .then(() => {
-        notifications.show({message: "Deleted"})
-      })
-      .catch(e => {
-        console.error(e);
-        notifications.show({message: "Deleted"});
-      })
-      router.replace(router.asPath);
+    questionDeleteMutation.mutate(qId)
   }
 
   return <Draggable key={question.id} index={index} draggableId={question.id}>

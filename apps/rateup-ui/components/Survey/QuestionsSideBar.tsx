@@ -4,10 +4,12 @@ import { Button } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { createQuestion } from "../../api";
 import { mockQuestion } from "../../utils/mock";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { createQuestion } from "../../api/surveys/questions/questions.api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { notifications } from "@mantine/notifications";
 
 //TODO: update order on change
 export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }) {
@@ -32,6 +34,18 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
 
     />
   ))
+
+  // add mutate function to createQuestion api call and invalidate ['questions', surveyId]
+  const queryClient = useQueryClient();
+  const questionCreateMutation = useMutation({
+    mutationFn: createQuestion,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['questions', surveyId])
+      notifications.show({
+        message: "Created!"
+      });
+    }
+  })
     
 
   return (
@@ -43,8 +57,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
       <Button onClick={() => {
         setTypeSelectionOpen(true);
         // TODO: remove
-        createQuestion({...mockQuestion(), surveyId, order: questions.length+1 /* assuming 'thank you' isn't a question */})
-        .then(() => router.replace(router.asPath)) // refreshing page
+        questionCreateMutation.mutate({...mockQuestion(), surveyId, order: questions.length+1 /* assuming 'thank you' isn't a question */})
       }}>Add Question</Button>
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (

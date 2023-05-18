@@ -1,19 +1,46 @@
-import {  getQuestions, getSurvey } from "../../../api"
 import { Box, Group, Paper, Select, Stack, Title } from "@mantine/core"
 import {  IconLetterCase, IconMail, IconPhone, IconStar } from '@tabler/icons-react';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { QuestionType as Q } from "../../../types";
-import { resetServerContext } from "react-beautiful-dnd"
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionTypeSelection } from "../../../components/Survey/Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "../../../components/Survey/QuestionsSideBar";
 import { QuestionDetailedView } from "../../../components/Survey/Question/QuestionDetailedView";
+import { getQuestions } from "../../../api/surveys/questions/questions.api";
+import { getSurvey } from "../../../api/surveys/survey.api";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 
-export default ({survey, questions}) => {
-  const [selectedLanguage, setSelectedLanguage] = useState(survey.languages[0])
+export default () => {
+  // Get survey id from url
+  const router = useRouter()
+  const {surveyId} = router.query
+
+  const {isLoading: isSurveyLoading, error: surveyError, data: survey} = useQuery({
+    queryKey: ['survey', surveyId],
+    queryFn: () => getSurvey(surveyId)
+
+  })
+
+  const {isLoading, error, data: questions} = useQuery({
+    queryKey: ['questions', surveyId],
+    queryFn: () => getQuestions(surveyId),
+  })
+
+  const [selectedLanguage, setSelectedLanguage] = useState(null)
   // Opens question type menu to choose from
   const [typeSelectionOpen, setTypeSelectionOpen] = useState(true);
   const [selectedQ, setSelectedQ] = useState(null)
+
+  // create useEffect and if survey not null set selectedLanguage to surveys.languages[0]
+  useEffect(() => {
+    if(survey) {
+      setSelectedLanguage(survey.languages[0])
+    }
+  }, [survey])
+
+  if(isLoading || isSurveyLoading) return 'Loading...'
+  if(error || surveyError) return 'An error has occurred: ' + error.message
 
   return (
   <SelectedLanguageContext.Provider value={{selectedLanguage}}>
@@ -77,23 +104,4 @@ export const questionTypesList = {
     icon: <IconLetterCase />,
     label: "Multiple Select"
   },
-}
-
-export async function getServerSideProps({params}) {
-
-  // Fix for drag & drop
-  resetServerContext()
-  try {
-    const survey = await (await getSurvey(params.surveyId)).json()
-    const questions = await (await getQuestions(params.surveyId)).json();
-    return {
-      props: {
-        survey,
-        questions
-      }
-    }
-  } catch (error) {
-    console.error(error)
-    return;
-  }
 }

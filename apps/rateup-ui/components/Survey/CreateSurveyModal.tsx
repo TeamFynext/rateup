@@ -1,8 +1,9 @@
 import { Button, Group, Modal, MultiSelect, Stack, TextInput } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
-import { createSurvey } from "../../api";
+import { createSurvey } from "../../api/surveys/survey.api";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/router";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 
 interface FormValues {
   title: string,
@@ -11,11 +12,18 @@ interface FormValues {
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 
 export function CreateSurveyModal({open, close}) {
-    // Used to refresh server side
-    const router = useRouter();
-    const refreshData = () => {
-      router.replace(router.asPath);
-    }
+
+    const queryClient = useQueryClient();
+    const createSurveyMutation = useMutation({
+      mutationFn: createSurvey,
+      onSuccess: () => {
+        notifications.show({
+          message: "Created!"
+        });
+        queryClient.invalidateQueries(['surveys']);
+        close();
+      }
+    })
   
 const form = useForm({
   initialValues: {
@@ -35,18 +43,7 @@ const onSubmit = (e) => {
     console.log(form.errors)
     return
   }
-  createSurvey(form.values).then(r => {
-    if(r.status !== 201) {
-      // TODO: why 'then' block executing with error response?
-      return;
-    }
-    notifications.show({
-      message: "Created!"
-    })
-    close()
-    form.reset();
-    refreshData()
-  }).catch(e => console.log(e))
+  createSurveyMutation.mutate(form.values);
 }
   return (
     <Modal opened={open} onClose={() => {close(); form.reset()}} title="Create Survey" centered>
