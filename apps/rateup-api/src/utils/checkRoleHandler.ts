@@ -1,19 +1,23 @@
 
-import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
-export const checkRoleHandler = (request: FastifyRequest,
-  reply: FastifyReply, done : HookHandlerDoneFunction
-) => {
+import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
 
-    let session = request.session;
-    let accessTokenPayload = session.getAccessTokenPayload();
-    let role = accessTokenPayload.role
+export const checkRoleHandler = (requiredRole: 'ADMIN' | 'SUPER_ADMIN') => 
+  (request: FastifyRequest, reply: FastifyReply, done : HookHandlerDoneFunction) => {
 
-    console.log("ROLE::::::::::::::"+role)
-    if (role !== 'SUPER_ADMIN') {
-        reply.send(new Error('Action is only allowed for Super Admin. You are logged in as :'+role));
+    const session = request.session;
+    const accessTokenPayload = session.getAccessTokenPayload();
+    const role = accessTokenPayload.role;
+
+    console.log(`ROLE: ${role},  REQ:  ${requiredRole}`);
+    if (role !== requiredRole) {
+        reply.status(403).send({
+          error: `Action is only allowed for ${requiredRole}.`,
+          message: `You are logged in as: ${role}`
+        });
         return;
-      }
-    
-      done();
-    
+    }
+
+    done();
+
 }
+

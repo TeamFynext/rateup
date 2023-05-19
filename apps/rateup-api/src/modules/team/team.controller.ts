@@ -1,29 +1,30 @@
-
 import { FastifyReply, FastifyRequest } from "fastify";
+import { createTeam, deleteTeamById, getTeamsByOrgId } from "./team.service";
 import {
-    createTeam, deleteTeamById, getTeamsByOrgId,
-} from "./team.service";
-import { CreateTeamInput, DeleteTeamInput, GetTeamsByOrgInput } from "./team.schema";
+  CreateTeamInput,
+  DeleteTeamInput,
+  GetTeamsByOrgInput,
+} from "./team.schema";
 
 export async function createTeamHandler(
-    request: FastifyRequest<{
-      Body: CreateTeamInput;
-    }>,
-    reply: FastifyReply
-  ) {
-    const body = request.body;
+  request: FastifyRequest<{
+    Body: CreateTeamInput;
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
 
-    try {
-      const team = await createTeam(body);
-      //reply.code(201).send({ success: true, data: team });
-      reply.code(201).send(team);
+  try {
+    const team = await createTeam(body);
+    //reply.code(201).send({ success: true, data: team });
+    reply.code(201).send(team);
 
-      //TODO Auth
-    } catch (e:any) {
-      console.error(e);
-      reply.code(500).send({ success: false, message: e.message });
-    }
+    //TODO Auth
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
   }
+}
 
 export async function getAllTeamsByOrgHandler(
   request: FastifyRequest<{
@@ -32,14 +33,14 @@ export async function getAllTeamsByOrgHandler(
   reply: FastifyReply
 ) {
   try {
-    const teams = await getTeamsByOrgId({orgId: request.params.orgId});
-    if (!teams) {
-      reply.code(404);
+    const teams = await getTeamsByOrgId({ orgId: request.params.orgId });
+    if (!teams || teams.length === 0) {
+      reply.code(200).send({ message: "No teams found for this organization" });
     } else {
       reply.send(teams);
     }
   } catch (e) {
-    reply.send(500);
+    reply.code(500).send({ message: "Internal server error" });
   }
 }
 
@@ -54,7 +55,7 @@ export async function deleteTeamByIdHandler(
     if (!team) {
       reply.code(404);
     } else {
-      reply.code(200).send("Deleted team.")
+      reply.code(200).send("Deleted team.");
     }
   } catch (e) {
     console.log(e);

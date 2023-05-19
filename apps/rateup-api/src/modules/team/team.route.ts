@@ -10,7 +10,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: [verifySession(), checkRoleHandler],
+      preHandler: [verifySession(), checkRoleHandler('SUPER_ADMIN')],
       schema: {
         body: $Tref("createTeamRequestSchema"),
         response: {
@@ -24,7 +24,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get(
     "/:orgId",
     {
-      preHandler: [verifySession(), checkRoleHandler],
+      preHandler: [verifySession(), checkRoleHandler('SUPER_ADMIN')],
         schema: {
           params: $Tref("getTeamsByOrgRequestSchema"),
         },
@@ -35,7 +35,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.delete(
     "/:id",
     {
-      preHandler: [verifySession(), checkRoleHandler],
+      preHandler: [verifySession(), checkRoleHandler('SUPER_ADMIN')],
         schema: {
           params: $Tref("deleteTeamByIdRequestSchema"),
         },
