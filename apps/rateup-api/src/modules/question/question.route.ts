@@ -4,10 +4,14 @@ import {
   deleteQuestionByIdHandler,
   getQuestionByIdHandler,
   getQuestionBySurveyIdHandler,
+  reorderQuestionsHandler,
+  updateQuestionHandler,
 } from "./question.controller";
 import { $Qref } from "./question.schema";
+import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 
 export async function questionRoutes(server: FastifyInstance) {
+  server.addHook("preHandler", verifySession());
   server.post(
     "/",
     {
@@ -49,4 +53,25 @@ export async function questionRoutes(server: FastifyInstance) {
     },
     deleteQuestionByIdHandler
   );
+
+  server.put(
+    "/reorder/:surveyId",
+    {
+      schema: {
+        body: $Qref("updateQuestionsOrderRequestSchema"),
+      }
+    },
+    reorderQuestionsHandler
+  )
+
+  server.put(
+    "/:id",
+    {
+      schema: {
+        params: $Qref("questionIdParamsSchema"),
+        body: $Qref("updateQuestionRequestSchema"),
+      }
+    },
+    updateQuestionHandler
+  )
 }

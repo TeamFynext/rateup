@@ -37,13 +37,28 @@ const questionIdParamsSchema = z.object({
   id: z.string(),
 });
 
+// making everything optional
+const updateQuestionRequestSchema = z.object({
+  ...questionCore,
+  surveyId: z.string().optional(),
+  title: z.record(z.string(), z.string()).optional(),
+  order: z.number().optional(),
+  type: z.nativeEnum(QuestionType).optional(),
+});
+
+const updateQuestionsOrderRequestSchema = z.array(z.string());
+
 export const { schemas: questionSchemas, $ref: $Qref } = buildJsonSchemas(
   {
     createQuestionRequestSchema,
     createQuestionResponseSchema,
     questionIdParamsSchema,
+    updateQuestionsOrderRequestSchema,
+    updateQuestionRequestSchema
   },
   { $id: "questionSchema" }
 );
 export type CreateQuestionInput = z.infer<typeof createQuestionRequestSchema>;
 export type QuestionIdParams = z.infer<typeof questionIdParamsSchema>;
+export type UpdateQuestionsOrderInput = z.infer<typeof updateQuestionsOrderRequestSchema>;
+export type UpdateQuestionInput = z.infer<typeof updateQuestionRequestSchema>;
