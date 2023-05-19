@@ -37,6 +37,16 @@ export default () => {
     }
   }, [survey])
 
+
+  // If selected question is not in the list of questions, set selected question to null and open type selection
+  useEffect(() => {
+    if(!questions) return;
+    if(!questions.find(q => q.id === selectedQ)) {
+      setTypeSelectionOpen(true);
+      setSelectedQ(null);
+    }
+  }, [questions, selectedQ])
+
   if(isLoading || isSurveyLoading) return <Loader />
   if(error || surveyError) {
     console.log(error, surveyError)
@@ -65,7 +75,7 @@ export default () => {
           </Stack>
         </Paper>
         <Paper p={"sm"} sx={{flex: 5}}>
-            {typeSelectionOpen ? (
+            {typeSelectionOpen || !questions.find(q => q.id === selectedQ)? (
               <QuestionTypeSelection />
             ):(
               <QuestionDetailedView
