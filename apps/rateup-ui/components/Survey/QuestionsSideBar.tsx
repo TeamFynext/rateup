@@ -15,7 +15,7 @@ import { reorder } from "../../utils/questions";
 //TODO: update order on change
 export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }) {
   const router = useRouter();
-  const { surveyId } = router.query;
+  const { surveyId } = router.query as {surveyId: string};
   const [questionsState, handlers] = useListState(questions);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
 
   const queryClient = useQueryClient();
   const questionCreateMutation = useMutation({
-    mutationFn: createQuestion,
+    mutationFn: (newQ) =>  createQuestion(surveyId, newQ),
     onSuccess: () => {
       queryClient.invalidateQueries(['questions', surveyId])
       notifications.show({
@@ -64,7 +64,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
       <Button onClick={() => {
         setTypeSelectionOpen(true);
         // TODO: remove
-        questionCreateMutation.mutate({ ...mockQuestion(), surveyId, order: questions.length + 1 /* assuming 'thank you' isn't a question */ })
+        questionCreateMutation.mutate({ ...mockQuestion(), surveyId })
       }}>Add Question</Button>
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (

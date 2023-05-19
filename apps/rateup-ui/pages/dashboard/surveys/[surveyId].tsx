@@ -59,7 +59,7 @@ export default () => {
         <Paper p={"sm"} sx={{flex: 2}}>
           <Stack>
             <QuestionsSideBar
-             questions={questions.sort((a, b) => a.order - b.order)}
+             questions={questions}
              setTypeSelectionOpen={setTypeSelectionOpen}
              setSelectedQ={setSelectedQ} />
           </Stack>

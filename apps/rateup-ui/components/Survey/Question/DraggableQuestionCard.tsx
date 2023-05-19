@@ -45,13 +45,13 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}) {
   // TODO: ref lost when card is dragged to new place
   const {hovered, ref: hoverRef} = useHover();
   const router = useRouter()
-  const {surveyId} = router.query
+  const {surveyId }  = router.query as {surveyId: string}
   const {selectedLanguage} = useContext(SelectedLanguageContext)
   const queryClient = useQueryClient();
 
 
   const questionDeleteMutation = useMutation({
-    mutationFn: deleteQuestion,
+    mutationFn: (qId) => deleteQuestion(surveyId, qId),
     onSuccess: () => {
       queryClient.invalidateQueries(['questions', surveyId])
       notifications.show({message: "Deleted"})
@@ -76,7 +76,7 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}) {
           <div {...provided.dragHandleProps} className={classes.dragHandle}>
             <IconGripVertical size={20} stroke={1.5} />
           </div>
-          <Badge>{question.order}</Badge>
+          <Badge>{index + 1}</Badge>
           {/* TODO: add truncate */}
           <Text pl="xs">{question.title[selectedLanguage]}</Text>
           {true ? (

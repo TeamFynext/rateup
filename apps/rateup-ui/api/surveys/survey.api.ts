@@ -7,10 +7,6 @@ export const createSurvey = (data) => axiosClient.post(SURVEYURL, data)
 export async function getSurveys() {
     try {
         let surveys: Array<any> = (await axiosClient.get(SURVEYURL)).data;
-        // TODO: check if we can sort & preserve order at the db level
-        // @ts-ignore
-        surveys.sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt))
-
         return surveys
     } catch (e) {
         console.error(e)

@@ -5,6 +5,9 @@ export function mockQuestion() {
     type: QuestionType.Text,
     title: {
       "English": faker.lorem.sentence(4)
+    },
+    description: {
+      "English": faker.lorem.sentence(10)
     }
   }
 }
