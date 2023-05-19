@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   Avatar,
@@ -23,21 +23,35 @@ import {
   IconChevronDown,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { Navbar } from '../Navbar';
+import { Navbar } from '../Navbar/Navbar';
 import { useStyles } from './Header.styles';
+import { getOrgIdRole, getUserEmail } from '../../../utils/userInfo';
 
 export function HeaderTabs() {
   const { classes, theme, cx } = useStyles();
   const [opened, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
 
+  const [name, setName] = useState('User')
+  const [role, setRole] = useState()
+
+  async function fetchUserData() {
+    let { email } = await getUserEmail()
+    let { role } = await getOrgIdRole()
+    setName(email)
+    setRole(role)
+  }
+  
+  useEffect(() => {
+    fetchUserData(); 
+  }, [])
+  
 
   const user = {
-    "name": "User fullname",
-    "role": "Super Admin",
+    "name": name,
+    "role": role === 'SUPER_ADMIN' ? "Super Admin" : "Admin",
     "image": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
-  }
-
+  };
   //TODO
 
   const MenuItemWithLink = ({ icon, href, children }) => (

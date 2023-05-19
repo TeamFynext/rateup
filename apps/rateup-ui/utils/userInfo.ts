@@ -16,4 +16,13 @@ export async function getUserID() {
     userId = await Session.getUserId();
     return { userId };
 }
-  
+
+
+export async function getUserEmail() {
+    let email;
+    if (await Session.doesSessionExist()) {
+        let accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
+        email = accessTokenPayload.email
+    }
+    return { email };
+}

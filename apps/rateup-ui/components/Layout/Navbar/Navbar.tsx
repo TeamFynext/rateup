@@ -1,0 +1,28 @@
+import { useRouter } from 'next/router';
+import { Breadcrumbs, Image, Text} from '@mantine/core';
+import Link from 'next/link';
+import { useStyles } from './Navbar.styles';
+
+export const Navbar = () => {
+  const router = useRouter();
+  const { pathname } = router;
+  const pathParts = pathname.split('/').filter(path => path);
+  const { classes } = useStyles();
+
+  return (
+    <Breadcrumbs separator={<Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/right-arrow.svg`} alt="right-arrow" />}>
+      <Link href="/" className={classes.link}>
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/home.svg`} alt="Home" />
+      </Link>
+      {pathParts.map((part, index) => (
+        <Link className={classes.link} href={`/${pathParts.slice(0, index + 1).join('/')}`} key={index}>
+            <Text color={index === pathParts.length - 1 ? "blue.9" : "dark.2"}>
+              {part.charAt(0).toUpperCase() + part.slice(1)}
+            </Text>
+        </Link>
+      ))}
+    </Breadcrumbs>
+  );
+};
+
+
