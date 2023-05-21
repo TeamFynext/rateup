@@ -2,7 +2,7 @@ import { useContext, useEffect } from "react"
 import SelectedLanguageContext from "../../../context/SelectedLanguage"
 import { useForm } from "@mantine/form"
 import { Box, Button, Checkbox, Group, Select, TextInput } from "@mantine/core"
-import { updateQuestion } from "../../../api/surveys/questions/questions.api"
+import { createQuestion, updateQuestion } from "../../../api/surveys/questions/questions.api"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/router"
@@ -10,7 +10,11 @@ import { QuestionType } from "../../../types/enums"
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
-export function QuestionDetailedView({ question }) {
+interface QuestionDetailedViewProps {
+  question: Question;
+  setSelectedQ: (Q: Question) => void;
+}
+export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   
@@ -55,19 +59,41 @@ export function QuestionDetailedView({ question }) {
 
     // TODO: only send modified fields
     const data = { title: formattedTitle, description: formattedDescription, ...restOfTheData }
-    updateQuestion(surveyId, question.id, data)
-      .then(() => {
-        notifications.show({
-          message: "Question updated"
-        });
-        queryClient.invalidateQueries(["questions"])
-      }).catch((e) => {
-        console.error(e)
-        notifications.show({
-          message: "An error has occurred",
-          color: "red"
-        });
-      })
+        // Checking if its a new question
+        if(!question.id) {
+          // Creating new question
+          createQuestion(surveyId, data)
+            .then((r) => {
+              notifications.show({
+                message: "Question created"
+              });
+              const newQ: Question = r.data;
+              setSelectedQ(newQ)
+              queryClient.invalidateQueries(["questions"])
+            })
+            .catch((e) => {
+              console.error(e)
+              notifications.show({
+                message: "An error has occurred",
+                color: "red"
+              });
+            })
+        } else {
+          // Updating existing question
+          updateQuestion(surveyId, question.id, data)
+          .then(() => {
+            notifications.show({
+              message: "Question updated"
+            });
+            queryClient.invalidateQueries(["questions"])
+          }).catch((e) => {
+            console.error(e)
+            notifications.show({
+              message: "An error has occurred",
+              color: "red"
+            });
+          })
+        }
   }
 
   return (

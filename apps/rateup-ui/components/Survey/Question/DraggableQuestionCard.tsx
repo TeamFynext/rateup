@@ -43,7 +43,7 @@ const useStyles = createStyles((theme) => ({
 interface DraggableQuestionCardProps {
   question: Question;
   index: number;
-  handleOpenQuestion: (qId: string) => void;
+  handleOpenQuestion: (Q: Question) => void;
 }
 
 export function DraggableQuestionCard({question, index, handleOpenQuestion}: DraggableQuestionCardProps) {
@@ -77,7 +77,7 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}: Dra
           className={cx(classes.item, { [classes.itemDragging]: snapshot.isDragging })}
           ref={provided.innerRef}
           {...provided.draggableProps}
-          onClick={() => handleOpenQuestion(question.id)}
+          onClick={() => handleOpenQuestion(question)}
         >
           <div {...provided.dragHandleProps} className={classes.dragHandle}>
             <IconGripVertical size={20} stroke={1.5} />

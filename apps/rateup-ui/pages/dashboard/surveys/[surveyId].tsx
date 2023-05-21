@@ -1,4 +1,4 @@
-import { Box, Group, Loader, Paper, Select, Stack, Title } from "@mantine/core"
+import { Box, Center, Group, Loader, Paper, Select, Stack, Text, Title } from "@mantine/core"
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionTypeSelection } from "../../../components/Survey/Question/QuestionTypeSelection";
@@ -31,8 +31,8 @@ export default () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState(null)
   // Opens question type menu to choose from
-  const [typeSelectionOpen, setTypeSelectionOpen] = useState(true);
-  const [selectedQ, setSelectedQ] = useState(null)
+  const [typeSelectionOpen, setTypeSelectionOpen] = useState(false);
+  const [selectedQ, setSelectedQ] = useState<Question>(null)
 
   useEffect(() => {
     if(survey) {
@@ -40,15 +40,16 @@ export default () => {
     }
   }, [survey])
 
-
-  // If selected question is not in the list of questions, set selected question to null and open type selection
   useEffect(() => {
-    if(!questions) return;
-    if(!questions.find(q => q.id === selectedQ)) {
-      setTypeSelectionOpen(true);
-      setSelectedQ(null);
+    if(!selectedQ) return;
+    if(questions && selectedQ.id) {
+      const Q = questions.find(q => q.id === selectedQ.id);
+      if(Q) {
+        setSelectedQ(Q)
+      }
     }
-  }, [questions, selectedQ])
+  }, [questions])
+
 
   if(isLoading || isSurveyLoading) return <Loader />
   if(error || surveyError) {
@@ -78,12 +79,19 @@ export default () => {
           </Stack>
         </Paper>
         <Paper p={"sm"} sx={{flex: 5}}>
-            {typeSelectionOpen || !questions.find(q => q.id === selectedQ)? (
-              <QuestionTypeSelection />
-            ):(
+            {selectedQ ? (
               <QuestionDetailedView
-                question={questions.find(q => q.id === selectedQ)}
+                question={selectedQ}
+                setSelectedQ={setSelectedQ}
                />
+            ): typeSelectionOpen ? (
+              <QuestionTypeSelection
+                setSelectedQ={setSelectedQ}
+              />
+            ): (
+              <Center sx={{height: "100%"}}>
+                <Text c="dimmed" >Select a question to edit</Text>
+              </Center>
             )}
         </Paper>
     </Box>

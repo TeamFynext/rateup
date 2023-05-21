@@ -15,7 +15,7 @@ import { reorder } from "../../utils/questions";
 interface QuestionsSideBarProps {
   questions: Question[];
   setTypeSelectionOpen: (open: boolean) => void;
-  setSelectedQ: (qId: string) => void;
+  setSelectedQ: (Q: Question) => void;
 }
 //TODO: update order on change
 export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }: QuestionsSideBarProps) {
@@ -27,8 +27,8 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
     handlers.setState(questions)
   }, [questions])
 
-  const handleOpenQuestion = (qId) => {
-    setSelectedQ(qId);
+  const handleOpenQuestion = (Q: Question) => {
+    setSelectedQ(Q);
     setTypeSelectionOpen(false);
   }
 
@@ -68,8 +68,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
     >
       <Button onClick={() => {
         setTypeSelectionOpen(true);
-        // TODO: remove
-        questionCreateMutation.mutate(mockQuestion())
+        setSelectedQ(null);
       }}>Add Question</Button>
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (
