@@ -1,4 +1,4 @@
-import { Badge, ActionIcon, createStyles, rem, Text } from "@mantine/core";
+import { Badge, ActionIcon, createStyles, rem, Text, Box, useMantineTheme } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
@@ -44,9 +44,10 @@ interface DraggableQuestionCardProps {
   question: Question;
   index: number;
   handleOpenQuestion: (Q: Question) => void;
+  selected: boolean
 }
 
-export function DraggableQuestionCard({question, index, handleOpenQuestion}: DraggableQuestionCardProps) {
+export function DraggableQuestionCard({question, index, selected, handleOpenQuestion}: DraggableQuestionCardProps) {
   const { classes, cx } = useStyles();
   // TODO: ref lost when card is dragged to new place
   const {hovered, ref: hoverRef} = useHover();
@@ -54,6 +55,7 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}: Dra
   const {surveyId }  = router.query as {surveyId: string}
   const {selectedLanguage} = useContext(SelectedLanguageContext)
   const queryClient = useQueryClient();
+  const theme = useMantineTheme();
 
 
   const questionDeleteMutation = useMutation({
@@ -73,24 +75,27 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}: Dra
   return <Draggable key={question.id} index={index} draggableId={question.id}>
     {(provided, snapshot) => (
       <div ref={hoverRef}>
-        <div
+        <Box
           className={cx(classes.item, { [classes.itemDragging]: snapshot.isDragging })}
           ref={provided.innerRef}
           {...provided.draggableProps}
           onClick={() => handleOpenQuestion(question)}
+          sx={{
+            backgroundColor: selected ? theme.colors.blue[0] : "white",
+          }}
         >
           <div {...provided.dragHandleProps} className={classes.dragHandle}>
             <IconGripVertical size={20} stroke={1.5} />
           </div>
-          <Badge>{index + 1}</Badge>
-          {/* TODO: add truncate */}
+          <Badge variant={selected? "filled" : "light"}>{index + 1}</Badge>
+          {/* TODO: add truncate and make height fixed*/}
           <Text pl="xs">{question.title[selectedLanguage]}</Text>
           {true ? (
             <ActionIcon onClick={(e) => handleDelete(e, question.id)} sx={{ position: "absolute", right: "5px" }}>
               <IconTrash />
             </ActionIcon>
           ) : null}
-        </div>
+        </Box>
       </div>
     )}
   </Draggable>;

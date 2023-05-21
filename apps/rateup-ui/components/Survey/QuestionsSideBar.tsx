@@ -15,10 +15,11 @@ import { reorder } from "../../utils/questions";
 interface QuestionsSideBarProps {
   questions: Question[];
   setTypeSelectionOpen: (open: boolean) => void;
+  selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
 }
 //TODO: update order on change
-export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }: QuestionsSideBarProps) {
+export function QuestionsSideBar({ questions, setTypeSelectionOpen, selectedQ, setSelectedQ }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as {surveyId: string};
   const [questionsState, handlers] = useListState(questions);
@@ -36,6 +37,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
     <DraggableQuestionCard
       key={question.id}
       question={question}
+      selected={question.id === selectedQ?.id}
       index={index}
       handleOpenQuestion={handleOpenQuestion}
     />

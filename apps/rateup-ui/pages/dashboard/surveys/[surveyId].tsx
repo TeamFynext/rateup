@@ -75,6 +75,7 @@ export default () => {
             <QuestionsSideBar
              questions={questions}
              setTypeSelectionOpen={setTypeSelectionOpen}
+             selectedQ={selectedQ}
              setSelectedQ={setSelectedQ} />
           </Stack>
         </Paper>
