@@ -40,7 +40,13 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export function DraggableQuestionCard({question, index, handleOpenQuestion}) {
+interface DraggableQuestionCardProps {
+  question: Question;
+  index: number;
+  handleOpenQuestion: (qId: string) => void;
+}
+
+export function DraggableQuestionCard({question, index, handleOpenQuestion}: DraggableQuestionCardProps) {
   const { classes, cx } = useStyles();
   // TODO: ref lost when card is dragged to new place
   const {hovered, ref: hoverRef} = useHover();
@@ -51,7 +57,7 @@ export function DraggableQuestionCard({question, index, handleOpenQuestion}) {
 
 
   const questionDeleteMutation = useMutation({
-    mutationFn: (qId) => deleteQuestion(surveyId, qId),
+    mutationFn: (qId: string) => deleteQuestion(surveyId, qId),
     onSuccess: () => {
       queryClient.invalidateQueries(['questions', surveyId])
       notifications.show({message: "Deleted"})

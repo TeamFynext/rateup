@@ -12,8 +12,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
 import { reorder } from "../../utils/questions";
 
+interface QuestionsSideBarProps {
+  questions: Question[];
+  setTypeSelectionOpen: (open: boolean) => void;
+  setSelectedQ: (qId: string) => void;
+}
 //TODO: update order on change
-export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }) {
+export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as {surveyId: string};
   const [questionsState, handlers] = useListState(questions);
@@ -38,7 +43,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
 
   const queryClient = useQueryClient();
   const questionCreateMutation = useMutation({
-    mutationFn: (newQ) =>  createQuestion(surveyId, newQ),
+    mutationFn: (newQ: any) =>  createQuestion(surveyId, newQ),
     onSuccess: () => {
       queryClient.invalidateQueries(['questions', surveyId])
       notifications.show({
@@ -47,7 +52,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
     }
   })
   const questionsReorderMutation = useMutation({
-    mutationFn: (reorderedQuestions) => reorderQuestions(surveyId, reorderedQuestions.map(q => q.id)),
+    mutationFn: (reorderedQuestions: Question[]) => reorderQuestions(surveyId, reorderedQuestions.map(q => q.id)),
     onSuccess: () => {
       queryClient.invalidateQueries(['questions', surveyId])
     }
@@ -64,7 +69,7 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, setSelectedQ
       <Button onClick={() => {
         setTypeSelectionOpen(true);
         // TODO: remove
-        questionCreateMutation.mutate({ ...mockQuestion(), surveyId })
+        questionCreateMutation.mutate(mockQuestion())
       }}>Add Question</Button>
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (

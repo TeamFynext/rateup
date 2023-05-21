@@ -12,7 +12,11 @@ import { useRouter } from "next/router";
 
 export default () => {
   const router = useRouter()
-  const {surveyId} = router.query
+  const { surveyId } = router.query
+
+  if(Array.isArray(surveyId)) {
+    throw new Error('surveyId is an array');
+  }
 
   const {isLoading: isSurveyLoading, error: surveyError, data: survey} = useQuery({
     queryKey: ['survey', surveyId],

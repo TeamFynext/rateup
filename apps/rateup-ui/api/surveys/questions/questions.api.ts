@@ -7,10 +7,10 @@ const QUESTION_URL = "/question";
 export async function createQuestion(surveyId: string, data) {
     return axiosClient.post(`${QUESTION_URL}/${surveyId}`, data)
 }
-export async function getQuestions(surveyId) {
+export async function getQuestions(surveyId: string) {
     if(!surveyId) return []
     const res = await axiosClient.get(`${QUESTION_URL}/${surveyId}`)
-    return res.data
+    return res.data as Question[]
 }
 
 export async function deleteQuestion(surveyId: string, questionId: string) {
