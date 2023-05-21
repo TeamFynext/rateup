@@ -47,7 +47,10 @@ export default function Surveys() {
   })
 
   if (isLoading) return <Loader />
-  if (error) return 'An error has occurred'
+  if (error || !Array.isArray(surveys)) {
+    console.error(surveys, error)
+    return 'An error has occurred'
+  }
 
   return (
     <Container fluid>
