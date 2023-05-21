@@ -46,9 +46,9 @@ export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetaile
   }, [question])
 
   const handleSave = () => {
-    form.validate();
-    if (Object.keys(form.errors).length !== 0) {
-      console.error(form.errors)
+    const validationRes = form.validate();
+    if (validationRes.hasErrors) {
+      console.error(validationRes.errors)
       return;
     }
 
