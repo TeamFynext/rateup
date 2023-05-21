@@ -83,7 +83,10 @@ export default function Surveys() {
   );
 }
 
-function SurveyCard({ survey }): JSX.Element {
+interface SurveyCardProps {
+  survey: Survey;
+}
+function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState('');
   useEffect(() => {
@@ -109,7 +112,7 @@ function SurveyCard({ survey }): JSX.Element {
         </Text>
       </Group>
       <Flex justify={"space-between"} mt="lg">
-        <StatusBadge isActive={survey.isActive} />
+        <StatusBadge active={survey.active} />
         <Link href="#" style={{color: theme.colors.blue[9]}} onClick={(e) => {e.stopPropagation()}}>
           <Group spacing="4px">
             <IconMessage />
@@ -150,19 +153,19 @@ function SurveyMenu({ survey }) {
         }}>Delete</Menu.Item>
         <Menu.Item icon={<IconMessage />}>View Responses</Menu.Item>
         <Menu.Item
-          icon={survey.isActive ? <IconPlayerPause /> : <IconPlayerPlay />}
+          icon={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
         >
-          {survey.isActive ? "Pause Survey" : "Resume Survey"}
+          {survey.active ? "Pause Survey" : "Resume Survey"}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
   );
 }
 
-function StatusBadge({ isActive }) {
+function StatusBadge({ active }) {
   return (
-    <Badge color={isActive ? "green" : "yellow"}>
-      {isActive ? "Active" : "Paused"}
+    <Badge color={active ? "green" : "yellow"}>
+      {active ? "Active" : "Paused"}
     </Badge>
   );
 }
