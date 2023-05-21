@@ -13,10 +13,13 @@ export async function getSurveys() {
         return { error: "Error Occured!" }
     }
 }
-export async function getSurvey(surveyId) {
+export async function getSurvey(surveyId: string) {
     const res =  await axiosClient.get(`${SURVEYURL}/${surveyId}`)
     return res.data as Survey
 }
-export async function deleteSurvey(surveyId) {
+export async function deleteSurvey(surveyId: string) {
     return await axiosClient.delete(`${SURVEYURL}/${surveyId}`)
+}
+export async function updateSurvey(surveyId: string, data) {
+    return await axiosClient.put(`${SURVEYURL}/${surveyId}`, data)
 }

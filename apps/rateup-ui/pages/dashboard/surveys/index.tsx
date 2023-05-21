@@ -34,7 +34,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSurveys, deleteSurvey } from "../../../api/surveys/survey.api";
+import { getSurveys, deleteSurvey, updateSurvey } from "../../../api/surveys/survey.api";
 
 
 export default function Surveys() {
@@ -137,6 +137,16 @@ function SurveyMenu({ survey }) {
     }
   })
 
+  const surveyUpdateMutation = useMutation({
+    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    onSuccess: () => {
+      notifications.show({
+        message: "Updated!"
+      });
+      queryClient.invalidateQueries(['surveys']);
+    }
+  })
+
   return (
     <Menu width={200}>
       <Menu.Target>
@@ -154,6 +164,7 @@ function SurveyMenu({ survey }) {
         <Menu.Item icon={<IconMessage />}>View Responses</Menu.Item>
         <Menu.Item
           icon={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+          onClick={() => surveyUpdateMutation.mutate({active: !survey.active})}
         >
           {survey.active ? "Pause Survey" : "Resume Survey"}
         </Menu.Item>
