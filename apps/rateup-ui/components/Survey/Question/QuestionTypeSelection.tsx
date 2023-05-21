@@ -34,4 +34,4 @@ const questionIcons = {
   [QuestionType.Testimonial]: IconUser,
 }
 
-console.assert(Object.values(QuestionType).every(key =>  {console.log(key);return questionIcons[key] !== undefined}), 'Not all QuestionType enums are mapped to an icon')
+console.assert(Object.values(QuestionType).every(key => questionIcons[key] !== undefined), 'Not all QuestionType enums are mapped to an icon')
