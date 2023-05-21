@@ -1,5 +1,6 @@
-import { QuestionType } from "../types";
 import { faker } from '@faker-js/faker';
+import { QuestionType } from '../types/enums';
+
 export function mockQuestion() {
   return {
     type: QuestionType.Text,

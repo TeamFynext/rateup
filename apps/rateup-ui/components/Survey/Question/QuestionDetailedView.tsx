@@ -2,11 +2,11 @@ import { useContext, useEffect } from "react"
 import SelectedLanguageContext from "../../../context/SelectedLanguage"
 import { useForm } from "@mantine/form"
 import { Box, Button, Checkbox, Group, Select, TextInput } from "@mantine/core"
-import { QuestionType } from "../../../types"
 import { updateQuestion } from "../../../api/surveys/questions/questions.api"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/router"
+import { QuestionType } from "../../../types/enums"
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?

@@ -1,7 +1,5 @@
 import { Box, Group, Loader, Paper, Select, Stack, Title } from "@mantine/core"
-import {  IconLetterCase, IconMail, IconPhone, IconStar } from '@tabler/icons-react';
 import { useEffect, useState } from "react";
-import { QuestionType as Q } from "../../../types";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionTypeSelection } from "../../../components/Survey/Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "../../../components/Survey/QuestionsSideBar";
@@ -10,6 +8,7 @@ import { getQuestions } from "../../../api/surveys/questions/questions.api";
 import { getSurvey } from "../../../api/surveys/survey.api";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
+
 
 export default () => {
   const router = useRouter()
@@ -88,33 +87,4 @@ export default () => {
   </SelectedLanguageContext.Provider>
   );
 
-}
-
-// TODO: add rest
-export const questionTypesList = {
-  [Q.Text]: {
-    icon: <IconLetterCase />,
-    label: "Text"
-  },  [Q.Email]: {
-    icon: <IconMail />,
-    label: "Email"
-  },  [Q.Phone]: {
-    icon: <IconPhone />,
-    label: "Phone"
-  },  [Q.Rating]: {
-    icon: <IconStar />,
-    label: "Rating"
-  },  [Q.LD]: {
-    icon: <IconLetterCase />,
-    label: "Like or Dislike"
-  },  [Q.YN]: {
-    icon: <IconLetterCase />,
-    label: "Yes or No"
-  },  [Q.MCQ]: {
-    icon: <IconLetterCase />,
-    label: "Multiple Choice"
-  },  [Q.MSQ]: {
-    icon: <IconLetterCase />,
-    label: "Multiple Select"
-  },
 }
