@@ -1,7 +1,10 @@
 import prisma from "../../utils/prisma";
 import { CreateSurveyInput } from "./survey.schema";
 
-export async function createSurvey(input: CreateSurveyInput, createdBy: string) {
+export async function createSurvey(
+  input: CreateSurveyInput,
+  createdBy: string
+) {
   const survey = await prisma.survey.create({
     data: { ...input, createdBy },
   });
@@ -14,6 +17,11 @@ export async function getSurveyById(id: string) {
       id,
     },
   });
+
+  if (!survey) {
+    throw new Error(`Could not find survey with id ${id}`);
+  }
+
   return survey;
 }
 

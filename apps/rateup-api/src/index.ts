@@ -26,7 +26,7 @@ supertokens.init(SuperTokensConfig);
 
 server.register(cors, {
   origin: "http://localhost:3000",
-  allowedHeaders: ['Content-Type', ...supertokens.getAllCORSHeaders()],
+  allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
   credentials: true,
 });
 
@@ -36,22 +36,20 @@ server.get("/ping", async () => {
 
 async function main() {
   //TODO move this schema stuff to somewhere else
-  const modules = [surveySchemas, questionSchemas,orgSchemas, teamSchemas];
+  const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas];
   for (const module of modules) {
     for (const schema of module) {
       server.addSchema(schema);
     }
   }
   server.register(surveyRoutes, { prefix: "api/survey" });
-  server.register(questionRoutes, { prefix: "api/question" });
+  server.register(questionRoutes, { prefix: "api/question/:surveyId" });
   server.register(orgRoutes, { prefix: "api/org" });
   server.register(teamRoutes, { prefix: "api/team" });
 
-
- // await server.register(formDataPlugin);
+  // await server.register(formDataPlugin);
   await server.register(plugin);
   server.setErrorHandler(errorHandler());
-
 
   server
     .listen({

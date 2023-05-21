@@ -68,7 +68,7 @@ export const SuperTokensConfig: TypeInput = {
                 orgId: user?.orgId,
                 role: user?.role,
               };
-              console.log(input.accessTokenPayload)
+              console.log(input.accessTokenPayload);
               return originalImplementation.createNewSession(input);
             },
           };

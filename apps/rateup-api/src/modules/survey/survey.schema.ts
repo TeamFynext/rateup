@@ -7,7 +7,7 @@ const surveyCore = {
     invalid_type_error: "Title must be a string",
   }),
   languages: z.array(z.string()),
-  teamId: z.string({required_error: "TeamId is required"}),
+  teamId: z.string({ required_error: "TeamId is required" }),
 };
 const createSurveyRequestSchema = z.object({
   ...surveyCore,

@@ -73,22 +73,10 @@ model Survey {
   updatedAt   DateTime?  @updatedAt
   title       String
   description String?    @default("")
-  questions   Question[]
+  questions   Json[]    @default([])
   languages   String[]
   user        User       @relation(fields: [createdBy], references: [id])
   createdBy   String     @db.Uuid
   team        Team       @relation(fields: [teamId], references: [id])
   teamId      String     @db.Uuid
-}
-
-model Question {
-  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title       Json
-  survey      Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId    String  @db.Uuid
-  description Json?   @default("{}")
-  choices     Json?   @default("{}")
-  required    Boolean @default(false)
-  type        String
-  order       Int
 }

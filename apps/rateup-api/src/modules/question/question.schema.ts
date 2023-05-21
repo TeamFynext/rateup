@@ -17,10 +17,8 @@ export enum QuestionType {
   Text = "text",
 }
 const questionCore = {
-  surveyId: z.string(),
   title: z.record(z.string(), z.string()),
   description: z.record(z.string(), z.string()).optional(),
-  order: z.number(),
   required: z.boolean().optional(),
   type: z.nativeEnum(QuestionType),
   choices: z.record(z.string(), z.array(z.string())).optional(),
@@ -33,16 +31,21 @@ const createQuestionResponseSchema = z.object({
   ...questionCore,
   id: z.string(),
 });
-const questionIdParamsSchema = z.object({
+
+const questionsRouteParamsSchema = z.object({
+  surveyId: z.string(),
+});
+
+/**  For routes that concerns a single question */
+const questionRouteParamsSchema = z.object({
+  surveyId: z.string(),
   id: z.string(),
 });
 
 // making everything optional
 const updateQuestionRequestSchema = z.object({
   ...questionCore,
-  surveyId: z.string().optional(),
   title: z.record(z.string(), z.string()).optional(),
-  order: z.number().optional(),
   type: z.nativeEnum(QuestionType).optional(),
 });
 
@@ -52,13 +55,17 @@ export const { schemas: questionSchemas, $ref: $Qref } = buildJsonSchemas(
   {
     createQuestionRequestSchema,
     createQuestionResponseSchema,
-    questionIdParamsSchema,
     updateQuestionsOrderRequestSchema,
-    updateQuestionRequestSchema
+    updateQuestionRequestSchema,
+    questionRouteParamsSchema,
+    questionsRouteParamsSchema,
   },
   { $id: "questionSchema" }
 );
 export type CreateQuestionInput = z.infer<typeof createQuestionRequestSchema>;
-export type QuestionIdParams = z.infer<typeof questionIdParamsSchema>;
-export type UpdateQuestionsOrderInput = z.infer<typeof updateQuestionsOrderRequestSchema>;
+export type UpdateQuestionsOrderInput = z.infer<
+  typeof updateQuestionsOrderRequestSchema
+>;
 export type UpdateQuestionInput = z.infer<typeof updateQuestionRequestSchema>;
+export type QuestionRouteParams = z.infer<typeof questionRouteParamsSchema>;
+export type QuestionsRouteParams = z.infer<typeof questionsRouteParamsSchema>;

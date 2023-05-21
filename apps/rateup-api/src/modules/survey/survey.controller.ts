@@ -20,7 +20,7 @@ export async function createSurveyHandler(
     const userId = request.session.getUserId();
     const teamId = data.teamId;
 
-    if(! await hasAccessToTeam(teamId, userId)) {
+    if (!(await hasAccessToTeam(teamId, userId))) {
       reply.code(403).send();
       return;
     }

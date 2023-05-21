@@ -7,6 +7,7 @@ import {
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
+
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", verifySession());
 
