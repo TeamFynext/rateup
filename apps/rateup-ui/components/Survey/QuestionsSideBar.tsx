@@ -4,12 +4,10 @@ import { Button } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { mockQuestion } from "../../utils/mock";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { createQuestion, reorderQuestions } from "../../api/surveys/questions/questions.api";
+import { reorderQuestions } from "../../api/surveys/questions/questions.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import { reorder } from "../../utils/questions";
 
 interface QuestionsSideBarProps {
@@ -44,15 +42,6 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, selectedQ, s
   ))
 
   const queryClient = useQueryClient();
-  const questionCreateMutation = useMutation({
-    mutationFn: (newQ: any) =>  createQuestion(surveyId, newQ),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['questions', surveyId])
-      notifications.show({
-        message: "Created!"
-      });
-    }
-  })
   const questionsReorderMutation = useMutation({
     mutationFn: (reorderedQuestions: Question[]) => reorderQuestions(surveyId, reorderedQuestions.map(q => q.id)),
     onSuccess: () => {

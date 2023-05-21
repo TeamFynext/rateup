@@ -127,9 +127,6 @@ export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetaile
           <Button onClick={handleSave}>
             Save
           </Button>
-          <Button>
-            Add next question
-          </Button>
         </Group>
       </Group>
     </Box>
