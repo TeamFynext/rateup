@@ -1,9 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createTeam, deleteTeamById, getTeamsByOrgId } from "./team.service";
+import { createTeam, deleteTeamById, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
 import {
   CreateTeamInput,
   DeleteTeamInput,
+  GetTeamMembersInput,
   GetTeamsByOrgInput,
+  InviteMemberInput,
 } from "./team.schema";
 
 export async function createTeamHandler(
@@ -60,5 +62,48 @@ export async function deleteTeamByIdHandler(
   } catch (e) {
     console.log(e);
     reply.code(500);
+  }
+}
+
+
+export async function inviteMemberHandler(
+  request: FastifyRequest<{
+    Body: InviteMemberInput;
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
+
+  try {
+    const invite = await inviteTeamMember(body);
+    //reply.code(201).send({ success: true, data: team });
+    reply.code(201).send(invite);
+
+    //TODO Auth
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+  }
+}
+
+
+//Get Team Members by Team Id
+
+export async function getTeamMembersHandler(
+  request: FastifyRequest<{
+    Params: GetTeamMembersInput;
+  }>,
+  reply: FastifyReply
+) {
+
+  try {
+    const members = await getTeamMembers({ teamId: request.params.teamId });
+    if (!members || members.length === 0) {
+      reply.code(200).send({ message: "No members found for this team" });
+    } else {
+      reply.send(members);
+    }
+  } catch (e) {
+    reply.code(500).send({ message: "Internal server error"});
   }
 }

@@ -27,8 +27,30 @@ const getTeamsByOrgRequestSchema = z.object({
   orgId: z.string(),
 });
 
+const getTeamMembersRequestSchema = z.object({
+  teamId: z.string(),
+});
+
 const deleteTeamByIdRequestSchema = z.object({
   id: z.string(),
+});
+
+enum InviteType {
+  ORG = 'ORG',
+  TEAM = 'TEAM',
+}
+
+const inviteMemberRequestSchema = z.object({
+  orgId: z.string(),
+  teamId: z.string(),
+  invitedBy: z.string(),
+  type: z.nativeEnum(InviteType),
+  email: z.string(),
+  name: z.string(),
+})
+
+const inviteMemberRequestResponse = z.object({
+   id: z.string(),
 });
 
 export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
@@ -37,9 +59,16 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     createTeamResponseSchema,
     getTeamsByOrgRequestSchema,
     deleteTeamByIdRequestSchema,
+    inviteMemberRequestSchema,
+    inviteMemberRequestResponse,
+    getTeamMembersRequestSchema
   },
   { $id: "teamSchema" }
 );
 export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
 export type GetTeamsByOrgInput = z.infer<typeof getTeamsByOrgRequestSchema>;
 export type DeleteTeamInput = z.infer<typeof deleteTeamByIdRequestSchema>;
+export type InviteMemberInput = z.infer<typeof inviteMemberRequestSchema>;
+export type GetTeamMembersInput = z.infer<typeof getTeamMembersRequestSchema>;
+
+

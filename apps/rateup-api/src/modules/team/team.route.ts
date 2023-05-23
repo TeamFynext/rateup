@@ -4,6 +4,8 @@ import {
   createTeamHandler,
   deleteTeamByIdHandler,
   getAllTeamsByOrgHandler,
+  getTeamMembersHandler,
+  inviteMemberHandler,
 } from "./team.controller";
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -49,4 +51,30 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get("/", async () => {
     return { message: "Teams API working fine!" };
   });
+
+  server.post(
+    "/invite",
+    {
+      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      schema: {
+        body: $Tref("inviteMemberRequestSchema"),
+        response: {
+          201: $Tref("inviteMemberRequestResponse"),
+        },
+      },
+    },
+    inviteMemberHandler
+  );
+
+
+    server.get(
+    "/members/:teamId",
+    {
+      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      schema: {
+        params: $Tref("getTeamMembersRequestSchema"),
+      },
+    },
+    getTeamMembersHandler
+  );
 }

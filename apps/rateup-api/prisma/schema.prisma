@@ -17,6 +17,20 @@ enum Role {
   ADMIN
 }
 
+enum InviteStatus {
+  // initial
+  PENDING
+  // accept invite
+  ACCEPTED
+  // decline invite
+  DECLINED
+}
+
+enum InviteType {
+  ORG
+  TEAM
+}
+
 model User {
   id         String       @id @default(uuid()) @db.Uuid
   createdAt  DateTime     @default(now())
@@ -36,6 +50,7 @@ model Org {
   ownerId   String      @db.Uuid
   members   OrgMember[]
   teams     Team[]
+  invitations Invitation[]
 }
 
 model OrgMember {
@@ -56,6 +71,7 @@ model Team {
   orgId     String       @db.Uuid
   members   TeamMember[]
   surveys   Survey[]
+  invitations Invitation[]
 }
 
 model TeamMember {
@@ -65,6 +81,20 @@ model TeamMember {
   teamId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id])
   userId    String   @db.Uuid
+}
+
+model Invitation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String
+  name      String
+  type      InviteType 
+  org       Org       @relation(fields: [orgId], references: [id])
+  orgId     String    @db.Uuid
+  team      Team?     @relation(fields: [teamId], references: [id])
+  teamId    String?   @db.Uuid
+  invitedBy String
+  createdAt DateTime @default(now())
+  status    InviteStatus @default(PENDING)
 }
 
 model Survey {

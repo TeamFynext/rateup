@@ -1,5 +1,5 @@
 import prisma from "../../utils/prisma";
-import { CreateTeamInput, GetTeamsByOrgInput } from "./team.schema";
+import { CreateTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, InviteMemberInput } from "./team.schema";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 2) {
@@ -68,4 +68,106 @@ export async function deleteTeamById(id: string) {
     },
   });
   return team;
+}
+
+export async function inviteTeamMember(input : InviteMemberInput){
+  if (input.name.length < 2) {
+    throw new Error("Invalid name.");
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (input.email.length < 6 || !emailRegex.test(input.email)) {
+    throw new Error("Invalid email. Please enter a valid email address.");
+  }
+try {
+    const { email, name, orgId, teamId, invitedBy, type } = input;
+
+     // Check if team member with the input email already exists
+    const existingTeamMember = await prisma.teamMember.findFirst({
+      where: {
+        user: {
+          email,
+        },
+        team: {
+          id: teamId,
+        },
+      },
+    });
+
+    if (existingTeamMember) {
+      throw new Error('Team member with the provided email already exists in the team.');
+    }
+
+
+    // Check if the user with the input email is already a member in any organization with role SUPER_ADMIN
+    const existingOrgMember = await prisma.orgMember.findFirst({
+      where: {
+        user: {
+          email,
+        },
+        role: 'SUPER_ADMIN',
+      },
+    });
+
+    if (existingOrgMember) {
+      throw new Error('User with the provided email is already a SUPER_ADMIN member in an organization.');
+    }
+
+        // Check if the email already exists in the invitation table
+    const existingInvitation = await prisma.invitation.findFirst({
+      where: {
+        email,
+      },
+    });
+
+    if (existingInvitation) {
+      if (existingInvitation.status === 'PENDING') {
+       
+        // Call Resend email function here
+       //TODO
+        
+        throw new Error('Invitation with the provided email is already pending.');
+      }
+       else if (existingInvitation.status === 'ACCEPTED' && existingInvitation.teamId === teamId) {
+        throw new Error('Team member with the provided email already exists.');
+      }
+    }
+
+    
+    const newInvite = await prisma.invitation.create({
+      data: {
+        email,
+        name,
+        orgId,
+        teamId,
+        type,
+        invitedBy
+      }
+    });
+    
+    console.log("Invite created successfully");
+    return newInvite
+    
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export function getTeamMembers(input: GetTeamMembersInput) {
+  return prisma.teamMember.findMany({
+    where: {
+      teamId: input.teamId,
+    },
+    select: {
+      id: true, // or any other fields you want from teamMember
+      user: {
+        select: {
+          id: true,
+          email:true,
+          name: true,
+        },
+      },
+    },
+  });
 }
