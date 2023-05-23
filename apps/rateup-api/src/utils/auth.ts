@@ -14,7 +14,6 @@ export async function hasAccessToSurvey(surveyId: string, userId: string) {
         teamId,
       },
     });
-    console.log("teamMember", teamMember);
     return teamMember !== null;
   } catch (e) {
     console.log(e);

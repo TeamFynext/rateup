@@ -1,31 +1,21 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-export enum QuestionType {
-  Rating = "rating",
-  Smiley = "smiley",
-  LD = "like or dislike",
-  YN = "yes or no",
-  Opinion = "opinion scale",
-  ThankYou = "thank you",
-  Email = "email",
-  MCQ = "multiple choice",
-  MSQ = "multiple select",
-  OTP = "otp",
-  Phone = "phone number",
-  Photo = "photo capture",
-  Testimonial = "testimonial",
-  Text = "text",
-}
+import { QuestionType } from "../../types/enums";
+
+
 const questionCore = {
   title: z.record(z.string(), z.string()),
-  description: z.record(z.string(), z.string()).optional(),
-  required: z.boolean().optional(),
+  description: z.record(z.string(), z.string()),
+  required: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
   choices: z.record(z.string(), z.array(z.string())).optional(),
 };
 
 const createQuestionRequestSchema = z.object({
   ...questionCore,
+  // Allow to create a question at a specific position
+  // Should be index of the question in the array (0 based)
+  position: z.number().optional(),
 });
 const createQuestionResponseSchema = z.object({
   ...questionCore,

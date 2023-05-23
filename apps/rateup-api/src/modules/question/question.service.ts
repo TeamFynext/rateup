@@ -6,13 +6,26 @@ export async function createQuestion(
   surveyId: string,
   input: CreateQuestionInput
 ) {
+  // 1. Get existing questions
   const questions = await getQuestionsBySurveyId(surveyId);
-  const question = { ...input, id: randomUUID() };
-  // TODO: allow to add questions in custom position.
-  questions?.push(question);
+
+  // 2. Determine position of new question
+  let { position, ...rest } = input;
+  if(!position) {
+    position = questions.length;
+  }
+  if(position > questions.length || position < 0) {
+    throw new Error(`'position'(order) must be between 0 and the number of questions(${questions.length})`);
+  }
+
+  // 3. Generate new id
+  const newQuestion = { ...rest, id: randomUUID() };
+
+  // 4. Insert new question at position
+  questions.splice(position, 0, newQuestion);
   await updateQuestionsOnSurvey(surveyId, questions);
 
-  return question;
+  return newQuestion;
 }
 
 export async function getQuestionById(surveyId: string, id: string) {

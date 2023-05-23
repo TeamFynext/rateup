@@ -9,10 +9,12 @@ import {
 } from "./question.controller";
 import { $Qref } from "./question.schema";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
+import { verifySurveyAccess } from "./question.auth";
 
 // Base route: /api/question/:surveyId
 export async function questionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", verifySession());
+  server.addHook("preHandler", verifySurveyAccess);
 
   // Create survey
   server.post(

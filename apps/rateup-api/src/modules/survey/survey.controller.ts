@@ -3,10 +3,10 @@ import {
   createSurvey,
   deleteSurveyById,
   getSurveyById,
-  getSurveys,
+  getSurveysByUserId,
+  updateSurveyById,
 } from "./survey.service";
-import { CreateSurveyInput, GetSurveyByIdParams } from "./survey.schema";
-import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth";
+import { CreateSurveyInput, GetSurveyByIdParams, UpdateSurveyInput } from "./survey.schema";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -18,13 +18,6 @@ export async function createSurveyHandler(
   try {
     // TODO add types for session
     const userId = request.session.getUserId();
-    const teamId = data.teamId;
-
-    if (!(await hasAccessToTeam(teamId, userId))) {
-      reply.code(403).send();
-      return;
-    }
-
     const survey = await createSurvey(data, userId);
     reply.code(201).send(survey);
   } catch (e) {
@@ -56,9 +49,11 @@ export async function getSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    const surveys = await getSurveys();
+    const userId = request.session.getUserId();
+    const surveys = await getSurveysByUserId(userId)
     reply.send(surveys);
   } catch (e) {
+    console.error(e)
     reply.code(500);
   }
 }
@@ -75,6 +70,28 @@ export async function deleteSurveyByIdHandler(
       reply.code(404);
     } else {
       await deleteSurveyById(request.params.id);
+      reply.code(200);
+    }
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
+  }
+}
+
+export async function updateSurveyByIdHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+    Body: UpdateSurveyInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    // TODO: By using prisma error codes, we can return 404 if the survey doesn't exist and remove this check.
+    const survey = await getSurveyById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      await updateSurveyById(request.params.id, request.body);
       reply.code(200);
     }
   } catch (e) {

@@ -98,15 +98,16 @@ model Invitation {
 }
 
 model Survey {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime?  @updatedAt
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
   title       String
-  description String?    @default("")
+  description String?   @default("")
   questions   Json[]    @default([])
   languages   String[]
-  user        User       @relation(fields: [createdBy], references: [id])
-  createdBy   String     @db.Uuid
-  team        Team       @relation(fields: [teamId], references: [id])
-  teamId      String     @db.Uuid
+  user        User      @relation(fields: [createdBy], references: [id])
+  createdBy   String    @db.Uuid
+  team        Team      @relation(fields: [teamId], references: [id])
+  teamId      String    @db.Uuid
+  active      Boolean   @default(true)
 }

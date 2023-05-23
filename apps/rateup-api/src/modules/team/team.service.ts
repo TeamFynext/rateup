@@ -171,3 +171,16 @@ export function getTeamMembers(input: GetTeamMembersInput) {
     },
   });
 }
+export async function getTeamIdsByUserId(userId: string) {
+  const teams = await prisma.teamMember.findMany({
+    where: {
+      userId,
+    },
+    select: {
+      teamId: true,
+    }
+  });
+
+  const teamIds = teams.map(team => team.teamId);
+  return teamIds;
+}

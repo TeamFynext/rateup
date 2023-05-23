@@ -1,5 +1,6 @@
-import prisma from "../../utils/prisma";
-import { CreateSurveyInput } from "./survey.schema";
+import prisma, { excludeFields } from "../../utils/prisma";
+import { CreateSurveyInput, UpdateSurveyInput } from "./survey.schema";
+import { getTeamIdsByUserId } from "../team/team.service";
 
 export async function createSurvey(
   input: CreateSurveyInput,
@@ -21,14 +22,26 @@ export async function getSurveyById(id: string) {
   if (!survey) {
     throw new Error(`Could not find survey with id ${id}`);
   }
-
   return survey;
 }
 
-// TODO: only return surveys belonging to the user
-export async function getSurveys() {
-  const survey = await prisma.survey.findMany();
-  return survey;
+/**
+ * Returns surveys from ALL TEAMs in which the user is a member of
+ * @param userId 
+ * @returns Array of surveys without questions
+ */
+export async function getSurveysByUserId(userId: string) {
+  const teamIds = await getTeamIdsByUserId(userId);
+  const surveys = await prisma.survey.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    }
+  });
+
+  const surveysWithoutQuestions = surveys.map((s) => excludeFields(s, ["questions"]))
+  return surveysWithoutQuestions;
 }
 
 export async function deleteSurveyById(id: string) {
@@ -36,6 +49,16 @@ export async function deleteSurveyById(id: string) {
     where: {
       id,
     },
+  });
+  return survey;
+}
+
+export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
+  const survey = await prisma.survey.update({
+    where: {
+      id,
+    },
+    data: input,
   });
   return survey;
 }

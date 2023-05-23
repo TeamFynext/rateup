@@ -14,7 +14,6 @@ import {
   reorderQuestions,
   updateQuestion,
 } from "./question.service";
-import { Prisma } from "@prisma/client";
 import { hasAccessToSurvey } from "../../utils/auth";
 
 export async function createQuestionHandler(
@@ -101,14 +100,6 @@ export async function reorderQuestionsHandler(
 ) {
   try {
     const surveyId = request.params.surveyId;
-    const userId = request.session.getUserId();
-    // TODO: add as prehandler?
-    if (!(await hasAccessToSurvey(surveyId, userId))) {
-      reply.code(403).send({
-        message: `You don't have access to survey with id ${surveyId}`,
-      });
-      return;
-    }
     await reorderQuestions(surveyId, request.body);
     reply.code(200).send();
   } catch (e) {
@@ -132,15 +123,6 @@ export async function updateQuestionHandler(
     if (!question) {
       reply.code(404);
     } else {
-      // check if user has access to survey
-      const userId = request.session.getUserId();
-      if (!(await hasAccessToSurvey(surveyId, userId))) {
-        reply.code(403).send({
-          message: `You don't have access to survey with id ${surveyId}`,
-        });
-        return;
-      }
-
       // update question
       await updateQuestion(surveyId, id, request.body);
       reply.code(200).send();

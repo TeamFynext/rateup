@@ -4,9 +4,11 @@ import {
   deleteSurveyByIdHandler,
   getSurveyByIdHandler,
   getSurveysHandler,
+  updateSurveyByIdHandler,
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
+import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
 
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", verifySession());
@@ -15,6 +17,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
+      preHandler: verifySurveyCreateAccess,
       schema: {
         body: $Sref("createSurveyRequestSchema"),
         response: {
@@ -32,6 +35,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.get(
     "/:id",
     {
+      preHandler: verifySurveyAccess,
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
@@ -43,10 +47,25 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.delete(
     "/:id",
     {
+      preHandler: verifySurveyAccess,
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
     },
     deleteSurveyByIdHandler
   );
+
+  // update survey by id
+  server.put(
+    "/:id",
+    {
+      preHandler: verifySurveyAccess,
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+        body: $Sref("updateSurveyRequestSchema"),
+      }
+    },
+    updateSurveyByIdHandler
+
+  )
 }

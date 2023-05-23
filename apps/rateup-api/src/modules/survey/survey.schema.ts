@@ -8,6 +8,7 @@ const surveyCore = {
   }),
   languages: z.array(z.string()),
   teamId: z.string({ required_error: "TeamId is required" }),
+  active: z.boolean().default(true),
 };
 const createSurveyRequestSchema = z.object({
   ...surveyCore,
@@ -19,15 +20,25 @@ const createSurveyResponseSchema = z.object({
 const getSurveyByIdParamsSchema = z.object({
   id: z.string(),
 });
+const updateSurveyRequestSchema = z.object({
+  title: z.string({
+    required_error: "Title is required",
+    invalid_type_error: "Title must be a string",
+  }).optional(),
+  languages: z.array(z.string()).optional(),
+  active: z.boolean().default(true).optional(),
+})
 
 export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
     createSurveyResponseSchema,
     getSurveyByIdParamsSchema,
+    updateSurveyRequestSchema
   },
   { $id: "surveySchema" }
 );
 
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
+export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
