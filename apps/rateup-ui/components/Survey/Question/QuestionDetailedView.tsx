@@ -114,10 +114,9 @@ export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetaile
         placeholder="Enter question description here"
         {...form.getInputProps('description')}
       />
-      {/* TODO: Only display for MCQ & MSQ*/}
-      <ChoicesCreator
-        qId={question.id}
+      <ExtraProps
         form={form}
+        question={question}
       />
       <Group position="apart" sx={{ position: "absolute", bottom: "0px", left: "0px", width: "100%" }}>
         <Group>
@@ -226,4 +225,23 @@ function Choice({ choice, onDelete }: ChoiceProps) {
       }
     </Group>
   )
+}
+
+interface ExtraPropsProps {
+  form: UseFormReturnType<any>;
+  question: Question;
+}
+function ExtraProps({form, question}: ExtraPropsProps) {
+  switch (question.type) {
+    case QuestionType.MCQ:
+    case QuestionType.MSQ:
+      return (
+        <ChoicesCreator
+          qId={question.id}
+          form={form}
+        />
+      )
+    default:
+      return null;
+  }
 }
