@@ -31,7 +31,6 @@ export const deleteTeamById = (id: String) => axiosClient({
     url: `/team/${id}`,
     method: 'DELETE',
 })
-<<<<<<< HEAD
 
 export const inviteTeamMember = (data: IInviteMember) => axiosClient({
     url: `/team/invite`,
@@ -43,5 +42,3 @@ export const getTeamMembers= (teamId: String) => axiosClient({
     url: `/team/members/${teamId}`,
     method: 'GET',
 })
-=======
->>>>>>> 2ddb7e9 (display teams)
