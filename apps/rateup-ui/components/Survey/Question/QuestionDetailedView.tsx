@@ -106,7 +106,7 @@ export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetaile
       <TextInput
         variant="unstyled"
         size="xl"
-        placeholder="Enter question title here"
+        placeholder="Enter question title here *"
         {...form.getInputProps('title')}
       />
       <TextInput
