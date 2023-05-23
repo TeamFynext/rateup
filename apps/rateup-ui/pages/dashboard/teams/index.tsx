@@ -1,4 +1,4 @@
-﻿import ButtonComponent from "../../components/Button/ButtonComponent";
+﻿import ButtonComponent from "../../../components/Button/ButtonComponent";
 import { Flex, Title, Space, Paper, Table, Button} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
@@ -8,9 +8,10 @@ import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation } from "@tanstack/react-query";
 import { IconCheck, IconSelector } from '@tabler/icons-react';
-import { getOrgIdRole, getUserID } from "../../utils/userInfo"
-import { createTeam, deleteTeamById, getTeamsByOrg } from "../../api/team/team.api";
+import { getOrgIdRole, getUserID } from "../../../utils/userInfo"
+import { createTeam, deleteTeamById, getTeamsByOrg } from "../../../api/team/team.api";
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/router'
 
 export default function Teams() {
     const sessionContext = useSessionContext();
@@ -20,6 +21,8 @@ export default function Teams() {
     const [deleteTeamId, setDeleteTeamId] = useState<string>();
     const isNameValid = name.length >= 2;
     const queryClient = useQueryClient()
+      const router = useRouter()
+
 
     useEffect(() => {
         setName('')
@@ -143,6 +146,11 @@ export default function Teams() {
     if (sessionContext.loading === true) {
         return null;
     }
+
+    function viewTeam(id) {
+        router.push(`/dashboard/teams/${id}`)
+    }
+    
     return (
         <><Modal opened={opened} onClose={close} title="Create Team" centered>
             <Box>
@@ -227,6 +235,11 @@ export default function Teams() {
                                 <tr key={id}>
                                     <td>{name}</td>
                                     <td>{id}</td>
+                                    <td>
+                                        <Button color="blue" onClick={() => viewTeam(id)}>
+                                             View
+                                        </Button>
+                                    </td>
                                     <td>
                                         <Button color="red" onClick={() => setDeleteTeamId(id)}>
                                             Delete

@@ -6,6 +6,16 @@ export interface ICreateTeam {
     userId: string;
 }
 
+
+export interface IInviteMember {
+    name: string; 
+    orgId: string; 
+    invitedBy: string;
+    teamId: string;
+    email: string;
+
+}
+
 export const createTeam = (data: ICreateTeam) => axiosClient({
     url: `/team`,
     method: 'POST',
@@ -20,4 +30,15 @@ export const getTeamsByOrg = (orgId: String) => axiosClient({
 export const deleteTeamById = (id: String) => axiosClient({
     url: `/team/${id}`,
     method: 'DELETE',
+})
+
+export const inviteTeamMember = (data: IInviteMember) => axiosClient({
+    url: `/team/invite`,
+    method: 'POST',
+    data: data
+})
+
+export const getTeamMembers= (teamId: String) => axiosClient({
+    url: `/team/members/${teamId}`,
+    method: 'GET',
 })
