@@ -1,10 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createTeam, deleteTeamById, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
+import { completeInvite, createTeam, deleteTeamById, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
 import {
   CreateTeamInput,
   DeleteTeamInput,
   GetTeamMembersInput,
   GetTeamsByOrgInput,
+  InviteCompleteInput,
   InviteMemberInput,
 } from "./team.schema";
 
@@ -83,6 +84,21 @@ export async function inviteMemberHandler(
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
+  }
+}
+
+export async function completeInviteHandler(
+  request: FastifyRequest<{
+    Params: InviteCompleteInput;
+  }>,
+  reply: FastifyReply
+) {
+
+  try {
+    const invite = await completeInvite(request.params.token);
+    reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
+  } catch (e) {
+    reply.code(500).send({ message: "Internal server error"});
   }
 }
 

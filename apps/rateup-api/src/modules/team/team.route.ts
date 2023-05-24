@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import {
+  completeInviteHandler,
   createTeamHandler,
   deleteTeamByIdHandler,
   getAllTeamsByOrgHandler,
@@ -66,6 +67,16 @@ export async function teamRoutes(server: FastifyInstance) {
     inviteMemberHandler
   );
 
+    server.post(
+    "/complete-invite/:token",
+    {
+      schema: {
+        params: $Tref("inviteCompleteRequestSchema"),
+      },
+    },
+    completeInviteHandler
+  );
+
 
     server.get(
     "/members/:teamId",
@@ -77,4 +88,5 @@ export async function teamRoutes(server: FastifyInstance) {
     },
     getTeamMembersHandler
   );
+  
 }

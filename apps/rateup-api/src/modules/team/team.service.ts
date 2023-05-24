@@ -1,6 +1,9 @@
 import prisma from "../../utils/prisma";
 import { CreateTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, InviteMemberInput } from "./team.schema";
 
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 2) {
     throw new Error("Invalid team name.");
@@ -144,6 +147,35 @@ try {
         invitedBy
       }
     });
+
+
+    if(newInvite){
+      const msg = {
+        to: email, // Change to your recipient
+        from: 'hello@rateup.app', // Change to your verified sender
+        subject: 'Invitation to Join Team - RateUp.app',
+        text: 'You are invited to manage a Team in RateUp. Click on the accept to continue with the process.',
+        html: `
+        <p>You are invited to manage a Team in RateUp. Click on the button below to continue with the process.</p>
+        <div style="width: 100%; text-align: center;">
+          <a href="${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}" style="display: inline-block; padding: 10px 20px; color: white; background-color: #007BFF; text-decoration: none; border-radius: 5px;">
+            Accept Invitation
+          </a>
+        </div>
+        `,
+      }
+
+      sgMail
+      .send(msg)
+      .then(() => {
+        console.log('Email sent')
+      })
+      .catch((error : any) => {
+        console.error(error)
+        throw new Error('Email sending failed. E:'+ error);
+      })
+  }
+
     
     console.log("Invite created successfully");
     return newInvite
@@ -153,6 +185,41 @@ try {
     throw error;
   }
 }
+
+//Complete Email invite
+export async function completeInvite(token: string) {
+  const invitation = await prisma.invitation.findUnique({
+    where: {
+      id: token,
+    }
+  });
+
+  if (!invitation) {
+    throw new Error('Invitation not found');
+  }
+
+  const updatedInvitation = await prisma.invitation.update({
+    where: {
+      id: token,
+    },
+    data: {
+      status: 'ACCEPTED',
+    }
+  });
+
+  
+  // find user in User table with the same email as the invitation
+  const user = await prisma.user.findFirst({
+    where: {
+      email: updatedInvitation.email, 
+    }
+  });
+
+  const isUser = user !== null;
+
+  return {...updatedInvitation, isUser: isUser};
+}
+
 
 export function getTeamMembers(input: GetTeamMembersInput) {
   return prisma.teamMember.findMany({
