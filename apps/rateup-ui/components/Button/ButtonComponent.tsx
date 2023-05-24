@@ -13,7 +13,6 @@ const ButtonComponent = ({ title, disabled, onClick, leftIcon = null, rightIcon 
         <Button
             radius="lg"
             px="xl"
-            py="sm"
             style={{
                 color: "black",
             }}

@@ -38,6 +38,12 @@ export const inviteTeamMember = (data: IInviteMember) => axiosClient({
     data: data
 })
 
+export const completeInvite = (inviteToken: String) => axiosClient({
+    url: `/team/complete-invite/${inviteToken}`,
+    method: 'POST',
+})
+
+
 export const getTeamMembers= (teamId: String) => axiosClient({
     url: `/team/members/${teamId}`,
     method: 'GET',
