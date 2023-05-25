@@ -15,8 +15,8 @@ export const SuperTokensConfig: TypeInput = {
   appInfo: {
     // learn more about this on https://supertokens.com/docs/session/appinfo
     appName: "rateup",
-    apiDomain: process.env.API_URL ? process.env.API_URL : "",
-    websiteDomain: process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "",
+    apiDomain: process.env.API_URL ? process.env.API_URL : "http://localhost:3001",
+    websiteDomain: process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "http://localhost:3000",
     apiBasePath: "/api/auth",
     websiteBasePath: "/auth",
   },

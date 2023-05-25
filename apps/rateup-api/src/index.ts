@@ -25,7 +25,7 @@ const server = Fastify({
 supertokens.init(SuperTokensConfig);
 
 server.register(cors, {
-  origin: "http://localhost:3000",
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
   allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
   credentials: true,
 });
@@ -50,15 +50,16 @@ async function main() {
   // await server.register(formDataPlugin);
   await server.register(plugin);
   server.setErrorHandler(errorHandler());
-
+  const port: number = parseInt(process.env.PORT || "3001");
+  const host: string = process.env.HOST || "0.0.0.0";
   server
     .listen({
-      port: 3001,
-      host: "0.0.0.0",
+      port: port,
+      host: host,
     })
     .then(() => {
       // TODO: make port & host env variables?
-      console.log(`Server ready at ${""}`);
+      console.log(`Server ready at ${port}`);
     })
     .catch((e) => {
       console.error(e);
