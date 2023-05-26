@@ -5,6 +5,7 @@ import {
   createTeamHandler,
   deleteTeamByIdHandler,
   getAllTeamsByOrgHandler,
+  getTeamIdsByUserHandler,
   getTeamMembersHandler,
   inviteMemberHandler,
 } from "./team.controller";
@@ -37,6 +38,15 @@ export async function teamRoutes(server: FastifyInstance) {
     },
     getAllTeamsByOrgHandler
   );
+
+  // Get id of teams a user is member of
+  server.get(
+    "/user",
+    {
+      preHandler: [verifySession()],
+    },
+    getTeamIdsByUserHandler
+  )
 
   server.delete(
     "/:id",

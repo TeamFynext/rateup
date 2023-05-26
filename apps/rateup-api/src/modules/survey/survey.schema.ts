@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
+import { questionSchema } from "../question/question.schema";
 
 const surveyCore = {
   title: z.string({
@@ -20,6 +21,13 @@ const createSurveyResponseSchema = z.object({
 const getSurveyByIdParamsSchema = z.object({
   id: z.string(),
 });
+
+const getSurveyPublicResponseSchema = z.object({
+  title: z.string(),
+  languages: z.array(z.string()),
+  active: z.boolean(),
+  questions: z.array(questionSchema)
+})
 const updateSurveyRequestSchema = z.object({
   title: z.string({
     required_error: "Title is required",
@@ -34,7 +42,8 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     createSurveyRequestSchema,
     createSurveyResponseSchema,
     getSurveyByIdParamsSchema,
-    updateSurveyRequestSchema
+    updateSurveyRequestSchema,
+    getSurveyPublicResponseSchema
   },
   { $id: "surveySchema" }
 );

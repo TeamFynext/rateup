@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { completeInvite, createTeam, deleteTeamById, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
+import { completeInvite, createTeam, deleteTeamById, getTeamIdsByUserId, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
 import {
   CreateTeamInput,
   DeleteTeamInput,
@@ -44,6 +44,20 @@ export async function getAllTeamsByOrgHandler(
     }
   } catch (e) {
     reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getTeamIdsByUserHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const userId = request.session.getUserId();
+    const teamIds = await getTeamIdsByUserId(userId);
+      reply.send(teamIds);
+  } catch (e) {
+    console.error(e)
+    reply.code(500).send();
   }
 }
 

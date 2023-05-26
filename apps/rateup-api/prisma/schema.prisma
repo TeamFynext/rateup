@@ -43,13 +43,13 @@ model User {
 }
 
 model Org {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime    @default(now())
-  name      String
-  owner     User        @relation(fields: [ownerId], references: [id])
-  ownerId   String      @db.Uuid
-  members   OrgMember[]
-  teams     Team[]
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime     @default(now())
+  name        String
+  owner       User         @relation(fields: [ownerId], references: [id])
+  ownerId     String       @db.Uuid
+  members     OrgMember[]
+  teams       Team[]
   invitations Invitation[]
 }
 
@@ -64,13 +64,13 @@ model OrgMember {
 }
 
 model Team {
-  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime     @default(now())
-  name      String
-  org       Org          @relation(fields: [orgId], references: [id])
-  orgId     String       @db.Uuid
-  members   TeamMember[]
-  surveys   Survey[]
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime     @default(now())
+  name        String
+  org         Org          @relation(fields: [orgId], references: [id])
+  orgId       String       @db.Uuid
+  members     TeamMember[]
+  surveys     Survey[]
   invitations Invitation[]
 }
 
@@ -84,30 +84,40 @@ model TeamMember {
 }
 
 model Invitation {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String
   name      String
-  type      InviteType 
-  org       Org       @relation(fields: [orgId], references: [id])
-  orgId     String    @db.Uuid
-  team      Team?     @relation(fields: [teamId], references: [id])
-  teamId    String?   @db.Uuid
+  type      InviteType
+  org       Org          @relation(fields: [orgId], references: [id])
+  orgId     String       @db.Uuid
+  team      Team?        @relation(fields: [teamId], references: [id])
+  teamId    String?      @db.Uuid
   invitedBy String
-  createdAt DateTime @default(now())
+  createdAt DateTime     @default(now())
   status    InviteStatus @default(PENDING)
 }
 
 model Survey {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @updatedAt
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime?        @updatedAt
   title       String
-  description String?   @default("")
-  questions   Json[]    @default([])
+  description String?          @default("")
+  questions   Json[]           @default([])
   languages   String[]
-  user        User      @relation(fields: [createdBy], references: [id])
-  createdBy   String    @db.Uuid
-  team        Team      @relation(fields: [teamId], references: [id])
-  teamId      String    @db.Uuid
-  active      Boolean   @default(true)
+  user        User             @relation(fields: [createdBy], references: [id])
+  createdBy   String           @db.Uuid
+  team        Team             @relation(fields: [teamId], references: [id])
+  teamId      String           @db.Uuid
+  active      Boolean          @default(true)
+  responses   SurveyResponse[]
+}
+
+model SurveyResponse {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  survey    Survey   @relation(fields: [surveyId], references: [id])
+  surveyId  String   @db.Uuid
+  responses Json[]
+  language  String
 }
