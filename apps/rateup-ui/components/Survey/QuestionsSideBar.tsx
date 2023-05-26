@@ -5,31 +5,37 @@ import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { reorderQuestions } from "../../api/surveys/questions/questions.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reorder } from "../../utils/questions";
+import { QuestionTabsEnum } from "./EditSurvey";
 
 interface QuestionsSideBarProps {
   questions: Question[];
-  setTypeSelectionOpen: (open: boolean) => void;
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
+  setActiveTab: (tab: QuestionTabsEnum) => void;
 }
 //TODO: update order on change
-export function QuestionsSideBar({ questions, setTypeSelectionOpen, selectedQ, setSelectedQ }: QuestionsSideBarProps) {
+export function QuestionsSideBar({
+  questions,
+  setActiveTab,
+  selectedQ,
+  setSelectedQ,
+}: QuestionsSideBarProps) {
   const router = useRouter();
-  const { surveyId } = router.query as {surveyId: string};
+  const { surveyId } = router.query as { surveyId: string };
   const [questionsState, handlers] = useListState(questions);
 
   useEffect(() => {
-    handlers.setState(questions)
-  }, [questions])
+    handlers.setState(questions);
+  }, [questions]);
 
   const handleOpenQuestion = (Q: Question) => {
     setSelectedQ(Q);
-    setTypeSelectionOpen(false);
-  }
+    setActiveTab(QuestionTabsEnum.Edit);
+  };
 
   const items = questionsState.map((question, index) => (
     <DraggableQuestionCard
@@ -39,28 +45,40 @@ export function QuestionsSideBar({ questions, setTypeSelectionOpen, selectedQ, s
       index={index}
       handleOpenQuestion={handleOpenQuestion}
     />
-  ))
+  ));
 
   const queryClient = useQueryClient();
   const questionsReorderMutation = useMutation({
-    mutationFn: (reorderedQuestions: Question[]) => reorderQuestions(surveyId, reorderedQuestions.map(q => q.id)),
+    mutationFn: (reorderedQuestions: Question[]) =>
+      reorderQuestions(
+        surveyId,
+        reorderedQuestions.map((q) => q.id)
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries(['questions', surveyId])
-    }
-  })
+      queryClient.invalidateQueries(["questions", surveyId]);
+    },
+  });
 
   return (
     <DragDropContext
       onDragEnd={({ destination, source }) => {
-        const reorderedQuestions = reorder(questionsState, source.index, destination?.index || 0)
+        const reorderedQuestions = reorder(
+          questionsState,
+          source.index,
+          destination?.index || 0
+        );
         handlers.setState(reorderedQuestions);
-        questionsReorderMutation.mutate(reorderedQuestions)
+        questionsReorderMutation.mutate(reorderedQuestions);
       }}
     >
-      <Button onClick={() => {
-        setTypeSelectionOpen(true);
-        setSelectedQ(null);
-      }}>Add Question</Button>
+      <Button
+        onClick={() => {
+          setActiveTab(QuestionTabsEnum.TypeSelection);
+          setSelectedQ(null);
+        }}
+      >
+        Add Question
+      </Button>
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (
           <div {...provided.droppableProps} ref={provided.innerRef}>

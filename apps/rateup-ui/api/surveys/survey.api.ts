@@ -14,7 +14,12 @@ export async function getSurveys() {
     }
 }
 export async function getSurvey(surveyId: string) {
+    if(!surveyId) return undefined
     const res =  await axiosClient.get(`${SURVEYURL}/${surveyId}`)
+    return res.data as Survey
+}
+export async function getPublicSurvey(surveyId: string) {
+    const res =  await axiosClient.get(`/public/survey/${surveyId}`)
     return res.data as Survey
 }
 export async function deleteSurvey(surveyId: string) {

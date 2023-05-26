@@ -33,28 +33,26 @@ import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal"
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSurveys, deleteSurvey, updateSurvey } from "../../../api/surveys/survey.api";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteSurvey, updateSurvey } from "../../../api/surveys/survey.api";
+import { useSurveys } from "../../../api/surveys/surveys.query";
 
 export default function Surveys() {
-  const [createSurveyOpened, {open, close}] = useDisclosure(false)
-  
-  const queryClient = useQueryClient();
-  const {isLoading, error, data: surveys} = useQuery({
-    queryKey: ['surveys'],
-    queryFn: getSurveys
-  })
+  const [createSurveyOpened, { open, close }] = useDisclosure(false);
 
-  if (isLoading) return <Loader />
+  const { isLoading, error, data: surveys } = useSurveys();
+
+  if (isLoading) return <Loader />;
   if (error || !Array.isArray(surveys)) {
-    console.error(surveys, error)
-    return 'An error has occurred'
+    console.error(surveys, error);
+    return "An error has occurred";
   }
 
   return (
     <Container fluid>
-      <Title order={2} mb={"md"}>Surveys</Title>
+      <Title order={2} mb={"md"}>
+        Surveys
+      </Title>
       <SimpleGrid
         cols={4}
         spacing={"lg"}
@@ -88,17 +86,26 @@ interface SurveyCardProps {
 }
 function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
   const theme = useMantineTheme();
-  const [timeSince, setTimeSince] = useState('');
+  const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
-    setTimeSince(getTimeSince(survey.createdAt))
-    const timeoutID = setInterval(() => setTimeSince(getTimeSince(survey.createdAt)), 5000);
-    return () => clearInterval(timeoutID)
-  },[])
-  
+    setTimeSince(getTimeSince(survey.createdAt));
+    const timeoutID = setInterval(
+      () => setTimeSince(getTimeSince(survey.createdAt)),
+      5000
+    );
+    return () => clearInterval(timeoutID);
+  }, []);
+
   const router = useRouter();
 
   return (
-    <Paper p="md" sx={{cursor: "pointer"}} onClick={() => {router.push(`surveys/${survey.id}`)}}>
+    <Paper
+      p="md"
+      sx={{ cursor: "pointer" }}
+      onClick={() => {
+        router.push(`surveys/${survey.id}`);
+      }}
+    >
       <Flex justify={"space-between"}>
         <Text mr={"sm"} truncate size="xl">
           {survey.title}
@@ -113,7 +120,13 @@ function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
       </Group>
       <Flex justify={"space-between"} mt="lg">
         <StatusBadge active={survey.active} />
-        <Link href="#" style={{color: theme.colors.blue[9]}} onClick={(e) => {e.stopPropagation()}}>
+        <Link
+          href="#"
+          style={{ color: theme.colors.blue[9] }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           <Group spacing="4px">
             <IconMessage />
             <Text>{99} Responses</Text>
@@ -125,46 +138,60 @@ function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
 }
 
 function SurveyMenu({ survey }) {
-
   const queryClient = useQueryClient();
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
       notifications.show({
-        message: "Deleted!"
+        message: "Deleted!",
       });
-      queryClient.invalidateQueries(['surveys']);
-    }
-  })
+      queryClient.invalidateQueries(["surveys"]);
+    },
+  });
 
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
       notifications.show({
-        message: "Updated!"
+        message: "Updated!",
       });
-      queryClient.invalidateQueries(['surveys']);
-    }
-  })
+      queryClient.invalidateQueries(["surveys"]);
+    },
+  });
 
   return (
     <Menu width={200}>
       <Menu.Target>
-        <ActionIcon onClick={(e) => {e.stopPropagation()}}>
+        <ActionIcon
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           <IconDots />
         </ActionIcon>
       </Menu.Target>
-      <Menu.Dropdown onClick={(e) => {e.stopPropagation()}}>
+      <Menu.Dropdown
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <Menu.Item icon={<IconEdit />}>Edit</Menu.Item>
         <Menu.Item icon={<IconShare />}>Share</Menu.Item>
         <Menu.Item icon={<IconCopy />}>Clone</Menu.Item>
-        <Menu.Item icon={<IconTrash />} onClick={() => {
-          surveyDeleteMutation.mutate(survey.id)
-        }}>Delete</Menu.Item>
+        <Menu.Item
+          icon={<IconTrash />}
+          onClick={() => {
+            surveyDeleteMutation.mutate(survey.id);
+          }}
+        >
+          Delete
+        </Menu.Item>
         <Menu.Item icon={<IconMessage />}>View Responses</Menu.Item>
         <Menu.Item
           icon={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
-          onClick={() => surveyUpdateMutation.mutate({active: !survey.active})}
+          onClick={() =>
+            surveyUpdateMutation.mutate({ active: !survey.active })
+          }
         >
           {survey.active ? "Pause Survey" : "Resume Survey"}
         </Menu.Item>

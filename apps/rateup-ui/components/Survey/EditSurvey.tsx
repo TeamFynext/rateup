@@ -1,0 +1,87 @@
+import { Paper, Stack, Center, Text, Tabs } from "@mantine/core";
+import { QuestionDetailedView } from "./Question/QuestionDetailedView";
+import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
+import { QuestionsSideBar } from "./QuestionsSideBar";
+import { useEffect, useState } from "react";
+import LogicEditor from "./Question/LogicEditor";
+import { useStyles } from "./EditSurvey.styles";
+
+export enum QuestionTabsEnum {
+  Edit = "Edit",
+  TypeSelection = "TypeSelection",
+  LogicEditor = "LogicEditor",
+  None = "None",
+}
+interface EditSurveyProps {
+  questions: Array<Question>;
+}
+export function EditSurvey({ questions }: EditSurveyProps) {
+  const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
+    QuestionTabsEnum.None
+  );
+  const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const { classes } = useStyles();
+
+  useEffect(() => {
+    if (!selectedQ) return;
+    if (questions && selectedQ.id) {
+      const Q = questions.find((q) => q.id === selectedQ.id);
+      if (Q) {
+        setSelectedQ(Q);
+      }
+    }
+  }, [questions]);
+
+  return (
+    <>
+      <Paper p={"sm"} sx={{ flex: 2 }}>
+        <Stack>
+          <QuestionsSideBar
+            questions={questions}
+            selectedQ={selectedQ}
+            setSelectedQ={setSelectedQ}
+            setActiveTab={setActiveTab}
+          />
+        </Stack>
+      </Paper>
+      <Paper p={"sm"} sx={{ flex: 5 }}>
+        <Tabs
+          value={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
+          sx={{ height: "100%" }}
+          classNames={{
+            panel: classes.panel,
+          }}
+        >
+          <Tabs.Panel value={QuestionTabsEnum.Edit} sx={{ height: "100%" }}>
+            {selectedQ && (
+              <QuestionDetailedView
+                question={selectedQ}
+                setSelectedQ={setSelectedQ}
+                setActiveTab={setActiveTab}
+              />
+            )}
+          </Tabs.Panel>
+          <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
+            <QuestionTypeSelection
+              setSelectedQ={setSelectedQ}
+              setActiveTab={setActiveTab}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
+            <LogicEditor
+              selectedQ={selectedQ}
+              setSelectedQ={setSelectedQ}
+              setActiveTab={setActiveTab}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value={QuestionTabsEnum.None}>
+            <Center sx={{ height: "100%" }}>
+              <Text c="dimmed">Select a question to edit</Text>
+            </Center>
+          </Tabs.Panel>
+        </Tabs>
+      </Paper>
+    </>
+  );
+}

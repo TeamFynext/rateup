@@ -27,6 +27,11 @@ export const getTeamsByOrg = (orgId: String) => axiosClient({
     method: 'GET',
 })
 
+export async function getTeamIdsByUserId() {
+    const res = await axiosClient.get(`/team/user`);
+    return res.data as Array<string>;
+}
+
 export const deleteTeamById = (id: String) => axiosClient({
     url: `/team/${id}`,
     method: 'DELETE',

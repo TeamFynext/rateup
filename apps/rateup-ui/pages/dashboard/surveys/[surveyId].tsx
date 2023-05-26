@@ -1,103 +1,103 @@
-import { Box, Center, Group, Loader, Paper, Select, Stack, Text, Title } from "@mantine/core"
+import { Box, Group, Loader, Select, Stack, Tabs, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { QuestionTypeSelection } from "../../../components/Survey/Question/QuestionTypeSelection";
-import { QuestionsSideBar } from "../../../components/Survey/QuestionsSideBar";
-import { QuestionDetailedView } from "../../../components/Survey/Question/QuestionDetailedView";
-import { getQuestions } from "../../../api/surveys/questions/questions.api";
-import { getSurvey } from "../../../api/surveys/survey.api";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
+import { EditSurvey } from "../../../components/Survey/EditSurvey";
+import { Responses } from "../../../components/Survey/Response/Responses";
+import { useSurvey } from "../../../api/surveys/surveys.query";
+import { useQuestions } from "../../../api/surveys/questions/questions.query";
+import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
 
-
-export default () => {
-  const router = useRouter()
-  const { surveyId } = router.query
-
-  if(Array.isArray(surveyId)) {
-    throw new Error('surveyId is an array');
-  }
-
-  const {isLoading: isSurveyLoading, error: surveyError, data: survey} = useQuery({
-    queryKey: ['survey', surveyId],
-    queryFn: () => getSurvey(surveyId)
-
-  })
-
-  const {isLoading, error, data: questions} = useQuery({
-    queryKey: ['questions', surveyId],
-    queryFn: () => getQuestions(surveyId),
-  })
-
-  const [selectedLanguage, setSelectedLanguage] = useState(null)
-  // Opens question type menu to choose from
-  const [typeSelectionOpen, setTypeSelectionOpen] = useState(false);
-  const [selectedQ, setSelectedQ] = useState<Question>(null)
-
-  useEffect(() => {
-    if(survey) {
-      setSelectedLanguage(survey.languages[0])
-    }
-  }, [survey])
-
-  useEffect(() => {
-    if(!selectedQ) return;
-    if(questions && selectedQ.id) {
-      const Q = questions.find(q => q.id === selectedQ.id);
-      if(Q) {
-        setSelectedQ(Q)
-      }
-    }
-  }, [questions])
-
-
-  if(isLoading || isSurveyLoading) return <Loader />
-  if(error || surveyError) {
-    console.log(error, surveyError)
-    return 'An error has occurred'
-  }
-  
-  return (
-  <SelectedLanguageContext.Provider value={{selectedLanguage}}>
-  <Stack sx={{height: "100%"}} >
-    <Group position="apart" >
-    <Title>{survey.title}</Title>
-    <Select
-      data={survey.languages}
-      value={selectedLanguage}
-      onChange={setSelectedLanguage}
-      />
-    </Group>
-    {/** TODO: Remove fixed height and make this responsive */}
-    <Box sx={{display: "flex", gap: 8, height: "70vh"}}>
-        <Paper p={"sm"} sx={{flex: 2}}>
-          <Stack>
-            <QuestionsSideBar
-             questions={questions}
-             setTypeSelectionOpen={setTypeSelectionOpen}
-             selectedQ={selectedQ}
-             setSelectedQ={setSelectedQ} />
-          </Stack>
-        </Paper>
-        <Paper p={"sm"} sx={{flex: 5}}>
-            {selectedQ ? (
-              <QuestionDetailedView
-                question={selectedQ}
-                setSelectedQ={setSelectedQ}
-               />
-            ): typeSelectionOpen ? (
-              <QuestionTypeSelection
-                setSelectedQ={setSelectedQ}
-              />
-            ): (
-              <Center sx={{height: "100%"}}>
-                <Text c="dimmed" >Select a question to edit</Text>
-              </Center>
-            )}
-        </Paper>
-    </Box>
-  </Stack>
-  </SelectedLanguageContext.Provider>
-  );
-
+enum TabEnum {
+  Edit = "Edit",
+  Share = "Share",
+  Responses = "Responses",
 }
+export default () => {
+  const router = useRouter();
+  const { surveyId } = router.query;
+
+  if (Array.isArray(surveyId)) {
+    throw new Error("surveyId is an array");
+  }
+
+  const {
+    isLoading: isSurveyLoading,
+    error: surveyError,
+    data: survey,
+  } = useSurvey(surveyId);
+
+  const { isLoading, error, data: questions } = useQuestions(surveyId);
+
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
+
+  useEffect(() => {
+    if (survey) {
+      setSelectedLanguage(survey.languages[0]);
+    }
+  }, [survey]);
+
+  if (isLoading || isSurveyLoading) return <Loader />;
+  if (error || surveyError) {
+    console.log(error, surveyError);
+    return "An error has occurred";
+  }
+
+  return (
+    <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
+      <Stack sx={{ height: "100%" }}>
+        <Tabs
+          value={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as TabEnum)}
+        >
+          <Group position="apart">
+            <Title>{survey.title}</Title>
+
+            <Tabs.List
+              sx={{
+                position: "absolute",
+                width: "fit-content",
+                left: 0,
+                right: 0,
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            >
+              <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Responses}>Responses</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value={TabEnum.Edit}>
+              <Select
+                data={survey.languages}
+                value={selectedLanguage}
+                onChange={setSelectedLanguage}
+              />
+            </Tabs.Panel>
+            <Tabs.Panel value={TabEnum.Responses}>
+              <div></div>
+            </Tabs.Panel>
+            <Tabs.Panel value={TabEnum.Share}>
+              <div></div>
+            </Tabs.Panel>
+          </Group>
+
+          <Tabs.Panel value={TabEnum.Edit}>
+            {/** TODO: Remove fixed height and make this responsive */}
+            <Box sx={{ display: "flex", gap: 8, height: "70vh" }}>
+              <EditSurvey questions={questions} />
+            </Box>
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Responses}>
+            <Responses />
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Share}>
+            <ShareSurvey />
+          </Tabs.Panel>
+        </Tabs>
+      </Stack>
+    </SelectedLanguageContext.Provider>
+  );
+};

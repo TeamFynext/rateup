@@ -1,27 +1,43 @@
-import { MutableRefObject, Ref, RefObject, useContext, useEffect, useState } from "react"
-import SelectedLanguageContext from "../../../context/SelectedLanguage"
-import { useForm, UseFormReturnType } from "@mantine/form"
-import { ActionIcon, Box, Button, Checkbox, Container, Group, Select, Stack, TextInput, useMantineTheme } from "@mantine/core"
-import { createQuestion, updateQuestion } from "../../../api/surveys/questions/questions.api"
-import { notifications } from "@mantine/notifications"
-import { useQueryClient } from "@tanstack/react-query"
-import { useRouter } from "next/router"
-import { QuestionType } from "../../../types/enums"
-import { IconPlus, IconTrash } from "@tabler/icons-react"
-import { useHover, useListState } from "@mantine/hooks"
+import { useContext, useEffect, useState } from "react";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Checkbox,
+  Group,
+  Stack,
+  TextInput,
+} from "@mantine/core";
+import { useRouter } from "next/router";
+import { QuestionType } from "../../../types/enums";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useHover } from "@mantine/hooks";
+import { QuestionTabsEnum } from "../EditSurvey";
+import {
+  useQuestionCreateMutation,
+  useQuestionUpdateMutation,
+} from "../../../api/surveys/questions/questions.query";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
 interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
+  setActiveTab: (tab: QuestionTabsEnum) => void;
 }
-export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetailedViewProps) {
+export function QuestionDetailedView({
+  question,
+  setSelectedQ,
+  setActiveTab,
+}: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
 
-  const { selectedLanguage } = useContext(SelectedLanguageContext)
-  const queryClient = useQueryClient();
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const questionCreateMutation = useQuestionCreateMutation(surveyId);
+  const questionUpdateMutation = useQuestionUpdateMutation(surveyId);
 
   const form = useForm({
     // Any modifications to initialValues must be applied in the useEffect below
@@ -30,12 +46,12 @@ export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetaile
       description: question.description[selectedLanguage] || "",
       required: question.required,
       type: question.type,
-      choices: question.choices
+      choices: question.choices,
     },
     validate: {
-      title: (value) => value.trim().length > 0 ? null : "Title is required",
-    }
-  })
+      title: (value) => (value.trim().length > 0 ? null : "Title is required"),
+    },
+  });
 
   // reset values when switching questions
   useEffect(() => {
@@ -46,100 +62,82 @@ export function QuestionDetailedView({ question, setSelectedQ }: QuestionDetaile
       description: question.description[selectedLanguage] || "",
       required: question.required,
       type: question.type,
-      choices: question.choices
-    })
-  }, [question])
+      choices: question.choices,
+    });
+  }, [question]);
 
   const handleSave = () => {
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
-      console.error(validationRes.errors)
+      console.error(validationRes.errors);
       return;
     }
 
     // converting to expected format
     const { title, description, ...restOfTheData } = form.values;
-    const formattedTitle = { ...question.title, [selectedLanguage]: title }
-    const formattedDescription = { ...question.description, [selectedLanguage]: description }
+    const formattedTitle = { ...question.title, [selectedLanguage]: title };
+    const formattedDescription = {
+      ...question.description,
+      [selectedLanguage]: description,
+    };
 
     // TODO: only send modified fields
-    const data = { title: formattedTitle, description: formattedDescription, ...restOfTheData }
+    const data = {
+      title: formattedTitle,
+      description: formattedDescription,
+      ...restOfTheData,
+    };
     // Checking if its a new question
     if (!question.id) {
       // Creating new question
-      createQuestion(surveyId, data)
-        .then((r) => {
-          notifications.show({
-            message: "Question created"
-          });
-          const newQ: Question = r.data;
-          setSelectedQ(newQ)
-          queryClient.invalidateQueries(["questions"])
-        })
-        .catch((e) => {
-          console.error(e)
-          notifications.show({
-            message: "An error has occurred",
-            color: "red"
-          });
-        })
+      questionCreateMutation.mutateAsync(data).then((r) => {
+        const newQ: Question = r.data;
+        setSelectedQ(newQ);
+      });
     } else {
       // Updating existing question
-      updateQuestion(surveyId, question.id, data)
-        .then(() => {
-          notifications.show({
-            message: "Question updated"
-          });
-          queryClient.invalidateQueries(["questions"])
-        }).catch((e) => {
-          console.error(e)
-          notifications.show({
-            message: "An error has occurred",
-            color: "red"
-          });
-        })
+      questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
-  }
+  };
 
+  // TODO: show question type somewhere
   return (
     <Box sx={{ position: "relative", height: "100%" }}>
       <TextInput
         variant="unstyled"
         size="xl"
         placeholder="Enter question title here *"
-        {...form.getInputProps('title')}
+        {...form.getInputProps("title")}
       />
       <TextInput
         variant="unstyled"
         placeholder="Enter question description here"
-        {...form.getInputProps('description')}
+        {...form.getInputProps("description")}
       />
-      <ExtraProps
-        form={form}
-        question={question}
-      />
-      <Group position="apart" sx={{ position: "absolute", bottom: "0px", left: "0px", width: "100%" }}>
+      <ExtraProps form={form} question={question} />
+      <Group
+        position="apart"
+        sx={{ position: "absolute", bottom: "0px", left: "0px", width: "100%" }}
+      >
         <Group>
-          <Select
-            radius="xl"
-            sx={{ width: "175px" }}
-            data={Object.values(QuestionType)}
-            {...form.getInputProps('type')}
-          />
+          <Button
+            variant="subtle"
+            onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
+          >
+            Edit Logic
+          </Button>
           <Checkbox
             label="Required"
             color="dark"
-            {...form.getInputProps('required', { type: 'checkbox' })}
+            {...form.getInputProps("required", { type: "checkbox" })}
           />
         </Group>
         <Group>
-          <Button onClick={handleSave}>
-            Save
-          </Button>
+          <Button onClick={handleSave}>Save</Button>
         </Group>
       </Group>
     </Box>
-  )
+  );
 }
 
 // TODO: move to new file
@@ -149,27 +147,30 @@ interface ChoicesCreatorProps {
   qId: string;
 }
 function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
-  const [newChoice, setNewChoice] = useState<string>("")
+  const [newChoice, setNewChoice] = useState<string>("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
 
-  const choices = form.values.choices?.[selectedLanguage] || []
+  const choices = form.values.choices?.[selectedLanguage] || [];
 
-  useEffect(() => {
-
-  }, [choices])
+  useEffect(() => {}, [choices]);
 
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
     if (choices.includes(newChoice)) return;
 
-    form.setFieldValue("choices", { ...form.values.choices, [selectedLanguage]: [...choices, newChoice] })
-    setNewChoice("")
-  }
+    form.setFieldValue("choices", {
+      ...form.values.choices,
+      [selectedLanguage]: [...choices, newChoice],
+    });
+    setNewChoice("");
+  };
 
   const handleRemoveChoice = (choice) => {
-    form.setFieldValue("choices", { ...form.values.choices, [selectedLanguage]: choices.filter((c) => c !== choice) })
-  }
-
+    form.setFieldValue("choices", {
+      ...form.values.choices,
+      [selectedLanguage]: choices.filter((c) => c !== choice),
+    });
+  };
 
   return (
     <>
@@ -183,23 +184,19 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
         ))}
       </Stack>
 
-      <Group >
+      <Group>
         <TextInput
           placeholder="Enter choice here"
           value={newChoice}
           onChange={(e) => setNewChoice(e.currentTarget.value)}
         />
 
-        <Button
-          leftIcon={<IconPlus />}
-          onClick={handleAddChoice}
-        >
+        <Button leftIcon={<IconPlus />} onClick={handleAddChoice}>
           Add choice
         </Button>
       </Group>
-
     </>
-  )
+  );
 }
 
 interface ChoiceProps {
@@ -207,40 +204,34 @@ interface ChoiceProps {
   onDelete: () => void;
 }
 function Choice({ choice, onDelete }: ChoiceProps) {
-  const { hovered, ref } = useHover<HTMLInputElement>()
+  const { hovered, ref } = useHover<HTMLInputElement>();
 
   return (
     <Group ref={ref} sx={{ height: "30px" }}>
-      <Checkbox
-        label={choice}
-        checked={false}
-        readOnly
-      />
-      {
-        hovered && (
-          <ActionIcon variant="transparent" color="red" onClick={onDelete} size={"sm"}>
-            <IconTrash />
-          </ActionIcon>
-        )
-      }
+      <Checkbox label={choice} checked={false} readOnly />
+      {hovered && (
+        <ActionIcon
+          variant="transparent"
+          color="red"
+          onClick={onDelete}
+          size={"sm"}
+        >
+          <IconTrash />
+        </ActionIcon>
+      )}
     </Group>
-  )
+  );
 }
 
 interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
 }
-function ExtraProps({form, question}: ExtraPropsProps) {
+function ExtraProps({ form, question }: ExtraPropsProps) {
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
-      return (
-        <ChoicesCreator
-          qId={question.id}
-          form={form}
-        />
-      )
+      return <ChoicesCreator qId={question.id} form={form} />;
     default:
       return null;
   }
