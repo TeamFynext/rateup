@@ -21,8 +21,10 @@ export default function Teams() {
     const [deleteTeamId, setDeleteTeamId] = useState<string>();
     const isNameValid = name.length >= 2;
     const queryClient = useQueryClient()
-      const router = useRouter()
+    const router = useRouter()
 
+    const data = queryClient.getQueryData<UserInfoQueryData>(['userInfoQuery']);
+    const user = data?.data?.data
 
     useEffect(() => {
         setName('')
@@ -197,12 +199,16 @@ export default function Teams() {
                     direction="row"
                     wrap="wrap"
                 >
-
-                    <ButtonComponent
+                    {
+            user?.role !== 'ADMIN' 
+            &&      <ButtonComponent
                         onClick={open}
                         title={"Create Team"}
                         rightIcon={<IconSquarePlus
                             size="1rem" />} />
+
+        }
+                    
 
                     <ButtonComponent
                         onClick={ () =>  setSort(!sort)}
@@ -216,7 +222,13 @@ export default function Teams() {
 
             <Space h="xl" />
 
+
             <Paper shadow="xs" radius="md" p="xl">
+                { isLoadingTeams 
+                
+                ? "Loading Data..."
+                
+                :<>
                 {teamsData && teamsData.data && teamsData.data.length > 0 ? (
                     <Table>
                         <thead>
@@ -253,6 +265,8 @@ export default function Teams() {
                 ) : (
                     <p>No teams found. Try creating one.</p>
                 )}
+
+                </>}
             </Paper>
 
         </>

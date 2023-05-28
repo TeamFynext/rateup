@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState , useEffect} from 'react';
 import {
   Container,
   Avatar,
@@ -25,31 +25,20 @@ import {
 import Link from 'next/link';
 import { Navbar } from '../Navbar/Navbar';
 import { useStyles } from './Header.styles';
-import { getOrgIdRole, getUserEmail } from '../../../utils/userInfo';
 
-export function HeaderTabs() {
+export function HeaderTabs({userData} : {userData : UserData}) {
   const { classes, theme, cx } = useStyles();
   const [opened, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
 
-  const [name, setName] = useState('User')
-  const [role, setRole] = useState()
-
-  async function fetchUserData() {
-    let { email } = await getUserEmail()
-    let { role } = await getOrgIdRole()
-    setName(email)
-    setRole(role)
-  }
-  
   useEffect(() => {
-    fetchUserData(); 
-  }, [])
+    console.log("Email:  "+ JSON.stringify(userData?.email))
+  }, [userData])
   
-
+  
   const user = {
-    "name": name,
-    "role": role === 'SUPER_ADMIN' ? "Super Admin" : "Admin",
+    "name": userData?.email,
+    "role": userData?.role === 'SUPER_ADMIN' ? "Super Admin" : "Admin",
     "image": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
   };
   //TODO
@@ -94,10 +83,16 @@ export function HeaderTabs() {
   return (
     <div className={classes.header}>
       <Container className={classes.mainSection} fluid>
+
+      {userData?.role !== "GUEST" 
+
+        ?
+
         <Group position="apart">
         <Link href="/dashboard">
-        <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
-                </Link>
+           <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
+        </Link>
+        
         
 
           <Burger opened={opened} onClick={toggle} className={classes.burger} size="sm" />
@@ -159,11 +154,22 @@ export function HeaderTabs() {
             </Menu.Dropdown>
 
           </Menu>
+
         </Group>
 
+        :
+
+          <Link href="/">
+            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
+          </Link>
+
+      }
+
         <Space h="lg" />
-        <Navbar />
+           {userData?.role !== "GUEST" &&  <Navbar /> }
         <Space h="lg" />
+
+
       </Container>
     </div>
   );

@@ -4,11 +4,23 @@ import {Box, Modal, TextInput, Title, Space} from '@mantine/core';
 import {useEffect, useState} from 'react';
 import {notifications} from '@mantine/notifications';
 import {IconSquarePlus} from '@tabler/icons';
+import { useRouter } from 'next/router';
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DashboardHome() {
     const [opened, { open, close }] = useDisclosure(false);
     const [name, setName] = useState('');
     const isNameValid = name.length >= 2;
+
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    const data = queryClient?.getQueryData<UserInfoQueryData>(['userInfoQuery']);
+    const user = data?.data?.data
+
+   useEffect(() => {
+        console.log("Role:" + user?.role);
+    }, [user?.role]);
 
     useEffect(() => {
         setName('')
@@ -46,9 +58,16 @@ export default function DashboardHome() {
                 </Box>
             </Modal>
 
-            <span onClick={open}  >
-                <ButtonComponent title={"Create Organization"} leftIcon={<IconSquarePlus size="1rem" />} />
-            </span>
+        {
+           user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN'
+            ?                 <ButtonComponent onClick={open} title={"Create Organization"} leftIcon={<IconSquarePlus size="1rem" />} />
+
+
+            :                 <ButtonComponent onClick={() => router.push('/dashboard/teams')} title={"Teams"}  />
+
+        }
+
+
         </>
     );
 

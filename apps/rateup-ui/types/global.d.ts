@@ -55,4 +55,17 @@ declare global {
       [QuestionType.DateTime]?: Date;
     };
   };
+
+    type UserData = {
+        email: string,
+        userId: string,
+        role: string
+  }
+
+  interface UserInfoQueryData {
+    data: {
+        data: UserData
+    };
+  
+  }
 }

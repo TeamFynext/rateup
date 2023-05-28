@@ -11,9 +11,6 @@ import SuperTokensReact, {
 import { frontendConfig } from "../config/frontendConfig";
 import Session from "supertokens-auth-react/recipe/session";
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";

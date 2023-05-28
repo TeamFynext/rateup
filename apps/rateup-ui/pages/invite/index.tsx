@@ -7,11 +7,20 @@ import { IconCheck,  } from '@tabler/icons-react';
 import { useEffect } from 'react';
 import ButtonComponent from '../../components/Button/ButtonComponent';
 import styles from './styles.module.css';
+import { HeaderTabs } from '../../components/Layout/Header/Header';
 
 const Invite = () => {
 const router = useRouter();
 const queryClient = useQueryClient()
 const { type, token } = router.query;
+
+
+const userData = {
+  email : '',
+  role: 'GUEST',
+  userId: ''
+
+}
 
 let title = '';
 if(type === 'team')
@@ -36,7 +45,6 @@ const updateInviteMutation = useMutation(() => acceptInvite(), {
                 icon: <IconCheck size="1rem" />,
                 autoClose: 3000,
             });
-        close()
     },
 
     onError: (error: Error) => {
@@ -52,7 +60,6 @@ const updateInviteMutation = useMutation(() => acceptInvite(), {
     },
 });
 
-
 useEffect(() => {
     if (type === 'team' && token) {
         notifications.show({
@@ -64,13 +71,11 @@ useEffect(() => {
             withCloseButton: false,
         });
         setTimeout(() => {
-            updateInviteMutation.mutate()
+           !updateInviteMutation.data && updateInviteMutation.mutate()
         }, 2000);
 
     }
-
     //TODO : improve with org invite
-
 }, [type, token])
 
 
@@ -82,13 +87,18 @@ useEffect(() => {
 
 
   return (
-     <Flex
+    <>
+    
+            <HeaderTabs userData={userData} />
+            <Space h="lg" />
+            <Flex
       gap="md"
       justify="center"
       align="center"
       direction="column"
       wrap="wrap"
     >
+
         <Space h="xl" />
         <Container>
             <Title color='blue.9'>{title} Invitation</Title>
@@ -145,7 +155,7 @@ useEffect(() => {
                   
                 { updateInviteMutation.data?.data.data.isUser 
                 ? "Login to your existing account in this email and continue using the app." 
-                : "Create an account with the same email and start using the app." }
+                : "Your account is ready, Create a new password and login to start using the app." }
 
            { updateInviteMutation.data?.data.data.isUser ? 
            
@@ -153,15 +163,15 @@ useEffect(() => {
                         onClick={() => {
     router.push('/auth/login');
   }}
-                        title={"Login"}
+                        title={"Continue"}
            />
            : 
            
            <ButtonComponent
                         onClick={() => {
-    router.push('/auth/signup');
+    router.push(updateInviteMutation.data?.data.data.redirectLink);
   }}
-                        title={"Sign Up"}
+                        title={"Continue"}
            />
 
            }  
@@ -174,6 +184,9 @@ useEffect(() => {
         { updateInviteMutation.error && "Failed..! Error.... Try another invitation."}
               
       </Flex>
+
+    </>
+     
   )
 }
 
