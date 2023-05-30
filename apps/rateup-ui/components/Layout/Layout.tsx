@@ -35,10 +35,10 @@ export default ({ children }) => {
         refetchOnMount: "always",
     })
 
-
       useEffect(() => {
-        console.log(userInfo?.data?.data)
-        }, [userInfo])
+        console.log("Layout userinfo:"+ JSON.stringify(userInfo?.data?.data))
+        !userInfo?.data?.data && refetch()
+      }, [userInfo])
 
     return (
         <SessionAuth>

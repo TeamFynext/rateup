@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
-import { getTeamIdsByUserId } from "../../api/team/team.api";
+import { getTeamsByUser } from "../../api/team/team.api";
 import { useCreateSurveyMutation } from "../../api/surveys/surveys.query";
 
 interface FormValues {
@@ -25,7 +25,13 @@ export function CreateSurveyModal({ open, close }) {
     isError,
     isLoading,
     data: teams,
-  } = useQuery(["teamsIds"], getTeamIdsByUserId);
+  } = useQuery(["teamsByUser"], getTeamsByUser);
+
+  let teamSelectData = teams?.data?.data?.map(team => ({
+    value: team.teamId,
+    label: team.teamName
+  }));
+  
 
   const form = useForm({
     initialValues: {
@@ -54,7 +60,7 @@ export function CreateSurveyModal({ open, close }) {
   if (isLoading) {
     return null;
   }
-  if (isError || !teams) {
+  if (isError || !teams.data.data) {
     // TODO: Handle error
     throw new Error("Failed to load teams");
   }
@@ -95,7 +101,7 @@ export function CreateSurveyModal({ open, close }) {
             <Select
               label="Team"
               placeholder="Select team"
-              data={teams}
+              data={teamSelectData}
               withAsterisk
               {...form.getInputProps("teamId")}
             />

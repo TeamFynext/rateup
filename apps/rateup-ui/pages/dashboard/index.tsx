@@ -1,11 +1,12 @@
 ﻿import ButtonComponent from "../../components/Button/ButtonComponent";
 import {useDisclosure} from '@mantine/hooks';
-import {Box, Modal, TextInput, Title, Space} from '@mantine/core';
+import {Box, Modal, TextInput, Title, Space, Container} from '@mantine/core';
 import {useEffect, useState} from 'react';
 import {notifications} from '@mantine/notifications';
 import {IconSquarePlus} from '@tabler/icons';
 import { useRouter } from 'next/router';
 import { useQueryClient } from "@tanstack/react-query";
+import Loading from "../../components/Page/Loading";
 
 export default function DashboardHome() {
     const [opened, { open, close }] = useDisclosure(false);
@@ -18,9 +19,14 @@ export default function DashboardHome() {
     const data = queryClient?.getQueryData<UserInfoQueryData>(['userInfoQuery']);
     const user = data?.data?.data
 
-   useEffect(() => {
-        console.log("Role:" + user?.role);
-    }, [user?.role]);
+
+    useEffect(() => {
+        if (!user) {
+            queryClient.invalidateQueries(['userInfoQuery']);
+        }
+        console.log("Dashboard Role:" + user?.role);
+
+    }, []);
 
     useEffect(() => {
         setName('')
@@ -58,6 +64,10 @@ export default function DashboardHome() {
                 </Box>
             </Modal>
 
+            {
+                user ?
+
+                <Container>
         {
            user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN'
             ?                 <ButtonComponent onClick={open} title={"Create Organization"} leftIcon={<IconSquarePlus size="1rem" />} />
@@ -67,6 +77,10 @@ export default function DashboardHome() {
 
         }
 
+            </Container>
+
+                : <Loading h={300} />
+            }
 
         </>
     );

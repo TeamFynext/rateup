@@ -1,5 +1,5 @@
 ﻿import ButtonComponent from "../../../components/Button/ButtonComponent";
-import { Flex, Title, Space, Paper, Table, Button} from '@mantine/core';
+import { Flex, Title, Space, Paper, Table, Button, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
@@ -9,9 +9,10 @@ import { useDisclosure } from '@mantine/hooks';
 import { useMutation } from "@tanstack/react-query";
 import { IconCheck, IconSelector } from '@tabler/icons-react';
 import { getOrgIdRole, getUserID } from "../../../utils/userInfo"
-import { createTeam, deleteTeamById, getTeamsByOrg } from "../../../api/team/team.api";
+import { createTeam, deleteTeamById, getTeamsByOrg, getTeamsByUser } from "../../../api/team/team.api";
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
+import CardButton from "../../../components/Card";
 
 export default function Teams() {
     const sessionContext = useSessionContext();
@@ -41,6 +42,18 @@ export default function Teams() {
         error: errorTeamsData,
         refetch,
     } = useQuery(["teamsDataQuery"], fetchTeams, {
+        refetchOnWindowFocus: "always",
+        refetchOnMount: "always",
+    })
+
+    //TODO optimize
+
+     const {
+        isLoading: isLoadingTeamsUser,
+        data: teamsDataUser,
+        error: errorTeamsDataUser,
+        refetch: reftchTeams,
+    } = useQuery(["teamsDataUserQuery"], getTeamsByUser, {
         refetchOnWindowFocus: "always",
         refetchOnMount: "always",
     })
@@ -104,7 +117,6 @@ export default function Teams() {
         },
 
     })
-
 
     const addResourceMutation = useMutation(() => handleCreateTeam(), {
         onSuccess: () => {
@@ -188,7 +200,11 @@ export default function Teams() {
                     wrap="wrap"
                 >
                     <Title order={1}>Teams</Title>
-                    <p >You can view all the teams under your organization. Also create new teams from here.</p>
+                    {
+                        user?.role === 'ADMIN' 
+                        ? <p>You can view all your teams.</p>
+                        :  <p >You can view all the teams under your organization. Also create new teams from here.</p>
+                    }
                 </Flex>
 
                 <Flex
@@ -222,7 +238,29 @@ export default function Teams() {
 
             <Space h="xl" />
 
+        {
+            user?.role === 'ADMIN' 
+           ?
+         <SimpleGrid
+                cols={4}
+                spacing={"lg"}
+                breakpoints={[
+                { minWidth: "xl", cols: 3 },
+                { minWidth: "lg", cols: 2 },
+                { minWidth: "md", cols: 2 },
+                { maxWidth: "md", cols: 1 },
+                ]}
+            >
+        {
+            teamsDataUser?.data?.data
+            ?
+            teamsDataUser?.data?.data?.map((team, i) => (<CardButton title={team?.teamName}></CardButton>))
+            : "No teams found."
+        }
 
+      </SimpleGrid>
+             //TODO optimize
+           : //For Super Admin
             <Paper shadow="xs" radius="md" p="xl">
                 { isLoadingTeams 
                 
@@ -268,6 +306,8 @@ export default function Teams() {
 
                 </>}
             </Paper>
+
+                }
 
         </>
     );

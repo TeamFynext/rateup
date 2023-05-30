@@ -15,6 +15,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { NextPage } from "next";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 if (typeof window !== "undefined") {
   SuperTokensReact.init(frontendConfig());
@@ -86,6 +87,7 @@ export default function App({
             <LayoutComponent>
               <Component {...pageProps} />
             </LayoutComponent>
+            <ReactQueryDevtools initialIsOpen={false} />
           </QueryClientProvider>
           <Notifications />
         </MantineProvider>

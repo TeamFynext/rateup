@@ -161,7 +161,7 @@ useEffect(() => {
            
            <ButtonComponent
                         onClick={() => {
-    router.push('/auth/login');
+    router.push('/auth');
   }}
                         title={"Continue"}
            />
