@@ -12,6 +12,7 @@ import { surveyRoutes } from "./modules/survey/survey.route";
 import { surveySchemas } from "./modules/survey/survey.schema";
 import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
+import { userRoutes } from "./modules/user/user.route";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas];
@@ -22,6 +23,7 @@ export function registerRoutes(server: FastifyInstance): void {
     }
     server.register(surveyRoutes, { prefix: "api/survey" });
     server.register(questionRoutes, { prefix: "api/question/:surveyId" });
+    server.register(userRoutes, { prefix: "api/user" });
     server.register(orgRoutes, { prefix: "api/org" });
     server.register(teamRoutes, { prefix: "api/team" });
     server.register(responseRoutes, { prefix: "api/response" });

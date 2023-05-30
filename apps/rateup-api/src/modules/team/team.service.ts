@@ -357,16 +357,29 @@ export function getTeamMembers(input: GetTeamMembersInput) {
     },
   });
 }
-export async function getTeamIdsByUserId(userId: string) {
+
+export async function getTeamsByUserId(userId: string) {
   const teams = await prisma.teamMember.findMany({
     where: {
       userId,
     },
     select: {
-      teamId: true,
+      team: {
+        select: {
+          id: true,
+          name: true, // Team name
+        }
+      }
     }
   });
 
-  const teamIds = teams.map(team => team.teamId);
-  return teamIds;
+  const teamData = teams.map(team => {
+    return {
+      teamId: team.team.id,
+      teamName: team.team.name,
+    }
+  });
+  
+
+  return teamData;
 }

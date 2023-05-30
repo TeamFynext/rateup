@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { completeInvite, createTeam, deleteTeamById, getTeamIdsByUserId, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
+import { completeInvite, createTeam, deleteTeamById, getTeamsByUserId, getTeamMembers, getTeamsByOrgId, inviteTeamMember } from "./team.service";
 import {
   CreateTeamInput,
   DeleteTeamInput,
@@ -8,6 +8,7 @@ import {
   InviteCompleteInput,
   InviteMemberInput,
 } from "./team.schema";
+import Session from "supertokens-node/recipe/session";
 
 export async function createTeamHandler(
   request: FastifyRequest<{
@@ -16,17 +17,17 @@ export async function createTeamHandler(
   reply: FastifyReply
 ) {
   const body = request.body;
+  let team;
 
   try {
-    const team = await createTeam(body);
-    //reply.code(201).send({ success: true, data: team });
-    reply.code(201).send(team);
-
-    //TODO Auth
+    team = await createTeam(body);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
+    return;
   }
+  
+  reply.code(201).send(team);
 }
 
 export async function getAllTeamsByOrgHandler(
@@ -47,14 +48,19 @@ export async function getAllTeamsByOrgHandler(
   }
 }
 
-export async function getTeamIdsByUserHandler(
+export async function getTeamsByUserHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
-    const userId = request.session.getUserId();
-    const teamIds = await getTeamIdsByUserId(userId);
-      reply.send(teamIds);
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    const teams = await getTeamsByUserId(userId);
+    if (!teams || teams.length === 0) {
+      reply.code(200).send({ message: "No teams found." });
+    } else {
+      reply.send({ message: `Teams found for user : ${userId}`, data: teams });
+    }
   } catch (e) {
     console.error(e)
     reply.code(500).send();
