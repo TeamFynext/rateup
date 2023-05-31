@@ -26,7 +26,7 @@ import Link from 'next/link';
 import { Navbar } from '../Navbar/Navbar';
 import { useStyles } from './Header.styles';
 
-export function HeaderTabs({userData} : {userData : UserData}) {
+export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: string}) {
   const { classes, theme, cx } = useStyles();
   const [opened, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
@@ -84,7 +84,7 @@ export function HeaderTabs({userData} : {userData : UserData}) {
     <div className={classes.header}>
       <Container className={classes.mainSection} fluid>
 
-      {userData?.role !== "GUEST" 
+      {mode !== "GUEST" 
 
         ?
 
@@ -166,7 +166,7 @@ export function HeaderTabs({userData} : {userData : UserData}) {
       }
 
         <Space h="lg" />
-           {userData?.role !== "GUEST" &&  <Navbar /> }
+           {mode !== "GUEST" &&  <Navbar /> }
         <Space h="lg" />
 
 
