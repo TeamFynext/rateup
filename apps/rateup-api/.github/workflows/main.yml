@@ -1,11 +1,11 @@
 name: prisma-migrate-dev
 on:
-  workflow_dispatch:
   push:
     branches:
       - dev
     paths:
       - "./prisma/**/*.*"
+  workflow_dispatch:
 jobs:
   install:
     runs-on: ubuntu-latest
