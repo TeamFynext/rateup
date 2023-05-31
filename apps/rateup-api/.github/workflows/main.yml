@@ -1,8 +1,9 @@
 name: prisma-migrate-dev
 on:
+  workflow_dispatch:
   push:
     branches:
-      -dev
+      - dev
     paths:
       - "./prisma/**/*.*"
 jobs:
