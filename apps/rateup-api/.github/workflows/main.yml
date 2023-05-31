@@ -1,7 +1,8 @@
 name: prisma-migrate-dev
 on:
   push:
-    branches: [dev]
+    branches:
+      -dev
     paths:
       - "./prisma/**/*.*"
 jobs:
