@@ -216,7 +216,7 @@ export function HomeNavbar() {
                             variant="default"
                             onClick={() => {
                                 router.push({
-                                    pathname: '/auth',
+                                    pathname: '/login',
                                     query: {type: 'sign_in'},
                                 });
                             }}
@@ -224,7 +224,7 @@ export function HomeNavbar() {
                         </Button>
                         <Button onClick={() => {
                             router.push({
-                                pathname: '/auth',
+                                pathname: '/signup',
                                 query: {type: 'sign_up'},
                             });
                         }}

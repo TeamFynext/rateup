@@ -7,12 +7,12 @@ const Logout = () => {
     const router = useRouter();
     useEffect(() => {
         handleSignOut();
-        router.push('/auth')
+        router.push('/login')
     }, [router]);
 
     async function handleSignOut() {
         await signOut();
-        router.push('/auth');
+        router.push('/login');
     }
 
     return (
