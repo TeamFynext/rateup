@@ -64,6 +64,7 @@ model OrgMember {
 }
 
 model Team {
+  @@unique([name, orgId], name: "team_name_org_id_unique")
   id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt   DateTime     @default(now())
   name        String

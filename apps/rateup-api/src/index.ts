@@ -1,26 +1,14 @@
-//index.ts
 
+import cors from "@fastify/cors";
 import Fastify from "fastify";
-import { surveyRoutes } from "./modules/survey/survey.route";
+import supertokens from "supertokens-node";
+import { plugin } from "supertokens-node/framework/fastify";
 import { logger } from "./utils/logger";
 require("dotenv").config();
-import { surveySchemas } from "./modules/survey/survey.schema";
-import { questionSchemas } from "./modules/question/question.schema";
-import { questionRoutes } from "./modules/question/question.route";
-import supertokens from "supertokens-node";
-import cors from "@fastify/cors";
-import { plugin } from "supertokens-node/framework/fastify";
 
 import { errorHandler } from "supertokens-node/framework/fastify";
 import { SuperTokensConfig } from "./config";
-import { orgRoutes } from "./modules/org/org.route";
-import { orgSchemas } from "./modules/org/org.schema";
-import { teamRoutes } from "./modules/team/team.route";
-import { teamSchemas } from "./modules/team/team.schema";
-import { responseSchemas } from "./modules/response/response.schema";
-import { responseRoutes } from "./modules/response/response.route";
-import { surveyPublicRoutes } from "./modules/survey/survey.public.routes";
-import { responsePublicRoutes } from "./modules/response/response.public.route";
+import { registerRoutes } from "./registerRoutes";
 
 const server = Fastify({
   logger,
@@ -39,20 +27,7 @@ server.get("/ping", async () => {
 });
 
 async function main() {
-  //TODO move this schema stuff to somewhere else
-  const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas];
-  for (const module of modules) {
-    for (const schema of module) {
-      server.addSchema(schema);
-    }
-  }
-  server.register(surveyRoutes, { prefix: "api/survey" });
-  server.register(questionRoutes, { prefix: "api/question/:surveyId" });
-  server.register(orgRoutes, { prefix: "api/org" });
-  server.register(teamRoutes, { prefix: "api/team" });
-  server.register(responseRoutes, { prefix: "api/response" });
-  server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
-  server.register(responsePublicRoutes, { prefix: "api/public/response" })
+  registerRoutes(server);
 
   // await server.register(formDataPlugin);
   await server.register(plugin);
@@ -65,7 +40,6 @@ async function main() {
       host: host,
     })
     .then(() => {
-      // TODO: make port & host env variables?
       console.log(`Server ready at ${port}`);
     })
     .catch((e) => {
