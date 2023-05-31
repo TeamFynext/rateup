@@ -43,6 +43,11 @@ export const SuperTokensConfig: TypeInput = {
                 let { id, email } = response.user;
 
                 const user = await createUser({ id, email });
+
+                if(user){
+                  let orgMember = await getOrgIdAndRole({ id: id });
+                }
+
               }
               return response;
             },

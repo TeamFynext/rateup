@@ -9,7 +9,13 @@ const questionCore = {
   required: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
   choices: z.record(z.string(), z.array(z.string())).optional(),
+  logic: z.record(z.union([z.string(), z.number(), z.array(z.string())]), z.string()).optional(),
 };
+
+export const questionSchema = z.object({
+  ...questionCore,
+  id: z.string(),
+});
 
 const createQuestionRequestSchema = z.object({
   ...questionCore,
@@ -36,7 +42,10 @@ const questionRouteParamsSchema = z.object({
 const updateQuestionRequestSchema = z.object({
   ...questionCore,
   title: z.record(z.string(), z.string()).optional(),
-  type: z.nativeEnum(QuestionType).optional(),
+  description: z.record(z.string(), z.string()).optional(),
+  required: z.boolean().optional(),
+  // Type cannot be changed. Throws error if 'type' is provided
+  type: z.never().optional()
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
