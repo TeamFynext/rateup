@@ -9,6 +9,7 @@ import { SessionAuth } from "supertokens-auth-react/recipe/session";
 import { HeaderTabs } from './Header/Header';
 import { fetchUserInfo } from '../../api/user/user.api';
 import { useQuery } from '@tanstack/react-query';
+import { useUser } from '../../context/UserContext';
 
 const useStyles = createStyles((theme) => ({
   
@@ -34,10 +35,12 @@ export default ({ children }) => {
         refetchOnWindowFocus: "always",
         refetchOnMount: "always",
     })
+    const { setUser } = useUser();
 
       useEffect(() => {
-        console.log("Layout userinfo:"+ JSON.stringify(userInfo?.data?.data))
+        console.log("Query Fetched UserInfo:"+ JSON.stringify(userInfo?.data?.data))
         !userInfo?.data?.data && refetch()
+        setUser(userInfo?.data?.data)
       }, [userInfo])
 
     return (
