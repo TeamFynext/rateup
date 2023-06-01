@@ -91,7 +91,8 @@ export function useSignUp() {
       } else {
         // sign up successful. The session tokens are automatically handled by
         // the frontend SDK.
-        router.push("/dashboard");
+        //router.push("/dashboard");
+        consumeVerificationCode()
       }
     } catch (err: any) {
       if (err.isSuperTokensGeneralError === true) {
@@ -102,4 +103,54 @@ export function useSignUp() {
       }
     }
   }
+}
+
+
+import { verifyEmail } from "supertokens-web-js/recipe/emailverification";
+
+async function consumeVerificationCode() {
+    try {
+        let response = await verifyEmail();
+        if (response.status === "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR") {
+            // This can happen if the verification code is expired or invalid.
+            // You should ask the user to retry
+            window.alert("Oops! Seems like the verification link expired. Please try again")
+            window.location.assign("/login/verify-email") // back to the email sending screen.
+        } else {
+            // email was verified successfully.
+            window.location.assign("/dashboard")
+        }
+    } catch (err: any) {
+        if (err.isSuperTokensGeneralError === true) {
+            // this may be a custom error message sent from the API by you.
+            window.alert(err.message);
+        } else {
+            window.alert("Oops! Something went wrong.");
+        }
+    }
+}
+
+
+
+import { sendVerificationEmail } from "supertokens-web-js/recipe/emailverification";
+
+export async function sendEmail() {
+    try {
+        let response = await sendVerificationEmail();
+        if (response.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
+            // This can happen if the info about email verification in the session was outdated.
+            // Redirect the user to the home page
+            window.location.assign("/dashbard");
+        } else {
+            // email was sent successfully.
+            window.alert("Please check your email and click the link in it")
+        }
+    } catch (err: any) {
+        if (err.isSuperTokensGeneralError === true) {
+            // this may be a custom error message sent from the API by you.
+            window.alert(err.message);
+        } else {
+            window.alert("Oops! Something went wrong.");
+        }
+    }
 }

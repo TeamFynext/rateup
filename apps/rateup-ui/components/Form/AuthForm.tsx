@@ -12,9 +12,10 @@ import {
   Paper,
   Group,
   Button,
+  Image
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useSignIn, useSignUp } from "../../utils/auth";
+import { sendEmail, useSignIn, useSignUp } from "../../utils/auth";
 import Link from 'next/link';
 
 const AuthForm = ({ mode }) => {
@@ -54,6 +55,7 @@ const AuthForm = ({ mode }) => {
     <>
       <HeaderTabs mode={"GUEST"} />
       <Space h="lg" />
+      {mode !=="VERIFY" ?
 
       <Container size={420} my={40}>
         <Title
@@ -112,6 +114,29 @@ const AuthForm = ({ mode }) => {
           </form>
         </Paper>
       </Container>
+
+      :
+
+      <Container  size={420} my={40}>
+        <Paper withBorder shadow="lg" p={30} mt={30} radius="md">
+            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="RateUp Logo" width={90} height={60} />
+            <Space h="lg" />
+            <Title>Verify your email address</Title>
+            <Space h="md" />
+            <Text>Please click on the link in the email we just sent you to confirm your email address.</Text>
+            <Space h="lg" />
+            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+            onClick={() => sendEmail()}>Resend Email</Text>
+            <Space h="md" />
+            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+            <Link href='/logout' style={{ textDecoration: 'none', }}>
+                 Logout
+            </Link>
+            </Text>
+        </Paper>
+      </Container>
+
+      }
     </>
   );
 };
