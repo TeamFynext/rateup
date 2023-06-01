@@ -48,7 +48,7 @@ const updateInviteMutation = useMutation(() => acceptInvite(), {
     },
 
     onError: (error: Error) => {
-        console.error("Error creating the post:", error.message);
+        console.error("Error:", error.message);
         notifications.update({
             id: 'load-data',
             color: 'red',

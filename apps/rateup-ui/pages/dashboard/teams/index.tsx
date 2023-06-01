@@ -13,6 +13,7 @@ import { createTeam, deleteTeamById, getTeamsByOrg, getTeamsByUser } from "../..
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
 import CardButton from "../../../components/Card";
+import { useUser } from "../../../context/UserContext";
 
 export default function Teams() {
     const sessionContext = useSessionContext();
@@ -23,9 +24,7 @@ export default function Teams() {
     const isNameValid = name.length >= 2;
     const queryClient = useQueryClient()
     const router = useRouter()
-
-    const data = queryClient.getQueryData<UserInfoQueryData>(['userInfoQuery']);
-    const user = data?.data?.data
+    const { user, setUser } = useUser();
 
     useEffect(() => {
         setName('')
@@ -35,18 +34,6 @@ export default function Teams() {
         const { orgId } = await getOrgIdRole()
         return getTeamsByOrg(orgId)
     };
-
-    const {
-        isLoading: isLoadingTeams,
-        data: teamsData,
-        error: errorTeamsData,
-        refetch,
-    } = useQuery(["teamsDataQuery"], fetchTeams, {
-        refetchOnWindowFocus: "always",
-        refetchOnMount: "always",
-    })
-
-    //TODO optimize
 
      const {
         isLoading: isLoadingTeamsUser,
@@ -58,9 +45,11 @@ export default function Teams() {
         refetchOnMount: "always",
     })
 
+    let teamsData = teamsDataUser?.data
+
     useEffect(() => {
-        console.log(teamsData?.data);
-    }, [teamsData]);
+        console.log(teamsDataUser?.data?.data);
+    }, [teamsDataUser]);
 
     useEffect(() => {
         deleteTeamId && deleteTeamMutation.mutate();
@@ -254,7 +243,7 @@ export default function Teams() {
         {
             teamsDataUser?.data?.data
             ?
-            teamsDataUser?.data?.data?.map((team, i) => (<CardButton title={team?.teamName}></CardButton>))
+            teamsDataUser?.data?.data?.map((team, i : number) => (<CardButton key={i} title={team?.teamName}></CardButton>))
             : "No teams found."
         }
 
@@ -262,7 +251,7 @@ export default function Teams() {
              //TODO optimize
            : //For Super Admin
             <Paper shadow="xs" radius="md" p="xl">
-                { isLoadingTeams 
+                { isLoadingTeamsUser 
                 
                 ? "Loading Data..."
                 

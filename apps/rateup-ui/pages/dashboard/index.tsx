@@ -7,6 +7,7 @@ import {IconSquarePlus} from '@tabler/icons';
 import { useRouter } from 'next/router';
 import { useQueryClient } from "@tanstack/react-query";
 import Loading from "../../components/Page/Loading";
+import { useUser } from "../../context/UserContext";
 
 export default function DashboardHome() {
     const [opened, { open, close }] = useDisclosure(false);
@@ -15,10 +16,7 @@ export default function DashboardHome() {
 
     const router = useRouter();
     const queryClient = useQueryClient();
-
-    const data = queryClient?.getQueryData<UserInfoQueryData>(['userInfoQuery']);
-    const user = data?.data?.data
-
+    const { user } = useUser();
 
     useEffect(() => {
         if (!user) {
