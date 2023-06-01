@@ -157,30 +157,28 @@ export const useConsumeVerificationCode = () => {
 };
 
 import { sendVerificationEmail } from "supertokens-web-js/recipe/emailverification";
+import { useCallback } from 'react';
 
-export async function useEmailSend() {
- // const router = useRouter();
+export function useEmailSend() {
+  const router = useRouter();
 
-  try {
-    let response = await sendVerificationEmail();
-    if (response.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
-      // This can happen if the info about email verification in the session was outdated.
-      // Redirect the user to the home page
-      console.log("verified success")
-      //router.push("/dashboard");
-      window.location.assign("/dashboard");
-    } else {
-      // email was sent successfully.
-      //window.alert("Please check your email and click the link in it");
-      showNotification('send-mail-error', 'blue', 'Error', "Please check your email and click the link in it", <IconInfoCircleFilled size="1rem" />);
+  return useCallback(async () => {
+    try {
+      let response = await sendVerificationEmail();
+      if (response.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
+        console.log("verified success")
+        router.push("/dashboard");
+      } else {
+        showNotification('send-mail-error', 'blue', 'Check mail inbox & Verify', "Please check your email and click the link in it", <IconInfoCircleFilled size="1rem" />);
+      }
+    } catch (err: any) {
+      if (err.isSuperTokensGeneralError === true) {
+        showNotification('send-mail-error', 'red', 'Error', err.message, <IconX size="1rem" />);
+      } else {
+        showNotification('send-mail-error', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
+      }
     }
-  } catch (err: any) {
-    if (err.isSuperTokensGeneralError === true) {
-      // this may be a custom error message sent from the API by you.
-      showNotification('send-mail-error', 'red', 'Error', err.message, <IconX size="1rem" />);
-    } else {
-      showNotification('send-mail-error', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
-    }
-  }
+  }, [router]);
 }
+
 

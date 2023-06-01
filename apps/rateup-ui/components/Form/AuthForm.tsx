@@ -24,6 +24,8 @@ const AuthForm = ({ mode }) => {
   const router = useRouter();
   const { token, rid } = router.query;
   const consumeVerificationCode = useConsumeVerificationCode();
+  const sendEmail = useEmailSend();
+
 
 
   useEffect(() => {
@@ -32,10 +34,10 @@ const AuthForm = ({ mode }) => {
         consumeVerificationCode()
         console.log(rid)
       }else{
-        useEmailSend()
+        sendEmail(); 
       }
     }
-  }, [mode, token]);
+  }, [mode, token, sendEmail, consumeVerificationCode, rid]); // add dependencies here
   
   const form = useForm({
     initialValues: {
@@ -144,7 +146,7 @@ const AuthForm = ({ mode }) => {
             <Text>Please click on the link in the email we just sent you to confirm your email address.</Text>
             <Space h="lg" />
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-            onClick={() => useEmailSend()}>Resend Email</Text>
+              onClick={sendEmail}>Resend Email</Text>
             <Space h="md" />
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
             <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
