@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { HeaderTabs } from "../../components/Layout/Header/Header";
 import {
   Container,
@@ -14,11 +14,29 @@ import {
   Button,
   Image
 } from "@mantine/core";
+import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
-import { sendEmail, useSignIn, useSignUp } from "../../utils/auth";
+import {  useConsumeVerificationCode, useEmailSend, useSignIn, useSignUp } from "../../utils/auth";
 import Link from 'next/link';
 
 const AuthForm = ({ mode }) => {
+
+  const router = useRouter();
+  const { token, rid } = router.query;
+  const consumeVerificationCode = useConsumeVerificationCode();
+
+
+  useEffect(() => {
+    if (mode === "VERIFY") {
+      if (token && rid==="emailverification") {
+        consumeVerificationCode()
+        console.log(rid)
+      }else{
+        useEmailSend()
+      }
+    }
+  }, [mode, token]);
+  
   const form = useForm({
     initialValues: {
         email: "",
@@ -43,7 +61,7 @@ const AuthForm = ({ mode }) => {
   });
 
   const signIn = useSignIn();
-  const signUp = useSignUp(); // Use the hooks here
+  const signUp = useSignUp(); 
 
   const isLogin = mode === "LOGIN";
 
@@ -126,10 +144,10 @@ const AuthForm = ({ mode }) => {
             <Text>Please click on the link in the email we just sent you to confirm your email address.</Text>
             <Space h="lg" />
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-            onClick={() => sendEmail()}>Resend Email</Text>
+            onClick={() => useEmailSend()}>Resend Email</Text>
             <Space h="md" />
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-            <Link href='/logout' style={{ textDecoration: 'none', }}>
+            <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
                  Logout
             </Link>
             </Text>
