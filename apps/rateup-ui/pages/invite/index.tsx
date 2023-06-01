@@ -15,12 +15,11 @@ const queryClient = useQueryClient()
 const { type, token } = router.query;
 
 
-const userData = {
-  email : '',
-  role: 'GUEST',
-  userId: ''
-
-}
+// const userData = {
+//   email : '',
+//   role: 'GUEST',
+//   userId: ''
+// }
 
 let title = '';
 if(type === 'team')
@@ -89,7 +88,7 @@ useEffect(() => {
   return (
     <>
     
-            <HeaderTabs userData={userData} />
+            <HeaderTabs mode={'GUEST'} />
             <Space h="lg" />
             <Flex
       gap="md"
@@ -161,7 +160,7 @@ useEffect(() => {
            
            <ButtonComponent
                         onClick={() => {
-    router.push('/auth');
+    router.push('/login');
   }}
                         title={"Continue"}
            />
