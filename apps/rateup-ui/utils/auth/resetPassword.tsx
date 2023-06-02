@@ -1,5 +1,5 @@
 import { sendPasswordResetEmail } from "supertokens-web-js/recipe/emailpassword";
-import { IconInfoCircleFilled, IconX , IconCheck} from "@tabler/icons-react";
+import { IconX , IconCheck} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 
 
@@ -19,26 +19,26 @@ export function useSendResetEmail() {
                 response.formFields.forEach(formField => {
                     if (formField.id === "email") {
                         // Email validation failed (for example incorrect email syntax).
-                        window.alert(formField.error)
+                        showNotification('error', 'red', 'Error', formField.error, <IconX size="1rem" />);
+
                     }
                 })
             } else {
                 // reset password email sent.
                 //window.alert("Please check your email for the password reset link")
                 showNotification('send-mail-error', 'teal', 'Reset Email Sent', 
-    
                 "Please check your email for the password reset link", <IconCheck size="1rem" />);
                router.push(`/login/reset-password?emailTo=${encodeURIComponent(email)}&requestStatus=success`);
     
             }
-        } catch (err: any) {
+        }catch (err: any) {
             if (err.isSuperTokensGeneralError === true) {
-                // this may be a custom error message sent from the API by you.
-                window.alert(err.message);
+              // this may be a custom error message sent from the API by you.
+              showNotification('reset-email-error', 'red', 'Error', err.message, <IconX size="1rem" />);
             } else {
-                window.alert("Oops! Something went wrong.");
+              showNotification('reset-email-error', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
             }
-        }
+          }
 
     }
 }
@@ -49,36 +49,42 @@ export function useSendResetEmail() {
 import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword";
 import { showNotification } from ".";
 
-export async function setNewPassword(newPassword: string) {
-    try {
-        let response = await submitNewPassword({
-            formFields: [{
-                id: "password",
-                value: newPassword
-            }]
-        });
+export function useSetNewPassword() {
+    const router = useRouter();
+    return async function(newPassword: string) {
+        try {
+            let response = await submitNewPassword({
+                formFields: [{
+                    id: "password",
+                    value: newPassword
+                }]
+            });
+    
+            if (response.status === "FIELD_ERROR") {
+                response.formFields.forEach(formField => {
+                    if (formField.id === "password") {
+                        // New password did not meet password criteria on the backend.
+                        showNotification('error', 'red', 'Error', formField.error, <IconX size="1rem" />);
+                    }
+                })
+            } else if (response.status === "RESET_PASSWORD_INVALID_TOKEN_ERROR") {
+                // the password reset token in the URL is invalid, expired, or already consumed
+                showNotification('reset-error', 'red', 'Failed', 
+                "Password reset failed. Please try again", <IconX size="1rem" />);
+                router.push("/login") // back to the login scree.
+            } else {
+                showNotification('reset-success', 'teal', 'Success', 
+                "Password reset successful!", <IconCheck size="1rem" />);
+                router.push("/login")
+            }
+        } catch (err: any) {
+            if (err.isSuperTokensGeneralError === true) {
+              // this may be a custom error message sent from the API by you.
+              showNotification('set-pwd-error', 'red', 'Error', err.message, <IconX size="1rem" />);
+            } else {
+              showNotification('set-pwd-error', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
+            }
+          }
 
-        if (response.status === "FIELD_ERROR") {
-            response.formFields.forEach(formField => {
-                if (formField.id === "password") {
-                    // New password did not meet password criteria on the backend.
-                    window.alert(formField.error)
-                }
-            })
-        } else if (response.status === "RESET_PASSWORD_INVALID_TOKEN_ERROR") {
-            // the password reset token in the URL is invalid, expired, or already consumed
-            window.alert("Password reset failed. Please try again")
-            window.location.assign("/login") // back to the login scree.
-        } else {
-            window.alert("Password reset successful!")
-            window.location.assign("/login")
-        }
-    } catch (err: any) {
-        if (err.isSuperTokensGeneralError === true) {
-            // this may be a custom error message sent from the API by you.
-            window.alert(err.message);
-        } else {
-            window.alert("Oops! Something went wrong.");
-        }
     }
 }

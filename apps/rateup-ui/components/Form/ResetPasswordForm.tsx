@@ -16,29 +16,27 @@ import {
 import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
 import Link from 'next/link';
-import { useSendResetEmail } from "../../utils/auth/resetPassword";
+import { useSendResetEmail, useSetNewPassword } from "../../utils/auth/resetPassword";
 
 const ResetPasswordForm = ({ mode }) => {
 
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
-  const [page, setPage] = useState(mode)
+  const [page, setPage] = useState(token && rid==="emailpassword" ? "STEP_THREE" : mode)
 
-  const [isChangePwd, setIsChangePwd] = useState<boolean>(token && rid==="emailpassword")
 
   useEffect(() => {
-      if (token && rid==="emailpassword") {
-        console.log(rid)
+      if (token && rid) {
+        setPage("STEP_THREE")
       }else{
+        if(requestStatus === 'success'){
+            setPage("STEP_TWO")
+            console.log("Activating page 2")
+          }else{
+            setPage("STEP_ONE")
+          }
       }
 
-      if(requestStatus === 'success'){
-        setPage("STEP_TWO")
-        console.log("Activating page 2")
-        console.log(emailTo)
-      }else{
-        setPage("STEP_ONE")
-      }
   }, [mode, token, rid, requestStatus, router]); 
   
   const emailForm = useForm({
@@ -55,34 +53,45 @@ const ResetPasswordForm = ({ mode }) => {
 
   const pwdForm = useForm({
     initialValues: {
-        email: "",
         password: "",
+        confirmPassword: "",
     },
 
     validate: {
-        email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-        password: (value) => {
-          if (!value) {
-            return 'Password is required';
-          }
-          if (value.length < 5) {
-            return 'Password should be at least 5 characters long';
-          }
-          if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-            return 'Password should contain at least one letter and one number';
-          }
-          return null; // Validation passed
+        password: (value, values) => {
+            if (!value) {
+              return 'Password is required';
+            }
+            if (value.length < 5) {
+              return 'Password should be at least 5 characters long';
+            }
+            if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
+              return 'Password should contain at least one letter and one number';
+            }
+            if (values.confirmPassword && value !== values.confirmPassword) {
+              return 'Passwords do not match';
+            }
+            return null; 
+          },
+        confirmPassword: (value, values) => {
+            if (!value) {
+              return 'Confirm password is required';
+            }
+            if (value !== values.password) {
+              return 'Passwords do not match';
+            }
+            return null; 
+          },
         },
-      },
   });
 
 const sendResetEmail = useSendResetEmail();
+const setNewPassword = useSetNewPassword();
 
-
-const isEmailPage = mode === "STEP_ONE";
+const isEmailPage = page === "STEP_ONE";
   const onSubmit = isEmailPage
     ? (values) => sendResetEmail(values.email)
-    : (values) => sendResetEmail(values.email);
+    : (values) => setNewPassword(values.confirmPassword);
 
   return (
     <>
@@ -98,42 +107,53 @@ const isEmailPage = mode === "STEP_ONE";
             fontWeight: 900,
           })}
         >
-          {isEmailPage ? "Reset your Password!" : "Create new password!"}
+          {page !== "STEP_THREE" ? "Reset your Password!" : "Create new password!"}
         </Title>
         <Text color="dimmed" size="sm" align="center" mt={5}>
           {isEmailPage ? (
             <>We will send you an email to reset your password.
             </>
           ) : (
-            <>Already have an account?{" "}
-            <Anchor size="sm" component="button">
-              <Link href='/login'>
-              Log in
-                </Link>
-            </Anchor></>
+            <>Enter your new password and confirm{" "}
+           </>
           )}
         </Text>
 
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={emailForm.onSubmit(onSubmit)}>
+        <form onSubmit={isEmailPage ?  emailForm.onSubmit(onSubmit) : pwdForm.onSubmit(onSubmit)}>
+          
+        {
+        isEmailPage ?
           <TextInput
             withAsterisk
             label="Email"
             placeholder="your@email.com"
             {...emailForm.getInputProps('email')}
           />
-          {/* <PasswordInput
-            label="Password"
-            placeholder="Your password"
-            required
-            {...form.getInputProps('password')}
-            mt="md"
-          /> */}
+
+          :
+          <>
+           <PasswordInput
+                label="Password"
+                placeholder="Your password"
+                required
+                {...pwdForm.getInputProps('password')}
+                mt="md"
+            /> 
+
+            <PasswordInput
+                label="Confirm Password"
+                placeholder="Your password again"
+                required
+                {...pwdForm.getInputProps('confirmPassword')}
+                mt="md"
+            /> 
+            </>
+        }
 
           <Button fullWidth mt="xl" type="submit">
-            {isEmailPage ? "Email me" : "Change Password"}
+            {isEmailPage ? "Email Reset Link" : "Change Password"}
           </Button>
-
           <Group position="apart" mt="lg">
             {/* <Checkbox label="Remember me" /> */}
             <Anchor component="button" size="sm">
