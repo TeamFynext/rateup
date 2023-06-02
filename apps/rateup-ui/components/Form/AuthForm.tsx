@@ -26,8 +26,6 @@ const AuthForm = ({ mode }) => {
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
 
-
-
   useEffect(() => {
     if (mode === "VERIFY") {
       if (token && rid==="emailverification") {
@@ -125,7 +123,9 @@ const AuthForm = ({ mode }) => {
           <Group position="apart" mt="lg">
             <Checkbox label="Remember me" />
             <Anchor component="button" size="sm">
-              {isLogin ? "Forgot password?" : "Forgot email?"}
+              {isLogin ? <Link href='/login/reset-password'>
+              Forgot password?
+                </Link> : "Forgot email?"}
             </Anchor>
           </Group>
           <Button fullWidth mt="xl" type="submit">

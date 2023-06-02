@@ -47,7 +47,7 @@ export function useSignIn() {
   }
 }
 
-function showNotification(id: string, color: string, title: string, message: string, icon: JSX.Element, autoClose: number = 4000) {
+export function showNotification(id: string, color: string, title: string, message: string, icon: JSX.Element, autoClose: number = 4000) {
   notifications.show({
     id,
     color,
