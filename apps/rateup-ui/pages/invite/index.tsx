@@ -8,18 +8,12 @@ import { useEffect } from 'react';
 import ButtonComponent from '../../components/Button/ButtonComponent';
 import styles from './styles.module.css';
 import { HeaderTabs } from '../../components/Layout/Header/Header';
+import { UserMode } from '../../utils/enums';
 
 const Invite = () => {
 const router = useRouter();
 const queryClient = useQueryClient()
 const { type, token } = router.query;
-
-
-// const userData = {
-//   email : '',
-//   role: 'GUEST',
-//   userId: ''
-// }
 
 let title = '';
 if(type === 'team')
@@ -88,7 +82,7 @@ useEffect(() => {
   return (
     <>
     
-            <HeaderTabs mode={'GUEST'} />
+            <HeaderTabs mode={UserMode.GUEST} />
             <Space h="lg" />
             <Flex
       gap="md"

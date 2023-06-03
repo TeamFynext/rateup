@@ -1,5 +1,6 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { HeaderTabs } from "../../components/Layout/Header/Header";
+import { IconSend , IconArrowAutofitLeft, IconChevronRight} from "@tabler/icons-react";
 import {
   Container,
   Title,
@@ -12,12 +13,33 @@ import {
   Paper,
   Group,
   Button,
+  Image,
+  NavLink
 } from "@mantine/core";
+import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
-import { useSignIn, useSignUp } from "../../utils/auth";
+import {  useConsumeVerificationCode, useEmailSend, useSignIn, useSignUp } from "../../utils/auth";
 import Link from 'next/link';
+import { AuthMode, UserMode } from "../../utils/enums";
 
 const AuthForm = ({ mode }) => {
+
+  const router = useRouter();
+  const { token, rid } = router.query;
+  const consumeVerificationCode = useConsumeVerificationCode();
+  const sendEmail = useEmailSend();
+
+  useEffect(() => {
+    if (mode === AuthMode.VERIFY) {
+      if (token && rid==="emailverification") {
+        consumeVerificationCode()
+        console.log(rid)
+      }else{
+        sendEmail(); 
+      }
+    }
+  }, [mode, token, sendEmail, consumeVerificationCode, rid]); // add dependencies here
+  
   const form = useForm({
     initialValues: {
         email: "",
@@ -42,18 +64,31 @@ const AuthForm = ({ mode }) => {
   });
 
   const signIn = useSignIn();
-  const signUp = useSignUp(); // Use the hooks here
+  const signUp = useSignUp(); 
 
-  const isLogin = mode === "LOGIN";
+  const isLogin = mode === AuthMode.LOGIN;
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = isLogin
-    ? (values) => signIn(values.email, values.password)
-    : (values) => signUp(values.email, values.password);
+    ? (values) => {
+        setIsLoading(true);
+        signIn(values.email, values.password).finally(() => {
+          setIsLoading(false);
+        });
+      }
+    : (values) => {
+        setIsLoading(true);
+        signUp(values.email, values.password).finally(() => {
+          setIsLoading(false);
+        });
+      };
 
   return (
     <>
-      <HeaderTabs mode={"GUEST"} />
+      <HeaderTabs mode={UserMode.GUEST} />
       <Space h="lg" />
+      {mode !== AuthMode.VERIFY ?
 
       <Container size={420} my={40}>
         <Title
@@ -103,15 +138,53 @@ const AuthForm = ({ mode }) => {
           <Group position="apart" mt="lg">
             <Checkbox label="Remember me" />
             <Anchor component="button" size="sm">
-              {isLogin ? "Forgot password?" : "Forgot email?"}
+              {isLogin ? <Link href='/login/reset-password'>
+              Forgot password?
+                </Link> : "Forgot email?"}
             </Anchor>
           </Group>
-          <Button fullWidth mt="xl" type="submit">
+          <Button fullWidth mt="xl" type="submit" loading ={isLoading}>
             {isLogin ? "Sign in" : "Sign up"}
           </Button>
           </form>
         </Paper>
       </Container>
+
+      :
+
+      <Container  size={420} my={40}>
+        <Paper withBorder shadow="lg" p={30} mt={30} radius="md">
+            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="RateUp Logo" width={90} height={60} />
+            <Space h="lg" />
+            <Title>Verify your email address</Title>
+            <Space h="md" />
+            <Text>Please click on the link in the email we just sent you to confirm your email address.</Text>
+            <Space h="lg" />
+            <Space h="xl" />
+
+            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              onClick={sendEmail}>
+                  <NavLink
+                  label="Resend or change email"
+                  icon={<IconSend size="1rem" stroke={1.5} />}
+                  rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Text>
+
+            <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
+                <NavLink
+                  label="Logout"
+                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Link>
+            </Text>
+        </Paper>
+      </Container>
+
+      }
     </>
   );
 };
