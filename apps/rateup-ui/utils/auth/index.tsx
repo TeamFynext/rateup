@@ -21,14 +21,14 @@ export function useSignIn() {
         ],
       });
 
-      if (response.status === "FIELD_ERROR") {
-        response.formFields.forEach((formField) => {
-          if (formField.id === "email") {
+      if (response?.status === "FIELD_ERROR") {
+        response?.formFields?.forEach((formField) => {
+          if (formField?.id === "email") {
             // Email validation failed (for example incorrect email syntax).
-            showNotification('load-data', 'red', 'Error', formField.error, <IconX size="1rem" />);
+            showNotification('load-data', 'red', 'Error', formField?.error, <IconX size="1rem" />);
           }
         });
-      } else if (response.status === "WRONG_CREDENTIALS_ERROR") {
+      } else if (response?.status === "WRONG_CREDENTIALS_ERROR") {
         // Email password combination is incorrect.
         showNotification('load-data', 'red', 'Failed', 'Email password combination is incorrect.', <IconX size="1rem" />);
       } else {
@@ -37,9 +37,9 @@ export function useSignIn() {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+      if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification('load-data', 'red', 'Error', err.message, <IconX size="1rem" />);
+        showNotification('load-data', 'red', 'Error', err?.message, <IconX size="1rem" />);
       } else {
         showNotification('load-data', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
       }
@@ -76,16 +76,16 @@ export function useSignUp() {
         ],
       });
 
-      if (response.status === "FIELD_ERROR") {
-        response.formFields.forEach((formField) => {
-          if (formField.id === "email") {
+      if (response?.status === "FIELD_ERROR") {
+        response?.formFields?.forEach((formField) => {
+          if (formField?.id === "email") {
             // Email validation failed (for example incorrect email syntax),
             // or the email is not unique.
-            showNotification('sign-up-error', 'red', 'Error', formField.error, <IconX size="1rem" />);
-          } else if (formField.id === "password") {
+            showNotification('sign-up-error', 'red', 'Error', formField?.error, <IconX size="1rem" />);
+          } else if (formField?.id === "password") {
             // Password validation failed.
             // Maybe it didn't match the password strength
-            showNotification('sign-up-error', 'red', 'Error', formField.error, <IconX size="1rem" />);
+            showNotification('sign-up-error', 'red', 'Error', formField?.error, <IconX size="1rem" />);
           }
         });
       } else {
@@ -95,9 +95,9 @@ export function useSignUp() {
         //consumeVerificationCode()
       }
     } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+      if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification('sign-up-error', 'red', 'Error', err.message, <IconX size="1rem" />);
+        showNotification('sign-up-error', 'red', 'Error', err?.message, <IconX size="1rem" />);
       } else {
         showNotification('sign-up-error', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
       }
@@ -114,7 +114,7 @@ export const useConsumeVerificationCode = () => {
   const consumeVerificationCode = async () => {
     try {
       let response = await verifyEmail();
-      if (response.status === "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR") {
+      if (response?.status === "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR") {
         // This can happen if the verification code is expired or invalid.
         // You should ask the user to retry
         showNotification(
@@ -132,13 +132,13 @@ export const useConsumeVerificationCode = () => {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+      if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
         showNotification(
           "sign-up-error",
           "red",
           "Error",
-          err.message,
+          err?.message,
           <IconX size="1rem" />
         );
       } else {
@@ -165,15 +165,15 @@ export function useEmailSend() {
   return useCallback(async () => {
     try {
       let response = await sendVerificationEmail();
-      if (response.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
+      if (response?.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
         console.log("verified success")
         router.push("/dashboard");
       } else {
         showNotification('send-mail-error', 'blue', 'Check mail inbox & Verify', "Please check your email and click the link in it", <IconInfoCircleFilled size="1rem" />);
       }
     } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
-        showNotification('send-mail-error', 'red', 'Error', err.message, <IconX size="1rem" />);
+      if (err?.isSuperTokensGeneralError === true) {
+        showNotification('send-mail-error', 'red', 'Error', err?.message, <IconX size="1rem" />);
       } else {
         showNotification('send-mail-error', 'red', 'Error', "Oops! Something went wrong.", <IconX size="1rem" />);
       }

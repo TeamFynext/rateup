@@ -19,23 +19,24 @@ import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
 import Link from 'next/link';
 import { useSendResetEmail, useSetNewPassword } from "../../utils/auth/resetPassword";
+import { ResetSteps, UserMode } from "../../utils/enums";
 
 const ResetPasswordForm = ({ mode }) => {
 
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
-  const [page, setPage] = useState(token && rid==="emailpassword" ? "STEP_THREE" : mode)
+  const [page, setPage] = useState(token && rid==="emailpassword" ? ResetSteps.STEP_THREE : mode)
 
 
   useEffect(() => {
       if (token && rid) {
-        setPage("STEP_THREE")
+        setPage(ResetSteps.STEP_THREE)
       }else{
         if(requestStatus === 'success'){
-            setPage("STEP_TWO")
+            setPage(ResetSteps.STEP_TWO)
             console.log("Activating page 2")
           }else{
-            setPage("STEP_ONE")
+            setPage(ResetSteps.STEP_ONE)
           }
       }
 
@@ -90,7 +91,7 @@ const ResetPasswordForm = ({ mode }) => {
 const sendResetEmail = useSendResetEmail();
 const setNewPassword = useSetNewPassword();
 
-const isEmailPage = page === "STEP_ONE";
+const isEmailPage = page === ResetSteps.STEP_ONE;
 const [isLoading, setIsLoading] = useState(false);
 
 const onSubmit = isEmailPage
@@ -109,9 +110,9 @@ const onSubmit = isEmailPage
 
   return (
     <>
-      <HeaderTabs mode={"GUEST"} />
+      <HeaderTabs mode={UserMode.GUEST} />
       <Space h="lg" />
-      {page !=="STEP_TWO" ?
+      {page !== ResetSteps.STEP_TWO ?
 
       <Container size={420} my={40}>
         <Title
@@ -121,7 +122,7 @@ const onSubmit = isEmailPage
             fontWeight: 900,
           })}
         >
-          {page !== "STEP_THREE" ? "Reset your Password!" : "Create new password!"}
+          {page !== ResetSteps.STEP_THREE ? "Reset your Password!" : "Create new password!"}
         </Title>
         <Text color="dimmed" size="sm" align="center" mt={5}>
           {isEmailPage ? (

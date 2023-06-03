@@ -20,6 +20,7 @@ import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
 import {  useConsumeVerificationCode, useEmailSend, useSignIn, useSignUp } from "../../utils/auth";
 import Link from 'next/link';
+import { AuthMode, UserMode } from "../../utils/enums";
 
 const AuthForm = ({ mode }) => {
 
@@ -29,7 +30,7 @@ const AuthForm = ({ mode }) => {
   const sendEmail = useEmailSend();
 
   useEffect(() => {
-    if (mode === "VERIFY") {
+    if (mode === AuthMode.VERIFY) {
       if (token && rid==="emailverification") {
         consumeVerificationCode()
         console.log(rid)
@@ -65,7 +66,7 @@ const AuthForm = ({ mode }) => {
   const signIn = useSignIn();
   const signUp = useSignUp(); 
 
-  const isLogin = mode === "LOGIN";
+  const isLogin = mode === AuthMode.LOGIN;
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -85,9 +86,9 @@ const AuthForm = ({ mode }) => {
 
   return (
     <>
-      <HeaderTabs mode={"GUEST"} />
+      <HeaderTabs mode={UserMode.GUEST} />
       <Space h="lg" />
-      {mode !=="VERIFY" ?
+      {mode !== AuthMode.VERIFY ?
 
       <Container size={420} my={40}>
         <Title
