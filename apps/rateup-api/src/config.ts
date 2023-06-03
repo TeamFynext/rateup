@@ -5,6 +5,8 @@ import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createUser, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 
+const frontendUrl =  process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "http://localhost:3000";
+
 export const SuperTokensConfig: TypeInput = {
   framework: "fastify",
   supertokens: {
@@ -16,14 +18,54 @@ export const SuperTokensConfig: TypeInput = {
     // learn more about this on https://supertokens.com/docs/session/appinfo
     appName: "rateup",
     apiDomain: process.env.API_URL ? process.env.API_URL : "http://localhost:3001",
-    websiteDomain: process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "http://localhost:3000",
+    websiteDomain: frontendUrl,
     apiBasePath: "/api/auth",
     websiteBasePath: "/auth",
   },
   recipeList: [
-    EmailPassword.init(), // initializes signin / sign up features
+    EmailPassword.init({
+      emailDelivery: {
+          override: (originalImplementation) => {
+              return {
+                  ...originalImplementation,
+                  sendEmail: async function (input) {
+                      if (input.type === "PASSWORD_RESET") {
+                          // You can change the path, domain of the reset password link,
+                          // or even deep link it to your mobile app
+                          return originalImplementation.sendEmail({
+                              ...input,
+                              passwordResetLink: input.passwordResetLink.replace(
+                                  `${frontendUrl}/auth/reset-password`,
+                                  `${frontendUrl}/login/reset-password`,
+                                  )
+                          })
+                      }
+                      return originalImplementation.sendEmail(input);
+                  }
+              }
+          }
+      }
+  }), // initializes signin / sign up features
     EmailVerification.init({
       mode: "REQUIRED", // or "OPTIONAL"
+      emailDelivery: {
+        override: (originalImplementation) => {
+            return {
+                ...originalImplementation,
+                sendEmail(input) {
+                    return originalImplementation.sendEmail({
+                        ...input,
+                        emailVerifyLink: input.emailVerifyLink.replace(
+                            // This is: `${websiteDomain}${websiteBasePath}/verify-email`
+                            `${frontendUrl}/auth/verify-email`,
+                            `${frontendUrl}/login/verify-email`
+                            ),
+                        }
+                    )
+                },
+            }
+        }
+      },
       override: {
         apis: (originalImplementation) => {
           return {
