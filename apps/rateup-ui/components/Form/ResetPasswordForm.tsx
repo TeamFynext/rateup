@@ -89,9 +89,21 @@ const sendResetEmail = useSendResetEmail();
 const setNewPassword = useSetNewPassword();
 
 const isEmailPage = page === "STEP_ONE";
-  const onSubmit = isEmailPage
-    ? (values) => sendResetEmail(values.email)
-    : (values) => setNewPassword(values.confirmPassword);
+const [isLoading, setIsLoading] = useState(false);
+
+const onSubmit = isEmailPage
+  ? (values) => {
+      setIsLoading(true);
+      sendResetEmail(values.email).finally(() => {
+        setIsLoading(false);
+      });
+    }
+  : (values) => {
+      setIsLoading(true);
+      setNewPassword(values.confirmPassword).finally(() => {
+        setIsLoading(false);
+      });
+  };
 
   return (
     <>
@@ -151,7 +163,7 @@ const isEmailPage = page === "STEP_ONE";
             </>
         }
 
-          <Button fullWidth mt="xl" type="submit">
+          <Button fullWidth mt="xl" type="submit"  loading ={isLoading}>
             {isEmailPage ? "Email Reset Link" : "Change Password"}
           </Button>
           <Group position="apart" mt="lg">

@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import { HeaderTabs } from "../../components/Layout/Header/Header";
 import {
   Container,
@@ -65,9 +65,21 @@ const AuthForm = ({ mode }) => {
 
   const isLogin = mode === "LOGIN";
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const onSubmit = isLogin
-    ? (values) => signIn(values.email, values.password)
-    : (values) => signUp(values.email, values.password);
+    ? (values) => {
+        setIsLoading(true);
+        signIn(values.email, values.password).finally(() => {
+          setIsLoading(false);
+        });
+      }
+    : (values) => {
+        setIsLoading(true);
+        signUp(values.email, values.password).finally(() => {
+          setIsLoading(false);
+        });
+      };
 
   return (
     <>
@@ -128,7 +140,7 @@ const AuthForm = ({ mode }) => {
                 </Link> : "Forgot email?"}
             </Anchor>
           </Group>
-          <Button fullWidth mt="xl" type="submit">
+          <Button fullWidth mt="xl" type="submit" loading ={isLoading}>
             {isLogin ? "Sign in" : "Sign up"}
           </Button>
           </form>
