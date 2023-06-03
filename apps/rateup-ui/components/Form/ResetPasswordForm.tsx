@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import { HeaderTabs } from "../../components/Layout/Header/Header";
+import { IconSend , IconArrowAutofitLeft, IconChevronRight} from "@tabler/icons-react";
 import {
   Container,
   Title,
@@ -11,7 +12,8 @@ import {
   Paper,
   Group,
   Button,
-  Image
+  Image,
+  NavLink
 } from "@mantine/core";
 import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
@@ -180,23 +182,33 @@ const onSubmit = isEmailPage
       </Container>
 
       :
-
       <Container  size={420} my={40}>
         <Paper withBorder shadow="lg" p={30} mt={30} radius="md">
             <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="RateUp Logo" width={90} height={60} />
             <Space h="lg" />
             <Title>Check your email</Title>
             <Space h="md" />
-            <Text>A password reset email has been sent to {emailTo} . If it exists in our system. </Text>
+            <Text>A password reset email has been sent to <Text span c="blue" inherit>{emailTo}</Text> . If it exists in our system. </Text>
+            <Space h="xl" />
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-              ><Link href="/login/reset-password" style={{ textDecoration: 'none', }}>
-              Resend or change email
-              </Link></Text>
-            <Space h="md" />
-            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-            <Link href="/login" style={{ textDecoration: 'none', }}>
-                 Go to Login
-            </Link>
+              >
+                <Link href="/login/reset-password" style={{ textDecoration: 'none', }}>
+                  <NavLink
+                  label="Resend or change email"
+                  icon={<IconSend size="1rem" stroke={1.5} />}
+                  rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
+                  variant="subtle" 
+                />
+                  </Link>
+              </Text>
+            <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              <Link href="/login" style={{ textDecoration: 'none', }}>
+                <NavLink
+                  label="Login"
+                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Link>
             </Text>
         </Paper>
       </Container>

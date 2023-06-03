@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import { HeaderTabs } from "../../components/Layout/Header/Header";
+import { IconSend , IconArrowAutofitLeft, IconChevronRight} from "@tabler/icons-react";
 import {
   Container,
   Title,
@@ -12,7 +13,8 @@ import {
   Paper,
   Group,
   Button,
-  Image
+  Image,
+  NavLink
 } from "@mantine/core";
 import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
@@ -157,13 +159,26 @@ const AuthForm = ({ mode }) => {
             <Space h="md" />
             <Text>Please click on the link in the email we just sent you to confirm your email address.</Text>
             <Space h="lg" />
+            <Space h="xl" />
+
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-              onClick={sendEmail}>Resend Email</Text>
-            <Space h="md" />
-            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-            <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
-                 Logout
-            </Link>
+              onClick={sendEmail}>
+                  <NavLink
+                  label="Resend or change email"
+                  icon={<IconSend size="1rem" stroke={1.5} />}
+                  rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Text>
+
+            <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
+                <NavLink
+                  label="Logout"
+                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Link>
             </Text>
         </Paper>
       </Container>
