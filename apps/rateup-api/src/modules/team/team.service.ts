@@ -5,6 +5,7 @@ import { CreateTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, InviteMemberI
 import EmailPassword from "supertokens-node/recipe/emailpassword";
 import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createEmailBody } from "../../utils/email/emailBody";
+import { Role } from "../../utils/enums";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 2) {
@@ -188,11 +189,6 @@ try {
     console.error(error);
     throw error;
   }
-}
-
-enum Role {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  ADMIN = 'ADMIN'
 }
 
 //Complete Email invite

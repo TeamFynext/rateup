@@ -2,8 +2,9 @@ import EmailPassword from "supertokens-node/recipe/emailpassword";
 import Session from "supertokens-node/recipe/session";
 import { TypeInput } from "supertokens-node/types";
 import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createUser, getOrgIdAndRole } from "./modules/user/user.service";
+import { createUser, createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
+import { getValueByKey } from "./utils/signUp";
 
 const frontendUrl =  process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "http://localhost:3000";
 
@@ -24,6 +25,17 @@ export const SuperTokensConfig: TypeInput = {
   },
   recipeList: [
     EmailPassword.init({
+      signUpFeature: {
+        formFields: [{
+          id: "name"
+        }, {
+          id: "orgName"
+        },
+        {
+          id: "inviteCode"
+        }      
+      ]
+      },
       emailDelivery: {
           override: (originalImplementation) => {
               return {
@@ -44,7 +56,46 @@ export const SuperTokensConfig: TypeInput = {
                   }
               }
           }
-      }
+      },
+      override: {
+        apis: (originalImplementation) => {
+            return {
+                ...originalImplementation,
+                signUpPOST: async function (input) {
+
+                    if (originalImplementation.signUpPOST === undefined) {
+                        throw Error("Should never come here");
+                    }
+                    let formFields = input.formFields;
+                    const inviteCode = getValueByKey(formFields, "inviteCode");
+
+                    if (inviteCode !== process.env.INVITE_CODE) {
+                     return {
+                          status: "GENERAL_ERROR",
+                          message: "Invite Code not valid"
+                      }
+                    }
+                    // First we call the original implementation of signUpPOST.
+                    let response = await originalImplementation.signUpPOST(input);
+
+                    // Post sign up response, we check if it was successful
+                    if (response.status === "OK") {
+
+                      const name = getValueByKey(formFields, "name");
+                      const orgName = getValueByKey(formFields, "orgName");
+
+                      let { id, email } = response.user;
+
+                      if(name && orgName){
+                        const userSignup = await createUserSignup({ id, email, name, orgName });
+                      }
+                      
+                    }
+                    return response;
+                }
+            }
+        }
+    }
   }), // initializes signin / sign up features
     EmailVerification.init({
       mode: "REQUIRED", // or "OPTIONAL"
@@ -84,11 +135,13 @@ export const SuperTokensConfig: TypeInput = {
               if (response.status === "OK") {
                 let { id, email } = response.user;
 
-                const user = await createUser({ id, email });
+                console.log("--------------Email Verification Part---------------------------"+JSON.stringify(response.user))
 
-                if(user){
+               // const user = await createUser({ id, email });
+
+               // if(user){
                   let orgMember = await getOrgIdAndRole({ id: id });
-                }
+               // }
 
               }
               return response;
@@ -115,7 +168,7 @@ export const SuperTokensConfig: TypeInput = {
                 orgId: user?.orgId,
                 role: user?.role,
               };
-              console.log(input.accessTokenPayload);
+              console.log("Session Start Data:........ "+JSON.stringify(input.accessTokenPayload));
               return originalImplementation.createNewSession(input);
             },
           };
