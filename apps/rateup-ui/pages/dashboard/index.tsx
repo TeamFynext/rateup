@@ -19,11 +19,10 @@ export default function DashboardHome() {
     const { user } = useUser();
 
     useEffect(() => {
-        if (!user) {
+        if (!user?.role) {
             queryClient.invalidateQueries(['userInfoQuery']);
         }
         console.log("Dashboard Role:" + user?.role);
-
     }, []);
 
     useEffect(() => {

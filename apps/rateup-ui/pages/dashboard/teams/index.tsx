@@ -270,17 +270,17 @@ export default function Teams() {
                                 sort
                                 ? [...teamsData?.data]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
-                            ).map(({ id, name }) => (
-                                <tr key={id}>
-                                    <td>{name}</td>
-                                    <td>{id}</td>
+                            ).map(({ teamId, teamName }) => (
+                                <tr key={teamId}>
+                                    <td>{teamName} </td>
+                                    <td>{teamId}</td>
                                     <td>
-                                        <Button color="blue" onClick={() => viewTeam(id)}>
+                                        <Button color="blue" onClick={() => viewTeam(teamId)}>
                                              View
                                         </Button>
                                     </td>
                                     <td>
-                                        <Button color="red" onClick={() => setDeleteTeamId(id)}>
+                                        <Button color="red" onClick={() => setDeleteTeamId(teamId)}>
                                             Delete
                                         </Button>
                                     </td>

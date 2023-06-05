@@ -17,10 +17,10 @@ import {
   NavLink
 } from "@mantine/core";
 import { useRouter } from 'next/router';
-import { useForm } from "@mantine/form";
 import {  useConsumeVerificationCode, useEmailSend, useSignIn, useSignUp } from "../../utils/auth";
 import Link from 'next/link';
 import { AuthMode, UserMode } from "../../utils/enums";
+import { useForm } from "@mantine/form";
 
 const AuthForm = ({ mode }) => {
 
@@ -40,13 +40,46 @@ const AuthForm = ({ mode }) => {
     }
   }, [mode, token, sendEmail, consumeVerificationCode, rid]); // add dependencies here
   
-  const form = useForm({
-    initialValues: {
+  const signIn = useSignIn();
+  const signUp = useSignUp(); 
+
+  const isLogin = mode === AuthMode.LOGIN;
+
+  const [isLoading, setIsLoading] = useState(false);
+
+    const loginForm = useForm({
+      initialValues: {
+          email: "",
+          password: "",
+      },
+  
+      validate: {
+          email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+          password: (value) => {
+            if (!value) {
+              return 'Password is required';
+            }
+            if (value.length < 5) {
+              return 'Password should be at least 5 characters long';
+            }
+            if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
+              return 'Password should contain at least one letter and one number';
+            }
+            return null; // Validation passed
+          },
+        },
+    });
+    
+  const signUpForm = useForm({
+      initialValues: {
         email: "",
         password: "",
-    },
-
-    validate: {
+        name: "",
+        orgName: "",
+        inviteCode: "",
+      },
+    
+      validate: {
         email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
         password: (value) => {
           if (!value) {
@@ -60,30 +93,40 @@ const AuthForm = ({ mode }) => {
           }
           return null; // Validation passed
         },
+        name: (value) => {
+          if (value.length < 4) {
+            return 'Name should be at least 4 characters long';
+          }
+          return null; // Validation passed
+        },
+        orgName: (value) => {
+          if (value.length < 4) {
+            return 'Organization name should be at least 4 characters long';
+          }
+          return null; // Validation passed
+        },
+        inviteCode: (value) => {
+          if (value.length < 5) {
+            return 'Invalid invite code';
+          }
+          return null; // Validation passed
+        },
       },
-  });
-
-  const signIn = useSignIn();
-  const signUp = useSignUp(); 
-
-  const isLogin = mode === AuthMode.LOGIN;
-
-  const [isLoading, setIsLoading] = useState(false);
+    });
 
   const onSubmit = isLogin
-    ? (values) => {
-        setIsLoading(true);
-        signIn(values.email, values.password).finally(() => {
-          setIsLoading(false);
-        });
-      }
-    : (values) => {
-        setIsLoading(true);
-        signUp(values.email, values.password).finally(() => {
-          setIsLoading(false);
-        });
-      };
-
+  ? (values) => {
+      setIsLoading(true);
+      signIn(values.email, values.password).finally(() => {
+        setIsLoading(false);
+      });
+    }
+  : (values) => {
+      setIsLoading(true);
+      signUp(values.email, values.password, values.name, values.orgName, values.inviteCode ).finally(() => {
+        setIsLoading(false);
+      });
+    };
   return (
     <>
       <HeaderTabs mode={UserMode.GUEST} />
@@ -121,18 +164,21 @@ const AuthForm = ({ mode }) => {
         </Text>
 
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={form.onSubmit(onSubmit)}>
+        <form onSubmit={isLogin ? loginForm.onSubmit(onSubmit) : signUpForm.onSubmit(onSubmit) }>
+
+        {isLogin ?
+          <>
           <TextInput
             withAsterisk
             label="Email"
             placeholder="your@email.com"
-            {...form.getInputProps('email')}
+            {...loginForm.getInputProps('email')}
           />
           <PasswordInput
             label="Password"
             placeholder="Your password"
             required
-            {...form.getInputProps('password')}
+            {...loginForm.getInputProps('password')}
             mt="md"
           />
           <Group position="apart" mt="lg">
@@ -143,6 +189,45 @@ const AuthForm = ({ mode }) => {
                 </Link> : "Forgot email?"}
             </Anchor>
           </Group>
+          </>
+          :
+          <>
+            <TextInput
+                withAsterisk
+                label="Name"
+                placeholder="Enter your name"
+                {...signUpForm.getInputProps('name')}
+              />
+            <TextInput
+              withAsterisk
+              label="Organization Name"
+              placeholder="Enter company name"
+              {...signUpForm.getInputProps('orgName')}
+              mt="md"
+            />
+            <TextInput
+              withAsterisk
+              label="Email"
+              placeholder="your@email.com"
+              {...signUpForm.getInputProps('email')}
+              mt="md"
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Your password"
+              required
+              {...signUpForm.getInputProps('password')}
+              mt="md"
+            />
+            <TextInput
+              withAsterisk
+              label="Invite Code"
+              placeholder="Enter invitation code"
+              {...signUpForm.getInputProps('inviteCode')}
+              mt="md"
+            />
+          </>
+        }
           <Button fullWidth mt="xl" type="submit" loading ={isLoading}>
             {isLogin ? "Sign in" : "Sign up"}
           </Button>

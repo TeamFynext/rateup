@@ -1,6 +1,6 @@
 import { signIn , signUp} from "supertokens-web-js/recipe/emailpassword";
 import { useRouter } from "next/router";
-import { IconInfoCircleFilled, IconX } from "@tabler/icons-react";
+import { IconInfoCircleFilled, IconX, IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 
 export function useSignIn() {
@@ -61,7 +61,7 @@ export function showNotification(id: string, color: string, title: string, messa
 export function useSignUp() {
   const router = useRouter();
   
-  return async function(email: string, password: string) {
+  return async function(email: string, password: string, name: string, orgName: string, inviteCode: string) {
     try {
       let response = await signUp({
         formFields: [
@@ -72,6 +72,18 @@ export function useSignUp() {
           {
             id: "password",
             value: password,
+          },
+          {
+            id: "name",
+            value: name,
+          },
+          {
+            id: "orgName",
+            value: orgName,
+          },
+          {
+            id: "inviteCode",
+            value: inviteCode,
           },
         ],
       });
@@ -110,15 +122,24 @@ import { verifyEmail } from "supertokens-web-js/recipe/emailverification";
 
 export const useConsumeVerificationCode = () => {
   const router = useRouter();
-
   const consumeVerificationCode = async () => {
+
+    notifications.show({
+      id: 'verify-email',
+      loading: true,
+      title: 'Verifying email',
+      message: `Hold on, We are verifying your email...`,
+      autoClose: false,
+      withCloseButton: false,
+  });
+
     try {
       let response = await verifyEmail();
       if (response?.status === "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR") {
         // This can happen if the verification code is expired or invalid.
         // You should ask the user to retry
         showNotification(
-          "verify-email-error",
+          "verify-email",
           "red",
           "Error",
           "Oops! Seems like the verification link expired. Please try again",
@@ -127,7 +148,15 @@ export const useConsumeVerificationCode = () => {
         //window.location.assign("/login/verify-email"); // back to the email sending screen.
       } else {
         // email was verified successfully.
-        window.location.assign("/dashboard");
+        notifications.update({
+          id: 'verify-email',
+          color: 'teal',
+          title: 'Success',
+          message: "Verified email successfully.",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+      });
+
         console.log("verified success");
         router.push("/dashboard");
       }
@@ -135,7 +164,7 @@ export const useConsumeVerificationCode = () => {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
         showNotification(
-          "sign-up-error",
+          "verify-email",
           "red",
           "Error",
           err?.message,
@@ -143,7 +172,7 @@ export const useConsumeVerificationCode = () => {
         );
       } else {
         showNotification(
-          "sign-up-error",
+          "verify-email",
           "red",
           "Error",
           "Oops! Something went wrong.",
