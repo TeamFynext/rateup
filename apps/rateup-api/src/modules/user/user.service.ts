@@ -78,6 +78,7 @@ export async function getLoggedUserInfo(  request: FastifyRequest,
     const accessTokenPayload = session.getAccessTokenPayload();
     let role = accessTokenPayload.role;
     let email = accessTokenPayload.email;
+    let orgId = accessTokenPayload.orgId;
 
     if (session === undefined) {
         throw Error("No session available")
@@ -87,9 +88,14 @@ export async function getLoggedUserInfo(  request: FastifyRequest,
     if(!role){
       const user = await getOrgIdAndRole({ id: userId });
       role = user?.role
+      orgId = user?.orgId
+
+      await session!.mergeIntoAccessTokenPayload(
+        { orgId: orgId, role: role }
+      );
     }
 
-  return {userId, role, email}
+  return {userId, role, email, orgId}
 }
 
 

@@ -21,7 +21,7 @@ export const SuperTokensConfig: TypeInput = {
     apiDomain: process.env.API_URL ? process.env.API_URL : "http://localhost:3001",
     websiteDomain: frontendUrl,
     apiBasePath: "/api/auth",
-    websiteBasePath: "/auth",
+    websiteBasePath: "/login",
   },
   recipeList: [
     EmailPassword.init({
