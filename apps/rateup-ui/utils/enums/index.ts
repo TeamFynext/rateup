@@ -1,6 +1,7 @@
 export const AuthMode = {
     VERIFY: "VERIFY",
     LOGIN: "LOGIN",
+    SIGNUP: "SIGNUP"
   };
     
 export const UserMode = {

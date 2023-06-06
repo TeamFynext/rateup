@@ -119,6 +119,7 @@ export default function Teams() {
                     autoClose: 3000,
                 });
             close()
+            reftchTeams()
         },
 
         onError: (error: Error) => {
