@@ -1,11 +1,11 @@
 import prisma from "../../utils/prisma";
-import sendEmail from "../../utils/email/sendEmail";
 import { createUser } from "../user/user.service";
 import { CreateTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, InviteMemberInput } from "./team.schema";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
 import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createEmailBody } from "../../utils/email/emailBody";
 import { Role } from "../../utils/enums";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 2) {
@@ -169,13 +169,14 @@ try {
     if(newInvite){
       const msg = {
         to: email, // Change to your recipient
-        from: 'hello@rateup.app', // Change to your verified sender
+       // from: 'hello@rateup.app', // Change to your verified sender
         subject: 'Invitation to Join Team - RateUp.app',
         text: 'You are invited to manage a Team in RateUp. Click on the accept to continue with the process.',
         html: createEmailBody(`${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}`, email)
       }
       try {
-        sendEmail(msg);
+        //sendEmail(msg);
+        sendAWSEmail(msg)
       } catch (error) {
         console.error(error)
         throw new Error('Email sending failed. E:'+ error);
