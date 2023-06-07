@@ -31,6 +31,12 @@ enum InviteType {
   TEAM
 }
 
+enum ResponsePlatform {
+  WEB
+  WHATSAPP
+  APP
+}
+
 model User {
   id         String       @id @default(uuid()) @db.Uuid
   createdAt  DateTime     @default(now())
@@ -64,7 +70,6 @@ model OrgMember {
 }
 
 model Team {
-  @@unique([name, orgId], name: "team_name_org_id_unique")
   id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt   DateTime     @default(now())
   name        String
@@ -73,6 +78,8 @@ model Team {
   members     TeamMember[]
   surveys     Survey[]
   invitations Invitation[]
+
+  @@unique([name, orgId], name: "team_name_org_id_unique")
 }
 
 model TeamMember {
@@ -112,13 +119,28 @@ model Survey {
   teamId      String           @db.Uuid
   active      Boolean          @default(true)
   responses   SurveyResponse[]
+  sessions    WaSession[]
 }
 
 model SurveyResponse {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  survey    Survey   @relation(fields: [surveyId], references: [id])
-  surveyId  String   @db.Uuid
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime         @default(now())
+  survey    Survey           @relation(fields: [surveyId], references: [id])
+  surveyId  String           @db.Uuid
   responses Json[]
-  language  String
+  language  String           @default("")
+  platform  ResponsePlatform @default(WEB)
+  phone     String           @default("")
+}
+
+// Whatsapp session
+model WaSession {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime @default(now())
+  phone             String   @unique
+  survey            Survey   @relation(fields: [surveyId], references: [id])
+  surveyId          String   @db.Uuid
+  currentQuestionId String
+  responses         Json[]
+  language          String   @default("")
 }

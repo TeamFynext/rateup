@@ -31,3 +31,7 @@ export enum SmileyResponse {
   Sad = "Sad",
   VerySad = "Very Sad",
 }
+export enum LogicAction {
+  NextQ = "NextQ",
+  EndSurvey = "EndSurvey",
+}

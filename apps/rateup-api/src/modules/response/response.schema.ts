@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
 import { QuestionType } from "../../types/enums";
+import { ResponsePlatform } from "@prisma/client";
 
 const questionResponseSchema = z.object({
   questionId: z.string(),

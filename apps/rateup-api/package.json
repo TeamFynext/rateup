@@ -12,6 +12,8 @@
     "@fastify/formbody": "^7.4.0",
     "@prisma/client": "^4.14.0",
     "@sendgrid/mail": "^7.7.0",
+    "axios": "^1.4.0",
+    "pino": "^8.14.1",
     "aws-sdk": "^2.1391.0",
     "dotenv": "^16.0.3",
     "fastify": "^4.17.0",

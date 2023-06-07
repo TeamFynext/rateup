@@ -13,6 +13,7 @@ import { surveySchemas } from "./modules/survey/survey.schema";
 import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
 import { userRoutes } from "./modules/user/user.route";
+import { wasurveyRoutes } from "./modules/whatsappSurvey/wasurvey.route";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas];
@@ -29,4 +30,5 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(responseRoutes, { prefix: "api/response" });
     server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
     server.register(responsePublicRoutes, { prefix: "api/public/response" })
+    server.register(wasurveyRoutes, { prefix: "webhook" })
 }

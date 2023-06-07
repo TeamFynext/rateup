@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import supertokens from "supertokens-node";
 import { plugin } from "supertokens-node/framework/fastify";
-import { logger } from "./utils/logger";
+import { logOptions } from "./utils/logger";
 require("dotenv").config();
 
 import { errorHandler } from "supertokens-node/framework/fastify";
@@ -11,7 +11,7 @@ import { SuperTokensConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
 
 const server = Fastify({
-  logger,
+  logger: logOptions,
 });
 
 supertokens.init(SuperTokensConfig);

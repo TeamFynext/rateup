@@ -1,21 +1,20 @@
-const envToLogger = {
-  development: {
-    transport: {
-      target: "pino-pretty",
-      options: {
-        translateTime: "HH:MM:ss Z",
-        ignore: "pid,hostname",
-      },
+import pino from "pino";
+import PinoPretty from "pino-pretty";
+const { NO_LOG } = process.env;
+const prettyLog = {
+  transport: {
+    target: "pino-pretty",
+    options: {
+      translateTime: "HH:MM:ss Z",
+      ignore: "pid,hostname",
     },
   },
-  production: true,
-  test: false,
 };
-let NODE_ENV;
-if (!process.env.NODE_ENV) {
-  NODE_ENV = "production";
-} else {
-  NODE_ENV = process.env.NODE_ENV;
-}
-// @ts-ignore
-export const logger: any = envToLogger[NODE_ENV] ?? true;
+console.log('set NO_LOG to true to disable logging')
+export const logOptions: any = NO_LOG === "true" ? false : prettyLog;
+export const log = pino(
+  {
+    enabled: NO_LOG !== "true",
+  },
+  PinoPretty()
+);
