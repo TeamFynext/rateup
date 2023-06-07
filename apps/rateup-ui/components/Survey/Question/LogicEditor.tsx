@@ -131,7 +131,7 @@ function getResponses(question: Question, selectedLanguage): Array<any> {
     case Q.LD:
       return Object.values(LDResponse);
     case Q.MCQ:
-      return question.choices[selectedLanguage];
+      return question.choices?.[selectedLanguage] || [];
     case Q.YN:
       return Object.values(YNResponse);
     case Q.Opinion:

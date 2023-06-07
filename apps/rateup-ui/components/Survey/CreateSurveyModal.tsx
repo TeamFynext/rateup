@@ -18,7 +18,7 @@ interface FormValues {
   teamId: string;
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-
+let Languages = new Set(["English"])
 export function CreateSurveyModal({ open, close }) {
   const createSurveyMutation = useCreateSurveyMutation();
   const {
@@ -89,11 +89,14 @@ export function CreateSurveyModal({ open, close }) {
               placeholder="Type to create new language"
               searchable
               creatable
-              data={["English"]}
+              // TODO: Add a user-level language list
+              data={Array.from(Languages)}
               getCreateLabel={(query) => `+ Create ${query}`}
               //@ts-ignore
               onCreate={(query) => {
-                throw new Error("Not implemented");
+                if(form.values.languages.includes(query)) return
+                form.setFieldValue("languages", [...form.values.languages, query])
+                Languages.add(query)
               }}
               {...form.getInputProps("languages")}
             />
