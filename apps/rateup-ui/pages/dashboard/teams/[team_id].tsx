@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Flex, Title, Modal, Box, TextInput, Space, Text, Table, Button  } from '@mantine/core';
+import { Tabs, Paper, Loader , Flex, Title, Modal, Box, TextInput, Space, Text, Table, Button  } from '@mantine/core';
 import ButtonComponent from "../../../components/Button/ButtonComponent";
 import { IconSquarePlus, IconSelector, IconCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -48,13 +48,13 @@ const TeamDetails = () => {
             close()
         },
 
-        onError: (error: Error) => {
-            console.error("Error creating invite:", error.message);
+        onError: (error: any) => {
+            console.error("Error creating invite:", error?.response?.data);
             notifications.update({
                 id: 'load-data',
                 color: 'red',
                 title: 'Failed',
-                message: error.message,
+                message: error?.response?.data?.message || error.message,
                 icon: <IconCheck size="1rem" />,
                 autoClose: 3000,
             });
@@ -204,7 +204,7 @@ const TeamDetails = () => {
             </Flex>
 
                         <Paper shadow="xs" radius="md" p="xl">
-                {teamsMembersData && teamsMembersData.data && teamsMembersData.data.length > 0 ? (
+                {teamsMembersData?.data?.length > 0 ? (
                     <Table>
                         <thead>
                             <tr>
@@ -234,7 +234,7 @@ const TeamDetails = () => {
                     </Table>
 
                 ) : (
-                    <p>No teams found. Try creating one.</p>
+                    isLoadingMembers ? <Loader />  : <p>No members found. Try adding one.</p>
                 )}
             </Paper>
       </Tabs.Panel>

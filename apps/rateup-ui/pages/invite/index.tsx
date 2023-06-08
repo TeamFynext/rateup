@@ -9,6 +9,7 @@ import ButtonComponent from '../../components/Button/ButtonComponent';
 import styles from './styles.module.css';
 import { HeaderTabs } from '../../components/Layout/Header/Header';
 import { UserMode } from '../../utils/enums';
+import { signOut } from "supertokens-auth-react/recipe/session";
 
 const Invite = () => {
 const router = useRouter();
@@ -23,6 +24,7 @@ else if(type === 'org')
 
 const acceptInvite = async () => {
     let inviteToken = token.toString();
+    await signOut();
     return completeInvite(inviteToken)
 };
 

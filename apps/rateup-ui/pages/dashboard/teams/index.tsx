@@ -1,5 +1,5 @@
 ﻿import ButtonComponent from "../../../components/Button/ButtonComponent";
-import { Flex, Title, Space, Paper, Table, Button, SimpleGrid} from '@mantine/core';
+import { Flex, Title, Loader, Space, Paper, Table, Button, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
@@ -254,10 +254,10 @@ export default function Teams() {
             <Paper shadow="xs" radius="md" p="xl">
                 { isLoadingTeamsUser 
                 
-                ? "Loading Data..."
+                ? <Loader /> 
                 
                 :<>
-                {teamsData && teamsData.data && teamsData.data.length > 0 ? (
+                {teamsData?.data?.length > 0 ? (
                     <Table>
                         <thead>
                             <tr>
