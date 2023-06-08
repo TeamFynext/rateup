@@ -263,7 +263,7 @@ export async function completeInvite(token: string) {
       if (passwordResetToken.status === "UNKNOWN_USER_ID_ERROR") {
           throw new Error("Should never come here");
       }
-      redirectLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=` + passwordResetToken.token
+      redirectLink = `${process.env.FRONTEND_URL}/login/reset-password?token=` + passwordResetToken.token+`&rid=emailpassword`
     }
 
   }
@@ -305,7 +305,7 @@ export async function completeInvite(token: string) {
       }
     }
 
-    redirectLink="http://localhost:3000/auth"
+    redirectLink=`${process.env.FRONTEND_URL}/login}`
   }
 
   return {...updatedInvitation, isUser: isUser, redirectLink};
