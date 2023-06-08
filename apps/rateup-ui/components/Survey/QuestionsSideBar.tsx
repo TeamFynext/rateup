@@ -1,6 +1,6 @@
 //TODO: refactor drag and drop
 
-import { Button } from "@mantine/core";
+import { Button, Center, Paper, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -10,12 +10,15 @@ import { reorderQuestions } from "../../api/surveys/questions/questions.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
+import ButtonComponent from "../Button/ButtonComponent";
+import { IconPlus } from "@tabler/icons-react";
 
 interface QuestionsSideBarProps {
   questions: Question[];
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
+  addQnTrigger?: number
 }
 //TODO: update order on change
 export function QuestionsSideBar({
@@ -23,6 +26,7 @@ export function QuestionsSideBar({
   setActiveTab,
   selectedQ,
   setSelectedQ,
+  addQnTrigger  
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -32,10 +36,20 @@ export function QuestionsSideBar({
     handlers.setState(questions);
   }, [questions]);
 
+  useEffect(() => {
+    addQnTrigger > 0 && handleAddQn()
+  }, [addQnTrigger])
+  
+
   const handleOpenQuestion = (Q: Question) => {
     setSelectedQ(Q);
     setActiveTab(QuestionTabsEnum.Edit);
   };
+
+  const handleAddQn = () => {
+    setActiveTab(QuestionTabsEnum.TypeSelection);
+    setSelectedQ(null);
+  }
 
   const items = questionsState.map((question, index) => (
     <DraggableQuestionCard
@@ -71,14 +85,25 @@ export function QuestionsSideBar({
         questionsReorderMutation.mutate(reorderedQuestions);
       }}
     >
-      <Button
-        onClick={() => {
-          setActiveTab(QuestionTabsEnum.TypeSelection);
-          setSelectedQ(null);
-        }}
-      >
-        Add Question
-      </Button>
+
+      {/* <ButtonComponent onClick={handleAddQn} title={"Add Question"}
+        rightIcon={<IconPlus
+          size="1rem" />}
+          size="md"
+        /> */}
+
+      { !questionsState.length &&
+              <Paper  sx={{ cursor: "pointer", marginTop:"200px" }} onClick={handleAddQn} >
+                <Center h="100%">
+                  <Stack align="center">
+                    <IconPlus size={36}/>
+                    <Text size="xl" fw={700}>Add Question</Text>
+                  </Stack>
+                </Center>
+              </Paper>
+
+        }
+
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (
           <div {...provided.droppableProps} ref={provided.innerRef}>

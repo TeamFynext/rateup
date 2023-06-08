@@ -20,7 +20,7 @@ interface FormValues {
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English"])
 export function CreateSurveyModal({ open, close }) {
-  const createSurveyMutation = useCreateSurveyMutation();
+  const createSurveyMutation = useCreateSurveyMutation({close});
   const {
     isError,
     isLoading,

@@ -14,8 +14,10 @@ import {
   useMantineTheme,
   Group,
   Loader,
+  Space
 } from "@mantine/core";
 import {
+  IconChartBar,
   IconCopy,
   IconDots,
   IconEdit,
@@ -25,7 +27,11 @@ import {
   IconPlus,
   IconShare,
   IconTrash,
+  IconSelector,
+  IconChevronDown,
+  IconPencil
 } from "@tabler/icons-react";
+import ButtonComponent from "../../../components/Button/ButtonComponent";
 import Link from "next/link";
 import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
@@ -41,6 +47,7 @@ export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
 
   const { isLoading, error, data: surveys } = useSurveys();
+  const [sort, setSort] = useState(false)
 
   if (isLoading) return <Loader />;
   if (error || !Array.isArray(surveys)) {
@@ -50,9 +57,62 @@ export default function Surveys() {
 
   return (
     <Container fluid>
-      <Title order={2} mb={"md"}>
-        Surveys
-      </Title>
+      <Flex
+          mih={50}
+          gap="md"
+          justify="space-between"
+          align="center"
+          direction="row"
+          wrap="wrap"
+      >
+          <Flex
+              mih={50}
+              gap="md"
+              justify="flex-start"
+              align="flex-start"
+              direction="column"
+              wrap="wrap"
+          >
+              <Title order={1} mb="md">All Surveys</Title>
+                  
+          </Flex>
+
+          <Flex
+              mih={50}
+              gap="md"
+              justify="flex-start"
+              align="flex-start"
+              direction="row"
+              wrap="wrap"
+          >
+           <Menu shadow="md" width={200} position="bottom-end" offset={2}>
+              <Menu.Target>
+                <ButtonComponent
+                    title={"Status"}
+                    variant="subtle"
+                    rightIcon={<IconChevronDown
+                        size="1rem" />}
+                />
+              </Menu.Target>
+{/* 
+              <Menu.Dropdown >
+                <Menu.Item color="teal" icon={<IconCheck size={14} />}>Active</Menu.Item>
+                <Menu.Item color="red" icon={<IconX size={14} />}>Inactive</Menu.Item>
+              </Menu.Dropdown> */}
+            </Menu>
+
+          <ButtonComponent
+              onClick={ () =>  setSort(!sort)}
+              title={"Sort"}
+              variant="subtle"
+              rightIcon={<IconSelector
+                  size="1rem" />}
+          />
+          </Flex>
+      </Flex>
+
+      <Space h="xl" />
+
       <SimpleGrid
         cols={4}
         spacing={"lg"}
@@ -63,11 +123,11 @@ export default function Surveys() {
           { maxWidth: "md", cols: 1 },
         ]}
       >
-        <Paper p="md" sx={{ cursor: "pointer" }} onClick={open}>
+        <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
           <Center h="100%">
             <Stack align="center">
-              <IconPlus />
-              <Text size="xl">Add Survey</Text>
+              <IconPlus size={36}/>
+              <Text size="xl" fw={700}>Add Survey</Text>
             </Stack>
           </Center>
         </Paper>
@@ -100,17 +160,21 @@ function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
 
   return (
     <Paper
-      p="md"
+      p="md"shadow="lg" radius="lg"
       sx={{ cursor: "pointer" }}
       onClick={() => {
         router.push(`surveys/${survey.id}`);
       }}
     >
-      <Flex justify={"space-between"}>
-        <Text mr={"sm"} truncate size="xl">
+      <Flex justify={"space-between"} align={"center"}>
+        <Text mr={"sm"} truncate size="xl" fw={700}>
           {survey.title}
         </Text>
+        <Group align={"center"} mt="sm" spacing="xs">
+        <IconPencil />
         <SurveyMenu survey={survey} />
+        </Group>
+        
       </Flex>
       <Group align={"center"} mt="sm" spacing="xs">
         <Avatar radius={"xl"} />
@@ -118,8 +182,12 @@ function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
           Created {timeSince}
         </Text>
       </Group>
-      <Flex justify={"space-between"} mt="lg">
-        <StatusBadge active={survey.active} />
+      <Space h="xl" />
+      <Space h="lg" />
+
+      <Flex justify={"space-between"} mt="xl"  align={"center"}>
+        <StatusBadge active={survey.active}/>
+        <Text>Total Responses : 0</Text>
         <Link
           href="#"
           style={{ color: theme.colors.blue[9] }}
@@ -128,8 +196,8 @@ function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
           }}
         >
           <Group spacing="4px">
-            <IconMessage />
-            <Text>{99} Responses</Text>
+            <IconChartBar size={20} />
+            <Text>Responses</Text>
           </Group>
         </Link>
       </Flex>

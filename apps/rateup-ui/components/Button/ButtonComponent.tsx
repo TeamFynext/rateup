@@ -6,9 +6,10 @@ interface Props {
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
     variant?: string;
+    size?: string;
 }
 
-const ButtonComponent = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant }: Props) => {
+const ButtonComponent = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius="lg"
@@ -22,6 +23,45 @@ const ButtonComponent = ({ title, disabled, onClick, leftIcon = null, rightIcon 
             rightIcon={rightIcon}
             onClick={onClick}
             variant={variant}
+            size= {size}
+        >
+            {title}
+        </Button >
+    )
+}
+
+export const SecondaryButton = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+    return (
+        <Button
+            radius="lg"
+            px="xl"
+            disabled={disabled}
+            leftIcon={leftIcon}
+            rightIcon={rightIcon}
+            onClick={onClick}
+            color="dark"
+            size= {size}
+        >
+            {title}
+        </Button >
+    )
+}
+
+export const OutlineButton = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+    return (
+        <Button
+            radius="lg"
+            px="xl"
+            style={{
+                color: "black",
+            }}
+            disabled={disabled}
+            color='yellow'
+            leftIcon={leftIcon}
+            rightIcon={rightIcon}
+            onClick={onClick}
+            variant="outline" 
+            size= {size}
         >
             {title}
         </Button >

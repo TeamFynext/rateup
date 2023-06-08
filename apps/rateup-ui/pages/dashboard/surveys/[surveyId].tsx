@@ -1,4 +1,4 @@
-import { Box, Group, Loader, Select, Stack, Tabs, Title } from "@mantine/core";
+import { Box, Group, Loader, Select, Stack, Tabs, Title, Space } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useRouter } from "next/router";
@@ -7,6 +7,9 @@ import { Responses } from "../../../components/Survey/Response/Responses";
 import { useSurvey } from "../../../api/surveys/surveys.query";
 import { useQuestions } from "../../../api/surveys/questions/questions.query";
 import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
+import StyledTabs from "./StyledTabs";
+import ButtonComponent from "../../../components/Button/ButtonComponent";
+import { IconPlus } from "@tabler/icons-react";
 
 enum TabEnum {
   Edit = "Edit",
@@ -31,6 +34,7 @@ export default () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
+  const [addQnTrigger, setaddQnTrigger] = useState(0)
 
   useEffect(() => {
     if (survey) {
@@ -46,13 +50,13 @@ export default () => {
 
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
-      <Stack sx={{ height: "100%" }}>
-        <Tabs
+      <Stack sx={{ height: "100%" }} >
+        <StyledTabs
           value={activeTab}
           onTabChange={(tab) => setActiveTab(tab as TabEnum)}
         >
           <Group position="apart">
-            <Title>{survey.title}</Title>
+            <Title order={1} mb="sm">{survey.title}</Title>
 
             <Tabs.List
               sx={{
@@ -70,12 +74,22 @@ export default () => {
             </Tabs.List>
 
             <Tabs.Panel value={TabEnum.Edit}>
-              <Select
-                data={survey.languages}
-                value={selectedLanguage}
-                onChange={setSelectedLanguage}
-              />
+              <Group>
+                <Select
+                    data={survey.languages}
+                    value={selectedLanguage}
+                    onChange={setSelectedLanguage}
+                  />
+
+                  <ButtonComponent onClick={() => {setaddQnTrigger(addQnTrigger+1)}} title={"Add Question"}
+                        rightIcon={<IconPlus
+                          size="1rem" />}
+                          size="md"
+                    />
+              </Group>
+  
             </Tabs.Panel>
+            
             <Tabs.Panel value={TabEnum.Responses}>
               <div></div>
             </Tabs.Panel>
@@ -84,10 +98,12 @@ export default () => {
             </Tabs.Panel>
           </Group>
 
+          <Space h="xl" />
+          
           <Tabs.Panel value={TabEnum.Edit}>
             {/** TODO: Remove fixed height and make this responsive */}
-            <Box sx={{ display: "flex", gap: 8, height: "70vh" }}>
-              <EditSurvey questions={questions} />
+            <Box sx={{ display: "flex", gap: 30, height: "70vh" }}>
+              <EditSurvey questions={questions} addQnTrigger={addQnTrigger} />
             </Box>
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Responses}>
@@ -96,7 +112,7 @@ export default () => {
           <Tabs.Panel value={TabEnum.Share}>
             <ShareSurvey />
           </Tabs.Panel>
-        </Tabs>
+        </StyledTabs>
       </Stack>
     </SelectedLanguageContext.Provider>
   );

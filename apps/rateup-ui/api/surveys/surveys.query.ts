@@ -18,7 +18,12 @@ export const useSurveys = () => useQuery({
   queryKey: ['surveys'],
   queryFn: getSurveys
 })
-export const useCreateSurveyMutation = () => {
+
+type MyProps = {
+  close: () => void;
+};
+
+export const useCreateSurveyMutation = ({close} : MyProps) => {
 
   const queryClient = useQueryClient();
   const createMutation = useMutation({

@@ -14,8 +14,9 @@ export enum QuestionTabsEnum {
 }
 interface EditSurveyProps {
   questions: Array<Question>;
+  addQnTrigger?: number;
 }
-export function EditSurvey({ questions }: EditSurveyProps) {
+export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
     QuestionTabsEnum.None
   );
@@ -34,18 +35,20 @@ export function EditSurvey({ questions }: EditSurveyProps) {
 
   return (
     <>
-      <Paper p={"sm"} sx={{ flex: 2 }}>
+      <Paper p={"xl"} sx={{ flex: 2 }} shadow="lg" radius="lg"> 
         <Stack>
           <QuestionsSideBar
             questions={questions}
             selectedQ={selectedQ}
             setSelectedQ={setSelectedQ}
             setActiveTab={setActiveTab}
+            addQnTrigger={addQnTrigger}
           />
         </Stack>
       </Paper>
-      <Paper p={"sm"} sx={{ flex: 5 }}>
+      <Paper p={"xl"} sx={{ flex: 5 }}  shadow="lg" radius="lg">
         <Tabs
+         p={"xl"}
           value={activeTab}
           onTabChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           sx={{ height: "100%" }}

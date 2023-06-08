@@ -64,9 +64,10 @@ export function DraggableQuestionCard({
             <div {...provided.dragHandleProps} className={classes.dragHandle}>
               <IconGripVertical size={20} stroke={1.5} />
             </div>
-            <Badge variant={selected ? "filled" : "light"}>{index + 1}</Badge>
+            <Badge bg={selected ? theme.colors.blue[9] : "yellow"} c={selected ? "white" : "black"} variant={selected ? "filled" : "light"}>
+              {index + 1}</Badge>
             {/* TODO: add truncate and make height fixed*/}
-            <Text pl="xs">{question.title[selectedLanguage]}</Text>
+            <Text pl="xs" fw={500}>{question.title[selectedLanguage]}</Text>
             {true ? (
               <ActionIcon
                 onClick={(e) => handleDelete(e, question.id)}

@@ -9,16 +9,22 @@ import {
   Group,
   Stack,
   TextInput,
+  Flex,
+  Text,
+  Tabs,
+  Space
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconChevronRight } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "../../../api/surveys/questions/questions.query";
+import { OutlineButton, SecondaryButton } from "../../Button/ButtonComponent";
+import StyledTabs  from "../../../pages/dashboard/surveys/StyledTabs";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -102,8 +108,19 @@ export function QuestionDetailedView({
 
   // TODO: show question type somewhere
   return (
-    <Box sx={{ position: "relative", height: "100%" }}>
+    <Box sx={{ position: "relative", height: "100%"}} >
       <TextInput
+        fw={800}
+        fz="lg"
+        styles={{
+          input: {
+            fontSize: '3rem', 
+            fontWeight:700// set custom font size for this TextInput
+          },
+        }}
+        sx={{
+          marginBottom: '30px', // add 30px bottom margin
+        }}
         variant="unstyled"
         size="xl"
         placeholder="Enter question title here *"
@@ -113,28 +130,85 @@ export function QuestionDetailedView({
         variant="unstyled"
         placeholder="Enter question description here"
         {...form.getInputProps("description")}
+        styles={{
+          input: {
+            fontSize: '1.6rem', 
+            fontWeight:400// set custom font size for this TextInput
+          },
+        }}
       />
       <ExtraProps form={form} question={question} />
+
+
       <Group
         position="apart"
         sx={{ position: "absolute", bottom: "0px", left: "0px", width: "100%" }}
+        
       >
-        <Group>
-          <Button
-            variant="subtle"
-            onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
+
+     <Flex
+        gap="xl"
+        justify="center"
+        align="space-between"
+        direction="column"
+        wrap="wrap"
+      >
+
+      <Flex
+            gap="md"
+            justify="space-between"
+            align="center"
+            direction="row"
           >
-            Edit Logic
-          </Button>
-          <Checkbox
-            label="Required"
-            color="dark"
-            {...form.getInputProps("required", { type: "checkbox" })}
-          />
-        </Group>
-        <Group>
-          <Button onClick={handleSave}>Save</Button>
-        </Group>
+            <Checkbox
+                label="Required"
+                color="dark"
+                fw={600}
+                {...form.getInputProps("required", { type: "checkbox" })}
+              />
+            <Group>
+                <SecondaryButton 
+                    title={"Save"}
+                    size="md"
+                    onClick={handleSave}
+                  />
+                  <SecondaryButton 
+                    title={"Add Next Question "}
+                    size="md"
+                    rightIcon={<IconChevronRight />}
+                    onClick={() => setActiveTab(QuestionTabsEnum.TypeSelection)}
+                  />
+              </Group>
+          </Flex>
+        <Group position="apart" >
+            <OutlineButton 
+                title={"Edit Logic"}
+                size="sm"
+                onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
+              />
+            <Space w="xl" />
+            <Space w="xl" />
+            <StyledTabs
+                  value={"English"}
+                //onTabChange={(tab) => setActiveTab(tab as TabEnum)}
+                >
+                  <Group position="apart">
+                    <Tabs.List                    >
+                      <Tabs.Tab value={"English"}>English</Tabs.Tab>
+                      <Tabs.Tab value={"Malayalam"}>Malayalam</Tabs.Tab>
+                    </Tabs.List>
+                  </Group>
+              </StyledTabs>
+
+              <Space w="xl" />
+              <Space w="xl" />
+              <Space w="xl" />
+              <Text c="blue.9">Question id: 999999999999999 </Text>
+
+         </Group>
+
+      </Flex>
+
       </Group>
     </Box>
   );
