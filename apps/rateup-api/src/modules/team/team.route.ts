@@ -8,6 +8,8 @@ import {
   getTeamsByUserHandler,
   getTeamMembersHandler,
   inviteMemberHandler,
+  getTeamMembersFromInviteHandler,
+  deleteInviteHandler,
 } from "./team.controller";
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -77,7 +79,7 @@ export async function teamRoutes(server: FastifyInstance) {
     inviteMemberHandler
   );
 
-    server.post(
+  server.post(
     "/complete-invite/:token",
     {
       schema: {
@@ -87,8 +89,20 @@ export async function teamRoutes(server: FastifyInstance) {
     completeInviteHandler
   );
 
+  server.delete(
+    "/invite/:id",
+    {
+      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      schema: {
+        params: $Tref("deleteTeamByIdRequestSchema"),
+      },
+    },
+    deleteInviteHandler
+  );
 
-    server.get(
+
+
+  server.get(
     "/members/:teamId",
     {
       preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
@@ -97,6 +111,17 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     getTeamMembersHandler
+  );
+
+  server.get(
+    "/invitation/:teamId",
+    {
+      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      schema: {
+        params: $Tref("getTeamMembersRequestSchema"),
+      },
+    },
+    getTeamMembersFromInviteHandler
   );
   
 }

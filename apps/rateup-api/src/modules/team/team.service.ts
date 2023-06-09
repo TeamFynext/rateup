@@ -12,6 +12,10 @@ export async function createTeam(input: CreateTeamInput) {
     throw new Error("Invalid team name.");
   }
 
+  if (input.code.length < 2) {
+    throw new Error("Invalid team code.");
+  }
+
   try {
     // Start a transaction
     const result = await prisma.$transaction(async (prisma) => {
@@ -22,20 +26,31 @@ export async function createTeam(input: CreateTeamInput) {
         },
       });
 
+      const existingTeamCode = await prisma.team.findFirst({
+        where: {
+          code: input.code,
+          orgId: input.orgId,
+        },
+      });
+
       if (existingTeam) {
         // Team with the same data combination already exists
-        console.log('Team already exists!');
+        if (existingTeamCode) {
+          throw new Error('Team Code already in use');
+        }
         throw new Error('Team already exists');
       } else {
         // Insert a new team
         const team = await prisma.team.create({
           data: {
             name: input.name,
+            code: input.code,
             orgId: input.orgId,
           },
           select: {
             id: true,
             name: true,
+            code:true
           },
         });
 
@@ -355,6 +370,29 @@ export function getTeamMembers(input: GetTeamMembersInput) {
   });
 }
 
+export function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
+  return prisma.invitation.findMany({
+    where: {
+      teamId: input.teamId,
+    },
+    select: {
+      id:true,
+      name: true,
+      email: true,
+      status: true,
+    },
+  });
+}
+
+export async function deleteMemberInvite(id: string) {
+  const invitation = await prisma.invitation.delete({
+    where: {
+      id,
+    },
+  });
+  return invitation;
+}
+
 export async function getTeamsByUserId(userId: string) {
   const teams = await prisma.teamMember.findMany({
     where: {
@@ -365,6 +403,7 @@ export async function getTeamsByUserId(userId: string) {
         select: {
           id: true,
           name: true, // Team name
+          code: true
         }
       }
     }
@@ -374,6 +413,7 @@ export async function getTeamsByUserId(userId: string) {
     return {
       teamId: team.team.id,
       teamName: team.team.name,
+      code: team.team.code,
     }
   });
   

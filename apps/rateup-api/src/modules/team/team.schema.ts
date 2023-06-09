@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const teamCore = {
   name: z.string(),
+  code: z.string(),
   orgId: z.string(),
   userId: z.string(),
 };
@@ -15,6 +16,7 @@ const createTeamResponseSchema = z.object({
   team: z.object({
     id: z.string(),
     name: z.string(),
+    code: z.string(),
   }),
   teamMember: z.object({
     id: z.string(),

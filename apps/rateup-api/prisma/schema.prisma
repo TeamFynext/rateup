@@ -73,6 +73,7 @@ model Team {
   id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt   DateTime     @default(now())
   name        String
+  code        String
   org         Org          @relation(fields: [orgId], references: [id])
   orgId       String       @db.Uuid
   members     TeamMember[]
@@ -80,6 +81,7 @@ model Team {
   invitations Invitation[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
+  @@unique([code, orgId], name: "team_code_org_id_unique")
 }
 
 model TeamMember {
@@ -103,6 +105,8 @@ model Invitation {
   invitedBy String
   createdAt DateTime     @default(now())
   status    InviteStatus @default(PENDING)
+
+  @@unique([email, teamId], name: "team_id_email_unique")
 }
 
 model Survey {
