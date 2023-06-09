@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Loader , Flex, Title, Modal, Box, TextInput, Space, Text, Table, Button  } from '@mantine/core';
-import ButtonComponent from "../../../components/Button/ButtonComponent";
-import { IconSquarePlus, IconSelector, IconCheck } from '@tabler/icons-react';
+import { Tabs, Paper, Loader, Flex, Title, Modal, Badge, Box, TextInput, Space, Text, Table, Button } from '@mantine/core';
+import ButtonComponent, { OutlineButton } from "../../../components/Button/ButtonComponent";
+import { IconSquarePlus, IconSelector, IconCheck, IconX, IconTrashXFilled, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import validateNameAndEmail from "./validation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from '@tanstack/react-query'
 import { getOrgIdRole, getUserID } from '../../../utils/userInfo';
-import { getTeamMembers, inviteTeamMember } from '../../../api/team/team.api';
+import { deleteInviteById, getTeamMembersFromInvitation, inviteTeamMember } from '../../../api/team/team.api';
 
 
 const TeamDetails = () => {
@@ -21,8 +21,25 @@ const TeamDetails = () => {
   const [email, setEmail] = useState('');
   const [sort, setSort] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [deleteInviteId, setDeleteInviteId] = useState('')
 
   const queryClient = useQueryClient()
+
+
+  useEffect(() => {
+    deleteInviteId && deleteInviteMutation.mutate();
+    if (deleteInviteId) {
+        notifications.show({
+            id: 'load-data',
+            loading: true,
+            title: 'Deleting Invite..',
+            message: `Hold on, Member invite is getting deleted.`,
+            autoClose: false,
+            withCloseButton: false,
+        });
+
+    }
+}, [deleteInviteId]);
 
 
   const handleMemberInvite = async () => {
@@ -36,7 +53,7 @@ const TeamDetails = () => {
 
     const addResourceMutation = useMutation(() => handleMemberInvite(), {
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['inviteDataQuery'] }),  //update team list on add
+            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on add
                 notifications.update({
                     id: 'load-data',
                     color: 'teal',
@@ -46,6 +63,7 @@ const TeamDetails = () => {
                     autoClose: 3000,
                 });
             close()
+            refetch()
         },
 
         onError: (error: any) => {
@@ -61,9 +79,45 @@ const TeamDetails = () => {
         },
     });
 
+    const handleDeleteInvite = async () => {
+        return deleteInviteById(deleteInviteId)
+    };
+
+    const deleteInviteMutation = useMutation(() => handleDeleteInvite(), {
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on delete
+                notifications.update({
+                    id: 'load-data',
+                    color: 'teal',
+                    title: 'Success',
+                    message: 'Invite deleted successfully.',
+                    icon: <IconCheck size="1rem" />,
+                    autoClose: 3000,
+                });
+            close()
+            refetch()
+            setDeleteInviteId('')
+        },
+
+        onError: (error: Error) => {
+            console.error("Error :", error.message);
+            notifications.update({
+                id: 'load-data',
+                color: 'red',
+                title: 'Failed',
+                message: error.message,
+                icon: <IconCheck size="1rem" />,
+                autoClose: 3000,
+            });
+            setDeleteInviteId('')
+
+        },
+
+    })
+
     const fetchTeamMembers = async () => {
         let teamId : string = team_id.toString();
-        return getTeamMembers(teamId)
+        return getTeamMembersFromInvitation(teamId)
     };
 
     const {
@@ -154,9 +208,6 @@ const TeamDetails = () => {
       </Tabs.List>
                   <Space h="xl" />
 
-
-
-
       <Tabs.Panel value="first" pt="xs">
         <Flex
                 mih={50}
@@ -202,14 +253,14 @@ const TeamDetails = () => {
                     />
                 </Flex>
             </Flex>
-
                         <Paper shadow="xs" radius="md" p="xl">
                 {teamsMembersData?.data?.length > 0 ? (
                     <Table>
                         <thead>
                             <tr>
+                                      <th>Name</th>
                                 <th>Email</th>
-                                <th>Name</th>
+                                      <th>Invite Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -218,15 +269,22 @@ const TeamDetails = () => {
                                 sort
                                 ? [...teamsMembersData?.data]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsMembersData?.data]?.sort((a, b) => a.id - b.id)
-                            ).map(({id, user}) => (
-                                <tr key={id}>
-                                    <td>{user?.email || 'N/A'}</td>
-                                    <td>{user?.name || 'N/A'}</td>
+                                  ).map(({ id, name, email, status }) => (
+                                      <tr key={email}>
+                                          <td>{name || 'N/A'}</td>
+                                          <td>{email || 'N/A'}</td>
+                                          <td style={{ minHeight: '40px'}}>
+
+                                              <Badge color={status === 'PENDING' ? "yellow" : "teal"} variant="filled">{status || 'N/A'} </Badge>
+                                          </td>
 
                                     <td>
-                                        <Button color="red" >
-                                            ---
+                                    {status === 'PENDING' &&
+                                        <Button color="red" size="xs" onClick={() => setDeleteInviteId(id)}>
+                                                  <IconTrashXFilled />
                                         </Button>
+
+                                  }
                                     </td>
                                 </tr>
                             ))}
@@ -234,7 +292,15 @@ const TeamDetails = () => {
                     </Table>
 
                 ) : (
-                    isLoadingMembers ? <Loader />  : <p>No members found. Try adding one.</p>
+                    isLoadingMembers ? <Loader /> 
+               
+                    : <>  {teamsMembersData?.data?.message  ?  teamsMembersData?.data?.message 
+                        :
+                        <> Error... Try Refreshing... <OutlineButton onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
+                        
+                        } 
+                        
+                        </>
                 )}
             </Paper>
       </Tabs.Panel>

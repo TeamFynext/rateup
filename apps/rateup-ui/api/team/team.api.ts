@@ -48,8 +48,18 @@ export const completeInvite = (inviteToken: String) => axiosClient({
     method: 'POST',
 })
 
+export const deleteInviteById = (id: String) => axiosClient({
+    url: `/team/invite/${id}`,
+    method: 'DELETE',
+})
+
 
 export const getTeamMembers= (teamId: String) => axiosClient({
     url: `/team/members/${teamId}`,
+    method: 'GET',
+})
+
+export const getTeamMembersFromInvitation= (teamId: String) => axiosClient({
+    url: `/team/invitation/${teamId}`,
     method: 'GET',
 })

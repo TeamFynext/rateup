@@ -1,4 +1,4 @@
-﻿import ButtonComponent from "../../../components/Button/ButtonComponent";
+﻿import ButtonComponent, { OutlineButton } from "../../../components/Button/ButtonComponent";
 import { Flex, Title, Loader, Space, Paper, Table, Button, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation } from "@tanstack/react-query";
-import { IconCheck, IconSelector } from '@tabler/icons-react';
+import { IconCheck, IconReload, IconSelector } from '@tabler/icons-react';
 import { getOrgIdRole, getUserID } from "../../../utils/userInfo"
 import { createTeam, deleteTeamById, getTeamsByOrg, getTeamsByUser } from "../../../api/team/team.api";
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +20,7 @@ export default function Teams() {
     const [opened, { open, close }] = useDisclosure(false);
     const [sort, setSort] = useState(false)
     const [name, setName] = useState('');
+    const [code, setCode] = useState('');
     const [deleteTeamId, setDeleteTeamId] = useState<string>();
     const isNameValid = name.length >= 2;
     const queryClient = useQueryClient()
@@ -69,7 +70,7 @@ export default function Teams() {
     const handleCreateTeam = async () => {
         const { orgId } = await getOrgIdRole()
         const { userId } = await getUserID()
-        const data = { name, orgId, userId }
+        const data = { name, code, orgId, userId }
         return createTeam(data)
     };
 
@@ -80,7 +81,7 @@ export default function Teams() {
 
     const deleteTeamMutation = useMutation(() => handleDeleteTeam(), {
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on delete
+            queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),  //update team list on delete
                 notifications.update({
                     id: 'load-data',
                     color: 'teal',
@@ -90,6 +91,7 @@ export default function Teams() {
                     autoClose: 3000,
                 });
             close()
+            reftchTeams()
             setDeleteTeamId('')
         },
 
@@ -109,7 +111,7 @@ export default function Teams() {
 
     const addResourceMutation = useMutation(() => handleCreateTeam(), {
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on add
+            queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),  //update team list on add
                 notifications.update({
                     id: 'load-data',
                     color: 'teal',
@@ -164,6 +166,13 @@ export default function Teams() {
                     placeholder="Enter team name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
+                />
+                <TextInput
+                    required
+                    label="Code"
+                    placeholder="Enter team code"
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
                 />
             </Box>
             <Box pt={20} >
@@ -262,7 +271,7 @@ export default function Teams() {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>ID</th>
+                                <th>Code</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -271,10 +280,10 @@ export default function Teams() {
                                 sort
                                 ? [...teamsData?.data]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
-                            ).map(({ teamId, teamName }) => (
+                            ).map(({ teamId, teamName, code }) => (
                                 <tr key={teamId}>
                                     <td>{teamName} </td>
-                                    <td>{teamId}</td>
+                                    <td>{code}</td>
                                     <td>
                                         <Button color="blue" onClick={() => viewTeam(teamId)}>
                                              View
@@ -291,7 +300,11 @@ export default function Teams() {
                     </Table>
 
                 ) : (
-                    <p>No teams found. Try creating one.</p>
+                    <>  {teamsData?.message  ?  teamsData?.message
+                        :
+                        <> Error... Try Refreshing... <OutlineButton onClick={reftchTeams} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>          
+                        }          
+                        </>
                 )}
 
                 </>}

@@ -114,7 +114,7 @@ export function QuestionDetailedView({
         fz="lg"
         styles={{
           input: {
-            fontSize: '3rem', 
+            fontSize: '2rem', 
             fontWeight:700// set custom font size for this TextInput
           },
         }}
@@ -132,7 +132,7 @@ export function QuestionDetailedView({
         {...form.getInputProps("description")}
         styles={{
           input: {
-            fontSize: '1.6rem', 
+            fontSize: '1.1rem', 
             fontWeight:400// set custom font size for this TextInput
           },
         }}
@@ -172,12 +172,12 @@ export function QuestionDetailedView({
                     size="md"
                     onClick={handleSave}
                   />
-                  <SecondaryButton 
+                  {/* <SecondaryButton 
                     title={"Add Next Question "}
                     size="md"
                     rightIcon={<IconChevronRight />}
                     onClick={() => setActiveTab(QuestionTabsEnum.TypeSelection)}
-                  />
+                  /> */}
               </Group>
           </Flex>
         <Group position="apart" >
@@ -200,7 +200,6 @@ export function QuestionDetailedView({
                   </Group>
               </StyledTabs>
 
-              <Space w="xl" />
               <Space w="xl" />
               <Space w="xl" />
               <Text c="blue.9">Question id: 999999999999999 </Text>
