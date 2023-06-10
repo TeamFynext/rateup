@@ -48,6 +48,7 @@ export async function createUserSignup({ id, email, name, orgName }: CreateUserS
       const team = await prisma.team.create({
         data: {
           name: "Default Team",
+          code:"D1",
           orgId: org.id,
         }
       });

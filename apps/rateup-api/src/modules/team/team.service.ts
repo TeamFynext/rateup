@@ -8,7 +8,7 @@ import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 
 export async function createTeam(input: CreateTeamInput) {
-  if (input.name.length < 2) {
+  if (input.name.length < 3) {
     throw new Error("Invalid team name.");
   }
 
@@ -16,30 +16,33 @@ export async function createTeam(input: CreateTeamInput) {
     throw new Error("Invalid team code.");
   }
 
+  const existingTeamCode = await prisma.team.findFirst({
+    where: {
+      code: input.code,
+      orgId: input.orgId,
+    },
+  });
+
+  if (existingTeamCode) {
+    throw new Error('Team Code already in use');
+  }
+
+  const existingTeam = await prisma.team.findFirst({
+    where: {
+      name: input.name,
+      orgId: input.orgId,
+    },
+  });
+
+  if (existingTeam) {
+    // Team with the same data combination already exists
+    throw new Error('Team already exists');
+  }
+
   try {
     // Start a transaction
     const result = await prisma.$transaction(async (prisma) => {
-      const existingTeam = await prisma.team.findFirst({
-        where: {
-          name: input.name,
-          orgId: input.orgId,
-        },
-      });
-
-      const existingTeamCode = await prisma.team.findFirst({
-        where: {
-          code: input.code,
-          orgId: input.orgId,
-        },
-      });
-
-      if (existingTeam) {
-        // Team with the same data combination already exists
-        if (existingTeamCode) {
-          throw new Error('Team Code already in use');
-        }
-        throw new Error('Team already exists');
-      } else {
+      if (!existingTeam) {
         // Insert a new team
         const team = await prisma.team.create({
           data: {
