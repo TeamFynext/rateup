@@ -1,4 +1,4 @@
-﻿import ButtonComponent, { OutlineButton } from "../../../components/Button/ButtonComponent";
+﻿﻿import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { Flex, Title, Loader, Space, Paper, Table, Button, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
@@ -6,45 +6,50 @@ import { Box, Modal, TextInput } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
-import { useMutation } from "@tanstack/react-query";
-import { IconCheck, IconReload, IconSelector } from '@tabler/icons-react';
-import { getOrgIdRole, getUserID } from "../../../utils/userInfo"
-import { createTeam, deleteTeamById, getTeamsByOrg, getTeamsByUser } from "../../../api/team/team.api";
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {  IconReload, IconSelector } from '@tabler/icons-react';
+import { deleteTeamById } from "../../../api/team/team.api";
 import { useRouter } from 'next/router'
 import CardButton from "../../../components/Card";
 import { useUser } from "../../../context/UserContext";
+import { useForm } from "@mantine/form";
+import { useCreateTeamMutation, useDeleteTeamMutation, useTeamsByUser } from "../../../api/team/team.query";
 
 export default function Teams() {
     const sessionContext = useSessionContext();
     const [opened, { open, close }] = useDisclosure(false);
     const [sort, setSort] = useState(false)
-    const [name, setName] = useState('');
-    const [code, setCode] = useState('');
     const [deleteTeamId, setDeleteTeamId] = useState<string>();
-    const isNameValid = name.length >= 2;
-    const queryClient = useQueryClient()
     const router = useRouter()
     const { user, setUser } = useUser();
 
-    useEffect(() => {
-        setName('')
-    }, [opened])
+    const createTeamForm = useForm({
+        initialValues: {
+            name: "",
+            code: "",
+        },
+    
+        validate: {
+            name: (value) => {
+                if (value.length < 3) {
+                  return 'Team Name should be at least 3 characters long';
+                }
+                return null; // Validation passed
+              },
+              code: (value) => {
+                if (value.length < 2) {
+                  return 'Team Code should be at least 2 characters long';
+                }
+                return null; // Validation passed
+              },
+          },
+      });
 
-    const fetchTeams = async () => {
-        const { orgId } = await getOrgIdRole()
-        return getTeamsByOrg(orgId)
-    };
-
-     const {
+    const {
         isLoading: isLoadingTeamsUser,
         data: teamsDataUser,
         error: errorTeamsDataUser,
         refetch: reftchTeams,
-    } = useQuery(["teamsDataUserQuery"], getTeamsByUser, {
-        refetchOnWindowFocus: "always",
-        refetchOnMount: "always",
-    })
+      } = useTeamsByUser();
 
     let teamsData = teamsDataUser?.data
 
@@ -67,77 +72,19 @@ export default function Teams() {
         }
     }, [deleteTeamId]);
 
-    const handleCreateTeam = async () => {
-        const { orgId } = await getOrgIdRole()
-        const { userId } = await getUserID()
-        const data = { name, code, orgId, userId }
-        return createTeam(data)
-    };
-
+    const onSubmit = (values) => {
+        handleSubmit(values);
+    }
 
     const handleDeleteTeam = async () => {
         return deleteTeamById(deleteTeamId)
     };
 
-    const deleteTeamMutation = useMutation(() => handleDeleteTeam(), {
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),  //update team list on delete
-                notifications.update({
-                    id: 'load-data',
-                    color: 'teal',
-                    title: 'Success',
-                    message: 'Team deleted successfully.',
-                    icon: <IconCheck size="1rem" />,
-                    autoClose: 3000,
-                });
-            close()
-            reftchTeams()
-            setDeleteTeamId('')
-        },
+    const deleteTeamMutation = useDeleteTeamMutation(handleDeleteTeam, setDeleteTeamId, close, reftchTeams);
+    const createTeamMutation = useCreateTeamMutation(close, createTeamForm);
 
-        onError: (error: Error) => {
-            console.error("Error :", error.message);
-            notifications.update({
-                id: 'load-data',
-                color: 'red',
-                title: 'Failed',
-                message: error.message,
-                icon: <IconCheck size="1rem" />,
-                autoClose: 3000,
-            });
-        },
 
-    })
-
-    const addResourceMutation = useMutation(() => handleCreateTeam(), {
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),  //update team list on add
-                notifications.update({
-                    id: 'load-data',
-                    color: 'teal',
-                    title: 'Success',
-                    message: 'Team created successfully.',
-                    icon: <IconCheck size="1rem" />,
-                    autoClose: 3000,
-                });
-            close()
-            reftchTeams()
-        },
-
-        onError: (error: Error) => {
-            console.error("Error creating the post:", error.message);
-            notifications.update({
-                id: 'load-data',
-                color: 'red',
-                title: 'Failed',
-                message: error.message,
-                icon: <IconCheck size="1rem" />,
-                autoClose: 3000,
-            });
-        },
-    });
-
-    const handleSubmit = async () => {
+    const handleSubmit = async (values) => {
         notifications.show({
             id: 'load-data',
             loading: true,
@@ -146,7 +93,7 @@ export default function Teams() {
             autoClose: false,
             withCloseButton: false,
         });
-        addResourceMutation.mutate();
+        createTeamMutation.mutate(values);
     }
 
     if (sessionContext.loading === true) {
@@ -158,27 +105,28 @@ export default function Teams() {
     }
     
     return (
-        <><Modal opened={opened} onClose={close} title="Create Team" centered>
+        <>
+        <Modal opened={opened} onClose={close} title="Create Team" centered>
+            <form onSubmit={createTeamForm.onSubmit(onSubmit) }>
             <Box>
                 <TextInput
-                    required
+                    withAsterisk
                     label="Name"
                     placeholder="Enter team name"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
+                    {...createTeamForm.getInputProps('name')}
                 />
                 <TextInput
-                    required
+                    withAsterisk
                     label="Code"
                     placeholder="Enter team code"
-                    value={code}
-                    onChange={(event) => setCode(event.target.value)}
+                    {...createTeamForm.getInputProps('code')}
                 />
             </Box>
             <Box pt={20} >
-                <ButtonComponent onClick={handleSubmit}
-                    title={"Create"} disabled={!isNameValid} />
+                <RateupButtonPrimary type="submit"
+                    title={"Create"} />
             </Box>
+            </form>
         </Modal>
 
 
@@ -216,7 +164,7 @@ export default function Teams() {
                 >
                     {
             user?.role !== 'ADMIN' 
-            &&      <ButtonComponent
+            &&      <RateupButtonPrimary
                         onClick={open}
                         title={"Create Team"}
                         rightIcon={<IconSquarePlus
@@ -225,7 +173,7 @@ export default function Teams() {
         }
                     
 
-                    <ButtonComponent
+                    <RateupButtonPrimary
                         onClick={ () =>  setSort(!sort)}
                         title={"Sort"}
                         variant="subtle"
@@ -302,7 +250,7 @@ export default function Teams() {
                 ) : (
                     <>  {teamsData?.message  ?  teamsData?.message
                         :
-                        <> Error... Try Refreshing... <OutlineButton onClick={reftchTeams} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>          
+                        <> Error... Try Refreshing... <RateupButtonOutline onClick={reftchTeams} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>          
                         }          
                         </>
                 )}

@@ -1,4 +1,4 @@
-﻿import ButtonComponent from "../../components/Button/ButtonComponent";
+﻿import { RateupButtonPrimary } from "../../components/Button/RateupButtons";
 import {useDisclosure} from '@mantine/hooks';
 import {Box, Modal, TextInput, Title, Space, Container} from '@mantine/core';
 import {useEffect, useState} from 'react';
@@ -57,7 +57,7 @@ export default function DashboardHome() {
                     />
                 </Box>
                 <Box pt={20} >
-                    <ButtonComponent onClick={handleSubmit} title={"Create"} disabled={!isNameValid} />
+                    <RateupButtonPrimary onClick={handleSubmit} title={"Create"} disabled={!isNameValid} />
                 </Box>
             </Modal>
 
@@ -67,10 +67,10 @@ export default function DashboardHome() {
                 <Container>
         {
            user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN'
-            ?                 <ButtonComponent onClick={open} title={"Create Organization"} leftIcon={<IconSquarePlus size="1rem" />} />
+            ?                 <RateupButtonPrimary onClick={open} title={"Create Organization"} leftIcon={<IconSquarePlus size="1rem" />} />
 
 
-            :                 <ButtonComponent onClick={() => router.push('/dashboard/teams')} title={"Teams"}  />
+            :                 <RateupButtonPrimary onClick={() => router.push('/dashboard/teams')} title={"Teams"}  />
 
         }
 

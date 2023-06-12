@@ -16,14 +16,14 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconPlus, IconTrash, IconChevronRight } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "../../../api/surveys/questions/questions.query";
-import { OutlineButton, SecondaryButton } from "../../Button/ButtonComponent";
+import { RateupButtonOutline, RateupButtonSecondary } from "../../Button/RateupButtons";
 import StyledTabs  from "../../../pages/dashboard/surveys/StyledTabs";
 
 // TODO: use a routing method instead of passing the question as a prop?
@@ -167,12 +167,12 @@ export function QuestionDetailedView({
                 {...form.getInputProps("required", { type: "checkbox" })}
               />
             <Group>
-                <SecondaryButton 
+                <RateupButtonSecondary 
                     title={"Save"}
                     size="md"
                     onClick={handleSave}
                   />
-                  {/* <SecondaryButton 
+                  {/* <RateupButtonSecondary 
                     title={"Add Next Question "}
                     size="md"
                     rightIcon={<IconChevronRight />}
@@ -181,7 +181,7 @@ export function QuestionDetailedView({
               </Group>
           </Flex>
         <Group position="apart" >
-            <OutlineButton 
+            <RateupButtonOutline 
                 title={"Edit Logic"}
                 size="sm"
                 onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}

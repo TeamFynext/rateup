@@ -8,7 +8,7 @@ import { useSurvey } from "../../../api/surveys/surveys.query";
 import { useQuestions } from "../../../api/surveys/questions/questions.query";
 import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "./StyledTabs";
-import ButtonComponent from "../../../components/Button/ButtonComponent";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
 
 enum TabEnum {
@@ -81,7 +81,7 @@ export default () => {
                     onChange={setSelectedLanguage}
                   />
 
-                  <ButtonComponent onClick={() => {setaddQnTrigger(addQnTrigger+1)}} title={"Add Question"}
+                  <RateupButtonPrimary onClick={() => {setaddQnTrigger(addQnTrigger+1)}} title={"Add Question"}
                         rightIcon={<IconPlus
                           size="1rem" />}
                           size="md"

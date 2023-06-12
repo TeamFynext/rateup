@@ -5,7 +5,7 @@ import { completeInvite } from '../../api/team/team.api';
 import { notifications } from '@mantine/notifications';
 import { IconCheck,  } from '@tabler/icons-react';
 import { useEffect } from 'react';
-import ButtonComponent from '../../components/Button/ButtonComponent';
+import { RateupButtonPrimary } from '../../components/Button/RateupButtons';
 import styles from './styles.module.css';
 import { HeaderTabs } from '../../components/Layout/Header/Header';
 import { UserMode } from '../../utils/enums';
@@ -154,7 +154,7 @@ useEffect(() => {
 
            { updateInviteMutation.data?.data.data.isUser ? 
            
-           <ButtonComponent
+           <RateupButtonPrimary
                         onClick={() => {
     router.push('/login');
   }}
@@ -162,7 +162,7 @@ useEffect(() => {
            />
            : 
            
-           <ButtonComponent
+           <RateupButtonPrimary
                         onClick={() => {
     router.push(updateInviteMutation.data?.data.data.redirectLink);
   }}

@@ -7,9 +7,10 @@ interface Props {
     rightIcon?: React.ReactNode;
     variant?: string;
     size?: string;
+    type?: any
 }
 
-const ButtonComponent = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonPrimary = ({ type, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius="lg"
@@ -24,13 +25,14 @@ const ButtonComponent = ({ title, disabled, onClick, leftIcon = null, rightIcon 
             onClick={onClick}
             variant={variant}
             size= {size}
+            type={type}
         >
             {title}
         </Button >
     )
 }
 
-export const SecondaryButton = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonSecondary = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius="lg"
@@ -47,7 +49,7 @@ export const SecondaryButton = ({ title, disabled, onClick, leftIcon = null, rig
     )
 }
 
-export const OutlineButton = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius="lg"
@@ -68,4 +70,3 @@ export const OutlineButton = ({ title, disabled, onClick, leftIcon = null, right
     )
 }
 
-export default ButtonComponent

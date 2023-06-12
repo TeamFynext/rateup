@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Tabs, Paper, Loader, Flex, Title, Modal, Badge, Box, TextInput, Space, Text, Table, Button } from '@mantine/core';
-import ButtonComponent, { OutlineButton } from "../../../components/Button/ButtonComponent";
+import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconSquarePlus, IconSelector, IconCheck, IconX, IconTrashXFilled, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
@@ -187,7 +187,7 @@ const TeamDetails = () => {
 
             </Box>
             <Box pt={20} >
-                <ButtonComponent 
+                <RateupButtonPrimary 
                     onClick={handleSubmit}
                     title={"Send Invite"} 
                     // disabled={!isNameValid} 
@@ -238,13 +238,13 @@ const TeamDetails = () => {
                     wrap="wrap"
                 >
 
-                    <ButtonComponent
+                    <RateupButtonPrimary
                         onClick={open}
                         title={"Add Member"}
                         rightIcon={<IconSquarePlus
                             size="1rem" />} />
 
-                    <ButtonComponent
+                    <RateupButtonPrimary
                         onClick={ () =>  setSort(!sort)}
                         title={"Sort"}
                         variant="subtle"
@@ -296,7 +296,7 @@ const TeamDetails = () => {
                
                     : <>  {teamsMembersData?.data?.message  ?  teamsMembersData?.data?.message 
                         :
-                        <> Error... Try Refreshing... <OutlineButton onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
+                        <> Error... Try Refreshing... <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
                         
                         } 
                         

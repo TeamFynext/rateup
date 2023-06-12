@@ -1,6 +1,6 @@
 //TODO: refactor drag and drop
 
-import { Button, Center, Paper, Stack, Text } from "@mantine/core";
+import { Center, Paper, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -10,7 +10,6 @@ import { reorderQuestions } from "../../api/surveys/questions/questions.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
-import ButtonComponent from "../Button/ButtonComponent";
 import { IconPlus } from "@tabler/icons-react";
 
 interface QuestionsSideBarProps {
@@ -86,7 +85,7 @@ export function QuestionsSideBar({
       }}
     >
 
-      {/* <ButtonComponent onClick={handleAddQn} title={"Add Question"}
+      {/* <RateupButtonPrimary onClick={handleAddQn} title={"Add Question"}
         rightIcon={<IconPlus
           size="1rem" />}
           size="md"

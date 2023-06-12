@@ -31,7 +31,7 @@ import {
   IconChevronDown,
   IconPencil
 } from "@tabler/icons-react";
-import ButtonComponent from "../../../components/Button/ButtonComponent";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import Link from "next/link";
 import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
@@ -87,7 +87,7 @@ export default function Surveys() {
           >
            <Menu shadow="md" width={200} position="bottom-end" offset={2}>
               <Menu.Target>
-                <ButtonComponent
+                <RateupButtonPrimary
                     title={"Status"}
                     variant="subtle"
                     rightIcon={<IconChevronDown
@@ -101,7 +101,7 @@ export default function Surveys() {
               </Menu.Dropdown> */}
             </Menu>
 
-          <ButtonComponent
+          <RateupButtonPrimary
               onClick={ () =>  setSort(!sort)}
               title={"Sort"}
               variant="subtle"
