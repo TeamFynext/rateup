@@ -412,14 +412,19 @@ export async function getTeamsByUserId(userId: string) {
     }
   });
 
-  const teamData = teams.map(team => {
+  const teamData = await Promise.all(teams.map(async (team) => {
+    const teamMembersCount = await prisma.teamMember.count({
+      where: { teamId: team.team.id },
+    });
+
     return {
       teamId: team.team.id,
       teamName: team.team.name,
       code: team.team.code,
-    }
-  });
-  
+      memberCount: teamMembersCount
+    };
+  }));
 
   return teamData;
+  
 }
