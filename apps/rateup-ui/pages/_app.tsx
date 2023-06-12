@@ -90,7 +90,7 @@ export default function App({
               <Component {...pageProps} />
             </LayoutComponent>
             </UserProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
+            <ReactQueryDevtools initialIsOpen={false}  position="bottom-right"/>
           </QueryClientProvider>
           <Notifications />
         </MantineProvider>

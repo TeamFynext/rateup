@@ -10,6 +10,7 @@ import { HeaderTabs } from './Header/Header';
 import { fetchUserInfo } from '../../api/user/user.api';
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from '../../context/UserContext';
+import LeftNavbar from './Navbar/LeftNavbar';
 
 const useStyles = createStyles((theme) => ({
   
@@ -52,6 +53,7 @@ export default ({ children }) => {
                 },
             }}
 
+          navbar={<LeftNavbar />}
           header={
                 <HeaderTabs userData={userInfo?.data?.data}/>
             }

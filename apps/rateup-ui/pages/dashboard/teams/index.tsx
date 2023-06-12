@@ -1,24 +1,24 @@
 ﻿﻿import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { Flex, Title, Loader, Space, Paper, Table, Button, SimpleGrid} from '@mantine/core';
+import { Flex, Title, Loader, Space, Paper, Table, Button, Text, Stack, Center, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
-import {  IconReload, IconSelector } from '@tabler/icons-react';
+import {  IconPlus, IconReload, IconSelector } from '@tabler/icons-react';
 import { deleteTeamById } from "../../../api/team/team.api";
 import { useRouter } from 'next/router'
 import CardButton from "../../../components/Card";
 import { useUser } from "../../../context/UserContext";
 import { useForm } from "@mantine/form";
 import { useCreateTeamMutation, useDeleteTeamMutation, useTeamsByUser } from "../../../api/team/team.query";
+import TeamCard from "./TeamCard";
 
 export default function Teams() {
     const sessionContext = useSessionContext();
     const [opened, { open, close }] = useDisclosure(false);
     const [sort, setSort] = useState(false)
-    const [deleteTeamId, setDeleteTeamId] = useState<string>();
     const router = useRouter()
     const { user, setUser } = useUser();
 
@@ -57,30 +57,10 @@ export default function Teams() {
         console.log(teamsDataUser?.data?.data);
     }, [teamsDataUser]);
 
-    useEffect(() => {
-        deleteTeamId && deleteTeamMutation.mutate();
-        if (deleteTeamId) {
-            notifications.show({
-                id: 'load-data',
-                loading: true,
-                title: 'Deleting Team..',
-                message: `Hold on, Your team is getting deleted.`,
-                autoClose: false,
-                withCloseButton: false,
-            });
-
-        }
-    }, [deleteTeamId]);
-
     const onSubmit = (values) => {
         handleSubmit(values);
     }
 
-    const handleDeleteTeam = async () => {
-        return deleteTeamById(deleteTeamId)
-    };
-
-    const deleteTeamMutation = useDeleteTeamMutation(handleDeleteTeam, setDeleteTeamId, close, reftchTeams);
     const createTeamMutation = useCreateTeamMutation(close, createTeamForm);
 
 
@@ -208,44 +188,40 @@ export default function Teams() {
       </SimpleGrid>
              //TODO optimize
            : //For Super Admin
-            <Paper shadow="xs" radius="md" p="xl">
+            <>
                 { isLoadingTeamsUser 
                 
                 ? <Loader /> 
                 
                 :<>
                 {teamsData?.data?.length > 0 ? (
-                    <Table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Code</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <SimpleGrid
+                            cols={4}
+                            spacing={"lg"}
+                            breakpoints={[
+                            { minWidth: "xl", cols: 3 },
+                            { minWidth: "lg", cols: 2 },
+                            { minWidth: "md", cols: 2 },
+                            { maxWidth: "md", cols: 1 },
+                            ]}
+                            >
+                            <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
+                            <Center h="100%">
+                                <Stack align="center">
+                                <IconPlus size={36}/>
+                                <Text size="xl" fw={700}>Add Team</Text>
+                                </Stack>
+                            </Center>
+                            </Paper>
+
                             {(
                                 sort
                                 ? [...teamsData?.data]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
-                            ).map(({ teamId, teamName, code }) => (
-                                <tr key={teamId}>
-                                    <td>{teamName} </td>
-                                    <td>{code}</td>
-                                    <td>
-                                        <Button color="blue" onClick={() => viewTeam(teamId)}>
-                                             View
-                                        </Button>
-                                    </td>
-                                    <td>
-                                        <Button color="red" onClick={() => setDeleteTeamId(teamId)}>
-                                            Delete
-                                        </Button>
-                                    </td>
-                                </tr>
+                            ).map((team) => (
+                            <TeamCard key={team.teamId} team={team} reftchTeams={reftchTeams} />
                             ))}
-                        </tbody>
-                    </Table>
+                        </SimpleGrid>
 
                 ) : (
                     <>  {teamsData?.message  ?  teamsData?.message
@@ -256,7 +232,7 @@ export default function Teams() {
                 )}
 
                 </>}
-            </Paper>
+            </>
 
                 }
 
