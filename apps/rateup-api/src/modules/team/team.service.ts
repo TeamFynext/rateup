@@ -373,18 +373,33 @@ export function getTeamMembers(input: GetTeamMembersInput) {
   });
 }
 
-export function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
-  return prisma.invitation.findMany({
+export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: input.teamId,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  const members = await prisma.invitation.findMany({
     where: {
       teamId: input.teamId,
     },
     select: {
-      id:true,
+      id: true,
       name: true,
       email: true,
       status: true,
     },
   });
+  
+  return {
+    team,
+    members,
+  };
 }
 
 export async function deleteMemberInvite(id: string) {
