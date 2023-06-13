@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Loader, Flex, Title, Modal, Badge, Box, TextInput, Space, Text, Table, Button } from '@mantine/core';
+import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Button, Group, Flex } from '@mantine/core';
 import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { IconSquarePlus, IconSelector, IconCheck, IconX, IconTrashXFilled, IconReload } from '@tabler/icons-react';
+import { IconSquarePlus, IconSelector, IconCheck, IconTrashXFilled, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import validateNameAndEmail from "./validation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from '@tanstack/react-query'
 import { getOrgIdRole, getUserID } from '../../../utils/userInfo';
-import { deleteInviteById, getTeamMembersFromInvitation, inviteTeamMember } from '../../../api/team/team.api';
+import { getTeamMembersFromInvitation, inviteTeamMember } from '../../../api/team/team.api';
+import StyledTabs from '../surveys/StyledTabs';
+import TeamMemberCard from './TeamMemberCard';
+import { IconPlus } from '@tabler/icons-react';
 
 
 const TeamDetails = () => {
@@ -21,25 +24,16 @@ const TeamDetails = () => {
   const [email, setEmail] = useState('');
   const [sort, setSort] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [deleteInviteId, setDeleteInviteId] = useState('')
 
   const queryClient = useQueryClient()
 
+  enum TabEnum {
+    Members = "Members",
+    Survey = "Survey",
+    Settings = "Settings",
+  }
+  const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Members);
 
-  useEffect(() => {
-    deleteInviteId && deleteInviteMutation.mutate();
-    if (deleteInviteId) {
-        notifications.show({
-            id: 'load-data',
-            loading: true,
-            title: 'Deleting Invite..',
-            message: `Hold on, Member invite is getting deleted.`,
-            autoClose: false,
-            withCloseButton: false,
-        });
-
-    }
-}, [deleteInviteId]);
 
 
   const handleMemberInvite = async () => {
@@ -79,41 +73,6 @@ const TeamDetails = () => {
         },
     });
 
-    const handleDeleteInvite = async () => {
-        return deleteInviteById(deleteInviteId)
-    };
-
-    const deleteInviteMutation = useMutation(() => handleDeleteInvite(), {
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on delete
-                notifications.update({
-                    id: 'load-data',
-                    color: 'teal',
-                    title: 'Success',
-                    message: 'Invite deleted successfully.',
-                    icon: <IconCheck size="1rem" />,
-                    autoClose: 3000,
-                });
-            close()
-            refetch()
-            setDeleteInviteId('')
-        },
-
-        onError: (error: Error) => {
-            console.error("Error :", error.message);
-            notifications.update({
-                id: 'load-data',
-                color: 'red',
-                title: 'Failed',
-                message: error.message,
-                icon: <IconCheck size="1rem" />,
-                autoClose: 3000,
-            });
-            setDeleteInviteId('')
-
-        },
-
-    })
 
     const fetchTeamMembers = async () => {
         let teamId : string = team_id.toString();
@@ -162,9 +121,8 @@ const TeamDetails = () => {
     
 
   return (
-    <Paper shadow="xs" radius="md" p="xl">
-        <Title order={1}>Team Management</Title>
-        <Space h="xl" />
+    <>
+
         <Modal opened={opened} onClose={close} title="Add Team Member" centered>
             <Box>
                 <TextInput
@@ -194,126 +152,96 @@ const TeamDetails = () => {
                     />
             </Box>
         </Modal>
-                    
-      <Tabs color="teal" defaultValue="first">
-      <Tabs.List>
-        <Tabs.Tab value="first" color="blue">
-          Members
-        </Tabs.Tab>
-                <Tabs.Tab value="second">Profile</Tabs.Tab>
 
-        <Tabs.Tab value="third" color="blue">
-          Settings
-        </Tabs.Tab>
-      </Tabs.List>
-                  <Space h="xl" />
+        <StyledTabs
+          value={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as TabEnum)}
+        >
 
-      <Tabs.Panel value="first" pt="xs">
         <Flex
-                mih={50}
-                gap="md"
-                justify="space-between"
-                align="center"
-                direction="row"
-                wrap="wrap"
+            mih={50}
+            gap="md"
+            justify="flex-start"
+            align="center"
+            direction="row"
+            wrap="wrap"
             >
-                <Flex
-                    mih={50}
-                    gap="md"
-                    justify="flex-start"
-                    align="flex-start"
-                    direction="column"
-                    wrap="wrap"
-                >
-                    <Title order={2} color="blue.9">Members</Title>
-                    <p >You can view all the members under your team. Also create new team members from here.</p>
-                </Flex>
+            <Title order={1} mb="sm">{teamsMembersData?.data?.team?.name || "Team"}</Title>
+            <Tabs.List
+              sx={{
+                position: "absolute",
+                width: "fit-content",
+                left: 0,
+                right: 0,
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            >
+              <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+            </Tabs.List>
 
-                <Flex
-                    mih={50}
-                    gap="md"
-                    justify="flex-start"
-                    align="flex-start"
-                    direction="row"
-                    wrap="wrap"
-                >
-
-                    <RateupButtonPrimary
-                        onClick={open}
-                        title={"Add Member"}
-                        rightIcon={<IconSquarePlus
-                            size="1rem" />} />
-
-                    <RateupButtonPrimary
-                        onClick={ () =>  setSort(!sort)}
-                        title={"Sort"}
-                        variant="subtle"
-                        rightIcon={<IconSelector
-                            size="1rem" />}
-                    />
-                </Flex>
             </Flex>
-                        <Paper shadow="xs" radius="md" p="xl">
-                {teamsMembersData?.data?.length > 0 ? (
-                    <Table>
-                        <thead>
-                            <tr>
-                                      <th>Name</th>
-                                <th>Email</th>
-                                      <th>Invite Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(
+
+          <Tabs.Panel value={TabEnum.Members} mt={60}>
+            {/** TODO: Remove fixed height and make this responsive */}
+            {teamsMembersData?.data?.members?.length > 0 ? (
+                  <SimpleGrid
+                            cols={4}
+                            spacing={"lg"}
+                            breakpoints={[
+                            { minWidth: "xl", cols: 3 },
+                            { minWidth: "lg", cols: 2 },
+                            { minWidth: "md", cols: 2 },
+                            { maxWidth: "md", cols: 1 },
+                            ]}
+                            >
+                            <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
+                                <Center h="100%">
+                                    <Stack align="center">
+                                    <IconPlus size={36}/>
+                                    <Text size="xl" fw={700}>Invite member</Text>
+                                    </Stack>
+                                </Center>
+                            </Paper>
+
+            {(
                                 sort
-                                ? [...teamsMembersData?.data]?.sort((a, b) => a.id - b.id).reverse()
-                                : [...teamsMembersData?.data]?.sort((a, b) => a.id - b.id)
-                                  ).map(({ id, name, email, status }) => (
-                                      <tr key={email}>
-                                          <td>{name || 'N/A'}</td>
-                                          <td>{email || 'N/A'}</td>
-                                          <td style={{ minHeight: '40px'}}>
+                                ? [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id).reverse()
+                                : [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id)
+                                  ).map((member) => (
+                                    <TeamMemberCard member={member} />
 
-                                              <Badge color={status === 'PENDING' ? "yellow" : "teal"} variant="filled">{status || 'N/A'} </Badge>
-                                          </td>
+                                  ))}
 
-                                    <td>
-                                    {status === 'PENDING' &&
-                                        <Button color="red" size="xs" onClick={() => setDeleteInviteId(id)}>
-                                                  <IconTrashXFilled />
-                                        </Button>
+                </SimpleGrid>)
 
-                                  }
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
+: (
+    isLoadingMembers ? <Loader /> 
 
-                ) : (
-                    isLoadingMembers ? <Loader /> 
-               
-                    : <>  {teamsMembersData?.data?.message  ?  teamsMembersData?.data?.message 
-                        :
-                        <> Error... Try Refreshing... <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
-                        
-                        } 
-                        
-                        </>
-                )}
-            </Paper>
-      </Tabs.Panel>
+    : <>  {teamsMembersData?.data?.members.length === 0  ? "No members in this team!"
+        :
+        <> Error... Try Refreshing... <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
+        
+        } 
+        
+        </>
+)}
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Survey}>
+          Survey Section
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Settings}>
+            Team Settings
+          </Tabs.Panel>
 
-      <Tabs.Panel value="second" pt="xs">
-        Id : {team_id}
-      </Tabs.Panel>
+            </StyledTabs>
 
-      <Tabs.Panel value="third" pt="xs">
-        Team settings
-      </Tabs.Panel>
-    </Tabs>
-    </Paper>
+        <Space h="xl" />
+
+                    
+    </>
   );
 };
 

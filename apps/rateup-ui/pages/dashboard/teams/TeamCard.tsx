@@ -1,4 +1,4 @@
-import { Avatar, Flex, Group, Menu, Paper, Space, Text,Badge, ActionIcon, useMantineTheme } from '@mantine/core';
+import { Flex, Group, Menu, Paper, Space, Text,Badge, ActionIcon, useMantineTheme } from '@mantine/core';
 import { IconChartBar, IconDots, IconEdit, IconPencil, IconSettings, IconShare, IconTrash } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
