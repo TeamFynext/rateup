@@ -1,7 +1,7 @@
 import { Container, Title, Flex , Space, Loader, Text} from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { completeInvite } from '../../api/team/team.api';
+import { completeInvite } from '../../backend/team/team.api';
 import { notifications } from '@mantine/notifications';
 import { IconCheck,  } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -31,7 +31,7 @@ const acceptInvite = async () => {
 
 const updateInviteMutation = useMutation(() => acceptInvite(), {
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on add
+        queryClient.invalidateQueries({ queryKey: ['teamsDetailsQuery'] }),  //update team list on add
             notifications.update({
                 id: 'load-data',
                 color: 'teal',

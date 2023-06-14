@@ -2,7 +2,7 @@ import React, {useState, useEffect } from 'react'
 import { Flex, Group, Paper, Space, Text,Badge, useMantineTheme, Menu, ActionIcon } from '@mantine/core';
 import { IconCheck, IconDots, IconPencil, IconTrash} from '@tabler/icons-react';
 import { useRouter } from 'next/router';
-import { deleteInviteById } from '../../../api/team/team.api';
+import { deleteInviteById } from '../../../backend/team/team.api';
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -68,7 +68,7 @@ function TeamMemberMenu({ status, inviteId }) {
 
     const deleteInviteMutation = useMutation(() => handleDeleteInvite(), {
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on delete
+            queryClient.invalidateQueries({ queryKey: ['teamsDetailsQuery'] }),  //update team list on delete
                 notifications.update({
                     id: 'load-data',
                     color: 'teal',

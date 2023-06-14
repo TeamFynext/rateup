@@ -1,8 +1,8 @@
 import { useRouter } from "next/router";
 import { Loader, Paper, Table, Text } from "@mantine/core";
 import dayjs from "dayjs";
-import { useResponses } from "../../../api/surveys/response/response.query";
-import { useQuestions } from "../../../api/surveys/questions/questions.query";
+import { useResponses } from "../../../backend/surveys/response/response.query";
+import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useContext } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { getResponse } from "../../../utils/response";

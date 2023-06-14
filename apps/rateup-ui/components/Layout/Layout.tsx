@@ -7,7 +7,7 @@ import {
 } from '@mantine/core';
 import { SessionAuth } from "supertokens-auth-react/recipe/session";
 import { HeaderTabs } from './Header/Header';
-import { fetchUserInfo } from '../../api/user/user.api';
+import { fetchUserInfo } from '../../backend/user/user.api';
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from '../../context/UserContext';
 import LeftNavbar from './Navbar/LeftNavbar';

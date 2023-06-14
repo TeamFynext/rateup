@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import { useContext } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { Draggable } from "react-beautiful-dnd";
-import { deleteQuestion } from "../../../../api/surveys/questions/questions.api";
+import { deleteQuestion } from "../../../../backend/surveys/questions/questions.api";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useStyles } from "./DraggableQuestionCard.styles";
 

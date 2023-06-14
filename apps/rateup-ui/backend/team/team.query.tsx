@@ -1,13 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTeam, deleteTeamById, getTeamsByUser } from "./team.api";
+import { createTeam, getTeamsByUser } from "./team.api";
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 
-export function useTeamsByUser() {
+export function useTeamsByUser(queryClient) {
     return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
       refetchOnWindowFocus: "always",
       refetchOnMount: "always",
+      initialData: () => queryClient.getQueryData(["teamsByUser"]),
+      onSuccess: (data) => {
+        console.log("Initial Prefetch Data:", queryClient.getQueryData(["teamsByUser"]));
+
+        console.log("New fetch Data:", data);
+      },
     });
 }
 

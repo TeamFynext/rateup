@@ -22,7 +22,7 @@ import { QuestionTabsEnum } from "../EditSurvey";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
-} from "../../../api/surveys/questions/questions.query";
+} from "../../../backend/surveys/questions/questions.query";
 import { RateupButtonOutline, RateupButtonSecondary } from "../../Button/RateupButtons";
 import StyledTabs  from "../../../pages/dashboard/surveys/StyledTabs";
 

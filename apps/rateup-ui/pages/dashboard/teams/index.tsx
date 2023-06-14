@@ -1,19 +1,23 @@
 ﻿﻿import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { Flex, Title, Loader, Space, Paper, Table, Button, Text, Stack, Center, SimpleGrid} from '@mantine/core';
+import { Flex, Title, Loader, Space, Paper, Text, Stack, Center, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { useDisclosure } from '@mantine/hooks';
-import {  IconPlus, IconReload, IconSelector } from '@tabler/icons-react';
-import { deleteTeamById } from "../../../api/team/team.api";
+import { IconPlus, IconReload, IconSelector } from '@tabler/icons-react';
 import { useRouter } from 'next/router'
 import CardButton from "../../../components/Card";
 import { useUser } from "../../../context/UserContext";
 import { useForm } from "@mantine/form";
-import { useCreateTeamMutation, useDeleteTeamMutation, useTeamsByUser } from "../../../api/team/team.query";
+import { useCreateTeamMutation, useTeamsByUser } from "../../../backend/team/team.query";
 import TeamCard from "./TeamCard";
+import { QueryClient, dehydrate, useQueryClient } from '@tanstack/react-query'
+import supertokensNode from 'supertokens-node'
+import { backendConfig } from "../../../config/backendConfig";
+import { fetchTeamsByUser } from "../../../backend/ssr/team.api";
+import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
 
 export default function Teams() {
     const sessionContext = useSessionContext();
@@ -21,6 +25,7 @@ export default function Teams() {
     const [sort, setSort] = useState(false)
     const router = useRouter()
     const { user, setUser } = useUser();
+    const queryClient = useQueryClient();
 
     const createTeamForm = useForm({
         initialValues: {
@@ -49,7 +54,7 @@ export default function Teams() {
         data: teamsDataUser,
         error: errorTeamsDataUser,
         refetch: reftchTeams,
-      } = useTeamsByUser();
+      } = useTeamsByUser(queryClient);
 
     let teamsData = teamsDataUser?.data
 
@@ -239,3 +244,21 @@ export default function Teams() {
         </>
     );
 }
+
+export async function getServerSideProps(context) {
+    const queryClient = new QueryClient();
+  
+    supertokensNode.init(backendConfig());
+    const session = await getSessionWithRefreshHandling(context);
+    const teamInitialData = await queryClient.prefetchQuery(["teamsByUser"], () => fetchTeamsByUser(session));
+  
+    console.log("Prefetched data: ", JSON.stringify(teamInitialData));
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  }
+
+
+  

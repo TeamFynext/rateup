@@ -9,8 +9,8 @@ import {
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
-import { getTeamsByUser } from "../../api/team/team.api";
-import { useCreateSurveyMutation } from "../../api/surveys/surveys.query";
+import { getTeamsByUser } from "../../backend/team/team.api";
+import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 
 interface FormValues {
   title: string;

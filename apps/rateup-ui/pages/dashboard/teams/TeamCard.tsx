@@ -3,8 +3,8 @@ import { IconChartBar, IconDots, IconEdit, IconPencil, IconSettings, IconShare, 
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, {useEffect, useState} from 'react'
-import { deleteTeamById } from '../../../api/team/team.api';
-import { useDeleteTeamMutation } from '../../../api/team/team.query';
+import { deleteTeamById } from '../../../backend/team/team.api';
+import { useDeleteTeamMutation } from '../../../backend/team/team.query';
 import { notifications } from '@mantine/notifications';
 
 const TeamCard = ({team, reftchTeams}) => {

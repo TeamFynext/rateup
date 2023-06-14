@@ -17,6 +17,7 @@ import {
 import { NextPage } from "next";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { UserProvider } from "../context/UserContext";
+import { Hydrate } from '@tanstack/react-query'
 
 if (typeof window !== "undefined") {
   SuperTokensReact.init(frontendConfig());
@@ -85,12 +86,14 @@ export default function App({
         <MantineProvider withGlobalStyles withNormalizeCSS>
           <Notifications />
           <QueryClientProvider client={queryClient}>
+           <Hydrate state={pageProps.dehydratedState}>
             <UserProvider>
             <LayoutComponent>
               <Component {...pageProps} />
             </LayoutComponent>
             </UserProvider>
             <ReactQueryDevtools initialIsOpen={false}  position="bottom-right"/>
+            </Hydrate>
           </QueryClientProvider>
           <Notifications />
         </MantineProvider>

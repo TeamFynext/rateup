@@ -2,7 +2,7 @@ import { useContext } from "react";
 import {
   useQuestionUpdateMutation,
   useQuestions,
-} from "../../../api/surveys/questions/questions.query";
+} from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
 import { Button, Center, Group, Select, Stack, Table } from "@mantine/core";
 import {

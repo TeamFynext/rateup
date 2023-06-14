@@ -1,7 +1,7 @@
 import { Box, Title } from "@mantine/core";
 import { useRouter } from "next/router";
 import React from "react";
-import { usePublicSurvey } from "../../../api/surveys/surveys.query";
+import { usePublicSurvey } from "../../../backend/surveys/surveys.query";
 
 const TakeSurveyLayout = ({children}) => {
   const {surveyId} = useRouter().query as { surveyId: string };

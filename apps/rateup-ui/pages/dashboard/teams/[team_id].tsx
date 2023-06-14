@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Button, Group, Flex } from '@mantine/core';
+import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex } from '@mantine/core';
 import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { IconSquarePlus, IconSelector, IconCheck, IconTrashXFilled, IconReload } from '@tabler/icons-react';
+import {IconCheck, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import validateNameAndEmail from "./validation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { QueryClient, dehydrate, useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from '@tanstack/react-query'
 import { getOrgIdRole, getUserID } from '../../../utils/userInfo';
-import { getTeamMembersFromInvitation, inviteTeamMember } from '../../../api/team/team.api';
+import { getTeamMembersFromInvitation, inviteTeamMember } from '../../../backend/team/team.api';
 import StyledTabs from '../surveys/StyledTabs';
 import TeamMemberCard from './TeamMemberCard';
 import { IconPlus } from '@tabler/icons-react';
+import { backendConfig } from '../../../config/backendConfig';
+import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
+import supertokensNode from 'supertokens-node'
+import { getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
 
 
 const TeamDetails = () => {
@@ -47,7 +51,7 @@ const TeamDetails = () => {
 
     const addResourceMutation = useMutation(() => handleMemberInvite(), {
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['teamsDataQuery'] }),  //update team list on add
+            queryClient.invalidateQueries({ queryKey: ['teamsDetailsQuery'] }),  //update team list on add
                 notifications.update({
                     id: 'load-data',
                     color: 'teal',
@@ -84,9 +88,16 @@ const TeamDetails = () => {
         data: teamsMembersData,
         error: errorTeamsMembersData,
         refetch,
-    } = useQuery(["teamsDataQuery"], fetchTeamMembers, {
+    } = useQuery(["teamsDetailsQuery"], fetchTeamMembers, {
         refetchOnWindowFocus: "always",
         refetchOnMount: "always",
+        initialData: () => queryClient.getQueryData(["teamDetailsPrefetch"]),
+        onSuccess: (data) => {
+          console.log("Initial Prefetch MData:", queryClient.getQueryData(["teamDetailsPrefetch"]));
+  
+          console.log("New fetch MData:", data);
+  
+        },
     })
 
     const handleSubmit = async () => {
@@ -210,8 +221,8 @@ const TeamDetails = () => {
                                 sort
                                 ? [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id)
-                                  ).map((member) => (
-                                    <TeamMemberCard member={member} />
+                                  ).map((member, i) => (
+                                    <TeamMemberCard key={i} member={member} />
 
                                   ))}
 
@@ -246,3 +257,24 @@ const TeamDetails = () => {
 };
 
 export default TeamDetails;
+
+
+export async function getServerSideProps(context) {
+  const { team_id } = context.query;
+  let teamId : string = team_id.toString();
+  const queryClient = new QueryClient();
+
+  supertokensNode.init(backendConfig());
+  const session = await getSessionWithRefreshHandling(context);
+  const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
+  () => getTeamMembersFromInvite(teamId, session));
+
+  console.log("Prefetched data: ", JSON.stringify(teamInitialData));
+  console.log("Team Id: ", teamId);
+
+  return {
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
+  };
+}

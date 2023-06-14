@@ -16,7 +16,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import { useRouter } from "next/router";
-import { usePublicSurvey } from "../../../api/surveys/surveys.query";
+import { usePublicSurvey } from "../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
 import { SelectedQContext } from "../../../context/SelectedQ";
 import {
@@ -36,7 +36,7 @@ import { SmileyResponse } from "../../../types/enums";
 import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
-import { createResponsePublic } from "../../../api/surveys/response/response.api";
+import { createResponsePublic } from "../../../backend/surveys/response/response.api";
 
 function TakeSurvey() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);

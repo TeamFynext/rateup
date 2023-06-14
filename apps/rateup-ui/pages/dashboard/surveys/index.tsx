@@ -40,8 +40,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteSurvey, updateSurvey } from "../../../api/surveys/survey.api";
-import { useSurveys } from "../../../api/surveys/surveys.query";
+import { deleteSurvey, updateSurvey } from "../../../backend/surveys/survey.api";
+import { useSurveys } from "../../../backend/surveys/surveys.query";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);

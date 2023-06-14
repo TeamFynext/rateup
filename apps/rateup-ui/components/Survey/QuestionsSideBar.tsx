@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import { reorderQuestions } from "../../api/surveys/questions/questions.api";
+import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";

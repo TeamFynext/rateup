@@ -1,7 +1,7 @@
 import { Center, Loader, Select } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { usePublicSurvey } from "../../../../api/surveys/surveys.query";
+import { usePublicSurvey } from "../../../../backend/surveys/surveys.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurvey";
 import TakeSurveyLayout from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayout";
