@@ -10,6 +10,7 @@ import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "./StyledTabs";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
+import { useRouteParams } from "../../../context/RouteParamsContext";
 
 enum TabEnum {
   Edit = "Edit",
@@ -31,6 +32,11 @@ export default () => {
   } = useSurvey(surveyId);
 
   const { isLoading, error, data: questions } = useQuestions(surveyId);
+
+  const { update } = useRouteParams();
+  useEffect(() => {
+    update({ surveyId: survey?.title });
+  }, [survey?.title])
 
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);

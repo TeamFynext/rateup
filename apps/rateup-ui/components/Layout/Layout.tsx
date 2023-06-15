@@ -11,6 +11,7 @@ import { fetchUserInfo } from '../../backend/user/user.api';
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from '../../context/UserContext';
 import LeftNavbar from './Navbar/LeftNavbar';
+import { RouteParamsProvider } from '../../context/RouteParamsContext';
 
 const useStyles = createStyles((theme) => ({
   
@@ -46,6 +47,7 @@ export default ({ children }) => {
 
     return (
         <SessionAuth>
+            <RouteParamsProvider>
         <AppShell
           styles={{
                 main: {
@@ -63,6 +65,7 @@ export default ({ children }) => {
             </Container>
             
         </AppShell>
+        </RouteParamsProvider>
         </SessionAuth>
     );
 };

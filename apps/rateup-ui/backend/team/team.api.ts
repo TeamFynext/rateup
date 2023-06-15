@@ -63,3 +63,8 @@ export const getTeamMembersFromInvitation= (teamId: String) => axiosClient({
     url: `/team/invitation/${teamId}`,
     method: 'GET',
 })
+
+export const getTeamSurveys= (teamId: String) => axiosClient({
+    url: `/survey/team/${teamId}`,
+    method: 'GET',
+})

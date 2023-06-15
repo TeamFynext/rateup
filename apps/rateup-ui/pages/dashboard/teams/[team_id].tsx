@@ -9,14 +9,16 @@ import validateNameAndEmail from "./validation";
 import { QueryClient, dehydrate, useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from '@tanstack/react-query'
 import { getOrgIdRole, getUserID } from '../../../utils/userInfo';
-import { getTeamMembersFromInvitation, inviteTeamMember } from '../../../backend/team/team.api';
+import { getTeamMembersFromInvitation, inviteTeamMember, getTeamSurveys } from '../../../backend/team/team.api';
 import StyledTabs from '../surveys/StyledTabs';
 import TeamMemberCard from './TeamMemberCard';
 import { IconPlus } from '@tabler/icons-react';
 import { backendConfig } from '../../../config/backendConfig';
 import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
 import supertokensNode from 'supertokens-node'
-import { getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
+import { fetchTeamSurveys, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
+import { SurveyCard } from '../surveys';
+import { useRouteParams } from '../../../context/RouteParamsContext';
 
 
 const TeamDetails = () => {
@@ -30,6 +32,7 @@ const TeamDetails = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const queryClient = useQueryClient()
+  const { state, update } = useRouteParams();
 
   enum TabEnum {
     Members = "Members",
@@ -37,8 +40,6 @@ const TeamDetails = () => {
     Settings = "Settings",
   }
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Members);
-
-
 
   const handleMemberInvite = async () => {
         const { orgId } = await getOrgIdRole()
@@ -99,6 +100,27 @@ const TeamDetails = () => {
   
         },
     })
+
+    useEffect(() => {
+      update({ team_id: teamsMembersData?.data?.team?.name });
+    }, [teamsMembersData?.data])
+
+    const {
+      isLoading: isLoadingSurveys,
+      data: surveys,
+      error: errorTeamsSurveysData,
+      refetch: refetchSurveys,
+  } = useQuery(["teamSurveysQuery"], () => getTeamSurveys(team_id.toString()), {
+      refetchOnWindowFocus: "always",
+      refetchOnMount: "always",
+      initialData: () => queryClient.getQueryData(["teamSurveysPrefetch"]),
+      onSuccess: (data) => {
+        console.log("Initial Prefetch SData:", queryClient.getQueryData(["teamSurveysPrefetch"]));
+
+        console.log("New fetch SData:", surveys);
+
+      },
+  })
 
     const handleSubmit = async () => {
 
@@ -240,10 +262,33 @@ const TeamDetails = () => {
         </>
 )}
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Survey}>
-          Survey Section
+          <Tabs.Panel value={TabEnum.Survey} mt={60}>
+          <SimpleGrid
+              cols={4}
+              spacing={"lg"}
+              breakpoints={[
+                { minWidth: "xl", cols: 3 },
+                { minWidth: "lg", cols: 2 },
+                { minWidth: "md", cols: 2 },
+                { maxWidth: "md", cols: 1 },
+              ]}
+            >
+              {/* <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
+                <Center h="100%">
+                  <Stack align="center">
+                    <IconPlus size={36}/>
+                    <Text size="xl" fw={700}>Add Survey</Text>
+                  </Stack>
+                </Center>
+              </Paper> */}
+
+              {surveys.data.map((s) => (
+                <SurveyCard key={s.id} survey={s} />
+              ))}
+          </SimpleGrid>
+
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Settings}>
+          <Tabs.Panel value={TabEnum.Settings} mt={60}>
             Team Settings
           </Tabs.Panel>
 
@@ -269,7 +314,12 @@ export async function getServerSideProps(context) {
   const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
   () => getTeamMembersFromInvite(teamId, session));
 
-  console.log("Prefetched data: ", JSON.stringify(teamInitialData));
+  const teamInitialSurveys = await queryClient.prefetchQuery(["teamSurveysPrefetch"], 
+  () => fetchTeamSurveys(teamId, session));
+
+  console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
+  console.log("Prefetched  Team Survey data: ", JSON.stringify(teamInitialSurveys));
+
   console.log("Team Id: ", teamId);
 
   return {

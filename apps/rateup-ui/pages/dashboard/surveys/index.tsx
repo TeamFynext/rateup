@@ -144,7 +144,7 @@ export default function Surveys() {
 interface SurveyCardProps {
   survey: Survey;
 }
-function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
+export function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
@@ -163,7 +163,7 @@ function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
       p="md"shadow="lg" radius="lg"
       sx={{ cursor: "pointer" }}
       onClick={() => {
-        router.push(`surveys/${survey.id}`);
+        router.push(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey.id}`);
       }}
     >
       <Flex justify={"space-between"} align={"center"}>

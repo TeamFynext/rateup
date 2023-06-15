@@ -32,3 +32,15 @@ export async function getTeamMembersFromInvite(teamId: string, session): Promise
     throw error;
   }
 }
+
+export async function fetchTeamSurveys(teamId: string, session): Promise<{ data: any }> {
+  try {
+    setAuthHeader(session.accessToken);
+    const response: AxiosResponse = await axiosInstance.get(`/api/survey/team/${teamId}`);
+    const data: any = response.data;
+    return { data };
+  } catch (error) {
+    console.error('Error fetching team surveys:', error);
+    throw error;
+  }
+}
