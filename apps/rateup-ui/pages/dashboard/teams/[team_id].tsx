@@ -282,7 +282,7 @@ const TeamDetails = () => {
                 </Center>
               </Paper> */}
 
-              {surveys.data.map((s) => (
+              {surveys?.data?.map((s) => (
                 <SurveyCard key={s.id} survey={s} />
               ))}
           </SimpleGrid>
