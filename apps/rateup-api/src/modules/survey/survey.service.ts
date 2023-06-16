@@ -45,6 +45,17 @@ export async function getSurveysByUserId(userId: string) {
   return surveysWithoutQuestions;
 }
 
+export async function getSurveysByTeam(teamId: string) {
+  const surveys = await prisma.survey.findMany({
+    where: {
+      teamId
+    }
+  });
+
+  const surveysWithoutQuestions = surveys.map((s) => excludeFields(s, ["questions"]))
+  return surveysWithoutQuestions;
+}
+
 export async function deleteSurveyById(id: string) {
   const survey = await prisma.survey.delete({
     where: {

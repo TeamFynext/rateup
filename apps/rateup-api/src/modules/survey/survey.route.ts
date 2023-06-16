@@ -3,6 +3,7 @@ import {
   createSurveyHandler,
   deleteSurveyByIdHandler,
   getSurveyByIdHandler,
+  getSurveyByTeamHandler,
   getSurveysHandler,
   updateSurveyByIdHandler,
 } from "./survey.controller";
@@ -41,6 +42,21 @@ export async function surveyRoutes(server: FastifyInstance) {
       },
     },
     getSurveyByIdHandler
+  );
+
+  interface GetSurveyByTeamParams {
+    id: string;
+  }
+  // get survey by team id
+  server.get<{ Params: GetSurveyByTeamParams }>(
+    "/team/:id",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+      },
+    },
+    getSurveyByTeamHandler
   );
 
   // delete survey by id

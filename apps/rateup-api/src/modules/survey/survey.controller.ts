@@ -3,6 +3,7 @@ import {
   createSurvey,
   deleteSurveyById,
   getSurveyById,
+  getSurveysByTeam,
   getSurveysByUserId,
   updateSurveyById,
 } from "./survey.service";
@@ -34,6 +35,24 @@ export async function getSurveyByIdHandler(
 ) {
   try {
     const survey = await getSurveyById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
+}
+
+export async function getSurveyByTeamHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getSurveysByTeam(request.params.id);
     if (!survey) {
       reply.code(404);
     } else {
