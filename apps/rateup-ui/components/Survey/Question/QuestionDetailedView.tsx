@@ -23,7 +23,7 @@ import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
-import { RateupButtonOutline, RateupButtonSecondary } from "../../Button/RateupButtons";
+import { RateupButtonOutline, RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
 import StyledTabs  from "../../../pages/dashboard/surveys/StyledTabs";
 
 // TODO: use a routing method instead of passing the question as a prop?
@@ -201,7 +201,6 @@ export function QuestionDetailedView({
               </StyledTabs>
 
               <Space w="xl" />
-              <Space w="xl" />
               <Text c="blue.9">Question id: 999999999999999 </Text>
 
          </Group>
@@ -263,10 +262,12 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
           value={newChoice}
           onChange={(e) => setNewChoice(e.currentTarget.value)}
         />
-
-        <Button leftIcon={<IconPlus />} onClick={handleAddChoice}>
-          Add choice
-        </Button>
+        <RateupButtonPrimary
+            title={"Add choice"}
+            size="sm"
+            leftIcon={<IconPlus size="1rem"/>} 
+            onClick={handleAddChoice}
+          />
       </Group>
     </>
   );

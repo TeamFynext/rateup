@@ -1,4 +1,4 @@
-import { Paper, Stack, Center, Text, Tabs } from "@mantine/core";
+import { Paper,  Center, Text, Tabs, ScrollArea } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
@@ -36,7 +36,7 @@ export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
   return (
     <>
       <Paper p={"xl"} sx={{ flex: 2 }} shadow="lg" radius="lg"> 
-        <Stack>
+      <ScrollArea style={{ height: '65vh' }} pr={20}>
           <QuestionsSideBar
             questions={questions}
             selectedQ={selectedQ}
@@ -44,7 +44,7 @@ export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
             setActiveTab={setActiveTab}
             addQnTrigger={addQnTrigger}
           />
-        </Stack>
+      </ScrollArea>
       </Paper>
       <Paper p={"xl"} sx={{ flex: 5 }}  shadow="lg" radius="lg">
         <Tabs

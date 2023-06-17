@@ -72,6 +72,12 @@ export default function App({
     return null;
   }
 
+  const styleOverride = {
+    fontSizes: {
+      xxl: '1.8rem', 
+    }
+  }
+
   return (
     <>
       <Head>
@@ -83,7 +89,7 @@ export default function App({
         <link rel="shortcut icon" href="/favicon.svg" />
       </Head>
       <SuperTokensWrapper>
-        <MantineProvider withGlobalStyles withNormalizeCSS>
+        <MantineProvider withGlobalStyles withNormalizeCSS theme={styleOverride}>
           <Notifications />
           <QueryClientProvider client={queryClient}>
            <Hydrate state={pageProps.dehydratedState}>

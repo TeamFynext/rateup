@@ -15,6 +15,7 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionTabsEnum } from "../EditSurvey";
 import { SmileyResponse } from "../../../types/enums";
 import { logicSupportedTypes } from "../../../utils/data";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -64,9 +65,12 @@ const LogicEditor = ({
       <Center sx={{ height: "100%" }}>
         <Stack>
           <p>Logic is not supported for this question type</p>
-          <Button onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
-            Go Back
-          </Button>
+          <RateupButtonSecondary 
+            title={"Go Back"}
+            size="sm"
+            onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
+          />
+
         </Stack>
       </Center>
     );
@@ -94,10 +98,16 @@ const LogicEditor = ({
         </tbody>
       </Table>
       <Group position="apart">
-        <Button onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave}>Save</Button>
+        <RateupButtonSecondary 
+            title={"Cancel"}
+            size="md"
+            onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
+          />
+          <RateupButtonSecondary 
+            title={"Save"}
+            size="md"
+            onClick={handleSave}
+          />
       </Group>
     </Stack>
   );

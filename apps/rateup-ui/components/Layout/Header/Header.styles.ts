@@ -22,14 +22,10 @@ export const useStyles = createStyles((theme) => ({
       paddingLeft: "20px",
       paddingRight:"30px",
       backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
-  
-  
       '&:hover': {
         backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
         boxShadow: theme.shadows.lg,
-  
       },
-  
       [theme.fn.smallerThan('xs')]: {
         display: 'none',
       },
@@ -49,6 +45,28 @@ export const useStyles = createStyles((theme) => ({
     link: {
       textDecoration: "none",
     },
+
+    colorModeBox:{
+      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
+      borderRadius: theme.radius.xl,
+      padding: `4px ${theme.spacing.sm}`,
+    },
+
+    searchBox: {
+      width: '25vw',
+      color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+      borderRadius: theme.radius.xl,
+      transition: 'background-color 100ms ease',
+      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
+      padding: `4px ${theme.spacing.sm}`,
+
+      '&:focus-within': {
+        borderColor: theme.colors.yellow[6],
+        borderWidth: '1px',
+        borderStyle: 'solid',
+      },
+    },
+
     search: {
       [theme.fn.smallerThan('xs')]: {
         display: 'none',

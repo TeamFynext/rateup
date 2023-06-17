@@ -70,3 +70,21 @@ export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null,
     )
 }
 
+export const RateupButtonBlackOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+    return (
+        <Button
+            radius="lg"
+            px="xl"
+            disabled={disabled}
+            color='dark'
+            leftIcon={leftIcon}
+            rightIcon={rightIcon}
+            onClick={onClick}
+            variant="outline" 
+            size= {size}
+        >
+            {title}
+        </Button >
+    )
+}
+
