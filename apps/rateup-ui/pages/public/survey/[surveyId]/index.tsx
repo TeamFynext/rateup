@@ -4,13 +4,14 @@ import { useState } from "react";
 import { usePublicSurvey } from "../../../../backend/surveys/surveys.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurvey";
-import TakeSurveyLayout from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayout";
+import { TakeSurveyLayout } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayout";
 
 export default function Page() {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const { isError, isLoading, data: survey } = usePublicSurvey(surveyId);
   const [selectedLanguage, setSelectedLanguage] = useState("");
+
 
   if (isError) return <div>Something went wrong</div>;
   if (isLoading) return <Loader />;
@@ -24,9 +25,9 @@ export default function Page() {
     );
   }
   return (
-    <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
-      <TakeSurvey />
-    </SelectedLanguageContext.Provider>
+      <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
+        <TakeSurvey />
+      </SelectedLanguageContext.Provider>
   );
 }
 

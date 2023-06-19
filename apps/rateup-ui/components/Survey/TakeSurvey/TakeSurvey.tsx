@@ -1,7 +1,6 @@
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
   ActionIcon,
-  Box,
   Button,
   Center,
   Checkbox,
@@ -11,7 +10,7 @@ import {
   Loader,
   Rating,
   Stack,
-  Text,
+  Text,Grid,
   TextInput,
   Textarea,
 } from "@mantine/core";
@@ -27,6 +26,8 @@ import {
 } from "../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
+  IconChevronLeft,
+  IconChevronRight,
   IconThumbDown,
   IconThumbDownFilled,
   IconThumbUp,
@@ -37,12 +38,19 @@ import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { createResponsePublic } from "../../../backend/surveys/response/response.api";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
+import QuestionCountContext from "../../../context/QuestionCountContext";
 
 function TakeSurvey() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const [QnNo, setQnNo] = useState(1)
+
+  const { setQuestionCount, setCurrentQuestionNo } = useContext(QuestionCountContext);
+
+
   const [responses, handlers] = useListState<QuestionResponse>([]);
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
@@ -53,8 +61,17 @@ function TakeSurvey() {
   useEffect(() => {
     if (survey.questions.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
+      questionsHistoryHandlers.append(survey.questions[0].id);
     }
+    setQuestionCount(survey.questions.length)
   }, [survey]);
+
+  useEffect(() => {
+    const index = survey.questions.indexOf(selectedQ);
+    setQnNo(index + 1)
+    setCurrentQuestionNo(index + 1)
+  }, [selectedQ])
+  
 
   if (isLoading) {
     return (
@@ -150,7 +167,8 @@ function TakeSurvey() {
       <SelectedQContext.Provider value={{ selectedQ }}>
         <Container h={"80vh"} size={"md"} sx={{ position: "relative" }}>
           <Stack p="md">
-            <QuestionTitle />
+            <QuestionNo num={QnNo} />
+            <QuestionTitle  />
             <QuestionDesc />
             <QuestionForm />
             <NextPrev next={handleNext} prev={handlePrev} />
@@ -182,16 +200,20 @@ function submitSurvey({ surveyId, responses, selectedLanguage }) {
     });
 }
 
+function QuestionNo({num}) {
+  return <Text size={"15px"}>Question: {num}</Text>;
+}
+
 function QuestionTitle() {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  return <Text size={"32px"}>{selectedQ.title[selectedLanguage]}</Text>;
+  return <Text size={"30px"}>{selectedQ.title[selectedLanguage]}</Text>;
 }
 function QuestionDesc() {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text size={"24px"} c="dimmed">
+    <Text size={"15px"} c="dimmed" pb={20}>
       {selectedQ.description[selectedLanguage]}
     </Text>
   );
@@ -201,7 +223,7 @@ function QuestionForm() {
   const { selectedQ } = useContext(SelectedQContext);
   const { type } = selectedQ;
 
-  return <Container mih={"300px"}>{getQuestionForm(type)}</Container>;
+  return <Group>{getQuestionForm(type)}</Group>;
 }
 
 function getQuestionForm(type) {
@@ -216,6 +238,8 @@ function getQuestionForm(type) {
       return <LDForm />;
     case Q.YN:
       return <YNForm />;
+    case Q.Opinion:
+      return <OpinionScaleForm />;
     case Q.Smiley:
       return <SmileyForm />;
     case Q.Photo:
@@ -243,17 +267,32 @@ function NextPrev({ prev, next }) {
   const isLastQuestion =
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
-    <Box sx={{ position: "absolute", bottom: "0px", width: "100%" }}>
-      {isFirstQuestion || (
-        <Button sx={{ position: "absolute", left: "10px" }} onClick={prev}>
-          Previous
-        </Button>
-      )}
-      <Button sx={{ position: "absolute", right: "10px" }} onClick={next}>
-        {isLastQuestion ? "Submit" : "Next"}
-      </Button>
-    </Box>
-  );
+
+    <Grid  pb={40} sx={{ position: "absolute", bottom: "10vh", width: "100%" }}>
+          <Grid.Col span={5}>
+              {isFirstQuestion || (
+          <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
+                sx={{ position: "absolute", }}
+                size="lg" onClick={prev}/>
+            )}
+           </Grid.Col>
+              <Grid.Col span={5}>
+
+              {isLastQuestion ?
+
+                 <RateupButtonBlue radius={"xl"} title={"Submit"} 
+                  sx={{ position: "absolute", right: "5vw" }}
+                  size="lg" onClick={next}/>
+              :
+
+              <RateupButtonSecondary radius={"xl"} title={"Next"}
+              sx={{ position: "absolute", right: "5vw" }}
+              size="lg" onClick={next} rightIcon={<IconChevronRight />}/>
+              }
+              </Grid.Col>
+
+    </Grid>
+  )
 }
 
 function TextForm() {
@@ -261,9 +300,15 @@ function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   return (
+    // <Textarea
+    //   placeholder="Enter your answer"
+    //   value={response || ""}
+    //   onChange={(e) => updateResponse(e.currentTarget.value)}
+
+    // />
+
     <TextInput
       placeholder="Enter your answer"
-      label="Response"
       value={response || ""}
       onChange={(e) => updateResponse(e.currentTarget.value)}
     />
@@ -289,6 +334,34 @@ function LDForm() {
       <ActionIcon onClick={() => updateResponse(LDResponse.Like)}>
         {response === LDResponse.Like ? <IconThumbUpFilled /> : <IconThumbUp />}
       </ActionIcon>
+    </Group>
+  );
+}
+
+function OpinionScaleForm(){
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const renderButtons = () => {
+    const buttons = [];
+    for (let i = 1; i <= 10; i++) {
+      buttons.push(
+        <Button
+          key={i}
+          radius="xl"
+          onClick={() => updateResponse(i)}
+          color={response === i ? 'blue' : 'gray'}
+          variant={response === i ? 'gradient' : 'outline'}
+          gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
+        >
+          {i}
+        </Button>
+      );
+    }
+    return buttons
+  }
+
+    return (
+    <Group position="center" spacing="xs">
+      {renderButtons()}
     </Group>
   );
 }
@@ -349,7 +422,7 @@ function ImageForm() {
     <>
       <Group position="center">
         <FileButton onChange={setFile} accept="image/png,image/jpeg">
-          {(props) => <Button {...props}>Upload image</Button>}
+          {(props) => <Button variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Upload image</Button>}
         </FileButton>
       </Group>
 
