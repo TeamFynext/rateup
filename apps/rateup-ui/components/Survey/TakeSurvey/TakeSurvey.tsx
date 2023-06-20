@@ -1,6 +1,5 @@
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
-  ActionIcon,
   Button,
   Center,
   Checkbox,
@@ -11,13 +10,15 @@ import {
   Rating,
   Stack,
   Text,Grid,
-  TextInput,
+  TextInput,Paper,Input,
   Textarea,
+  Box , Image
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { usePublicSurvey } from "../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
 import { SelectedQContext } from "../../../context/SelectedQ";
+
 import {
   LDResponse,
   LogicAction,
@@ -26,8 +27,10 @@ import {
 } from "../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
+  IconCalendarEvent,
   IconChevronLeft,
   IconChevronRight,
+  IconMail,
   IconThumbDown,
   IconThumbDownFilled,
   IconThumbUp,
@@ -40,6 +43,7 @@ import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { createResponsePublic } from "../../../backend/surveys/response/response.api";
 import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
 import QuestionCountContext from "../../../context/QuestionCountContext";
+import { useStyles } from "./TakeSurvey.styles";
 
 function TakeSurvey() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -229,9 +233,10 @@ function QuestionForm() {
 function getQuestionForm(type) {
   switch (type) {
     case Q.Text:
-    case Q.Email:
     case Q.Phone:
       return <TextForm />;
+    case Q.Email:
+      return <EmailForm />;
     case Q.Rating:
       return <RatingForm />;
     case Q.LD:
@@ -298,42 +303,105 @@ function NextPrev({ prev, next }) {
 function TextForm() {
   // TODO: TextArea?
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { classes } = useStyles();
 
   return (
-    // <Textarea
-    //   placeholder="Enter your answer"
-    //   value={response || ""}
-    //   onChange={(e) => updateResponse(e.currentTarget.value)}
+    <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+        <Input
+            placeholder="Enter your answer"
+            value={response || ""}
+            onChange={(e) => updateResponse(e.currentTarget.value)}
+            sx={{ width: '70vw', maxWidth: "400px" }}
+            variant="unstyled"
+            radius="xl"
+            size="sm"
+          />
+    </Paper>
 
-    // />
-
-    <TextInput
-      placeholder="Enter your answer"
-      value={response || ""}
-      onChange={(e) => updateResponse(e.currentTarget.value)}
-    />
   );
 }
 
+function EmailForm() {
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const [emailError, setEmailError] = useState(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const { classes } = useStyles();
+
+  useEffect(() => {
+    if(response)
+     setEmailError(/^\S+@\S+$/.test(response) ? null : "Invalid email");
+  }, [response])
+  
+  const handleInputBlur = () => {
+    if (emailError) {
+      console.log("Invalid email");
+    }
+    setIsFocused(false)
+  };
+  const handleInputChange = (e) => {
+    setIsFocused(true)
+    const email = e.target.value;
+    updateResponse(email);
+    setEmailError(/^\S+@\S+$/.test(email) ? null : "Invalid email");
+  };
+  
+  return (
+    <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+    <TextInput
+      placeholder="Enter email address"
+      value={response || ""}
+      onChange={handleInputChange}
+      onBlur={handleInputBlur}
+      sx={{ width: '70vw', maxWidth: "400px" }}
+      error={emailError && !isFocused  ? 'Invalid email' : null}
+      icon={<IconMail size="1.2rem" color="black" />}
+      variant="unstyled"
+    />
+    </Paper>
+  );
+}
+
+
 function RatingForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  return <Rating value={response} onChange={updateResponse} />;
+  return <Paper px={30} py={20} radius="lg"><Rating value={response} onChange={updateResponse} size="xl" /></Paper>;
 }
 
 function LDForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
     <Group>
-      <ActionIcon onClick={() => updateResponse(LDResponse.Dislike)}>
-        {response === LDResponse.Dislike ? (
-          <IconThumbDownFilled />
-        ) : (
-          <IconThumbDown />
-        )}
-      </ActionIcon>
-      <ActionIcon onClick={() => updateResponse(LDResponse.Like)}>
-        {response === LDResponse.Like ? <IconThumbUpFilled /> : <IconThumbUp />}
-      </ActionIcon>
+    <Box w={120}>
+          <Button
+            color={response === LDResponse.Like ? "yellow" : "dark.0"}
+            size="lg"
+            px="md"
+            fullWidth 
+            radius="md"
+            leftIcon={<IconThumbUpFilled /> }
+            onClick={() => updateResponse(LDResponse.Like)}
+          >
+            Like
+          </Button>
+      </Box>
+        <Box w={130}>
+
+          <Button
+            color={response === LDResponse.Dislike ? "yellow" : "dark.0"}
+            size="lg"
+            px="md"
+            radius="md"
+            fullWidth 
+            leftIcon={<IconThumbDownFilled /> }
+            onClick={() => updateResponse(LDResponse.Dislike)}
+          >
+            Dislike
+          </Button>
+        </Box>
     </Group>
   );
 }
@@ -348,8 +416,8 @@ function OpinionScaleForm(){
           key={i}
           radius="xl"
           onClick={() => updateResponse(i)}
-          color={response === i ? 'blue' : 'gray'}
-          variant={response === i ? 'gradient' : 'outline'}
+          color={response === i ? 'blue' : 'blue.9'}
+          variant={response === i ? 'gradient' : 'default'}
           gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
         >
           {i}
@@ -370,18 +438,31 @@ function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
     <Group>
+      <Box w={120}>
+        <Button
+          color={response === YNResponse.No ? "yellow" : "dark.0"}
+          size="lg"
+          px="xl"
+          fullWidth 
+          radius="md"
+          onClick={() => updateResponse(YNResponse.No)}
+        >
+          No
+        </Button>
+      </Box>
+      <Box w={120}>
+
       <Button
-        variant={response === YNResponse.No ? "light" : "subtle"}
-        onClick={() => updateResponse(YNResponse.No)}
-      >
-        No
-      </Button>
-      <Button
-        variant={response === YNResponse.Yes ? "light" : "subtle"}
+        color={response === YNResponse.Yes ? "yellow" : "dark.0"}
+        size="lg"
+        px="xl"
+        radius="md"
+        fullWidth 
         onClick={() => updateResponse(YNResponse.Yes)}
       >
         Yes
       </Button>
+      </Box>
     </Group>
   );
 }
@@ -398,10 +479,17 @@ function SmileyForm() {
       {SMILEY_OPTIONS.map(({ value, label }) => (
         <Button
           key={value}
-          variant={response === value ? "light" : "subtle"}
+          variant={response === value ? "gradient" : "default"}
+          gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
           onClick={() => updateResponse(value)}
+          sx={{height:'90px', width:'90px'}}
         >
-          {label}
+          {/* <Stack> */}
+            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
+            {/* <Text> {label}</Text>
+
+          </Stack> */}
+       
         </Button>
       ))}
     </Group>
@@ -420,11 +508,12 @@ function ImageForm() {
   }, [file]);
   return (
     <>
-      <Group position="center">
-        <FileButton onChange={setFile} accept="image/png,image/jpeg">
-          {(props) => <Button variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Upload image</Button>}
+      <Box w={300}>
+        <FileButton  onChange={setFile} accept="image/png,image/jpeg">
+          {(props) => <Button fullWidth size="lg" radius="lg"
+           variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Upload image</Button>}
         </FileButton>
-      </Group>
+      </Box>
 
       {file && (
         <Text size="sm" align="center" mt="sm">
@@ -476,15 +565,22 @@ function MSQForm() {
 
 function DateForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { classes } = useStyles();
   return (
-    <DateInput
-      value={response}
-      onChange={updateResponse}
-      label="Date input"
-      placeholder="Date input"
-      maw={400}
-      mx="auto"
-    />
+    <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+      <DateInput
+        value={response}
+        onChange={updateResponse}
+        placeholder="Select date"
+        maw={400}
+        mx="auto"
+        variant="unstyled"
+        icon={<IconCalendarEvent size="1.2rem" color="black" />}
+
+      />
+    </Paper>
   );
 }
 
@@ -503,21 +599,32 @@ function TestimonialForm() {
   };
 
   console.error("Image storage not implemented");
+  const { classes } = useStyles();
 
   return (
-    <Stack>
-      <TextInput
-        placeholder="Enter your name"
-        label="Name"
-        value={response?.name}
-        onChange={handleNameChange}
-      />
-      <Textarea
-        placeholder="Enter your testimonial"
-        label="Testimonial"
-        value={response?.testimonial}
-        onChange={handleTestimonialChange}
-      />
+    <>
+      <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+          <TextInput
+            placeholder="Enter your name"
+            value={response?.name}
+            onChange={handleNameChange}
+            sx={{ width: '70vw', maxWidth: "400px" }}
+            variant="unstyled"
+          />
+      </Paper>
+      <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+        <Textarea
+          placeholder="Enter your testimonial"
+          value={response?.testimonial}
+          onChange={handleTestimonialChange}
+          sx={{ width: '70vw', maxWidth: "400px" }}
+          variant="unstyled"
+        />
+      </Paper>
       {/* Will be brought back once image storing setup is  */}
       {/* <FileButton onChange={setFile} accept="image/png,image/jpeg">
         {(props) => <Button {...props}>Upload your image</Button>}
@@ -528,7 +635,7 @@ function TestimonialForm() {
           Picked file: {file.name}
         </Text>
       )} */}
-    </Stack>
+    </>
   );
 }
 export default TakeSurvey;

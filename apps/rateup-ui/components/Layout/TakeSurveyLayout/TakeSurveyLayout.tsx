@@ -28,7 +28,7 @@ export const TakeSurveyLayout = ({ children }) => {
      setQuestionCount,
      setCurrentQuestionNo,
    }}>
-      <Container  sx={{ height: "100vh", background: '#F7F7F7' }}>
+      <Container pb={20}  sx={{ height: "100vh", background: '#F7F7F7' }}>
           <Box  p="sm">
             {startClicked ?
 
@@ -59,7 +59,7 @@ export const TakeSurveyLayout = ({ children }) => {
           </Box>
 
           <Center mb={30}>
-            <Text fz="sm">Powered by </Text>
+            <Text  fz="sm">Powered by </Text>
             <Image pl={10 }src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={80} height={20} />
           </Center>
 
