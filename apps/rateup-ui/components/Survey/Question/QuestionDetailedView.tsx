@@ -4,7 +4,6 @@ import { useForm, UseFormReturnType } from "@mantine/form";
 import {
   ActionIcon,
   Box,
-  Button,
   Checkbox,
   Group,
   Stack,
@@ -12,11 +11,11 @@ import {
   Flex,
   Text,
   Tabs,
-  Space
+  Space,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDeviceSdCard, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -45,6 +44,8 @@ export function QuestionDetailedView({
   const questionCreateMutation = useQuestionCreateMutation(surveyId);
   const questionUpdateMutation = useQuestionUpdateMutation(surveyId);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const form = useForm({
     // Any modifications to initialValues must be applied in the useEffect below
     initialValues: {
@@ -72,7 +73,19 @@ export function QuestionDetailedView({
     });
   }, [question]);
 
+  const handleChoicesAndRequiredChange = () => {
+    if (form.isDirty('choices') || form.isDirty('required')) {
+      handleSave();
+    }
+  };
+
+  useEffect(() => {
+    handleChoicesAndRequiredChange();
+  }, [form.values.choices, form.values.required]);
+
   const handleSave = () => {
+    setIsSaving(true);
+
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
@@ -104,6 +117,7 @@ export function QuestionDetailedView({
       // Updating existing question
       questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
+    setIsSaving(false);
   };
 
   // TODO: show question type somewhere
@@ -125,6 +139,10 @@ export function QuestionDetailedView({
         size="xl"
         placeholder="Enter question title here *"
         {...form.getInputProps("title")}
+        onBlur={() => {
+          form.validateField('title');
+          handleSave();
+        }}
       />
       <TextInput
         variant="unstyled"
@@ -136,6 +154,10 @@ export function QuestionDetailedView({
             fontWeight:400// set custom font size for this TextInput
           },
         }}
+        onBlur={() => {
+          form.validateField('description');
+          handleSave();
+        }}
       />
       <ExtraProps form={form} question={question} />
 
@@ -143,9 +165,7 @@ export function QuestionDetailedView({
       <Group
         position="apart"
         sx={{ position: "absolute", bottom: "0px", left: "0px", width: "100%" }}
-        
       >
-
      <Flex
         gap="xl"
         justify="center"
@@ -171,6 +191,8 @@ export function QuestionDetailedView({
                     title={"Save"}
                     size="md"
                     onClick={handleSave}
+                    leftIcon={ <IconDeviceSdCard /> } 
+                    loading={isSaving}
                   />
                   {/* <RateupButtonSecondary 
                     title={"Add Next Question "}
@@ -201,7 +223,8 @@ export function QuestionDetailedView({
               </StyledTabs>
 
               <Space w="xl" />
-              <Text c="blue.9">Question id: 999999999999999 </Text>
+              {question?.id && <Text c="blue.9" size="sm"> Question Id:  {question?.id} </Text>}
+              
 
          </Group>
 

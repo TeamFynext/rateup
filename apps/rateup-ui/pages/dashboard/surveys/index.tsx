@@ -221,7 +221,9 @@ function SurveyMenu({ survey }) {
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
       notifications.show({
+        id:'survey',
         message: "Updated!",
+        autoClose: true,
       });
       queryClient.invalidateQueries(["surveys"]);
     },

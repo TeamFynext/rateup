@@ -266,6 +266,50 @@ function NextPrev({ prev, next }) {
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
+  const { response } = useContext(CurrentResponsesContext);
+
+  const [isErrorInput, setIsErrorInput] = useState(false)
+  const [errorMsg, setErrorMsg] = useState(null)
+
+  console.log("qn:"+ JSON.stringify(selectedQ))
+  console.log("res:"+ JSON.stringify(response))
+
+  useEffect(() => {
+      if(selectedQ?.required && response && selectedQ?.type === 'Email'){
+        setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
+        if(!(/^\S+@\S+$/.test(response))){
+          setIsErrorInput(false)
+        }
+      }else if(selectedQ?.required && response && selectedQ?.type === 'Phone'){
+        setErrorMsg(/^[\d+\s]{10,}$/.test(response) ? null : "Invalid Phone");
+        if(!(/^[\d+\s]{10,}$/.test(response))){
+          setIsErrorInput(false)
+        }
+      }else if (selectedQ?.required && response && selectedQ?.type === 'Testimonial') {
+        const { name, testimonial } = response;
+        if (name?.length < 3 || testimonial?.length < 5) {
+          setErrorMsg("Name - min 3 characters, and \n testimonial - min 5 characters");
+          setIsErrorInput(true);
+        } else {
+          setErrorMsg("");
+          setIsErrorInput(false);
+        }
+      } else {
+        setErrorMsg("");
+      }
+  }, [response])
+
+  function handleNextClick(){
+    if (selectedQ?.type === 'Email' || selectedQ?.type === 'Phone'  || selectedQ?.type === 'Testimonial') {
+      if (!errorMsg) {
+        next();
+      } else {
+        setIsErrorInput(true);
+      }
+    } else {
+      next();
+    }
+  }
 
   if (isLoading || isError) return null;
   const isFirstQuestion = survey.questions.indexOf(selectedQ) === 0;
@@ -273,7 +317,14 @@ function NextPrev({ prev, next }) {
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
 
-    <Grid  pb={40} sx={{ position: "absolute", bottom: "10vh", width: "100%" }}>
+    <Stack  pb={40} sx={{ position: "absolute", bottom: "6vh", width: "100%" }}>
+         {selectedQ.required && !response && 
+            <Text color="gray">Note: * Must attend to continue with next.</Text>
+          }
+          {errorMsg && isErrorInput &&
+            <Text color="red">Note: * {errorMsg}</Text>
+          }
+      <Grid>
           <Grid.Col span={5}>
               {isFirstQuestion || (
           <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
@@ -286,17 +337,18 @@ function NextPrev({ prev, next }) {
               {isLastQuestion ?
 
                  <RateupButtonBlue radius={"xl"} title={"Submit"} 
+                  disabled={(selectedQ?.required && !response)  || isErrorInput}
                   sx={{ position: "absolute", right: "5vw" }}
-                  size="lg" onClick={next}/>
+                  size="lg" onClick={handleNextClick}/>
               :
 
-              <RateupButtonSecondary radius={"xl"} title={"Next"}
+              <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={(selectedQ?.required && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
-              size="lg" onClick={next} rightIcon={<IconChevronRight />}/>
+              size="lg" onClick={handleNextClick} rightIcon={<IconChevronRight />}/>
               }
               </Grid.Col>
-
-    </Grid>
+         </Grid>
+    </Stack>
   )
 }
 

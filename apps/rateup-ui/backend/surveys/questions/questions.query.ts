@@ -1,3 +1,4 @@
+import { IconCheck } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createQuestion, getQuestions, updateQuestion } from "./questions.api";
 import { notifications } from "@mantine/notifications";
@@ -42,7 +43,10 @@ export const useQuestionUpdateMutation = (surveyId: string) => {
     },
     onSuccess: () => {
       notifications.show({
-        message: "Updated!",
+        id:'qns',
+        message: "Saved Changes..",
+        autoClose: 1000,
+        // icon: <IconCheck />,
       });
       queryClient.invalidateQueries(["questions"]);
     },

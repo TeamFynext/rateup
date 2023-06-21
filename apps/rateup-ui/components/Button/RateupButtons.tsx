@@ -10,6 +10,7 @@ interface Props {
     type?: any
     radius?: string
     sx?: any
+    loading?: boolean
 }
 
 export const RateupButtonPrimary = ({ type, sx,radius,  title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
@@ -53,7 +54,7 @@ export const RateupButtonBlue = ({ title, radius, sx, disabled, onClick, leftIco
     )
 }
 
-export const RateupButtonSecondary = ({ title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonSecondary = ({ loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -65,6 +66,7 @@ export const RateupButtonSecondary = ({ title, radius, sx, disabled, onClick, le
             color="dark"
             size= {size}
             sx={sx}
+            loading={loading}
         >
             {title}
         </Button >
