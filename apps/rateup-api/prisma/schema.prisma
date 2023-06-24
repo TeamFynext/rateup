@@ -124,6 +124,8 @@ model Survey {
   active      Boolean          @default(true)
   responses   SurveyResponse[]
   sessions    WaSession[]
+  isProtected Boolean          @default(false)
+  password    String?
 }
 
 model SurveyResponse {

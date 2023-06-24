@@ -1,6 +1,8 @@
 import prisma, { excludeFields } from "../../utils/prisma";
-import { CreateSurveyInput, UpdateSurveyInput } from "./survey.schema";
+import { CreateSurveyInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
 import { getTeamsByUserId } from "../team/team.service";
+const CryptoJS = require('crypto-js');
+const secretPassphrase = 'rateup-#$%^@#-passphrase';
 
 export async function createSurvey(
   input: CreateSurveyInput,
@@ -41,7 +43,7 @@ export async function getSurveysByUserId(userId: string) {
     }
   });
 
-  const surveysWithoutQuestions = surveys.map((s) => excludeFields(s, ["questions"]))
+  const surveysWithoutQuestions = surveys.map((s) => excludeFields(s, ["questions", "password"]))
   return surveysWithoutQuestions;
 }
 
@@ -52,7 +54,7 @@ export async function getSurveysByTeam(teamId: string) {
     }
   });
 
-  const surveysWithoutQuestions = surveys.map((s) => excludeFields(s, ["questions"]))
+  const surveysWithoutQuestions = surveys.map((s) => excludeFields(s, ["questions", "password"]))
   return surveysWithoutQuestions;
 }
 
@@ -73,4 +75,54 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     data: input,
   });
   return survey;
+}
+
+
+export async function updateSurveyPassword(id: string, data: UpdateSurveyPassword) {
+  let isProtected = true;
+  let password = data.password;
+  try {
+    if (data.password === '_remove_pwd') {
+      isProtected = false;
+      password = ""
+    } else {
+      isProtected = true;
+      password = CryptoJS.AES.encrypt(password, secretPassphrase).toString();
+    }
+    const survey = await prisma.survey.update({
+      where: {
+        id,
+      },
+      data: {
+        password,
+        isProtected,
+      },
+    });
+    return survey;
+  } catch (error) {
+    console.error("Failed to update survey password:", error);
+    throw error;
+  }
+}
+
+export async function verifySurveyPassword(id: string, data: UpdateSurveyPassword) {
+  let enteredPassword = data.password;
+  try {
+    const survey = await prisma.survey.findUnique({
+      where: { id },
+    });
+    if (!survey) {
+      throw new Error(`Survey not found`);
+    }
+
+    const decryptedPassword = CryptoJS.AES.decrypt(survey.password, secretPassphrase).toString(CryptoJS.enc.Utf8);
+
+    if (survey.isProtected && decryptedPassword === enteredPassword) {
+      return "Access granted"
+    } else {
+      return "Password Error"
+    }
+  } catch (error) {
+    throw new Error(`Internal server error`);
+  }
 }

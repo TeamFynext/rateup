@@ -26,7 +26,8 @@ const getSurveyPublicResponseSchema = z.object({
   title: z.string(),
   languages: z.array(z.string()),
   active: z.boolean(),
-  questions: z.array(questionSchema)
+  questions: z.array(questionSchema),
+  isProtected: z.boolean(),
 })
 const updateSurveyRequestSchema = z.object({
   title: z.string({
@@ -37,13 +38,21 @@ const updateSurveyRequestSchema = z.object({
   active: z.boolean().default(true).optional(),
 })
 
+const updateSurveyPasswordRequestSchema = z.object({
+  password: z.string({
+    required_error: "Password is required",
+    invalid_type_error: "Password must be a string",
+  })
+})
+
 export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
     createSurveyResponseSchema,
     getSurveyByIdParamsSchema,
     updateSurveyRequestSchema,
-    getSurveyPublicResponseSchema
+    getSurveyPublicResponseSchema,
+    updateSurveyPasswordRequestSchema
   },
   { $id: "surveySchema" }
 );
@@ -51,3 +60,5 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
+export type UpdateSurveyPassword = z.infer<typeof updateSurveyPasswordRequestSchema>;
+

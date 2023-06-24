@@ -6,6 +6,7 @@ import {
   getSurveyByTeamHandler,
   getSurveysHandler,
   updateSurveyByIdHandler,
+  updateSurveyPasswordHandler,
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
@@ -84,4 +85,18 @@ export async function surveyRoutes(server: FastifyInstance) {
     updateSurveyByIdHandler
 
   )
+
+  server.put(
+    "/password-update/:id",
+    {
+      preHandler: verifySurveyAccess,
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+        body: $Sref("updateSurveyPasswordRequestSchema"),
+      }
+    },
+    updateSurveyPasswordHandler
+  )
 }
+
+

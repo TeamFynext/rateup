@@ -6,8 +6,10 @@ import {
   getSurveysByTeam,
   getSurveysByUserId,
   updateSurveyById,
+  updateSurveyPassword,
+  verifySurveyPassword,
 } from "./survey.service";
-import { CreateSurveyInput, GetSurveyByIdParams, UpdateSurveyInput } from "./survey.schema";
+import { CreateSurveyInput, GetSurveyByIdParams, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -116,5 +118,46 @@ export async function updateSurveyByIdHandler(
   } catch (e) {
     console.log(e);
     reply.code(500);
+  }
+}
+
+
+export async function updateSurveyPasswordHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+    Body: UpdateSurveyPassword;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getSurveyById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      await updateSurveyPassword(request.params.id, request.body);
+      reply.code(200).send({ message: "Password Changes Updated successfully." });
+    }
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
+  }
+}
+
+export async function verifySurveyPasswordHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+    Body: UpdateSurveyPassword;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+      const verifyPassword = await verifySurveyPassword(request.params.id, request.body);
+      if (!verifyPassword) {
+        reply.code(404);
+      } else {
+        reply.code(200).send({ status: "success", data: verifyPassword});
+      }
+    } catch (e) {
+    reply.code(500).send({status: "error", message: e});
   }
 }
