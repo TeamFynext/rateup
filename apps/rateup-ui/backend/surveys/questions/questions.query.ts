@@ -42,6 +42,7 @@ export const useQuestionUpdateMutation = (surveyId: string) => {
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
+      notifications.clean()
       notifications.show({
         id:'qns',
         message: "Saved Changes..",

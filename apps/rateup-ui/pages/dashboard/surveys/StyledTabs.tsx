@@ -16,8 +16,8 @@ export default function StyledTabs(props: TabsProps) {
           fontWeight: 600,
           display: 'flex',
           alignItems: 'center',
-          paddingLeft: 50,
-          paddingRight:50,
+          paddingLeft: 25,
+          paddingRight:25,
           boxShadow: theme.shadows.lg, 
 
           '&:not(:last-child)': {

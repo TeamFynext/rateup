@@ -1,10 +1,11 @@
-import { Box, Grid, Title, Text, Center, Stack, Container, Image, RingProgress} from "@mantine/core";
+import { Box, Grid, Title, TextInput, Space, Text, Center, Stack, Container, Image, RingProgress, Modal, Group } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, {useState} from "react";
-import { usePublicSurvey } from "../../../backend/surveys/surveys.query";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { usePublicSurvey, useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
+import { RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
 import { IconArrowLeft } from "@tabler/icons-react";
 import QuestionCountContext from "../../../context/QuestionCountContext";
+import { useDisclosure } from '@mantine/hooks';
 
 export const TakeSurveyLayout = ({ children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -53,7 +54,7 @@ export const TakeSurveyLayout = ({ children }) => {
               </Grid.Col>
           </Grid>
             :   
-                  <Welcome onStart={handleStartClick} />
+                  <Welcome onStart={handleStartClick} surveyId={surveyId} isProtected={survey?.isProtected}/>
             }
             { startClicked && children.children}
           </Box>
@@ -70,13 +71,45 @@ export const TakeSurveyLayout = ({ children }) => {
 };
 
 
-function Welcome({ onStart }) {
+function Welcome({ onStart, isProtected, surveyId }) {
+  const [opened, { open, close }] = useDisclosure(false);
+
+  const [passwordInput, setPasswordInput] = useState('')
+
+  const updateSurveyPassword = useVerifySurveyPwdMutation(surveyId, passwordInput, onStart);
+
   return (
+    <>
+      <Modal opened={opened} onClose={close} title="Survey Login" centered size="sm">
+
+        <Text size='sm' color="gray">Hey Welcome , <br/> You need to enter password to continue.</Text>
+        <Space h="lg" />
+
+        <Box pt={20} >
+              <TextInput
+                  required
+                  label="Password"
+                  placeholder="Enter survey password"
+                  onChange={(event) => setPasswordInput(event.target.value)}
+              />
+
+        </Box>
+            <Group  position="center" pt={40} >
+                <RateupButtonPrimary
+                    onClick={()=> updateSurveyPassword.mutate()}
+                    title={"Login"} 
+                    // disabled={!isNameValid} 
+                    />
+            </Group>
+      </Modal>
+      
+      
       <Stack align="center" justify="center" spacing="xl" sx={{ height: "80vh" }}>
             <Title order={1} sx={{fontSize: '4rem', }}>Welcome</Title>
             <Text >Please fill the survey..</Text>
-      <RateupButtonSecondary radius={"xl"} title="Go to Survey" size="lg" onClick={onStart}/>
+            <RateupButtonSecondary radius={"xl"} title="Go to Survey" size="lg" onClick={isProtected ? open  : onStart}/>
       </Stack>
+      </>
   );
 }
 

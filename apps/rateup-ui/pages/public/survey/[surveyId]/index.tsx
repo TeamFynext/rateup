@@ -1,4 +1,4 @@
-import { Center, Loader, Select } from "@mantine/core";
+import { Center, Loader, Select} from "@mantine/core";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { usePublicSurvey } from "../../../../backend/surveys/surveys.query";

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
@@ -267,6 +267,15 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
     });
   };
 
+  const handleKeyDown  = useCallback(
+    (e) => {
+      if (e.key === 'Enter') {
+        handleAddChoice();
+      }
+    },
+    [handleAddChoice]
+  );
+
   return (
     <>
       <Stack py="xs" spacing={"xs"}>
@@ -284,6 +293,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
           placeholder="Enter choice here"
           value={newChoice}
           onChange={(e) => setNewChoice(e.currentTarget.value)}
+          onKeyDown={handleKeyDown }
         />
         <RateupButtonPrimary
             title={"Add choice"}
