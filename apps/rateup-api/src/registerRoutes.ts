@@ -14,9 +14,11 @@ import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
 import { userRoutes } from "./modules/user/user.route";
 import { wasurveyRoutes } from "./modules/whatsappSurvey/wasurvey.route";
+import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
+import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
-    const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas];
+    const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas, uploadSchemas ];
     for (const module of modules) {
         for (const schema of module) {
             server.addSchema(schema);
@@ -30,5 +32,6 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(responseRoutes, { prefix: "api/response" });
     server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
     server.register(responsePublicRoutes, { prefix: "api/public/response" })
+    server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" })
     server.register(wasurveyRoutes, { prefix: "webhook" })
 }
