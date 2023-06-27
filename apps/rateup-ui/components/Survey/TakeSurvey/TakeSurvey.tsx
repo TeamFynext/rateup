@@ -44,6 +44,7 @@ import { createResponsePublic } from "../../../backend/surveys/response/response
 import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useStyles } from "./TakeSurvey.styles";
+import { uploadFile } from "../../../utils/file-upload/upload";
 
 function TakeSurvey() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -271,8 +272,8 @@ function NextPrev({ prev, next }) {
   const [isErrorInput, setIsErrorInput] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
 
-  console.log("qn:"+ JSON.stringify(selectedQ))
-  console.log("res:"+ JSON.stringify(response))
+  // console.log("qn:"+ JSON.stringify(selectedQ))
+  // console.log("res:"+ JSON.stringify(response))
 
   useEffect(() => {
       if(selectedQ?.required && response && selectedQ?.type === 'Email'){
@@ -549,14 +550,17 @@ function SmileyForm() {
 }
 
 function ImageForm() {
-  console.error("Image storage not implemented");
   const [file, setFile] = useState<File | null>(null);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   useEffect(() => {
-    if (file) {
-      // TODO: upload to file storage
-      updateResponse(file.name);
-    }
+    const uploadAndUpdate = async () => {
+      if (file) {
+        const fileKey = await uploadFile(file);
+        updateResponse(fileKey);
+        //console.log("File Name:...." + JSON.stringify("https://d2uj946b0i8y27.cloudfront.net/"+fileKey));
+      }
+    };
+    uploadAndUpdate();
   }, [file]);
   return (
     <>
