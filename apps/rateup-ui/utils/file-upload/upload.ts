@@ -4,7 +4,11 @@ export const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/public/response/upload`, formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/file`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       console.log(response.data);
       return response?.data?.data?.key;
     } catch (error) {
@@ -12,5 +16,4 @@ export const uploadFile = async (file) => {
       return null;
     }
 };
-
 
