@@ -118,7 +118,7 @@ export async function completeInviteHandler(
     const invite = await completeInvite(request.params.token);
     reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
   } catch (e) {
-    reply.code(500).send({ message: "Internal server error"});
+    reply.code(500).send({ message: `Internal server error : ${e}`});
   }
 }
 
@@ -174,7 +174,7 @@ export async function getTeamMembersFromInviteHandler(
 
   try {
     const members = await getTeamMembersFromInvitation({ teamId: request.params.teamId });
-    if (!members || members.length === 0) {
+    if (!members || members?.members?.length === 0) {
       reply.code(200).send({ message: "No members found for this team" });
     } else {
       reply.send(members);

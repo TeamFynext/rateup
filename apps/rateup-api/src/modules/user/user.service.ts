@@ -17,7 +17,7 @@ async function createUser({ id, email }: CreateUserParams) {
 }
 
 export async function createUserSignup({ id, email, name, orgName }: CreateUserSignupSchema) {
-
+console.log(".....Creating user.....")
   try {
     // Start a transaction
     const result = await prisma.$transaction(async (prisma) => {

@@ -16,9 +16,10 @@ import { userRoutes } from "./modules/user/user.route";
 import { wasurveyRoutes } from "./modules/whatsappSurvey/wasurvey.route";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
 import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
+import { userSchemas } from "./modules/user/user.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
-    const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas, uploadSchemas ];
+    const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas, uploadSchemas, userSchemas ];
     for (const module of modules) {
         for (const schema of module) {
             server.addSchema(schema);

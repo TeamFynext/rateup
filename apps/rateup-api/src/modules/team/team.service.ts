@@ -1,11 +1,11 @@
 import prisma from "../../utils/prisma";
 import { createUser } from "../user/user.service";
 import { CreateTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, InviteMemberInput } from "./team.schema";
-import EmailPassword from "supertokens-node/recipe/emailpassword";
 import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createEmailBody } from "../../utils/email/emailBody";
 import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import ThirdPartyEmailPassword from"supertokens-node/recipe/thirdpartyemailpassword";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -240,7 +240,7 @@ export async function completeInvite(token: string) {
   if(!isUser){
     //Create new user , verify email
     const FAKE_PASSWORD = "qwerty123";
-    let signUpResult = await EmailPassword.signUp(updatedInvitation.email, FAKE_PASSWORD);
+    let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp(updatedInvitation.email, FAKE_PASSWORD);
     if (signUpResult.status === "EMAIL_ALREADY_EXISTS_ERROR") {
         throw new Error('User already exists');
     }
@@ -276,7 +276,7 @@ export async function completeInvite(token: string) {
                 createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id)
         }
       // change password page
-      let passwordResetToken = await EmailPassword.createResetPasswordToken(signUpResult.user.id);
+      let passwordResetToken = await ThirdPartyEmailPassword.createResetPasswordToken(signUpResult.user.id);
 
       if (passwordResetToken.status === "UNKNOWN_USER_ID_ERROR") {
           throw new Error("Should never come here");

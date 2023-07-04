@@ -1,11 +1,12 @@
-import EmailPassword from "supertokens-node/recipe/emailpassword";
 import Session from "supertokens-node/recipe/session";
 import { TypeInput } from "supertokens-node/types";
 import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createUser, createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
+import { createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
+import ThirdPartyEmailPassword from"supertokens-node/recipe/thirdpartyemailpassword";
 
+let { Google } = ThirdPartyEmailPassword;
 const frontendUrl =  process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "http://localhost:3000";
 
 export const SuperTokensConfig: TypeInput = {
@@ -24,19 +25,21 @@ export const SuperTokensConfig: TypeInput = {
     websiteBasePath: "/login",
   },
   recipeList: [
-    EmailPassword.init({
-      signUpFeature: {
+    ThirdPartyEmailPassword.init({
+
+    signUpFeature: {
         formFields: [{
-          id: "name"
-        }, {
-          id: "orgName"
-        },
-        {
-          id: "inviteCode"
-        }      
-      ]
+            id: "name"
+          }, {
+            id: "orgName"
+          },
+          {
+            id: "inviteCode"
+          }      
+        ]
       },
-      emailDelivery: {
+
+    emailDelivery: {
           override: (originalImplementation) => {
               return {
                   ...originalImplementation,
@@ -57,15 +60,30 @@ export const SuperTokensConfig: TypeInput = {
               }
           }
       },
+
+      providers: [
+        // We have provided you with development keys which you can use for testing.
+        // IMPORTANT: Please replace them with your own OAuth keys for production use.
+        Google({
+            clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || '',
+            clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || ''
+        }),
+
+      ],
+
       override: {
         apis: (originalImplementation) => {
             return {
                 ...originalImplementation,
-                signUpPOST: async function (input) {
 
-                    if (originalImplementation.signUpPOST === undefined) {
+                // override the email password sign up API
+                emailPasswordSignUpPOST: async function(input) {
+                    if (originalImplementation.emailPasswordSignUpPOST === undefined) {
                         throw Error("Should never come here");
                     }
+
+                    // TODO: some pre sign up logic
+
                     let formFields = input.formFields;
                     const inviteCode = getValueByKey(formFields, "inviteCode");
 
@@ -75,11 +93,11 @@ export const SuperTokensConfig: TypeInput = {
                           message: "Invite Code not valid"
                       }
                     }
-                    // First we call the original implementation of signUpPOST.
-                    let response = await originalImplementation.signUpPOST(input);
 
-                    // Post sign up response, we check if it was successful
+                    let response = await originalImplementation.emailPasswordSignUpPOST(input);
+
                     if (response.status === "OK") {
+                        // TODO: some post sign up logic
 
                       const name = getValueByKey(formFields, "name");
                       const orgName = getValueByKey(formFields, "orgName");
@@ -89,16 +107,85 @@ export const SuperTokensConfig: TypeInput = {
                       if(name && orgName){
                         const userSignup = await createUserSignup({ id, email, name, orgName });
                       }
-                      
                     }
+
+                    return response;
+                },
+
+                // override the email password sign in API
+                emailPasswordSignInPOST: async function(input) {
+                    if (originalImplementation.emailPasswordSignInPOST === undefined) {
+                        throw Error("Should never come here");
+                    }
+
+                    // TODO: some pre sign in logic
+
+                    let response = await originalImplementation.emailPasswordSignInPOST(input);
+
+                    if (response.status === "OK") {
+                        // TODO: some post sign in logic
+                    }
+
+                    return response;
+                },
+
+                // override the thirdparty sign in / up API
+                thirdPartySignInUpPOST: async function(input) {
+                    if (originalImplementation.thirdPartySignInUpPOST === undefined) {
+                        throw Error("Should never come here");
+                    }
+
+                    // TODO: Some pre sign in / up logic
+
+                    let response = await originalImplementation.thirdPartySignInUpPOST(input);
+
+                    if (response.status === "OK") {
+                        if (response.createdNewUser) {
+                            // TODO: some post sign up logic
+                        } else {
+                            // TODO: some post sign in logic
+                            console.log("Sign in succes............................")
+                            console.log(response?.user?.email)
+                            console.log(response?.user?.id)
+                            const user = await getOrgIdAndRole({ id: response?.user?.id });
+                        }
+                    }
+
                     return response;
                 }
             }
         }
     }
-  }), // initializes signin / sign up features
+    }),
+
+    Session.init({
+        override: {
+            functions: (originalImplementation) => {
+                return {
+                    ...originalImplementation,
+                    createNewSession: async function (input) {
+                        let userId = input.userId;
+                        let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+
+                        console.log("User email................."+userInfo?.email)
+                        const user = await getOrgIdAndRole({ id: userId });
+                        // This goes in the access token, and is availble to read on the frontend.
+                        input.accessTokenPayload = {
+                            ...input.accessTokenPayload,
+                            email: userInfo?.email,
+                            orgId: user?.orgId,
+                            role: user?.role,
+                        };
+
+                        return originalImplementation.createNewSession(input);
+                    },
+                };
+            },
+        },
+    }) ,
+  
     EmailVerification.init({
-      mode: "REQUIRED", // or "OPTIONAL"
+      mode: "REQUIRED", 
       emailDelivery: {
         override: (originalImplementation) => {
             return {
@@ -137,11 +224,7 @@ export const SuperTokensConfig: TypeInput = {
 
                 console.log("--------------Email Verification Part---------------------------"+JSON.stringify(response.user))
 
-               // const user = await createUser({ id, email });
-
-               // if(user){
-                  let orgMember = await getOrgIdAndRole({ id: id });
-               // }
+                let orgMember = await getOrgIdAndRole({ id: id });
 
               }
               return response;
@@ -150,31 +233,6 @@ export const SuperTokensConfig: TypeInput = {
         },
       },
     }),
-    Session.init({
-      antiCsrf: "VIA_TOKEN",
-      override: {
-        functions: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            createNewSession: async function (input) {
-              let userId = input.userId;
-              let userInfo = await EmailPassword.getUserById(userId);
-
-              const user = await getOrgIdAndRole({ id: userId });
-              // This goes in the access token, and is availble to read on the frontend.
-              input.accessTokenPayload = {
-                ...input.accessTokenPayload,
-                email: userInfo?.email,
-                orgId: user?.orgId,
-                role: user?.role,
-              };
-              console.log("Session Start Data:........ "+JSON.stringify(input.accessTokenPayload));
-              return originalImplementation.createNewSession(input);
-            },
-          };
-        },
-      },
-    }), // initializes session features
     Dashboard.init(),
   ],
 };
