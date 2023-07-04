@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex } from '@mantine/core';
+import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex, Group } from '@mantine/core';
 import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import {IconCheck, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -161,7 +161,7 @@ const TeamDetails = () => {
                 <TextInput
                     required
                     label="Name"
-                    placeholder="Enter team name"
+                    placeholder="Enter name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                 />
@@ -214,13 +214,12 @@ const TeamDetails = () => {
               <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
             </Tabs.List>
-
             </Flex>
 
           <Tabs.Panel value={TabEnum.Members} mt={60}>
             {/** TODO: Remove fixed height and make this responsive */}
-            {teamsMembersData?.data?.members?.length > 0 ? (
-                  <SimpleGrid
+
+            <SimpleGrid
                             cols={4}
                             spacing={"lg"}
                             breakpoints={[
@@ -238,29 +237,33 @@ const TeamDetails = () => {
                                     </Stack>
                                 </Center>
                             </Paper>
+            {teamsMembersData?.data?.members?.length > 0 ? (
 
-            {(
+
+            (
                                 sort
                                 ? [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id)
                                   ).map((member, i) => (
                                     <TeamMemberCard key={i} member={member} />
 
-                                  ))}
+                                  ))
 
-                </SimpleGrid>)
+                )
 
 : (
     isLoadingMembers ? <Loader /> 
 
-    : <>  {teamsMembersData?.data?.members.length === 0  ? "No members in this team!"
+    : <Group p="xl">  {teamsMembersData?.data?.members?.length === 0  ? "No other members in this team!"
         :
         <> Error... Try Refreshing... <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
         
         } 
         
-        </>
+        </Group>
 )}
+
+</SimpleGrid>
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Survey} mt={60}>
           <SimpleGrid

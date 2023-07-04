@@ -9,7 +9,9 @@ import SuperTokensReact, {
   SuperTokensWrapper,
 } from "supertokens-auth-react";
 import { frontendConfig } from "../config/frontendConfig";
-import Session from "supertokens-auth-react/recipe/session";
+//import Session from "supertokens-auth-react/recipe/session";
+import Session from 'supertokens-web-js/recipe/session';
+
 import {
   QueryClient,
   QueryClientProvider,
@@ -19,8 +21,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { UserProvider } from "../context/UserContext";
 import { Hydrate } from '@tanstack/react-query'
 
+import SuperTokens from 'supertokens-web-js';
+
 if (typeof window !== "undefined") {
-  SuperTokensReact.init(frontendConfig());
+  SuperTokens.init(frontendConfig());
 }
 
 const queryClient = new QueryClient();
@@ -88,7 +92,7 @@ export default function App({
         />
         <link rel="shortcut icon" href="/favicon.svg" />
       </Head>
-      <SuperTokensWrapper>
+      {/* <SuperTokensWrapper> */}
         <MantineProvider withGlobalStyles withNormalizeCSS theme={styleOverride}>
           <Notifications />
           <QueryClientProvider client={queryClient}>
@@ -103,7 +107,7 @@ export default function App({
           </QueryClientProvider>
           <Notifications />
         </MantineProvider>
-      </SuperTokensWrapper>
+      {/* </SuperTokensWrapper> */}
     </>
   );
 }

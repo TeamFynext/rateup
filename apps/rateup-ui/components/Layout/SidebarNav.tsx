@@ -44,7 +44,7 @@ const data = [
     { icon: <IconClipboardText size={16} />, color: 'lime', label: 'Surveys', link: '/dashboard/surveys' },
     { icon: <IconChartPie size={16} />, color: 'teal', label: 'Insights', link: '/dashboard/insights' },
     { icon: <IconUsers size={16} />, color: 'red', label: 'Teams', link: '/dashboard/teams' },
-    { icon: <IconSettings size={16} />, color: 'violet', label: 'Settings', link: '/dashboard/settings' },
+    { icon: <IconSettings size={16} />, color: 'violet', label: 'Settings', link: '/dashboard/settings/account' },
     { icon: <IconLogout size={16} />, color: 'orange', label: 'Logout', link: '/auth/logout' }, // Add the logout menu item
 
 ];

@@ -1,4 +1,4 @@
-import Session from 'supertokens-auth-react/recipe/session';
+import Session from 'supertokens-web-js/recipe/session';
 
 export async function getOrgIdRole() {
     let orgId : string, role : string;

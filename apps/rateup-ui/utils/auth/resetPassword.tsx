@@ -1,4 +1,4 @@
-import { sendPasswordResetEmail } from "supertokens-web-js/recipe/emailpassword";
+import { sendPasswordResetEmail } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import { IconX , IconCheck} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 
@@ -46,7 +46,7 @@ export function useSendResetEmail() {
 
 //save new password
 
-import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword";
+import { submitNewPassword } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import { showNotification } from ".";
 
 export function useSetNewPassword() {

@@ -9,7 +9,7 @@ import { RateupButtonPrimary } from '../../components/Button/RateupButtons';
 import styles from './styles.module.css';
 import { HeaderTabs } from '../../components/Layout/Header/Header';
 import { UserMode } from '../../utils/enums';
-import { signOut } from "supertokens-auth-react/recipe/session";
+import { signOut } from "supertokens-web-js/recipe/session";
 
 const Invite = () => {
 const router = useRouter();

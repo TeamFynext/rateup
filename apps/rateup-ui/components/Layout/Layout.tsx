@@ -5,13 +5,13 @@ import {
     Container,
     createStyles
 } from '@mantine/core';
-import { SessionAuth } from "supertokens-auth-react/recipe/session";
 import { HeaderTabs } from './Header/Header';
 import { fetchUserInfo } from '../../backend/user/user.api';
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from '../../context/UserContext';
 import LeftNavbar from './Navbar/LeftNavbar';
 import { RouteParamsProvider } from '../../context/RouteParamsContext';
+import SessionAuth from '../SuperToken/SessionAuth';
 
 const useStyles = createStyles((theme) => ({
   
@@ -48,24 +48,24 @@ export default ({ children }) => {
     return (
         <SessionAuth>
             <RouteParamsProvider>
-        <AppShell
-          styles={{
-                main: {
-                    background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-                },
-            }}
+                <AppShell
+                styles={{
+                        main: {
+                            background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                        },
+                    }}
 
-          navbar={<LeftNavbar />}
-          header={
-                <HeaderTabs userData={userInfo?.data?.data}/>
-            }
-        >
-            <Container className={classes.appShellBody} fluid>
-                {children}
-            </Container>
-            
-        </AppShell>
-        </RouteParamsProvider>
+                navbar={<LeftNavbar />}
+                header={
+                        <HeaderTabs userData={userInfo?.data?.data}/>
+                    }
+                >
+                    <Container className={classes.appShellBody} fluid>
+                        {children}
+                    </Container>
+                    
+                </AppShell>
+            </RouteParamsProvider>
         </SessionAuth>
     );
 };

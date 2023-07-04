@@ -3,16 +3,29 @@ import AuthForm from "../../components/Form/AuthForm";
 import { useCheckSession } from "../../hooks/checkSession";
 import { AuthMode } from "../../utils/enums";
 import { LoadingOverlay} from '@mantine/core';
+import { useRouter } from 'next/router';
 
 const Signup = () => {
-   const isLoading = useCheckSession();
-   const [visible, { toggle }] = useDisclosure(false);
-
+   const router = useRouter();
+   const { auth } = router.query;
+   if(!auth)
+   {
+    const isLoading = useCheckSession();
+    const [visible, { toggle }] = useDisclosure(false);
+ 
+     return (
+       <>
+         {isLoading ? <LoadingOverlay visible={visible} overlayBlur={2} /> : <AuthForm mode={AuthMode.SIGNUP} />}
+       </>
+     );
+   }else{
     return (
       <>
-        {isLoading ? <LoadingOverlay visible={visible} overlayBlur={2} /> : <AuthForm mode={AuthMode.SIGNUP} />}
+         <AuthForm mode={AuthMode.SIGNUP} authType={auth} />
       </>
     );
+   }
+
 };
 
 export default Signup;

@@ -11,7 +11,8 @@ import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
 import { getTeamsByUser } from "../../backend/team/team.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
-
+import { IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 interface FormValues {
   title: string;
   languages: Array<string>;
@@ -60,9 +61,17 @@ export function CreateSurveyModal({ open, close }) {
   if (isLoading) {
     return null;
   }
-  if (isError || !teams.data.data) {
+  if (isError || !teams?.data?.data) {
     // TODO: Handle error
-    throw new Error("Failed to load teams");
+    // throw new Error("Failed to load teams");
+    notifications.show({
+      id: 'load-data',
+      color: 'red',
+      title: 'Error',
+      message: 'Failed Loading teams!',
+      icon: <IconX size="1rem" />,
+      autoClose: 3000,
+    });
   }
   return (
     <Modal

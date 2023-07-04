@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { LoadingOverlay, Paper, Text } from '@mantine/core';
-import { signOut } from "supertokens-auth-react/recipe/session";
+//import { signOut } from "supertokens-auth-react/recipe/session";
+import Session from "supertokens-web-js/recipe/session";
 
 const Logout = () => {
     const router = useRouter();
@@ -11,7 +12,9 @@ const Logout = () => {
     }, [router]);
 
     async function handleSignOut() {
-        await signOut();
+       // await signOut();
+       await Session.signOut(); 
+
         router.push('/login');
     }
 

@@ -103,7 +103,7 @@ const LeftNavbar = () => {
       )}
         <Navbar.Section>
           <Stack justify="center" spacing={0}>
-            <NavbarLink icon={IconSettings} label="Settings" href="/dashboard" />
+            <NavbarLink icon={IconSettings} label="Settings" href="/dashboard/settings/account" />
             <NavbarLink icon={IconLogout} label="Logout" href="/auth/logout" />
           </Stack>
         </Navbar.Section>

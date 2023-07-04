@@ -20,7 +20,7 @@ import { fetchTeamsByUser } from "../../../backend/ssr/team.api";
 import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
 
 export default function Teams() {
-    const sessionContext = useSessionContext();
+    // const sessionContext = useSessionContext();
     const [opened, { open, close }] = useDisclosure(false);
     const [sort, setSort] = useState(false)
     const router = useRouter()
@@ -81,9 +81,9 @@ export default function Teams() {
         createTeamMutation.mutate(values);
     }
 
-    if (sessionContext.loading === true) {
-        return null;
-    }
+    // if (sessionContext.loading === true) {
+    //     return null;
+    // }
 
     function viewTeam(id) {
         router.push(`/dashboard/teams/${id}`)

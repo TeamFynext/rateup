@@ -1,14 +1,14 @@
-import { signIn , signUp} from "supertokens-web-js/recipe/emailpassword";
 import { useRouter } from "next/router";
 import { IconInfoCircleFilled, IconX, IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { emailPasswordSignUp, emailPasswordSignIn } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 
 export function useSignIn() {
   const router = useRouter();
   
   return async function(email: string, password: string) {
     try {
-      let response = await signIn({
+      let response = await emailPasswordSignIn({
         formFields: [
           {
             id: "email",
@@ -63,7 +63,7 @@ export function useSignUp() {
   
   return async function(email: string, password: string, name: string, orgName: string, inviteCode: string) {
     try {
-      let response = await signUp({
+      let response = await emailPasswordSignUp({
         formFields: [
           {
             id: "email",
@@ -209,5 +209,3 @@ export function useEmailSend() {
     }
   }, [router]);
 }
-
-
