@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
-import { createGoogleUserHandler, getLoggedUserInfoHandler } from "./user.controller";
+import { changeUserPasswordHandler, createGoogleUserHandler, getLoggedUserInfoHandler } from "./user.controller";
 import { $UserRef } from "./user.schema";
 
 export async function userRoutes(server: FastifyInstance) {
@@ -11,6 +11,17 @@ export async function userRoutes(server: FastifyInstance) {
       preHandler: [verifySession()],
     },
     getLoggedUserInfoHandler
+  );
+
+  server.post(
+    "/change-password",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        body: $UserRef("changeUserPasswordSchema"),
+      },
+    },
+    changeUserPasswordHandler
   );
 
   server.post(

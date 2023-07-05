@@ -27,18 +27,27 @@ const createUserGoogleSchema = z.object({
   orgName: z.string().min(4),
 });
 
+const changeUserPasswordSchema = z.object({
+  existingPassword: z.string().min(4),
+  newPassword: z.string().min(4),
+});
+
 
 export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
   {
     createUserSignupSchema,
-    createUserGoogleSchema
+    createUserGoogleSchema,
+    changeUserPasswordSchema
   },
   { $id: "userSchema" }
 );
+
 
 export type CreateUserParams = z.infer<typeof createUserSchema>;
 export type userInfoParams = z.infer<typeof userInfoSchema>;
 export type CreateUserSignupSchema = z.infer<typeof createUserSignupSchema>;
 export type CreateUserGoogleSchema = z.infer<typeof createUserGoogleSchema>;
+export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
+
 
 
