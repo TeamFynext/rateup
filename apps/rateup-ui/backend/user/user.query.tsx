@@ -1,8 +1,13 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { IChangePassword, ICreateGoogleUser, changeUserPassword, createGoogleUser } from "./user.api";
+import { IChangePassword, ICreateGoogleUser, IUpdateProfile, IUpdateProfilePhoto, changeUserPassword, createGoogleUser, fetchUserProfile, updateUserProfile, updateUserProfilePhoto } from "./user.api";
 import { useRouter } from "next/router";
+
+export const useGetUserProfile = () => useQuery({
+  queryKey: ["userProfile"],
+  queryFn: () => fetchUserProfile(),
+});
 
 export function useCreateUserMutation(setIsLoading) {
   const router = useRouter();
@@ -37,9 +42,6 @@ export function useCreateUserMutation(setIsLoading) {
   }
 
   async function handleCreateUser(values) {
-    // const { orgId } = await getOrgIdRole();
-    // const { userId } = await getUserID();
-    // const data = { name: values.name, code: values.code, orgId, userId };
     return createGoogleUser(values);
   }
 
@@ -73,4 +75,69 @@ export function useCreateUserMutation(setIsLoading) {
         },
       });
     }
-  
+
+
+    export function useUpdateProfileMutation(setIsLoading) {
+      const queryClient = useQueryClient();
+        return useMutation((values : IUpdateProfile) => updateUserProfile(values), {
+          onSuccess: () => {
+            notifications.show({
+              id: 'load-data',
+              color: 'teal',
+              title: 'Success',
+              message: 'Profile Updated Successfully!',
+              icon: <IconCheck size="1rem" />,
+              autoClose: 3000,
+            });
+            setIsLoading(false)
+            queryClient.invalidateQueries(["userProfile"]);
+          },
+          onError: (error: any) => {
+            console.error("Error Profile Update:", error.message);
+            notifications.show({
+              id: 'load-data',
+              color: 'red',
+              title: 'Failed',
+              message: error?.response?.data?.message,
+              icon: <IconCheck size="1rem" />,
+              autoClose: 3000,
+            });
+    
+            setIsLoading(false)
+          },
+        });
+    }
+
+    export function useUpdateProfilePhotoMutation(setIsLoadingUpload) {
+      const queryClient = useQueryClient();
+        return useMutation((values : IUpdateProfilePhoto) => updateUserProfilePhoto(values), {
+          onSuccess: () => {
+            notifications.update({
+              id: 'load-data',
+              color: 'teal',
+              title: 'Success',
+              message: 'Profile Photo Updated Successfully!',
+              icon: <IconCheck size="1rem" />,
+              autoClose: 3000,
+            });
+            setIsLoadingUpload(false)
+            queryClient.invalidateQueries(["userProfile"]);
+
+          },
+          onError: (error: any) => {
+            console.error("Error Profile photo Update:", error.message);
+            notifications.update({
+              id: 'load-data',
+              color: 'red',
+              title: 'Failed',
+              message: error?.response?.data?.message,
+              icon: <IconCheck size="1rem" />,
+              autoClose: 3000,
+            });
+    
+            setIsLoadingUpload(false)
+          },
+        });
+    }
+     
+   

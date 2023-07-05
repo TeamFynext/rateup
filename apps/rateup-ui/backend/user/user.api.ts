@@ -11,9 +11,36 @@ export interface IChangePassword {
     newPassword: string;
 }
 
+export interface IUpdateProfile{
+    title: string; 
+    name: string;
+    phone: string;
+}
+
+export interface IUpdateProfilePhoto{
+    profilePhoto: string; 
+}
+
 export const fetchUserInfo = () => axiosClient({
     url: `/user/info`,
     method: 'GET',
+})
+
+export const fetchUserProfile = () => axiosClient({
+    url: `/user/profile`,
+    method: 'GET',
+})
+
+export const updateUserProfile = (data: IUpdateProfile) => axiosClient({
+    url: `/user/update-profile`,
+    method: 'PUT',
+    data: data
+})
+
+export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) => axiosClient({
+    url: `/user/update-profile-photo`,
+    method: 'PUT',
+    data: data
 })
 
 export const createGoogleUser = (data: ICreateGoogleUser) => axiosClient({

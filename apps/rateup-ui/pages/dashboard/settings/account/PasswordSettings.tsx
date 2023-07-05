@@ -53,17 +53,17 @@ const PasswordSettings = () => {
         <Title> Password Settings </Title>
            <Divider my="lg" mb="xl" />
 
-           <Stack h={300} mt="xl" pl="md">
+           <Stack h={300} mt="xl" pl="md" sx={{maxWidth: "800px"}}>
             <Title order={2} mt="xl"> Change Password </Title>
             <Text color='dark.1'>Enter your existing password and new password to change.</Text>
             <Divider mb="lg"/>
             <form onSubmit={passwordForm.onSubmit(onSubmit)}>
 
             <Grid align='center'>
-              <Grid.Col  md={6} lg={3}>
+              <Grid.Col  md={6} lg={4}>
                 <Text size={'xl'}>Current Password: </Text>
               </Grid.Col>
-              <Grid.Col md={6} lg={3}>
+              <Grid.Col md={6} lg={4}>
                  <PasswordInput
                   placeholder="Enter existing password"
                   required
@@ -74,10 +74,10 @@ const PasswordSettings = () => {
            </Grid>
            <Divider my="lg"/>
            <Grid align='center'>
-              <Grid.Col  md={6} lg={3}>
+              <Grid.Col  md={6} lg={4}>
                 <Text size={'xl'}>New Password: </Text>
               </Grid.Col>
-              <Grid.Col md={6} lg={3}>
+              <Grid.Col md={6} lg={4}>
                <PasswordInput
                   placeholder="Enter new password"
                   required
@@ -89,10 +89,10 @@ const PasswordSettings = () => {
            <Divider my="lg"/>
 
            <Grid align='center'>
-              <Grid.Col  md={6} lg={3}>
+              <Grid.Col  md={6} lg={4}>
                 <Text size={'xl'}>Confirm Password: </Text>
               </Grid.Col>
-              <Grid.Col md={6} lg={3}>
+              <Grid.Col md={6} lg={4}>
                 <PasswordInput
                   placeholder="Enter new password again"
                   required
@@ -104,7 +104,7 @@ const PasswordSettings = () => {
            <Divider my="lg"/>
 
            <Grid justify="flex-end">
-              <Grid.Col   span={3}>
+              <Grid.Col   span={2}>
               <RateupButtonSecondary type="submit" loading ={isLoading} size='lg' title="Save Changes" />
               </Grid.Col>
               <Grid.Col span={5}>
