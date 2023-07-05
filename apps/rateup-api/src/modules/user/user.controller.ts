@@ -1,7 +1,7 @@
 
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createUserSignup, getLoggedUserInfo } from "./user.service";
-import { ChangeUserPasswordSchema, CreateUserGoogleSchema, CreateUserSignupSchema } from "./user.schema";
+import { createUserSignup, getLoggedUserInfo, getLoggedUserProfile, updateUserProfile, updateUserProfilePhoto } from "./user.service";
+import { ChangeUserPasswordSchema, CreateUserGoogleSchema, UpdateProfilePhotoSchema, UpdateProfileSchema } from "./user.schema";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from '@prisma/client';
@@ -14,6 +14,22 @@ export async function getLoggedUserInfoHandler(
     const userData =  await getLoggedUserInfo(request, reply);
     if (!userData) {
       reply.code(200).send({ message: "No user data found" });
+    } else {
+      reply.code(200).send({ message: "Success", data: userData });
+    }
+  } catch (e) {
+    reply.code(500).send({ message: `Internal server error :  ${e}` });
+  }
+}
+
+export async function getLoggedUserProfileHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const userData =  await getLoggedUserProfile(request, reply);
+    if (!userData) {
+      reply.code(200).send({ message: "No user profile found" });
     } else {
       reply.code(200).send({ message: "Success", data: userData });
     }
@@ -124,4 +140,44 @@ export async function changeUserPasswordHandler(
    let message ="Successfully updated password"
     reply.code(200).send({ success: true, message });
 
+}
+
+export async function updateProfileHandler(
+  request: FastifyRequest<{
+    Body: UpdateProfileSchema;
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
+  let user;
+
+  try {
+    user = await updateUserProfile(body, request, reply); 
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+  
+  reply.code(201).send({ success: true, data: user});
+}
+
+export async function updateProfilePhotoHandler(
+  request: FastifyRequest<{
+    Body: UpdateProfilePhotoSchema;
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
+  let user;
+
+  try {
+    user = await updateUserProfilePhoto(body, request, reply); 
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+  
+  reply.code(201).send({ success: true, data: "Photo Updated..!"});
 }

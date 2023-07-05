@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { CreateUserParams, CreateUserSignupSchema, userInfoParams } from "./user.schema";
+import { CreateUserParams, CreateUserSignupSchema, UpdateProfilePhotoSchema, UpdateProfileSchema, userInfoParams } from "./user.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { Role } from "../../utils/enums";
@@ -97,6 +97,67 @@ export async function getLoggedUserInfo(  request: FastifyRequest,
     }
 
   return {userId, role, email, orgId}
+}
+
+
+export async function getLoggedUserProfile(  request: FastifyRequest,
+  reply: FastifyReply) {
+    let session = await Session.getSession(request, reply);
+
+    const accessTokenPayload = session.getAccessTokenPayload();
+    let role = accessTokenPayload.role;
+    //let orgId = accessTokenPayload.orgId;
+
+    if (session === undefined) {
+        throw Error("No session available")
+    }
+    let userId = session.getUserId();
+
+    let profile = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    let userProfileData = {role, ...profile}
+
+   return userProfileData
+}
+
+export enum Gender {
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+  OTHER = "OTHER"
+}
+
+export async function updateUserProfile({ title, name, phone }: UpdateProfileSchema, request: FastifyRequest,
+  reply: FastifyReply) {
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      gender: title as Gender,
+      name,
+      phone
+    },
+  });
+
+  return user;
+}
+
+export async function updateUserProfilePhoto({ profilePhoto}: UpdateProfilePhotoSchema, request: FastifyRequest,
+  reply: FastifyReply) {
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      profilePhoto
+    },
+  });
+
+  return user;
 }
 
 

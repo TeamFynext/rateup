@@ -37,15 +37,24 @@ enum ResponsePlatform {
   APP
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 model User {
-  id         String       @id @default(uuid()) @db.Uuid
-  createdAt  DateTime     @default(now())
-  email      String?
-  name       String?
-  org        Org[]
-  orgMember  OrgMember[]
-  teamMember TeamMember[]
-  surveys    Survey[]
+  id           String       @id @default(uuid()) @db.Uuid
+  createdAt    DateTime     @default(now())
+  email        String       @unique
+  name         String?
+  profilePhoto String?
+  phone        String?
+  gender       Gender?
+  org          Org[]
+  orgMember    OrgMember[]
+  teamMember   TeamMember[]
+  surveys      Survey[]
 }
 
 model Org {
