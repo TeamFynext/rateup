@@ -54,7 +54,7 @@ export const RateupButtonBlue = ({ title, radius, sx, disabled, onClick, leftIco
     )
 }
 
-export const RateupButtonSecondary = ({ loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonSecondary = ({ type, loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -67,6 +67,7 @@ export const RateupButtonSecondary = ({ loading, title, radius, sx, disabled, on
             size= {size}
             sx={sx}
             loading={loading}
+            type={type}
         >
             {title}
         </Button >

@@ -24,7 +24,6 @@ import { AuthMode, UserMode } from "../../utils/enums";
 import { useForm } from "@mantine/form";
 import { GoogleButton } from "../Button/SocialButtons";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdpartyemailpassword";
-import Session from 'supertokens-web-js/recipe/session';
 import { useCreateUserMutation } from "../../backend/user/user.query";
 
 const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | string[]}) => {
