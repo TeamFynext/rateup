@@ -1,7 +1,7 @@
 import { useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import Session from 'supertokens-web-js/recipe/session';
-import { LoadingOverlay , Text, Paper } from '@mantine/core';
+import { LoadingOverlay , Text } from '@mantine/core';
 
 interface SessionAuthProps {
   children: ReactNode;

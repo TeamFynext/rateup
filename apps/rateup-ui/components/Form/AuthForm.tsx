@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import { HeaderTabs } from "../../components/Layout/Header/Header";
-import { IconSend , IconArrowAutofitLeft, IconChevronRight} from "@tabler/icons-react";
+import { IconSend, IconArrowAutofitLeft, IconChevronRight, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import {
   Container,
   Title,
@@ -15,7 +16,8 @@ import {
   Group,
   Button,
   Image,
-  NavLink
+  NavLink,
+  Center
 } from "@mantine/core";
 import { useRouter } from 'next/router';
 import {  useConsumeVerificationCode, useEmailSend, useSignIn, useSignUp } from "../../utils/auth";
@@ -172,9 +174,25 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
       } catch (err: any) {
           if (err.isSuperTokensGeneralError === true) {
               // this may be a custom error message sent from the API by you.
-              window.alert(err.message);
+            //window.alert(err.message);
+            notifications.show({
+              id: 'load-data',
+              color: 'red',
+              title: 'Error',
+              message: err.message,
+              icon: <IconX size="1rem" />,
+              autoClose: 3000,
+            });
           } else {
-              window.alert("Oops! Something went wrong.");
+            //window.alert("Oops! Something went wrong.");
+            notifications.show({
+              id: 'load-data',
+              color: 'red',
+              title: 'Error',
+              message: "Oops! Something went wrong..." + err,
+              icon: <IconX size="1rem" />,
+              autoClose: 3000,
+            });
           }
       }
   }
@@ -317,6 +335,22 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
             {isLogin ? "Sign in" : ( authType ? "Finish SignUp" : "Sign up")}
           </Button>
           </form>
+
+{authType &&
+  <Center  mt="xl">
+          <Text  mt="xl" inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
+                <NavLink
+                  label="Logout"
+                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Link>
+            </Text>
+
+            </Center>
+
+}
         </Paper>
       </Container>
 

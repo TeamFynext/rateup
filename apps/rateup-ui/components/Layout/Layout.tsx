@@ -12,6 +12,7 @@ import { useUser } from '../../context/UserContext';
 import LeftNavbar from './Navbar/LeftNavbar';
 import { RouteParamsProvider } from '../../context/RouteParamsContext';
 import SessionAuth from '../SuperToken/SessionAuth';
+import { useRouter } from 'next/router';
 
 const useStyles = createStyles((theme) => ({
   
@@ -27,6 +28,7 @@ const useStyles = createStyles((theme) => ({
 export default ({ children }) => {
     const theme = useMantineTheme();
     const { classes } = useStyles();
+    const router = useRouter();
 
      const {
         isLoading: isLoadingUserInfo,
@@ -43,6 +45,12 @@ export default ({ children }) => {
         console.log("Query Fetched UserInfo:"+ JSON.stringify(userInfo?.data?.data))
         !userInfo?.data?.data && refetch()
         setUser(userInfo?.data?.data)
+
+        if(userInfo?.data?.data?.email && !userInfo?.data?.data?.orgId){
+            if (router.query.msg !== 'welcome') {
+                router.push('/signup?auth=google');
+            }
+        }
       }, [userInfo])
 
     return (

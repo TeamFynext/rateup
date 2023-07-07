@@ -61,6 +61,7 @@ declare global {
         email: string,
         userId: string,
         role: string
+        orgId: string
   }
 
   interface UserInfoQueryData {

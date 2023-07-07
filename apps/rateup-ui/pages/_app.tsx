@@ -11,7 +11,6 @@ import SuperTokensReact, {
 import { frontendConfig } from "../config/frontendConfig";
 //import Session from "supertokens-auth-react/recipe/session";
 import Session from 'supertokens-web-js/recipe/session';
-
 import {
   QueryClient,
   QueryClientProvider,
@@ -22,6 +21,7 @@ import { UserProvider } from "../context/UserContext";
 import { Hydrate } from '@tanstack/react-query'
 
 import SuperTokens from 'supertokens-web-js';
+import WithLoader from "../components/Layout/Loader/WithLoader";
 
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
@@ -99,7 +99,9 @@ export default function App({
            <Hydrate state={pageProps.dehydratedState}>
             <UserProvider>
             <LayoutComponent>
-              <Component {...pageProps} />
+                <WithLoader>
+                   <Component {...pageProps} />
+                </WithLoader>
             </LayoutComponent>
             </UserProvider>
             <ReactQueryDevtools initialIsOpen={false}  position="bottom-right"/>

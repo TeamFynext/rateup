@@ -22,7 +22,7 @@ export function useCreateUserMutation(setIsLoading) {
           autoClose: 3000,
         });
         setIsLoading(false)
-        router.push('/dashboard');
+        router.push('/dashboard?msg=welcome');
       },
       onError: (error: any) => {
         console.error("Error completing signup:", error.message);

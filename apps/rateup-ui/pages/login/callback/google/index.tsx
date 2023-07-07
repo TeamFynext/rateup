@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react'
 import { thirdPartySignInAndUp } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import { useRouter } from 'next/router';
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { LoadingOverlay, Text } from '@mantine/core';
 const index = () => {
@@ -22,7 +22,7 @@ async function handleGoogleCallback() {
                     id: 'load-data',
                     color: 'teal',
                     title: 'Success',
-                    message: 'Sign up process is Complete!',
+                    message: 'Sign up success',
                     icon: <IconCheck size="1rem" />,
                     autoClose: 3000,
                   });
@@ -53,11 +53,25 @@ async function handleGoogleCallback() {
     } catch (err: any) {
         if (err.isSuperTokensGeneralError === true) {
             // this may be a custom error message sent from the API by you.
-            window.alert(err.message);
+            // window.alert(err.message);
+            notifications.show({
+                id: 'load-data',
+                color: 'red',
+                title: 'Error',
+                message: err.message,
+                icon: <IconX size="1rem" />,
+                autoClose: 3000,
+            });
         } else {
-            window.alert("Oops! Something went wrong.");
-            //TODO remov alert
-
+            //window.alert("Oops! Something went wrong.");
+            notifications.show({
+                id: 'load-data',
+                color: 'red',
+                title: 'Error',
+                message: "Oops! Something went wrong..." + err,
+                icon: <IconX size="1rem" />,
+                autoClose: 3000,
+            });
         }
     }
 }
