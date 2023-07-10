@@ -12,6 +12,7 @@ import {
   Text,
   Tabs,
   Space,
+  Center,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
@@ -23,7 +24,8 @@ import {
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
 import { RateupButtonOutline, RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
-import StyledTabs  from "../../../pages/dashboard/surveys/StyledTabs";
+import StyledTabs from "../../../pages/dashboard/surveys/StyledTabs";
+import QuestionTypePreview from "./Previews/QuestionTypePreview";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -133,7 +135,7 @@ export function QuestionDetailedView({
           },
         }}
         sx={{
-          marginBottom: '30px', // add 30px bottom margin
+          marginBottom: '20px', // add 30px bottom margin
         }}
         variant="unstyled"
         size="xl"
@@ -173,6 +175,10 @@ export function QuestionDetailedView({
         direction="column"
         wrap="wrap"
       >
+
+          <Center pb="xl" mb="lg" pl="xl" ml="xl">
+            <QuestionTypePreview type={question?.type} />
+          </Center>
 
       <Flex
             gap="md"

@@ -36,7 +36,7 @@ export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
   return (
     <>
       <Paper p={"xl"} sx={{ flex: 2 }} shadow="lg" radius="lg"> 
-      <ScrollArea style={{ height: '65vh' }} pr={20}>
+        <ScrollArea style={{ height: '65vh' }} pr={10}>
           <QuestionsSideBar
             questions={questions}
             selectedQ={selectedQ}
@@ -46,9 +46,10 @@ export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
           />
       </ScrollArea>
       </Paper>
-      <Paper p={"xl"} sx={{ flex: 5 }}  shadow="lg" radius="lg">
+      <Paper p={"md"} sx={{ flex: 5 }} shadow="lg" radius="lg">
         <Tabs
-         p={"xl"}
+          px={"md"}
+          pb="md"
           value={activeTab}
           onTabChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           sx={{ height: "100%" }}
