@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useState, ReactNode } from 'react';
 import Router from 'next/router';
-import { LoadingOverlay , Text } from '@mantine/core';
+import { LoadingOverlay, Text, Stack } from '@mantine/core';
 
 
 interface WithLoaderProps {
@@ -30,9 +30,11 @@ const WithLoader: React.FC<WithLoaderProps> = ({ children }) => {
 
 
   if (loading) {
-    return         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-   <LoadingOverlay visible /> 
-   <Text pt="5rem">Loading...</Text>
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Stack>
+        <LoadingOverlay visible />
+      </Stack>
+      {/* <Text>Loading...</Text> */}
 </div>
   }
 

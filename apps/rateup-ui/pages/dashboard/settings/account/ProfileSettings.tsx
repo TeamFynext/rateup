@@ -120,41 +120,40 @@ const ProfileSettings = () => {
 
   return (
     <>
-        <Title> Profile Settings </Title>
-            <Divider my="lg" mt="lg" />
+      <Title order={2}> Profile Settings </Title>
+      <Divider my="md" />
             <Stack pl="lg">
 
             <Grid align='center'>
               <Grid.Col md={6} lg={3}>
 
-            <Avatar src={avatarSrc} alt={"Profile Picture"} radius="xl" size={200} />
+            <Avatar src={avatarSrc} alt={"Profile Picture"} radius="xl" size={130} />
               </Grid.Col>
               <Grid.Col md={6} lg={4} >
                 <Stack> 
-                  <Text size="xxl" fw={500}>{ profileData?.data?.data?.name || "User"}</Text>
+              <Text size="lg" fw={500}>{profileData?.data?.data?.name || "User"}</Text>
                   <Text> {role(profileData?.data?.data?.role)}</Text>
 
-                  <Stack mt="md" >
-                    <Text fw={500}>{ profileData?.data?.data?.email }</Text>
+              <Stack  >
+                <Text size="sm" fw={500}>{profileData?.data?.data?.email}</Text>
                   </Stack>
                 </Stack>
               </Grid.Col>
               <Grid.Col md={6} lg={3} >
                 <Stack justify='center'>
                   <FileButton  onChange={setFile} accept="image/png,image/jpeg">
-                    {(props) => <Button fullWidth size="lg" radius="lg"
+                {(props) => <Button fullWidth size="sm" radius="lg"
                     variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Change Photo</Button>}
                   </FileButton>
 
-                  <RateupButtonSecondary title='Remove Photo' size='lg' onClick={removePhoto}/>
+              <RateupButtonSecondary title='Remove Photo' size='sm' onClick={removePhoto} />
                 </Stack>
               </Grid.Col>
             </Grid>
-            <Group mt="xl">
-               <Text size="xl" color='dark.1'> Personal Info</Text>
-            </Group>
-            <Divider mb="lg"/>
-
+        <Group mt="sm">
+          <Text size="lg" color='dark.1'> Personal Info</Text>
+        </Group>
+        <Divider mb="xs" />
             <form onSubmit={profileForm.onSubmit(onSubmit)}>
 
                 <Grid>
@@ -200,10 +199,10 @@ const ProfileSettings = () => {
 
                 </Grid>
 
-                <Grid justify="flex-end" pt="xl" mt="lg">
+          <Grid justify="flex-end" mt="md">
 
                 <Grid.Col   md={6} lg={6}>
-                    <RateupButtonSecondary  type="submit" loading ={isLoading} size='lg' title="Save Changes" />
+              <RateupButtonSecondary type="submit" loading={isLoading} size='sm' title="Save Changes" />
                 </Grid.Col>
                 <Grid.Col  md={6} lg={4}>
                 </Grid.Col>

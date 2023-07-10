@@ -9,7 +9,7 @@ const AccountSettings = () => {
     <>
        <StyledTabs defaultValue="settings" >
         
-          <Tabs.List mb="xl" pb="lg">
+        <Tabs.List mb="md" pb="md">
             <Tabs.Tab value="settings" >
               Account
             </Tabs.Tab>

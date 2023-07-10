@@ -7,16 +7,17 @@ export default function StyledTabs(props: TabsProps) {
         styles={(theme) => ({
           tab: {
             ...theme.fn.focusStyles(),
-            backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] :  theme.colors.gray[5],
+            backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
             color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[9],
             border: `${rem(1)} solid ${theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[5]}`,
-            padding: `${theme.spacing.lg} ${theme.spacing.lg}`,
+            padding: `${theme.spacing.sm} ${theme.spacing.sm}`,
             cursor: 'pointer',
-            fontSize: theme.fontSizes.xl,
+            fontSize: theme.fontSizes.sm,
             display: 'flex',
             alignItems: 'center',
             justifyContent:'center',
             width: "50%",
+            maxWidth: "300px",
             textAlign: "center",
   
             '&:disabled': {
