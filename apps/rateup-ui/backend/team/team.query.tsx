@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTeam, getTeamsByUser } from "./team.api";
+import { IEditTeam, createTeam, editTeam, getTeamsByUser } from "./team.api";
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -43,6 +43,37 @@ export function useCreateTeamMutation(close, createTeamForm) {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+    },
+  });
+}
+
+export function useEditTeamMutation(id, setIsLoading) {
+  const queryClient = useQueryClient();
+  return useMutation((values: IEditTeam) => editTeam(id, values), {
+    onSuccess: () => {
+      notifications.show({
+        id: 'load-data',
+        color: 'teal',
+        title: 'Success',
+        message: 'Team Details Updated Successfully!',
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      setIsLoading(false)
+      queryClient.invalidateQueries(["teamsDetailsQuery"]);
+    },
+    onError: (error: any) => {
+      console.error("Error Team Update:", error.message);
+      notifications.show({
+        id: 'load-data',
+        color: 'red',
+        title: 'Failed',
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+
+      setIsLoading(false)
     },
   });
 }

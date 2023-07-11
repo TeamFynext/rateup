@@ -13,12 +13,22 @@ export interface IInviteMember {
     invitedBy: string;
     teamId: string;
     email: string;
+}
 
+export interface IEditTeam {
+    name: string; 
+    googleLink: string; 
 }
 
 export const createTeam = (data: ICreateTeam) => axiosClient({
     url: `/team`,
     method: 'POST',
+    data: data
+})
+
+export const editTeam = (teamId: string , data: IEditTeam) => axiosClient({
+    url: `/team/edit/${teamId}`,
+    method: 'PUT',
     data: data
 })
 

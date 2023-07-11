@@ -35,9 +35,12 @@ export default ({ children }) => {
         data: userInfo,
         error: errorUserInfo,
         refetch,
-        } = useQuery<UserInfoQueryData>(["userInfoQuery"], fetchUserInfo, {
+     } = useQuery<UserInfoQueryData>({
+         queryKey: ["userInfoQuery"],
+         queryFn: () => fetchUserInfo(),
         refetchOnWindowFocus: "always",
         refetchOnMount: "always",
+         notifyOnChangeProps: ['data']
     })
     const { setUser } = useUser();
 

@@ -19,6 +19,7 @@ import supertokensNode from 'supertokens-node'
 import { fetchTeamSurveys, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
 import { SurveyCard } from '../surveys';
 import { useRouteParams } from '../../../context/RouteParamsContext';
+import TeamSettings from './TeamSettings';
 
 
 const TeamDetails = () => {
@@ -254,7 +255,7 @@ const TeamDetails = () => {
 : (
     isLoadingMembers ? <Loader /> 
 
-    : <Group p="xl">  {teamsMembersData?.data?.members?.length === 0  ? "No other members in this team!"
+                  : <Group p="xl">  {teamsMembersData?.data?.message ? "No other members in this team!"
         :
         <> Error... Try Refreshing... <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
         
@@ -292,7 +293,7 @@ const TeamDetails = () => {
 
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Settings} mt={60}>
-            Team Settings
+          <TeamSettings id={team_id?.toString()} teamData={teamsMembersData?.data?.team} />
           </Tabs.Panel>
 
             </StyledTabs>
@@ -311,6 +312,7 @@ export async function getServerSideProps(context) {
   const { team_id } = context.query;
   let teamId : string = team_id.toString();
   const queryClient = new QueryClient();
+  // const queryClient = useQueryClient();
 
   supertokensNode.init(backendConfig());
   const session = await getSessionWithRefreshHandling(context);

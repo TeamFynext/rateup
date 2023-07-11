@@ -74,7 +74,7 @@ export default function Teams() {
             id: 'load-data',
             loading: true,
             title: 'Creating Team..',
-            message: `Hold on, Your team '${name}' is getting created.`,
+            message: `Hold on, Your team '${values?.name}' is getting created.`,
             autoClose: false,
             withCloseButton: false,
         });
@@ -147,17 +147,6 @@ export default function Teams() {
                     direction="row"
                     wrap="wrap"
                 >
-                    {
-            user?.role !== 'ADMIN' 
-            &&      <RateupButtonPrimary
-                        onClick={open}
-                        title={"Create Team"}
-                        rightIcon={<IconSquarePlus
-                            size="1rem" />} />
-
-        }
-                    
-
                     <RateupButtonPrimary
                         onClick={ () =>  setSort(!sort)}
                         title={"Sort"}
@@ -199,8 +188,8 @@ export default function Teams() {
                 ? <Loader /> 
                 
                 :<>
-                {teamsData?.data?.length > 0 ? (
-                    <SimpleGrid
+
+                                <SimpleGrid
                             cols={4}
                             spacing={"lg"}
                             breakpoints={[
@@ -219,22 +208,27 @@ export default function Teams() {
                             </Center>
                             </Paper>
 
-                            {(
+
+                                    {teamsData?.data?.length > 0 ? (
+
+
+                                        (
                                 sort
                                 ? [...teamsData?.data]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
                             ).map((team) => (
                             <TeamCard key={team.teamId} team={team} reftchTeams={reftchTeams} />
-                            ))}
-                        </SimpleGrid>
+                            ))
 
                 ) : (
-                    <>  {teamsData?.message  ?  teamsData?.message
+                                            <Center>  {teamsData?.message ? teamsData?.message
                         :
                         <> Error... Try Refreshing... <RateupButtonOutline onClick={reftchTeams} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>          
                         }          
-                        </>
+                                            </Center>
                 )}
+
+                                </SimpleGrid>
 
                 </>}
             </>

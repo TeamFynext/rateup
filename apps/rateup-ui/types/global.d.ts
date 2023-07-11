@@ -62,6 +62,7 @@ declare global {
         userId: string,
         role: string
         orgId: string
+        profilePhoto: string
   }
 
   interface UserInfoQueryData {

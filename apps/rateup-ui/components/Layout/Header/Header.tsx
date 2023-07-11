@@ -33,18 +33,25 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
   const { classes, theme, cx } = useStyles();
   const [opened, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
+  const [userProfileAvatar, setUserProfileAvatar] = useState(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`)
+
 
   useEffect(() => {
     console.log("Email:  "+ JSON.stringify(userData?.email))
+    if (userData?.profilePhoto) {
+      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${userData?.profilePhoto}`
+      setUserProfileAvatar(imgUrl)
+    } else {
+      setUserProfileAvatar(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`)
+    }
   }, [userData])
   
   
   const user = {
     "name": userData?.email,
     "role": !userData?.role ? "...error..."  : (userData?.role === 'SUPER_ADMIN' ? "Super Admin" : "Admin"),
-    "image": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
+    "image": userProfileAvatar
   };
-  //TODO
 
   const MenuItemWithLink = ({ icon, href, children }) => (
    
@@ -53,35 +60,35 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
       </Link>
   );
   
-  const menuItems = [
-    {
-      icon: <IconCheckupList size="0.9rem" color={theme.colors.yellow[6]} stroke={1.5} />,
-      href: "/dashboard/surveys",
-      text: "Surveys",
-    },
-    {
-      icon: <IconUsers size="0.9rem" color={theme.colors.blue[6]} stroke={1.5} />,
-      href: "/dashboard/teams",
-      text: "Teams",
-    },
-    {
-      icon: <IconGitBranch size="0.9rem" color={theme.colors.red[6]} stroke={1.5} />,
-      href: "/dashboard/",
-      text: "Branches",
-    },
-    {
-      icon: <IconSettings size="0.9rem" stroke={1.5} />,
-      href: "/dashboard/settings",
-      text: "Settings",
-    },
-    {
-      icon: <IconLogout size="0.9rem" stroke={1.5} />,
-      href: "/auth/logout",
-      text: "Logout",
-      isDivider: true,
-      color: "red",
-    },
-  ];
+  // const menuItems = [
+  //   {
+  //     icon: <IconCheckupList size="0.9rem" color={theme.colors.yellow[6]} stroke={1.5} />,
+  //     href: "/dashboard/surveys",
+  //     text: "Surveys",
+  //   },
+  //   {
+  //     icon: <IconUsers size="0.9rem" color={theme.colors.blue[6]} stroke={1.5} />,
+  //     href: "/dashboard/teams",
+  //     text: "Teams",
+  //   },
+  //   {
+  //     icon: <IconGitBranch size="0.9rem" color={theme.colors.red[6]} stroke={1.5} />,
+  //     href: "/dashboard/",
+  //     text: "Branches",
+  //   },
+  //   {
+  //     icon: <IconSettings size="0.9rem" stroke={1.5} />,
+  //     href: "/dashboard/settings",
+  //     text: "Settings",
+  //   },
+  //   {
+  //     icon: <IconLogout size="0.9rem" stroke={1.5} />,
+  //     href: "/auth/logout",
+  //     text: "Logout",
+  //     isDivider: true,
+  //     color: "red",
+  //   },
+  // ];
 
   return (
     <div className={classes.header}>
@@ -113,7 +120,7 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
                 size='md'
               />
           </Paper>
-          <Paper shadow="sm"
+              {/* <Paper shadow="sm"
                 className={classes.colorModeBox}
               >
                 <Group position="apart">
@@ -124,7 +131,7 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
                   <IconSun />
                </ActionIcon>
                 </Group>
-            </Paper>
+            </Paper> */}
           <Menu
             width={260}
             position="bottom-end"
@@ -139,7 +146,7 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
               >
 
                 <Group>
-                  <Avatar src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`} alt={user.name} radius="xl" size={30} />
+                      <Avatar src={user?.image} alt={user.name} radius="xl" size={30} />
 
                   <div style={{ flex: 1 }}>
                     <Text size="sm" weight={500} sx={{ lineHeight: 1 }} mr={6}>
@@ -151,13 +158,13 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
                     </Text>
                     
                   </div>
-                  <IconChevronDown size={rem(12)} stroke={1.5} />
+                      {/* <IconChevronDown size={rem(12)} stroke={1.5} /> */}
               </Group>
 
               </Paper>
             </Menu.Target>
 
-            <Menu.Dropdown>
+                {/* <Menu.Dropdown>
             {menuItems.map((item, index) => (
                 <span key={index}>
                 {item.isDivider && <Menu.Divider />}
@@ -166,7 +173,7 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
                 </MenuItemWithLink>
                 </span>
             ))}
-            </Menu.Dropdown>
+            </Menu.Dropdown> */}
 
           </Menu>
         </Group>
