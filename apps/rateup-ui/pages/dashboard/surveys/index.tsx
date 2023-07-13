@@ -222,7 +222,7 @@ function SurveyMenu({ survey }) {
     onSuccess: () => {
       notifications.show({
         id:'survey',
-        message: "Updated!",
+        message: "Survey status Updated!",
         autoClose: true,
       });
       queryClient.invalidateQueries(["surveys"]);

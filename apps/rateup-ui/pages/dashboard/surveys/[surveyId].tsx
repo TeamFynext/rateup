@@ -10,8 +10,8 @@ import StyledTabs from "./StyledTabs";
 import { RateupButtonBlackOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconChevronDown, IconPlus } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { SurveySettings } from "../../../components/Survey/Settings";
 import Responses from "../../../components/Survey/Response/Responses";
+import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
 
 enum TabEnum {
   Edit = "Edit",
@@ -91,11 +91,11 @@ export default () => {
                     onChange={setSelectedLanguage}
                   />
 
-                  <RateupButtonPrimary onClick={() => {setaddQnTrigger(addQnTrigger+1)}} title={"Add Question"}
+                {/* <RateupButtonPrimary onClick={() => {setaddQnTrigger(addQnTrigger+1)}} title={"Add Question"}
                         rightIcon={<IconPlus
                           size="1rem" />}
                           size="md"
-                    />
+                    /> */}
               </Group>
   
             </Tabs.Panel>
@@ -134,7 +134,7 @@ export default () => {
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Settings}>
-            <SurveySettings surveyId={surveyId} isProtected={survey?.isProtected}/>
+            <SurveySettings surveyId={surveyId} survey={survey}  />
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Responses}>

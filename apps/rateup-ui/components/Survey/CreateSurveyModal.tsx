@@ -19,9 +19,9 @@ interface FormValues {
   teamId: string;
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-let Languages = new Set(["English"])
+let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"])
 export function CreateSurveyModal({ open, close }) {
-  const createSurveyMutation = useCreateSurveyMutation({close});
+  const createSurveyMutation = useCreateSurveyMutation({ close });
   const {
     isError,
     isLoading,
@@ -32,7 +32,7 @@ export function CreateSurveyModal({ open, close }) {
     value: team.teamId,
     label: team.teamName
   }));
-  
+
 
   const form = useForm({
     initialValues: {

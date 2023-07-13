@@ -11,9 +11,10 @@ interface Props {
     radius?: string
     sx?: any
     loading?: boolean
+    fullWidth?: boolean
 }
 
-export const RateupButtonPrimary = ({ type, sx,radius,  title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonPrimary = ({ fullWidth, type, sx, radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
         radius={radius || "lg"}
@@ -30,6 +31,7 @@ export const RateupButtonPrimary = ({ type, sx,radius,  title, disabled, onClick
             size= {size}
             type={type}
             sx={sx}
+            fullWidth={fullWidth}
         >
             {title}
         </Button >

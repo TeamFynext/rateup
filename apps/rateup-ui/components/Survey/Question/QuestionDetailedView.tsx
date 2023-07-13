@@ -24,8 +24,8 @@ import {
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
 import { RateupButtonOutline, RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
-import StyledTabs from "../../../pages/dashboard/surveys/StyledTabs";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
+import { logicSupportedTypes } from "../../../utils/data";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -141,10 +141,11 @@ export function QuestionDetailedView({
         size="xl"
         placeholder="Enter question title here *"
         {...form.getInputProps("title")}
-        onBlur={() => {
-          form.validateField('title');
-          handleSave();
-        }}
+        // onBlur={() => {
+        //   form.validateField('title');
+        //   handleSave();
+        // }}
+        //TODO : add error free autosave solution
       />
       <TextInput
         variant="unstyled"
@@ -156,10 +157,10 @@ export function QuestionDetailedView({
             fontWeight:400// set custom font size for this TextInput
           },
         }}
-        onBlur={() => {
-          form.validateField('description');
-          handleSave();
-        }}
+        // onBlur={() => {
+        //   form.validateField('description');
+        //   handleSave();
+        // }}
       />
       <ExtraProps form={form} question={question} />
 
@@ -209,24 +210,16 @@ export function QuestionDetailedView({
               </Group>
           </Flex>
         <Group position="apart" >
-            <RateupButtonOutline 
+            {
+              (logicSupportedTypes.includes(question?.type)) &&
+              <RateupButtonOutline
                 title={"Edit Logic"}
                 size="sm"
                 onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
               />
+            }
             <Space w="xl" />
             <Space w="xl" />
-            <StyledTabs
-                  value={"English"}
-                //onTabChange={(tab) => setActiveTab(tab as TabEnum)}
-                >
-                  <Group position="apart">
-                    <Tabs.List                    >
-                      <Tabs.Tab value={"English"}>English</Tabs.Tab>
-                      <Tabs.Tab value={"Malayalam"}>Malayalam</Tabs.Tab>
-                    </Tabs.List>
-                  </Group>
-              </StyledTabs>
 
               <Space w="xl" />
               {question?.id && <Text c="blue.9" size="sm"> Question Id:  {question?.id} </Text>}

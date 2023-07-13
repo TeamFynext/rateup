@@ -1,6 +1,6 @@
 //TODO: refactor drag and drop
 
-import { Center, Paper, Stack, Text } from "@mantine/core";
+import { Center, Paper, Stack, Text, Divider, ScrollArea } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { IconPlus } from "@tabler/icons-react";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -73,23 +74,33 @@ export function QuestionsSideBar({
   });
 
   return (
-    <DragDropContext
-      onDragEnd={({ destination, source }) => {
-        const reorderedQuestions = reorder(
-          questionsState,
-          source.index,
-          destination?.index || 0
-        );
-        handlers.setState(reorderedQuestions);
-        questionsReorderMutation.mutate(reorderedQuestions);
-      }}
-    >
+    <>
+      {
+        questionsState?.length > 0 && <>
+          <RateupButtonPrimary
+            onClick={handleAddQn}
+            title={"Add Question"}
+            rightIcon={<IconPlus size="1rem" />}
+            size="md"
+            fullWidth
+          />
+          <Divider my="md" color="gray.2" />
+        </>
+      }
 
-      {/* <RateupButtonPrimary onClick={handleAddQn} title={"Add Question"}
-        rightIcon={<IconPlus
-          size="1rem" />}
-          size="md"
-        /> */}
+      <ScrollArea style={{ height: '55vh' }} pr={10}>
+
+        <DragDropContext
+          onDragEnd={({ destination, source }) => {
+            const reorderedQuestions = reorder(
+              questionsState,
+              source.index,
+              destination?.index || 0
+            );
+            handlers.setState(reorderedQuestions);
+            questionsReorderMutation.mutate(reorderedQuestions);
+          }}
+        >
 
       { !questionsState.length &&
               <Paper  sx={{ cursor: "pointer", marginTop:"200px" }} onClick={handleAddQn} >
@@ -103,14 +114,16 @@ export function QuestionsSideBar({
 
         }
 
-      <Droppable droppableId="dnd-list" direction="vertical">
-        {(provided) => (
-          <div {...provided.droppableProps} ref={provided.innerRef}>
-            {items}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+          <Droppable droppableId="dnd-list" direction="vertical">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {items}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </ScrollArea>
+    </>
   );
 }
