@@ -8,10 +8,13 @@ import {
   IconLogout,
   IconUsers,
   IconCheckupList,
+  IconSocial,
+  IconUsersGroup
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useMediaQuery } from '@mantine/hooks';
+import { useUser } from '../../../context/UserContext';
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -67,7 +70,8 @@ export const WhasappSurveyIcon = () => (
 
 const mockdata = [
   { icon: DashBoardIcon, label: 'Dashboard', href: '/dashboard' },
-  { icon: IconUsers, label: 'Teams', href: '/dashboard/teams' },
+  { icon: IconSocial, label: 'Teams', href: '/dashboard/teams' },
+  { icon: IconUsers, label: 'Members', href: '/dashboard/members' , role: 'SUPER_ADMIN'},
   { icon: IconCheckupList, label: 'Surveys', href: '/dashboard/surveys' },
   { icon: WhasappSurveyIcon, label: 'WhatsApp Survey', href: '/dashboard/' },
   { icon: IconDeviceDesktopAnalytics, label: 'Testinomials', href: '/dashboard/' },
@@ -77,12 +81,23 @@ const LeftNavbar = () => {
     const [opened, setOpened] = useState(false);
     const theme = useMantineTheme();
     const isLargerThanSm = useMediaQuery('(min-width: 768px)');
-    const links = mockdata.map((link) => (
-      <NavbarLink
-        {...link}
-        key={link.label}
-      />
-    ));
+    const { user, setUser } = useUser();
+
+    const links = mockdata.map((link) => {
+      if(link?.role){
+        if(user?.role === link?.role){
+          return <NavbarLink
+            {...link}
+            key={link.label}
+          />
+        }
+      }else{
+        return <NavbarLink
+          {...link}
+          key={link.label}
+          />
+      }
+    });
   
     return (
       <Navbar width={{ base: 90 }} p="md">
