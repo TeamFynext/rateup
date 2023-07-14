@@ -1,6 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { createOrgHandler } from "./org.controller";
+import { createOrgHandler, getAllTeamsAndMembers, updateRoleController } from "./org.controller";
 import { $Sref } from "./org.schema";
+import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
+import { checkRoleHandler } from "../../utils/checkRoleHandler";
+
 export async function orgRoutes(server: FastifyInstance) {
   // create survey
   server.post(
@@ -15,4 +18,25 @@ export async function orgRoutes(server: FastifyInstance) {
     },
     createOrgHandler
   );
+
+  server.get(
+    "/members",
+    {
+      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+    },
+    getAllTeamsAndMembers
+  );
+
+  server.put(
+    "/members/change-role/:id",
+    {
+      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      schema: {
+        params: $Sref("idParamRequestSchema"),
+        body: $Sref("updateRoleSchema")
+      },
+    },
+    updateRoleController
+  );
+
 }
