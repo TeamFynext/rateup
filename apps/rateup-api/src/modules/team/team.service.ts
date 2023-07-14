@@ -1,11 +1,13 @@
 import prisma from "../../utils/prisma";
 import { createUser } from "../user/user.service";
-import { CreateTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, InviteMemberInput } from "./team.schema";
+import { CreateTeamInput, EditTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, IdParamInput, InviteMemberInput } from "./team.schema";
 import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createEmailBody } from "../../utils/email/emailBody";
 import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import ThirdPartyEmailPassword from"supertokens-node/recipe/thirdpartyemailpassword";
+import { FastifyReply, FastifyRequest } from "fastify";
+import Session from "supertokens-node/recipe/session";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -381,6 +383,8 @@ export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
     select: {
       id: true,
       name: true,
+      googleLink: true,
+      code: true,
     },
   });
 
@@ -442,4 +446,23 @@ export async function getTeamsByUserId(userId: string) {
 
   return teamData;
   
+}
+
+
+export async function editTeam({ name, googleLink }: EditTeamInput, params: IdParamInput, 
+   request: FastifyRequest,
+  reply: FastifyReply) {
+
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+
+  const user = await prisma.team.update({
+    where: { id: params.id },
+    data: {
+      name,
+      googleLink
+    },
+  });
+
+  return user;
 }

@@ -1,10 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { completeInvite, createTeam, deleteTeamById, getTeamsByUserId, getTeamMembers, getTeamsByOrgId, inviteTeamMember, getTeamMembersFromInvitation, deleteMemberInvite } from "./team.service";
+import { completeInvite, createTeam, deleteTeamById, getTeamsByUserId, getTeamMembers, getTeamsByOrgId, inviteTeamMember, getTeamMembersFromInvitation, deleteMemberInvite, editTeam } from "./team.service";
 import {
   CreateTeamInput,
   DeleteTeamInput,
+  EditTeamInput,
   GetTeamMembersInput,
   GetTeamsByOrgInput,
+  IdParamInput,
   InviteCompleteInput,
   InviteMemberInput,
 } from "./team.schema";
@@ -174,7 +176,10 @@ export async function getTeamMembersFromInviteHandler(
 
   try {
     const members = await getTeamMembersFromInvitation({ teamId: request.params.teamId });
-    if (!members || members?.members?.length === 0) {
+    if(!members){
+      reply.code(200).send({ response: "Error..." });
+    }
+    else if (members?.members?.length === 0) {
       reply.code(200).send({ message: "No members found for this team" });
     } else {
       reply.send(members);
@@ -182,4 +187,29 @@ export async function getTeamMembersFromInviteHandler(
   } catch (e) {
     reply.code(500).send({ message: "Internal server error"});
   }
+}
+
+
+//Edit or Update Team name, google url
+
+export async function editTeamHandler(
+  request: FastifyRequest<{
+    Body: EditTeamInput,
+    Params: IdParamInput
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
+  const id = request.params
+  let team;
+
+  try {
+    team = await editTeam(body, id, request, reply); 
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+  
+  reply.code(201).send({ success: true, data: team});
 }

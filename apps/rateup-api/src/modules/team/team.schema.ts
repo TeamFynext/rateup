@@ -60,6 +60,15 @@ const inviteCompleteRequestSchema = z.object({
    token: z.string(),
 });
 
+const editTeamSchema = z.object({
+  name: z.string().min(4),
+  googleLink: z.string().min(10),
+});
+
+const idParamRequestSchema = z.object({
+  id: z.string()
+});
+
 
 export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
   {
@@ -70,16 +79,23 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     inviteMemberRequestSchema,
     inviteMemberRequestResponse,
     getTeamMembersRequestSchema,
-    inviteCompleteRequestSchema
+    inviteCompleteRequestSchema,
+    editTeamSchema,
+    idParamRequestSchema
   },
   { $id: "teamSchema" }
 );
+
 export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
 export type GetTeamsByOrgInput = z.infer<typeof getTeamsByOrgRequestSchema>;
 export type DeleteTeamInput = z.infer<typeof deleteTeamByIdRequestSchema>;
 export type InviteMemberInput = z.infer<typeof inviteMemberRequestSchema>;
 export type GetTeamMembersInput = z.infer<typeof getTeamMembersRequestSchema>;
 export type InviteCompleteInput = z.infer<typeof inviteCompleteRequestSchema>;
+export type EditTeamInput = z.infer<typeof editTeamSchema>;
+export type IdParamInput = z.infer<typeof idParamRequestSchema>;
+
+
 
 
 

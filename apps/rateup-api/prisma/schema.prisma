@@ -83,6 +83,7 @@ model Team {
   createdAt   DateTime     @default(now())
   name        String
   code        String
+  googleLink  String?
   org         Org          @relation(fields: [orgId], references: [id])
   orgId       String       @db.Uuid
   members     TeamMember[]

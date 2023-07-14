@@ -47,8 +47,8 @@ console.log(".....Creating user.....")
 
       const team = await prisma.team.create({
         data: {
-          name: "Default Team",
-          code:"D1",
+          name: "Main",
+          code:"MAIN",
           orgId: org.id,
         }
       });
@@ -96,7 +96,14 @@ export async function getLoggedUserInfo(  request: FastifyRequest,
       );
     }
 
-  return {userId, role, email, orgId}
+    let profile = await prisma.user.findUnique({
+      where: { id: userId },
+      select:{
+        profilePhoto: true
+      }
+    });
+
+  return {userId, role, email, orgId, profilePhoto: profile?.profilePhoto}
 }
 
 

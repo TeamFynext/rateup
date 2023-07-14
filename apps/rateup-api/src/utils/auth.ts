@@ -30,3 +30,31 @@ export async function hasAccessToTeam(teamId: string, userId: string) {
   });
   return teamMember !== null;
 }
+
+export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
+  const teamMember = await hasAccessToTeam(teamId, userId)
+
+  if(teamMember){
+    const superAdmin = await prisma.orgMember.findFirst({
+      where: {
+        userId: userId,
+        org: {
+          teams: {
+            some: {
+              id: teamId,
+            },
+          },
+        },
+        role: 'SUPER_ADMIN',
+      },
+    });
+  
+    if (!superAdmin) {
+      return false;
+    }else{
+      return true
+    }
+  }
+
+  return false;
+}

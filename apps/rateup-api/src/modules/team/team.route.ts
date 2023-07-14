@@ -10,9 +10,11 @@ import {
   inviteMemberHandler,
   getTeamMembersFromInviteHandler,
   deleteInviteHandler,
+  editTeamHandler,
 } from "./team.controller";
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
+import { verifyTeamAdminAccess } from "./team.auth";
 
 
 export async function teamRoutes(server: FastifyInstance) {
@@ -59,6 +61,18 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     deleteTeamByIdHandler
+  );
+
+  server.put(
+    "/edit/:id",
+    {
+      preHandler: verifyTeamAdminAccess,
+      schema: {
+        body: $Tref("editTeamSchema"),
+        params: $Tref("idParamRequestSchema")
+      },
+    },
+    editTeamHandler
   );
 
   server.get("/", async () => {
