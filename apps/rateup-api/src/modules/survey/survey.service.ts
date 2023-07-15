@@ -14,6 +14,51 @@ export async function createSurvey(
   return survey;
 }
 
+export async function cloneSurvey(surveyId: string, userId: string) {
+  const survey = await prisma.survey.findUnique({
+    where: {
+      id : surveyId
+    },
+  });
+
+  if(survey){
+    const { id, ...surveyWithoutId } = survey;
+
+    const existingSurveys = await prisma.survey.findMany({
+      where: {
+        title: {
+          startsWith: survey.title + ' Copy',
+        },
+      },
+    });
+
+    let maxCopyNumber = 0;
+    existingSurveys.forEach((existingSurvey) => {
+      const copyNumber = parseInt(existingSurvey.title.split(' Copy ')[1]);
+      if (copyNumber > maxCopyNumber) {
+        maxCopyNumber = copyNumber;
+      }
+    });
+
+    const clonedSurvey = {
+      ...surveyWithoutId,
+      createdBy: userId,
+      createdAt: new Date(),
+      updatedAt: null,
+      title: `${survey.title} Copy ${maxCopyNumber + 1}`,
+    };
+  
+    const newSurvey = await prisma.survey.create({
+      data: clonedSurvey,
+    });
+  
+    return newSurvey;
+
+  }else{
+    return "Survey not found to duplicate"
+  }
+}
+
 export async function getSurveyById(id: string) {
   const survey = await prisma.survey.findUnique({
     where: {

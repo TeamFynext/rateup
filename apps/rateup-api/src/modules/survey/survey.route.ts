@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  cloneSurveyHandler,
   createSurveyHandler,
   deleteSurveyByIdHandler,
   getSurveyByIdHandler,
@@ -44,6 +45,19 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     getSurveyByIdHandler
   );
+
+  //duplicate survey
+  server.post(
+    "/clone/:id",
+    {
+      preHandler: verifySurveyAccess,
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+      },
+    },
+    cloneSurveyHandler
+  );
+
 
   interface GetSurveyByTeamParams {
     id: string;

@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  cloneSurvey,
   createSurvey,
   deleteSurveyById,
   getSurveyById,
@@ -10,6 +11,7 @@ import {
   verifySurveyPassword,
 } from "./survey.service";
 import { CreateSurveyInput, GetSurveyByIdParams, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
+import Session from "supertokens-node/recipe/session";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -20,7 +22,9 @@ export async function createSurveyHandler(
   const data = request.body;
   try {
     // TODO add types for session
-    const userId = request.session.getUserId();
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
     const survey = await createSurvey(data, userId);
     reply.code(201).send(survey);
   } catch (e) {
@@ -47,6 +51,34 @@ export async function getSurveyByIdHandler(
   }
 }
 
+export async function cloneSurveyHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  let session = await Session.getSession(request, reply);
+  let userId = session.getUserId();
+
+  let survey;
+  try {
+    survey = await cloneSurvey(request.params.id, userId);
+
+    // Check if the survey is an error message
+    if (typeof survey === 'string') {
+      reply.code(400).send({ success: false, message: survey });
+      return;
+    }
+
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+
+  reply.code(201).send({ success: true, data: survey});
+}
+
 export async function getSurveyByTeamHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
@@ -70,7 +102,9 @@ export async function getSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    const userId = request.session.getUserId();
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
     const surveys = await getSurveysByUserId(userId)
     reply.send(surveys);
   } catch (e) {
