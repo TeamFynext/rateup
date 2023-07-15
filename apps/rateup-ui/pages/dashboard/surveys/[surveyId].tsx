@@ -18,11 +18,11 @@ enum TabEnum {
   Share = "Share",
   Responses = "Responses",
   Settings = "Settings",
-
 }
 export default () => {
   const router = useRouter();
   const { surveyId } = router.query;
+  const { tab } = router.query;
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -44,6 +44,12 @@ export default () => {
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
   const [addQnTrigger, setaddQnTrigger] = useState(0)
+
+  useEffect(() => {
+    if (tab && Object.values(TabEnum).includes(tab as any)) {
+      setActiveTab(tab as any);
+    }
+  }, [tab]);
 
   useEffect(() => {
     if (survey) {

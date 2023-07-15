@@ -6,6 +6,12 @@ const SURVEY_PUBLIC_URL = "/public/survey"
 
 export const createSurvey = (data) => axiosClient.post(SURVEYURL, data)
 
+export async function cloneSurvey(surveyId: string) {
+    if(!surveyId) return undefined
+    const res =  await axiosClient.post(`${SURVEYURL}/clone/${surveyId}`)
+    return res.data as Survey
+}
+
 export async function getSurveys() {
     try {
         let surveys: Array<Survey> = (await axiosClient.get(SURVEYURL)).data;

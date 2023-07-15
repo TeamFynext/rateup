@@ -29,7 +29,8 @@ import {
   IconTrash,
   IconSelector,
   IconChevronDown,
-  IconPencil
+  IconPencil,
+  IconSettings
 } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import Link from "next/link";
@@ -41,7 +42,7 @@ import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteSurvey, updateSurvey } from "../../../backend/surveys/survey.api";
-import { useSurveys } from "../../../backend/surveys/surveys.query";
+import { useCloneSurveyMutation, useSurveys } from "../../../backend/surveys/surveys.query";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -163,10 +164,10 @@ export function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
       p="md"shadow="lg" radius="lg"
       sx={{ cursor: "pointer" }}
       onClick={() => {
-        router.push(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey.id}`);
+        router.push(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`);
       }}
     >
-      <Flex justify={"space-between"} align={"center"}>
+      <Flex justify={"space-between"} align={"center"} >
         <Text mr={"sm"} truncate size="xl" fw={700}>
           {survey.title}
         </Text>
@@ -189,7 +190,7 @@ export function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
         <StatusBadge active={survey.active}/>
         <Text>Total Responses : 0</Text>
         <Link
-          href="#"
+          href={`/dashboard/surveys/${survey.id}?tab=Responses`}
           style={{ color: theme.colors.blue[9] }}
           onClick={(e) => {
             e.stopPropagation();
@@ -207,6 +208,10 @@ export function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
 
 function SurveyMenu({ survey }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const cloneSurvey = useCloneSurveyMutation();
+
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
@@ -245,19 +250,7 @@ function SurveyMenu({ survey }) {
           e.stopPropagation();
         }}
       >
-        <Menu.Item icon={<IconEdit />}>Edit</Menu.Item>
-        <Menu.Item icon={<IconShare />}>Share</Menu.Item>
-        <Menu.Item icon={<IconCopy />}>Clone</Menu.Item>
-        <Menu.Item
-          icon={<IconTrash />}
-          onClick={() => {
-            surveyDeleteMutation.mutate(survey.id);
-          }}
-        >
-          Delete
-        </Menu.Item>
-        <Menu.Item icon={<IconMessage />}>View Responses</Menu.Item>
-        <Menu.Item
+       <Menu.Item
           icon={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
           onClick={() =>
             surveyUpdateMutation.mutate({ active: !survey.active })
@@ -265,6 +258,33 @@ function SurveyMenu({ survey }) {
         >
           {survey.active ? "Pause Survey" : "Resume Survey"}
         </Menu.Item>
+
+        <Menu.Item icon={<IconShare />}
+          onClick={() => {
+            router.push(`/dashboard/surveys/${survey?.id}?tab=Share`);
+          }}
+        >Share</Menu.Item>
+        <Menu.Item 
+          icon={<IconCopy />}
+          onClick={() => {
+            cloneSurvey.mutate(survey?.id);
+          }}
+          >Clone</Menu.Item>
+        <Menu.Item
+          icon={<IconTrash />}
+          onClick={() => {
+            surveyDeleteMutation.mutate(survey?.id);
+          }}
+        >
+          Delete
+        </Menu.Item>
+
+        <Menu.Item icon={<IconSettings />}
+          onClick={() => {
+            router.push(`/dashboard/surveys/${survey?.id}?tab=Settings`);
+          }}
+        >Settings</Menu.Item>
+
       </Menu.Dropdown>
     </Menu>
   );

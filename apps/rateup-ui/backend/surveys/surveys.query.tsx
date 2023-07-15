@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createSurvey, getPublicSurvey, getSurvey, getSurveys, updateSurvey, updateSurveyPassword, verifySurveyPassword } from "./survey.api";
+import { cloneSurvey, createSurvey, getPublicSurvey, getSurvey, getSurveys, updateSurvey, updateSurveyPassword, verifySurveyPassword } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
@@ -40,6 +40,36 @@ export const useCreateSurveyMutation = ({close} : MyProps) => {
 
   return createMutation;
 }
+
+export function useCloneSurveyMutation() {
+  const queryClient = useQueryClient();
+  return useMutation((id: string) => cloneSurvey(id), {
+    onSuccess: () => {
+      notifications.show({
+        id: 'load-data',
+        color: 'teal',
+        title: 'Success',
+        message: 'Survey Copy created!',
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(["survey"]);
+    },
+    onError: (error: any) => {
+      console.error("Error Survey Clone:", error.message);
+      notifications.show({
+        id: 'load-data',
+        color: 'red',
+        title: 'Failed',
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+  });
+}
+
 
 export function useUpdateSurveyPwdMutation(id, passwordProtect, password) {
   return useMutation(() => handleSurveyPwd(id, passwordProtect, password), {
