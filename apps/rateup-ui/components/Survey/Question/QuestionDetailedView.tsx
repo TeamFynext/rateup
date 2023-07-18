@@ -75,15 +75,17 @@ export function QuestionDetailedView({
     });
   }, [question]);
 
-  const handleChoicesAndRequiredChange = () => {
-    if (form.isDirty('choices') || form.isDirty('required')) {
-      handleSave();
-    }
-  };
+  //autosave add choices
 
-  useEffect(() => {
-    handleChoicesAndRequiredChange();
-  }, [form.values.choices, form.values.required]);
+  // const handleChoicesAndRequiredChange = () => {
+  //   if (form.isDirty('choices') || form.isDirty('required')) {
+  //     handleSave();
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   handleChoicesAndRequiredChange();
+  // }, [form.values.choices, form.values.required]);
 
   const handleSave = () => {
     setIsSaving(true);

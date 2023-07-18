@@ -4,6 +4,7 @@ interface User {
     role: string;
     userId: string;
     email: string;
+    profilePhoto: string
 }
 
 interface UserContextProps {

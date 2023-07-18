@@ -97,10 +97,10 @@ export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null,
     )
 }
 
-export const RateupButtonBlackOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
-            radius="lg"
+            radius={radius}
             px="xl"
             disabled={disabled}
             color='dark'

@@ -90,7 +90,7 @@ export function useCreateUserMutation(setIsLoading) {
               autoClose: 3000,
             });
             setIsLoading(false)
-            queryClient.invalidateQueries(["userInfoQuery"]); //TODO verify this invalidation
+            queryClient.invalidateQueries(["userInfoQuery"]);
             queryClient.invalidateQueries(["userProfile"]);
           },
           onError: (error: any) => {
@@ -123,6 +123,7 @@ export function useCreateUserMutation(setIsLoading) {
             });
             setIsLoadingUpload(false)
             queryClient.invalidateQueries(["userProfile"]);
+            queryClient.invalidateQueries(["userInfoQuery"]);
 
           },
           onError: (error: any) => {

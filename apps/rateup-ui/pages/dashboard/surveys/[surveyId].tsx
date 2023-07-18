@@ -117,6 +117,7 @@ export default () => {
             <Tabs.Panel value={TabEnum.Responses}>
                 <RateupButtonBlackOutline 
                   title={"All"} 
+                  radius={"lg"}
                   size="md"
                   rightIcon={<IconChevronDown
                     size="1rem" />}

@@ -44,6 +44,7 @@ const Responses = () => {
       <RateupButtonBlackOutline 
         title={"Responses"} 
         size="md"
+        radius={"lg"}
         rightIcon={<IconChevronDown
           size="1rem" />}
       />

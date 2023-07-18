@@ -28,28 +28,29 @@ import {
 import Link from 'next/link';
 import { Navbar } from '../Navbar/Navbar';
 import { useStyles } from './Header.styles';
+import { useUser } from '../../../context/UserContext';
 
-export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: string}) {
+export function HeaderTabs({mode} : {mode?: string}) {
   const { classes, theme, cx } = useStyles();
   const [opened, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
   const [userProfileAvatar, setUserProfileAvatar] = useState(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`)
-
+ const { user, setUser } = useUser();
 
   useEffect(() => {
-    console.log("Email:  "+ JSON.stringify(userData?.email))
-    if (userData?.profilePhoto) {
-      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${userData?.profilePhoto}`
+    console.log("Email:  "+ JSON.stringify(user?.email))
+    if (user?.profilePhoto) {
+      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user?.profilePhoto}`
       setUserProfileAvatar(imgUrl)
     } else {
       setUserProfileAvatar(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`)
     }
-  }, [userData])
+  }, [user])
   
   
-  const user = {
-    "name": userData?.email,
-    "role": !userData?.role ? "...error..."  : (userData?.role === 'SUPER_ADMIN' ? "Super Admin" : "Admin"),
+  const userInfo = {
+    "name": user?.email,
+    "role": !user?.role ? "...error..."  : (user?.role === 'SUPER_ADMIN' ? "Super Admin" : "Admin"),
     "image": userProfileAvatar
   };
 
@@ -146,15 +147,15 @@ export function HeaderTabs({userData, mode} : {userData? : UserData, mode?: stri
               >
 
                 <Group>
-                      <Avatar src={user?.image} alt={user.name} radius="xl" size={30} />
+                      <Avatar src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} />
 
                   <div style={{ flex: 1 }}>
                     <Text size="sm" weight={500} sx={{ lineHeight: 1 }} mr={6}>
-                      {user.name}
+                      {userInfo.name}
                     </Text>
 
                     <Text color="dimmed" size="xs">
-                      {user.role}
+                      {userInfo.role}
                     </Text>
                     
                   </div>

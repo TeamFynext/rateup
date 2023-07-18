@@ -12,8 +12,12 @@ import {
   Text,Grid,
   TextInput,Paper,Input,
   Textarea,
-  Box , Image
+  Box , Image,
+  Modal, useMantineTheme,
+  Title,
+  Divider
 } from "@mantine/core";
+import { useDisclosure } from '@mantine/hooks';
 import { useRouter } from "next/router";
 import { usePublicSurvey } from "../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
@@ -27,7 +31,9 @@ import {
 } from "../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
+  IconArrowLeft,
   IconCalendarEvent,
+  IconCheck,
   IconChevronLeft,
   IconChevronRight,
   IconMail,
@@ -41,7 +47,7 @@ import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { createResponsePublic } from "../../../backend/surveys/response/response.api";
-import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
+import { RateupButtonBlackOutline, RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
@@ -52,6 +58,8 @@ function TakeSurvey() {
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1)
+  const [opened, { open, close }] = useDisclosure(false);
+  const theme = useMantineTheme();
 
   const { setQuestionCount, setCurrentQuestionNo } = useContext(QuestionCountContext);
 
@@ -117,9 +125,7 @@ function TakeSurvey() {
           // Do nothing since we are already going to next question
         } else if (action === LogicAction.EndSurvey) {
           // End survey and submit
-          submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
-            router.push(`${surveyId}/end`);
-          });
+          open()
           return;
         } else {
           // Action is a question id
@@ -138,11 +144,15 @@ function TakeSurvey() {
       goTo(survey.questions[index + 1]);
     } else {
       // Survey completed
+      open()
+    }
+  };
+
+  const finishSurvey = () => {
       submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
         router.push(`${surveyId}/end`);
       });
-    }
-  };
+  }
 
   const handlePrev = () => {
     goBack();
@@ -165,12 +175,79 @@ function TakeSurvey() {
     }
   };
 
+  const responseValues = responses.map(item => {
+    const key = Object.keys(item.response)[0];
+    const value = item.response[key];
+    return value;
+  });
+
+  const filteredQuestions = survey?.questions?.filter(
+    question => question?.title[selectedLanguage]
+  );
+
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container h={"80vh"} size={"md"} sx={{ position: "relative" }}>
+        <Container h={"60vh"} size={"md"} sx={{ position: "relative" }}>
+              {/* TODO for mobile design 80vh */}
+
+        <Modal
+            opened={opened}
+            onClose={close}
+            title={<Title order={2}> Confirm your responses </Title>}
+            overlayProps={{
+              color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
+              opacity: 0.55,
+              blur: 3,
+            }}
+          >
+
+            <Stack pb="5rem">
+              <Divider/>
+                <Stack >
+                  {filteredQuestions.map(question => {
+                    const response = responses.find(
+                      response => response.questionId === question.id
+                    );
+
+                    return (
+                      <Stack key={question.id}>
+                        <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
+                        {response && (
+                          <Text pb="sm">
+                            {Object.values(response.response)[0]}
+                          </Text>
+                        )}
+                       <Divider/>
+                      </Stack>
+                    );
+                  })}
+                </Stack>
+
+                <div style={{ position: "fixed", bottom: 0, left: 10, right: 10,}}>
+                  <Group position="apart" p="lg" sx={{ background:'#fff'}}>
+                    <RateupButtonBlackOutline
+                      radius={"xl"}
+                      title={"Back"}
+                      size="lg"
+                      onClick={close}
+                      leftIcon={<IconChevronLeft />}
+                    />
+
+                    <RateupButtonBlue
+                      radius={"xl"}
+                      title={"Confirm"}
+                      size="lg"
+                      leftIcon={<IconCheck />}
+                      onClick={finishSurvey}
+                    />
+                  </Group>
+                </div>
+            </Stack>
+        </Modal>
+
           <Stack p="md">
             <QuestionNo num={QnNo} />
             <QuestionTitle  />
@@ -337,7 +414,7 @@ function NextPrev({ prev, next }) {
 
               {isLastQuestion ?
 
-                 <RateupButtonBlue radius={"xl"} title={"Submit"} 
+                <RateupButtonBlue radius={"xl"} title={"Submit"} 
                   disabled={(selectedQ?.required && !response)  || isErrorInput}
                   sx={{ position: "absolute", right: "5vw" }}
                   size="lg" onClick={handleNextClick}/>

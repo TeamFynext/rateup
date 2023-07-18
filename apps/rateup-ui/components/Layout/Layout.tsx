@@ -68,7 +68,7 @@ export default ({ children }) => {
 
                 navbar={<LeftNavbar />}
                 header={
-                        <HeaderTabs userData={userInfo?.data?.data}/>
+                        <HeaderTabs />
                     }
                 >
                     <Container className={classes.appShellBody} fluid>
