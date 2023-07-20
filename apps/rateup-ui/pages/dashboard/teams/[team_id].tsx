@@ -238,33 +238,32 @@ const TeamDetails = () => {
                                     </Stack>
                                 </Center>
                             </Paper>
-            {teamsMembersData?.data?.members?.length > 0 ? (
+                            {teamsMembersData?.data?.members?.length > 0 ? (
+                                Array.isArray(teamsMembersData.data.members) ? (
+                                  sort
+                                    ? [...teamsMembersData?.data?.members].sort((a, b) => b.id - a.id)
+                                    : [...teamsMembersData?.data?.members].sort((a, b) => a.id - b.id)
+                                ).map((member, i) => (
+                                  <TeamMemberCard key={i} member={member} />
+                                )) : (<Group p="xl"> {teamsMembersData?.data?.members }</Group>)
+                              ) : (
+                                isLoadingMembers ? (
+                                  <Loader />
+                                ) : (
+                                  <Group p="xl">
+                                    {teamsMembersData?.data?.message ? (
+                                      "No other members in this team!"
+                                    ) : (
+                                      <>
+                                        Error... Try Refreshing...{" "}
+                                        <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs' />
+                                      </>
+                                    )}
+                                  </Group>
+                                )
+                              )}
 
-
-            (
-                                sort
-                                ? [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id).reverse()
-                                : [...teamsMembersData?.data?.members]?.sort((a, b) => a.id - b.id)
-                                  ).map((member, i) => (
-                                    <TeamMemberCard key={i} member={member} />
-
-                                  ))
-
-                )
-
-: (
-    isLoadingMembers ? <Loader /> 
-
-                  : <Group p="xl">  {teamsMembersData?.data?.message ? "No other members in this team!"
-        :
-        <> Error... Try Refreshing... <RateupButtonOutline onClick={refetch} rightIcon={<IconReload size='1rem'/>} title='Refresh' size='xs'/></>
-        
-        } 
-        
-        </Group>
-)}
-
-</SimpleGrid>
+            </SimpleGrid>
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Survey} mt={60}>
           <SimpleGrid

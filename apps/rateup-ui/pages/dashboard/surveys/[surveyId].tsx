@@ -10,13 +10,13 @@ import StyledTabs from "./StyledTabs";
 import { RateupButtonBlackOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconChevronDown, IconPlus } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import Responses from "../../../components/Survey/Response/Responses";
 import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
+import Result from "../../../components/Survey/Result/Result";
 
 enum TabEnum {
   Edit = "Edit",
   Share = "Share",
-  Responses = "Responses",
+  Result = "Result",
   Settings = "Settings",
 }
 export default () => {
@@ -86,7 +86,7 @@ export default () => {
               <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Responses}>Responses</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value={TabEnum.Edit}>
@@ -114,7 +114,7 @@ export default () => {
               <div></div>
             </Tabs.Panel>
 
-            <Tabs.Panel value={TabEnum.Responses}>
+            <Tabs.Panel value={TabEnum.Result}>
                 <RateupButtonBlackOutline 
                   title={"All"} 
                   radius={"lg"}
@@ -144,8 +144,8 @@ export default () => {
             <SurveySettings surveyId={surveyId} survey={survey}  />
           </Tabs.Panel>
 
-          <Tabs.Panel value={TabEnum.Responses}>
-            <Responses/>
+          <Tabs.Panel value={TabEnum.Result}>
+            <Result survey={survey}/>
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Share}>

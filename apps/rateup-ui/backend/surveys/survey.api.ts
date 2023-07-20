@@ -44,3 +44,15 @@ export async function updateSurveyPassword(surveyId: string, data) {
 export async function verifySurveyPassword(surveyId: string, data) {
     return await axiosClient.post(`${SURVEY_PUBLIC_URL}/check-password/${surveyId}`, data)
 }
+
+export async function updateSurveyVisited(surveyId: string) {
+    return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/visited`)
+}
+
+export async function updateSurveyStarted(surveyId: string) {
+    return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/started`)
+}
+
+export async function updateSurveyCompleted(surveyId: string) {
+    return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/completed`)
+}

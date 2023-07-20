@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { cloneSurvey, createSurvey, getPublicSurvey, getSurvey, getSurveys, updateSurvey, updateSurveyPassword, verifySurveyPassword } from "./survey.api";
+import { cloneSurvey, createSurvey, getPublicSurvey, getSurvey, getSurveys, updateSurvey, updateSurveyCompleted, updateSurveyPassword, updateSurveyStarted, updateSurveyVisited, verifySurveyPassword } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
@@ -169,4 +169,16 @@ export function useEditSurveyMutation(id, setIsLoading) {
       setIsLoading(false)
     },
   });
+}
+
+export function useUpdateVisitedMutation() {
+  return useMutation((id: string) => updateSurveyVisited(id));
+}
+
+export function useUpdateStartedMutation() {
+  return useMutation((id: string) => updateSurveyStarted(id));
+}
+
+export function useUpdateCompletedMutation() {
+  return useMutation((id: string) => updateSurveyCompleted(id));
 }

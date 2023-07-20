@@ -19,7 +19,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
 import { useRouter } from "next/router";
-import { usePublicSurvey } from "../../../backend/surveys/surveys.query";
+import { usePublicSurvey, useUpdateCompletedMutation } from "../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
 import { SelectedQContext } from "../../../context/SelectedQ";
 
@@ -62,7 +62,7 @@ function TakeSurvey() {
   const theme = useMantineTheme();
 
   const { setQuestionCount, setCurrentQuestionNo } = useContext(QuestionCountContext);
-
+  const updateCompleted = useUpdateCompletedMutation();
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
@@ -150,6 +150,7 @@ function TakeSurvey() {
 
   const finishSurvey = () => {
       submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
+        updateCompleted.mutate(surveyId)
         router.push(`${surveyId}/end`);
       });
   }

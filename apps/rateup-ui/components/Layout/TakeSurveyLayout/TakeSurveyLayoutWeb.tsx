@@ -1,7 +1,7 @@
 import { Box, Grid, Title, Paper, TextInput, Space, Text, Center, Stack, Container, Image, RingProgress, Modal, Group } from "@mantine/core";
 import { useRouter } from "next/router";
-import React, {useState} from "react";
-import { usePublicSurvey, useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
+import React, {useState, useEffect} from "react";
+import { usePublicSurvey, useUpdateStartedMutation, useUpdateVisitedMutation, useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 import { RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
 import { IconArrowLeft } from "@tabler/icons-react";
 import QuestionCountContext from "../../../context/QuestionCountContext";
@@ -15,7 +15,10 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
   const [questionCount, setQuestionCount] = useState(0);
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
 
+  const updateStarted = useUpdateStartedMutation();
+
   const handleStartClick = () => {
+    updateStarted.mutate(surveyId)
     setStartClicked(true);
   };
 
@@ -90,6 +93,13 @@ function Welcome({ onStart, isProtected, surveyId }) {
   const [passwordInput, setPasswordInput] = useState('')
 
   const updateSurveyPassword = useVerifySurveyPwdMutation(surveyId, passwordInput, onStart);
+
+  const updateVisited = useUpdateVisitedMutation();
+
+  useEffect(() => {
+    if(surveyId)
+      updateVisited.mutate(surveyId)
+  }, [])
 
   return (
     <>
