@@ -138,6 +138,7 @@ model Survey {
   sessions    WaSession[]
   isProtected Boolean          @default(false)
   password    String?
+  surveyStats SurveyStats?
 }
 
 model SurveyResponse {
@@ -149,6 +150,15 @@ model SurveyResponse {
   language  String           @default("")
   platform  ResponsePlatform @default(WEB)
   phone     String           @default("")
+}
+
+model SurveyStats {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  survey    Survey @relation(fields: [surveyId], references: [id])
+  surveyId  String @unique @db.Uuid
+  visited   Int    @default(0)
+  started   Int    @default(0)
+  completed Int    @default(0)
 }
 
 // Whatsapp session

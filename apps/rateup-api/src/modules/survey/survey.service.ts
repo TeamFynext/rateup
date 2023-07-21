@@ -64,6 +64,9 @@ export async function getSurveyById(id: string) {
     where: {
       id,
     },
+    include: {
+      surveyStats: true,
+    },
   });
 
   if (!survey) {
@@ -170,4 +173,66 @@ export async function verifySurveyPassword(id: string, data: UpdateSurveyPasswor
   } catch (error) {
     throw new Error(`Internal server error`);
   }
+}
+
+
+export async function updateVisitedSurvey(id: string) {
+  let surveyStats
+  try {
+    surveyStats = await prisma.surveyStats.update({
+      where: { surveyId: id },
+      data: { visited: { increment: 1 } },
+    })
+  } catch (error: any) {
+    if (error?.code === 'P2025') { // Record not found error
+      surveyStats = await prisma.surveyStats.create({
+        data: { surveyId: id, visited: 1 },
+      })
+    } else {
+      throw error
+    }
+  }
+  return surveyStats;
+
+}
+
+export async function updateStartedSurvey(id: string) {
+  let surveyStats
+  try {
+    surveyStats = await prisma.surveyStats.update({
+      where: { surveyId: id },
+      data: { started: { increment: 1 } },
+    })
+  } catch (error: any) {
+    if (error?.code === 'P2025') { // Record not found error
+      surveyStats = await prisma.surveyStats.create({
+        data: { surveyId: id, visited: 1 },
+      })
+    } else {
+      throw error
+    }
+  }
+  return surveyStats;
+
+}
+
+export async function updateCompletedSurvey(id: string) {
+  let surveyStats
+  try {
+    surveyStats = await prisma.surveyStats.update({
+      where: { surveyId: id },
+      data: { completed: { increment: 1 } },
+    })
+  } catch (error: any) {
+    if (error?.code === 'P2025') { // Record not found error
+      surveyStats = await prisma.surveyStats.create({
+        data: { surveyId: id, completed: 1 },
+      })
+    } else {
+      throw error
+    }
+  }
+  return surveyStats;
+
+
 }

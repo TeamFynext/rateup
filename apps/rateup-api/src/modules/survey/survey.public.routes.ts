@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $Sref } from "./survey.schema";
-import { getSurveyByIdHandler, verifySurveyPasswordHandler } from "./survey.controller";
+import { completedSurveyHandler, getSurveyByIdHandler, startedSurveyHandler, verifySurveyPasswordHandler, visitedSurveyHandler } from "./survey.controller";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
   server.get(
@@ -19,12 +19,42 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
 
 
   server.post(
-    "/check-password/:id",
+      "/check-password/:id",
+      {
+        schema: {
+          params: $Sref("idParamsSchema"),
+        },
+      },
+      verifySurveyPasswordHandler
+  );
+
+  server.post(
+    "/:id/visited",
     {
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
+        params: $Sref("idParamsSchema"),
       },
     },
-    verifySurveyPasswordHandler
+    visitedSurveyHandler
   );
-}
+
+  server.post(
+    "/:id/started",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    startedSurveyHandler
+  );
+
+  server.post(
+    "/:id/completed",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    completedSurveyHandler
+  );
+  }

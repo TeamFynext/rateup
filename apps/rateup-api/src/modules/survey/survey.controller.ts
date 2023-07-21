@@ -6,11 +6,14 @@ import {
   getSurveyById,
   getSurveysByTeam,
   getSurveysByUserId,
+  updateCompletedSurvey,
+  updateStartedSurvey,
   updateSurveyById,
   updateSurveyPassword,
+  updateVisitedSurvey,
   verifySurveyPassword,
 } from "./survey.service";
-import { CreateSurveyInput, GetSurveyByIdParams, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
+import { CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
 
 export async function createSurveyHandler(
@@ -190,6 +193,60 @@ export async function verifySurveyPasswordHandler(
         reply.code(404);
       } else {
         reply.code(200).send({ status: "success", data: verifyPassword});
+      }
+    } catch (e) {
+    reply.code(500).send({status: "error", message: e});
+  }
+}
+
+export async function visitedSurveyHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+      const updateVisited = await updateVisitedSurvey(request.params.id);
+      if (!updateVisited) {
+        reply.code(404);
+      } else {
+        reply.code(200).send({ status: "success"});
+      }
+    } catch (e) {
+    reply.code(500).send({status: "error", message: e});
+  }
+}
+
+export async function startedSurveyHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+      const updateStarted = await updateStartedSurvey(request.params.id);
+      if (!updateStarted) {
+        reply.code(404);
+      } else {
+        reply.code(200).send({ status: "success"});
+      }
+    } catch (e) {
+    reply.code(500).send({status: "error", message: e});
+  }
+}
+
+export async function completedSurveyHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+      const updateCompleted = await updateCompletedSurvey(request.params.id);
+      if (!updateCompleted) {
+        reply.code(404);
+      } else {
+        reply.code(200).send({ status: "success"});
       }
     } catch (e) {
     reply.code(500).send({status: "error", message: e});

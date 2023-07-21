@@ -388,7 +388,7 @@ export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
     },
   });
 
-  const members = await prisma.invitation.findMany({
+  const membersQ = await prisma.invitation.findMany({
     where: {
       teamId: input.teamId,
     },
@@ -399,6 +399,13 @@ export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
       status: true,
     },
   });
+
+  let members
+  if(membersQ.length === 0){
+    members = "No members found"
+  }else{
+    members = membersQ
+  }
   
   return {
     team,

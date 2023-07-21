@@ -22,6 +22,10 @@ const getSurveyByIdParamsSchema = z.object({
   id: z.string(),
 });
 
+const idParamsSchema = z.object({
+  id: z.string(),
+});
+
 const getSurveyPublicResponseSchema = z.object({
   title: z.string(),
   languages: z.array(z.string()),
@@ -52,7 +56,8 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     getSurveyByIdParamsSchema,
     updateSurveyRequestSchema,
     getSurveyPublicResponseSchema,
-    updateSurveyPasswordRequestSchema
+    updateSurveyPasswordRequestSchema,
+    idParamsSchema
   },
   { $id: "surveySchema" }
 );
@@ -61,4 +66,5 @@ export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
 export type UpdateSurveyPassword = z.infer<typeof updateSurveyPasswordRequestSchema>;
+export type IdParamInput = z.infer<typeof idParamsSchema>;
 
