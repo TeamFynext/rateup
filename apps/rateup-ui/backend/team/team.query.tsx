@@ -6,13 +6,13 @@ import { notifications } from "@mantine/notifications";
 
 export function useTeamsByUser(queryClient) {
     return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
-      refetchOnWindowFocus: "always",
-      refetchOnMount: "always",
+      //refetchOnWindowFocus: "always",
+      //refetchOnMount: "always",
       initialData: () => queryClient.getQueryData(["teamsByUser"]),
       onSuccess: (data) => {
-        console.log("Initial Prefetch Data:", queryClient.getQueryData(["teamsByUser"]));
+        console.log("Initial Prefetch Team Data:", queryClient.getQueryData(["teamsByUser"]));
 
-        console.log("New fetch Data:", data);
+        console.log("New fetch Team Data:", data);
       },
     });
 }

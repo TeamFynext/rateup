@@ -246,7 +246,7 @@ export async function getServerSideProps(context) {
     const session = await getSessionWithRefreshHandling(context);
     const teamInitialData = await queryClient.prefetchQuery(["teamsByUser"], () => fetchTeamsByUser(session));
   
-    console.log("Prefetched data: ", JSON.stringify(teamInitialData));
+    console.log("Prefetched Teams: ", JSON.stringify(teamInitialData));
     return {
       props: {
         dehydratedState: dehydrate(queryClient),

@@ -4,7 +4,7 @@ import {
   useQuestions,
 } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
-import { Button, Center, Group, Select, Stack, Table } from "@mantine/core";
+import { ScrollArea, Center, Group, Select, Stack, Table } from "@mantine/core";
 import {
   LDResponse,
   LogicAction,
@@ -76,27 +76,37 @@ const LogicEditor = ({
     );
   }
 
+  const stickyHeaderStyles: React.CSSProperties = {
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    backgroundColor: 'white',
+    marginBottom: '50px'
+  };
   return (
-    <Stack>
-      <Table>
-        <thead>
-          <tr>
-            <th>Response</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {getResponses(selectedQ, selectedLanguage).map((response) => (
-            <ActionSelector
-              key={response}
-              possibleActions={possibleActions}
-              response={response}
-              currentLogic={selectedQ.logic}
-              updateLogic={updateLogic}
-            />
-          ))}
-        </tbody>
-      </Table>
+
+    <Stack justify="space-between" sx={{height:'100%'}}>
+      <ScrollArea sx={{height:'90%', overscrollBehavior: 'contain'}}>
+        <Table align="center">
+          <thead style={stickyHeaderStyles}>
+            <tr>
+              <th>Response</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+                {getResponses(selectedQ, selectedLanguage).map((response) => (
+                  <ActionSelector
+                    key={response}
+                    possibleActions={possibleActions}
+                    response={response}
+                    currentLogic={selectedQ.logic}
+                    updateLogic={updateLogic}
+                  />
+                ))}
+          </tbody>
+        </Table>
+      </ScrollArea>
       <Group position="apart">
         <RateupButtonSecondary 
             title={"Cancel"}

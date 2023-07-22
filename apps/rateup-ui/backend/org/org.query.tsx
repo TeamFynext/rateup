@@ -3,17 +3,15 @@ import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { getTeamsMembersOfOrg, updateRole } from "./org.api";
 
-export function useTeamsMembersOfOrg() {
- // export function useTeamsMembersOfOrg(queryClient) {
-  //TODO SSR
+ export function useTeamsMembersOfOrg(queryClient) {
   return useQuery(["orgTeamsDataQuery"], getTeamsMembersOfOrg, {
-    refetchOnWindowFocus: "always",
-    refetchOnMount: "always",
-    //initialData: () => queryClient.getQueryData(["teamsByUser"]),
+    //refetchOnWindowFocus: "always",
+    //refetchOnMount: "always",
+    initialData: () => queryClient.getQueryData(["teamsMembersOfOrg"]),
     onSuccess: (data) => {
-    //  console.log("Initial Prefetch Data:", queryClient.getQueryData(["teamsByUser"]));
+     console.log("Initial Prefetch Members Data:", queryClient.getQueryData(["teamsMembersOfOrg"]));
 
-     // console.log("New fetch Data:", data);
+     console.log("New fetch Members Data:", data);
     },
   });
 }

@@ -13,6 +13,8 @@ import {
   Tabs,
   Space,
   Center,
+  ScrollArea,
+  Divider
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
@@ -26,6 +28,7 @@ import {
 import { RateupButtonOutline, RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
 import { logicSupportedTypes } from "../../../utils/data";
+import { IconChevronRight } from "@tabler/icons-react";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -93,6 +96,7 @@ export function QuestionDetailedView({
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
+      setIsSaving(false);
       return;
     }
 
@@ -126,70 +130,62 @@ export function QuestionDetailedView({
 
   // TODO: show question type somewhere
   return (
-    <Box sx={{ position: "relative", height: "100%"}} >
-      <TextInput
-        fw={800}
-        fz="lg"
-        styles={{
-          input: {
-            fontSize: '2rem', 
-            fontWeight:700// set custom font size for this TextInput
-          },
-        }}
-        sx={{
-          marginBottom: '20px', // add 30px bottom margin
-        }}
-        variant="unstyled"
-        size="xl"
-        placeholder="Enter question title here *"
-        {...form.getInputProps("title")}
-        // onBlur={() => {
-        //   form.validateField('title');
-        //   handleSave();
-        // }}
-        //TODO : add error free autosave solution
-      />
-      <TextInput
-        variant="unstyled"
-        placeholder="Enter question description here"
-        {...form.getInputProps("description")}
-        styles={{
-          input: {
-            fontSize: '1.1rem', 
-            fontWeight:400// set custom font size for this TextInput
-          },
-        }}
-        // onBlur={() => {
-        //   form.validateField('description');
-        //   handleSave();
-        // }}
-      />
-      <ExtraProps form={form} question={question} />
-
-
-      <Group
-        position="apart"
-        sx={{ position: "absolute", bottom: "0px", left: "0px", width: "100%" }}
-      >
-     <Flex
-        gap="xl"
-        justify="center"
-        align="space-between"
-        direction="column"
-        wrap="wrap"
-      >
-
-          <Center pb="xl" mb="lg" pl="xl" ml="xl">
+    <Stack justify="space-between" sx={{height:'100%'}}>
+      <ScrollArea sx={{height:'80%'}}>
+        <Stack>
+          <Stack justify="space-between" sx={{height:'100%'}}>
+              <TextInput
+              fw={800}
+              fz="lg"
+              styles={{
+                input: {
+                  fontSize: '2rem', 
+                  fontWeight:700// set custom font size for this TextInput
+                },
+              }}
+              sx={{
+                marginBottom: '20px', // add 30px bottom margin
+              }}
+              variant="unstyled"
+              size="xl"
+              placeholder="Enter question title here *"
+              {...form.getInputProps("title")}
+              // onBlur={() => {
+              //   form.validateField('title');
+              //   handleSave();
+              // }}
+              //TODO : add error free autosave solution
+            />
+            <TextInput
+              variant="unstyled"
+              placeholder="Enter question description here"
+              {...form.getInputProps("description")}
+              styles={{
+                input: {
+                  fontSize: '1.1rem', 
+                  fontWeight:400// set custom font size for this TextInput
+                },
+              }}
+              // onBlur={() => {
+              //   form.validateField('description');
+              //   handleSave();
+              // }}
+            />
+            
+            <ExtraProps form={form} question={question} />
+         </Stack>
+          <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
             <QuestionTypePreview type={question?.type} />
           </Center>
+        </Stack>
+      </ScrollArea>
 
-      <Flex
-            gap="md"
-            justify="space-between"
-            align="center"
-            direction="row"
-          >
-            <Checkbox
+      <Divider/>
+
+      <Stack pt="sm" sx={{height:'20%', position: 'sticky', bottom: '0', }}>
+ 
+        <Group position="apart" spacing="sm">
+        <Checkbox
                 label="Required"
                 color="dark"
                 fw={600}
@@ -210,9 +206,10 @@ export function QuestionDetailedView({
                     onClick={() => setActiveTab(QuestionTabsEnum.TypeSelection)}
                   /> */}
               </Group>
-          </Flex>
-        <Group position="apart" >
-            {
+        </Group>
+
+        <Group position="apart" spacing="sm">
+        {
               (logicSupportedTypes.includes(question?.type)) &&
               <RateupButtonOutline
                 title={"Edit Logic"}
@@ -226,13 +223,10 @@ export function QuestionDetailedView({
               <Space w="xl" />
               {question?.id && <Text c="blue.9" size="sm"> Question Id:  {question?.id} </Text>}
               
+        </Group>
 
-         </Group>
-
-      </Flex>
-
-      </Group>
-    </Box>
+      </Stack>
+    </Stack>
   );
 }
 

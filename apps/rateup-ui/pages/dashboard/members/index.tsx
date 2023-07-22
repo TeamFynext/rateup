@@ -1,12 +1,18 @@
 import React from 'react'
 import { useUser } from '../../../context/UserContext';
 import { useRouter } from "next/router";
-import { Flex, Title, Grid, Select, Table, Text, Paper, Divider} from '@mantine/core';
+import { Flex, Title, Stack, Grid, Select, Table, Text, Paper, Divider} from '@mantine/core';
 import { useTeamsMembersOfOrg, useUpdateRoleMutation } from '../../../backend/org/org.query';
+import { QueryClient, dehydrate, useQueryClient } from '@tanstack/react-query'
+import { backendConfig } from '../../../config/backendConfig';
+import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
+import supertokensNode from 'supertokens-node'
+import { fetchTeamsMembersOfOrg } from '../../../backend/ssr/org.api';
 
 const Members = () => {
   const router = useRouter();
   const { user, setUser } = useUser();
+  const queryClient = useQueryClient();
 
   if(user?.role === 'ADMIN'){
     router.push('/dashboard');
@@ -17,7 +23,7 @@ const Members = () => {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsMembersOfOrg();
+  } = useTeamsMembersOfOrg(queryClient);
 
   const updateRole = useUpdateRoleMutation();
 
@@ -32,8 +38,8 @@ const Members = () => {
 
       <td>
         {team?.members?.map((member, j: number) => (
-    <>            
-          <Grid key={j} sx={{minWidth:"600px"}} py="lg" align='center'>
+    <Stack key={j}>            
+          <Grid  sx={{minWidth:"600px"}} py="lg" align='center'>
               <Grid.Col span={3}>{member?.name}</Grid.Col>
               <Grid.Col span={5}>{member?.email}</Grid.Col>
               <Grid.Col span={4}>
@@ -55,7 +61,7 @@ const Members = () => {
         (j !== team?.members.length - 1) && <Divider my="sm" variant="dashed" />
       }
            
-          </>
+          </Stack>
         ))}
       </td>
     </tr>
@@ -111,3 +117,19 @@ const Members = () => {
 }
 
 export default Members
+
+
+export async function getServerSideProps(context) {
+  const queryClient = new QueryClient();
+  console.log("..........members ssr........")
+  supertokensNode.init(backendConfig());
+  const session = await getSessionWithRefreshHandling(context);
+  const memberInitialData = await queryClient.prefetchQuery(["teamsMembersOfOrg"], () => fetchTeamsMembersOfOrg(session));
+
+  console.log("Prefetched Members: ", JSON.stringify(memberInitialData));
+  return {
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
+  };
+}
