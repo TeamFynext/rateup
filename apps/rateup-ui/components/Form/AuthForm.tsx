@@ -13,6 +13,7 @@ import {
   Checkbox,
   Anchor,
   Paper,
+  Stack,
   Group,
   Button,
   Image,
@@ -27,6 +28,8 @@ import { useForm } from "@mantine/form";
 import { GoogleButton } from "../Button/SocialButtons";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import { useCreateUserMutation } from "../../backend/user/user.query";
+import { RateupButtonSecondary } from "../Button/RateupButtons";
+import { useStyles } from "./FormStyle";
 
 const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | string[]}) => {
 
@@ -34,7 +37,7 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
   const { token, rid } = router.query;
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
-
+  const { classes } = useStyles();
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
       if (token && rid==="emailverification") {
@@ -199,16 +202,22 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
 
   return (
     <>
-      <HeaderTabs mode={UserMode.GUEST} />
-      <Space h="lg" />
-      {mode !== AuthMode.VERIFY ?
+      {
+      mode !== AuthMode.VERIFY ?
 
       <Container size={420} my={40}>
 
-      {
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7"}}>
+        <Link href="/">
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+        </Link>
+
+        {
             authType  ?
       <Title
-          align="center"
+          my="xl"
+          pb="lg"
+          order={2}
           sx={(theme) => ({
             fontFamily: `Greycliff CF, ${theme.fontFamily}`,
             fontWeight: 900,
@@ -219,7 +228,8 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
         :
         <>
         <Title
-          align="center"
+          order={2}
+          mt="xl"
           sx={(theme) => ({
             fontFamily: `Greycliff CF, ${theme.fontFamily}`,
             fontWeight: 900,
@@ -227,20 +237,20 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
         >
           {isLogin ? "Welcome back!" : "Create your account!"}
         </Title>
-        <Text color="dimmed" size="sm" align="center" mt={5}>
+        <Text color="dimmed" size="sm" mt={7} mb={30}>
           {isLogin ? (
             <>Do not have an account yet?{" "}
             <Anchor size="sm" component="button">
              
 
-              <Link href='/signup'>
+              <Link href='/signup' className={classes.createAcc}>
                  Create account
                 </Link>
             </Anchor></>
           ) : (
             <>Already have an account?{" "}
             <Anchor size="sm" component="button">
-              <Link href='/login'>
+              <Link href='/login'  className={classes.createAcc}>
               Log in
                 </Link>
             </Anchor></>
@@ -251,7 +261,6 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
 
       }
 
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <form onSubmit={isLogin ? loginForm.onSubmit(onSubmit) : signUpForm.onSubmit(onSubmit) }>
           {
             !authType  && 
@@ -277,14 +286,7 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
             {...loginForm.getInputProps('password')}
             mt="md"
           />
-          <Group position="apart" mt="lg">
-            <Checkbox label="Remember me" />
-            <Anchor component="button" size="sm">
-              {isLogin ? <Link href='/login/reset-password'>
-              Forgot password?
-                </Link> : "Forgot email?"}
-            </Anchor>
-          </Group>
+
           </>
           :
           <>
@@ -331,9 +333,21 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
             />
           </>
         }
-          <Button fullWidth mt="xl" type="submit" loading ={isLoading}>
-            {isLogin ? "Sign in" : ( authType ? "Finish SignUp" : "Sign up")}
-          </Button>
+       
+          <RateupButtonSecondary
+            mt="xl"
+            size="md"
+            fullWidth={true} type="submit"  loading ={isLoading}
+            title={isLogin ? "Sign in" : ( authType ? "Finish SignUp" : "Sign up")}
+          />        
+        <Group position="center" mt="lg">
+            <Anchor component="button" size="sm" align="center">
+              {isLogin && <Link href='/login/reset-password' className={classes.forgot}>
+                
+              Forgot password?
+                </Link> }
+            </Anchor>
+          </Group>
           </form>
 
 {authType &&
@@ -357,18 +371,25 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
       :
 
       <Container  size={420} my={40}>
-        <Paper withBorder shadow="lg" p={30} mt={30} radius="md">
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="RateUp Logo" width={90} height={60} />
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7"}}>
+        <Link href="/">
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+        </Link>
             <Space h="lg" />
-            <Title>Verify your email address</Title>
-            <Space h="md" />
+            <Title order={2}>Verify your email address</Title>
+            <Space h="xl" />
             <Text>Please click on the link in the email we just sent you to confirm your email address.</Text>
-            <Space h="lg" />
+
+            <Space h="xl" />
+            <Group position="center" py="xl">
+               <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="email" width={90} height={60} />
+            </Group>
             <Space h="xl" />
 
-            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+            <Text color="blue.6" sx={{  textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
               onClick={sendEmail}>
                   <NavLink
+                   sx={{ fontWeight: 620}}
                   label="Resend or change email"
                   icon={<IconSend size="1rem" stroke={1.5} />}
                   rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
@@ -379,6 +400,7 @@ const AuthForm =  ({ mode, authType } : {mode: string, authType?: string | strin
             <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
               <Link href="/auth/logout" style={{ textDecoration: 'none', }}>
                 <NavLink
+                  sx={{ fontWeight: 620}}
                   label="Logout"
                   icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                   variant="subtle"

@@ -1,4 +1,4 @@
-import { Container, Title, Flex , Space, Loader, Text} from '@mantine/core';
+import { Container, Paper, Image,  Title, Flex , Space, Loader, Text} from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { completeInvite } from '../../backend/team/team.api';
@@ -10,6 +10,7 @@ import styles from './styles.module.css';
 import { HeaderTabs } from '../../components/Layout/Header/Header';
 import { UserMode } from '../../utils/enums';
 import { signOut } from "supertokens-web-js/recipe/session";
+import Link from 'next/link';
 
 const Invite = () => {
 const router = useRouter();
@@ -83,9 +84,12 @@ useEffect(() => {
 
   return (
     <>
-    
-            <HeaderTabs mode={UserMode.GUEST} />
-            <Space h="lg" />
+          <Container size={420} my={40}>
+
+    <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7", minHeight: "600px"}}>
+        <Link href="/">
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+        </Link>
             <Flex
       gap="md"
       justify="center"
@@ -96,7 +100,7 @@ useEffect(() => {
 
         <Space h="xl" />
         <Container>
-            <Title color='blue.9'>{title} Invitation</Title>
+            <Title mb="xl" order={2} color='dark'>{title} Invitation</Title>
         </Container>
 
         {
@@ -179,6 +183,9 @@ useEffect(() => {
         { updateInviteMutation.error && "Failed..! Error.... Try another invitation."}
               
       </Flex>
+
+      </Paper>
+      </Container>
 
     </>
      

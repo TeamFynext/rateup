@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from "react";
-import { HeaderTabs } from "../../components/Layout/Header/Header";
-import { IconSend , IconArrowAutofitLeft, IconChevronRight} from "@tabler/icons-react";
+import { IconSend , IconArrowAutofitLeft, IconChevronRight, IconChevronLeft, IconArrowLeft} from "@tabler/icons-react";
 import {
   Container,
   Title,
@@ -11,7 +10,6 @@ import {
   Anchor,
   Paper,
   Group,
-  Button,
   Image,
   NavLink
 } from "@mantine/core";
@@ -19,10 +17,12 @@ import { useRouter } from 'next/router';
 import { useForm } from "@mantine/form";
 import Link from 'next/link';
 import { useSendResetEmail, useSetNewPassword } from "../../utils/auth/resetPassword";
-import { ResetSteps, UserMode } from "../../utils/enums";
+import { ResetSteps } from "../../utils/enums";
+import { RateupButtonSecondary } from "../Button/RateupButtons";
+import { useStyles } from "./FormStyle";
 
 const ResetPasswordForm = ({ mode }) => {
-
+  const { classes } = useStyles();
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
   const [page, setPage] = useState(token && rid==="emailpassword" ? ResetSteps.STEP_THREE : mode)
@@ -110,13 +110,17 @@ const onSubmit = isEmailPage
 
   return (
     <>
-      <HeaderTabs mode={UserMode.GUEST} />
-      <Space h="lg" />
       {page !== ResetSteps.STEP_TWO ?
 
       <Container size={420} my={40}>
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7"}}>
+        <Link href="/">
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+        </Link>
+
         <Title
-          align="center"
+          mt="xl"
+          order={2}
           sx={(theme) => ({
             fontFamily: `Greycliff CF, ${theme.fontFamily}`,
             fontWeight: 900,
@@ -124,7 +128,7 @@ const onSubmit = isEmailPage
         >
           {page !== ResetSteps.STEP_THREE ? "Reset your Password!" : "Create new password!"}
         </Title>
-        <Text color="dimmed" size="sm" align="center" mt={5}>
+        <Text color="dimmed" size="sm"  mt={5} mb="xl">
           {isEmailPage ? (
             <>We will send you an email to reset your password.
             </>
@@ -134,7 +138,6 @@ const onSubmit = isEmailPage
           )}
         </Text>
 
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <form onSubmit={isEmailPage ?  emailForm.onSubmit(onSubmit) : pwdForm.onSubmit(onSubmit)}>
           
         {
@@ -166,14 +169,21 @@ const onSubmit = isEmailPage
             </>
         }
 
-          <Button fullWidth mt="xl" type="submit"  loading ={isLoading}>
-            {isEmailPage ? "Email Reset Link" : "Change Password"}
-          </Button>
-          <Group position="apart" mt="lg">
+          <RateupButtonSecondary
+            mt="xl"
+            size="md"
+            fullWidth={true} type="submit"  loading ={isLoading}
+            title={isEmailPage ? "Email Reset Link" : "Change Password"}
+          />
+          <Group position="center" mt="xl" pt="xl">
             {/* <Checkbox label="Remember me" /> */}
             <Anchor component="button" size="sm">
-               <Link href='/login'>
-              Go Back to Login
+               <Link href='/login' className={classes.forgot}>
+               <Group >
+                  <IconArrowLeft size="1rem"/>
+                 <Text> Go Back to Login</Text>
+               </Group>
+
                 </Link> 
             </Anchor>
           </Group>
@@ -184,13 +194,22 @@ const onSubmit = isEmailPage
 
       :
       <Container  size={420} my={40}>
-        <Paper withBorder shadow="lg" p={30} mt={30} radius="md">
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="RateUp Logo" width={90} height={60} />
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7"}}>
+        <Link href="/">
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+        </Link>
             <Space h="lg" />
-            <Title>Check your email</Title>
-            <Space h="md" />
+            <Title order={2}>Check your email</Title>
+            <Space h="xl" />
             <Text>A password reset email has been sent to <Text span c="blue" inherit>{emailTo}</Text> . If it exists in our system. </Text>
             <Space h="xl" />
+
+            <Group position="center" py="xl">
+               <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="email" width={90} height={60} />
+            </Group>
+
+            <Space h="xl" />
+
             <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
               >
                 <Link href="/login/reset-password" style={{ textDecoration: 'none', }}>

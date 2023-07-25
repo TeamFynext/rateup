@@ -140,7 +140,8 @@ const ProfileSettings = () => {
                 </Stack>
               </Grid.Col>
               <Grid.Col md={6} lg={3} >
-                <Stack justify='center'>
+                <Stack justify='center'     sx={{maxWidth:"200px"}}
+>
                   <FileButton  onChange={setFile} accept="image/png,image/jpeg">
                 {(props) => <Button fullWidth size="sm" radius="lg"
                     variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Change Photo</Button>}
@@ -157,8 +158,9 @@ const ProfileSettings = () => {
             <form onSubmit={profileForm.onSubmit(onSubmit)}>
 
                 <Grid>
-                <Grid.Col  md={6} lg={2}>
+                <Grid.Col  md={3} lg={2}>
                 <Select
+                      sx={{maxWidth:"250px"}}
                     label="Title"
                     placeholder="Select"
                     data={[
@@ -172,6 +174,7 @@ const ProfileSettings = () => {
                 </Grid.Col>
                 <Grid.Col  md={6} lg={4}>
                     <TextInput
+                        sx={{maxWidth:"250px"}}
                         label="Name"
                         placeholder="Enter your full name"
                         {...profileForm.getInputProps('name')}
@@ -180,16 +183,18 @@ const ProfileSettings = () => {
                     </Grid.Col>
                 </Grid>
                 <Grid>
-                <Grid.Col md={6} lg={3}>              
+                <Grid.Col md={6} lg={3} >              
                 <TextInput
+                    sx={{maxWidth:"250px"}}
                     disabled
                     label="Email"
                     placeholder="Enter your email"
                     value={profileData?.data?.data?.email}
                     withAsterisk
                 /></Grid.Col>
-                <Grid.Col md={6} lg={3}>
+                <Grid.Col md={6} lg={3} >
                     <TextInput
+                        sx={{maxWidth:"250px"}}
                         withAsterisk
                         label="Phone"
                         placeholder="Enter your phone number"

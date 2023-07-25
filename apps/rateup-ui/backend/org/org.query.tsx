@@ -21,19 +21,19 @@ export function useUpdateRoleMutation() {
   return useMutation((values: {memberId: string, body: {role: string}}) => 
   updateRole(values.memberId, values.body), {
     onSuccess: () => {
-      notifications.show({
+      notifications.update({
         id: 'load-data',
         color: 'teal',
         title: 'Success',
         message: 'Member Role Updated Successfully!',
         icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
+        autoClose: 2000,
       });
       queryClient.invalidateQueries(["orgTeamsDataQuery"]);
     },
     onError: (error: any) => {
       console.error("Error Role Update:", error.message);
-      notifications.show({
+      notifications.update({
         id: 'load-data',
         color: 'red',
         title: 'Failed',

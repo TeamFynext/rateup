@@ -1,18 +1,22 @@
 import React from 'react'
 import { useUser } from '../../../context/UserContext';
 import { useRouter } from "next/router";
-import { Flex, Title, Stack, Grid, Select, Table, Text, Paper, Divider} from '@mantine/core';
+import { Flex, Badge, Title, Stack, Grid, Select, 
+  Loader , Table, Text, Paper, Divider, useMantineTheme} from '@mantine/core';
 import { useTeamsMembersOfOrg, useUpdateRoleMutation } from '../../../backend/org/org.query';
 import { QueryClient, dehydrate, useQueryClient } from '@tanstack/react-query'
 import { backendConfig } from '../../../config/backendConfig';
 import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
 import supertokensNode from 'supertokens-node'
 import { fetchTeamsMembersOfOrg } from '../../../backend/ssr/org.api';
+import { notifications } from '@mantine/notifications';
 
 const Members = () => {
   const router = useRouter();
   const { user, setUser } = useUser();
   const queryClient = useQueryClient();
+  const theme = useMantineTheme();
+
 
   if(user?.role === 'ADMIN'){
     router.push('/dashboard');
@@ -30,11 +34,28 @@ const Members = () => {
   function onChangeRole(id, role){
     const data = { memberId : id, body : { role: role }};
     updateRole.mutate(data);
+
+    notifications.show({
+        id: 'load-data',
+        loading: true,
+        title: 'Updating role..',
+        message: `Hold on, your changes are getting updated...`,
+        autoClose: false,
+        withCloseButton: false,
+    });
   }
 
   const rows = teamsDataUser?.data?.data?.map((team, i) => (
     <tr key={i}>
-      <td><Title order={3} >{team?.team_name}</Title></td>
+      <td>
+        <Stack align='center'>
+          <Title order={3} >{team?.team_name}</Title>
+
+          <Badge color={theme.colors.blue[9]} variant="outline">{team?.team_code} </Badge>
+
+        </Stack>
+      
+      </td>
 
       <td>
         {team?.members?.map((member, j: number) => (
@@ -88,7 +109,15 @@ const Members = () => {
         <Text> List of all teams and their members list.</Text>
 
     <Paper p="md" radius="md">
-        <Table horizontalSpacing="xl" 
+
+      {
+
+isLoadingTeamsUser ?
+
+<Loader />
+:
+
+<Table horizontalSpacing="xl" 
               verticalSpacing="lg" 
               fontSize="md" 
               mt='lg'
@@ -110,6 +139,7 @@ const Members = () => {
           </thead>
           <tbody>{rows}</tbody>
         </Table>
+      }      
       </Paper>
     </Flex> 
       </Flex>
