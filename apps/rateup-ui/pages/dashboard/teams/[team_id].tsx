@@ -212,7 +212,7 @@ const TeamDetails = () => {
               }}
             >
               <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab>
+              {/* <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab> */}
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
             </Tabs.List>
             </Flex>
@@ -265,7 +265,8 @@ const TeamDetails = () => {
 
             </SimpleGrid>
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Survey} mt={60}>
+
+          {/* <Tabs.Panel value={TabEnum.Survey} mt={60}>
           <SimpleGrid
               cols={4}
               spacing={"lg"}
@@ -275,7 +276,7 @@ const TeamDetails = () => {
                 { minWidth: "md", cols: 2 },
                 { maxWidth: "md", cols: 1 },
               ]}
-            >
+            > */}
               {/* <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
                 <Center h="100%">
                   <Stack align="center">
@@ -285,12 +286,13 @@ const TeamDetails = () => {
                 </Center>
               </Paper> */}
 
-              {surveys?.data?.map((s) => (
+              {/* {surveys?.data?.map((s) => (
                 <SurveyCard key={s.id} survey={s} />
               ))}
           </SimpleGrid>
 
-          </Tabs.Panel>
+          </Tabs.Panel> */}
+          
           <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <TeamSettings id={team_id?.toString()} teamData={teamsMembersData?.data?.team} />
           </Tabs.Panel>
