@@ -157,10 +157,10 @@ const ProfileSettings = () => {
         <Divider mb="xs" />
             <form onSubmit={profileForm.onSubmit(onSubmit)}>
 
-                <Grid>
-                <Grid.Col  md={3} lg={2}>
+                <Grid sx={{maxWidth:"550px"}}>
+                <Grid.Col  md={2} lg={3}>
                 <Select
-                      sx={{maxWidth:"250px"}}
+                      sx={{maxWidth:"200px"}}
                     label="Title"
                     placeholder="Select"
                     data={[
@@ -182,8 +182,8 @@ const ProfileSettings = () => {
                     />
                     </Grid.Col>
                 </Grid>
-                <Grid>
-                <Grid.Col md={6} lg={3} >              
+                <Grid sx={{maxWidth:"550px"}}>
+                <Grid.Col md={6} >              
                 <TextInput
                     sx={{maxWidth:"250px"}}
                     disabled
@@ -192,7 +192,7 @@ const ProfileSettings = () => {
                     value={profileData?.data?.data?.email}
                     withAsterisk
                 /></Grid.Col>
-                <Grid.Col md={6} lg={3} >
+                <Grid.Col md={6} >
                     <TextInput
                         sx={{maxWidth:"250px"}}
                         withAsterisk
@@ -204,12 +204,12 @@ const ProfileSettings = () => {
 
                 </Grid>
 
-          <Grid justify="flex-end" mt="md">
+          <Grid justify="flex-end" mt="md" sx={{maxWidth:"550px"}}>
 
-                <Grid.Col   md={6} lg={6}>
+                <Grid.Col   md={6} lg={6} >
               <RateupButtonSecondary type="submit" loading={isLoading} size='sm' title="Save Changes" />
                 </Grid.Col>
-                <Grid.Col  md={6} lg={4}>
+                <Grid.Col  md={6} lg={3}>
                 </Grid.Col>
 
             </Grid>
