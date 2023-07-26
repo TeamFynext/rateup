@@ -23,7 +23,7 @@ const TeamMemberCard = ({member}) => {
         {member.name}
       </Text>
       <Group align={"center"} mt="sm" spacing="xs">
-      <IconPencil />
+      {/* <IconPencil /> */}
        <TeamMemberMenu status={member.status} inviteId={member.id} /> 
       </Group>
       
