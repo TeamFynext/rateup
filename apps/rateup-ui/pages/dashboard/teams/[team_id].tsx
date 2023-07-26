@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex, Group } from '@mantine/core';
+import { Tabs, Paper, Loader, Button, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex, Group } from '@mantine/core';
 import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import {IconCheck, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -192,16 +192,14 @@ const TeamDetails = () => {
           onTabChange={(tab) => setActiveTab(tab as TabEnum)}
         >
 
-        <Flex
-            mih={50}
-            gap="md"
-            justify="flex-start"
-            align="center"
-            direction="row"
-            wrap="wrap"
-            >
-            <Title order={1} mb="sm">{teamsMembersData?.data?.team?.name || "Team"}</Title>
-            <Tabs.List
+  <Flex
+      direction={{ base: 'column', sm: 'column' }}
+      gap={{ base: 'lg', sm: 'lg' }}
+      justify={{ sm: 'center' }}
+    >
+      <Title order={1} mb="sm">{teamsMembersData?.data?.team?.name || "Team"}</Title>
+      <Group>
+        <Tabs.List
               sx={{
                 position: "absolute",
                 width: "fit-content",
@@ -215,7 +213,8 @@ const TeamDetails = () => {
               {/* <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab> */}
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
             </Tabs.List>
-            </Flex>
+        </Group>
+    </Flex>
 
           <Tabs.Panel value={TabEnum.Members} mt={60}>
             {/** TODO: Remove fixed height and make this responsive */}

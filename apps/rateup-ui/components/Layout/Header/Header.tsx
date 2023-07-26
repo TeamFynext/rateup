@@ -109,7 +109,7 @@ export function HeaderTabs({mode} : {mode?: string}) {
           <Burger opened={opened} onClick={toggle} className={classes.burger} size="sm" />
 
           <Group position="apart">
-          <Paper shadow="sm"
+          {/* <Paper shadow="sm"
                 className={classes.searchBox}
               >
               <Autocomplete
@@ -120,7 +120,7 @@ export function HeaderTabs({mode} : {mode?: string}) {
                 variant="unstyled"
                 size='md'
               />
-          </Paper>
+          </Paper> */}
               {/* <Paper shadow="sm"
                 className={classes.colorModeBox}
               >
