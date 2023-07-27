@@ -43,16 +43,30 @@ import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteSurvey, updateSurvey } from "../../../backend/surveys/survey.api";
-import { useCloneSurveyMutation, useSurveys } from "../../../backend/surveys/surveys.query";
+import { useCloneSurveyMutation, useSurveys, useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
-
-  const { isLoading, error, data: surveys } = useSurveys();
   const [sort, setSort] = useState(false)
+  const [options, setOptions] = useState([{
+    value: 'all',
+    label: 'All Teams',
+    group: 'Organization'
+  }]);
+  const [selectedTeamId, setSelectedTeamId] = useState(options[0].value)
 
+  const teamIsSelected = selectedTeamId !== 'all'; 
+
+  const { isLoading, error, data: surveys } = useSurveys(teamIsSelected);
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (selectedTeamId !== null) {
+      queryClient.invalidateQueries(['surveysByTeam', selectedTeamId]);
+    }
+  }, [selectedTeamId, queryClient]);
+    
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsDataUser,
@@ -62,12 +76,10 @@ export default function Surveys() {
 
   let teamsData = teamsDataUser?.data?.data
 
-  const [options, setOptions] = useState([{
-    value: 'all',
-    label: 'All Teams',
-    group: 'Organization'
-  }]);
 
+ const { isLoading: isLoadingSurveys, error: errSurveysByTeams, data: surveysByTeam } 
+      = useSurveysByTeam(selectedTeamId, teamIsSelected);
+    
   useEffect(() => {
     //console.log("test.........."+JSON.stringify(teamsData))
     if(teamsData?.length){
@@ -86,6 +98,9 @@ export default function Surveys() {
   
   }, [teamsData])
   
+  useEffect(() => {
+    queryClient.invalidateQueries(['surveysByTeam', selectedTeamId]);
+  }, [selectedTeamId])
 
   if (isLoading) return <Loader />;
   if (error || !Array.isArray(surveys)) {
@@ -118,6 +133,8 @@ export default function Surveys() {
                 mt="xs"
                 data={options}
                 defaultValue={options[0].value} 
+                value={selectedTeamId}
+                onChange={setSelectedTeamId}
               />     
           </Flex>
 
@@ -138,11 +155,12 @@ export default function Surveys() {
                         size="1rem" />}
                 />
               </Menu.Target>
-{/* 
+            {/* 
               <Menu.Dropdown >
                 <Menu.Item color="teal" icon={<IconCheck size={14} />}>Active</Menu.Item>
                 <Menu.Item color="red" icon={<IconX size={14} />}>Inactive</Menu.Item>
-              </Menu.Dropdown> */}
+              </Menu.Dropdown>
+               */}
             </Menu>
 
           <RateupButtonPrimary
@@ -176,9 +194,21 @@ export default function Surveys() {
           </Center>
         </Paper>
 
-        {surveys.map((s) => (
-          <SurveyCard key={s.id} survey={s} />
-        ))}
+        {
+          (teamIsSelected 
+            ? (surveysByTeam?.data?.length > 0 ? [...surveysByTeam?.data] : []) 
+            : [...surveys]
+          )
+          .slice()
+          .sort((a, b) => sort 
+    ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+)
+          .map((s) => (
+            <SurveyCard key={s.id} survey={s} />
+          ))
+        }
+
       </SimpleGrid>
       <CreateSurveyModal open={createSurveyOpened} close={close} />
     </Container>
@@ -274,6 +304,7 @@ function SurveyMenu({ survey }) {
         autoClose: true,
       });
       queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(['surveysByTeam']);
     },
   });
 
