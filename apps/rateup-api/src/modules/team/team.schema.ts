@@ -62,6 +62,7 @@ const inviteCompleteRequestSchema = z.object({
 
 const editTeamSchema = z.object({
   name: z.string().min(4),
+  code: z.string().min(2),
   googleLink: z.string().min(10),
 });
 

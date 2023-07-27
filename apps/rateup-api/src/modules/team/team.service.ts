@@ -456,7 +456,7 @@ export async function getTeamsByUserId(userId: string) {
 }
 
 
-export async function editTeam({ name, googleLink }: EditTeamInput, params: IdParamInput, 
+export async function editTeam({ name, code, googleLink }: EditTeamInput, params: IdParamInput, 
    request: FastifyRequest,
   reply: FastifyReply) {
 
@@ -467,6 +467,7 @@ export async function editTeam({ name, googleLink }: EditTeamInput, params: IdPa
     where: { id: params.id },
     data: {
       name,
+      code,
       googleLink
     },
   });
