@@ -14,7 +14,8 @@ import {
   useMantineTheme,
   Group,
   Loader,
-  Space
+  Space,
+  Select
 } from "@mantine/core";
 import {
   IconChartBar,
@@ -43,12 +44,48 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteSurvey, updateSurvey } from "../../../backend/surveys/survey.api";
 import { useCloneSurveyMutation, useSurveys } from "../../../backend/surveys/surveys.query";
+import { useTeamsByUser } from "../../../backend/team/team.query";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
 
   const { isLoading, error, data: surveys } = useSurveys();
   const [sort, setSort] = useState(false)
+
+  const queryClient = useQueryClient()
+  const {
+    isLoading: isLoadingTeamsUser,
+    data: teamsDataUser,
+    error: errorTeamsDataUser,
+    refetch: reftchTeams,
+  } = useTeamsByUser(queryClient);
+
+  let teamsData = teamsDataUser?.data?.data
+
+  const [options, setOptions] = useState([{
+    value: 'all',
+    label: 'All Teams',
+    group: 'Organization'
+  }]);
+
+  useEffect(() => {
+    //console.log("test.........."+JSON.stringify(teamsData))
+    if(teamsData?.length){
+      const newOptions = teamsData?.map((team) => ({
+        value: team?.teamId,
+        label: team?.teamName,
+        group: 'Team',
+      }));
+  
+      setOptions((prev) => {
+        const uniqueValues = new Set(prev.map(option => option.value));
+        const nonDuplicateOptions = newOptions.filter(option => !uniqueValues.has(option.value));
+        return [...prev, ...nonDuplicateOptions];
+      });
+    }
+  
+  }, [teamsData])
+  
 
   if (isLoading) return <Loader />;
   if (error || !Array.isArray(surveys)) {
@@ -70,12 +107,18 @@ export default function Surveys() {
               mih={50}
               gap="md"
               justify="flex-start"
-              align="flex-start"
-              direction="column"
+              align="center"
+              direction="row"
               wrap="wrap"
+              mb="md"
           >
-              <Title order={1} mb="md">All Surveys</Title>
-                  
+              <Title order={1} >Surveys : </Title>
+
+              <Select
+                mt="xs"
+                data={options}
+                defaultValue={options[0].value} 
+              />     
           </Flex>
 
           <Flex

@@ -24,7 +24,7 @@ import { useTeamsByUser } from '../../../backend/team/team.query';
 
 
 const TeamDetails = () => {
-  // Get the team ID from the router
+  // TODO fix id fail case on page reload
   const router = useRouter();
   const { team_code  } = router.query;
   const [opened, { open, close }] = useDisclosure(false);
