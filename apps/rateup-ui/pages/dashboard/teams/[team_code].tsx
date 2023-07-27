@@ -9,23 +9,23 @@ import validateNameAndEmail from "./validation";
 import { QueryClient, dehydrate, useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from '@tanstack/react-query'
 import { getOrgIdRole, getUserID } from '../../../utils/userInfo';
-import { getTeamMembersFromInvitation, inviteTeamMember, getTeamSurveys } from '../../../backend/team/team.api';
+import { getTeamMembersFromInvitation, inviteTeamMember } from '../../../backend/team/team.api';
 import StyledTabs from '../surveys/StyledTabs';
 import TeamMemberCard from './TeamMemberCard';
 import { IconPlus } from '@tabler/icons-react';
 import { backendConfig } from '../../../config/backendConfig';
 import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
 import supertokensNode from 'supertokens-node'
-import { fetchTeamSurveys, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
-import { SurveyCard } from '../surveys';
+import { fetchTeamsByUser, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
 import { useRouteParams } from '../../../context/RouteParamsContext';
 import TeamSettings from './TeamSettings';
+import { useTeamsByUser } from '../../../backend/team/team.query';
 
 
 const TeamDetails = () => {
-  // Get the team ID from the router
+  // TODO fix id fail case on page reload
   const router = useRouter();
-  const { team_id  } = router.query;
+  const { team_code  } = router.query;
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,6 +34,18 @@ const TeamDetails = () => {
 
   const queryClient = useQueryClient()
   const { state, update } = useRouteParams();
+
+  const {
+    isLoading: isLoadingTeamsUser,
+    data: teamsDataUser,
+    error: errorTeamsDataUser,
+    refetch: reftchTeams,
+  } = useTeamsByUser(queryClient);
+
+  let teamsData = teamsDataUser?.data?.data
+  let teamCode : string = team_code?.toString();
+
+  let team_id = getTeamIdByCode(teamsData, teamCode)
 
   enum TabEnum {
     Members = "Members",
@@ -45,7 +57,7 @@ const TeamDetails = () => {
   const handleMemberInvite = async () => {
         const { orgId } = await getOrgIdRole()
         const { userId } = await getUserID()
-        let teamId : string = team_id.toString();
+        let teamId : string = team_id?.toString();
         let type = "TEAM"
         const data = { name, email, orgId, type, teamId, invitedBy: userId }
         return inviteTeamMember(data)
@@ -96,32 +108,14 @@ const TeamDetails = () => {
         initialData: () => queryClient.getQueryData(["teamDetailsPrefetch"]),
         onSuccess: (data) => {
           console.log("Initial Prefetch MData:", queryClient.getQueryData(["teamDetailsPrefetch"]));
-  
           console.log("New fetch MData:", data);
-  
         },
     })
 
     useEffect(() => {
-      update({ team_id: teamsMembersData?.data?.team?.name });
+      update({ team_code: teamsMembersData?.data?.team?.name });
     }, [teamsMembersData?.data])
 
-    const {
-      isLoading: isLoadingSurveys,
-      data: surveys,
-      error: errorTeamsSurveysData,
-      refetch: refetchSurveys,
-  } = useQuery(["teamSurveysQuery"], () => getTeamSurveys(team_id.toString()), {
-      refetchOnWindowFocus: "always",
-      refetchOnMount: "always",
-      initialData: () => queryClient.getQueryData(["teamSurveysPrefetch"]),
-      onSuccess: (data) => {
-        console.log("Initial Prefetch SData:", queryClient.getQueryData(["teamSurveysPrefetch"]));
-
-        console.log("New fetch SData:", surveys);
-
-      },
-  })
 
     const handleSubmit = async () => {
 
@@ -192,16 +186,14 @@ const TeamDetails = () => {
           onTabChange={(tab) => setActiveTab(tab as TabEnum)}
         >
 
-        <Flex
-            mih={50}
-            gap="md"
-            justify="flex-start"
-            align="center"
-            direction="row"
-            wrap="wrap"
-            >
-            <Title order={1} mb="sm">{teamsMembersData?.data?.team?.name || "Team"}</Title>
-            <Tabs.List
+  <Flex
+      direction={{ base: 'column', sm: 'column' }}
+      gap={{ base: 'lg', sm: 'lg' }}
+      justify={{ sm: 'center' }}
+    >
+      <Title order={1} mb="sm">{teamsMembersData?.data?.team?.name || "Team"}</Title>
+      <Group>
+        <Tabs.List
               sx={{
                 position: "absolute",
                 width: "fit-content",
@@ -212,10 +204,10 @@ const TeamDetails = () => {
               }}
             >
               <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
             </Tabs.List>
-            </Flex>
+        </Group>
+    </Flex>
 
           <Tabs.Panel value={TabEnum.Members} mt={60}>
             {/** TODO: Remove fixed height and make this responsive */}
@@ -265,32 +257,7 @@ const TeamDetails = () => {
 
             </SimpleGrid>
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Survey} mt={60}>
-          <SimpleGrid
-              cols={4}
-              spacing={"lg"}
-              breakpoints={[
-                { minWidth: "xl", cols: 3 },
-                { minWidth: "lg", cols: 2 },
-                { minWidth: "md", cols: 2 },
-                { maxWidth: "md", cols: 1 },
-              ]}
-            >
-              {/* <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
-                <Center h="100%">
-                  <Stack align="center">
-                    <IconPlus size={36}/>
-                    <Text size="xl" fw={700}>Add Survey</Text>
-                  </Stack>
-                </Center>
-              </Paper> */}
-
-              {surveys?.data?.map((s) => (
-                <SurveyCard key={s.id} survey={s} />
-              ))}
-          </SimpleGrid>
-
-          </Tabs.Panel>
+          
           <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <TeamSettings id={team_id?.toString()} teamData={teamsMembersData?.data?.team} />
           </Tabs.Panel>
@@ -298,37 +265,57 @@ const TeamDetails = () => {
             </StyledTabs>
 
         <Space h="xl" />
-
-                    
+                
     </>
   );
 };
 
 export default TeamDetails;
 
+export  function getTeamIdByCode(teamsData, code) {
+  let teamId = '';
+  teamsData?.forEach(team => {
+    if (team.code === code) {
+      teamId = team.teamId;
+    }
+  });
+  return teamId;
+}
+
 
 export async function getServerSideProps(context) {
-  const { team_id } = context.query;
-  let teamId : string = team_id.toString();
+  const { team_code } = context.query;
+  let teamCode : string = team_code?.toString();
   const queryClient = new QueryClient();
-  // const queryClient = useQueryClient();
 
   supertokensNode.init(backendConfig());
   const session = await getSessionWithRefreshHandling(context);
-  const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
-  () => getTeamMembersFromInvite(teamId, session));
 
-  const teamInitialSurveys = await queryClient.prefetchQuery(["teamSurveysPrefetch"], 
-  () => fetchTeamSurveys(teamId, session));
+  const teamsData = await queryClient.prefetchQuery(["teamDataPrefetch"], 
+  () => fetchTeamsByUser(session));
 
-  console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
-  console.log("Prefetched  Team Survey data: ", JSON.stringify(teamInitialSurveys));
+  let teamId = getTeamIdByCode(teamsData, teamCode)
 
-  console.log("Team Id: ", teamId);
+  console.log("test..........:"+teamId)
+
+  if(teamId){
+
+    const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
+    () => getTeamMembersFromInvite(teamId, session));
+  
+ 
+    console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
+  
+    console.log("Team Id: ", teamId);
+  
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  }
 
   return {
-    props: {
-      dehydratedState: dehydrate(queryClient),
-    },
+    props: {},
   };
 }

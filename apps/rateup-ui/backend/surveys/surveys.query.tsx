@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cloneSurvey, createSurvey, getPublicSurvey, getSurvey, getSurveys, updateSurvey, updateSurveyCompleted, updateSurveyPassword, updateSurveyStarted, updateSurveyVisited, verifySurveyPassword } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { getTeamSurveys } from "../team/team.api";
 
 export const useSurvey = (surveyId: string) => useQuery({
   enabled: !!surveyId,
@@ -15,10 +16,17 @@ export const usePublicSurvey = (surveyId: string) => useQuery({
   queryFn: () => getPublicSurvey(surveyId),
 })
 
-export const useSurveys = () => useQuery({
+export const useSurveys = (teamIsSelected) => useQuery({
+  enabled: !teamIsSelected,
   queryKey: ['surveys'],
   queryFn: getSurveys
 })
+
+export const useSurveysByTeam = (teamId: string, teamIsSelected) => useQuery({
+  enabled: teamIsSelected,
+  queryKey: ["surveysByTeam", teamId],
+  queryFn: () => getTeamSurveys(teamId),
+});
 
 type MyProps = {
   close: () => void;
@@ -34,6 +42,7 @@ export const useCreateSurveyMutation = ({close} : MyProps) => {
         message: "Created!"
       });
       queryClient.invalidateQueries(['surveys']);
+      queryClient.invalidateQueries(['surveysByTeam'])
       close();
     }
   })
@@ -53,7 +62,7 @@ export function useCloneSurveyMutation() {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(['surveysByTeam']);
       queryClient.invalidateQueries(["survey"]);
     },
     onError: (error: any) => {

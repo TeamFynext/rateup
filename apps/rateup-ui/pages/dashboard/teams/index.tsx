@@ -59,7 +59,7 @@ export default function Teams() {
     let teamsData = teamsDataUser?.data
 
     useEffect(() => {
-        console.log(teamsDataUser?.data?.data);
+        console.log("TEAMS DATA::"+JSON.stringify(teamsDataUser?.data?.data));
     }, [teamsDataUser]);
 
     const onSubmit = (values) => {
@@ -85,8 +85,8 @@ export default function Teams() {
     //     return null;
     // }
 
-    function viewTeam(id) {
-        router.push(`/dashboard/teams/${id}`)
+    function viewTeam(code) {
+        router.push(`/dashboard/teams/${code}`)
     }
     
     return (
@@ -193,19 +193,19 @@ export default function Teams() {
                             cols={4}
                             spacing={"lg"}
                             breakpoints={[
-                            { minWidth: "xl", cols: 3 },
-                            { minWidth: "lg", cols: 2 },
+                            { minWidth: "xl", cols: 4 },
+                            { minWidth: "lg", cols: 3 },
                             { minWidth: "md", cols: 2 },
                             { maxWidth: "md", cols: 1 },
                             ]}
                             >
-                            <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
-                            <Center h="100%">
-                                <Stack align="center">
-                                <IconPlus size={36}/>
-                                <Text size="xl" fw={700}>Add Team</Text>
-                                </Stack>
-                            </Center>
+                            <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer",  width:"250px", height:"140px" }} onClick={open}>
+                                <Center h="100%">
+                                    <Stack align="center">
+                                    <IconPlus size={36}/>
+                                    <Text size="xl" fw={700}>Add Team</Text>
+                                    </Stack>
+                                </Center>
                             </Paper>
 
 

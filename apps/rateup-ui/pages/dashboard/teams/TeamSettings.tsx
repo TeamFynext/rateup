@@ -17,12 +17,19 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
     const teamForm = useForm({
         initialValues: {
             name: "",
+            code: "",
             googleLink: "",
         },
         validate: {
             name: (value) => {
                 if (value.length < 4) {
                     return 'Name should be min 4 characters';
+                }
+                return null; // Validation passed
+            },
+            code: (value) => {
+                if (value.length < 2) {
+                    return 'Code should be min 3 characters';
                 }
                 return null; // Validation passed
             },
@@ -41,6 +48,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
         if (teamData?.name) {
             teamForm.setValues({
                 name: teamData?.name || "",
+                code: teamData?.code || "",
                 googleLink: teamData?.googleLink || "",
             });
         }
@@ -50,7 +58,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
     const editTeam = useEditTeamMutation(id, setIsLoading);
     const onSubmit = (values) => {
         setIsLoading(true);
-        const data = { name: values.name, googleLink: values.googleLink };
+        const data = { name: values.name, code: values.code, googleLink: values.googleLink };
         editTeam.mutate(data);
     }
 
@@ -78,6 +86,20 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                     <Divider my="xl" />
                     <Grid align='center'>
                         <Grid.Col md={6} lg={4}>
+                            <Text size={'md'}>Team Code: </Text>
+                        </Grid.Col>
+                        <Grid.Col md={6} lg={4}>
+                            <TextInput
+                                placeholder="Enter team code"
+                                required
+                                mt="md"
+                                {...teamForm.getInputProps('code')}
+                            />
+                        </Grid.Col>
+                    </Grid>
+                    <Divider my="xl" />
+                    <Grid align='center'>
+                        <Grid.Col md={6} lg={4}>
                             <Text size={'md'}>Google Reviews Link: </Text>
                         </Grid.Col>
                         <Grid.Col md={6} lg={4}>
@@ -89,10 +111,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                             />
                         </Grid.Col>
                     </Grid>
-
-
                     <Divider my="xl" />
-
                     <Grid justify="flex-end">
                         <Grid.Col span={2}>
                             <RateupButtonSecondary type="submit" loading={isLoading} size='md' title="Save Changes" />

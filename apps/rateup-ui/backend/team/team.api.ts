@@ -6,7 +6,6 @@ export interface ICreateTeam {
     userId: string;
 }
 
-
 export interface IInviteMember {
     name: string; 
     orgId: string; 
@@ -18,6 +17,7 @@ export interface IInviteMember {
 export interface IEditTeam {
     name: string; 
     googleLink: string; 
+    code: string; 
 }
 
 export const createTeam = (data: ICreateTeam) => axiosClient({
