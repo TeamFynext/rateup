@@ -1,11 +1,6 @@
-import { Flex, Group,Stack, Menu, Paper, Space, Text,Badge, ActionIcon, useMantineTheme } from '@mantine/core';
-import { IconChartBar, IconDots, IconEdit, IconPencil, IconSettings, IconShare, IconTrash } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Flex, Group,Stack,  Paper, Space, Text,Badge, useMantineTheme } from '@mantine/core';
 import { useRouter } from 'next/router';
-import React, {useEffect, useState} from 'react'
-import { deleteTeamById } from '../../../backend/team/team.api';
-import { useDeleteTeamMutation } from '../../../backend/team/team.query';
-import { notifications } from '@mantine/notifications';
+import React from 'react'
 
 const TeamCard = ({team, reftchTeams}) => {
     const theme = useMantineTheme();
@@ -21,12 +16,7 @@ const TeamCard = ({team, reftchTeams}) => {
       <Flex justify={"space-between"} align={"center"}>
         <Text mr={"sm"} truncate size="xl" fw={700}>
           {team.teamName}
-        </Text>
-        {/* <Group align={"center"} mt="sm" spacing="xs">
-        <IconPencil />
-         <TeamMenu reftchTeams={reftchTeams}  team={team} /> 
-        </Group> */}
-        
+        </Text>        
       </Flex>
       <Stack  mt="sm" spacing="xs">
 
@@ -51,61 +41,5 @@ const TeamCard = ({team, reftchTeams}) => {
     </Paper>
   )
 }
-
-// function TeamMenu({ reftchTeams, team }) {
-//     const [deleteTeamId, setDeleteTeamId] = useState<string>();
-//     useEffect(() => {
-//         deleteTeamId && deleteTeamMutation.mutate();
-//         if (deleteTeamId) {
-//             notifications.show({
-//                 id: 'load-data',
-//                 loading: true,
-//                 title: 'Deleting Team..',
-//                 message: `Hold on, Your team is getting deleted.`,
-//                 autoClose: false,
-//                 withCloseButton: false,
-//             });
-
-//         }
-//     }, [deleteTeamId]);
-
-//     const handleDeleteTeam = async () => {
-//         return deleteTeamById(deleteTeamId)
-//     };
-
-//     const deleteTeamMutation = useDeleteTeamMutation(handleDeleteTeam, setDeleteTeamId, close, reftchTeams);
-
-//     return (
-//       <Menu width={200}>
-//         <Menu.Target>
-//           <ActionIcon
-//             onClick={(e) => {
-//               e.stopPropagation();
-//             }}
-//           >
-//             <IconDots />
-//           </ActionIcon>
-//         </Menu.Target>
-//         <Menu.Dropdown
-//           onClick={(e) => {
-//             e.stopPropagation();
-//           }}
-//         >
-//           <Menu.Item icon={<IconEdit />}>Edit</Menu.Item>
-//           <Menu.Item icon={<IconShare />}>Invite</Menu.Item>
-//           <Menu.Item icon={<IconSettings />}>Settings</Menu.Item>
-//           <Menu.Item
-//             icon={<IconTrash />}
-//             onClick={(e) =>  {
-//                 e.stopPropagation();
-//                 setDeleteTeamId(team?.teamId)
-//               }}
-//           >
-//             Delete
-//           </Menu.Item>
-//         </Menu.Dropdown>
-//       </Menu>
-//     );
-//   }
 
 export default TeamCard

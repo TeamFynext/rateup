@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Tabs, Paper, Loader, Button, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex, Group } from '@mantine/core';
+import { Tabs, Paper, Loader, Stack, Title, Modal, SimpleGrid, Box, TextInput, Space, Text, Center, Flex, Group } from '@mantine/core';
 import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import {IconCheck, IconReload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -9,15 +9,14 @@ import validateNameAndEmail from "./validation";
 import { QueryClient, dehydrate, useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from '@tanstack/react-query'
 import { getOrgIdRole, getUserID } from '../../../utils/userInfo';
-import { getTeamMembersFromInvitation, inviteTeamMember, getTeamSurveys } from '../../../backend/team/team.api';
+import { getTeamMembersFromInvitation, inviteTeamMember } from '../../../backend/team/team.api';
 import StyledTabs from '../surveys/StyledTabs';
 import TeamMemberCard from './TeamMemberCard';
 import { IconPlus } from '@tabler/icons-react';
 import { backendConfig } from '../../../config/backendConfig';
 import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
 import supertokensNode from 'supertokens-node'
-import { fetchTeamSurveys, fetchTeamsByUser, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
-import { SurveyCard } from '../surveys';
+import { fetchTeamsByUser, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
 import { useRouteParams } from '../../../context/RouteParamsContext';
 import TeamSettings from './TeamSettings';
 import { useTeamsByUser } from '../../../backend/team/team.query';
@@ -117,22 +116,6 @@ const TeamDetails = () => {
       update({ team_code: teamsMembersData?.data?.team?.name });
     }, [teamsMembersData?.data])
 
-    const {
-      isLoading: isLoadingSurveys,
-      data: surveys,
-      error: errorTeamsSurveysData,
-      refetch: refetchSurveys,
-  } = useQuery(["teamSurveysQuery"], () => getTeamSurveys(team_id.toString()), {
-      refetchOnWindowFocus: "always",
-      refetchOnMount: "always",
-      initialData: () => queryClient.getQueryData(["teamSurveysPrefetch"]),
-      onSuccess: (data) => {
-        console.log("Initial Prefetch SData:", queryClient.getQueryData(["teamSurveysPrefetch"]));
-
-        console.log("New fetch SData:", surveys);
-
-      },
-  })
 
     const handleSubmit = async () => {
 
@@ -221,7 +204,6 @@ const TeamDetails = () => {
               }}
             >
               <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
-              {/* <Tabs.Tab value={TabEnum.Survey}>Survey</Tabs.Tab> */}
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
             </Tabs.List>
         </Group>
@@ -275,33 +257,6 @@ const TeamDetails = () => {
 
             </SimpleGrid>
           </Tabs.Panel>
-
-          {/* <Tabs.Panel value={TabEnum.Survey} mt={60}>
-          <SimpleGrid
-              cols={4}
-              spacing={"lg"}
-              breakpoints={[
-                { minWidth: "xl", cols: 3 },
-                { minWidth: "lg", cols: 2 },
-                { minWidth: "md", cols: 2 },
-                { maxWidth: "md", cols: 1 },
-              ]}
-            > */}
-              {/* <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
-                <Center h="100%">
-                  <Stack align="center">
-                    <IconPlus size={36}/>
-                    <Text size="xl" fw={700}>Add Survey</Text>
-                  </Stack>
-                </Center>
-              </Paper> */}
-
-              {/* {surveys?.data?.map((s) => (
-                <SurveyCard key={s.id} survey={s} />
-              ))}
-          </SimpleGrid>
-
-          </Tabs.Panel> */}
           
           <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <TeamSettings id={team_id?.toString()} teamData={teamsMembersData?.data?.team} />
@@ -310,8 +265,7 @@ const TeamDetails = () => {
             </StyledTabs>
 
         <Space h="xl" />
-
-                    
+                
     </>
   );
 };
@@ -349,11 +303,8 @@ export async function getServerSideProps(context) {
     const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
     () => getTeamMembersFromInvite(teamId, session));
   
-    const teamInitialSurveys = await queryClient.prefetchQuery(["teamSurveysPrefetch"], 
-    () => fetchTeamSurveys(teamId, session));
-  
+ 
     console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
-    console.log("Prefetched  Team Survey data: ", JSON.stringify(teamInitialSurveys));
   
     console.log("Team Id: ", teamId);
   
