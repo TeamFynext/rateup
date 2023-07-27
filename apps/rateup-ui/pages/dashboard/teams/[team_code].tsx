@@ -16,16 +16,17 @@ import { IconPlus } from '@tabler/icons-react';
 import { backendConfig } from '../../../config/backendConfig';
 import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
 import supertokensNode from 'supertokens-node'
-import { fetchTeamSurveys, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
+import { fetchTeamSurveys, fetchTeamsByUser, getTeamMembersFromInvite } from '../../../backend/ssr/team.api';
 import { SurveyCard } from '../surveys';
 import { useRouteParams } from '../../../context/RouteParamsContext';
 import TeamSettings from './TeamSettings';
+import { useTeamsByUser } from '../../../backend/team/team.query';
 
 
 const TeamDetails = () => {
   // Get the team ID from the router
   const router = useRouter();
-  const { team_id  } = router.query;
+  const { team_code  } = router.query;
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,6 +35,18 @@ const TeamDetails = () => {
 
   const queryClient = useQueryClient()
   const { state, update } = useRouteParams();
+
+  const {
+    isLoading: isLoadingTeamsUser,
+    data: teamsDataUser,
+    error: errorTeamsDataUser,
+    refetch: reftchTeams,
+  } = useTeamsByUser(queryClient);
+
+  let teamsData = teamsDataUser?.data?.data
+  let teamCode : string = team_code?.toString();
+
+  let team_id = getTeamIdByCode(teamsData, teamCode)
 
   enum TabEnum {
     Members = "Members",
@@ -45,7 +58,7 @@ const TeamDetails = () => {
   const handleMemberInvite = async () => {
         const { orgId } = await getOrgIdRole()
         const { userId } = await getUserID()
-        let teamId : string = team_id.toString();
+        let teamId : string = team_id?.toString();
         let type = "TEAM"
         const data = { name, email, orgId, type, teamId, invitedBy: userId }
         return inviteTeamMember(data)
@@ -96,14 +109,12 @@ const TeamDetails = () => {
         initialData: () => queryClient.getQueryData(["teamDetailsPrefetch"]),
         onSuccess: (data) => {
           console.log("Initial Prefetch MData:", queryClient.getQueryData(["teamDetailsPrefetch"]));
-  
           console.log("New fetch MData:", data);
-  
         },
     })
 
     useEffect(() => {
-      update({ team_id: teamsMembersData?.data?.team?.name });
+      update({ team_code: teamsMembersData?.data?.team?.name });
     }, [teamsMembersData?.data])
 
     const {
@@ -307,29 +318,53 @@ const TeamDetails = () => {
 
 export default TeamDetails;
 
+export  function getTeamIdByCode(teamsData, code) {
+  let teamId = '';
+  teamsData?.forEach(team => {
+    if (team.code === code) {
+      teamId = team.teamId;
+    }
+  });
+  return teamId;
+}
+
 
 export async function getServerSideProps(context) {
-  const { team_id } = context.query;
-  let teamId : string = team_id.toString();
+  const { team_code } = context.query;
+  let teamCode : string = team_code?.toString();
   const queryClient = new QueryClient();
-  // const queryClient = useQueryClient();
 
   supertokensNode.init(backendConfig());
   const session = await getSessionWithRefreshHandling(context);
-  const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
-  () => getTeamMembersFromInvite(teamId, session));
 
-  const teamInitialSurveys = await queryClient.prefetchQuery(["teamSurveysPrefetch"], 
-  () => fetchTeamSurveys(teamId, session));
+  const teamsData = await queryClient.prefetchQuery(["teamDataPrefetch"], 
+  () => fetchTeamsByUser(session));
 
-  console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
-  console.log("Prefetched  Team Survey data: ", JSON.stringify(teamInitialSurveys));
+  let teamId = getTeamIdByCode(teamsData, teamCode)
 
-  console.log("Team Id: ", teamId);
+  console.log("test..........:"+teamId)
+
+  if(teamId){
+
+    const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
+    () => getTeamMembersFromInvite(teamId, session));
+  
+    const teamInitialSurveys = await queryClient.prefetchQuery(["teamSurveysPrefetch"], 
+    () => fetchTeamSurveys(teamId, session));
+  
+    console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
+    console.log("Prefetched  Team Survey data: ", JSON.stringify(teamInitialSurveys));
+  
+    console.log("Team Id: ", teamId);
+  
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  }
 
   return {
-    props: {
-      dehydratedState: dehydrate(queryClient),
-    },
+    props: {},
   };
 }

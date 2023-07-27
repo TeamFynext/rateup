@@ -10,13 +10,12 @@ import { notifications } from '@mantine/notifications';
 const TeamCard = ({team, reftchTeams}) => {
     const theme = useMantineTheme();
     const router = useRouter();
-
   return (
     <Paper
       p="md"shadow="lg" radius="lg"
       sx={{ cursor: "pointer", width:"250px", height:"140px" }}
       onClick={() => {
-        router.push(`teams/${team.teamId}`);
+        router.push(`teams/${team.code}`);
       }}
     >
       <Flex justify={"space-between"} align={"center"}>

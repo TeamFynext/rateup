@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 
 interface RouteParamsState {
-  team_id: string;
+  team_code: string;
   surveyId: string;
 }
 
@@ -12,7 +12,7 @@ interface RouteParamsContextData {
 
 const RouteParamsContext = createContext<RouteParamsContextData>({
   state: {
-    team_id: '',
+    team_code: '',
     surveyId: '',
   },
   update: () => {},
@@ -29,7 +29,7 @@ interface RouteParamsProviderProps {
 
 export const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({ children }) => {
   const [state, update] = useReducer(reducer, {
-    team_id: 'Team Name',
+    team_code: 'Team Name',
     surveyId: 'Survey Name',
   });
 

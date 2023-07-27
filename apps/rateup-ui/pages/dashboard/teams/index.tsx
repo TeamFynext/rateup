@@ -59,7 +59,7 @@ export default function Teams() {
     let teamsData = teamsDataUser?.data
 
     useEffect(() => {
-        console.log(teamsDataUser?.data?.data);
+        console.log("TEAMS DATA::"+JSON.stringify(teamsDataUser?.data?.data));
     }, [teamsDataUser]);
 
     const onSubmit = (values) => {
@@ -85,8 +85,8 @@ export default function Teams() {
     //     return null;
     // }
 
-    function viewTeam(id) {
-        router.push(`/dashboard/teams/${id}`)
+    function viewTeam(code) {
+        router.push(`/dashboard/teams/${code}`)
     }
     
     return (
