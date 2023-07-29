@@ -12,6 +12,7 @@ export async function getLoggedUserInfoHandler(
 ) {
   try {
     const userData =  await getLoggedUserInfo(request, reply);
+    console.log(userData,">>user data disp")
     if (!userData) {
       reply.code(200).send({ message: "No user data found" });
     } else {

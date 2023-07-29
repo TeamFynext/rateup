@@ -6,6 +6,7 @@ import {
   getSurveyById,
   getSurveysByTeam,
   getSurveysByUserId,
+  getWhatsappSurveysByUserId,
   updateCompletedSurvey,
   updateStartedSurvey,
   updateSurveyById,
@@ -28,6 +29,8 @@ export async function createSurveyHandler(
     //const userId = request.session.getUserId();
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
+
+    console.log(data,">>>data survey controller---")
     const survey = await createSurvey(data, userId);
     reply.code(201).send(survey);
   } catch (e) {
@@ -105,10 +108,31 @@ export async function getSurveysHandler(
   reply: FastifyReply
 ) {
   try {
+    console.log("gtsurvey")
     //const userId = request.session.getUserId();
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
     const surveys = await getSurveysByUserId(userId)
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e)
+    reply.code(500);
+  }
+}
+
+//------------get whatsapp surveys -------
+//--------@author:harshad
+export async function getWhatsappSurveysHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    console.log("gtsurvey")
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    let type="whatsapp"
+    const surveys = await getWhatsappSurveysByUserId(userId,type)
     reply.send(surveys);
   } catch (e) {
     console.error(e)

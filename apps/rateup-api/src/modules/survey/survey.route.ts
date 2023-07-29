@@ -8,6 +8,7 @@ import {
   getSurveysHandler,
   updateSurveyByIdHandler,
   updateSurveyPasswordHandler,
+  getWhatsappSurveysHandler
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
@@ -33,6 +34,9 @@ export async function surveyRoutes(server: FastifyInstance) {
 
   // get all surveys from user
   server.get("/", getSurveysHandler);
+
+  // get all whatsappsurveys from user
+  server.get("/whatsappsurveys", getWhatsappSurveysHandler);
 
   // get survey by id
   server.get(

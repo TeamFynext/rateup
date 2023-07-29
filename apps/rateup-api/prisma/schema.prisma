@@ -139,6 +139,7 @@ model Survey {
   isProtected Boolean          @default(false)
   password    String?
   surveyStats SurveyStats?
+  type        String          @default("web")
 }
 
 model SurveyResponse {

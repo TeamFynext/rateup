@@ -10,6 +10,7 @@ const surveyCore = {
   languages: z.array(z.string()),
   teamId: z.string({ required_error: "TeamId is required" }),
   active: z.boolean().default(true),
+  type: z.string().default("web"),
 };
 const createSurveyRequestSchema = z.object({
   ...surveyCore,
@@ -32,6 +33,7 @@ const getSurveyPublicResponseSchema = z.object({
   active: z.boolean(),
   questions: z.array(questionSchema),
   isProtected: z.boolean(),
+  type:z.string()
 })
 const updateSurveyRequestSchema = z.object({
   title: z.string({
