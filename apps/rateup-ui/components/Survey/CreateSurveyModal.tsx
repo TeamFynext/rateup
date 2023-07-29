@@ -17,10 +17,11 @@ interface FormValues {
   title: string;
   languages: Array<string>;
   teamId: string;
+  type: string;
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"])
-export function CreateSurveyModal({ open, close }) {
+let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
+export function CreateSurveyModal({ open, close, surveyType }) {
   const createSurveyMutation = useCreateSurveyMutation({ close });
   const {
     isError,
@@ -28,23 +29,31 @@ export function CreateSurveyModal({ open, close }) {
     data: teams,
   } = useQuery(["teamsByUser"], getTeamsByUser);
 
-  let teamSelectData = teams?.data?.data?.map(team => ({
+  let teamSelectData = teams?.data?.data?.map((team) => ({
     value: team.teamId,
-    label: team.teamName
+    label: team.teamName,
   }));
 
+  //------------type select data -----------
+  const typesArray = ["web", "whatsapp"];
+  let typeSelectData = typesArray.map((type) => ({
+    value: type,
+    label: type,
+  }));
 
   const form = useForm({
     initialValues: {
       title: "",
       languages: [],
       teamId: null,
+      type: surveyType ? surveyType : "web",
     },
     validate: {
       title: (value) => (value.length ? null : "Cannot be empty"),
       languages: (values) =>
         values.length ? null : "Must contain atleast one language",
       teamId: (value) => (value ? null : "Must select a team"),
+      type: (value) => (value ? null : "Must select a type"),
     },
   });
 
@@ -65,10 +74,10 @@ export function CreateSurveyModal({ open, close }) {
     // TODO: Handle error
     // throw new Error("Failed to load teams");
     notifications.show({
-      id: 'load-data',
-      color: 'red',
-      title: 'Error',
-      message: 'Failed Loading teams!',
+      id: "load-data",
+      color: "red",
+      title: "Error",
+      message: "Failed Loading teams!",
       icon: <IconX size="1rem" />,
       autoClose: 3000,
     });
@@ -103,9 +112,12 @@ export function CreateSurveyModal({ open, close }) {
               getCreateLabel={(query) => `+ Create ${query}`}
               //@ts-ignore
               onCreate={(query) => {
-                if(form.values.languages.includes(query)) return
-                form.setFieldValue("languages", [...form.values.languages, query])
-                Languages.add(query)
+                if (form.values.languages.includes(query)) return;
+                form.setFieldValue("languages", [
+                  ...form.values.languages,
+                  query,
+                ]);
+                Languages.add(query);
               }}
               {...form.getInputProps("languages")}
             />
@@ -117,6 +129,16 @@ export function CreateSurveyModal({ open, close }) {
               withAsterisk
               {...form.getInputProps("teamId")}
             />
+            {/* //-----------------survey type ----------- */}
+            {!surveyType && (
+              <Select
+                label="Type"
+                placeholder="Select survey type"
+                data={typeSelectData}
+                withAsterisk
+                {...form.getInputProps("type")}
+              />
+            )}
             <Group position="right" pt="lg">
               <Button variant="subtle" onClick={close}>
                 Cancel

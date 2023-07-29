@@ -2,6 +2,7 @@ import { axiosClient } from '../apiClient'
 
 const SURVEYURL = "/survey"
 const SURVEY_PUBLIC_URL = "/public/survey"
+const WHATSAPPSURVEYURL = "/whatsappsurvey"
 
 
 export const createSurvey = (data) => axiosClient.post(SURVEYURL, data)
@@ -15,6 +16,16 @@ export async function cloneSurvey(surveyId: string) {
 export async function getSurveys() {
     try {
         let surveys: Array<Survey> = (await axiosClient.get(SURVEYURL)).data;
+        return surveys
+    } catch (e) {
+        console.error(e)
+        return { error: "Error Occured!" }
+    }
+}
+//----get whatsapp survey list ------------
+export async function getWhatsappSurveys() {
+    try {
+        let surveys: Array<Survey> = (await axiosClient.get(`${SURVEYURL}/whatsappsurveys`)).data;
         return surveys
     } catch (e) {
         console.error(e)

@@ -23,6 +23,7 @@ declare global {
     createdAt: string;
     teamId: string;
     isProtected:boolean
+    type:string
   };
 
   type SurveyResponse = {
