@@ -1,5 +1,5 @@
 ﻿﻿import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { Flex, Title, Loader, Space, Paper, Text, Stack, Center, SimpleGrid} from '@mantine/core';
+import { Flex, Title, Loader, Space, Paper,Grid, Text, Stack, Center, SimpleGrid} from '@mantine/core';
 import { IconSquarePlus } from '@tabler/icons';
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
@@ -84,10 +84,6 @@ export default function Teams() {
     // if (sessionContext.loading === true) {
     //     return null;
     // }
-
-    function viewTeam(code) {
-        router.push(`/dashboard/teams/${code}`)
-    }
     
     return (
         <>
@@ -189,16 +185,8 @@ export default function Teams() {
                 
                 :<>
 
-                                <SimpleGrid
-                            cols={4}
-                            spacing={"lg"}
-                            breakpoints={[
-                            { minWidth: "xl", cols: 4 },
-                            { minWidth: "lg", cols: 3 },
-                            { minWidth: "md", cols: 2 },
-                            { maxWidth: "md", cols: 1 },
-                            ]}
-                            >
+<Grid>
+      <Grid.Col span="content">
                             <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer",  width:"250px", height:"140px" }} onClick={open}>
                                 <Center h="100%">
                                     <Stack align="center">
@@ -207,6 +195,7 @@ export default function Teams() {
                                     </Stack>
                                 </Center>
                             </Paper>
+                            </Grid.Col>
 
 
                                     {teamsData?.data?.length > 0 ? (
@@ -217,7 +206,10 @@ export default function Teams() {
                                 ? [...teamsData?.data]?.sort((a, b) => a.id - b.id).reverse()
                                 : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
                             ).map((team) => (
-                            <TeamCard key={team.teamId} team={team} reftchTeams={reftchTeams} />
+                                <Grid.Col span="content" >
+
+                            <TeamCard key={team.teamId} team={team} reftchTeams={reftchTeams} />                 </Grid.Col>
+
                             ))
 
                 ) : (
@@ -228,7 +220,8 @@ export default function Teams() {
                                             </Center>
                 )}
 
-                                </SimpleGrid>
+
+                                </Grid>
 
                 </>}
             </>

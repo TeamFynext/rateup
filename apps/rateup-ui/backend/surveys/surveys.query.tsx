@@ -74,9 +74,9 @@ export const useCreateSurveyMutation = ({ close }: MyProps) => {
   return createMutation;
 };
 
-export function useCloneSurveyMutation() {
+export function useCloneSurveyMutation(close, selectedTeamId) {
   const queryClient = useQueryClient();
-  return useMutation((id: string) => cloneSurvey(id), {
+  return useMutation(({ id, teamId } : {id: string, teamId : string}) => cloneSurvey(id, teamId), {
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -86,8 +86,9 @@ export function useCloneSurveyMutation() {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      queryClient.invalidateQueries(["surveysByTeam"]);
-      queryClient.invalidateQueries(["survey"]);
+      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(['surveysByTeam', selectedTeamId]);
+      close()
     },
     onError: (error: any) => {
       console.error("Error Survey Clone:", error.message);

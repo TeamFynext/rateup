@@ -7,9 +7,12 @@ const WHATSAPPSURVEYURL = "/whatsappsurvey"
 
 export const createSurvey = (data) => axiosClient.post(SURVEYURL, data)
 
-export async function cloneSurvey(surveyId: string) {
+export async function cloneSurvey(surveyId: string, teamId : string) {
     if(!surveyId) return undefined
-    const res =  await axiosClient.post(`${SURVEYURL}/clone/${surveyId}`)
+    const data = {
+        teamId: teamId,
+      };
+    const res =  await axiosClient.post(`${SURVEYURL}/clone/${surveyId}`, data)
     return res.data as Survey
 }
 

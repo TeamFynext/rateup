@@ -38,7 +38,7 @@ export const PasswordProtection = ({ surveyId, isProtected }) => {
   const updateSurveyPassword = useUpdateSurveyPwdMutation(surveyId, passwordProtect, password);
 
   return (
-    <Paper p="xl" sx={{ minHeight: '600px' }}>
+    <Paper p="xl" sx={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
 
       <Switch.Group
         px={30}

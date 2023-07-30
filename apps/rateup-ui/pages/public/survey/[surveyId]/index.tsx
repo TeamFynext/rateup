@@ -18,13 +18,17 @@ export default function Page() {
   if (isError) return <div>Something went wrong</div>;
   if (isLoading) return <Loader />;
   if (!selectedLanguage) {
-    return (
-      <SelectLang
-        languages={survey.languages}
-        selectedLanguage={selectedLanguage}
-        setSelectedLanguage={setSelectedLanguage}
-      />
-    );
+    if(survey?.languages?.length>1){
+      return (
+        <SelectLang
+          languages={survey?.languages}
+          selectedLanguage={selectedLanguage}
+          setSelectedLanguage={setSelectedLanguage}
+        />
+      );
+    }else{
+      setSelectedLanguage(survey?.languages[0])
+    }
   }
   return (
       <SelectedLanguageContext.Provider value={{ selectedLanguage }}>

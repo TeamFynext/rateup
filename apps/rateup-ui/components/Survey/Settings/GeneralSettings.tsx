@@ -42,14 +42,14 @@ const GeneralSettings = ({ survey }) => {
         editSurvey.mutate(data);
     }
     return (
-        <Paper p="xl" sx={{ minHeight: '400px', minWidth: '600px' }}>
+        <Paper p="xl" sx={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
             <form onSubmit={surveyForm.onSubmit(onSubmit)}>
 
                 <Grid align='center'>
-                    <Grid.Col md={6} lg={4}>
+                    <Grid.Col md={6} lg={5}>
                         <Text size={'md'}>Survey Name: </Text>
                     </Grid.Col>
-                    <Grid.Col md={6} lg={4}>
+                    <Grid.Col md={6} lg={5}>
                         <TextInput
                             withAsterisk
                             placeholder="Enter Survey name"
@@ -61,10 +61,10 @@ const GeneralSettings = ({ survey }) => {
                 </Grid>
                 <Divider my="xl" />
                 <Grid align='center'>
-                    <Grid.Col md={6} lg={4}>
+                    <Grid.Col md={6} lg={5}>
                         <Text size={'md'}>Languages: </Text>
                     </Grid.Col>
-                    <Grid.Col md={6} lg={4}>
+                    <Grid.Col md={6} lg={5}>
                         <MultiSelect
                             withAsterisk
                             placeholder="Type to create new language"

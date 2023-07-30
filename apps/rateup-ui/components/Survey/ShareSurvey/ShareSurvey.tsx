@@ -6,19 +6,47 @@ import {
   CopyButton,
   Group,
   TextInput,
+  SimpleGrid,
+  Title,
+  ActionIcon
 } from "@mantine/core";
+import { IconBrandFacebook, IconBrandWhatsapp, IconCopy, IconMail, IconMessage } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React from "react";
 
 const ShareSurvey = () => {
   const { surveyId } = useRouter().query;
   return (
-    <Stack>
-      <Paper p="md">
-        <Text>Share Survey</Text>
-        <CopyLinkComponent
-          value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`}
-        />
+    <Stack >
+      <Paper p="md" radius="md" shadow="lg" sx={{minHeight: "200px"}}>
+
+      <SimpleGrid cols={2} spacing="xl">
+
+      <Stack sx={{maxWidth: "450px"}} p="md">
+         <Title order={4}>Share Survey</Title>
+
+          <CopyLinkComponent
+            value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`}
+          />
+      </Stack>
+
+      <Stack sx={{maxWidth: "400px"}} p="md">
+         <Title order={4} align="center">How would you like to survey people?</Title>
+          <Group position="center">
+
+            <ActionIcon size="xl" variant="light"><IconMail size="2rem" /></ActionIcon>
+            <ActionIcon size="xl" variant="light"><IconBrandWhatsapp size="2rem" /></ActionIcon>
+            <ActionIcon size="xl" variant="light"><IconBrandFacebook size="2rem" /></ActionIcon>
+            <ActionIcon size="xl" variant="light"><IconMessage size="2rem" /></ActionIcon>
+
+          </Group>
+      </Stack>
+
+
+
+      </SimpleGrid>
+
+
       </Paper>
     </Stack>
   );
@@ -31,11 +59,12 @@ const CopyLinkComponent = ({ value }) => {
         sx={{ flexGrow: 1, maxWidth: "600px" }}
         readOnly
         value={value}
+        pr="sm"
       ></TextInput>
       <CopyButton value={value}>
         {({ copied, copy }) => (
-          <Button color={copied ? "teal" : "blue"} onClick={copy}>
-            {copied ? "Copied url" : "Copy url"}
+          <Button color={copied ? "dark" : "yellow.6"} onClick={copy} rightIcon={ <IconCopy />}>
+            {copied ? "Copied url" : "Copy url"} 
           </Button>
         )}
       </CopyButton>

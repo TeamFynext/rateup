@@ -3,6 +3,7 @@ import { IEditTeam, createTeam, editTeam, getTeamsByUser } from "./team.api";
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { useRouter } from "next/router";
 
 export function useTeamsByUser(queryClient) {
     return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
@@ -78,8 +79,10 @@ export function useEditTeamMutation(id, setIsLoading) {
   });
 }
 
-export function useDeleteTeamMutation(handleDeleteTeam, setDeleteTeamId, close, reftchTeams) {
+export function useDeleteTeamMutation(handleDeleteTeam) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+
   return useMutation(() => handleDeleteTeam(), {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),
@@ -91,9 +94,8 @@ export function useDeleteTeamMutation(handleDeleteTeam, setDeleteTeamId, close, 
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      close();
-      reftchTeams();
-      setDeleteTeamId('');
+      router.push('/dashboard/teams');
+
     },
     onError: (error : any) => {
       console.error("Error :", error.message);

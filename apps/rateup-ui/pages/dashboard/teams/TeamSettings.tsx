@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Title, Divider, Stack, Text, Grid, TextInput } from '@mantine/core';
+import { Title, Dialog, Stack, Text, Grid, Group, TextInput,Paper, Space } from '@mantine/core';
 import { useForm } from "@mantine/form";
-import { RateupButtonSecondary } from '../../../components/Button/RateupButtons';
-import { useEditTeamMutation } from '../../../backend/team/team.query';
+import { RateupButtonPrimary, RateupButtonSecondary } from '../../../components/Button/RateupButtons';
+import { useDeleteTeamMutation, useEditTeamMutation } from '../../../backend/team/team.query';
+import { useDisclosure } from '@mantine/hooks';
+import { deleteTeamById } from '../../../backend/team/team.api';
+import { notifications } from '@mantine/notifications';
 
 
 export interface ITeamData {
@@ -62,12 +65,70 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
         editTeam.mutate(data);
     }
 
+    const [opened, { toggle, close }] = useDisclosure(false);
+
+    const [deleteTeamId, setDeleteTeamId] = useState<string>();
+    useEffect(() => {
+        deleteTeamId && deleteTeamMutation.mutate();
+        if (deleteTeamId) {
+            notifications.show({
+                id: 'load-data',
+                loading: true,
+                title: 'Deleting Team..',
+                message: `Hold on, Your team is getting deleted.`,
+                autoClose: false,
+                withCloseButton: false,
+            });
+
+        }
+    }, [deleteTeamId]);
+
+    const handleDeleteTeam = async () => {
+        return deleteTeamById(deleteTeamId)
+    };
+
+    const deleteTeamMutation = useDeleteTeamMutation(handleDeleteTeam);
+
+
     return (
         <>
-            <Stack h={300} pl="md" sx={{ maxWidth: "800px" }}>
-                <Title order={2} > Team Settings</Title>
-                <Text color='dark.1'>Update team name and google reviews profile link.</Text>
-                <Divider my="lg" />
+            <Stack h={300} pl="md" sx={{ maxWidth: "600px" }}>
+                <Title order={2} pb="lg"> Team Settings</Title>
+
+                <Paper radius="md" px="md" py="xl" shadow='lg'>
+                    <Group py="md">
+                        <Title order={4} > Delete Team:</Title>
+                        <Space/>
+                        <RateupButtonPrimary onClick={toggle}
+                        loading={isLoading} size='sm' title="Delete" />
+                    </Group>
+                </Paper>
+
+                <Dialog opened={opened} withCloseButton onClose={close} size="lg" radius="md">
+                    <Text size="md" mb="xs" weight={500}>
+                        Are you sure to delete this team?
+                    </Text>
+
+                    <Group align="center" pt="lg">
+                    <RateupButtonSecondary onClick={close} loading={isLoading} size='md' title="Cancel" />
+
+                    <RateupButtonPrimary 
+                    
+                    onClick={() => {
+                        close()
+                        setDeleteTeamId(teamData?.id)
+                    }} 
+                    
+                    loading={isLoading} size='md' title="Yes, Delete" />
+
+                    </Group>
+                </Dialog>
+
+
+
+                <Paper radius="md" p="md" shadow='lg'>
+                <Title order={4} pb="xl"> Edit Team:</Title>
+
                 <form onSubmit={teamForm.onSubmit(onSubmit)}>
 
                     <Grid align='center'>
@@ -83,7 +144,6 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                             />
                         </Grid.Col>
                     </Grid>
-                    <Divider my="xl" />
                     <Grid align='center'>
                         <Grid.Col md={6} lg={4}>
                             <Text size={'md'}>Team Code: </Text>
@@ -97,7 +157,6 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                             />
                         </Grid.Col>
                     </Grid>
-                    <Divider my="xl" />
                     <Grid align='center'>
                         <Grid.Col md={6} lg={4}>
                             <Text size={'md'}>Google Reviews Link: </Text>
@@ -111,8 +170,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                             />
                         </Grid.Col>
                     </Grid>
-                    <Divider my="xl" />
-                    <Grid justify="flex-end">
+                    <Grid justify="flex-end" pt="xl">
                         <Grid.Col span={2}>
                             <RateupButtonSecondary type="submit" loading={isLoading} size='md' title="Save Changes" />
                         </Grid.Col>
@@ -121,6 +179,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                     </Grid>
 
                 </form>
+                </Paper>
 
             </Stack>
 
