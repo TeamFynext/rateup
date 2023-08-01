@@ -22,7 +22,6 @@ interface FormValues {
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 export function CreateSurveyModal({ open, close, surveyType }) {
-  const createSurveyMutation = useCreateSurveyMutation({ close });
   const {
     isError,
     isLoading,
@@ -56,6 +55,12 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       type: (value) => (value ? null : "Must select a type"),
     },
   });
+
+  const resetForm = () => {
+    form.reset()
+  }
+
+  const createSurveyMutation = useCreateSurveyMutation({ close, resetForm });
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -92,9 +97,9 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       title="Create Survey"
       centered
     >
-      <FormProvider form={form}>
+      <FormProvider form={form} >
         <form onSubmit={onSubmit}>
-          <Stack>
+          <Stack sx={{ minHeight: "300px"}} mt="xl">
             <TextInput
               placeholder="Enter title"
               label="Title"
@@ -107,6 +112,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
               placeholder="Type to create new language"
               searchable
               creatable
+              maxDropdownHeight="110"
               // TODO: Add a user-level language list
               data={Array.from(Languages)}
               getCreateLabel={(query) => `+ Create ${query}`}
@@ -127,6 +133,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
               placeholder="Select team"
               data={teamSelectData}
               withAsterisk
+              maxDropdownHeight={110}
               {...form.getInputProps("teamId")}
             />
             {/* //-----------------survey type ----------- */}
@@ -139,7 +146,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
                 {...form.getInputProps("type")}
               />
             )}
-            <Group position="right" pt="lg">
+            <Group position="right" pt="xl" mt="lg">
               <Button variant="subtle" onClick={close}>
                 Cancel
               </Button>

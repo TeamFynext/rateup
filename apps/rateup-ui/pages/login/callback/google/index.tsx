@@ -60,18 +60,19 @@ async function handleGoogleCallback() {
                 title: 'Error',
                 message: err.message,
                 icon: <IconX size="1rem" />,
-                autoClose: 3000,
+                autoClose: 6000,
             });
+            router.push('/logout');
         } else {
-            //window.alert("Oops! Something went wrong.");
             notifications.show({
                 id: 'load-data',
                 color: 'red',
                 title: 'Error',
                 message: "Oops! Something went wrong..." + err,
                 icon: <IconX size="1rem" />,
-                autoClose: 3000,
+                autoClose: 6000,
             });
+            router.push('/logout');
         }
     }
 }

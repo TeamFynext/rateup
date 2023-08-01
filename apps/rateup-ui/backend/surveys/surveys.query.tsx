@@ -55,9 +55,10 @@ export const useSurveysByTeam = (teamId: string, teamIsSelected) =>
 
 type MyProps = {
   close: () => void;
+  resetForm: () => void;
 };
 
-export const useCreateSurveyMutation = ({ close }: MyProps) => {
+export const useCreateSurveyMutation = ({ close, resetForm }: MyProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createSurvey,
@@ -68,6 +69,7 @@ export const useCreateSurveyMutation = ({ close }: MyProps) => {
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);
       close();
+      resetForm()
     },
   });
 
