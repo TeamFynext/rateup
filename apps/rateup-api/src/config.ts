@@ -72,6 +72,35 @@ export const SuperTokensConfig: TypeInput = {
       ],
 
       override: {
+          functions: (originalImplementation) => {
+            return {
+                ...originalImplementation,
+                emailPasswordSignUp: async function (input) {
+                    let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(input.email);
+                    console.log(input)
+                    if (existingUsers.length === 0) {
+                        // this means this email is new so we allow sign up
+                        return originalImplementation.emailPasswordSignUp(input);
+                    }
+                    return {
+                        status: "EMAIL_ALREADY_EXISTS_ERROR"
+                    }
+                },
+                thirdPartySignInUp: async function (input) {
+                    let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(input.email);
+                    if (existingUsers.length === 0) {
+                        // this means this email is new so we allow sign up
+                        return originalImplementation.thirdPartySignInUp(input);
+                    }
+                    if (existingUsers.find(i => i.thirdParty !== undefined && i.thirdParty.id === input.thirdPartyId && i.thirdParty.userId === input.thirdPartyUserId)) {
+                        // this means we are trying to sign in with the same social login. So we allow it
+                        return originalImplementation.thirdPartySignInUp(input);
+                    }
+                    // this means that the email already exists with another social or email password login method, so we throw an error.
+                    throw new Error("Cannot sign up as email already exists");
+                }
+            }
+        },
         apis: (originalImplementation) => {
             return {
                 ...originalImplementation,
@@ -134,24 +163,34 @@ export const SuperTokensConfig: TypeInput = {
                     if (originalImplementation.thirdPartySignInUpPOST === undefined) {
                         throw Error("Should never come here");
                     }
-
                     // TODO: Some pre sign in / up logic
+                    try {
+                          let response = await originalImplementation.thirdPartySignInUpPOST!(input);
 
-                    let response = await originalImplementation.thirdPartySignInUpPOST(input);
+                          if (response.status === "OK") {
+                              if (response.createdNewUser) {
+                                  // TODO: some post sign up logic
+                              } else {
+                                  // TODO: some post sign in logic
+                                  console.log("Sign in succes............................")
+                                  console.log(response?.user?.email)
+                                  console.log(response?.user?.id)
+                                  const user = await getOrgIdAndRole({ id: response?.user?.id });
+                              }
+                          }
 
-                    if (response.status === "OK") {
-                        if (response.createdNewUser) {
-                            // TODO: some post sign up logic
-                        } else {
-                            // TODO: some post sign in logic
-                            console.log("Sign in succes............................")
-                            console.log(response?.user?.email)
-                            console.log(response?.user?.id)
-                            const user = await getOrgIdAndRole({ id: response?.user?.id });
-                        }
-                    }
-
-                    return response;
+                          return response;
+                      } catch (err: any) {
+                          if (err.message === "Cannot sign up as email already exists") {
+                              // this error was thrown from our function override above.
+                              // so we send a useful message to the user
+                              return {
+                                  status: "GENERAL_ERROR",
+                                  message: "Seems like you already have an account with another method. Please use Email & Password to Login."
+                              }
+                          }
+                          throw err;
+                      }
                 }
             }
         }
