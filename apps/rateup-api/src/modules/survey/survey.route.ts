@@ -57,6 +57,7 @@ export async function surveyRoutes(server: FastifyInstance) {
       preHandler: verifySurveyAccess,
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
+        body: $Sref("cloneSurveySchema"),
       },
     },
     cloneSurveyHandler

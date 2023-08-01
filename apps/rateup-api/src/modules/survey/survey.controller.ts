@@ -14,7 +14,7 @@ import {
   updateVisitedSurvey,
   verifySurveyPassword,
 } from "./survey.service";
-import { CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
+import { CloneSurveyInput, CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
 
 export async function createSurveyHandler(
@@ -60,15 +60,16 @@ export async function getSurveyByIdHandler(
 export async function cloneSurveyHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
+    Body: CloneSurveyInput;
   }>,
   reply: FastifyReply
 ) {
   let session = await Session.getSession(request, reply);
   let userId = session.getUserId();
-
+  let teamId  = request?.body?.teamId;
   let survey;
   try {
-    survey = await cloneSurvey(request.params.id, userId);
+    survey = await cloneSurvey(request.params.id, userId, teamId);
 
     // Check if the survey is an error message
     if (typeof survey === 'string') {

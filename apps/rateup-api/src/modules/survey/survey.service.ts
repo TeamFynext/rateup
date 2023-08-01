@@ -18,7 +18,7 @@ export async function createSurvey(
   return survey;
 }
 
-export async function cloneSurvey(surveyId: string, userId: string) {
+export async function cloneSurvey(surveyId: string, userId: string, teamId: string) {
   const survey = await prisma.survey.findUnique({
     where: {
       id: surveyId,
@@ -31,16 +31,27 @@ export async function cloneSurvey(surveyId: string, userId: string) {
     const existingSurveys = await prisma.survey.findMany({
       where: {
         title: {
-          startsWith: survey.title + " Copy",
+          startsWith: survey.title,
         },
+        teamId: survey.teamId
       },
+      orderBy: {
+        title: 'asc'
+      }
     });
 
     let maxCopyNumber = 0;
+
     existingSurveys.forEach((existingSurvey) => {
-      const copyNumber = parseInt(existingSurvey.title.split(" Copy ")[1]);
-      if (copyNumber > maxCopyNumber) {
-        maxCopyNumber = copyNumber;
+      const suffix = existingSurvey.title.slice(survey.title.length);
+      if(suffix.startsWith(' Copy ')) {
+        const copyNumberStr = suffix.slice(' Copy '.length);
+        const copyNumber = parseInt(copyNumberStr, 10);
+        console.log(`Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`);
+        if(!isNaN(copyNumber)) {
+          maxCopyNumber = Math.max(maxCopyNumber, copyNumber);
+          console.log('Found a valid copy number: ', maxCopyNumber);
+        }
       }
     });
 
@@ -49,6 +60,7 @@ export async function cloneSurvey(surveyId: string, userId: string) {
       createdBy: userId,
       createdAt: new Date(),
       updatedAt: null,
+      teamId: teamId,
       title: `${survey.title} Copy ${maxCopyNumber + 1}`,
     };
 
@@ -57,8 +69,9 @@ export async function cloneSurvey(surveyId: string, userId: string) {
     });
 
     return newSurvey;
+
   } else {
-    return "Survey not found to duplicate";
+    return "Survey not found to duplicate"
   }
 }
 
