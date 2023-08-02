@@ -15,8 +15,9 @@ export enum QuestionTabsEnum {
 interface EditSurveyProps {
   questions: Array<Question>;
   addQnTrigger?: number;
+  surveyType?: String;
 }
-export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
+export function EditSurvey({ questions, addQnTrigger,surveyType }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
     QuestionTabsEnum.None
   );
@@ -61,6 +62,7 @@ export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
                 question={selectedQ}
                 setSelectedQ={setSelectedQ}
                 setActiveTab={setActiveTab}
+                surveyType={surveyType}
               />
             )}
           </Tabs.Panel>
@@ -68,6 +70,7 @@ export function EditSurvey({ questions, addQnTrigger }: EditSurveyProps) {
             <QuestionTypeSelection
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
+              surveyType={surveyType}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>

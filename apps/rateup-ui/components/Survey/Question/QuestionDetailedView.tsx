@@ -14,7 +14,7 @@ import {
   Space,
   Center,
   ScrollArea,
-  Divider
+  Divider,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
@@ -25,10 +25,15 @@ import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
-import { RateupButtonOutline, RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
+import {
+  RateupButtonOutline,
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
 import { logicSupportedTypes } from "../../../utils/data";
 import { IconChevronRight } from "@tabler/icons-react";
+import { fi } from "@faker-js/faker";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -36,11 +41,13 @@ interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
+  surveyType?: String;
 }
 export function QuestionDetailedView({
   question,
   setSelectedQ,
   setActiveTab,
+  surveyType,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -62,6 +69,18 @@ export function QuestionDetailedView({
     },
     validate: {
       title: (value) => (value.trim().length > 0 ? null : "Title is required"),
+      description: (value) => {
+        if (surveyType == "web") {
+          value.trim().length > 0 ? null : "Title is required";
+        } else {
+          //-----------whatsapp text message support only 4096 charecters only----------
+          if (value.trim().length > 10) {
+            return "Charecter length exceed (Max 4096 charecters allowed)";
+          } else if (value.trim().length == 0) {
+            return "message is required";
+          }
+        }
+      },
     },
   });
 
@@ -130,21 +149,21 @@ export function QuestionDetailedView({
 
   // TODO: show question type somewhere
   return (
-    <Stack justify="space-between" sx={{height:'100%'}}>
-      <ScrollArea sx={{height:'80%'}}>
+    <Stack justify="space-between" sx={{ height: "100%" }}>
+      <ScrollArea sx={{ height: "80%" }}>
         <Stack>
-          <Stack justify="space-between" sx={{height:'100%'}}>
-              <TextInput
+          <Stack justify="space-between" sx={{ height: "100%" }}>
+            <TextInput
               fw={800}
               fz="lg"
               styles={{
                 input: {
-                  fontSize: '2rem', 
-                  fontWeight:700// set custom font size for this TextInput
+                  fontSize: "2rem",
+                  fontWeight: 700, // set custom font size for this TextInput
                 },
               }}
               sx={{
-                marginBottom: '20px', // add 30px bottom margin
+                marginBottom: "20px", // add 30px bottom margin
               }}
               variant="unstyled"
               size="xl"
@@ -162,8 +181,8 @@ export function QuestionDetailedView({
               {...form.getInputProps("description")}
               styles={{
                 input: {
-                  fontSize: '1.1rem', 
-                  fontWeight:400// set custom font size for this TextInput
+                  fontSize: "1.1rem",
+                  fontWeight: 400, // set custom font size for this TextInput
                 },
               }}
               // onBlur={() => {
@@ -171,60 +190,60 @@ export function QuestionDetailedView({
               //   handleSave();
               // }}
             />
-            
             <ExtraProps form={form} question={question} />
-         </Stack>
+          </Stack>
           <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
             <QuestionTypePreview type={question?.type} />
           </Center>
         </Stack>
       </ScrollArea>
 
-      <Divider/>
+      <Divider />
 
-      <Stack pt="sm" sx={{height:'20%', position: 'sticky', bottom: '0', }}>
- 
+      <Stack pt="sm" sx={{ height: "20%", position: "sticky", bottom: "0" }}>
         <Group position="apart" spacing="sm">
-        <Checkbox
-                label="Required"
-                color="dark"
-                fw={600}
-                {...form.getInputProps("required", { type: "checkbox" })}
-              />
-            <Group>
-                <RateupButtonSecondary 
-                    title={"Save"}
-                    size="md"
-                    onClick={handleSave}
-                    leftIcon={ <IconDeviceSdCard /> } 
-                    loading={isSaving}
-                  />
-                  {/* <RateupButtonSecondary 
+          <Checkbox
+            label="Required"
+            color="dark"
+            fw={600}
+            {...form.getInputProps("required", { type: "checkbox" })}
+          />
+          <Group>
+            <RateupButtonSecondary
+              title={"Save"}
+              size="md"
+              onClick={handleSave}
+              leftIcon={<IconDeviceSdCard />}
+              loading={isSaving}
+            />
+            {/* <RateupButtonSecondary 
                     title={"Add Next Question "}
                     size="md"
                     rightIcon={<IconChevronRight />}
                     onClick={() => setActiveTab(QuestionTabsEnum.TypeSelection)}
                   /> */}
-              </Group>
+          </Group>
         </Group>
 
         <Group position="apart" spacing="sm">
-        {
-              (logicSupportedTypes.includes(question?.type)) &&
-              <RateupButtonOutline
-                title={"Edit Logic"}
-                size="sm"
-                onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
-              />
-            }
-            <Space w="xl" />
-            <Space w="xl" />
+          {logicSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Edit Logic"}
+              size="sm"
+              onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
+            />
+          )}
+          <Space w="xl" />
+          <Space w="xl" />
 
-              <Space w="xl" />
-              {question?.id && <Text c="blue.9" size="sm"> Question Id:  {question?.id} </Text>}
-              
+          <Space w="xl" />
+          {question?.id && (
+            <Text c="blue.9" size="sm">
+              {" "}
+              Question Id: {question?.id}{" "}
+            </Text>
+          )}
         </Group>
-
       </Stack>
     </Stack>
   );
@@ -262,9 +281,9 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
     });
   };
 
-  const handleKeyDown  = useCallback(
+  const handleKeyDown = useCallback(
     (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         handleAddChoice();
       }
     },
@@ -288,14 +307,14 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
           placeholder="Enter choice here"
           value={newChoice}
           onChange={(e) => setNewChoice(e.currentTarget.value)}
-          onKeyDown={handleKeyDown }
+          onKeyDown={handleKeyDown}
         />
         <RateupButtonPrimary
-            title={"Add choice"}
-            size="sm"
-            leftIcon={<IconPlus size="1rem"/>} 
-            onClick={handleAddChoice}
-          />
+          title={"Add choice"}
+          size="sm"
+          leftIcon={<IconPlus size="1rem" />}
+          onClick={handleAddChoice}
+        />
       </Group>
     </>
   );

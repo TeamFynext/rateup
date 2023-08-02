@@ -1,4 +1,4 @@
-import { Box, Group, Loader, Select, Stack, Tabs, Title, Space } from "@mantine/core";
+import { Box, Group, Loader, Select, Stack, Tabs, Title, Space, Badge } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useRouter } from "next/router";
@@ -72,7 +72,6 @@ export default () => {
         >
           <Group position="apart">
             <Title order={1} mb="sm">{survey.title}</Title>
-
             <Tabs.List
               sx={{
                 position: "absolute",
@@ -91,6 +90,8 @@ export default () => {
 
             <Tabs.Panel value={TabEnum.Edit}>
               <Group>
+            <Badge color={survey?.type=="web"?"blue":"green"}>{survey.type}</Badge>
+
                 <Select
                     data={survey.languages}
                     value={selectedLanguage}
@@ -136,7 +137,7 @@ export default () => {
           <Tabs.Panel value={TabEnum.Edit}>
             {/** TODO: Remove fixed height and make this responsive */}
             <Box sx={{ display: "flex", gap: 30, height: "70vh" }}>
-              <EditSurvey questions={questions} addQnTrigger={addQnTrigger} />
+              <EditSurvey questions={questions} addQnTrigger={addQnTrigger} surveyType={survey.type}/>
             </Box>
           </Tabs.Panel>
 
@@ -149,11 +150,12 @@ export default () => {
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Share}>
-            <ShareSurvey />
+            <ShareSurvey survey={survey}/>
           </Tabs.Panel>
           
         </StyledTabs>
       </Stack>
+      {/* <Title>hello google</Title> */}
     </SelectedLanguageContext.Provider>
   );
 };

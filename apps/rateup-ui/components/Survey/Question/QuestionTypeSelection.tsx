@@ -19,10 +19,12 @@ import { QuestionTabsEnum } from "../EditSurvey";
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
+  surveyType
 }
 export function QuestionTypeSelection({
   setSelectedQ,
   setActiveTab,
+  surveyType
 }: QuestionTypeSelectionProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const handleTypeSelection = (type: QuestionType) => {
@@ -30,10 +32,21 @@ export function QuestionTypeSelection({
     setSelectedQ(newQ);
     setActiveTab(QuestionTabsEnum.Edit);
   };
+
+  console.log(typeof(surveyType) ,">>surveyty")
   return (
     <Center sx={{ height: "100%" }}>
       <SimpleGrid cols={3}>
-        {Object.entries(questionIcons).map(([type, Icon]) => (
+        {surveyType==="web"? Object.entries(questionIcons).map(([type, Icon]) => (
+          <Button
+            key={type}
+            leftIcon={<Icon />}
+            variant="default"
+            onClick={() => handleTypeSelection(type as QuestionType)}
+          >
+            <Text>{type}</Text>
+          </Button>
+        )):Object.entries(whatsappQuestionIcons).map(([type, Icon]) => (
           <Button
             key={type}
             leftIcon={<Icon />}
@@ -47,6 +60,7 @@ export function QuestionTypeSelection({
     </Center>
   );
 }
+
 
 // TODO: add proper icons
 const questionIcons = {
@@ -63,6 +77,21 @@ const questionIcons = {
   [QuestionType.YN]: IconStar,
   [QuestionType.Photo]: IconCamera,
   [QuestionType.Testimonial]: IconUser,
+};
+const whatsappQuestionIcons = {
+  [QuestionType.Text]: IconLetterCase,
+  [QuestionType.Email]: IconMail,
+  [QuestionType.Phone]: IconPhone,
+  // [QuestionType.Rating]: IconStar,
+  [QuestionType.MCQ]: IconStar,
+  // [QuestionType.MSQ]: IconStar,
+  // [QuestionType.Smiley]: IconMoodSmile,
+  // [QuestionType.Opinion]: IconStar,
+  // [QuestionType.DateTime]: IconCalendar,
+  [QuestionType.LD]: IconStar,
+  [QuestionType.YN]: IconStar,
+  [QuestionType.Photo]: IconCamera,
+  // [QuestionType.Testimonial]: IconUser,
 };
 
 console.assert(
