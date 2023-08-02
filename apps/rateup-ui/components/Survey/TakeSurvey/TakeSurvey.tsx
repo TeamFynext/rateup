@@ -51,6 +51,7 @@ import { RateupButtonBlackOutline, RateupButtonBlue, RateupButtonSecondary } fro
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
+import { useMediaQuery } from '@mantine/hooks';
 
 function TakeSurvey() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -60,6 +61,7 @@ function TakeSurvey() {
   const [QnNo, setQnNo] = useState(1)
   const [opened, { open, close }] = useDisclosure(false);
   const theme = useMantineTheme();
+  const isMobile = useMediaQuery('(max-width: 480px)');
 
   const { setQuestionCount, setCurrentQuestionNo } = useContext(QuestionCountContext);
   const updateCompleted = useUpdateCompletedMutation();
@@ -191,7 +193,7 @@ function TakeSurvey() {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container h={"60vh"} size={"md"} sx={{ position: "relative" }}>
+        <Container  h={isMobile ? "53vh" : "60vh"} size={"md"} sx={{ position: "relative" }}>
               {/* TODO for mobile design 80vh */}
 
         <Modal
@@ -249,11 +251,14 @@ function TakeSurvey() {
             </Stack>
         </Modal>
 
-          <Stack p="md">
-            <QuestionNo num={QnNo} />
-            <QuestionTitle  />
-            <QuestionDesc />
-            <QuestionForm />
+
+          <Stack mt="xl">
+            {/* <QuestionNo num={QnNo} /> */}
+            
+              <QuestionTitle />
+              <QuestionDesc />
+              <QuestionForm />
+              
             <NextPrev next={handleNext} prev={handlePrev} />
           </Stack>
         </Container>
@@ -350,9 +355,6 @@ function NextPrev({ prev, next }) {
   const [isErrorInput, setIsErrorInput] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
 
-  // console.log("qn:"+ JSON.stringify(selectedQ))
-  // console.log("res:"+ JSON.stringify(response))
-
   useEffect(() => {
       if(selectedQ?.required && response && selectedQ?.type === 'Email'){
         setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
@@ -404,14 +406,14 @@ function NextPrev({ prev, next }) {
             <Text color="red">Note: * {errorMsg}</Text>
           }
       <Grid>
-          <Grid.Col span={5}>
+          <Grid.Col span={6}>
               {isFirstQuestion || (
           <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
                 sx={{ position: "absolute", }}
                 size="lg" onClick={prev}/>
             )}
            </Grid.Col>
-              <Grid.Col span={5}>
+              <Grid.Col span={6}>
 
               {isLastQuestion ?
 
@@ -444,7 +446,7 @@ function TextForm() {
             placeholder="Enter your answer"
             value={response || ""}
             onChange={(e) => updateResponse(e.currentTarget.value)}
-            sx={{ width: '70vw', maxWidth: "400px" }}
+            sx={{ maxWidth: "400px" }}
             variant="unstyled"
             radius="xl"
             size="sm"
@@ -487,7 +489,7 @@ function EmailForm() {
       value={response || ""}
       onChange={handleInputChange}
       onBlur={handleInputBlur}
-      sx={{ width: '70vw', maxWidth: "400px" }}
+      sx={{ maxWidth: "400px" }}
       error={emailError && !isFocused  ? 'Invalid email' : null}
       icon={<IconMail size="1.2rem" color="black" />}
       variant="unstyled"
@@ -598,7 +600,7 @@ function YNForm() {
   );
 }
 
-// TODO: add the smileys
+// TODO: improve smileys
 const SMILEY_OPTIONS = Object.entries(SmileyResponse).map(([type, value]) => ({
   value: type,
   label: value,
@@ -613,7 +615,7 @@ function SmileyForm() {
           variant={response === value ? "gradient" : "default"}
           gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
           onClick={() => updateResponse(value)}
-          sx={{height:'90px', width:'90px'}}
+          sx={{minHeight:'70px', maxWidth:'90px'}}
         >
           {/* <Stack> */}
             <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
@@ -744,7 +746,7 @@ function TestimonialForm() {
             placeholder="Enter your name"
             value={response?.name}
             onChange={handleNameChange}
-            sx={{ width: '70vw', maxWidth: "400px" }}
+            sx={{ maxWidth: "400px" }}
             variant="unstyled"
           />
       </Paper>
@@ -755,7 +757,7 @@ function TestimonialForm() {
           placeholder="Enter your testimonial"
           value={response?.testimonial}
           onChange={handleTestimonialChange}
-          sx={{ width: '70vw', maxWidth: "400px" }}
+          sx={{ maxWidth: "400px" }}
           variant="unstyled"
         />
       </Paper>

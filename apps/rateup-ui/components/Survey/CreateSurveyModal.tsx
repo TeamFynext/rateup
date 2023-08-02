@@ -13,6 +13,8 @@ import { getTeamsByUser } from "../../backend/team/team.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { useState} from 'react'
+
 interface FormValues {
   title: string;
   languages: Array<string>;
@@ -59,8 +61,9 @@ export function CreateSurveyModal({ open, close, surveyType }) {
   const resetForm = () => {
     form.reset()
   }
+  const [isCreating, setIsCreating] = useState(false);
 
-  const createSurveyMutation = useCreateSurveyMutation({ close, resetForm });
+  const createSurveyMutation = useCreateSurveyMutation({ close, resetForm, setIsCreating });
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -69,7 +72,15 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       console.error(validationRes.errors);
       return;
     }
-
+    setIsCreating(true)
+    notifications.show({
+      id: 'load-data',
+      loading: true,
+      title: 'Creating survey..',
+      message: `Hold on, your survey is getting created...`,
+      autoClose: false,
+      withCloseButton: false,
+  });
     createSurveyMutation.mutate(form.values);
   };
   if (isLoading) {
@@ -150,7 +161,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
               <Button variant="subtle" onClick={close}>
                 Cancel
               </Button>
-              <Button variant="filled" type="submit">
+              <Button variant="filled" type="submit" loading={isCreating}>
                 Submit
               </Button>
             </Group>

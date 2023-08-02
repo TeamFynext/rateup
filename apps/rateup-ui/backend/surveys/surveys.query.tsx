@@ -56,30 +56,54 @@ export const useSurveysByTeam = (teamId: string, teamIsSelected) =>
 type MyProps = {
   close: () => void;
   resetForm: () => void;
+  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>
 };
 
-export const useCreateSurveyMutation = ({ close, resetForm }: MyProps) => {
+export const useCreateSurveyMutation = ({ close, resetForm, setIsCreating }: MyProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createSurvey,
     onSuccess: () => {
-      notifications.show({
-        message: "Created!",
+      notifications.update({
+        id: 'load-data',
+        color: 'teal',
+        title: 'Success',
+        message: 'Survey Created...!',
+        icon: <IconCheck size="1rem" />,
+        autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);
       close();
+      setIsCreating(false)
       resetForm()
     },
+    onError: (error: any) => {
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    }
   });
 
   return createMutation;
 };
 
-export function useCloneSurveyMutation(close, selectedTeamId) {
+
+type CloneProps = {
+  close: () => void;
+  selectedTeamID: String;
+  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
+};
+
+export function useCloneSurveyMutation({close, selectedTeamID, setSelectedTeamId} : CloneProps) {
   const queryClient = useQueryClient();
   return useMutation(({ id, teamId } : {id: string, teamId : string}) => cloneSurvey(id, teamId), {
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       notifications.show({
         id: "load-data",
         color: "teal",
@@ -89,7 +113,8 @@ export function useCloneSurveyMutation(close, selectedTeamId) {
         autoClose: 3000,
       });
       queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(['surveysByTeam', selectedTeamId]);
+      queryClient.invalidateQueries(['surveysByTeam', selectedTeamID]);
+      setSelectedTeamId(variables?.teamId)
       close()
     },
     onError: (error: any) => {

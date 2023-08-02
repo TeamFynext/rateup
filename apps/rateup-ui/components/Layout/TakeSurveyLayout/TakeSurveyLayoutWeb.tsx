@@ -39,38 +39,36 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               alt="RateUp Logo" width={140} height={35} />
 
           </>
-          <Paper  p="sm" radius="lg" shadow="lg" sx={{ height: "80vh" }}>
+          <Paper  p="sm" radius="lg" shadow="lg" sx={{ minHeight: "80vh" }}>
             <Container fluid>
+
+                    {/* .........Survey Header Section.......... */}
+
             {startClicked ?
+                   (currentQuestionNo > 0 && (
+                    <Grid justify="center" align="center" pb={40} columns={24}>
+                    <Grid.Col md={4} lg={4} xs={24} order={2}  orderSm={1} orderXs={1}>
+                      <Center>
+                      <Text>Question: {currentQuestionNo}</Text>
+                      </Center>
+                    </Grid.Col>
+                    <Grid.Col md={16} lg={16} xs={24} order={1} orderSm={2} orderXs={2}>
+                      <Center>
+                        <Title order={2}>{survey.title}</Title>
+                      </Center>
+                    </Grid.Col>
+                    <Grid.Col md={4} lg={4} xs={24} order={3} orderSm={3} orderXs={3}>
+                    <Center>
+                      <ProgressBar currentQuestionNo={currentQuestionNo} questionCount={questionCount} /> 
+                      </Center>
+                    </Grid.Col>
+                  </Grid>
+                    ))
 
-(currentQuestionNo > 0 && (
-
-          <Grid justify="center" align="center" pb={40} >
-
-              <Grid.Col span={1}>
-                <Center> 
-                  {/* TODO back action */}
-                  <IconArrowLeft />
-                </Center>
-              </Grid.Col>
-              <Grid.Col span={8}>
-                <Center>
-                  <Title order={2}>{survey.title}</Title>
-                </Center>
-              </Grid.Col>
-              <Grid.Col span={3}>
-                  <Center>
-                    <ProgressBar currentQuestionNo={currentQuestionNo} questionCount={questionCount} /> 
-                  </Center>
-              </Grid.Col>
-
-          </Grid>
-          ))
-
-            :   
-                  <Welcome onStart={handleStartClick} surveyId={surveyId} isProtected={survey?.isProtected}/>
-            }
-            { startClicked && children.children}
+                  :   
+                        <Welcome onStart={handleStartClick} surveyId={surveyId} isProtected={survey?.isProtected}/>
+                  }
+                  { startClicked && children.children}
             </Container>
 
           <Center>
@@ -126,7 +124,7 @@ function Welcome({ onStart, isProtected, surveyId }) {
             </Group>
       </Modal>
       
-      
+      {/* .........Survey Welcome page.......... */}
       <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>
             <Title order={1} sx={{fontSize: '4rem', }}>Welcome</Title>
             <Text >Please fill the survey..</Text>

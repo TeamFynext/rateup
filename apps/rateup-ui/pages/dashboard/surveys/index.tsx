@@ -229,7 +229,7 @@ export default function Surveys() {
                 new Date(b.createdAt).getTime()
           )
           .map((s) => (
-            <SurveyCard key={s.id} survey={s} teamsData={teamsData} />
+            <SurveyCard key={s.id} survey={s} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
           ))
         }
 
@@ -241,8 +241,9 @@ export default function Surveys() {
 
 interface SurveyCardProps {
   survey: Survey;
+  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
-export function SurveyCard({ survey, teamsData }: SurveyCardProps & {teamsData: any}): JSX.Element {
+export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & {teamsData: any}): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
@@ -275,7 +276,7 @@ export function SurveyCard({ survey, teamsData }: SurveyCardProps & {teamsData: 
         <Badge color={survey?.type=="web"?"blue":"green"}>{survey.type}</Badge>
         <Group align={"center"} mt="sm" spacing="xs">
         <IconPencil />
-        <SurveyMenu survey={survey} teamsData={teamsData} />
+        <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId}/>
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" spacing="xs">
@@ -307,14 +308,13 @@ export function SurveyCard({ survey, teamsData }: SurveyCardProps & {teamsData: 
   );
 }
 
-function SurveyMenu({ survey, teamsData }) {
+function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const [cloneSurveyId, setCloneSurveyId] = useState('')
   const [opened, { close, open }] = useDisclosure(false);
-  const [selectedTeamId, setSelectedTeamId] = useState('')
-  const cloneSurvey = useCloneSurveyMutation(close, selectedTeamId);
+  const [selectedTeamID, setSelectedTeamID] = useState('')
+  const cloneSurvey = useCloneSurveyMutation({close, selectedTeamID, setSelectedTeamId});
 
   const [options, setOptions] = useState([]);
   
@@ -328,7 +328,6 @@ useEffect(() => {
 }, [teamsData])
 
 
-
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
@@ -336,6 +335,7 @@ useEffect(() => {
         message: "Deleted!",
       });
       queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(["surveysByTeam"]);
     },
   });
 
@@ -375,8 +375,8 @@ useEffect(() => {
                 mt="xs"
                 placeholder="Pick one"
                 data={options}
-                value={selectedTeamId}
-                onChange={(value) => setSelectedTeamId(value)}
+                value={selectedTeamID}
+                onChange={(value) => setSelectedTeamID(value)}
                 onClick={(event) => {
                   event.stopPropagation();
                 }}
@@ -385,7 +385,7 @@ useEffect(() => {
           <Group mt="xl">
             <RateupButtonSecondary title="Cancel" onClick={close} />              
             <RateupButtonPrimary title="Submit" onClick={() => {
-              cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamId });
+              cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
             }} />
           </Group>
 
