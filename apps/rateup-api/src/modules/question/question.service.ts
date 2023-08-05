@@ -18,8 +18,13 @@ export async function createQuestion(
     throw new Error(`'position'(order) must be between 0 and the number of questions(${questions.length})`);
   }
 
-  // 3. Generate new id
-  const newQuestion = { ...rest, id: randomUUID() };
+  // Ensure title is defined and not an empty object
+  if(!rest.title || Object.keys(rest.title).length === 0) {
+    throw new Error(`'title' property is required for a question`);
+  }
+
+  // rest.title is to be a non-empty object
+  const newQuestion = { ...rest, id: randomUUID() } as Question;
 
   // 4. Insert new question at position
   questions.splice(position, 0, newQuestion);

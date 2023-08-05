@@ -13,7 +13,12 @@ export async function createSurvey(
   createdBy: string
 ) {
   const survey = await prisma.survey.create({
-    data: { ...input, createdBy },
+    data: { 
+      ...input, 
+      title: input.title,
+      teamId: input.teamId,
+      createdBy 
+    },   
   });
   return survey;
 }
