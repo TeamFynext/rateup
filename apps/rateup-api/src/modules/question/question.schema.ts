@@ -50,7 +50,13 @@ const updateQuestionRequestSchema = z.object({
   description: z.record(z.string(), z.string()).optional(),
   required: z.boolean().optional(),
   // Type cannot be changed. Throws error if 'type' is provided
-  type: z.never().optional()
+  type: z.never().optional(),
+  logic: z.any().optional(), //TODO
+  googleReview: z.union([z.null(), z.object({
+    minRating: z.number().optional(),
+    minOpinion: z.number().optional(),
+    reqOptions: z.array(z.string()).optional(),
+  })]).optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
