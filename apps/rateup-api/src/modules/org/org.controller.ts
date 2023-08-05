@@ -54,9 +54,14 @@ export async function updateRoleController(
   const id = request.params;
   let roleUpdate;
 
-  try {
-    roleUpdate = await updateOrgUserRole(body, id, request, reply);
+  if (!body.role) {
+    reply.code(400).send({ success: false, message: 'Role is required' });
+    return;
+  }
 
+  try {
+    roleUpdate = await updateOrgUserRole(body as { role: string }, id, request, reply);
+  
     // Check if the roleUpdate is an error message
     if (typeof roleUpdate === 'string') {
       reply.code(400).send({ success: false, message: roleUpdate });
