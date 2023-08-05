@@ -1,11 +1,15 @@
 import prisma from "../../utils/prisma";
-import { CreateOrgInput, IdParamInput, UpdateRoleInput } from "./org.schema";
+import { CreateOrgInput, IdParamInput } from "./org.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
-    data: input,
+    //data: input, 
+    data: {
+      name: input.name,
+      ownerId: input.owner,
+    },
   });
   return org;
 }
