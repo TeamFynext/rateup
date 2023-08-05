@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  // can access all the team
+  SUPER_ADMIN
+  // can access only to the teams they are member of
+  ADMIN
+}
+
+enum InviteStatus {
+  // initial
+  PENDING
+  // accept invite
+  ACCEPTED
+  // decline invite
+  DECLINED
+}
+
+enum InviteType {
+  ORG
+  TEAM
+}
+
+enum ResponsePlatform {
+  WEB
+  WHATSAPP
+  APP
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model User {
+  id           String       @id @default(uuid()) @db.Uuid
+  createdAt    DateTime     @default(now())
+  email        String       @unique
+  name         String?
+  profilePhoto String?
+  phone        String?
+  gender       Gender?
+  org          Org[]
+  orgMember    OrgMember[]
+  teamMember   TeamMember[]
+  surveys      Survey[]
+}
+
+model Org {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime     @default(now())
+  name        String
+  owner       User         @relation(fields: [ownerId], references: [id])
+  ownerId     String       @db.Uuid
+  members     OrgMember[]
+  teams       Team[]
+  invitations Invitation[]
+}
+
+model OrgMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  org       Org      @relation(fields: [orgId], references: [id])
+  orgId     String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid
+  role      Role
+
+  @@unique([userId, orgId], name: "userId_orgId")
+}
+
+model Team {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime     @default(now())
+  name        String
+  code        String
+  googleLink  String?
+  org         Org          @relation(fields: [orgId], references: [id])
+  orgId       String       @db.Uuid
+  members     TeamMember[]
+  surveys     Survey[]
+  invitations Invitation[]
+
+  @@unique([name, orgId], name: "team_name_org_id_unique")
+  @@unique([code, orgId], name: "team_code_org_id_unique")
+}
+
+model TeamMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid
+}
+
+model Invitation {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String
+  name      String
+  type      InviteType
+  org       Org          @relation(fields: [orgId], references: [id])
+  orgId     String       @db.Uuid
+  team      Team?        @relation(fields: [teamId], references: [id])
+  teamId    String?      @db.Uuid
+  invitedBy String
+  createdAt DateTime     @default(now())
+  status    InviteStatus @default(PENDING)
+
+  @@unique([email, teamId], name: "team_id_email_unique")
+}
+
+model Survey {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime?        @updatedAt
+  title       String
+  description String?          @default("")
+  questions   Json[]           @default([])
+  languages   String[]
+  user        User             @relation(fields: [createdBy], references: [id])
+  createdBy   String           @db.Uuid
+  team        Team             @relation(fields: [teamId], references: [id])
+  teamId      String           @db.Uuid
+  active      Boolean          @default(true)
+  responses   SurveyResponse[]
+  sessions    WaSession[]
+  isProtected Boolean          @default(false)
+  password    String?
+  surveyStats SurveyStats?
+  type        String          @default("web")
+}
+
+model SurveyResponse {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime         @default(now())
+  survey    Survey           @relation(fields: [surveyId], references: [id])
+  surveyId  String           @db.Uuid
+  responses Json[]
+  language  String           @default("")
+  platform  ResponsePlatform @default(WEB)
+  phone     String           @default("")
+}
+
+model SurveyStats {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  survey    Survey @relation(fields: [surveyId], references: [id])
+  surveyId  String @unique @db.Uuid
+  visited   Int    @default(0)
+  started   Int    @default(0)
+  completed Int    @default(0)
+}
+
+// Whatsapp session
+model WaSession {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime @default(now())
+  phone             String   @unique
+  survey            Survey   @relation(fields: [surveyId], references: [id])
+  surveyId          String   @db.Uuid
+  currentQuestionId String
+  responses         Json[]
+  language          String   @default("")
+}
