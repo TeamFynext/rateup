@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessToSurvey } from "../../utils/auth";
 import { QuestionsRouteParams } from "./question.schema";
+import Session from "supertokens-node/recipe/session";
 
 export async function verifySurveyAccess(
   request: FastifyRequest<{
@@ -8,8 +9,10 @@ export async function verifySurveyAccess(
   }>,
   reply: FastifyReply
 ) {
+  let session = await Session.getSession(request, reply);
+
   const surveyId = request.params.surveyId;
-  const userId = request.session.getUserId();
+  let userId = session.getUserId();
 
   const hasAccess = await hasAccessToSurvey(surveyId, userId);
 

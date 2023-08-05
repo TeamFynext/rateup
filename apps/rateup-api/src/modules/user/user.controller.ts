@@ -128,13 +128,21 @@ export async function changeUserPasswordHandler(
        password: updatedPassword
    })
 
-   if (response?.status === "PASSWORD_POLICY_VIOLATED_ERROR") {
-       // TODO: handle incorrect password error
-       console.log("..........................incorrect password format")
-       let message ="Incorrect password format"
-       reply.code(500).send({ success: false, message });
-       return
-   }
+   if (response?.status === "UNKNOWN_USER_ID_ERROR") {
+    console.log("Unknown user id error")
+    let message ="Unknown user id error"
+    reply.code(500).send({ success: false, message });
+    return
+  }
+
+  //  if (response?.status === "PASSWORD_POLICY_VIOLATED_ERROR") { 
+  //      // TODO: handle incorrect password error
+  //      console.log("..........................incorrect password format")
+  //      let message ="Incorrect password format"
+  //      reply.code(500).send({ success: false, message });
+  //      return
+  //  }
+  
    
    // TODO: send successful password update response
 

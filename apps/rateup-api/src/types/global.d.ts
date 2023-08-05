@@ -1,5 +1,12 @@
 // Any modification to this file should be reflected in the frontend
 import { QuestionType, SmileyResponse, YNResponse, LDResponse } from "./enums";
+
+type GoogleReview = {
+  minRating?: number;
+  minOpinion?: number;
+  reqOptions?: Array<string>;
+} | null;
+
 export {};
 declare global {
   type Question = {
@@ -9,7 +16,8 @@ declare global {
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<string>>;
     id: string;
-    logic?: Zod.RecordType<string|number|Array<string>, string>
+    logic?: Zod.RecordType<string|number|Array<string>, string>;
+    googleReview?: GoogleReview
   };
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.

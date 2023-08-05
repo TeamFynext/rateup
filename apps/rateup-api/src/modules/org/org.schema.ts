@@ -5,7 +5,7 @@ const orgCore = {
   name: z.string({
     required_error: "Name is required",
     invalid_type_error: "Name must be a string",
-  }),
+  }).nonempty("Name cannot be empty"),
   owner: z.string(),
 };
 const createOrgRequestSchema = z.object({
