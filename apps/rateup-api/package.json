@@ -26,8 +26,8 @@
     "zod": "^3.21.4"
   },
   "scripts": {
-    "build": "tsc src/index.ts",
-    "start": "node src/index.js",
+    "build":"tsc -p tsconfig.json",
+    "start":"node dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^20.1.0",
