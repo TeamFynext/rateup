@@ -4,6 +4,7 @@ export interface ICreateTeam {
     name: string; 
     orgId: string; 
     userId: string;
+    whatsappAccessToken:string
 }
 
 export interface IInviteMember {
@@ -18,6 +19,7 @@ export interface IEditTeam {
     name: string; 
     googleLink: string; 
     code: string; 
+    whatsappAccessToken: string; 
 }
 
 export const createTeam = (data: ICreateTeam) => axiosClient({

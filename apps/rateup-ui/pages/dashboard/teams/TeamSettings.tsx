@@ -13,6 +13,7 @@ export interface ITeamData {
     googleLink: string;
     code: string;
     id: string
+    whatsappAccessToken: string
 }
 
 const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => {
@@ -22,6 +23,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
             name: "",
             code: "",
             googleLink: "",
+            whatsappAccessToken: null,
         },
         validate: {
             name: (value) => {
@@ -53,6 +55,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                 name: teamData?.name || "",
                 code: teamData?.code || "",
                 googleLink: teamData?.googleLink || "",
+                whatsappAccessToken: teamData?.whatsappAccessToken || "",
             });
         }
     }, [teamData]);
@@ -61,7 +64,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
     const editTeam = useEditTeamMutation(id, setIsLoading);
     const onSubmit = (values) => {
         setIsLoading(true);
-        const data = { name: values.name, code: values.code, googleLink: values.googleLink };
+        const data = { name: values.name, code: values.code, googleLink: values.googleLink, whatsappAccessToken: values.whatsappAccessToken };
         editTeam.mutate(data);
     }
 
@@ -170,6 +173,18 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                             />
                         </Grid.Col>
                     </Grid>
+                        <Grid align='center'>
+                            <Grid.Col md={6} lg={4}>
+                                <Text size={'md'}>Whatsapp Access Token: </Text>
+                            </Grid.Col>
+                            <Grid.Col md={6} lg={4}>
+                                <TextInput
+                                    placeholder="Enter whatsapp access token url"
+                                    mt="md"
+                                    {...teamForm.getInputProps('whatsappAccessToken')}
+                                />
+                            </Grid.Col>
+                        </Grid>
                     <Grid justify="flex-end" pt="xl">
                         <Grid.Col span={2}>
                             <RateupButtonSecondary type="submit" loading={isLoading} size='md' title="Save Changes" />
