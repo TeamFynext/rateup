@@ -32,7 +32,6 @@ export default function Teams() {
     initialValues: {
       name: "",
       code: "",
-      whatsappAccessToken: null,
     },
 
     validate: {
@@ -106,11 +105,7 @@ export default function Teams() {
               placeholder="Enter team code"
               {...createTeamForm.getInputProps("code")}
             />
-            <TextInput
-              label="Whatsapp Access Token"
-              placeholder="Enter whatsapp access token"
-              {...createTeamForm.getInputProps("whatsappAccessToken")}
-            />
+            
           </Box>
           <Box pt={20}>
             <RateupButtonPrimary type="submit" title={"Create"} />
