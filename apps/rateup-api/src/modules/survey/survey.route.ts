@@ -8,7 +8,8 @@ import {
   getSurveysHandler,
   updateSurveyByIdHandler,
   updateSurveyPasswordHandler,
-  getWhatsappSurveysHandler
+  getWhatsappSurveysHandler,
+  updateGoogleLinkHandler
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
@@ -116,6 +117,19 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     updateSurveyPasswordHandler
   )
+
+  server.put(
+    "/googlelink-update/:id",
+    {
+      preHandler: verifySurveyAccess,
+      schema: {
+        params: $Sref("idParamsSchema"),
+        body: $Sref("updateGoogleLinkRequestSchema"),
+      }
+    },
+    updateGoogleLinkHandler
+  )
+  
 }
 
 

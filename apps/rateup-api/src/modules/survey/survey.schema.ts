@@ -39,6 +39,7 @@ const getSurveyPublicResponseSchema = z.object({
   isProtected: z.boolean(),
   type:z.string()
 })
+
 const updateSurveyRequestSchema = z.object({
   title: z.string({
     required_error: "Title is required",
@@ -55,6 +56,14 @@ const updateSurveyPasswordRequestSchema = z.object({
   })
 })
 
+const updateGoogleLinkRequestSchema = z.object({
+  googleLink: z.string({
+    required_error: "Link is required",
+    invalid_type_error: "Link must be a string",
+  }).min(5, "Invalid link")
+});
+
+
 export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
@@ -64,7 +73,8 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     getSurveyPublicResponseSchema,
     updateSurveyPasswordRequestSchema,
     idParamsSchema,
-    cloneSurveySchema
+    cloneSurveySchema,
+    updateGoogleLinkRequestSchema
   },
   { $id: "surveySchema" }
 );
@@ -75,5 +85,7 @@ export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
 export type UpdateSurveyPassword = z.infer<typeof updateSurveyPasswordRequestSchema>;
 export type IdParamInput = z.infer<typeof idParamsSchema>;
 export type CloneSurveyInput = z.infer<typeof cloneSurveySchema>;
+export type UpdateGoogleLinkInput = z.infer<typeof updateGoogleLinkRequestSchema>;
+
 
 
