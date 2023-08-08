@@ -6,6 +6,7 @@ const teamCore = {
   code: z.string(),
   orgId: z.string(),
   userId: z.string(),
+  
 };
 
 const createTeamRequestSchema = z.object({
@@ -27,10 +28,12 @@ const createTeamResponseSchema = z.object({
 
 const getTeamsByOrgRequestSchema = z.object({
   orgId: z.string(),
+  whatsappAccessToken: z.any(),
 });
 
 const getTeamMembersRequestSchema = z.object({
   teamId: z.string(),
+  whatsappAccessToken: z.any(),
 });
 
 const deleteTeamByIdRequestSchema = z.object({
@@ -64,6 +67,7 @@ const editTeamSchema = z.object({
   name: z.string().min(4),
   code: z.string().min(2),
   googleLink: z.string().min(10),
+  whatsappAccessToken: z.any(),
 });
 
 const idParamRequestSchema = z.object({

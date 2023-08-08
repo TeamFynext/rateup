@@ -26,7 +26,8 @@ console.log(".....Creating user.....")
         data: {
           id,
           email,
-          name
+          name,
+          
         },
       });
 
@@ -145,7 +146,7 @@ export async function updateUserProfile({ title, name, phone }: UpdateProfileSch
     data: {
       gender: title as Gender,
       name,
-      phone
+      phone,
     },
   });
 

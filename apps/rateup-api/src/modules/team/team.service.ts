@@ -385,6 +385,7 @@ export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
       name: true,
       googleLink: true,
       code: true,
+      whatsappAccessToken: true,
     },
   });
 
@@ -432,7 +433,8 @@ export async function getTeamsByUserId(userId: string) {
         select: {
           id: true,
           name: true, // Team name
-          code: true
+          code: true,
+          whatsappAccessToken: true,
         }
       }
     }
@@ -447,6 +449,7 @@ export async function getTeamsByUserId(userId: string) {
       teamId: team.team.id,
       teamName: team.team.name,
       code: team.team.code,
+      whatsappAccessToken: team.team.whatsappAccessToken,
       memberCount: teamMembersCount
     };
   }));
@@ -456,7 +459,7 @@ export async function getTeamsByUserId(userId: string) {
 }
 
 
-export async function editTeam({ name, code, googleLink }: EditTeamInput, params: IdParamInput, 
+export async function editTeam({ name, code, googleLink,whatsappAccessToken }: EditTeamInput, params: IdParamInput, 
    request: FastifyRequest,
   reply: FastifyReply) {
 
@@ -468,6 +471,7 @@ export async function editTeam({ name, code, googleLink }: EditTeamInput, params
     data: {
       name,
       code,
+      whatsappAccessToken,
       googleLink
     },
   });

@@ -45,7 +45,7 @@ export async function createGoogleUserHandler(
   }>,
   reply: FastifyReply
 ) {
-
+console.log("enter user signup6777",request?.body)
   if (request?.body?.inviteCode !== process.env.INVITE_CODE) {
     let message ="Invite code is not valid."
     reply.code(500).send({ success: false, message });
@@ -62,6 +62,7 @@ export async function createGoogleUserHandler(
       email: userInfo?.email !== undefined ? userInfo.email : '',
       name: request?.body?.name,
       orgName: request?.body?.orgName,
+      
     }
     try {
       user = await createUserSignup(data);

@@ -55,6 +55,7 @@ model User {
   orgMember    OrgMember[]
   teamMember   TeamMember[]
   surveys      Survey[]
+  whatsappAccessToken        String?
 }
 
 model Org {
@@ -91,6 +92,7 @@ model Team {
   members     TeamMember[]
   surveys     Survey[]
   invitations Invitation[]
+  whatsappAccessToken        String?
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
