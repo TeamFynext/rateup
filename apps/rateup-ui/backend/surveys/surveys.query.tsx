@@ -3,11 +3,13 @@ import {
   cloneSurvey,
   createSurvey,
   getPublicSurvey,
+  getPublicSurveyGoogleLink,
   getSurvey,
   getSurveys,
   getWhatsappSurveys,
   updateSurvey,
   updateSurveyCompleted,
+  updateSurveyGoogleLink,
   updateSurveyPassword,
   updateSurveyStarted,
   updateSurveyVisited,
@@ -38,6 +40,13 @@ export const usePublicSurvey = (surveyId: string) =>
     queryKey: ["public-survey", surveyId],
     queryFn: () => getPublicSurvey(surveyId),
   });
+
+export const usePublicSurveyGoogleLink = (surveyId: string) =>
+useQuery({
+  enabled: !!surveyId,
+  queryKey: ["public-survey-google-link", surveyId],
+  queryFn: () => getPublicSurveyGoogleLink(surveyId),
+});
 
 export const useSurveys = (teamIsSelected) =>
   useQuery({
@@ -232,6 +241,30 @@ export function useEditSurveyMutation(id, setIsLoading) {
     },
   });
 }
+
+export const useUpdateSurveyGoogleLinkMutation = (surveyId: string, setLinkUpdateStatus: (value: boolean) => void) => {
+  const updateMutation = useMutation({
+    mutationFn: ({ data }: any) => {
+      return updateSurveyGoogleLink(surveyId, data);
+    },
+    onSuccess: (data) => {
+      notifications.clean()
+      console.log("Google Link updated.")
+      console.log(data)
+      setLinkUpdateStatus(true)
+    },
+    onError: (err) => {
+      console.error(err);
+      notifications.show({
+        message: "Error updating google link",
+        color: "red",
+      });
+      setLinkUpdateStatus(false)
+    },
+  });
+
+  return updateMutation;
+};
 
 export function useUpdateVisitedMutation() {
   return useMutation((id: string) => updateSurveyVisited(id));

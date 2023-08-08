@@ -1,7 +1,5 @@
 ﻿﻿import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { Flex, Title, Loader, Space, Paper,Grid, Text, Stack, Center, SimpleGrid} from '@mantine/core';
-import { IconSquarePlus } from '@tabler/icons';
-import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { Box, Modal, TextInput } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';

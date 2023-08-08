@@ -23,7 +23,7 @@ import React from "react";
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
 
-  console.log(survey, ">>>istan survey");
+ // console.log(survey, ">>>istan survey");
   return (
     <Stack>
       <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>

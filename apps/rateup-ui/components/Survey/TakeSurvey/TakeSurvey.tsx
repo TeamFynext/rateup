@@ -151,9 +151,48 @@ function TakeSurvey() {
   };
 
   const finishSurvey = () => {
+      let shouldShowGoogleReview = false;
+
+      for (let question of survey?.questions) {
+          if (question?.googleReview) {
+              let userResponse = responses.find(r => r?.questionId === question?.id);
+              if (userResponse) {
+                  switch (question?.type) {
+                      case "Rating":
+                          if (userResponse?.response?.Rating >= question?.googleReview?.minRating) {
+                              shouldShowGoogleReview = true;
+                          }
+                          break;
+                      case "Opinion Scale":
+                          if (userResponse?.response["Opinion Scale"] >= question?.googleReview?.minOpinion) {
+                              shouldShowGoogleReview = true;
+                          }
+                          break;
+                      case "Smiley":
+                          if (question?.googleReview?.reqOptions.includes(userResponse?.response?.Smiley)) {
+                              shouldShowGoogleReview = true;
+                          }
+                          break;
+                      default:
+                          break;
+                  }
+              }
+          }
+
+          if (shouldShowGoogleReview) {
+              break;
+          }
+      }
+
+      if (shouldShowGoogleReview) {
+          console.log("Show Google Review");
+      } else {
+          console.log("Don't show Google Review");
+      }
       submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
         updateCompleted.mutate(surveyId)
-        router.push(`${surveyId}/end`);
+        
+        shouldShowGoogleReview ? router.push(`${surveyId}/end?msg=thanks`) :router.push(`${surveyId}/end`) 
       });
   }
 

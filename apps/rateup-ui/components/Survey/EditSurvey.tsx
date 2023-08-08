@@ -5,11 +5,13 @@ import { QuestionsSideBar } from "./QuestionsSideBar";
 import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import { useStyles } from "./EditSurvey.styles";
+import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
   TypeSelection = "TypeSelection",
   LogicEditor = "LogicEditor",
+  GoogleReviewEditor = "GoogleReviewEditor",
   None = "None",
 }
 interface EditSurveyProps {
@@ -79,6 +81,13 @@ export function EditSurvey({ questions, addQnTrigger,surveyType }: EditSurveyPro
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
             />
+          </Tabs.Panel>
+          <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
+            <GoogleReviewEditor
+                selectedQ={selectedQ}
+                setSelectedQ={setSelectedQ}
+                setActiveTab={setActiveTab}
+              />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.None}>
             <Center sx={{ height: "100%" }}>

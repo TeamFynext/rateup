@@ -31,7 +31,7 @@ import {
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
-import { logicSupportedTypes } from "../../../utils/data";
+import { googleReviewSupportedTypes, logicSupportedTypes } from "../../../utils/data";
 import { IconChevronRight } from "@tabler/icons-react";
 import { fi } from "@faker-js/faker";
 
@@ -61,11 +61,11 @@ export function QuestionDetailedView({
   const form = useForm({
     // Any modifications to initialValues must be applied in the useEffect below
     initialValues: {
-      title: question.title[selectedLanguage] || "",
-      description: question.description[selectedLanguage] || "",
-      required: question.required,
-      type: question.type,
-      choices: question.choices,
+      title: question?.title[selectedLanguage] || "",
+      description: question?.description[selectedLanguage] || "",
+      required: question?.required,
+      type: question?.type,
+      choices: question?.choices,
     },
     validate: {
       title: (value) => (value.trim().length > 0 ? null : "Title is required"),
@@ -225,7 +225,7 @@ export function QuestionDetailedView({
           </Group>
         </Group>
 
-        <Group position="apart" spacing="sm">
+        <Group position="apart"  spacing="md">
           {logicSupportedTypes.includes(question?.type) && (
             <RateupButtonOutline
               title={"Edit Logic"}
@@ -233,8 +233,14 @@ export function QuestionDetailedView({
               onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
             />
           )}
-          <Space w="xl" />
-          <Space w="xl" />
+          {googleReviewSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Options"}
+              size="sm"
+              onClick={() => setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+            />
+          )}
+
 
           <Space w="xl" />
           {question?.id && (
