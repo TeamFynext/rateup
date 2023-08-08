@@ -10,8 +10,8 @@ export default function ThankYou() {
 
   const router = useRouter();
   const { msg } = router.query;
+  const { k } = router.query as { k: string }
   const { surveyId } = router.query as { surveyId: string };
-
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false)
 
@@ -20,11 +20,22 @@ export default function ThankYou() {
   useEffect(() => {
     console.log(JSON.stringify(googleLink))
   }, [googleLink])
-  
 
   useEffect(() => {
     msg === 'thanks' && setEnableGoogleReview(true)
   }, [router, msg])
+
+  useEffect(() => {
+    if (k === 'y') {
+        const timeoutId = setTimeout(() => {
+            router.push(`/public/survey/${surveyId}`);
+        }, 5000);
+        
+        return () => {
+            clearTimeout(timeoutId); 
+        };
+    }
+}, [k]);
  
   // TODO: add customisable thankyou page
   return (
@@ -43,7 +54,7 @@ export default function ThankYou() {
                       Kindly Leave a Google Review
                   </Text>
 
-                  { isLoading ? " " :
+                  { isLoading ? " " : googleLink &&
                     <Link href={`${googleLink}`} target="_blank">
                     <RateupButtonPrimary leftIcon={<IconJewishStar />} title="Go to Review Page" />
                     </Link>
@@ -57,8 +68,6 @@ export default function ThankYou() {
             <Text fz="sm">Powered by </Text>
             <Image pl={10 }src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={80} height={20} />
 
-            
-      
       </Center>
       </Stack>
       </Center>

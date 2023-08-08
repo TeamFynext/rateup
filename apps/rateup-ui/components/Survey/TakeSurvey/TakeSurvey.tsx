@@ -191,8 +191,10 @@ function TakeSurvey() {
       }
       submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
         updateCompleted.mutate(surveyId)
-        
-        shouldShowGoogleReview ? router.push(`${surveyId}/end?msg=thanks`) :router.push(`${surveyId}/end`) 
+        let kioskMode = survey?.kioskMode ? "y" :"n"
+        console.log(">>>"+kioskMode)
+        console.log(">>>"+survey?.kioskMode)
+        shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) :router.push(`${surveyId}/end?k=${kioskMode}`) 
       });
   }
 

@@ -30,7 +30,8 @@ declare global {
     createdBy: string;
     createdAt: string;
     teamId: string;
-    isProtected:boolean
+    isProtected:boolean;
+    kioskMode:boolean;
     type:string
   };
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Paper, Divider, Text, Grid, TextInput, MultiSelect } from '@mantine/core';
+import { Paper, Divider, Text, Grid, TextInput, MultiSelect, Switch } from '@mantine/core';
 import { RateupButtonSecondary } from '../../Button/RateupButtons';
 import { useForm } from "@mantine/form";
 import { useEditSurveyMutation } from '../../../backend/surveys/surveys.query';
 
 const GeneralSettings = ({ survey }) => {
+    const [kioskMode, setKioskMode] = useState(false);
     const surveyForm = useForm({
         initialValues: {
             title: "",
@@ -23,6 +24,7 @@ const GeneralSettings = ({ survey }) => {
             title: survey?.title || "",
             languages: survey?.languages || "",
         });
+        setKioskMode(survey?.kioskMode)
     }, [survey])
 
     const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +40,7 @@ const GeneralSettings = ({ survey }) => {
     const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
     const onSubmit = (values) => {
         setIsLoading(true);
-        const data = { title: values.title, languages: values.languages };
+        const data = { title: values.title, languages: values.languages, kioskMode: kioskMode };
         editSurvey.mutate(data);
     }
     return (
@@ -81,6 +83,21 @@ const GeneralSettings = ({ survey }) => {
                                 setLanguages((current) => [...current, item]);
                             }}
                             {...surveyForm.getInputProps("languages")}
+                        />
+                    </Grid.Col>
+                </Grid>
+
+                <Divider my="xl" />
+                <Grid align='center'>
+                    <Grid.Col md={6} lg={5}>
+                        <Text size={'md'}>Kiosk Mode:</Text>
+                    </Grid.Col>
+                    <Grid.Col md={6} lg={5}>
+                        <Switch 
+                            size="xl" onLabel="ON" offLabel="OFF" checked={kioskMode} 
+                            onChange={(event) => {
+                                setKioskMode(event.target.checked);
+                            }} 
                         />
                     </Grid.Col>
                 </Grid>
