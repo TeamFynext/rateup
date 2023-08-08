@@ -55,7 +55,7 @@ model User {
   orgMember    OrgMember[]
   teamMember   TeamMember[]
   surveys      Survey[]
-  whatsappAccessToken        String?
+ 
 }
 
 model Org {
