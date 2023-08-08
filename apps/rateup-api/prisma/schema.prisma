@@ -137,9 +137,10 @@ model Survey {
   responses   SurveyResponse[]
   sessions    WaSession[]
   isProtected Boolean          @default(false)
+  kioskMode   Boolean          @default(false)
   password    String?
   surveyStats SurveyStats?
-  type        String          @default("web")
+  type        String           @default("web")
 }
 
 model SurveyResponse {

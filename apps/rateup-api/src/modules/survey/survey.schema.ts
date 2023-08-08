@@ -37,7 +37,8 @@ const getSurveyPublicResponseSchema = z.object({
   active: z.boolean(),
   questions: z.array(questionSchema),
   isProtected: z.boolean(),
-  type:z.string()
+  type:z.string(),
+  kioskMode: z.boolean()
 })
 
 const updateSurveyRequestSchema = z.object({
@@ -47,6 +48,7 @@ const updateSurveyRequestSchema = z.object({
   }).optional(),
   languages: z.array(z.string()).optional(),
   active: z.boolean().default(true).optional(),
+  kioskMode: z.boolean().default(false).optional(),
 })
 
 const updateSurveyPasswordRequestSchema = z.object({
