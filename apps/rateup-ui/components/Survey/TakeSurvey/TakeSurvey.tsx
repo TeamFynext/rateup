@@ -239,14 +239,18 @@ function TakeSurvey() {
 
         <Modal
             opened={opened}
+            title=""
             onClose={close}
-            title={<Title order={2}> Confirm your responses </Title>}
             overlayProps={{
               color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
               opacity: 0.55,
               blur: 3,
             }}
           >
+
+          <Modal.Header>
+            <Title order={2}>Confirm your responses</Title>
+          </Modal.Header>
 
             <Stack pb="5rem">
               <Divider/>
@@ -261,7 +265,7 @@ function TakeSurvey() {
                         <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
                         {response && (
                           <Text pb="sm">
-                            {Object.values(response.response)[0]}
+                              {JSON.stringify(Object.values(response?.response)[0])}
                           </Text>
                         )}
                        <Divider/>
