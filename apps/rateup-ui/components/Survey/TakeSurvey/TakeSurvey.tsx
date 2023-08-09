@@ -157,6 +157,7 @@ function TakeSurvey() {
 
   const finishSurvey = () => {
       let shouldShowGoogleReview = false;
+      const { start } = router.query as { start: string };  //(TODO - Temp) change for survey merge 
 
       for (let question of survey?.questions) {
           if (question?.googleReview) {
@@ -197,6 +198,7 @@ function TakeSurvey() {
       submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
         updateCompleted.mutate(surveyId)
         let kioskMode = survey?.kioskMode ? "y" :"n"
+        kioskMode = start === 'true' ? "cs" : kioskMode // temp for static cs demo (TODO)
         console.log(">>>"+kioskMode)
         console.log(">>>"+survey?.kioskMode)
         shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) :router.push(`${surveyId}/end?k=${kioskMode}`) 
