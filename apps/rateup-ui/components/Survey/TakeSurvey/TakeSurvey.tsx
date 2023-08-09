@@ -15,8 +15,12 @@ import {
   Box , Image,
   Modal, useMantineTheme,
   Title,
-  Divider
+  Divider,
+  NumberInput,
+  Avatar,
+  Select
 } from "@mantine/core";
+import { forwardRef } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import { useRouter } from "next/router";
 import { usePublicSurvey, useUpdateCompletedMutation } from "../../../backend/surveys/surveys.query";
@@ -52,6 +56,7 @@ import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from '@mantine/hooks';
+import { flagofIndia } from "../../../public/images";
 
 function TakeSurvey() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -362,8 +367,9 @@ function QuestionForm() {
 function getQuestionForm(type) {
   switch (type) {
     case Q.Text:
-    case Q.Phone:
       return <TextForm />;
+    case Q.Phone:
+        return <PhoneForm />;
     case Q.Email:
       return <EmailForm />;
     case Q.Rating:
@@ -407,8 +413,8 @@ function NextPrev({ prev, next }) {
           setIsErrorInput(false)
         }
       }else if(selectedQ?.required && response && selectedQ?.type === 'Phone'){
-        setErrorMsg(/^[\d+\s]{10,}$/.test(response) ? null : "Invalid Phone");
-        if(!(/^[\d+\s]{10,}$/.test(response))){
+        setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone")
+        if (!/^\d{10}$/.test(response)) {
           setIsErrorInput(false)
         }
       }else if (selectedQ?.required && response && selectedQ?.type === 'Testimonial') {
@@ -496,6 +502,104 @@ function TextForm() {
             radius="xl"
             size="sm"
           />
+    </Paper>
+
+  );
+}
+
+function PhoneForm() {
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { classes } = useStyles();
+  const [phoneError, setPhoneError] = useState(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const data = [
+    {
+      image: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/flag_india.png`,
+      label: '+91',
+      value: '91',
+      description: 'India',
+    },
+
+  ];
+
+  interface ItemProps extends React.ComponentPropsWithoutRef<'div'> {
+    image: string;
+    label: string;
+    description: string;
+  }
+  
+  const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
+    ({ image, label, description, ...others }: ItemProps, ref) => (
+      <div ref={ref} {...others}>
+        <Group noWrap>
+          <Avatar src={image} sx={{minWidth: "50px"}}/>
+          <div>
+            <Text size="sm">{label}</Text>
+            <Text size="xs" opacity={0.65}>
+              {description}
+            </Text>
+          </div>
+        </Group>
+      </div>
+    )
+  );
+
+  //TODO : save with 91 in db if required
+
+  useEffect(() => {
+    if(response)
+    setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
+  }, [response])
+  
+  const handleInputBlur = () => {
+    if (phoneError) {
+      console.log("Invalid phone number");
+
+    }
+    setIsFocused(false)
+  };
+  const handleInputChange = (value: number) => {
+    setIsFocused(true)
+    const phone = value;
+    updateResponse(phone);
+    setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
+  };
+
+  return (
+    <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+        <Group>
+        <Select
+          sx={{maxWidth: "140px"}}
+          placeholder="Select Country Code"
+          itemComponent={SelectItem}
+          data={data}
+          searchable
+          maxDropdownHeight={400}
+          defaultValue={data[0].value}
+          nothingFound="No results"
+          filter={(value, item) =>
+            item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
+            item.description.toLowerCase().includes(value.toLowerCase().trim())
+          }
+        />
+         <NumberInput
+          size="sm"
+          max={9999999999}
+          type="number"
+          placeholder="Enter 10 digit phone number"
+          hideControls
+          value={response || ""}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          variant="unstyled"
+          error={phoneError && !isFocused  ? 'Invalid phone number' : null}
+        />
+        </Group>
+
+
     </Paper>
 
   );
