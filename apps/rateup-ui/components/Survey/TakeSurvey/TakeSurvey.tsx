@@ -151,9 +151,50 @@ function TakeSurvey() {
   };
 
   const finishSurvey = () => {
+      let shouldShowGoogleReview = false;
+
+      for (let question of survey?.questions) {
+          if (question?.googleReview) {
+              let userResponse = responses.find(r => r?.questionId === question?.id);
+              if (userResponse) {
+                  switch (question?.type) {
+                      case "Rating":
+                          if (userResponse?.response?.Rating >= question?.googleReview?.minRating) {
+                              shouldShowGoogleReview = true;
+                          }
+                          break;
+                      case "Opinion Scale":
+                          if (userResponse?.response["Opinion Scale"] >= question?.googleReview?.minOpinion) {
+                              shouldShowGoogleReview = true;
+                          }
+                          break;
+                      case "Smiley":
+                          if (question?.googleReview?.reqOptions.includes(userResponse?.response?.Smiley)) {
+                              shouldShowGoogleReview = true;
+                          }
+                          break;
+                      default:
+                          break;
+                  }
+              }
+          }
+
+          if (shouldShowGoogleReview) {
+              break;
+          }
+      }
+
+      if (shouldShowGoogleReview) {
+          console.log("Show Google Review");
+      } else {
+          console.log("Don't show Google Review");
+      }
       submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
         updateCompleted.mutate(surveyId)
-        router.push(`${surveyId}/end`);
+        let kioskMode = survey?.kioskMode ? "y" :"n"
+        console.log(">>>"+kioskMode)
+        console.log(">>>"+survey?.kioskMode)
+        shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) :router.push(`${surveyId}/end?k=${kioskMode}`) 
       });
   }
 
@@ -198,14 +239,18 @@ function TakeSurvey() {
 
         <Modal
             opened={opened}
+            title=""
             onClose={close}
-            title={<Title order={2}> Confirm your responses </Title>}
             overlayProps={{
               color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
               opacity: 0.55,
               blur: 3,
             }}
           >
+
+          <Modal.Header>
+            <Title order={2}>Confirm your responses</Title>
+          </Modal.Header>
 
             <Stack pb="5rem">
               <Divider/>
@@ -220,7 +265,7 @@ function TakeSurvey() {
                         <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
                         {response && (
                           <Text pb="sm">
-                            {Object.values(response.response)[0]}
+                              {JSON.stringify(Object.values(response?.response)[0])}
                           </Text>
                         )}
                        <Divider/>

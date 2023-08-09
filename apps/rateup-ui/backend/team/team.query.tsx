@@ -115,7 +115,7 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
 async function handleCreateTeam(values) {
   const { orgId } = await getOrgIdRole();
   const { userId } = await getUserID();
-  const data = { name: values.name, code: values.code, orgId, userId };
+  const data = { name: values.name, code: values.code, orgId, userId,whatsappAccessToken: values.whatsappAccessToken };
   return createTeam(data);
 }
 

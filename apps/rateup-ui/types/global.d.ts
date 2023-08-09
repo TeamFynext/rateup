@@ -1,5 +1,12 @@
 // Any modification to this file should be reflected in the backend
 import { QuestionType } from "./enums";
+
+type GoogleReview = {
+  minRating?: number;
+  minOpinion?: number;
+  reqOptions?: Array<string>;
+} | null;
+
 export {};
 declare global {
   type Question = {
@@ -10,6 +17,7 @@ declare global {
     choices?: Zod.RecordType<string, Array<string>>;
     id: string;
     logic?: Zod.RecordType<string|number|Array<string>, string>
+    googleReview?: GoogleReview
   };
 
   type Survey = {
@@ -22,7 +30,8 @@ declare global {
     createdBy: string;
     createdAt: string;
     teamId: string;
-    isProtected:boolean
+    isProtected:boolean;
+    kioskMode:boolean;
     type:string
   };
 

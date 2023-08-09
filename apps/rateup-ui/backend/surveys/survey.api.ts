@@ -44,11 +44,19 @@ export async function getPublicSurvey(surveyId: string) {
     const res =  await axiosClient.get(`${SURVEY_PUBLIC_URL}/${surveyId}`)
     return res.data as Survey
 }
+export async function getPublicSurveyGoogleLink(surveyId: string) {
+    const res =  await axiosClient.get(`${SURVEY_PUBLIC_URL}/googlelink/${surveyId}`)
+    return res?.data?.data?.googleLink
+}
 export async function deleteSurvey(surveyId: string) {
     return await axiosClient.delete(`${SURVEYURL}/${surveyId}`)
 }
 export async function updateSurvey(surveyId: string, data) {
     return await axiosClient.put(`${SURVEYURL}/${surveyId}`, data)
+}
+
+export async function updateSurveyGoogleLink(surveyId: string, data) {
+    return await axiosClient.put(`${SURVEYURL}/googlelink-update/${surveyId}`, data)
 }
 
 export async function updateSurveyPassword(surveyId: string, data) {

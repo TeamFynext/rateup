@@ -11,7 +11,8 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
 
-  const [startClicked, setStartClicked] = useState(false);
+  const { start } = useRouter().query as { start?: boolean };
+  const [startClicked, setStartClicked] = useState(start || false);
   const [questionCount, setQuestionCount] = useState(0);
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
 
