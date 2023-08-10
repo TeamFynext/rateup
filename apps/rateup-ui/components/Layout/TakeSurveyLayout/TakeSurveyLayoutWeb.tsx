@@ -5,6 +5,7 @@ import { usePublicSurvey, useUpdateStartedMutation, useUpdateVisitedMutation, us
 import { RateupButtonPrimary, RateupButtonSecondary } from "../../Button/RateupButtons";
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import Link from 'next/link';
 
 export const TakeSurveyLayoutWeb = ({ children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -47,9 +48,12 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
                      src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
                      alt="RateUp Logo" width={140} height={35} /> 
                  :
-                 <Image pb={30} 
-                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`} 
-                 alt="Govt Logo" width={largeScreen ? 600 : 310}/>
+                 <Link href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`} >
+
+                  <Image pb={30} 
+                  src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`} 
+                  alt="Govt Logo" width={largeScreen ? 600 : 310}/>
+                 </Link>
              
           }
           </>
