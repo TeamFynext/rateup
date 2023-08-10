@@ -48,6 +48,7 @@ declare global {
     type: QuestionType;
     response: {
       [QuestionType.Text]?: string;
+      [QuestionType.TextArea]?: string;
       [QuestionType.Email]?: string;
       [QuestionType.Testimonial]?: {
         testimonial: string;

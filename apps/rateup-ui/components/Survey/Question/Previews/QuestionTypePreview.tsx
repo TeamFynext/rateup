@@ -10,7 +10,7 @@ import {
     Rating,
     Text,
     TextInput, Paper, Input,
-    Box, Image
+    Box, Image, Textarea
 } from "@mantine/core";
 import { useStyles } from '../../TakeSurvey/TakeSurvey.styles';
 import { IconMail, IconThumbDownFilled, IconThumbUpFilled } from '@tabler/icons-react';
@@ -19,10 +19,12 @@ import { IconCalendarEvent } from '@tabler/icons-react';
 
 const QuestionTypePreview = ({ type }) => {
 
-    switch (type) {
+    switch (type) {  //TODO change preview of phone
         case Q.Text:
         case Q.Phone:
             return <TextForm />;
+        case Q.TextArea:
+            return <TextAreaForm />;
         case Q.Email:
             return <EmailForm />;
         case Q.Rating:
@@ -65,6 +67,28 @@ const QuestionTypePreview = ({ type }) => {
                     radius="xl"
                     size="sm"
                 />
+            </Paper>
+
+        );
+    }
+
+    function TextAreaForm() {
+        const { classes } = useStyles();
+
+        return (
+            <Paper shadow="sm"
+                className={classes.inputBox}
+            >
+
+            <Textarea
+                        placeholder="Enter your answer"
+                    //    value={response || ""}
+                    //    onChange={(e) => updateResponse(e.currentTarget.value)}
+                        sx={{ maxWidth: "400px" }}
+                        variant="unstyled"
+                        radius="xl"
+                        size="sm"
+                    />
             </Paper>
 
         );
