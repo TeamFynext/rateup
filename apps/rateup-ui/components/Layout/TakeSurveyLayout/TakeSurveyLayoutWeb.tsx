@@ -12,11 +12,15 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
   const largeScreen = useMediaQuery('(min-width: 60em)');
 
   const { start } = useRouter().query as { start?: boolean };
-  const [startClicked, setStartClicked] = useState(start || false);
+  const [startClicked, setStartClicked] = useState<boolean>(start || false);
   const [questionCount, setQuestionCount] = useState(0);
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
 
   const updateStarted = useUpdateStartedMutation();
+  useEffect(() => {
+    if(start === true)
+      setStartClicked(true)
+  }, [start])
 
   const handleStartClick = () => {
     updateStarted.mutate(surveyId)
@@ -36,10 +40,18 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
    }}>
       <Container fluid px={largeScreen ? "10vw" : "5vw"} py="3vh"  sx={{ background: '#F7F6FB', minHeight:"100vh",  height: "100%" }}>
           <>
-          <Image pb={30} 
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
-              alt="RateUp Logo" width={140} height={35} />
-
+          
+          {
+                 !start ? 
+                 <Image pb={30} 
+                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
+                     alt="RateUp Logo" width={140} height={35} /> 
+                 :
+                 <Image pb={30} 
+                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`} 
+                 alt="Govt Logo" width={largeScreen ? 600 : 310}/>
+             
+          }
           </>
           <Paper  p="sm" radius="lg" shadow="lg" sx={{ minHeight: "80vh" ,  height: "100%" }}>
             <Container fluid>

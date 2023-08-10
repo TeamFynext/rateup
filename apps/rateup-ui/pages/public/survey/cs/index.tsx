@@ -11,10 +11,13 @@ const index = () => {
   return (
       <Container fluid px="10vw" py="5vh"  sx={{ background: '#F7F6FB',  height: "100vh" }}>
           <>
-          <Image pb={30} 
+          {/* <Image pb={30} 
               src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
-              alt="RateUp Logo" width={140} height={35} />
+              alt="RateUp Logo" width={140} height={35} /> */}
 
+          <Image pb={30} 
+              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`} 
+              alt="Govt Logo" width={largeScreen ? 600 : 310}/>
           </>
           <Paper  p="sm" radius="lg" shadow="lg" sx={{ minHeight: "80vh" }}>
             <Container fluid>
@@ -53,9 +56,9 @@ function Welcome({ setStartClicked, largeScreen }) {
   );
 }
 
-let survey1="https://www.rateup.app/public/survey/cd0083d5-edd7-43c0-acc9-a206517e1e47?start=true"
-let survey2="https://www.rateup.app/public/survey/ef9cae16-22bb-496c-b238-d896a14aa429?start=true"
-let survey3="https://www.rateup.app/public/survey/c0b79b80-57ca-47a7-98d0-089f42cd6cbe?start=true"
+let survey1="https://www.rateup.app/public/survey/06f95c13-fc22-438f-a7dd-f4f068ac4233?start=true"
+let survey2="https://www.rateup.app/public/survey/24f3cdde-4833-46f6-9b82-6ded85e679f8?start=true"
+let survey3="https://www.rateup.app/public/survey/74a86d7e-ec59-40e3-8bf5-4dbece9023e2?start=true"
 
 function StartPage({ largeScreen }){
   return <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>
