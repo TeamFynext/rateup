@@ -13,6 +13,7 @@ export enum QuestionType {
   Photo = "Photo",
   Testimonial = "Testimonial",
   Text = "Text",
+  TextArea = "TextArea",
   DateTime = "DateTime",
 }
 

@@ -65,6 +65,7 @@ export function QuestionTypeSelection({
 // TODO: add proper icons
 const questionIcons = {
   [QuestionType.Text]: IconLetterCase,
+  [QuestionType.TextArea]: IconLetterCase, //TODO update icon
   [QuestionType.Email]: IconMail,
   [QuestionType.Phone]: IconPhone,
   [QuestionType.Rating]: IconStar,
@@ -80,6 +81,7 @@ const questionIcons = {
 };
 const whatsappQuestionIcons = {
   [QuestionType.Text]: IconLetterCase,
+  [QuestionType.TextArea]: IconLetterCase, //TODO update icon
   [QuestionType.Email]: IconMail,
   [QuestionType.Phone]: IconPhone,
   // [QuestionType.Rating]: IconStar,
