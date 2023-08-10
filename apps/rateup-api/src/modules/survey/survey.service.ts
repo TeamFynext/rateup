@@ -1,6 +1,7 @@
 import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
+  UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
@@ -96,6 +97,35 @@ export async function getSurveyById(id: string) {
   return survey;
 }
 
+export async function getGoogleUrlBySurveyId(id: string) {
+  const survey = await prisma.survey.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      teamId: true,
+    },
+  });
+
+  if(survey){
+    const team = await prisma.team.findUnique({
+      where: {
+        id: survey.teamId
+      },
+      select: {
+        googleLink: true,
+      },
+    });
+
+    return team;
+
+  }else{
+    return { error: "Survey not found"}
+  }
+
+}
+
+
 /**
  * Returns surveys from ALL TEAMs in which the user is a member of
  * @param userId
@@ -177,6 +207,34 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     data: input,
   });
   return survey;
+}
+
+export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) {
+
+  const survey = await prisma.survey.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      teamId: true,
+    },
+  });
+
+  if(survey){
+    const team = await prisma.team.update({
+      where: {
+        id: survey.teamId
+      },
+      data: {
+        googleLink: data.googleLink,
+      },
+    });
+
+    return team;
+
+  }else{
+    return { error: "Survey not found"}
+  }
 }
 
 export async function updateSurveyPassword(

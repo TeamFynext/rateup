@@ -3,18 +3,20 @@ import {
   cloneSurvey,
   createSurvey,
   deleteSurveyById,
+  getGoogleUrlBySurveyId,
   getSurveyById,
   getSurveysByTeam,
   getSurveysByUserId,
   getWhatsappSurveysByUserId,
   updateCompletedSurvey,
+  updateGoogleLink,
   updateStartedSurvey,
   updateSurveyById,
   updateSurveyPassword,
   updateVisitedSurvey,
   verifySurveyPassword,
 } from "./survey.service";
-import { CloneSurveyInput, CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
+import { CloneSurveyInput, CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateGoogleLinkInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
 
 export async function createSurveyHandler(
@@ -56,6 +58,32 @@ export async function getSurveyByIdHandler(
     reply.code(500);
   }
 }
+
+export async function fetchGoogleUrlBySurveyIdHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply
+) {
+
+  let url;
+
+  try {
+    url =  await getGoogleUrlBySurveyId(request.params.id);
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+  
+  if ("error" in url){
+    reply.code(404).send({ success: false, data: url});
+  }else{
+    reply.code(201).send({ success: true, data: url});
+  }
+  
+}
+
 
 export async function cloneSurveyHandler(
   request: FastifyRequest<{
@@ -275,5 +303,26 @@ export async function completedSurveyHandler(
       }
     } catch (e) {
     reply.code(500).send({status: "error", message: e});
+  }
+}
+
+export async function updateGoogleLinkHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+    Body: UpdateGoogleLinkInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getSurveyById(request.params.id);
+    if (!survey) {
+      reply.code(404).send({ message: "Survey not found."});
+    } else {
+      await updateGoogleLink(request.params.id, request.body);
+      reply.code(200).send({ message: "Success", data: "Google Link Updated successfully." });
+    }
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
   }
 }

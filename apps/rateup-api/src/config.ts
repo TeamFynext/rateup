@@ -4,10 +4,12 @@ import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
-import ThirdPartyEmailPassword from"supertokens-node/recipe/thirdpartyemailpassword";
+import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 
 let { Google } = ThirdPartyEmailPassword;
-const frontendUrl =  process.env.FRONTEND_URL ? process.env.FRONTEND_URL : "http://localhost:3000";
+const frontendUrl = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL
+  : "http://localhost:3000";
 
 export const SuperTokensConfig: TypeInput = {
   framework: "fastify",
@@ -19,229 +21,257 @@ export const SuperTokensConfig: TypeInput = {
   appInfo: {
     // learn more about this on https://supertokens.com/docs/session/appinfo
     appName: "rateup",
-    apiDomain: process.env.API_URL ? process.env.API_URL : "http://localhost:3001",
+    apiDomain: process.env.API_URL
+      ? process.env.API_URL
+      : "http://localhost:3001",
     websiteDomain: frontendUrl,
     apiBasePath: "/api/auth",
     websiteBasePath: "/login",
   },
   recipeList: [
     ThirdPartyEmailPassword.init({
-
-    signUpFeature: {
-        formFields: [{
-            id: "name"
-          }, {
-            id: "orgName"
+      signUpFeature: {
+        formFields: [
+          {
+            id: "name",
           },
           {
-            id: "inviteCode"
-          }      
-        ]
+            id: "orgName",
+          },
+          {
+            id: "inviteCode",
+          },
+         
+        ],
       },
 
-    emailDelivery: {
-          override: (originalImplementation) => {
-              return {
-                  ...originalImplementation,
-                  sendEmail: async function (input) {
-                      if (input.type === "PASSWORD_RESET") {
-                          // You can change the path, domain of the reset password link,
-                          // or even deep link it to your mobile app
-                          return originalImplementation.sendEmail({
-                              ...input,
-                              passwordResetLink: input.passwordResetLink.replace(
-                                  `${frontendUrl}/auth/reset-password`,
-                                  `${frontendUrl}/login/reset-password`,
-                                  )
-                          })
-                      }
-                      return originalImplementation.sendEmail(input);
-                  }
+      emailDelivery: {
+        override: (originalImplementation) => {
+          return {
+            ...originalImplementation,
+            sendEmail: async function (input) {
+              if (input.type === "PASSWORD_RESET") {
+                // You can change the path, domain of the reset password link,
+                // or even deep link it to your mobile app
+                return originalImplementation.sendEmail({
+                  ...input,
+                  passwordResetLink: input.passwordResetLink.replace(
+                    `${frontendUrl}/auth/reset-password`,
+                    `${frontendUrl}/login/reset-password`
+                  ),
+                });
               }
-          }
+              return originalImplementation.sendEmail(input);
+            },
+          };
+        },
       },
 
       providers: [
         // We have provided you with development keys which you can use for testing.
         // IMPORTANT: Please replace them with your own OAuth keys for production use.
         Google({
-            clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || '',
-            clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || ''
+          clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
+          clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
         }),
-
       ],
 
       override: {
-          functions: (originalImplementation) => {
-            return {
-                ...originalImplementation,
-                emailPasswordSignUp: async function (input) {
-                    let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(input.email);
-                    console.log(input)
-                    if (existingUsers.length === 0) {
-                        // this means this email is new so we allow sign up
-                        return originalImplementation.emailPasswordSignUp(input);
-                    }
-                    return {
-                        status: "EMAIL_ALREADY_EXISTS_ERROR"
-                    }
-                },
-                thirdPartySignInUp: async function (input) {
-                    let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(input.email);
-                    if (existingUsers.length === 0) {
-                        // this means this email is new so we allow sign up
-                        return originalImplementation.thirdPartySignInUp(input);
-                    }
-                    if (existingUsers.find(i => i.thirdParty !== undefined && i.thirdParty.id === input.thirdPartyId && i.thirdParty.userId === input.thirdPartyUserId)) {
-                        // this means we are trying to sign in with the same social login. So we allow it
-                        return originalImplementation.thirdPartySignInUp(input);
-                    }
-                    // this means that the email already exists with another social or email password login method, so we throw an error.
-                    throw new Error("Cannot sign up as email already exists");
-                }
-            }
+        functions: (originalImplementation) => {
+          return {
+            ...originalImplementation,
+            emailPasswordSignUp: async function (input) {
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
+                input.email
+              );
+              console.log(input);
+              if (existingUsers.length === 0) {
+                // this means this email is new so we allow sign up
+                return originalImplementation.emailPasswordSignUp(input);
+              }
+              return {
+                status: "EMAIL_ALREADY_EXISTS_ERROR",
+              };
+            },
+            thirdPartySignInUp: async function (input) {
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
+                input.email
+              );
+              if (existingUsers.length === 0) {
+                // this means this email is new so we allow sign up
+                return originalImplementation.thirdPartySignInUp(input);
+              }
+              if (
+                existingUsers.find(
+                  (i) =>
+                    i.thirdParty !== undefined &&
+                    i.thirdParty.id === input.thirdPartyId &&
+                    i.thirdParty.userId === input.thirdPartyUserId
+                )
+              ) {
+                // this means we are trying to sign in with the same social login. So we allow it
+                return originalImplementation.thirdPartySignInUp(input);
+              }
+              // this means that the email already exists with another social or email password login method, so we throw an error.
+              throw new Error("Cannot sign up as email already exists");
+            },
+          };
         },
         apis: (originalImplementation) => {
-            return {
-                ...originalImplementation,
+          return {
+            ...originalImplementation,
 
-                // override the email password sign up API
-                emailPasswordSignUpPOST: async function(input) {
-                    if (originalImplementation.emailPasswordSignUpPOST === undefined) {
-                        throw Error("Should never come here");
-                    }
+            // override the email password sign up API
+            emailPasswordSignUpPOST: async function (input) {
+              if (
+                originalImplementation.emailPasswordSignUpPOST === undefined
+              ) {
+                throw Error("Should never come here");
+              }
 
-                    // TODO: some pre sign up logic
+              // TODO: some pre sign up logic
 
-                    let formFields = input.formFields;
-                    const inviteCode = getValueByKey(formFields, "inviteCode");
+              let formFields = input.formFields;
+              const inviteCode = getValueByKey(formFields, "inviteCode");
+              console.log(formFields, "formal fielsds");
+              if (inviteCode !== process.env.INVITE_CODE) {
+                return {
+                  status: "GENERAL_ERROR",
+                  message: "Invite Code not valid",
+                };
+              }
 
-                    if (inviteCode !== process.env.INVITE_CODE) {
-                     return {
-                          status: "GENERAL_ERROR",
-                          message: "Invite Code not valid"
-                      }
-                    }
+              let response =
+                await originalImplementation.emailPasswordSignUpPOST(input);
 
-                    let response = await originalImplementation.emailPasswordSignUpPOST(input);
+              if (response.status === "OK") {
+                // TODO: some post sign up logic
 
-                    if (response.status === "OK") {
-                        // TODO: some post sign up logic
+                const name = getValueByKey(formFields, "name");
+                const orgName = getValueByKey(formFields, "orgName");
 
-                      const name = getValueByKey(formFields, "name");
-                      const orgName = getValueByKey(formFields, "orgName");
+                let { id, email } = response.user;
 
-                      let { id, email } = response.user;
-
-                      if(name && orgName){
-                        const userSignup = await createUserSignup({ id, email, name, orgName });
-                      }
-                    }
-
-                    return response;
-                },
-
-                // override the email password sign in API
-                emailPasswordSignInPOST: async function(input) {
-                    if (originalImplementation.emailPasswordSignInPOST === undefined) {
-                        throw Error("Should never come here");
-                    }
-
-                    // TODO: some pre sign in logic
-
-                    let response = await originalImplementation.emailPasswordSignInPOST(input);
-
-                    if (response.status === "OK") {
-                        // TODO: some post sign in logic
-                    }
-
-                    return response;
-                },
-
-                // override the thirdparty sign in / up API
-                thirdPartySignInUpPOST: async function(input) {
-                    if (originalImplementation.thirdPartySignInUpPOST === undefined) {
-                        throw Error("Should never come here");
-                    }
-                    // TODO: Some pre sign in / up logic
-                    try {
-                          let response = await originalImplementation.thirdPartySignInUpPOST!(input);
-
-                          if (response.status === "OK") {
-                              if (response.createdNewUser) {
-                                  // TODO: some post sign up logic
-                              } else {
-                                  // TODO: some post sign in logic
-                                  console.log("Sign in succes............................")
-                                  console.log(response?.user?.email)
-                                  console.log(response?.user?.id)
-                                  const user = await getOrgIdAndRole({ id: response?.user?.id });
-                              }
-                          }
-
-                          return response;
-                      } catch (err: any) {
-                          if (err.message === "Cannot sign up as email already exists") {
-                              // this error was thrown from our function override above.
-                              // so we send a useful message to the user
-                              return {
-                                  status: "GENERAL_ERROR",
-                                  message: "Seems like you already have an account with another method. Please use Email & Password to Login."
-                              }
-                          }
-                          throw err;
-                      }
+                if (name && orgName) {
+                  const userSignup = await createUserSignup({
+                    id,
+                    email,
+                    name,
+                    orgName,
+                  });
                 }
-            }
-        }
-    }
+              }
+
+              return response;
+            },
+
+            // override the email password sign in API
+            emailPasswordSignInPOST: async function (input) {
+              if (
+                originalImplementation.emailPasswordSignInPOST === undefined
+              ) {
+                throw Error("Should never come here");
+              }
+
+              // TODO: some pre sign in logic
+
+              let response =
+                await originalImplementation.emailPasswordSignInPOST(input);
+
+              if (response.status === "OK") {
+                // TODO: some post sign in logic
+              }
+
+              return response;
+            },
+
+            // override the thirdparty sign in / up API
+            thirdPartySignInUpPOST: async function (input) {
+              if (originalImplementation.thirdPartySignInUpPOST === undefined) {
+                throw Error("Should never come here");
+              }
+              // TODO: Some pre sign in / up logic
+              try {
+                let response =
+                  await originalImplementation.thirdPartySignInUpPOST!(input);
+
+                if (response.status === "OK") {
+                  if (response.createdNewUser) {
+                    // TODO: some post sign up logic
+                  } else {
+                    // TODO: some post sign in logic
+                    console.log("Sign in succes............................");
+                    console.log(response?.user?.email);
+                    console.log(response?.user?.id);
+                    const user = await getOrgIdAndRole({
+                      id: response?.user?.id,
+                    });
+                  }
+                }
+
+                return response;
+              } catch (err: any) {
+                if (err.message === "Cannot sign up as email already exists") {
+                  // this error was thrown from our function override above.
+                  // so we send a useful message to the user
+                  return {
+                    status: "GENERAL_ERROR",
+                    message:
+                      "Seems like you already have an account with another method. Please use Email & Password to Login.",
+                  };
+                }
+                throw err;
+              }
+            },
+          };
+        },
+      },
     }),
 
     Session.init({
-        override: {
-            functions: (originalImplementation) => {
-                return {
-                    ...originalImplementation,
-                    createNewSession: async function (input) {
-                        let userId = input.userId;
-                        let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+      override: {
+        functions: (originalImplementation) => {
+          return {
+            ...originalImplementation,
+            createNewSession: async function (input) {
+              let userId = input.userId;
+              let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
 
-                        console.log("User email................."+userInfo?.email)
-                        const user = await getOrgIdAndRole({ id: userId });
-                        // This goes in the access token, and is availble to read on the frontend.
-                        input.accessTokenPayload = {
-                            ...input.accessTokenPayload,
-                            email: userInfo?.email,
-                            orgId: user?.orgId,
-                            role: user?.role,
-                        };
+              console.log("User email................." + userInfo?.email);
+              const user = await getOrgIdAndRole({ id: userId });
+              // This goes in the access token, and is availble to read on the frontend.
+              input.accessTokenPayload = {
+                ...input.accessTokenPayload,
+                email: userInfo?.email,
+                orgId: user?.orgId,
+                role: user?.role,
+              };
 
-                        return originalImplementation.createNewSession(input);
-                    },
-                };
+              return originalImplementation.createNewSession(input);
             },
+          };
         },
-    }) ,
-  
+      },
+    }),
+
     EmailVerification.init({
-      mode: "REQUIRED", 
+      mode: "REQUIRED",
       emailDelivery: {
         override: (originalImplementation) => {
-            return {
-                ...originalImplementation,
-                sendEmail(input) {
-                    return originalImplementation.sendEmail({
-                        ...input,
-                        emailVerifyLink: input.emailVerifyLink.replace(
-                            // This is: `${websiteDomain}${websiteBasePath}/verify-email`
-                            `${frontendUrl}/auth/verify-email`,
-                            `${frontendUrl}/login/verify-email`
-                            ),
-                        }
-                    )
-                },
-            }
-        }
+          return {
+            ...originalImplementation,
+            sendEmail(input) {
+              return originalImplementation.sendEmail({
+                ...input,
+                emailVerifyLink: input.emailVerifyLink.replace(
+                  // This is: `${websiteDomain}${websiteBasePath}/verify-email`
+                  `${frontendUrl}/auth/verify-email`,
+                  `${frontendUrl}/login/verify-email`
+                ),
+              });
+            },
+          };
+        },
       },
       override: {
         apis: (originalImplementation) => {
@@ -261,10 +291,12 @@ export const SuperTokensConfig: TypeInput = {
               if (response.status === "OK") {
                 let { id, email } = response.user;
 
-                console.log("--------------Email Verification Part---------------------------"+JSON.stringify(response.user))
+                console.log(
+                  "--------------Email Verification Part---------------------------" +
+                    JSON.stringify(response.user)
+                );
 
                 let orgMember = await getOrgIdAndRole({ id: id });
-
               }
               return response;
             },
