@@ -5,9 +5,10 @@ import { useRouter } from "next/router";
 import { RateupButtonBlue, RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
 import { usePublicSurveyGoogleLink } from "../../../../backend/surveys/surveys.query";
 import Link from 'next/link';
+import { useMediaQuery } from '@mantine/hooks';
 
 export default function ThankYou() {
-
+  const largeScreen = useMediaQuery('(min-width: 60em)');
   const router = useRouter();
   const { msg } = router.query;
   const { k } = router.query as { k: string } //kioskMode
@@ -43,7 +44,7 @@ export default function ThankYou() {
       <Center sx={{ height: "100vh" }}>
         <Stack align="center" justify="center" spacing="xl" sx={{ height: "80vh" }}>
             <IconCircleCheck size={"4rem"}/>
-            <Title order={1} sx={{fontSize: '4rem'}}>Thank you</Title>
+            <Title order={1} sx={{fontSize: largeScreen ? '4rem' : "3rem"}}>Thank you</Title>
             <Text sx={{fontSize: '1.3rem'}}> For submitting the response.</Text>
 
             {

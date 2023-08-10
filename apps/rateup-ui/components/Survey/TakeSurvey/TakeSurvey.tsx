@@ -35,15 +35,12 @@ import {
 } from "../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
-  IconArrowLeft,
   IconCalendarEvent,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
   IconMail,
-  IconThumbDown,
   IconThumbDownFilled,
-  IconThumbUp,
   IconThumbUpFilled,
 } from "@tabler/icons-react";
 import { SmileyResponse } from "../../../types/enums";
@@ -56,9 +53,9 @@ import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from '@mantine/hooks';
-import { flagofIndia } from "../../../public/images";
 
 function TakeSurvey() {
+  const largeScreen = useMediaQuery('(min-width: 60em)');
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
@@ -286,7 +283,7 @@ function TakeSurvey() {
                     <RateupButtonBlackOutline
                       radius={"xl"}
                       title={"Back"}
-                      size="lg"
+                      size={largeScreen ? "lg" : "md"}
                       onClick={close}
                       leftIcon={<IconChevronLeft />}
                     />
@@ -294,7 +291,7 @@ function TakeSurvey() {
                     <RateupButtonBlue
                       radius={"xl"}
                       title={"Confirm"}
-                      size="lg"
+                      size={largeScreen ? "lg" : "md"}
                       leftIcon={<IconCheck />}
                       onClick={finishSurvey}
                     />
@@ -307,8 +304,8 @@ function TakeSurvey() {
           <Stack mt="xl">
             {/* <QuestionNo num={QnNo} /> */}
             
-              <QuestionTitle />
-              <QuestionDesc />
+              <QuestionTitle largeScreen={largeScreen} />
+              <QuestionDesc  largeScreen={largeScreen}/>
               <QuestionForm />
               
             <NextPrev next={handleNext} prev={handlePrev} />
@@ -344,16 +341,16 @@ function QuestionNo({num}) {
   return <Text size={"15px"}>Question: {num}</Text>;
 }
 
-function QuestionTitle() {
+function QuestionTitle({largeScreen}) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  return <Text size={"30px"}>{selectedQ.title[selectedLanguage]}</Text>;
+  return <Text fw={500} size={largeScreen ? "30px" : "18px"}>{selectedQ.title[selectedLanguage]}</Text>;
 }
-function QuestionDesc() {
+function QuestionDesc({largeScreen}) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text size={"15px"} c="dimmed" pb={20}>
+    <Text size={largeScreen ? "15px" : "12px"} c="dimmed" pb={ largeScreen ? 20 : 10}>
       {selectedQ.description[selectedLanguage]}
     </Text>
   );
@@ -722,7 +719,7 @@ function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
     <Group>
-      <Box w={120}>
+      <Box w={100}>
         <Button
           color={response === YNResponse.No ? "yellow" : "dark.0"}
           size="lg"
@@ -734,7 +731,7 @@ function YNForm() {
           No
         </Button>
       </Box>
-      <Box w={120}>
+      <Box w={100}>
 
       <Button
         color={response === YNResponse.Yes ? "yellow" : "dark.0"}
