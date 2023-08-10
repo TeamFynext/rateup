@@ -367,6 +367,8 @@ function getQuestionForm(type) {
   switch (type) {
     case Q.Text:
       return <TextForm />;
+    case Q.TextArea:
+        return <TextAreaForm />;
     case Q.Phone:
         return <PhoneForm />;
     case Q.Email:
@@ -496,6 +498,32 @@ function TextForm() {
             placeholder="Enter your answer"
             value={response || ""}
             onChange={(e) => updateResponse(e.currentTarget.value)}
+            sx={{ maxWidth: "400px" }}
+            variant="unstyled"
+            radius="xl"
+            size="sm"
+          />
+    </Paper>
+
+  );
+}
+
+function TextAreaForm() {
+  // TODO: TextArea?
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { classes } = useStyles();
+
+  return (
+    <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+          <Textarea
+            placeholder="Enter your answer"
+            value={response ? response.replace(', ', '\n') : ""}
+            onChange={(e) => {
+              const replacedValue = e.currentTarget.value.replace(/\n/g, ', ');
+              updateResponse(replacedValue)
+            }}
             sx={{ maxWidth: "400px" }}
             variant="unstyled"
             radius="xl"
@@ -645,7 +673,6 @@ function EmailForm() {
     </Paper>
   );
 }
-
 
 function RatingForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
