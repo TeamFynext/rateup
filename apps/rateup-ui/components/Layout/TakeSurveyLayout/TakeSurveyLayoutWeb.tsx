@@ -59,7 +59,7 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
 
             {startClicked ?
                    (currentQuestionNo > 0 && (
-                    <Grid justify="center" align="center" pb={largeScreen ? 40 : 10}  columns={24}>
+                    <Grid justify="center" align="center" pb={largeScreen ? 100 : 10}  columns={24}>
                     <Grid.Col md={4} lg={4} xs={24} order={2}  orderSm={1} orderXs={1}>
                       <Center>
                       <Text>Question: {currentQuestionNo}</Text>
