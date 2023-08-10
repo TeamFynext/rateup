@@ -26,7 +26,7 @@ import { useRouter } from "next/router";
 import { usePublicSurvey, useUpdateCompletedMutation } from "../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
 import { SelectedQContext } from "../../../context/SelectedQ";
-
+import dayjs from 'dayjs';
 import {
   LDResponse,
   LogicAction,
@@ -269,7 +269,12 @@ function TakeSurvey() {
                         <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
                         {response && (
                           <Text pb="sm">
-                              {JSON.stringify(Object.values(response?.response)[0])}
+                              {question.type === 'DateTime' ? (
+                                    dayjs(Object.values(response?.response)[0]).format('DD, MMM , YYYY')
+                                  ) : (
+                                    JSON.stringify(Object.values(response?.response)[0])
+                                  )}
+                              
                           </Text>
                         )}
                        <Divider/>
