@@ -1,8 +1,8 @@
-import { Center, Container, Stack , Paper, Title, Text,Image } from "@mantine/core";
-import {  IconCircleCheck, IconJewishStar } from "@tabler/icons-react";
+import { Center, Container, Group, Stack , Paper, Title, Text,Image } from "@mantine/core";
+import {  IconCircleCheck, IconHome, IconJewishStar } from "@tabler/icons-react";
 import React, {useState, useEffect} from "react";
 import { useRouter } from "next/router";
-import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
+import { RateupButtonBlue, RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
 import { usePublicSurveyGoogleLink } from "../../../../backend/surveys/surveys.query";
 import Link from 'next/link';
 
@@ -10,7 +10,7 @@ export default function ThankYou() {
 
   const router = useRouter();
   const { msg } = router.query;
-  const { k } = router.query as { k: string }
+  const { k } = router.query as { k: string } //kioskMode
   const { surveyId } = router.query as { surveyId: string };
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false)
@@ -25,10 +25,10 @@ export default function ThankYou() {
     msg === 'thanks' && setEnableGoogleReview(true)
   }, [router, msg])
 
-  useEffect(() => {
-    if (k === 'y') {
+  useEffect(() => {  //kioskMode redirect
+    if (k === 'y' || k ==='cs') {
         const timeoutId = setTimeout(() => {
-            router.push(`/public/survey/${surveyId}`);
+          k ==='cs' ? router.push(`/public/survey/cs`) : router.push(`/public/survey/${surveyId}`);
         }, 5000);
         
         return () => {
@@ -63,6 +63,16 @@ export default function ThankYou() {
                 </Stack>
               </Paper>
             }
+
+            { k==="cs" &&
+            <Group m="xl" p="xl">
+                  <Link href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`} target="_blank">
+                   <RateupButtonBlue leftIcon={<IconHome />} title="Go to Home" />
+                  </Link>
+
+                  </Group>
+            }
+                
 
             <Center mb={30}  sx={{ position: 'absolute' , bottom: '10vh'}}>
             <Text fz="sm">Powered by </Text>
