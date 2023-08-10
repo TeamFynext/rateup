@@ -247,6 +247,7 @@ export function parseResponse(
     case Q.YN:
     case Q.LD:
     case Q.Text:
+    case Q.TextArea:
     case Q.Email:
     case Q.Opinion:
     case Q.MCQ:
