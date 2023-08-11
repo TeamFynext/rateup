@@ -13,9 +13,10 @@ export function getResponse(qId: string, response: SurveyResponse) {
     const date = dayjs(dateTimeValue);
 
     const formattedDate = date.format("D, MMM YYYY");
-    const formattedTime = date.format("h:mm A");
+    //const formattedTime = date.format("h:mm A");  
+   // return `${formattedDate}, ${formattedTime}`;
 
-    return `${formattedDate}, ${formattedTime}`;
+    return `${formattedDate}`;
   }
 
   return qResponse.response[type];
