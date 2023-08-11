@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef, useCallback} from 'react'
 import { ScrollArea, Loader, Table, Title, Grid, Paper, Text } from "@mantine/core";
-import { RateupButtonBlackOutline } from '../../Button/RateupButtons';
+import { RateupButtonBlackOutline, RateupButtonSecondary } from '../../Button/RateupButtons';
 import { IconChevronDown } from '@tabler/icons-react';
 import { useContext } from "react";
 import { useResponses } from '../../../backend/surveys/response/response.query';
@@ -9,10 +9,11 @@ import { useRouter } from "next/router";
 import dayjs from 'dayjs';
 import { getResponse } from '../../../utils/response';
 import SelectedLanguageContext from '../../../context/SelectedLanguage';
+import { useDownloadExcel } from 'react-export-table-to-excel';
 
-const Responses = () => {
+const Responses = ({ survey }) => {
     const [responseCount, setResponseCount] = useState(0)
-
+    const tableRef = useRef(null);
     const router = useRouter();
     const { surveyId } = router.query;
 
@@ -28,15 +29,26 @@ const Responses = () => {
       error: QError,
       data: questions,
     } = useQuestions(surveyId);
+
+    useEffect(() => {
+      setResponseCount(responses?.length);
+    }, [responses]);
+
+    const { onDownload } = useDownloadExcel({
+      currentTableRef: tableRef.current,
+      filename: survey?.title,
+      sheet: 'Responses'
+  })
+
+    const cellGap = {
+      paddingLeft: '10px',
+      paddingRight: '10px',
+      minWidth: '100px'
+    };
   
     if (isLoading || isQLoading) return <Loader />;
     if (error || QError) return <Text>An error has occurred</Text>;
-    
-  const cellGap = {
-    paddingLeft: '10px',
-    paddingRight: '10px',
-    minWidth: '100px'
-  };
+
   return (
     <>
     <Grid grow mb={15} align="center">
@@ -57,20 +69,30 @@ const Responses = () => {
   <Grid justify="space-between" align="center">
     <Grid.Col span={3}><Title order={2}>Total Responses : {responseCount}</Title></Grid.Col>
           <Grid.Col span={3}>
+          <RateupButtonSecondary 
+           onClick={onDownload}
+          title={"Download"} 
+          size="md"
+          radius={"lg"}
+          rightIcon={<IconChevronDown
+            size="1rem" />}/>
+
           </Grid.Col>
   </Grid>
 </Paper>
 
 <Paper p="xl" shadow="lg" radius="lg">
   <ScrollArea style={{ width: '70vw', height: '50vh', overflow: 'auto', position: 'relative' }}>
-    <Table highlightOnHover>
+    <Table highlightOnHover  ref={tableRef}>
       <TableHead questions={questions}  />
       <tbody>
-        {responses.map((response) => (
+        {responses?.map((response) => (
           <tr key={response.id}>
             <td style={cellGap}>{dayjs(response.createdAt).format("DD-MM-YYYY")}</td>
             {questions.map((q) => (
-              <td key={q.id} style={cellGap}>{getResponse(q.id, response)}</td>
+              <td key={q.id} style={cellGap}>
+                {getResponse(q.id, response)}
+              </td>
             ))}
           </tr>
         ))}

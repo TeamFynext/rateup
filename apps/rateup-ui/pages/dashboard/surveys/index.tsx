@@ -290,7 +290,8 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
 
       <Flex justify={"space-between"} mt="xl" align={"center"}>
         <StatusBadge active={survey.active} />
-        <Text>Total Responses : 0</Text>
+        {/* <Text>Total Responses : #</Text> */}
+         {/* //TODO */}
         <Link
           href={`/dashboard/surveys/${survey.id}?tab=Responses`}
           style={{ color: theme.colors.blue[9] }}

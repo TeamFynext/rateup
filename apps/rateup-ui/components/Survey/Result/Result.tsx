@@ -30,7 +30,7 @@ const Result = ({survey}) => {
       </Tabs.Panel>
 
     <Tabs.Panel value="responses" >
-        <Responses />
+        <Responses survey={survey}/>
     </Tabs.Panel>
 
 
