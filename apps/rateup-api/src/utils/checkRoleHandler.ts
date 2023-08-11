@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
 import Session from "supertokens-node/recipe/session";
 
 export const checkRoleHandler =
-  (requiredRole: "ADMIN" | "SUPER_ADMIN") =>
+  (requiredRole: "ADMIN" | "SUPER_ADMIN" | "MEMBER") =>
  async (
     request: FastifyRequest,
     reply: FastifyReply,

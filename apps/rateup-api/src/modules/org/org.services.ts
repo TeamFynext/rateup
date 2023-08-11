@@ -52,6 +52,7 @@ export async function getTeamsMembers(orgId: string) {
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
 }
 
 export async function updateOrgUserRole({ role }: { role: string }, params: IdParamInput, request: FastifyRequest, reply: FastifyReply) {
