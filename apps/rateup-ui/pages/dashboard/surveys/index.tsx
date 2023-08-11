@@ -53,10 +53,12 @@ import {
   useSurveysByTeam,
 } from "../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import { useUser } from "../../../context/UserContext";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
+  const { user, setUser } = useUser();
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -197,6 +199,8 @@ export default function Surveys() {
           { maxWidth: "md", cols: 1 },
         ]}
       >
+        {user?.role !== 'MEMBER' &&  
+
         <Paper
           p="md"
           shadow="lg"
@@ -213,6 +217,7 @@ export default function Surveys() {
             </Stack>
           </Center>
         </Paper>
+        }
 
         {(teamIsSelected
           ? surveysByTeam?.data?.length > 0
@@ -246,6 +251,8 @@ interface SurveyCardProps {
 export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & {teamsData: any}): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
+  const { user, setUser } = useUser();
+
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -264,9 +271,15 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       radius="lg"
       sx={{ cursor: "pointer" }}
       onClick={() => {
-        router.push(
+
+        user?.role === 'MEMBER' 
+        
+        ? router.push(
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+        )
+        : router.push(
           `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
-        );
+        )
       }}
     >
       <Flex justify={"space-between"} align={"center"}>

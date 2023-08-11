@@ -54,10 +54,12 @@ import {
   useSurveysByTeam,
 } from "../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import { useUser } from "../../../context/UserContext";
 
 export default function WhatsappSurveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
+  const { user, setUser } = useUser();
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -197,22 +199,25 @@ export default function WhatsappSurveys() {
           { maxWidth: "md", cols: 1 },
         ]}
       >
-        <Paper
-          p="md"
-          shadow="lg"
-          radius="lg"
-          sx={{ cursor: "pointer" }}
-          onClick={open}
-        >
-          <Center h="100%">
-            <Stack align="center">
-              <IconPlus size={36} />
-              <Text size="xl" fw={700}>
-                Add Survey
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
+         {user?.role !== 'MEMBER' &&  
+
+              <Paper
+                p="md"
+                shadow="lg"
+                radius="lg"
+                sx={{ cursor: "pointer" }}
+                onClick={open}
+              >
+                <Center h="100%">
+                  <Stack align="center">
+                    <IconPlus size={36} />
+                    <Text size="xl" fw={700}>
+                      Add Survey
+                    </Text>
+                  </Stack>
+                </Center>
+              </Paper>
+        }
 
         {(teamIsSelected
           ? surveysByTeam?.data?.length > 0
@@ -244,6 +249,8 @@ interface SurveyCardProps {
 export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & {teamsData: any}): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
+  const { user, setUser } = useUser();
+
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -262,9 +269,14 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       radius="lg"
       sx={{ cursor: "pointer" }}
       onClick={() => {
-        router.push(
+        user?.role === 'MEMBER' 
+        
+        ? router.push(
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+        )
+        : router.push(
           `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
-        );
+        )
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
