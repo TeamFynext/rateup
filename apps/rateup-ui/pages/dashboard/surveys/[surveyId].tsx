@@ -12,6 +12,7 @@ import { IconChevronDown, IconPlus } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
 import Result from "../../../components/Survey/Result/Result";
+import { useUser } from "../../../context/UserContext";
 
 enum TabEnum {
   Edit = "Edit",
@@ -23,6 +24,7 @@ export default () => {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
+  const { user, setUser } = useUser();
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -44,6 +46,13 @@ export default () => {
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
   const [addQnTrigger, setaddQnTrigger] = useState(0)
+
+  useEffect(() => {
+    user?.role === 'MEMBER' && router.push(
+      `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${surveyId}`
+    )
+  }, [user])
+  
 
   useEffect(() => {
     if (tab && Object.values(TabEnum).includes(tab as any)) {

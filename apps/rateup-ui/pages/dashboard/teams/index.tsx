@@ -130,7 +130,7 @@ export default function Teams() {
           wrap="wrap"
         >
           <Title order={1}>Teams</Title>
-          {user?.role === "ADMIN" ? (
+          {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
             <p>You can view all your teams.</p>
           ) : (
             <p>
@@ -159,7 +159,7 @@ export default function Teams() {
 
       <Space h="xl" />
 
-      {user?.role === "ADMIN" ? (
+      {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
         <SimpleGrid
           cols={4}
           spacing={"lg"}
