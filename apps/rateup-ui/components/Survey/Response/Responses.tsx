@@ -17,7 +17,6 @@ const Responses = ({ survey }) => {
     const router = useRouter();
     const { surveyId } = router.query;
 
-
     // TODO: find out why surveyId is an array
     if (Array.isArray(surveyId)) {
       throw new Error("surveyId is an array");
@@ -53,13 +52,13 @@ const Responses = ({ survey }) => {
     <>
     <Grid grow mb={15} align="center">
     <Grid.Col span={3} > 
-      <RateupButtonBlackOutline 
+      {/* <RateupButtonBlackOutline 
         title={"Responses"} 
         size="md"
         radius={"lg"}
         rightIcon={<IconChevronDown
           size="1rem" />}
-      />
+      /> */}
     </Grid.Col>
     <Grid.Col span={5}>
       <Text fz="xxl" fw={600}>Responses</Text>
@@ -128,8 +127,10 @@ interface TableHeadProps {
         <tr>
           <th>Date</th>
           {questions.map((q) => (
-            <th key={q.id}>{q.title[selectedLanguage]}</th>
+            <th key={q.id}>{q.title[selectedLanguage] || q.title['English']}</th>
           ))}
+          {/* TODO : above 'English' given as a temporary fix,
+           change default language for page survey/response/id */}
         </tr>
       </thead>
     );

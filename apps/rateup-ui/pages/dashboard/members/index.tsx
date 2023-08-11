@@ -18,7 +18,7 @@ const Members = () => {
   const theme = useMantineTheme();
 
 
-  if(user?.role === 'ADMIN'){
+  if(user?.role === 'ADMIN' || user?.role === 'MEMBER'){
     router.push('/dashboard');
   }
 
@@ -69,7 +69,8 @@ const Members = () => {
                   placeholder="Select a role"
                   data={[
                     { value: 'SUPER_ADMIN', label: 'Super Admin' },
-                    { value: 'ADMIN', label: 'Admin' }
+                    { value: 'ADMIN', label: 'Admin' },
+                    { value: 'MEMBER', label: 'Member' }
                   ]}
                   value={member?.role}
                   disabled={member?.id === user?.userId}
