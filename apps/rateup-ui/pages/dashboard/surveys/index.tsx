@@ -68,10 +68,10 @@ export default function Surveys() {
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
 
-  const teamIsSelected = selectedTeamId !== "all";
+  const specificTeamIsSelected = selectedTeamId !== 'all';
 
-  const { isLoading, error, data: surveys } = useSurveys(teamIsSelected);
-  const queryClient = useQueryClient();
+  const { isLoading, error, data: surveys } = useSurveys(specificTeamIsSelected);
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (selectedTeamId !== null) {
@@ -88,11 +88,9 @@ export default function Surveys() {
 
   let teamsData = teamsDataUser?.data?.data;
 
-  const {
-    isLoading: isLoadingSurveys,
-    error: errSurveysByTeams,
-    data: surveysByTeam,
-  } = useSurveysByTeam(selectedTeamId, teamIsSelected);
+
+  const { isLoading: isLoadingSurveys, error: errSurveysByTeams, data: surveysByTeam }
+    = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
 
   useEffect(() => {
     //console.log("test.........."+JSON.stringify(teamsData))
@@ -144,15 +142,15 @@ export default function Surveys() {
         >
           <Title order={1}>Surveys : </Title>
 
-              <Select
-                mt="xs"
-                data={options}
-                defaultValue={options[0].value} 
-                value={selectedTeamId}
-                onChange={(value) => setSelectedTeamId(value)}
-                
-              />     
-          </Flex>
+          <Select
+            mt="xs"
+            data={options}
+            defaultValue={options[0].value}
+            value={selectedTeamId}
+            onChange={(value) => setSelectedTeamId(value)}
+
+          />
+        </Flex>
 
         <Flex
           mih={50}
@@ -199,47 +197,46 @@ export default function Surveys() {
           { maxWidth: "md", cols: 1 },
         ]}
       >
-        {user?.role !== 'MEMBER' &&  
+        {user?.role !== 'MEMBER' &&
 
-        <Paper
-          p="md"
-          shadow="lg"
-          radius="lg"
-          sx={{ cursor: "pointer" }}
-          onClick={open}
-        >
-          <Center h="100%">
-            <Stack align="center">
-              <IconPlus size={36} />
-              <Text size="xl" fw={700}>
-                Add Survey
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
+          <Paper
+            p="md"
+            shadow="lg"
+            radius="lg"
+            sx={{ cursor: "pointer" }}
+            onClick={open}
+          >
+            <Center h="100%">
+              <Stack align="center">
+                <IconPlus size={36} />
+                <Text size="xl" fw={700}>
+                  Add Survey
+                </Text>
+              </Stack>
+            </Center>
+          </Paper>
         }
 
-        {(teamIsSelected
-          ? surveysByTeam?.data?.length > 0
-            ? [...surveysByTeam?.data]
-            : []
-          : [...surveys]
-        )
-          .slice()
-          .sort((a, b) =>
-            sort
-              ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-              : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime()
+        {
+          (specificTeamIsSelected
+            ? (surveysByTeam?.data?.length > 0 ? [...surveysByTeam?.data] : [])
+            : [...surveys]
           )
-          .map((s) => (
-            <SurveyCard key={s.id} survey={s} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
-          ))
+            .slice()
+            .sort((a, b) =>
+              sort
+                ? new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+                : new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime()
+            )
+            .map((s) => (
+              <SurveyCard key={s.id} survey={s} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
+            ))
         }
 
       </SimpleGrid>
-      <CreateSurveyModal open={createSurveyOpened} close={close} surveyType={"web"}/>
+      <CreateSurveyModal open={createSurveyOpened} close={close} surveyType={"web"} />
     </Container>
   );
 }
@@ -248,7 +245,7 @@ interface SurveyCardProps {
   survey: Survey;
   setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
-export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & {teamsData: any}): JSX.Element {
+export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & { teamsData: any }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
@@ -272,24 +269,24 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       sx={{ cursor: "pointer" }}
       onClick={() => {
 
-        user?.role === 'MEMBER' 
-        
-        ? router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
-        )
-        : router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
-        )
+        user?.role === 'MEMBER'
+
+          ? router.push(
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+          )
+          : router.push(
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
+          )
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
         <Text mr={"sm"} truncate size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type=="web"?"blue":"green"}>{survey.type}</Badge>
+        <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
         <Group align={"center"} mt="sm" spacing="xs">
-        <IconPencil />
-        <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId}/>
+          <IconPencil />
+          <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" spacing="xs">
@@ -304,7 +301,7 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       <Flex justify={"space-between"} mt="xl" align={"center"}>
         <StatusBadge active={survey.active} />
         {/* <Text>Total Responses : #</Text> */}
-         {/* //TODO */}
+        {/* //TODO */}
         <Link
           href={`/dashboard/surveys/${survey.id}?tab=Responses`}
           style={{ color: theme.colors.blue[9] }}
@@ -328,18 +325,18 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
 
   const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState('')
-  const cloneSurvey = useCloneSurveyMutation({close, selectedTeamID, setSelectedTeamId});
+  const cloneSurvey = useCloneSurveyMutation({ close, selectedTeamID, setSelectedTeamId });
 
   const [options, setOptions] = useState([]);
-  
-useEffect(() => {
-  const newOptions = teamsData?.map((team) => ({
-    value: team?.teamId,
-    label: team?.teamName,
-  }));
 
-  setOptions(newOptions)
-}, [teamsData])
+  useEffect(() => {
+    const newOptions = teamsData?.map((team) => ({
+      value: team?.teamId,
+      label: team?.teamName,
+    }));
+
+    setOptions(newOptions)
+  }, [teamsData])
 
 
   const surveyDeleteMutation = useMutation({
@@ -369,42 +366,42 @@ useEffect(() => {
   return (
     <Menu width={200}>
 
-      <Modal size="sm" centered opened={opened} onClose={close}  
-      title={
-        <h2 >
-          Clone Survey
-        </h2>
-      }
+      <Modal size="sm" centered opened={opened} onClose={close}
+        title={
+          <h2 >
+            Clone Survey
+          </h2>
+        }
         onClick={(event) => {
           event.stopPropagation();
-        }}  
+        }}
       >
         <Stack >
           <Text pr="xl" color="dark.2">Select the team in which the copy to be created.</Text>
-          <Group  mt="md"         sx={{minHeight:"200px"}}
->
-              <Select
-                label="Select Team"
-                maxDropdownHeight={150} 
-                mt="xs"
-                placeholder="Pick one"
-                data={options}
-                value={selectedTeamID}
-                onChange={(value) => setSelectedTeamID(value)}
-                onClick={(event) => {
-                  event.stopPropagation();
-                }}
-              />  
+          <Group mt="md" sx={{ minHeight: "200px" }}
+          >
+            <Select
+              label="Select Team"
+              maxDropdownHeight={150}
+              mt="xs"
+              placeholder="Pick one"
+              data={options}
+              value={selectedTeamID}
+              onChange={(value) => setSelectedTeamID(value)}
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            />
           </Group>
           <Group mt="xl">
-            <RateupButtonSecondary title="Cancel" onClick={close} />              
+            <RateupButtonSecondary title="Cancel" onClick={close} />
             <RateupButtonPrimary title="Submit" onClick={() => {
               cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
             }} />
           </Group>
 
-          </Stack>
-        </Modal>
+        </Stack>
+      </Modal>
 
       <Menu.Target>
         <ActionIcon

@@ -25,6 +25,7 @@ export enum YNResponse {
   Yes = "Yes",
   No = "No",
 }
+// TODO: Use an index value & map to a customizable scale
 export enum SmileyResponse {
   VeryHappy = "Very Happy",
   Happy = "Happy",
@@ -35,4 +36,12 @@ export enum SmileyResponse {
 export enum LogicAction {
   NextQ = "NextQ",
   EndSurvey = "EndSurvey",
+}
+export enum LogicCondition {
+  Equals = "Equals",
+  NotEquals = "NotEquals",
+  IncludesNoneOf = "Includes None Of",
+  IncludesAnyOf = "Includes Any Of",
+  IncludesAllOf = "Includes All Of",
+  Submitted = "is Submitted",
 }

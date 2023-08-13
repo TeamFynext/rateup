@@ -19,12 +19,13 @@ import {
   IconCheckupList,
   IconSocial,
   IconUsersGroup,
-  IconClipboardData
-} from "@tabler/icons-react";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useMediaQuery } from "@mantine/hooks";
-import { useUser } from "../../../context/UserContext";
+  IconClipboardData,
+  IconSpeakerphone
+} from '@tabler/icons-react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useMediaQuery } from '@mantine/hooks';
+import { useUser } from '../../../context/UserContext';
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -99,21 +100,14 @@ export const WhasappSurveyIcon = () => (
 );
 
 const mockdata = [
-  { icon: DashBoardIcon, label: "Dashboard", href: "/dashboard" },
-  { icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
-  {
-    icon: IconUsers,
-    label: "Members",
-    href: "/dashboard/members",
-    role: "SUPER_ADMIN",
-  },
-  { icon: IconCheckupList, label: "Surveys", href: "/dashboard/surveys" },
-  { icon: IconClipboardData, label: "WhatsApp Survey", href: "/dashboard/whatsappsurvey" },
-  {
-    icon: IconDeviceDesktopAnalytics,
-    label: "Testinomials",
-    href: "/dashboard/",
-  },
+
+  { icon: DashBoardIcon, label: 'Dashboard', href: '/dashboard' },
+  { icon: IconSocial, label: 'Teams', href: '/dashboard/teams' },
+  { icon: IconUsers, label: 'Members', href: '/dashboard/members' , role: 'SUPER_ADMIN'},
+  { icon: IconCheckupList, label: 'Surveys', href: '/dashboard/surveys' },
+  { icon: WhasappSurveyIcon, label: "WhatsApp Survey", href: "/dashboard/whatsappsurvey" },
+  { icon: IconDeviceDesktopAnalytics, label: 'Testinomials', href: '/dashboard/' },
+  { icon: IconSpeakerphone, label: "Promotion", href: '/dashboard/promotion'}
 ];
 
 const LeftNavbar = () => {

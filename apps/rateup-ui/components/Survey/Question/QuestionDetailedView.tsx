@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconDeviceSdCard, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDeviceSdCard, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -227,8 +227,9 @@ export function QuestionDetailedView({
 
         <Group position="apart"  spacing="md">
           {logicSupportedTypes.includes(question?.type) && (
-            <RateupButtonOutline
-              title={"Edit Logic"}
+              <RateupButtonOutline
+              title={"Logic Jump"}
+              leftIcon={<IconEdit />}
               size="sm"
               onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
             />
@@ -240,8 +241,6 @@ export function QuestionDetailedView({
               onClick={() => setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
             />
           )}
-
-
           <Space w="xl" />
           {question?.id && (
             <Text c="blue.9" size="sm">

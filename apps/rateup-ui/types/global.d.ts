@@ -16,8 +16,8 @@ declare global {
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<string>>;
     id: string;
-    logic?: Zod.RecordType<string|number|Array<string>, string>
     googleReview?: GoogleReview
+    logic?: Array<LogicJump>
   };
 
   type Survey = {
@@ -42,7 +42,7 @@ declare global {
     responses: Array<QuestionResponse>;
     language: string;
   };
-  
+
   type QuestionResponse = {
     questionId: string;
     type: QuestionType;
@@ -68,18 +68,24 @@ declare global {
     };
   };
 
-    type UserData = {
-        email: string,
-        userId: string,
-        role: string
-        orgId: string
-        profilePhoto: string
+  type UserData = {
+    email: string,
+    userId: string,
+    role: string
+    orgId: string
+    profilePhoto: string
   }
 
   interface UserInfoQueryData {
     data: {
-        data: UserData
+      data: UserData
     };
-  
+
+  }
+
+  type LogicJump = {
+    condition: LogicCondition;
+    response: any // Contains the response to match against
+    action: LogicAction;
   }
 }

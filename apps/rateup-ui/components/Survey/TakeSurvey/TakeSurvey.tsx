@@ -9,10 +9,10 @@ import {
   Loader,
   Rating,
   Stack,
-  Text,Grid,
-  TextInput,Paper,Input,
+  Text, Grid,
+  TextInput, Paper, Input,
   Textarea,
-  Box , Image,
+  Box, Image,
   Modal, useMantineTheme,
   Title,
   Divider,
@@ -53,6 +53,7 @@ import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from '@mantine/hooks';
+import { parseLogicAction } from "../../../utils";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery('(min-width: 60em)');
@@ -88,7 +89,7 @@ function TakeSurvey() {
     setQnNo(index + 1)
     setCurrentQuestionNo(index + 1)
   }, [selectedQ])
-  
+
 
   if (isLoading) {
     return (
@@ -122,7 +123,7 @@ function TakeSurvey() {
     if (index < survey.questions.length - 1) {
       // Not last question
       // Checking for logic jump
-      const action = selectedQ.logic?.[currentResponse];
+      const action = parseLogicAction(selectedQ.type, selectedQ.logic, currentResponse)
       if (action) {
         // Performing logic jump
         if (action === LogicAction.NextQ) {
@@ -241,7 +242,7 @@ function TakeSurvey() {
         <Container  h={isMobile ? "53vh" : "60vh"} size={"md"} sx={{ position: "relative" }}>
               {/* TODO for mobile design 80vh */}
 
-        <Modal
+          <Modal
             opened={opened}
             title=""
             onClose={close}
@@ -257,12 +258,12 @@ function TakeSurvey() {
           </Modal.Header>
 
             <Stack pb="5rem">
-              <Divider/>
-                <Stack >
-                  {filteredQuestions.map(question => {
-                    const response = responses.find(
-                      response => response.questionId === question.id
-                    );
+              <Divider />
+              <Stack >
+                {filteredQuestions.map(question => {
+                  const response = responses.find(
+                    response => response.questionId === question.id
+                  );
 
                     return (
                       <Stack key={question.id}>
@@ -303,7 +304,7 @@ function TakeSurvey() {
                   </Group>
                 </div>
             </Stack>
-        </Modal>
+          </Modal>
 
 
           <Stack mt="xl">
@@ -342,7 +343,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage }) {
     });
 }
 
-function QuestionNo({num}) {
+function QuestionNo({ num }) {
   return <Text size={"15px"}>Question: {num}</Text>;
 }
 
@@ -413,6 +414,7 @@ function NextPrev({ prev, next }) {
   const [errorMsg, setErrorMsg] = useState(null)
 
   useEffect(() => {
+    // TODO: check if rebase was done correctly
       if(selectedQ?.required && response && selectedQ?.type === 'Email'){
         setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
         if(!(/^\S+@\S+$/.test(response))){
@@ -434,11 +436,12 @@ function NextPrev({ prev, next }) {
         }
       } else {
         setErrorMsg("");
+        setIsErrorInput(false);
       }
   }, [response])
 
-  function handleNextClick(){
-    if (selectedQ?.type === 'Email' || selectedQ?.type === 'Phone'  || selectedQ?.type === 'Testimonial') {
+  function handleNextClick() {
+    if (selectedQ?.type === 'Email' || selectedQ?.type === 'Phone' || selectedQ?.type === 'Testimonial') {
       if (!errorMsg) {
         next();
       } else {
@@ -455,13 +458,13 @@ function NextPrev({ prev, next }) {
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
 
-    <Stack  pb={40} sx={{ position: "absolute", bottom: "6vh", width: "100%" }}>
-         {selectedQ.required && !response && 
-            <Text color="gray">Note: * Must attend to continue with next.</Text>
-          }
-          {errorMsg && isErrorInput &&
-            <Text color="red">Note: * {errorMsg}</Text>
-          }
+    <Stack pb={40} sx={{ position: "absolute", bottom: "6vh", width: "100%" }}>
+      {selectedQ.required && !response &&
+        <Text color="gray">Note: * Must attend to continue with next.</Text>
+      }
+      {errorMsg && isErrorInput &&
+        <Text color="red">Note: * {errorMsg}</Text>
+      }
       <Grid>
           <Grid.Col span={6}>
               {isFirstQuestion || (
@@ -472,20 +475,20 @@ function NextPrev({ prev, next }) {
            </Grid.Col>
               <Grid.Col span={6}>
 
-              {isLastQuestion ?
+          {isLastQuestion ?
 
-                <RateupButtonBlue radius={"xl"} title={"Submit"} 
-                  disabled={(selectedQ?.required && !response)  || isErrorInput}
-                  sx={{ position: "absolute", right: "5vw" }}
-                  size="lg" onClick={handleNextClick}/>
-              :
-
-              <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={(selectedQ?.required && !response) || isErrorInput}
+            <RateupButtonBlue radius={"xl"} title={"Submit"}
+              disabled={(selectedQ?.required && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
-              size="lg" onClick={handleNextClick} rightIcon={<IconChevronRight />}/>
-              }
-              </Grid.Col>
-         </Grid>
+              size="lg" onClick={handleNextClick} />
+            :
+
+            <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={(selectedQ?.required && !response) || isErrorInput}
+              sx={{ position: "absolute", right: "5vw" }}
+              size="lg" onClick={handleNextClick} rightIcon={<IconChevronRight />} />
+          }
+        </Grid.Col>
+      </Grid>
     </Stack>
   )
 }
@@ -644,10 +647,10 @@ function EmailForm() {
   const { classes } = useStyles();
 
   useEffect(() => {
-    if(response)
-     setEmailError(/^\S+@\S+$/.test(response) ? null : "Invalid email");
+    if (response)
+      setEmailError(/^\S+@\S+$/.test(response) ? null : "Invalid email");
   }, [response])
-  
+
   const handleInputBlur = () => {
     if (emailError) {
       console.log("Invalid email");
@@ -660,7 +663,7 @@ function EmailForm() {
     updateResponse(email);
     setEmailError(/^\S+@\S+$/.test(email) ? null : "Invalid email");
   };
-  
+
   return (
     <Paper shadow="sm"
         className={classes.inputBox}
@@ -688,38 +691,38 @@ function LDForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
     <Group>
-    <Box w={120}>
-          <Button
-            color={response === LDResponse.Like ? "yellow" : "dark.0"}
-            size="lg"
-            px="md"
-            fullWidth 
-            radius="md"
-            leftIcon={<IconThumbUpFilled /> }
-            onClick={() => updateResponse(LDResponse.Like)}
-          >
-            Like
-          </Button>
+      <Box w={120}>
+        <Button
+          color={response === LDResponse.Like ? "yellow" : "dark.0"}
+          size="lg"
+          px="md"
+          fullWidth
+          radius="md"
+          leftIcon={<IconThumbUpFilled />}
+          onClick={() => updateResponse(LDResponse.Like)}
+        >
+          Like
+        </Button>
       </Box>
-        <Box w={130}>
+      <Box w={130}>
 
-          <Button
-            color={response === LDResponse.Dislike ? "yellow" : "dark.0"}
-            size="lg"
-            px="md"
-            radius="md"
-            fullWidth 
-            leftIcon={<IconThumbDownFilled /> }
-            onClick={() => updateResponse(LDResponse.Dislike)}
-          >
-            Dislike
-          </Button>
-        </Box>
+        <Button
+          color={response === LDResponse.Dislike ? "yellow" : "dark.0"}
+          size="lg"
+          px="md"
+          radius="md"
+          fullWidth
+          leftIcon={<IconThumbDownFilled />}
+          onClick={() => updateResponse(LDResponse.Dislike)}
+        >
+          Dislike
+        </Button>
+      </Box>
     </Group>
   );
 }
 
-function OpinionScaleForm(){
+function OpinionScaleForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const renderButtons = () => {
     const buttons = [];
@@ -740,7 +743,7 @@ function OpinionScaleForm(){
     return buttons
   }
 
-    return (
+  return (
     <Group position="center" spacing="xs">
       {renderButtons()}
     </Group>
@@ -756,7 +759,7 @@ function YNForm() {
           color={response === YNResponse.No ? "yellow" : "dark.0"}
           size="lg"
           px="xl"
-          fullWidth 
+          fullWidth
           radius="md"
           onClick={() => updateResponse(YNResponse.No)}
         >
@@ -765,16 +768,16 @@ function YNForm() {
       </Box>
       <Box w={100}>
 
-      <Button
-        color={response === YNResponse.Yes ? "yellow" : "dark.0"}
-        size="lg"
-        px="xl"
-        radius="md"
-        fullWidth 
-        onClick={() => updateResponse(YNResponse.Yes)}
-      >
-        Yes
-      </Button>
+        <Button
+          color={response === YNResponse.Yes ? "yellow" : "dark.0"}
+          size="lg"
+          px="xl"
+          radius="md"
+          fullWidth
+          onClick={() => updateResponse(YNResponse.Yes)}
+        >
+          Yes
+        </Button>
       </Box>
     </Group>
   );
@@ -798,11 +801,11 @@ function SmileyForm() {
           sx={{minHeight:'70px', maxWidth:'90px'}}
         >
           {/* <Stack> */}
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
-            {/* <Text> {label}</Text>
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
+          {/* <Text> {label}</Text>
 
           </Stack> */}
-       
+
         </Button>
       ))}
     </Group>
@@ -825,9 +828,9 @@ function ImageForm() {
   return (
     <>
       <Box w={300}>
-        <FileButton  onChange={setFile} accept="image/png,image/jpeg">
+        <FileButton onChange={setFile} accept="image/png,image/jpeg">
           {(props) => <Button fullWidth size="lg" radius="lg"
-           variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Upload image</Button>}
+            variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Upload image</Button>}
         </FileButton>
       </Box>
 
@@ -884,8 +887,8 @@ function DateForm() {
   const { classes } = useStyles();
   return (
     <Paper shadow="sm"
-        className={classes.inputBox}
-      >
+      className={classes.inputBox}
+    >
       <DateInput
         value={response}
         onChange={updateResponse}

@@ -48,19 +48,17 @@ useQuery({
   queryFn: () => getPublicSurveyGoogleLink(surveyId),
 });
 
-export const useSurveys = (teamIsSelected) =>
-  useQuery({
-    enabled: !teamIsSelected,
-    queryKey: ["surveys"],
-    queryFn: getSurveys,
-  });
+export const useSurveys = (specificTeamIsSelected: boolean) => useQuery({
+  enabled: !specificTeamIsSelected,
+  queryKey: ['surveys'],
+  queryFn: getSurveys
+})
 
-export const useSurveysByTeam = (teamId: string, teamIsSelected) =>
-  useQuery({
-    enabled: teamIsSelected,
-    queryKey: ["surveysByTeam", teamId],
-    queryFn: () => getTeamSurveys(teamId),
-  });
+export const useSurveysByTeam = (teamId: string, specificTeamIsSelected) => useQuery({
+  enabled: specificTeamIsSelected,
+  queryKey: ["surveysByTeam", teamId],
+  queryFn: () => getTeamSurveys(teamId),
+});
 
 type MyProps = {
   close: () => void;
