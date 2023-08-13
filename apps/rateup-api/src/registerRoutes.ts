@@ -13,13 +13,29 @@ import { surveySchemas } from "./modules/survey/survey.schema";
 import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
 import { userRoutes } from "./modules/user/user.route";
-import { wasurveyRoutes } from "./modules/whatsappSurvey/wasurvey.route";
+import { waWebhookRoutes, whatsappRoutes } from "./modules/whatsappSurvey/wasurvey.route";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
 import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
 import { userSchemas } from "./modules/user/user.schema";
+import { rGroupSchemas } from "./modules/respondent/rgroup/rgroup.schema";
+import { rgroupRoutes } from "./modules/respondent/rgroup/rgroup.route";
+import { wasurveySchemas } from "./modules/whatsappSurvey/wasurvey.schema";
+import { respondentRoutes } from "./modules/respondent/respondent/respondent.route";
+import { respondentSchemas } from "./modules/respondent/respondent/respondent.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
-    const modules = [surveySchemas, questionSchemas, orgSchemas, teamSchemas, responseSchemas, uploadSchemas, userSchemas ];
+    const modules = [
+        surveySchemas,
+        questionSchemas,
+        orgSchemas,
+        teamSchemas,
+        responseSchemas,
+        uploadSchemas,
+        userSchemas,
+        rGroupSchemas,
+        respondentSchemas,
+        wasurveySchemas,
+    ];
     for (const module of modules) {
         for (const schema of module) {
             server.addSchema(schema);
@@ -34,5 +50,8 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
     server.register(responsePublicRoutes, { prefix: "api/public/response" })
     server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" })
-    server.register(wasurveyRoutes, { prefix: "webhook" })
+    server.register(rgroupRoutes, { prefix: "api/rgroup" })
+    server.register(whatsappRoutes, { prefix: "api/wa" })
+    server.register(respondentRoutes, { prefix: "api/respondent" })
+    server.register(waWebhookRoutes, { prefix: "webhook" })
 }

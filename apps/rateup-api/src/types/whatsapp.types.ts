@@ -45,7 +45,8 @@ export type WaMessageBody = {
                   sha256: string;
                   link: string;
                 };
-                type: "text" | "image" | "interactive";
+                type: "text" | "image" | "interactive"|"button";
+                button?: any;
               }
             ];
             statuses: [
@@ -85,6 +86,7 @@ export interface WaSendMessageBody {
     preview_url?: boolean;
     body: string;
   };
+  template?: any;
   image?: {};
   interactive?: {
     type: "button" | "list";

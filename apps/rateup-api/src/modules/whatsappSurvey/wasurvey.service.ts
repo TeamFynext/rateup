@@ -5,8 +5,9 @@ import {
   getQuestionById,
   getQuestionsBySurveyId,
 } from "../question/question.service";
-import { ResponsePlatform, WaSession } from "@prisma/client";
+import { ResponsePlatform, Survey, WaSession } from "@prisma/client";
 import {
+  createTemplateMessage,
   createTextMessage,
   generateMessageDataFromQuestion,
 } from "./wasurvey.utils";
@@ -26,7 +27,14 @@ export async function sendMessage(messageData: WaSendMessageBody) {
 
   log.info(`sending message to %s \n%o`, messageData.to, messageData);
   try {
+    const res = await axios.post(
+      `https://graph.facebook.com/v16.0/${phone_number_id}/messages`,
+      messageData,
+      config
+    );
+    console.log(res.data, res.statusText)
   } catch (e: any) {
+    log.error("Error sending message")
     console.log(e.response);
   }
 }
@@ -59,8 +67,9 @@ export async function deleteSession(phone: string) {
   }
 }
 
-async function getFirstQuestion(surveyId: string) {
+export async function getFirstQuestion(surveyId: string) {
   const questions = await getQuestionsBySurveyId(surveyId);
+  console.log(questions)
   return questions[0].id;
 }
 
@@ -100,7 +109,8 @@ export async function sendNextQuestion(session: WaSession, response: any) {
   const { currentQuestionId, surveyId } = session;
   const questions = await getQuestionsBySurveyId(surveyId);
 
-  const next = getNextAction(questions, currentQuestionId, response);
+  // TODO
+  const next = getNextAction(questions, currentQuestionId!, response);
   log.info("Next action: %s", next);
 
   if (next === LogicAction.NextQ) {
@@ -185,4 +195,57 @@ export async function sendTextMessage(
 ) {
   const messageData = createTextMessage(to, title, description);
   await sendMessage(messageData);
+}
+
+// TODO: move to .env & upgrade to v17.0?
+const WA_API_VERSION = "v16.0";
+const manager_config = {
+  headers: {
+    Authorization: "Bearer " + process.env.WA_MARKETING_API_TOKEN,
+  },
+};
+export async function getTemplates() {
+  try {
+    const wa_business_id = process.env.WA_BUSINESS_ID;
+  const res = await axios.get(
+    `https://graph.facebook.com/${WA_API_VERSION}/${wa_business_id}/message_templates`,
+    manager_config
+  );
+  console.log(res)
+  return res.data
+  } catch (e: any) {
+    log.error("Error getting templates")
+    console.log(e.response);
+  }
+  
+}
+
+export async function getSurveyConsentTemplate() {
+  const templates = await getTemplates();
+  const consentTemplate = templates.data.find((t: any) => t.name === "survey_consent");
+  return consentTemplate;
+}
+
+const templateQuery = {
+  name: "survey_consent",
+  language: {
+    code: "en"
+  }
+}
+
+/**
+ * Creates a session with currentQuestionId as null & sends the template with name "survey_consent"
+ * @param phone 
+ * @param survey 
+ */
+export async function sendSurveyToRespondent(phone: string, survey: Survey ) {
+   await prisma.waSession.create({
+    data: {
+      phone,
+      surveyId: survey.id,
+      language: survey.languages[0],
+    }
+  })
+  const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
+  await sendMessage(consentTemplateMessage);
 }

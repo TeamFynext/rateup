@@ -16,6 +16,8 @@ const responseCore = {
 
 const createResponseInputSchema = z.object({
   ...responseCore,
+  platform: z.nativeEnum(ResponsePlatform).optional(),
+  phone: z.string().optional(),
 });
 
 const getResponsesParamsSchema = z.object({

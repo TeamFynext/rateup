@@ -57,7 +57,6 @@ model User {
   orgMember    OrgMember[]
   teamMember   TeamMember[]
   surveys      Survey[]
- 
 }
 
 model Org {
@@ -95,6 +94,8 @@ model Team {
   surveys     Survey[]
   invitations Invitation[]
   whatsappAccessToken        String?
+  Respondent  Respondent[]
+  RGroup      RGroup[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -145,17 +146,23 @@ model Survey {
   password    String?
   surveyStats SurveyStats?
   type        String           @default("web")
+
+  RespondentSurveySendHistory RespondentSurveySendHistory[]
+  RGroupSurveySendHistory     RGroupSurveySendHistory[]
 }
 
 model SurveyResponse {
-  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime         @default(now())
-  survey    Survey           @relation(fields: [surveyId], references: [id])
-  surveyId  String           @db.Uuid
-  responses Json[]
-  language  String           @default("")
-  platform  ResponsePlatform @default(WEB)
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime         @default(now())
+  survey       Survey           @relation(fields: [surveyId], references: [id])
+  surveyId     String           @db.Uuid
+  responses    Json[]
+  language     String           @default("")
+  platform     ResponsePlatform @default(WEB)
   phone     String           @default("")
+  // TODO: should this relation be a separate model?
+  respondent   Respondent?      @relation(fields: [respondentId], references: [id])
+  respondentId String?          @db.Uuid
 }
 
 model SurveyStats {
@@ -174,7 +181,65 @@ model WaSession {
   phone             String   @unique
   survey            Survey   @relation(fields: [surveyId], references: [id])
   surveyId          String   @db.Uuid
-  currentQuestionId String
+  currentQuestionId String?
   responses         Json[]
   language          String   @default("")
+}
+
+// TODO: Add relation to team or org
+model Respondent {
+  id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                   DateTime                      @default(now())
+  name                        String?
+  phone                       String                        
+  email                       String?                       
+  team                        Team?                         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                      String?                       @db.Uuid
+  responses                   SurveyResponse[]
+  rgroups                     RespondentGroupRelation[]
+  RespondentSurveySendHistory RespondentSurveySendHistory[]
+
+  @@unique([phone, teamId], name: "respondent_phone_team_id_unique")
+}
+
+// Respondent groups to send surveys to
+model RGroup {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime                  @default(now())
+  name                    String
+  respondents             RespondentGroupRelation[]
+  RGroupSurveySendHistory RGroupSurveySendHistory[]
+  team                    Team                      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                  String                    @db.Uuid
+
+  @@unique([name, teamId], name: "group_name_team_id_unique")
+}
+
+model RespondentGroupRelation {
+  respondent   Respondent @relation(fields: [respondentId], references: [id], onDelete: Cascade)
+  respondentId String     @db.Uuid
+  rgroup       RGroup     @relation(fields: [rgroupId], references: [id], onDelete: Cascade)
+  rgroupId     String     @db.Uuid
+
+  @@id([respondentId, rgroupId])
+}
+
+// survey "send" history
+// records when a survey was sent to a respondent
+model RespondentSurveySendHistory {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  survey       Survey     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId     String     @db.Uuid
+  respondent   Respondent @relation(fields: [respondentId], references: [id], onDelete: Cascade)
+  respondentId String     @db.Uuid
+  createdAt    DateTime   @default(now())
+}
+
+model RGroupSurveySendHistory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rgroup    RGroup   @relation(fields: [rgroupId], references: [id], onDelete: Cascade)
+  rgroupId  String   @db.Uuid
+  survey    Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId  String   @db.Uuid
+  createdAt DateTime @default(now())
 }

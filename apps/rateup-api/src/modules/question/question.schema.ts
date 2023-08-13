@@ -1,7 +1,15 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { QuestionType } from "../../types/enums";
+import { LogicAction, LogicCondition, QuestionType } from "../../types/enums";
 
+
+export const logicConditionSchema = z.nativeEnum(LogicCondition)
+
+const logicJumpSchema = z.object({
+  condition: logicConditionSchema,
+  response: z.any(),
+  action: z.string()
+})
 
 const questionCore = {
   title: z.record(z.string(), z.string()),
@@ -9,12 +17,12 @@ const questionCore = {
   required: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
   choices: z.record(z.string(), z.array(z.string())).optional(),
-  logic: z.record(z.union([z.string(), z.number(), z.array(z.string())]), z.string()).optional(),
   googleReview: z.union([z.null(), z.object({
     minRating: z.number().optional(),
     minOpinion: z.number().optional(),
     reqOptions: z.array(z.string()).optional(),
   })]).optional(),
+  logic: z.array(logicJumpSchema).optional()
 };
 
 export const questionSchema = z.object({

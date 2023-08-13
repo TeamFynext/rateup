@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the frontend
-import { QuestionType, SmileyResponse, YNResponse, LDResponse } from "./enums";
+import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition } from "./enums";
 
 type GoogleReview = {
   minRating?: number;
@@ -16,8 +16,8 @@ declare global {
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<string>>;
     id: string;
-    logic?: Zod.RecordType<string|number|Array<string>, string>;
     googleReview?: GoogleReview
+    logic?: Array<LogicJump>
   };
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.
@@ -45,4 +45,9 @@ declare global {
       [QuestionType.DateTime]?: Date;
     };
   };
+  type LogicJump = {
+    condition: LogicCondition;
+    response: any
+    action: LogicAction;
+  }
 }

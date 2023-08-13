@@ -36,3 +36,11 @@ export enum LogicAction {
   NextQ = "NextQ",
   EndSurvey = "EndSurvey",
 }
+export enum LogicCondition {
+  Equals = "Equals",
+  NotEquals = "NotEquals",
+  IncludesNoneOf = "Includes None Of",
+  IncludesAnyOf = "Includes Any Of",
+  IncludesAllOf = "Includes All Of",
+  Submitted = "is Submitted",
+}

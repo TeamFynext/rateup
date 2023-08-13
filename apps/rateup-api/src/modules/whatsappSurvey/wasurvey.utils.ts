@@ -32,6 +32,8 @@ export function parseMessage(data: WaMessageBody) {
     body = message.text.body;
   } else if (message.type === "image") {
     body = message.image.id;
+  } else if (message.type === "button") {
+    body = message.button.text;
   }
   return { from, timestamp, message: body, type };
 }
@@ -70,6 +72,7 @@ export function createReplyButtonsMessage(
     },
   };
 }
+
 export function createTextMessage(
   to: string,
   title: string,
@@ -86,6 +89,20 @@ export function createTextMessage(
     },
   };
 }
+
+export function createTemplateMessage(
+  to: string,
+  template: any
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "template",
+    template
+  };
+}
+
 export function createListMessage(
   to: string,
   questionTitle: string,
