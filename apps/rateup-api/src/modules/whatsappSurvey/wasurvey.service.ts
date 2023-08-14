@@ -119,13 +119,13 @@ export async function sendNextQuestion(session: WaSession, response: any) {
   // TODO
   const next = parseLogicAction(currentQuestion.type, currentQuestion.logic, response)
   log.info("Next action: %s", next);
+  const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
 
-  if (next === LogicAction.NextQ) {
+  if (next === LogicAction.NextQ && questions.length > currentIndex + 1) {
     // Send next question
-    const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
     const nextQuestion = questions[currentIndex + 1];
     await sendQuestion(nextQuestion, session);
-  } else if (next === LogicAction.EndSurvey) {
+  } else if (next === LogicAction.EndSurvey || questions.length <= currentIndex + 1) {
     // End Survey
     const ThankYouMessage = createTextMessage(
       session.phone,
@@ -254,5 +254,6 @@ export async function sendSurveyToRespondent(phone: string, survey: Survey ) {
     }
   })
   const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
+  // TODO: send error if sending template failed
   await sendMessage(consentTemplateMessage);
 }
