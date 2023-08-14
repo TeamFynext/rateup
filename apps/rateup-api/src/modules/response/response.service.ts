@@ -13,6 +13,23 @@ export async function getResponses(surveyId: string) {
     return responses;
 }
 
+export async function resetResponsesStats(surveyId: string) {
+    const deleteResponses = await prisma.surveyResponse.deleteMany({
+        where: {
+            surveyId,
+        }
+    });
+
+    const deleteStats = await prisma.surveyStats.deleteMany({
+        where: {
+            surveyId,
+        }
+    });
+
+    const deletionMessage = `Deleted.. ${deleteResponses.count} survey responses for survey ID: ${surveyId}`;
+    return deletionMessage;
+}
+
 export async function createResponse(input: CreateResponseInput) {
     let respondent = undefined;
 

@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateResponseInput, GetResponsesParams } from "./response.schema";
-import { createResponse, getResponses } from "./response.service";
+import { createResponse, getResponses, resetResponsesStats } from "./response.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -15,6 +15,22 @@ export async function getResponsesHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send();
+  }
+}
+
+export async function resetResponsesHandler(
+  request: FastifyRequest<{
+    Params: GetResponsesParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const surveyId = request.params.surveyId;
+    const reset = await resetResponsesStats(surveyId);
+    reply.code(201).send({ success: true, data: reset});
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
   }
 }
 

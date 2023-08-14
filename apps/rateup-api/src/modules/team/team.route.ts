@@ -21,7 +21,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         body: $Tref("createTeamRequestSchema"),
         response: {
@@ -35,7 +35,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get(
     "/:orgId",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Tref("getTeamsByOrgRequestSchema"),
       },
@@ -55,7 +55,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.delete(
     "/:id",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Tref("deleteTeamByIdRequestSchema"),
       },
@@ -82,7 +82,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.post(
     "/invite",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         body: $Tref("inviteMemberRequestSchema"),
         response: {
@@ -106,7 +106,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.delete(
     "/invite/:id",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Tref("deleteTeamByIdRequestSchema"),
       },
@@ -119,7 +119,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get(
     "/members/:teamId",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Tref("getTeamMembersRequestSchema"),
       },
@@ -130,7 +130,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get(
     "/invitation/:teamId",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Tref("getTeamMembersRequestSchema"),
       },

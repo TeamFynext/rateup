@@ -1,8 +1,9 @@
 import { FastifyInstance } from "fastify";
 import { $Rref } from "./response.schema";
-import { getResponsesHandler } from "./response.controller";
+import { getResponsesHandler, resetResponsesHandler } from "./response.controller";
 import { verifyAccess } from "./response.auth";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
+import { checkRoleHandler } from "../../utils/checkRoleHandler";
 
 export async function responseRoutes(server: FastifyInstance) {
   server.addHook("preHandler", verifySession());
@@ -16,5 +17,17 @@ export async function responseRoutes(server: FastifyInstance) {
       },
     },
     getResponsesHandler
+  );
+
+  //to reset survey responses & stats
+  server.delete(  
+    "/reset/:surveyId",
+    {
+      preHandler: [ checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      schema: {
+        params: $Rref("getResponsesParamsSchema"),
+      },
+    },
+    resetResponsesHandler
   );
 }
