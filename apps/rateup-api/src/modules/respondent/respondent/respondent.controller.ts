@@ -44,7 +44,12 @@ export async function createRespondentsHandler(
 ) {
     const { body: {respondents, teamId} } = request;
     // TODO: replace with batch operation
-    await createRespondentsIndividually(teamId, respondents);
+    if(!respondents.every(r => r.phone != undefined || r.phone != null)) {
+        throw new Error("Phone should not be null")
+        return
+    }
+    // TODO: fix the below hacky type-error-fix. Find out why phone is marked as optional in respondents array.
+    await createRespondentsIndividually(teamId, respondents as Array<{phone: string, name?: string}>);
     reply.code(201).send();
 }
 

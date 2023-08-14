@@ -11,10 +11,10 @@ import {
   createTextMessage,
   generateMessageDataFromQuestion,
 } from "./wasurvey.utils";
-import { getNextAction } from "../question/question.utils";
 import { LogicAction } from "../../types/enums";
 import { createResponse } from "../response/response.service";
 import { log } from "../../utils/logger";
+import { parseLogicAction } from "../question/question.utils";
 
 const config = {
   headers: {
@@ -107,10 +107,17 @@ export async function updateSession(phone: string, data: any) {
 
 export async function sendNextQuestion(session: WaSession, response: any) {
   const { currentQuestionId, surveyId } = session;
+  if(!currentQuestionId) {
+    log.error("CurrentQuestionId is null")
+    throw new Error("CurrentQuestionId is null")
+  }
   const questions = await getQuestionsBySurveyId(surveyId);
-
+  const currentQuestion = questions.find(q => q.id === currentQuestionId)
+  if(!currentQuestion) {
+    throw new Error("CurrentQuestion Not Found")
+  }
   // TODO
-  const next = getNextAction(questions, currentQuestionId!, response);
+  const next = parseLogicAction(currentQuestion.type, currentQuestion.logic, response)
   log.info("Next action: %s", next);
 
   if (next === LogicAction.NextQ) {

@@ -159,7 +159,6 @@ model SurveyResponse {
   responses    Json[]
   language     String           @default("")
   platform     ResponsePlatform @default(WEB)
-  phone     String           @default("")
   // TODO: should this relation be a separate model?
   respondent   Respondent?      @relation(fields: [respondentId], references: [id])
   respondentId String?          @db.Uuid

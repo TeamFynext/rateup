@@ -1,58 +1,70 @@
-import { Survey, WaSession } from "@prisma/client";
-import { LogicAction } from "../../types/enums";
+import { LogicAction, LogicCondition, QuestionType } from "../../types/enums";
 import { QuestionType as Q } from "../../types/enums";
-import {
-  sendMessage,
-  sendTextMessage,
-} from "../whatsappSurvey/wasurvey.service";
-import { log } from "../../utils/logger";
+import { arrayEquals } from "../../utils/array";
 
-/**
- * Returns a questionId, if a custom logic exists, or a LogicAction
- * @param survey
- * @param currentQ
- * @param currentResponse
- * @returns LogicAction | string
- */
-export function getNextAction(
-  questions: Array<Question>,
-  currentQId: string,
-  currentResponse: any
-): LogicAction | string {
-  const currentQ = questions.find((q) => q.id === currentQId);
-  if (!currentQ) throw new Error("Question not found");
+// Copied from frontend. Update accordingly.
+export const logicSupportedTypes  = [Q.LD, Q.YN, Q.Rating, Q.Smiley, Q.Opinion, Q.MCQ, Q.MSQ]
+export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], userResponse: any): LogicAction | string {
+// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
-  const index = questions.indexOf(currentQ);
-  if (index === -1) throw new Error("Question not found"); // this should never happen
+  try {
+    if (!logicSupportedTypes.includes(type) || !userResponse) {
+      return LogicAction.NextQ
+    }
 
-  if (index < questions.length - 1) {
-    // Not last question
-    // Checking for logic jump
-    const action = currentQ.logic?.[currentResponse];
-    if (action) {
-      // Performing logic jump
-      if (action === LogicAction.NextQ) {
-        return LogicAction.NextQ;
-      } else if (action === LogicAction.EndSurvey) {
-        // End survey
-        return LogicAction.EndSurvey;
-      } else {
-        // Action is a question id
-        const nextQ = questions.find((q) => q.id === action);
-        if (!nextQ) {
-          // quietly go to next question
-          console.error(
-            "Question not found. Invalid logic jump. Going to next question"
-          );
-          return LogicAction.NextQ;
-        } else {
-          return nextQ.id;
-        }
+    let flag = false;
+    for (const logic of logicJumps) {
+      switch (logic.condition) {
+        case LogicCondition.Equals:
+          if (type === QuestionType.MSQ) {
+            flag = arrayEquals(userResponse, logic.response);
+          } else {
+            flag = userResponse === logic.response;
+          }
+          break;
+
+        case LogicCondition.NotEquals:
+          flag = userResponse !== logic.response;
+          break;
+
+        case LogicCondition.IncludesAllOf:
+          if (type === QuestionType.MSQ) {
+            flag = logic.response.every((val: string) => userResponse.includes(val));
+          }
+          break;
+
+        case LogicCondition.IncludesAnyOf:
+          if (type === QuestionType.MSQ) {
+            flag = logic.response.some((val: string) => userResponse.includes(val));
+          } else {
+            flag = logic.response.includes(userResponse);
+          }
+          break;
+
+        case LogicCondition.IncludesNoneOf:
+          if (type === QuestionType.MSQ) {
+            flag = logic.response.every((val: string) => !userResponse.includes(val));
+          } else {
+            flag = !logic.response.includes(userResponse);
+          }
+          break;
+
+        case LogicCondition.Submitted:
+          flag = true;
+          break;
+
+        default:
+          console.error("Invalid LogicCondition: ", logic.condition);
+          break;
+      }
+      if (flag) {
+        return logic.action;
       }
     }
     return LogicAction.NextQ;
-  } else {
-    // Survey completed
-    return LogicAction.EndSurvey;
+  } catch (e) {
+    // TODO: show error toast if in dev mode
+    console.error(e);
+    return LogicAction.NextQ;
   }
 }
