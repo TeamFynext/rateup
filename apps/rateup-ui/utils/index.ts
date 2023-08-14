@@ -42,6 +42,8 @@ export function arrayEquals(a: Array<string>, b: Array<string>) {
 }
 
 export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], userResponse: any): LogicAction | string {
+  // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
+
   try {
     if (!logicSupportedTypes.includes(type) || !userResponse) {
       return LogicAction.NextQ

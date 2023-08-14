@@ -1,3 +1,6 @@
+// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
+
+
 import { useContext, useEffect, useState } from "react";
 import {
   useQuestionUpdateMutation,
