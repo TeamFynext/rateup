@@ -14,6 +14,7 @@ export enum QuestionType {
   Testimonial = "Testimonial",
   Text = "Text",
   TextArea = "TextArea",
+  Number = "Number",
   DateTime = "DateTime",
 }
 

@@ -1,14 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, forwardRef } from 'react'
 import {
     QuestionType as Q,
     SmileyResponse,
 } from "../../../../types/enums";
 import {
-    Button,
-    FileButton,
+    Button, NumberInput,
+    FileButton, Select,
     Group,
     Rating,
-    Text,
+    Text, Avatar,
     TextInput, Paper, Input,
     Box, Image, Textarea
 } from "@mantine/core";
@@ -19,10 +19,13 @@ import { IconCalendarEvent } from '@tabler/icons-react';
 
 const QuestionTypePreview = ({ type }) => {
 
-    switch (type) {  //TODO change preview of phone
+    switch (type) { 
         case Q.Text:
-        case Q.Phone:
             return <TextForm />;
+        case Q.Phone:
+            return <PhoneForm />;
+        case Q.Number:
+            return <NumberForm />;
         case Q.TextArea:
             return <TextAreaForm />;
         case Q.Email:
@@ -59,9 +62,7 @@ const QuestionTypePreview = ({ type }) => {
                 className={classes.inputBox}
             >
                 <Input
-                    placeholder="Enter your answer"
-                    //value={response || ""}
-                    //onChange={(e) => updateResponse(e.currentTarget.value)}
+                    placeholder="Enter text input"
                     sx={{ width: '70vw', maxWidth: "400px" }}
                     variant="unstyled"
                     radius="xl"
@@ -81,9 +82,7 @@ const QuestionTypePreview = ({ type }) => {
             >
 
             <Textarea
-                        placeholder="Enter your answer"
-                    //    value={response || ""}
-                    //    onChange={(e) => updateResponse(e.currentTarget.value)}
+                        placeholder="Enter multiline text input"
                         sx={{ maxWidth: "400px" }}
                         variant="unstyled"
                         radius="xl"
@@ -94,6 +93,93 @@ const QuestionTypePreview = ({ type }) => {
         );
     }
 
+    function NumberForm() {
+        const { classes } = useStyles();
+      
+        return (
+          <Paper shadow="sm"
+              className={classes.inputBox}
+            >
+            <NumberInput
+                size="sm"
+                type="number"
+                placeholder="Enter number input"
+                variant="unstyled"
+              />
+          </Paper>
+      
+        );
+      }
+
+      function PhoneForm() {
+        const { classes } = useStyles();
+     
+        const data = [
+          {
+            image: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/flag_india.png`,
+            label: '+91',
+            value: '91',
+            description: 'India',
+          },
+      
+        ];
+      
+        interface ItemProps extends React.ComponentPropsWithoutRef<'div'> {
+          image: string;
+          label: string;
+          description: string;
+        }
+        
+        const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
+          ({ image, label, description, ...others }: ItemProps, ref) => (
+            <div ref={ref} {...others}>
+              <Group noWrap>
+                <Avatar src={image} sx={{minWidth: "50px"}}/>
+                <div>
+                  <Text size="sm">{label}</Text>
+                  <Text size="xs" opacity={0.65}>
+                    {description}
+                  </Text>
+                </div>
+              </Group>
+            </div>
+          )
+        );
+        
+        return (
+          <Paper shadow="sm"
+              className={classes.inputBox}
+            >
+              <Group>
+              <Select
+                sx={{maxWidth: "140px"}}
+                placeholder="Select Country Code"
+                itemComponent={SelectItem}
+                data={data}
+                searchable
+                maxDropdownHeight={400}
+                defaultValue={data[0].value}
+                nothingFound="No results"
+                filter={(value, item) =>
+                  item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
+                  item.description.toLowerCase().includes(value.toLowerCase().trim())
+                }
+              />
+               <NumberInput
+                size="sm"
+                max={9999999999}
+                type="number"
+                placeholder="Enter 10 digit phone number"
+                hideControls
+                variant="unstyled"
+              />
+              </Group>
+    
+          </Paper>
+      
+        );
+      }
+
     function EmailForm() {
         const { classes } = useStyles();
         return (
@@ -102,11 +188,7 @@ const QuestionTypePreview = ({ type }) => {
             >
                 <TextInput
                     placeholder="Enter email address"
-                    // value={response || ""}
-                    //  onChange={handleInputChange}
-                    //  onBlur={handleInputBlur}
                     sx={{ width: '70vw', maxWidth: "400px" }}
-                    //   error={emailError && !isFocused ? 'Invalid email' : null}
                     icon={<IconMail size="1.2rem" color="black" />}
                     variant="unstyled"
                 />
@@ -118,8 +200,6 @@ const QuestionTypePreview = ({ type }) => {
     function RatingForm() {
         return <Paper px={30} py={20} radius="lg">
             <Rating
-                //value={response} 
-                //onChange={updateResponse} 
                 size="xl" /></Paper>;
     }
 
@@ -128,14 +208,12 @@ const QuestionTypePreview = ({ type }) => {
             <Group>
                 <Box w={120}>
                     <Button
-                        // color={response === LDResponse.Like ? "yellow" : "dark.0"}
                         color={"dark.0"}
                         size="lg"
                         px="md"
                         fullWidth
                         radius="md"
                         leftIcon={<IconThumbUpFilled />}
-                    // onClick={() => updateResponse(LDResponse.Like)}
                     >
                         Like
                     </Button>
@@ -144,13 +222,11 @@ const QuestionTypePreview = ({ type }) => {
 
                     <Button
                         color={"dark.0"}
-                        // color={response === LDResponse.Dislike ? "yellow" : "dark.0"}
                         size="lg"
                         px="md"
                         radius="md"
                         fullWidth
                         leftIcon={<IconThumbDownFilled />}
-                    //onClick={() => updateResponse(LDResponse.Dislike)}
                     >
                         Dislike
                     </Button>
@@ -167,10 +243,6 @@ const QuestionTypePreview = ({ type }) => {
                     <Button
                         key={i}
                         radius="xl"
-                        //onClick={() => updateResponse(i)}
-                        //color={response === i ? 'blue' : 'blue.9'}
-                        // variant={response === i ? 'gradient' : 'default'}
-
                         color={'blue.9'}
                         variant={'default'}
                         gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
@@ -195,12 +267,10 @@ const QuestionTypePreview = ({ type }) => {
                 <Box w={120}>
                     <Button
                         color={"dark.0"}
-                        //color={response === YNResponse.No ? "yellow" : "dark.0"}
                         size="lg"
                         px="xl"
                         fullWidth
                         radius="md"
-                    // onClick={() => updateResponse(YNResponse.No)}
                     >
                         No
                     </Button>
@@ -209,12 +279,10 @@ const QuestionTypePreview = ({ type }) => {
 
                     <Button
                         color={"dark.0"}
-                        // color={response === YNResponse.Yes ? "yellow" : "dark.0"}
                         size="lg"
                         px="xl"
                         radius="md"
                         fullWidth
-                    // onClick={() => updateResponse(YNResponse.Yes)}
                     >
                         Yes
                     </Button>
@@ -235,9 +303,7 @@ const QuestionTypePreview = ({ type }) => {
                     <Button
                         key={value}
                         variant={"default"}
-                        //variant={response === value ? "gradient" : "default"}
                         gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
-                        //  onClick={() => updateResponse(value)}
                         sx={{ height: '90px', width: '90px' }}
                     >
                         {/* <Stack> */}

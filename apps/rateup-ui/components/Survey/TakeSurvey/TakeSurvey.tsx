@@ -375,6 +375,8 @@ function getQuestionForm(type) {
       return <TextForm />;
     case Q.TextArea:
         return <TextAreaForm />;
+    case Q.Number:
+      return <NumberForm />;
     case Q.Phone:
         return <PhoneForm />;
     case Q.Email:
@@ -494,7 +496,6 @@ function NextPrev({ prev, next }) {
 }
 
 function TextForm() {
-  // TODO: TextArea?
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const { classes } = useStyles();
 
@@ -517,7 +518,6 @@ function TextForm() {
 }
 
 function TextAreaForm() {
-  // TODO: TextArea?
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const { classes } = useStyles();
 
@@ -537,6 +537,29 @@ function TextAreaForm() {
             radius="xl"
             size="sm"
           />
+    </Paper>
+
+  );
+}
+
+function NumberForm() {
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { classes } = useStyles();
+
+  return (
+    <Paper shadow="sm"
+        className={classes.inputBox}
+      >
+      <NumberInput
+          size="sm"
+          type="number"
+          placeholder="Enter number input"
+          value={response || undefined}
+          onChange={(value) => updateResponse(value)}
+          //onBlur={handleInputBlur}
+          variant="unstyled"
+          //error={numberError && !isFocused  ? 'Invalid phone number' : null}
+        />
     </Paper>
 
   );
