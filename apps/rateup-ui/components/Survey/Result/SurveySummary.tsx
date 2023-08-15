@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from "next/router";
 import { useQuestions } from '../../../backend/surveys/questions/questions.query';
-import { useResponses } from '../../../backend/surveys/response/response.query';
 import { Paper, Rating, Text, Group, Select , Chip, Stack, Button} from '@mantine/core';
 import { IconThumbDownFilled, IconThumbUpFilled } from '@tabler/icons-react';
+import { useResponses } from '../../../backend/surveys/response/response.query';
 
 type ResponseCounts = Record<string, Record<string, number>>;
 

@@ -3,6 +3,7 @@ import { Tabs } from '@mantine/core';
 import StyledTabs from '../../../pages/dashboard/settings/account/StyledTabs';
 import GeneralSettings from './GeneralSettings';
 import { PasswordProtection } from './PasswordSettings';
+import OtherSettings from './OtherSettings';
 
 const SurveySettings = ({ surveyId, survey }) => {
     return (
@@ -15,6 +16,9 @@ const SurveySettings = ({ surveyId, survey }) => {
                 <Tabs.Tab value="general">
                     Password Protection
                 </Tabs.Tab>
+                <Tabs.Tab value="other">
+                    Other Settings
+                </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="settings" >
@@ -23,6 +27,10 @@ const SurveySettings = ({ surveyId, survey }) => {
 
             <Tabs.Panel value="general">
                 <PasswordProtection surveyId={surveyId} isProtected={survey?.isProtected} />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="other" >
+                <OtherSettings />
             </Tabs.Panel>
 
         </StyledTabs>

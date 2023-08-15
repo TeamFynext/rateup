@@ -11,3 +11,8 @@ type CreateResonseType = Omit<SurveyResponse, "id" | "createdAt">
 export async function createResponsePublic(data: CreateResonseType) {
     return await axiosClient.post(`/public/response`, data)
 }
+
+export async function resetResponsesStats(surveyId: string) {
+    const res = await axiosClient.delete(`${RESPONSE_URL}/reset/${surveyId}`)
+    return res.data 
+}

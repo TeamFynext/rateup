@@ -50,7 +50,7 @@ export function HeaderTabs({mode} : {mode?: string}) {
   
   const userInfo = {
     "name": user?.email,
-    "role": !user?.role ? "...error..."  : (user?.role === 'SUPER_ADMIN' ? "Super Admin" : "Admin"),
+    "role": !user?.role ? "...error..."  : (user?.role === 'SUPER_ADMIN' ? "Super Admin" : (user?.role === 'ADMIN' ? "Admin" : "Team Member")),
     "image": userProfileAvatar
   };
 

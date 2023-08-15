@@ -78,7 +78,6 @@ export function EditSurvey({ questions, addQnTrigger,surveyType }: EditSurveyPro
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
             <LogicEditor
               selectedQ={selectedQ}
-              setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
             />
           </Tabs.Panel>

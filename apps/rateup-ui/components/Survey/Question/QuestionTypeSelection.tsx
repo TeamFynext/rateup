@@ -9,6 +9,13 @@ import {
   IconCalendar,
   IconCamera,
   IconUser,
+  Icon123,
+  IconAlignBoxLeftTop,
+  IconCheckupList,
+  IconListCheck,
+  IconHandClick,
+  IconThumbUp,
+  IconSortAscendingNumbers,
 } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
 import { useContext } from "react";
@@ -65,34 +72,36 @@ export function QuestionTypeSelection({
 // TODO: add proper icons
 const questionIcons = {
   [QuestionType.Text]: IconLetterCase,
-  [QuestionType.TextArea]: IconLetterCase, //TODO update icon
+  [QuestionType.TextArea]: IconAlignBoxLeftTop, //TODO update icon
+  [QuestionType.Number]: Icon123,
   [QuestionType.Email]: IconMail,
   [QuestionType.Phone]: IconPhone,
-  [QuestionType.Rating]: IconStar,
-  [QuestionType.MCQ]: IconStar,
-  [QuestionType.MSQ]: IconStar,
-  [QuestionType.Smiley]: IconMoodSmile,
-  [QuestionType.Opinion]: IconStar,
-  [QuestionType.DateTime]: IconCalendar,
-  [QuestionType.LD]: IconStar,
-  [QuestionType.YN]: IconStar,
   [QuestionType.Photo]: IconCamera,
+  [QuestionType.DateTime]: IconCalendar,
+  [QuestionType.MCQ]: IconCheckupList,
+  [QuestionType.MSQ]: IconListCheck,
+  [QuestionType.Rating]: IconStar,
+  [QuestionType.Smiley]: IconMoodSmile,
+  [QuestionType.Opinion]: IconSortAscendingNumbers,
+  [QuestionType.LD]: IconThumbUp,
+  [QuestionType.YN]: IconHandClick,
   [QuestionType.Testimonial]: IconUser,
 };
 const whatsappQuestionIcons = {
   [QuestionType.Text]: IconLetterCase,
-  [QuestionType.TextArea]: IconLetterCase, //TODO update icon
+  [QuestionType.TextArea]: IconAlignBoxLeftTop, //TODO update icon
+  [QuestionType.Number]: Icon123,
   [QuestionType.Email]: IconMail,
   [QuestionType.Phone]: IconPhone,
+  [QuestionType.Photo]: IconCamera,
   // [QuestionType.Rating]: IconStar,
-  [QuestionType.MCQ]: IconStar,
+  [QuestionType.MCQ]: IconCheckupList,
   // [QuestionType.MSQ]: IconStar,
   // [QuestionType.Smiley]: IconMoodSmile,
   // [QuestionType.Opinion]: IconStar,
   // [QuestionType.DateTime]: IconCalendar,
-  [QuestionType.LD]: IconStar,
-  [QuestionType.YN]: IconStar,
-  [QuestionType.Photo]: IconCamera,
+  [QuestionType.LD]: IconThumbUp,
+  [QuestionType.YN]: IconHandClick,
   // [QuestionType.Testimonial]: IconUser,
 };
 
