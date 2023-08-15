@@ -22,7 +22,7 @@ export async function orgRoutes(server: FastifyInstance) {
   server.get(
     "/members",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
     },
     getAllTeamsAndMembers
   );
@@ -30,7 +30,7 @@ export async function orgRoutes(server: FastifyInstance) {
   server.put(
     "/members/change-role/:id",
     {
-      preHandler: [verifySession(), checkRoleHandler("SUPER_ADMIN")],
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Sref("idParamRequestSchema"),
         body: $Sref("updateRoleSchema")

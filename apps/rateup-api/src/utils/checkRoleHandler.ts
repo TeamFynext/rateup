@@ -2,26 +2,26 @@ import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
 import Session from "supertokens-node/recipe/session";
 
 export const checkRoleHandler =
-  (requiredRole: "ADMIN" | "SUPER_ADMIN" | "MEMBER") =>
- async (
-    request: FastifyRequest,
-    reply: FastifyReply,
-    done: HookHandlerDoneFunction
-  ) => {
+(requiredRoles: Array<"ADMIN" | "SUPER_ADMIN" | "MEMBER">) =>
+async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+  done: HookHandlerDoneFunction
+) => {
 
-    let session = await Session.getSession(request, reply);
+  let session = await Session.getSession(request, reply);
 
-    const accessTokenPayload = session.getAccessTokenPayload();
-    const role = accessTokenPayload.role;
+  const accessTokenPayload = session.getAccessTokenPayload();
+  const role = accessTokenPayload.role;
 
-    console.log(`ROLE: ${role},  REQ:  ${requiredRole}`);
-    if (role !== requiredRole) {
-      reply.status(403).send({
-        error: `Action is only allowed for ${requiredRole}.`,
-        message: `You are logged in as: ${role}`,
-      });
-      return;
-    }
+  //console.log(`>>>ROLE: ${role},  REQUIRED ROLES:  ${requiredRoles}`);
+  if (!requiredRoles.includes(role)) {
+    reply.status(403).send({
+      error: `Permissions failed.`,
+      message: `Action is only allowed for ${requiredRoles.join(', ')}.`,
+    });
+    return;
+  }
 
-    done();
-  };
+  done();
+};
