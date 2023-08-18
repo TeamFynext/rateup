@@ -11,9 +11,9 @@ export default function Promotion() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
 
   // print selectedTeamId when changed 
-  useEffect(() => {
-    console.log(selectedTeamId);
-  }, [selectedTeamId])
+  // useEffect(() => {
+  //   console.log(selectedTeamId);
+  // }, [selectedTeamId])
 
   return (
     <Container fluid>

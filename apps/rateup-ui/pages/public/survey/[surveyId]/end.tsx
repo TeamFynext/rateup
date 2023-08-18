@@ -19,10 +19,6 @@ export default function ThankYou() {
   const { isLoading, isError, data: googleLink } = usePublicSurveyGoogleLink(surveyId);
 
   useEffect(() => {
-    console.log(JSON.stringify(googleLink))
-  }, [googleLink])
-
-  useEffect(() => {
     msg === 'thanks' && setEnableGoogleReview(true)
   }, [router, msg])
 

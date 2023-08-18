@@ -91,7 +91,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         default:
-          console.error("Invalid LogicCondition: ", logic.condition);
+         // console.error("Invalid LogicCondition: ", logic.condition);
           break;
       }
       if (flag) {
@@ -101,7 +101,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
     return LogicAction.NextQ;
   } catch (e) {
     // TODO: show error toast if in dev mode
-    console.error(e);
+   // console.error(e);
     return LogicAction.NextQ;
   }
 }

@@ -247,8 +247,6 @@ export const useUpdateSurveyGoogleLinkMutation = (surveyId: string, setLinkUpdat
     },
     onSuccess: (data) => {
       notifications.clean()
-      console.log("Google Link updated.")
-      console.log(data)
       setLinkUpdateStatus(true)
     },
     onError: (err) => {

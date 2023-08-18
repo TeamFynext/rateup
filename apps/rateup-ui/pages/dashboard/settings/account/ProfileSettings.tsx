@@ -70,8 +70,6 @@ const ProfileSettings = () => {
     },
   });
 
-  console.log(profileForm,">>>enfovo")
-
   const [isLoading, setIsLoading] = useState(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
 

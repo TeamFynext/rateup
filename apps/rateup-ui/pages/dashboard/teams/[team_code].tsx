@@ -107,8 +107,8 @@ const TeamDetails = () => {
         refetchOnMount: "always",
         initialData: () => queryClient.getQueryData(["teamDetailsPrefetch"]),
         onSuccess: (data) => {
-          console.log("Initial Prefetch MData:", queryClient.getQueryData(["teamDetailsPrefetch"]));
-          console.log("New fetch MData:", data);
+         // console.log("Initial Prefetch MData:", queryClient.getQueryData(["teamDetailsPrefetch"]));
+        //  console.log("New fetch MData:", data);
         },
     })
 
@@ -296,18 +296,13 @@ export async function getServerSideProps(context) {
 
   let teamId = getTeamIdByCode(teamsData, teamCode)
 
-  console.log("test..........:"+teamId)
-
   if(teamId){
 
     const teamInitialData = await queryClient.prefetchQuery(["teamDetailsPrefetch"], 
     () => getTeamMembersFromInvite(teamId, session));
   
- 
-    console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
-  
-    console.log("Team Id: ", teamId);
-  
+    //console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
+    
     return {
       props: {
         dehydratedState: dehydrate(queryClient),

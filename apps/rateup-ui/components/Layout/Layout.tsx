@@ -45,7 +45,7 @@ export default ({ children }) => {
     const { setUser } = useUser();
 
       useEffect(() => {
-        console.log("Query Fetched UserInfo:"+ JSON.stringify(userInfo?.data?.data))
+       // console.log("Query Fetched UserInfo:"+ JSON.stringify(userInfo?.data?.data))
         !userInfo?.data?.data && refetch()
         setUser(userInfo?.data?.data)
 

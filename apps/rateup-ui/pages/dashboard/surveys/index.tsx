@@ -33,6 +33,7 @@ import {
   IconChevronDown,
   IconPencil,
   IconSettings,
+  IconCheck,
 } from "@tabler/icons-react";
 import { RateupButtonPrimary, RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import Link from "next/link";
@@ -342,11 +343,30 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
-      notifications.show({
-        message: "Deleted!",
+      // notifications.show({
+      //   message: "Deleted!",
+      // });
+      notifications.update({
+        id: 'load-data',
+        color: 'teal',
+        title: 'Success',
+        message: 'Deleted Survey Successfully!',
+        icon: <IconCheck size="1rem" />,
+        autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);
+    },
+    onError: (error: any) => {
+      console.error("Error deleting Survey:", error.message);
+      notifications.update({
+        id: 'load-data',
+        color: 'red',
+        title: 'Delete Failed..!',
+        message: error?.response?.data?.error,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 4000,
+      });
     },
   });
 
@@ -445,6 +465,14 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         <Menu.Item
           icon={<IconTrash />}
           onClick={() => {
+            notifications.show({
+              id: 'load-data',
+              loading: true,
+              title: 'Deleting survey..',
+              message: `Hold on, survey is getting deleted...`,
+              autoClose: false,
+              withCloseButton: false,
+          });
             surveyDeleteMutation.mutate(survey?.id);
           }}
         >

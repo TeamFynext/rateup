@@ -57,7 +57,6 @@ const AuthForm = ({
     if (mode === AuthMode.VERIFY) {
       if (token && rid === "emailverification") {
         consumeVerificationCode();
-        console.log(rid);
       } else {
         sendEmail();
       }

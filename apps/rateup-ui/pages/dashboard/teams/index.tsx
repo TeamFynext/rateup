@@ -27,6 +27,7 @@ export default function Teams() {
   const router = useRouter();
   const { user, setUser } = useUser();
   const queryClient = useQueryClient();
+  const [isCreating, setIsCreating] = useState(false)
 
   const createTeamForm = useForm({
     initialValues: {
@@ -61,18 +62,15 @@ export default function Teams() {
   console.log(teamsData,">>>infinete")
 
 
-  useEffect(() => {
-    console.log("TEAMS DATA::" + JSON.stringify(teamsDataUser?.data?.data));
-  }, [teamsDataUser]);
-
   const onSubmit = (values) => {
     handleSubmit(values);
   };
 
 
-  const createTeamMutation = useCreateTeamMutation(close, createTeamForm);
+  const createTeamMutation = useCreateTeamMutation(close, createTeamForm, setIsCreating);
 
   const handleSubmit = async (values) => {
+    setIsCreating(true)
     notifications.show({
       id: "load-data",
       loading: true,
@@ -108,7 +106,7 @@ export default function Teams() {
             
           </Box>
           <Box pt={20}>
-            <RateupButtonPrimary type="submit" title={"Create"} />
+            <RateupButtonPrimary  loading={isCreating} type="submit" title={"Create"} />
           </Box>
         </form>
       </Modal>
@@ -256,7 +254,7 @@ export async function getServerSideProps(context) {
     fetchTeamsByUser(session)
   );
 
-  console.log("Prefetched Teams: ", JSON.stringify(teamInitialData));
+ // console.log("Prefetched Teams: ", JSON.stringify(teamInitialData));
   return {
     props: {
       dehydratedState: dehydrate(queryClient),

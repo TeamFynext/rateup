@@ -42,7 +42,7 @@ function AddModal({ opened, onClose, rgroupId }) {
               <Checkbox
                 checked={respondentsToAdd.includes(r.id)}
                 onChange={(e) => {
-                  console.log(e.target.checked, respondentsToAdd)
+                 // console.log(e.target.checked, respondentsToAdd)
                   if (e.target.checked) {
                     handlers.append(r.id)
                   } else {

@@ -34,7 +34,7 @@ const LogicEditor = ({
 }: LogicEditorProps) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: questions } = useQuestions(surveyId);
-  const questionUpdateMutation = useQuestionUpdateMutation(surveyId);
+  const questionUpdateMutation = useQuestionUpdateMutation({surveyId});
   const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
 
   useEffect(() => {

@@ -40,7 +40,7 @@ export function QuestionTypeSelection({
     setActiveTab(QuestionTabsEnum.Edit);
   };
 
-  console.log(typeof(surveyType) ,">>surveyty")
+  //console.log(typeof(surveyType) ,">>surveyty")
   return (
     <Center sx={{ height: "100%" }}>
       <SimpleGrid cols={3}>

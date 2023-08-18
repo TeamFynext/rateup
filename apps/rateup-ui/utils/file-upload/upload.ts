@@ -9,10 +9,9 @@ export const uploadFile = async (file) => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log(response.data);
       return response?.data?.data?.key;
     } catch (error) {
-      console.error(error);
+      //console.error(error);
       return null;
     }
 };

@@ -15,7 +15,6 @@ export default function DashboardHome() {
         if (!user?.role) {
             queryClient.invalidateQueries(['userInfoQuery']);
         }
-        console.log("Dashboard Role:" + user?.role);
     }, []);
 
     

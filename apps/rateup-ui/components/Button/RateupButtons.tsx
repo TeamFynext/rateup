@@ -15,7 +15,7 @@ interface Props {
     mt?: string
 }
 
-export const RateupButtonPrimary = ({ fullWidth, type, sx, radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonPrimary = ({ loading, fullWidth, type, sx, radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
         radius={radius || "lg"}
@@ -33,13 +33,14 @@ export const RateupButtonPrimary = ({ fullWidth, type, sx, radius, title, disabl
             type={type}
             sx={sx}
             fullWidth={fullWidth}
+            loading={loading}
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonBlue = ({ title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonBlue = ({ loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -51,6 +52,7 @@ export const RateupButtonBlue = ({ title, radius, sx, disabled, onClick, leftIco
             variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
             size= {size}
             sx={sx}
+            loading={loading}
         >
             {title}
         </Button >

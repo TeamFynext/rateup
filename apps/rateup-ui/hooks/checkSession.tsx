@@ -11,7 +11,7 @@ export const useCheckSession = () => {
     const checkSession = async () => {
       try {
         if (await Session.doesSessionExist()) {
-          console.log("session exists");
+          //console.log("session exists");
           router.push('/dashboard');
         } else {
           console.log("session does not exist");

@@ -57,6 +57,7 @@ import { parseLogicAction } from "../../../utils";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery('(min-width: 60em)');
+  const [isSavingResponses, setIsSavingResponses] = useState(false)
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
@@ -154,6 +155,7 @@ function TakeSurvey() {
   };
 
   const finishSurvey = () => {
+    setIsSavingResponses(true)
       let shouldShowGoogleReview = false;
       const { start } = router.query as { start: string };  //(TODO - Temp) change for survey merge 
 
@@ -188,17 +190,16 @@ function TakeSurvey() {
           }
       }
 
-      if (shouldShowGoogleReview) {
-          console.log("Show Google Review");
-      } else {
-          console.log("Don't show Google Review");
-      }
-      submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
+      // if (shouldShowGoogleReview) {
+      //     console.log("Show Google Review");
+      // } else {
+      //     console.log("Don't show Google Review");
+      // }
+
+      submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingResponses }).then(() => {
         updateCompleted.mutate(surveyId)
         let kioskMode = survey?.kioskMode ? "y" :"n"
         kioskMode = start === 'true' ? "cs" : kioskMode // temp for static cs demo (TODO)
-        console.log(">>>"+kioskMode)
-        console.log(">>>"+survey?.kioskMode)
         shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) :router.push(`${surveyId}/end?k=${kioskMode}`) 
       });
   }
@@ -295,6 +296,7 @@ function TakeSurvey() {
                     />
 
                     <RateupButtonBlue
+                      loading={isSavingResponses}
                       radius={"xl"}
                       title={"Confirm"}
                       size={largeScreen ? "lg" : "md"}
@@ -322,7 +324,7 @@ function TakeSurvey() {
   );
 }
 
-function submitSurvey({ surveyId, responses, selectedLanguage }) {
+function submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingResponses }) {
   return createResponsePublic({
     surveyId,
     responses,
@@ -333,6 +335,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage }) {
         message: "Survey completed!",
         color: "teal",
       });
+      setIsSavingResponses(false)
     })
     .catch((e) => {
       console.error(e);
@@ -340,6 +343,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage }) {
         message: "Something went wrong",
         color: "red",
       });
+      setIsSavingResponses(false)
     });
 }
 
@@ -939,7 +943,7 @@ function TestimonialForm() {
   ) => {
     updateResponse({ ...response, testimonial: e.currentTarget.value });
   };
-
+  //TODO: image storage
   console.error("Image storage not implemented");
   const { classes } = useStyles();
 

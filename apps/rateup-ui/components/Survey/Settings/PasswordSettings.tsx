@@ -9,11 +9,6 @@ export const PasswordProtection = ({ surveyId, isProtected }) => {
   const [passwordProtect, setPasswordProtect] = useState(isProtected);
   const [password, setPassword] = useState('')
 
-  useEffect(() => {
-    console.log("Test...." + JSON.stringify(isProtected))
-  }, [isProtected])
-
-
   function updatePassword() {
     updateSurveyPassword.mutate()
   }

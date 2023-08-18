@@ -158,7 +158,7 @@ export const useConsumeVerificationCode = () => {
           autoClose: 3000,
       });
 
-        console.log("verified success");
+        //console.log("verified success");
         router.push("/dashboard");
       }
     } catch (err: any) {
@@ -196,7 +196,7 @@ export function useEmailSend() {
     try {
       let response = await sendVerificationEmail();
       if (response?.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
-        console.log("verified success")
+        //console.log("verified success")
         router.push("/dashboard");
       } else {
         showNotification('send-mail-error', 'blue', 'Check mail inbox & Verify', "Please check your email and click the link in it", <IconInfoCircleFilled size="1rem" />);

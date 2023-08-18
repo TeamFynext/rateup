@@ -51,12 +51,12 @@ export function QuestionDetailedView({
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
+  const [isSaving, setIsSaving] = useState(false);
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const questionCreateMutation = useQuestionCreateMutation(surveyId);
-  const questionUpdateMutation = useQuestionUpdateMutation(surveyId);
+  const questionCreateMutation = useQuestionCreateMutation({surveyId, setIsSaving});
+  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
 
-  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm({
     // Any modifications to initialValues must be applied in the useEffect below
@@ -144,7 +144,7 @@ export function QuestionDetailedView({
       // Updating existing question
       questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
-    setIsSaving(false);
+    //setIsSaving(false);  
   };
 
   // TODO: show question type somewhere

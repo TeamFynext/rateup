@@ -95,7 +95,7 @@ export function SendSurveyComponent({ sendHandler }) {
   if (isLoading) return <div>Loading...</div>
   if (error || !Array.isArray(surveys)) {
     console.log(error)
-    console.log(surveys)
+    //console.log(surveys)
     return <div>Error</div>
   }
   const handleSend = () => {

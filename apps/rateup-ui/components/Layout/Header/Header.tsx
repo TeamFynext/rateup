@@ -38,7 +38,6 @@ export function HeaderTabs({mode} : {mode?: string}) {
  const { user, setUser } = useUser();
 
   useEffect(() => {
-    console.log("Email:  "+ JSON.stringify(user?.email))
     if (user?.profilePhoto) {
       const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user?.profilePhoto}`
       setUserProfileAvatar(imgUrl)
