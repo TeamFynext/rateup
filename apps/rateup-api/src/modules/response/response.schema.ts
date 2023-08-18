@@ -24,10 +24,23 @@ const getResponsesParamsSchema = z.object({
   surveyId: z.string(),
 });
 
+const idInputParamsSchema = z.object({
+  id: z.string(),
+});
+
+const deleteResponseParamsSchema = z.object({
+  id: z.string(),
+  surveyId: z.string(),
+});
+
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   createResponseInputSchema,
   getResponsesParamsSchema,
+  idInputParamsSchema,
+  deleteResponseParamsSchema
 });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
 export type GetResponsesParams = z.infer<typeof getResponsesParamsSchema>;
+export type IdInputParams = z.infer<typeof idInputParamsSchema>;
+export type DeleteResponseParamsSchema = z.infer<typeof deleteResponseParamsSchema>;

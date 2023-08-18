@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $Rref } from "./response.schema";
-import { getResponsesHandler, resetResponsesHandler } from "./response.controller";
+import { deleteResponseHandler, getResponsesHandler, resetResponsesHandler } from "./response.controller";
 import { verifyAccess } from "./response.auth";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -30,4 +30,17 @@ export async function responseRoutes(server: FastifyInstance) {
     },
     resetResponsesHandler
   );
+
+
+    //to delete single response
+    server.delete(  
+      "/:surveyId/delete/:id",
+      {
+        preHandler: [ checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+        schema: {
+          params: $Rref("deleteResponseParamsSchema"),
+        },
+      },
+      deleteResponseHandler
+    );
 }

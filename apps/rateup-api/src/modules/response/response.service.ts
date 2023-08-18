@@ -30,6 +30,16 @@ export async function resetResponsesStats(surveyId: string) {
     return deletionMessage;
 }
 
+export async function deleteResponse(id: string) {
+    const deleteResponse = await prisma.surveyResponse.delete({
+        where: {
+            id,
+        }
+    });
+
+    return deleteResponse;
+}
+
 export async function createResponse(input: CreateResponseInput) {
     let respondent = undefined;
 

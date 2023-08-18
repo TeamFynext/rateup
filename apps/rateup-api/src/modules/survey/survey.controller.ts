@@ -18,6 +18,7 @@ import {
 } from "./survey.service";
 import { CloneSurveyInput, CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateGoogleLinkInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
+import { Prisma } from '@prisma/client';
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -185,7 +186,15 @@ export async function deleteSurveyByIdHandler(
     }
   } catch (e) {
     console.log(e);
-    reply.code(500);
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
+      reply.code(400).send({
+        error: 'Cannot delete Survey because it has associated responses. Cleanup responses and Try Again!'
+      });
+    } else {
+      reply.code(500).send({
+        error: 'An unknown error occurred.'
+      });
+    }
   }
 }
 
