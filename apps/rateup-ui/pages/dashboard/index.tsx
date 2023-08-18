@@ -34,7 +34,18 @@ export default function DashboardHome() {
                             <RateupButtonPrimary onClick={() => router.push('/dashboard/teams')} title={"Teams"}  />
 
                             <RateupButtonSecondary onClick={() => router.push('/dashboard/settings')} title={"Settings"}  />
-
+                            
+              <RateupButtonPrimary
+                onClick={() => router.push("/dashboard/LandingPages")}
+                title={"Create Survey Landing "}
+              />
+            
+            
+              <RateupButtonPrimary
+                onClick={() => router.push("/dashboard/LandingSurveyList")}
+                title={" Landings "}
+              />
+            
                     </Group>
    
 

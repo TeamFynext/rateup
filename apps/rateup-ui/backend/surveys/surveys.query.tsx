@@ -2,10 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   cloneSurvey,
   createSurvey,
+  createSurveyLandingPage,
   getPublicSurvey,
   getPublicSurveyGoogleLink,
   getSurvey,
+  getSurveyByLandingId,
+  getSurveyLandings,
   getSurveys,
+  getSurveysLandingPage,
   getWhatsappSurveys,
   updateSurvey,
   updateSurveyCompleted,
@@ -25,6 +29,12 @@ export const useSurvey = (surveyId: string) =>
     queryKey: ["survey", surveyId],
     queryFn: () => getSurvey(surveyId),
   });
+export const useSurveysBylandingId = (landingId: string) =>
+  useQuery({
+    enabled: !!landingId,
+    queryKey: ["landingSurveys", landingId],
+    queryFn: () => getSurveyByLandingId(landingId),
+  });
 //------------whatsapp survey --------------
 //----@author:harshad-----------
 export const useWhatsappSurveys = (teamIsSelected) =>
@@ -42,17 +52,40 @@ export const usePublicSurvey = (surveyId: string) =>
   });
 
 export const usePublicSurveyGoogleLink = (surveyId: string) =>
-useQuery({
-  enabled: !!surveyId,
-  queryKey: ["public-survey-google-link", surveyId],
-  queryFn: () => getPublicSurveyGoogleLink(surveyId),
-});
+  useQuery({
+    enabled: !!surveyId,
+    queryKey: ["public-survey-google-link", surveyId],
+    queryFn: () => getPublicSurveyGoogleLink(surveyId),
+  });
 
+// export const useSurveys = (teamIsSelected) =>
+//   useQuery({
+//     enabled: !teamIsSelected,
+//     queryKey: ["surveys"],
+//     queryFn: getSurveys,
+//   });
+//--------------survey landing pages----------
+export const useSurveysLanding = (teamIsSelected) =>
+  useQuery({
+    enabled: true,
+    queryKey: ["surveysLanding"],
+    queryFn: getSurveyLandings,
+  });
+
+// export function useSurveysLanding(queryClient) {
+//   return useQuery(["surveysLanding"], getSurveyLandings, {
+//     //refetchOnWindowFocus: "always",
+//     //refetchOnMount: "always",
+//     initialData: () => queryClient.getQueryData(["surveysLanding"]),
+//     onSuccess: (data) => {},
+//   });
+// }
 export const useSurveys = (specificTeamIsSelected: boolean) => useQuery({
   enabled: !specificTeamIsSelected,
   queryKey: ['surveys'],
   queryFn: getSurveys
 })
+
 
 export const useSurveysByTeam = (teamId: string, specificTeamIsSelected) => useQuery({
   enabled: specificTeamIsSelected,
@@ -63,27 +96,31 @@ export const useSurveysByTeam = (teamId: string, specificTeamIsSelected) => useQ
 type MyProps = {
   close: () => void;
   resetForm: () => void;
-  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>
+  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
 };
 
-export const useCreateSurveyMutation = ({ close, resetForm, setIsCreating }: MyProps) => {
+export const useCreateSurveyMutation = ({
+  close,
+  resetForm,
+  setIsCreating,
+}: MyProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createSurvey,
     onSuccess: () => {
       notifications.update({
-        id: 'load-data',
-        color: 'teal',
-        title: 'Success',
-        message: 'Survey Created...!',
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Survey Created...!",
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);
       close();
-      setIsCreating(false)
-      resetForm()
+      setIsCreating(false);
+      resetForm();
     },
     onError: (error: any) => {
       notifications.show({
@@ -94,12 +131,56 @@ export const useCreateSurveyMutation = ({ close, resetForm, setIsCreating }: MyP
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-    }
+    },
   });
 
   return createMutation;
 };
 
+//--------------create survey landing page query-----------------
+type LandingProps = {
+  close: () => void;
+  resetForm: () => void;
+  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
+};
+
+export const useCreateSurveyLandingPageMutation = ({
+  close,
+  resetForm,
+  setIsCreating,
+}: LandingProps) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: createSurveyLandingPage,
+    onSuccess: () => {
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Survey Landing Page created Created...!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 2000,
+      });
+      queryClient.invalidateQueries(["surveysLanding"]);
+      queryClient.invalidateQueries(["surveysByTeam"]);
+      close();
+      setIsCreating(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+  });
+
+  return createMutation;
+};
 
 type CloneProps = {
   close: () => void;
@@ -107,35 +188,42 @@ type CloneProps = {
   setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 };
 
-export function useCloneSurveyMutation({close, selectedTeamID, setSelectedTeamId} : CloneProps) {
+export function useCloneSurveyMutation({
+  close,
+  selectedTeamID,
+  setSelectedTeamId,
+}: CloneProps) {
   const queryClient = useQueryClient();
-  return useMutation(({ id, teamId } : {id: string, teamId : string}) => cloneSurvey(id, teamId), {
-    onSuccess: (data, variables) => {
-      notifications.show({
-        id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Survey Copy created!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(['surveysByTeam', selectedTeamID]);
-      setSelectedTeamId(variables?.teamId)
-      close()
-    },
-    onError: (error: any) => {
-      console.error("Error Survey Clone:", error.message);
-      notifications.show({
-        id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-    },
-  });
+  return useMutation(
+    ({ id, teamId }: { id: string; teamId: string }) => cloneSurvey(id, teamId),
+    {
+      onSuccess: (data, variables) => {
+        notifications.show({
+          id: "load-data",
+          color: "teal",
+          title: "Success",
+          message: "Survey Copy created!",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+        queryClient.invalidateQueries(["surveys"]);
+        queryClient.invalidateQueries(["surveysByTeam", selectedTeamID]);
+        setSelectedTeamId(variables?.teamId);
+        close();
+      },
+      onError: (error: any) => {
+        console.error("Error Survey Clone:", error.message);
+        notifications.show({
+          id: "load-data",
+          color: "red",
+          title: "Failed",
+          message: error?.response?.data?.message,
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+      },
+    }
+  );
 }
 
 export function useUpdateSurveyPwdMutation(id, passwordProtect, password) {
@@ -240,7 +328,10 @@ export function useEditSurveyMutation(id, setIsLoading) {
   });
 }
 
-export const useUpdateSurveyGoogleLinkMutation = (surveyId: string, setLinkUpdateStatus: (value: boolean) => void) => {
+export const useUpdateSurveyGoogleLinkMutation = (
+  surveyId: string,
+  setLinkUpdateStatus: (value: boolean) => void
+) => {
   const updateMutation = useMutation({
     mutationFn: ({ data }: any) => {
       return updateSurveyGoogleLink(surveyId, data);
@@ -255,7 +346,7 @@ export const useUpdateSurveyGoogleLinkMutation = (surveyId: string, setLinkUpdat
         message: "Error updating google link",
         color: "red",
       });
-      setLinkUpdateStatus(false)
+      setLinkUpdateStatus(false);
     },
   });
 

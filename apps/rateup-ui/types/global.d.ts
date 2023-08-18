@@ -30,9 +30,19 @@ declare global {
     createdBy: string;
     createdAt: string;
     teamId: string;
-    isProtected:boolean;
-    kioskMode:boolean;
-    type:string
+    isProtected: boolean;
+    kioskMode: boolean;
+    type: string;
+  };
+  type SurveyLanding = {
+    id: string;
+    title: string;
+    description: string | null;
+
+    surveys: string[];
+    createdBy: string;
+    createdAt: string;
+    type: string;
   };
 
   type SurveyResponse = {
