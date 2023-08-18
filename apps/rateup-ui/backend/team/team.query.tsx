@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 
 export function useTeamsByUser(queryClient) {
     return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
+      staleTime: 1000 * 60 * 5, // 5 minutes,
       //refetchOnWindowFocus: "always",
       //refetchOnMount: "always",
       initialData: () => queryClient.getQueryData(["teamsByUser"]),

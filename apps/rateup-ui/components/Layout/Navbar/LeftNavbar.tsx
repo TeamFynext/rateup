@@ -150,7 +150,7 @@ const LeftNavbar = () => {
             label="Settings"
             href="/dashboard/settings/account"
           />
-          <NavbarLink icon={IconLogout} label="Logout" href="/auth/logout" />
+          <NavbarLink icon={IconLogout} label="Logout" href="/logout" />
         </Stack>
       </Navbar.Section>
     </Navbar>

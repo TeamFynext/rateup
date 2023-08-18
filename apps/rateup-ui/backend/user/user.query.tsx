@@ -91,6 +91,7 @@ export function useCreateUserMutation(setIsLoading) {
             });
             setIsLoading(false)
             queryClient.invalidateQueries(["userInfoQuery"]);
+            queryClient.resetQueries(['userInfoQuery']);
             queryClient.invalidateQueries(["userProfile"]);
           },
           onError: (error: any) => {
@@ -122,8 +123,9 @@ export function useCreateUserMutation(setIsLoading) {
               autoClose: 3000,
             });
             setIsLoadingUpload(false)
-            queryClient.invalidateQueries(["userProfile"]);
             queryClient.invalidateQueries(["userInfoQuery"]);
+            queryClient.resetQueries(['userInfoQuery']);
+            queryClient.invalidateQueries(["userProfile"]);
 
           },
           onError: (error: any) => {

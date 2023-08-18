@@ -6,13 +6,14 @@ import {
     createStyles
 } from '@mantine/core';
 import { HeaderTabs } from './Header/Header';
-import { fetchUserInfo } from '../../backend/user/user.api';
-import { useQuery } from '@tanstack/react-query';
+import { IUserInfoApiResponse, fetchUserInfo } from '../../backend/user/user.api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '../../context/UserContext';
 import LeftNavbar from './Navbar/LeftNavbar';
 import { RouteParamsProvider } from '../../context/RouteParamsContext';
 import SessionAuth from '../SuperToken/SessionAuth';
 import { useRouter } from 'next/router';
+import useLocalStorage from '../../hooks/localStorage';
 
 const useStyles = createStyles((theme) => ({
   
@@ -23,38 +24,52 @@ const useStyles = createStyles((theme) => ({
 
 }));
 
-
 // @ts-ignore
 export default ({ children }) => {
     const theme = useMantineTheme();
     const { classes } = useStyles();
     const router = useRouter();
 
-     const {
+    const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>('userInfo', null);
+    const { setUser } = useUser();
+    const queryClient = useQueryClient();
+
+    const {
         isLoading: isLoadingUserInfo,
-        data: userInfo,
+        data: userQueryData,
         error: errorUserInfo,
         refetch,
-     } = useQuery<UserInfoQueryData>({
-         queryKey: ["userInfoQuery"],
-         queryFn: () => fetchUserInfo(),
-        //refetchOnWindowFocus: "always",
-        // refetchOnMount: "always",
-         notifyOnChangeProps: ['data']
-    })
-    const { setUser } = useUser();
+      } = useQuery<IUserInfoApiResponse>({
+        queryKey: ["userInfoQuery"],
+        queryFn: fetchUserInfo,
+        notifyOnChangeProps: ['data'],
+        enabled: !userInfo, // fetch only if there is no data in localStorage
+      });
 
       useEffect(() => {
-       // console.log("Query Fetched UserInfo:"+ JSON.stringify(userInfo?.data?.data))
-        !userInfo?.data?.data && refetch()
-        setUser(userInfo?.data?.data)
-
-        if(userInfo?.data?.data?.email && !userInfo?.data?.data?.orgId){
+        console.log("query refetching...")
+        if (userQueryData?.data) {
+          setUserInfo(userQueryData); // update localStorage
+        }
+        if(userQueryData?.data?.email && !userQueryData?.data?.orgId){
             if (router.query.msg !== 'welcome') {
                 router.push('/signup?auth=google');
             }
         }
-      }, [userInfo])
+
+        if (!userQueryData) {
+            refetch();
+          }
+      }, [userQueryData]);
+
+      useEffect(() => {
+        setUser(userInfo?.data)
+
+        if(userInfo === null ) 
+            queryClient.invalidateQueries(["userInfoQuery"]);
+
+      }, [userInfo]);
+
 
     return (
         <SessionAuth>

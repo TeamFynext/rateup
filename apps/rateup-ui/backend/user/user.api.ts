@@ -21,10 +21,26 @@ export interface IUpdateProfilePhoto{
     profilePhoto: string; 
 }
 
-export const fetchUserInfo = () => axiosClient({
-    url: `/user/info`,
-    method: 'GET',
-})
+export interface IUserData {
+    userId: string;
+    role: string;
+    email: string;
+    orgId: string;
+    profilePhoto: string;
+  }
+  
+export interface IUserInfoApiResponse {
+    message: string;
+    data: UserData;
+  }
+  
+  export const fetchUserInfo = async (): Promise<IUserInfoApiResponse> => {
+    const response = await axiosClient({
+      url: '/user/info',
+      method: 'GET',
+    });
+    return response.data as IUserInfoApiResponse;
+  };
 
 export const fetchUserProfile = () => axiosClient({
     url: `/user/profile`,

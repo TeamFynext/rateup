@@ -59,8 +59,6 @@ export default function Teams() {
   } = useTeamsByUser(queryClient);
 
   let teamsData = teamsDataUser?.data;
-  console.log(teamsData,">>>infinete")
-
 
   const onSubmit = (values) => {
     handleSubmit(values);
