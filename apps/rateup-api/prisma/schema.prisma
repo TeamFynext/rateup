@@ -151,6 +151,16 @@ model Survey {
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
 }
 
+model SurveyLanding {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  title       String
+  description String?   @default("")
+  surveys     String[]
+  createdBy   String    @db.Uuid
+}
+
 model SurveyResponse {
   id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt    DateTime         @default(now())

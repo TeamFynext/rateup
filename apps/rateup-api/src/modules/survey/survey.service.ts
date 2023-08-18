@@ -1,6 +1,7 @@
 import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
+  CreateSurveyLandingInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
@@ -14,17 +15,37 @@ export async function createSurvey(
   createdBy: string
 ) {
   const survey = await prisma.survey.create({
-    data: { 
-      ...input, 
+    data: {
+      ...input,
       title: input.title,
       teamId: input.teamId,
-      createdBy 
-    },   
+      createdBy,
+    },
   });
   return survey;
 }
 
-export async function cloneSurvey(surveyId: string, userId: string, teamId: string) {
+//----------------create survey landing-----------------
+export async function createSurveyLanding(
+  input: CreateSurveyLandingInput,
+  createdBy: string
+) {
+  const survey = await prisma.surveyLanding.create({
+    data: {
+      ...input,
+      title: input.title,
+      // teamId: input.teamId,
+      createdBy,
+    },
+  });
+  return survey;
+}
+
+export async function cloneSurvey(
+  surveyId: string,
+  userId: string,
+  teamId: string
+) {
   const survey = await prisma.survey.findUnique({
     where: {
       id: surveyId,
@@ -39,24 +60,26 @@ export async function cloneSurvey(surveyId: string, userId: string, teamId: stri
         title: {
           startsWith: survey.title,
         },
-        teamId: survey.teamId
+        teamId: survey.teamId,
       },
       orderBy: {
-        title: 'asc'
-      }
+        title: "asc",
+      },
     });
 
     let maxCopyNumber = 0;
 
     existingSurveys.forEach((existingSurvey) => {
       const suffix = existingSurvey.title.slice(survey.title.length);
-      if(suffix.startsWith(' Copy ')) {
-        const copyNumberStr = suffix.slice(' Copy '.length);
+      if (suffix.startsWith(" Copy ")) {
+        const copyNumberStr = suffix.slice(" Copy ".length);
         const copyNumber = parseInt(copyNumberStr, 10);
-        console.log(`Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`);
-        if(!isNaN(copyNumber)) {
+        console.log(
+          `Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`
+        );
+        if (!isNaN(copyNumber)) {
           maxCopyNumber = Math.max(maxCopyNumber, copyNumber);
-          console.log('Found a valid copy number: ', maxCopyNumber);
+          console.log("Found a valid copy number: ", maxCopyNumber);
         }
       }
     });
@@ -75,9 +98,8 @@ export async function cloneSurvey(surveyId: string, userId: string, teamId: stri
     });
 
     return newSurvey;
-
   } else {
-    return "Survey not found to duplicate"
+    return "Survey not found to duplicate";
   }
 }
 
@@ -97,6 +119,41 @@ export async function getSurveyById(id: string) {
   return survey;
 }
 
+//---------------get surveys by landingId------------
+export async function getSurveyBylandingId(landingid: string) {
+  const survey = await prisma.surveyLanding.findUnique({
+    where: {
+      id:landingid,
+    },
+    
+  });
+  //-------------form array if survey ids ---------
+  let surveyIds = []
+  for(let i =0; i<survey.surveys.length;i++){
+    surveyIds.push(survey.surveys[i])
+  }
+
+  // const surveyids: string[] = survey.surveys.map(
+  //   (item: { id: string }) => item
+  // );
+  //----------get surveys from surveyids------------
+  console.log(surveyIds,">>>fateeno")
+  const surveyResponse = await prisma.survey.findMany({
+    where: {
+      id :{
+        in:surveyIds
+      }
+    },
+    
+  });
+
+  console.log(survey,">>>> anding under",surveyResponse)
+  if (!survey || survey.surveys.length==0) {
+    throw new Error(`Could not find survey with id ${landingid}`);
+  }
+  return surveyResponse;
+}
+
 export async function getGoogleUrlBySurveyId(id: string) {
   const survey = await prisma.survey.findUnique({
     where: {
@@ -107,10 +164,10 @@ export async function getGoogleUrlBySurveyId(id: string) {
     },
   });
 
-  if(survey){
+  if (survey) {
     const team = await prisma.team.findUnique({
       where: {
-        id: survey.teamId
+        id: survey.teamId,
       },
       select: {
         googleLink: true,
@@ -118,13 +175,10 @@ export async function getGoogleUrlBySurveyId(id: string) {
     });
 
     return team;
-
-  }else{
-    return { error: "Survey not found"}
+  } else {
+    return { error: "Survey not found" };
   }
-
 }
-
 
 /**
  * Returns surveys from ALL TEAMs in which the user is a member of
@@ -156,6 +210,15 @@ export async function getSurveysByUserId(userId: string) {
  * @author harshad
  */
 
+export async function getSurveyLandingByUserId(userId: string) {
+  const surveysLanding = await prisma.surveyLanding.findMany({
+    
+  });
+
+  return surveysLanding;
+}
+
+//------------get landing surevey list --------
 export async function getWhatsappSurveysByUserId(userId: string, type: string) {
   const teamData = await getTeamsByUserId(userId);
   const teamIds: string[] = teamData.map(
@@ -209,8 +272,10 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
   return survey;
 }
 
-export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) {
-
+export async function updateGoogleLink(
+  id: string,
+  data: UpdateGoogleLinkInput
+) {
   const survey = await prisma.survey.findUnique({
     where: {
       id,
@@ -220,10 +285,10 @@ export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) 
     },
   });
 
-  if(survey){
+  if (survey) {
     const team = await prisma.team.update({
       where: {
-        id: survey.teamId
+        id: survey.teamId,
       },
       data: {
         googleLink: data.googleLink,
@@ -231,9 +296,8 @@ export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) 
     });
 
     return team;
-
-  }else{
-    return { error: "Survey not found"}
+  } else {
+    return { error: "Survey not found" };
   }
 }
 
