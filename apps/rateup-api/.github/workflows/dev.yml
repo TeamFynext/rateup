@@ -1,10 +1,5 @@
 name: prisma-migrate-dev
 on:
-  pull_request_target:
-    types:
-      - closed
-    branches:
-      - dev
   push:
     branches:
       - dev
