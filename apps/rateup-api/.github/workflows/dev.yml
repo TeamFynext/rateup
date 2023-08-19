@@ -5,13 +5,9 @@ on:
       - closed
     branches:
       - dev
-    paths:
-      - "./prisma/**"
   push:
     branches:
       - dev
-    paths:
-      - "./prisma/**"
   workflow_dispatch:
 jobs:
   install:
