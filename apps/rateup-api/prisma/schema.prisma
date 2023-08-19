@@ -252,3 +252,8 @@ model RGroupSurveySendHistory {
   surveyId  String   @db.Uuid
   createdAt DateTime @default(now())
 }
+
+model dummy {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+}

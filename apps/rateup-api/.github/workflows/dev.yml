@@ -1,17 +1,17 @@
 name: prisma-migrate-dev
 on:
   pull_request_target:
-    types: 
+    types:
       - closed
     branches:
       - dev
     paths:
-      - "./prisma/**/*.*"
+      - "./prisma/**"
   push:
     branches:
       - dev
     paths:
-      - "./prisma/**/*.*"
+      - "./prisma/**"
   workflow_dispatch:
 jobs:
   install:
