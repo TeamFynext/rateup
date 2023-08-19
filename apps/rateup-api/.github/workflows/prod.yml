@@ -1,17 +1,13 @@
 name: prisma-migrate-prod
 on:
-  pull_request_target:
-    types: 
+  pull_request:
+    types:
       - closed
     branches:
       - main
-    paths:
-      - "./prisma/**/*.*"
   push:
     branches:
       - main
-    paths:
-      - "./prisma/**/*.*"
   workflow_dispatch:
 jobs:
   install:

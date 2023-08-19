@@ -1,15 +1,15 @@
-name: prisma-migrate-prod
+name: prisma-migrate-dev
 on:
   pull_request_target:
     types: 
       - closed
     branches:
-      - main
+      - dev
     paths:
       - "./prisma/**/*.*"
   push:
     branches:
-      - main
+      - dev
     paths:
       - "./prisma/**/*.*"
   workflow_dispatch:
