@@ -71,6 +71,16 @@ const updateSurveyRequestSchema = z.object({
   active: z.boolean().default(true).optional(),
   kioskMode: z.boolean().default(false).optional(),
 });
+const updateLandingPageRequestSchema = z.object({
+  title: z
+    .string({
+      required_error: "Title is required",
+      invalid_type_error: "Title must be a string",
+    })
+    .optional(),
+  surveys: z.array(z.string()).optional(),
+ 
+});
 
 const updateSurveyPasswordRequestSchema = z.object({
   password: z.string({
@@ -113,6 +123,7 @@ export type CreateSurveyLandingInput = z.infer<
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
 export type GetSurveyLandingByIdParams = z.infer<typeof getSurveyLandingByIdParamsSchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
+export type UpdateLandingPageInput = z.infer<typeof updateLandingPageRequestSchema>;
 export type UpdateSurveyPassword = z.infer<
   typeof updateSurveyPasswordRequestSchema
 >;

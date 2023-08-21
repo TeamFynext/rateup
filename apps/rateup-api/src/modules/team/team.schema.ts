@@ -28,7 +28,6 @@ const createTeamResponseSchema = z.object({
 
 const getTeamsByOrgRequestSchema = z.object({
   orgId: z.string(),
-  whatsappAccessToken: z.any(),
 });
 
 const getTeamMembersRequestSchema = z.object({

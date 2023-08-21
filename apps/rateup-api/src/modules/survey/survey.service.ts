@@ -3,6 +3,7 @@ import {
   CreateSurveyInput,
   CreateSurveyLandingInput,
   UpdateGoogleLinkInput,
+  UpdateLandingPageInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
@@ -39,6 +40,20 @@ export async function createSurveyLanding(
     },
   });
   return survey;
+}
+//----------------update survey landing page details-----------------
+export async function updateSurveyLanding(
+  id,
+  input: UpdateLandingPageInput,
+  // createdBy: string
+) {
+  const Landing = await prisma.surveyLanding.update({
+    where: {
+      id
+    },
+    data: input,
+  });
+  return Landing;
 }
 
 export async function cloneSurvey(
@@ -123,32 +138,28 @@ export async function getSurveyById(id: string) {
 export async function getSurveyBylandingId(landingid: string) {
   const survey = await prisma.surveyLanding.findUnique({
     where: {
-      id:landingid,
+      id: landingid,
     },
-    
   });
   //-------------form array if survey ids ---------
-  let surveyIds = []
-  for(let i =0; i<survey.surveys.length;i++){
-    surveyIds.push(survey.surveys[i])
+  let surveyIds = [];
+  for (let i = 0; i < survey.surveys.length; i++) {
+    surveyIds.push(survey.surveys[i]);
   }
 
-  // const surveyids: string[] = survey.surveys.map(
-  //   (item: { id: string }) => item
-  // );
+ 
   //----------get surveys from surveyids------------
-  console.log(surveyIds,">>>fateeno")
+  console.log(surveyIds, ">>>fateeno");
   const surveyResponse = await prisma.survey.findMany({
     where: {
-      id :{
-        in:surveyIds
-      }
+      id: {
+        in: surveyIds,
+      },
     },
-    
   });
 
-  console.log(survey,">>>> anding under",surveyResponse)
-  if (!survey || survey.surveys.length==0) {
+  console.log(survey, ">>>> anding under", surveyResponse);
+  if (!survey || survey.surveys.length == 0) {
     throw new Error(`Could not find survey with id ${landingid}`);
   }
   return surveyResponse;
@@ -211,9 +222,7 @@ export async function getSurveysByUserId(userId: string) {
  */
 
 export async function getSurveyLandingByUserId(userId: string) {
-  const surveysLanding = await prisma.surveyLanding.findMany({
-    
-  });
+  const surveysLanding = await prisma.surveyLanding.findMany({});
 
   return surveysLanding;
 }

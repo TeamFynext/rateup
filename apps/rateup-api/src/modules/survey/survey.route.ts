@@ -13,6 +13,8 @@ import {
   createSurveyLandingHandler,
   getSurveysLandingHandler,
   getSurveyBylandingIdhandler,
+  getLandingPageByIdHandler,
+  updateSurveyLandingHandler,
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
@@ -49,6 +51,20 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     createSurveyLandingHandler
   );
+  // ----------create survey landing page ---------
+  server.post(
+    "/updatelanding/:id",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        body: $Sref("createSurveyLandingRequestSchema"),
+        response: {
+          201: $Sref("createSurveyLandingResponseSchema"),
+        },
+      },
+    },
+    updateSurveyLandingHandler
+  );
 
   // get all surveys from user
   server.get("/", getSurveysHandler);
@@ -69,6 +85,18 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     getSurveyByIdHandler
   );
+  // get landingpage by id
+  server.get(
+    "/landingpage/:id",
+    {
+      //----------to do ------verify access to landingpage session
+      preHandler: [verifySession()],
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+      },
+    },
+    getLandingPageByIdHandler
+  );
   // get survey by landingid
   server.get(
     "/landingsurveys/:id",
@@ -80,7 +108,6 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     getSurveyBylandingIdhandler
   );
-  
 
   //duplicate survey
   server.post(

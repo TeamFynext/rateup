@@ -10,6 +10,7 @@ import { responseSchemas } from "./modules/response/response.schema";
 import { surveyPublicRoutes } from "./modules/survey/survey.public.routes";
 import { surveyRoutes } from "./modules/survey/survey.route";
 import { surveySchemas } from "./modules/survey/survey.schema";
+import { landingPageSchemas } from "./modules/landingPage/landingpage.schema";
 import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
 import { userRoutes } from "./modules/user/user.route";
@@ -22,6 +23,7 @@ import { rgroupRoutes } from "./modules/respondent/rgroup/rgroup.route";
 import { wasurveySchemas } from "./modules/whatsappSurvey/wasurvey.schema";
 import { respondentRoutes } from "./modules/respondent/respondent/respondent.route";
 import { respondentSchemas } from "./modules/respondent/respondent/respondent.schema";
+import { LandingPageRoutes } from "./modules/landingPage/landingpage.route";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [
@@ -35,6 +37,7 @@ export function registerRoutes(server: FastifyInstance): void {
         rGroupSchemas,
         respondentSchemas,
         wasurveySchemas,
+        landingPageSchemas
     ];
     for (const module of modules) {
         for (const schema of module) {
@@ -42,6 +45,7 @@ export function registerRoutes(server: FastifyInstance): void {
         }
     }
     server.register(surveyRoutes, { prefix: "api/survey" });
+    server.register(LandingPageRoutes, { prefix: "api/landingpage" });
     server.register(questionRoutes, { prefix: "api/question/:surveyId" });
     server.register(userRoutes, { prefix: "api/user" });
     server.register(orgRoutes, { prefix: "api/org" });

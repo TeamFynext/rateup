@@ -15,6 +15,7 @@ import {
   updateGoogleLink,
   updateStartedSurvey,
   updateSurveyById,
+  updateSurveyLanding,
   updateSurveyPassword,
   updateVisitedSurvey,
   verifySurveyPassword,
@@ -32,6 +33,7 @@ import {
 } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from '@prisma/client';
+import { getLandingPageById } from "../landingPage/landingpage.service";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -79,6 +81,32 @@ export async function createSurveyLandingHandler(
     reply.code(500).send();
   }
 }
+//------------update survey landing handler--------------
+export async function updateSurveyLandingHandler(
+  request: FastifyRequest<{
+    Body: CreateSurveyLandingInput;
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  const data = request.body;
+
+  console.log("caretesurvye--213", data);
+  try {
+    // TODO add types for session
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    let landingId = request.params.id
+
+    console.log(data, ">>>data survey controller---");
+    const survey = await updateSurveyLanding(landingId,data);
+    reply.code(201).send(survey);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
 
 export async function getSurveyByIdHandler(
   request: FastifyRequest<{
@@ -97,6 +125,26 @@ export async function getSurveyByIdHandler(
     reply.code(500);
   }
 }
+//---------------get landing page by id ----------
+export async function getLandingPageByIdHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getLandingPageById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
+}
+
+
 
 //-----------get survey by landingid------------
 export async function getSurveyBylandingIdhandler(

@@ -1,0 +1,38 @@
+import { FastifyReply, FastifyRequest } from "fastify";
+import Session from "supertokens-node/recipe/session";
+import { Prisma } from '@prisma/client';
+import { GetSurveyLandingByIdParams } from "../survey/survey.schema";
+import { GetLandingPageByIdParams } from "./landingpage.schema";
+import { deleteLandingPageById, getLandingPageById } from "./landingpage.service";
+
+
+//---------delete landing page by id -----------
+export async function deleteSLandingPageByIdHandler(
+    request: FastifyRequest<{
+      Params: GetLandingPageByIdParams;
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      //------check if landing page exist ----
+      const LandingPage = await getLandingPageById(request.params.id);
+      if (!LandingPage) {
+        reply.code(404);
+      } else {
+        //--------deleting landing page-----
+        await deleteLandingPageById(request.params.id);
+        reply.code(200);
+      }
+    } catch (e) {
+      console.log(e);
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
+        reply.code(400).send({
+          error: 'Cannot delete Landing Page because it has associated responses. Cleanup responses and Try Again!'
+        });
+      } else {
+        reply.code(500).send({
+          error: 'An unknown error occurred.'
+        });
+      }
+    }
+  }

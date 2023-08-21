@@ -65,6 +65,7 @@ model Org {
   name        String
   owner       User         @relation(fields: [ownerId], references: [id])
   ownerId     String       @db.Uuid
+  whatsappAccessToken        String?
   members     OrgMember[]
   teams       Team[]
   invitations Invitation[]
@@ -93,7 +94,7 @@ model Team {
   members     TeamMember[]
   surveys     Survey[]
   invitations Invitation[]
-  whatsappAccessToken        String?
+  
   Respondent  Respondent[]
   RGroup      RGroup[]
 
