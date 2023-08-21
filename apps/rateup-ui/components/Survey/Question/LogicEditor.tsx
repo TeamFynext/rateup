@@ -32,9 +32,10 @@ const LogicEditor = ({
   selectedQ,
   setActiveTab,
 }: LogicEditorProps) => {
+  const [isSaving, setIsSaving] = useState(false);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: questions } = useQuestions(surveyId);
-  const questionUpdateMutation = useQuestionUpdateMutation({surveyId});
+  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
   const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
 
   useEffect(() => {
@@ -56,6 +57,7 @@ const LogicEditor = ({
   }
 
   const handleSave = () => {
+    setIsSaving(true);
     questionUpdateMutation
       .mutateAsync({
         qId: selectedQ.id,
@@ -125,6 +127,7 @@ const LogicEditor = ({
           title={"Save"}
           size="md"
           onClick={handleSave}
+          loading={isSaving}
         />
       </Group>
     </Stack>
@@ -138,6 +141,8 @@ function getResponses(question: Question, selectedLanguage): Array<any> {
       return Object.values(LDResponse);
     case Q.MCQ:
     case Q.MSQ:
+    case Q.DDSS:
+    case Q.DDMS:
       return question.choices?.[selectedLanguage] || [];
     case Q.YN:
       return Object.values(YNResponse);
@@ -157,6 +162,7 @@ function getConditions(qType: QuestionType): Array<any> {
     case Q.LD:
       return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.MCQ:
+    case Q.DDSS:
       return [
         LogicCondition.Equals,
         LogicCondition.NotEquals,
@@ -172,6 +178,7 @@ function getConditions(qType: QuestionType): Array<any> {
     case Q.Smiley:
       return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.MSQ:
+    case Q.DDMS:
       return [
         LogicCondition.Equals,
         LogicCondition.NotEquals,
@@ -242,7 +249,7 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
         selectedCondition === LogicCondition.Submitted ? (<></>) : (
           [LogicCondition.IncludesAllOf, LogicCondition.IncludesAnyOf, LogicCondition.IncludesNoneOf].includes(selectedCondition)
           ||
-          (selectedQ.type === Q.MSQ && selectedCondition === LogicCondition.Equals)
+          ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS)  && selectedCondition === LogicCondition.Equals)
            ? (
             // Array Selector
             <MultiSelect

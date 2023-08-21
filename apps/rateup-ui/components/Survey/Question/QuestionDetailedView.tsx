@@ -1,16 +1,13 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState, forwardRef} from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
   ActionIcon,
-  Box,
   Checkbox,
   Group,
   Stack,
   TextInput,
-  Flex,
   Text,
-  Tabs,
   Space,
   Center,
   ScrollArea,
@@ -357,6 +354,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
+    case QuestionType.DDSS:
+    case QuestionType.DDMS:
       return <ChoicesCreator qId={question.id} form={form} />;
     default:
       return null;

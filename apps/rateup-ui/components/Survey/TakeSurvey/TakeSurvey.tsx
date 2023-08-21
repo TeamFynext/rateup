@@ -18,7 +18,7 @@ import {
   Divider,
   NumberInput,
   Avatar,
-  Select
+  Select,MultiSelect
 } from "@mantine/core";
 import { forwardRef } from 'react';
 import { useDisclosure } from '@mantine/hooks';
@@ -401,6 +401,10 @@ function getQuestionForm(type) {
       return <MCQForm />;
     case Q.MSQ:
       return <MSQForm />;
+    case Q.DDSS:
+      return <DDSSForm />;
+    case Q.DDMS:
+      return <DDMSForm />;
     case Q.Testimonial:
       return <TestimonialForm />;
     case Q.DateTime:
@@ -906,6 +910,48 @@ function MSQForm() {
         ))}
       </Stack>
     </Checkbox.Group>
+  );
+}
+
+function DDSSForm() {
+  const { selectedQ } = useContext(SelectedQContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const choices = selectedQ.choices[selectedLanguage];
+
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const data = choices.map((choice) => ({ value: choice, label: choice }));
+
+  return (
+    <Select
+      sx={{minWidth: "300px", maxWidth: "500px"}}
+      label="Select one option"
+      placeholder="Pick one"
+      data={data}
+      value={response}
+      onChange={(e) => updateResponse(e)}
+    />
+  );
+}
+
+function DDMSForm() {
+  const { selectedQ } = useContext(SelectedQContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const choices = selectedQ.choices[selectedLanguage];
+
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const data = choices.map((choice) => ({ value: choice, label: choice }));
+
+  return (
+    <MultiSelect
+      sx={{minWidth: "300px", maxWidth: "500px"}}
+      data={data}
+      value={response}
+      onChange={updateResponse}
+      label="Select one or more options"
+      placeholder="Pick one or more"
+    />
   );
 }
 

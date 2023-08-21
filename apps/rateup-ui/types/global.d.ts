@@ -73,6 +73,8 @@ declare global {
       [QuestionType.Opinion]?: number;
       [QuestionType.MCQ]?: string;
       [QuestionType.MSQ]?: Array<string>;
+      [QuestionType.DDSS]?: string;
+      [QuestionType.DDMS]?: Array<string>;
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;

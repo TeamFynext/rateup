@@ -16,6 +16,8 @@ import {
   IconHandClick,
   IconThumbUp,
   IconSortAscendingNumbers,
+  IconSelect,
+  IconSelector,
 } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
 import { useContext } from "react";
@@ -78,14 +80,17 @@ const questionIcons = {
   [QuestionType.Phone]: IconPhone,
   [QuestionType.Photo]: IconCamera,
   [QuestionType.DateTime]: IconCalendar,
-  [QuestionType.MCQ]: IconCheckupList,
-  [QuestionType.MSQ]: IconListCheck,
+  [QuestionType.LD]: IconThumbUp,
+  [QuestionType.YN]: IconHandClick,
   [QuestionType.Rating]: IconStar,
   [QuestionType.Smiley]: IconMoodSmile,
   [QuestionType.Opinion]: IconSortAscendingNumbers,
-  [QuestionType.LD]: IconThumbUp,
-  [QuestionType.YN]: IconHandClick,
+  [QuestionType.MCQ]: IconCheckupList,
+  [QuestionType.MSQ]: IconListCheck,
   [QuestionType.Testimonial]: IconUser,
+  [QuestionType.DDSS]: IconSelect,
+  [QuestionType.DDMS]: IconSelector,
+
 };
 const whatsappQuestionIcons = {
   [QuestionType.Text]: IconLetterCase,

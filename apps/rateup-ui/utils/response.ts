@@ -4,11 +4,11 @@ import dayjs from "dayjs";
 export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
   if (!qResponse) return null;
-  const { type } = qResponse;
+  const { type, response: responseType } = qResponse;
 
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
-  } else if (type === "DateTime") {
+  } else if (type === QuestionType.DateTime) {
     const dateTimeValue = qResponse.response.DateTime;
     const date = dayjs(dateTimeValue);
 
@@ -17,6 +17,10 @@ export function getResponse(qId: string, response: SurveyResponse) {
    // return `${formattedDate}, ${formattedTime}`;
 
     return `${formattedDate}`;
+  } else if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
+    const value = responseType[type];
+    const formattedValue = value?.map(item => item.trim()).join(", ");
+    return formattedValue || ''; // Return blank if undefined
   }
 
   return qResponse.response[type];

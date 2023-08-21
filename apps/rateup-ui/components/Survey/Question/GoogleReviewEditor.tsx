@@ -25,8 +25,9 @@ const GoogleReviewEditor = ({
 }: IProps) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false)
+  const [isSaving, setIsSaving] = useState(false);
 
-  const questionUpdateMutation = useQuestionUpdateMutation({surveyId});
+  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
   const googleLinkUpdateMutation = useUpdateSurveyGoogleLinkMutation(surveyId, setLinkUpdateStatus);
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false);
@@ -124,6 +125,7 @@ const GoogleReviewEditor = ({
 
       try {
         if(googleReviewLink !== googleLink){
+          setIsSaving(true);
           await googleLinkUpdateMutation.mutateAsync({
             data: { googleLink: googleReviewLink},
           });
@@ -315,6 +317,7 @@ const GoogleReviewEditor = ({
             title={"Save"}
             size="md"
             onClick={handleSave}
+            loading={isSaving}
           />
       </Group>
 
