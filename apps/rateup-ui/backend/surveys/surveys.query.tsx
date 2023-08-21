@@ -6,6 +6,7 @@ import {
   getPublicSurvey,
   getPublicSurveyGoogleLink,
   getSurvey,
+  getLandingpage,
   getSurveyByLandingId,
   getSurveyLandings,
   getSurveys,
@@ -18,6 +19,7 @@ import {
   updateSurveyStarted,
   updateSurveyVisited,
   verifySurveyPassword,
+  updateSurveyLandingPage,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -28,6 +30,13 @@ export const useSurvey = (surveyId: string) =>
     enabled: !!surveyId,
     queryKey: ["survey", surveyId],
     queryFn: () => getSurvey(surveyId),
+  });
+  //------------get landing page -----------
+export const useLandingPage = (LandingpageId: string) =>
+  useQuery({
+    enabled: !!LandingpageId,
+    queryKey: ["survey", LandingpageId],
+    queryFn: () => getLandingpage(LandingpageId),
   });
 export const useSurveysBylandingId = (landingId: string) =>
   useQuery({
@@ -180,6 +189,51 @@ export const useCreateSurveyLandingPageMutation = ({
   });
 
   return createMutation;
+};
+
+//-------update landinf page -------------
+
+type UpdateLandingProps = {
+  close: () => void;
+  resetForm: () => void;
+  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
+};
+export const useUpdateSurveyLandingPageMutation = ({
+  close,
+  resetForm,
+  setIsCreating,
+}: UpdateLandingProps) => {
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationFn: updateSurveyLandingPage,
+    onSuccess: () => {
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Survey Landing Page Updated...!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 2000,
+      });
+      queryClient.invalidateQueries(["surveysLanding"]);
+      queryClient.invalidateQueries(["surveysByTeam"]);
+      close();
+      setIsCreating(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+  });
+
+  return updateMutation;
 };
 
 type CloneProps = {

@@ -51,22 +51,14 @@ import {
   useCloneSurveyMutation,
   useSurveys,
   useSurveysByTeam,
-  useSurveysBylandingId,
 } from "../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useUser } from "../../../context/UserContext";
 
-
-//------------get all surveys under this landing id -----------
-export default ()=> {
+export default function SurveyLandingList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const { user, setUser } = useUser();
-
-  const router = useRouter();
-  const { LandingId } = router.query;
-  console.log(LandingId,">>>>hoooookiolo")
-
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -77,12 +69,8 @@ export default ()=> {
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
 
   const specificTeamIsSelected = selectedTeamId !== 'all';
-  //---------check not array ------------
-  if (Array.isArray(LandingId)) {
-    throw new Error("surveyId is an array");
-  }
 
-  const { isLoading, error, data: surveys } = useSurveysBylandingId(LandingId);
+  const { isLoading, error, data: surveys } = useSurveys(specificTeamIsSelected);
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -152,7 +140,7 @@ export default ()=> {
           wrap="wrap"
           mb="md"
         >
-          <Title order={1}> surevy list  </Title>
+          <Title order={1}>Landing survey list  </Title>
 
           <Select
             mt="xs"
@@ -235,7 +223,6 @@ export default ()=> {
   );
 }
 
-//---------------survey card section starts --------------
 interface SurveyCardProps {
   survey: Survey;
   setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
@@ -280,7 +267,8 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
         </Text>
         <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
         <Group align={"center"} mt="sm" spacing="xs">
-          <IconPencil />
+
+          <IconPencil  />
           <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
         </Group>
       </Flex>

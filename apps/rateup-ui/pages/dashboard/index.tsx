@@ -1,60 +1,57 @@
-﻿import { RateupButtonBlue, RateupButtonPrimary, RateupButtonSecondary } from "../../components/Button/RateupButtons";
-import { Group, Title, Space, Container} from '@mantine/core';
-import {useEffect, useState} from 'react';
-import { useRouter } from 'next/router';
+﻿import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../components/Button/RateupButtons";
+import { Group, Title, Space, Container } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { useQueryClient } from "@tanstack/react-query";
 import Loading from "../../components/Page/Loading";
 import { useUser } from "../../context/UserContext";
 
 export default function DashboardHome() {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const { user } = useUser();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user } = useUser();
 
-    useEffect(() => {
-        if (!user?.role) {
-            queryClient.invalidateQueries(['userInfoQuery']);
-        }
-    }, []);
+  useEffect(() => {
+    if (!user?.role) {
+      queryClient.invalidateQueries(["userInfoQuery"]);
+    }
+  }, []);
 
-    
-    return (
-        <>
-        <Title order={1}>Dashboard</Title>
-        <Space h="xl" />
-                        {
-                user ?
+  return (
+    <>
+      <Title order={1}>Dashboard</Title>
+      <Space h="xl" />
+      {user ? (
+        <Container fluid>
+          <Group mt="xl" pt="xl">
+            <RateupButtonBlue
+              onClick={() => router.push("/dashboard/surveys")}
+              title={"Surveys"}
+            />
 
-                <Container fluid>
+            <RateupButtonPrimary
+              onClick={() => router.push("/dashboard/teams")}
+              title={"Teams"}
+            />
 
-                    <Group mt="xl" pt="xl">  
+            <RateupButtonSecondary
+              onClick={() => router.push("/dashboard/settings")}
+              title={"Settings"}
+            />
 
-                            <RateupButtonBlue onClick={() => router.push('/dashboard/surveys')} title={"Surveys"}  />
-
-                            <RateupButtonPrimary onClick={() => router.push('/dashboard/teams')} title={"Teams"}  />
-
-                            <RateupButtonSecondary onClick={() => router.push('/dashboard/settings')} title={"Settings"}  />
-                            
-              <RateupButtonPrimary
-                onClick={() => router.push("/dashboard/LandingPages")}
-                title={"Create Survey Landing "}
-              />
-            
-            
-              <RateupButtonPrimary
-                onClick={() => router.push("/dashboard/LandingSurveyList")}
-                title={" Landings "}
-              />
-            
-                    </Group>
-   
-
-            </Container>
-
-                : <Loading h={300} />
-            }
-
-        </>
-    );
-
+            <RateupButtonPrimary
+              onClick={() => router.push("/dashboard/LandingPages")}
+              title={"Create Survey Landing "}
+            />
+          </Group>
+        </Container>
+      ) : (
+        <Loading h={300} />
+      )}
+    </>
+  );
 }

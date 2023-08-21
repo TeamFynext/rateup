@@ -33,8 +33,11 @@ import {
   IconChevronDown,
   IconPencil,
   IconSettings,
+  IconCheck,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { notifications } from "@mantine/notifications";
+import { useMutation } from "@tanstack/react-query";
 
 import { useDisclosure } from "@mantine/hooks";
 import { QueryClient, dehydrate, useQueryClient } from "@tanstack/react-query";
@@ -44,10 +47,17 @@ import { useSurveysLanding } from "../../../backend/surveys/surveys.query";
 import { useEffect, useState } from "react";
 import { getTimeSince } from "../../../utils";
 import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
+import { deleteLandingPage } from "../../../backend/LandingPage/landingpage.api";
 export default function LandingPages() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const selectedTeamId = "all";
+  const [selectedLandingId, setSelectedLandingId] = useState(null);
 
+  //---------set landing page id for editing--------
+  const EditLandingPage = (selectedId) => {
+    setSelectedLandingId(selectedId);
+  };
+  console.log(selectedLandingId, ">>>sooaliio");
   const {
     isLoading,
     error,
@@ -106,16 +116,24 @@ export default function LandingPages() {
           </Paper>
 
           {surveyLandingData.map((s) => (
-            <SurveyCard key={s.id} survey={s} />
+            <SurveyCard
+              key={s.id}
+              survey={s}
+              open={open}
+              EditLandingPage={EditLandingPage}
+            />
           ))}
-         
         </SimpleGrid>
-        {surveyLandingData.length==0 && 
-          <Text ta={"center"} fw={600}>No Landing pages found</Text>}
+        {surveyLandingData.length == 0 && (
+          <Text ta={"center"} fw={600}>
+            No Landing pages found
+          </Text>
+        )}
         <CreateSurveyLandingModal
           open={createSurveyOpened}
           close={close}
           surveyType={"web"}
+          landingPageId={selectedLandingId}
         />
       </Container>
     </>
@@ -125,14 +143,17 @@ export default function LandingPages() {
 //---------------survey landing page cards-----------------
 interface SurveyLandingCardProps {
   survey: SurveyLanding;
+  open: any;
   // setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function SurveyCard({ survey }): JSX.Element {
+export function SurveyCard({ survey, open, EditLandingPage }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
-console.log(survey,"istanbooool")
+
+  console.log(survey, "istanbooool");
   const router = useRouter();
+  console.log(survey, ">>>>ooofolio");
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -150,7 +171,7 @@ console.log(survey,"istanbooool")
       sx={{ cursor: "pointer" }}
       onClick={() => {
         router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/LandingSurveyList/${survey?.id}`
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveylandinglist/${survey?.id}`
         );
       }}
     >
@@ -158,10 +179,17 @@ console.log(survey,"istanbooool")
         <Text mr={"sm"} truncate size="xl" fw={700} tt={"capitalize"}>
           {survey.title}
         </Text>
-        
+
         <Group align={"center"} mt="sm" spacing="xs">
-          <IconPencil />
-          {/* <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId}/> */}
+          <IconPencil
+            onClick={(e) => {
+              e.stopPropagation(),
+                console.log("enter cikkkk"),
+                EditLandingPage(survey.id);
+              open();
+            }}
+          />
+          <SurveyMenu survey={survey} />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" spacing="xs">
@@ -190,5 +218,103 @@ console.log(survey,"istanbooool")
         </Link> */}
       </Flex>
     </Paper>
+  );
+}
+
+//-----------menu area ---------------
+function SurveyMenu({ survey}) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const [opened, { close, open }] = useDisclosure(false);
+  const [selectedTeamID, setSelectedTeamID] = useState("");
+ 
+
+  const [options, setOptions] = useState([]);
+
+  // useEffect(() => {
+  //   const newOptions = teamsData?.map((team) => ({
+  //     value: team?.teamId,
+  //     label: team?.teamName,
+  //   }));
+
+  //   setOptions(newOptions);
+  // }, [teamsData]);
+
+  const LandingPageDeleteMutation = useMutation({
+    mutationFn: deleteLandingPage,
+    onSuccess: () => {
+      
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Deleted Landing Page Successfully!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 2000,
+      });
+      queryClient.invalidateQueries(["surveysLanding"]);
+      // queryClient.invalidateQueries(["surveysByTeam"]);
+    },
+    onError: (error: any) => {
+      console.error("Error deleting Survey:", error.message);
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        title: "Delete Failed..!",
+        message: error?.response?.data?.error,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 4000,
+      });
+    },
+  });
+
+ 
+
+  return (
+    <Menu width={200}>
+      <Menu.Target>
+        <ActionIcon
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <IconDots />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <Menu.Item
+          icon={<IconShare />}
+          // onClick={() => {
+          //   router.push(`/dashboard/surveys/${survey?.id}?tab=Share`);
+          // }}
+        >
+          Share
+        </Menu.Item>
+
+        <Menu.Item
+          icon={<IconTrash />}
+          onClick={() => {
+            notifications.show({
+              id: "load-data",
+              loading: true,
+              title: "Deleting Landing page..",
+              message: `Hold on, landing page is getting deleted...`,
+              autoClose: false,
+              withCloseButton: false,
+            });
+            LandingPageDeleteMutation.mutate(survey?.id);
+          }}
+        >
+          Delete
+        </Menu.Item>
+
+        
+      </Menu.Dropdown>
+    </Menu>
   );
 }

@@ -8,6 +8,10 @@ export const createSurvey = (data) => axiosClient.post(SURVEYURL, data);
 export const createSurveyLandingPage = (data) =>
   axiosClient.post(`${SURVEYURL}/createlanding`, data);
 
+  //-----------update landing page---------
+export const updateSurveyLandingPage = (data) =>
+  axiosClient.post(`${SURVEYURL}/updatelanding/${data.id}`, data);
+
 export async function cloneSurvey(surveyId: string, teamId: string) {
   if (!surveyId) return undefined;
   const data = {
@@ -27,13 +31,14 @@ export async function getSurveys() {
   }
 }
 
-export const getSurveysList = () => axiosClient({
-  url: `/survey`,
-  method: 'GET',
-})
+export const getSurveysList = () =>
+  axiosClient({
+    url: `/survey`,
+    method: "GET",
+  });
 //----------get all survey landings-------------
 export async function getSurveyLandings() {
-  console.log("enter servicio")
+  console.log("enter servicio");
   try {
     let surveyLandings: Array<SurveyLanding> = (
       await axiosClient.get(`${SURVEYURL}/surveylandings`)
@@ -72,6 +77,11 @@ export async function getSurvey(surveyId: string) {
   const res = await axiosClient.get(`${SURVEYURL}/${surveyId}`);
   return res.data as Survey;
 }
+export async function getLandingpage(LandingId: string) {
+  if (!LandingId) return undefined;
+  const res = await axiosClient.get(`${SURVEYURL}/landingpage/${LandingId}`);
+  return res.data as Survey;
+}
 export async function getSurveyByLandingId(landingid: string) {
   if (!landingid) return undefined;
   const res = await axiosClient.get(`${SURVEYURL}/landingsurveys/${landingid}`);
@@ -90,6 +100,7 @@ export async function getPublicSurveyGoogleLink(surveyId: string) {
 export async function deleteSurvey(surveyId: string) {
   return await axiosClient.delete(`${SURVEYURL}/${surveyId}`);
 }
+
 export async function updateSurvey(surveyId: string, data) {
   return await axiosClient.put(`${SURVEYURL}/${surveyId}`, data);
 }

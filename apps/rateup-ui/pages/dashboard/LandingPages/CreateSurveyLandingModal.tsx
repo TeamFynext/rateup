@@ -13,9 +13,9 @@ import { useQuery } from "@tanstack/react-query";
 // import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getSurveys } from "../../../backend/surveys/survey.api";
-import { useCreateSurveyLandingPageMutation, useSurveys } from "../../../backend/surveys/surveys.query";
+import { useCreateSurveyLandingPageMutation, useLandingPage, useSurveys, useUpdateCompletedMutation, useUpdateSurveyLandingPageMutation } from "../../../backend/surveys/surveys.query";
 import { getTeamsByUser } from "../../../backend/team/team.api";
 
 interface FormValues {
@@ -24,14 +24,28 @@ interface FormValues {
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-export default function CreateSurveyLandingModal({ open, close, surveyType }) {
+export default function CreateSurveyLandingModal({ open, close, surveyType,landingPageId }) {
   const {
     isError,
     isLoading,
     data: surveys,
   } = useQuery(["surveys"], getSurveys);
 
-  console.log(surveys,">>>surveyyysool")
+  
+
+  //--------------get landing page details based on landing page id (prop)----------
+  const {
+    isLoading: isLandingPageLoading,
+    error: LandingPageError,
+    data: LandingPage,
+  } = useLandingPage(landingPageId);
+  //------------if survey data set survey data ---------
+  useEffect(() => {
+    if (surveys) {
+      form.setValues(LandingPage);
+    }},[LandingPage])
+
+  // console.log(surveys,">>>surveyyysool",LandingPage)
   // let teamSelectData = [];
   let SurveyListData = [];
 
@@ -69,7 +83,9 @@ export default function CreateSurveyLandingModal({ open, close, surveyType }) {
   const [isCreating, setIsCreating] = useState(false);
   // console.log(form, ">>>insane form values");
   const createSurveyLandingMutation = useCreateSurveyLandingPageMutation({ close, resetForm, setIsCreating });
+  const updateLandingMutation = useUpdateSurveyLandingPageMutation({ close, resetForm, setIsCreating });
 
+  console.log(form,">>>form values-----")
   const onSubmit = (e) => {
     e.preventDefault();
     const validationRes = form.validate();
@@ -78,15 +94,31 @@ export default function CreateSurveyLandingModal({ open, close, surveyType }) {
       return;
     }
     setIsCreating(true);
-    notifications.show({
-      id: "load-data",
-      loading: true,
-      title: "Creating survey Landing page..",
-      message: `Hold on, your survey landing page is getting created...`,
-      autoClose: false,
-      withCloseButton: false,
-    });
-    createSurveyLandingMutation.mutate(form.values);
+   
+    if(LandingPage?.id){
+      //--------------updating landing page -------
+      notifications.show({
+        id: "load-data",
+        loading: true,
+        title: "Updating survey Landing page..",
+        message: `Hold on, your survey landing page is getting updated...`,
+        autoClose: false,
+        withCloseButton: false,
+      });
+      updateLandingMutation.mutate(form.values);
+    }else{
+      //--------------creating new landing page--------------
+      notifications.show({
+        id: "load-data",
+        loading: true,
+        title: "Creating survey Landing page..",
+        message: `Hold on, your survey landing page is getting created...`,
+        autoClose: false,
+        withCloseButton: false,
+      });
+      createSurveyLandingMutation.mutate(form.values);
+
+    }
   };
   if (isLoading) {
     return null;

@@ -40,6 +40,7 @@ const ProfileSettings = () => {
       title: "",
       name: "",
       phone: "",
+      whatsappAccessToken: null,
     },
     validate: {
       title: (value) => {
@@ -79,6 +80,7 @@ const ProfileSettings = () => {
       title: values.title,
       name: values.name,
       phone: values.phone,
+      whatsappAccessToken: values.whatsappAccessToken,
     };
     updateProfile.mutate(data);
   };
@@ -243,6 +245,15 @@ const ProfileSettings = () => {
                 label="Phone"
                 placeholder="Enter your phone number"
                 {...profileForm?.getInputProps("phone")}
+              />
+            </Grid.Col>
+            <Grid.Col md={4}>
+              <TextInput
+                sx={{ maxWidth: "250px" }}
+                withAsterisk
+                label="whatsappAccessToken"
+                placeholder="Enter your whatsappAccessToken number"
+                {...profileForm?.getInputProps("whatsappAccessToken")}
               />
             </Grid.Col>
             
