@@ -9,6 +9,8 @@ export enum QuestionType {
   Email = "Email",
   MCQ = "Multiple Choice",
   MSQ = "Multiple Select",
+  DDSS = "Dropdown SingleSelect",
+  DDMS = "Dropdown MultiSelect",
   Phone = "Phone",
   Photo = "Photo",
   Testimonial = "Testimonial",

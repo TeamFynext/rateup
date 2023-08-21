@@ -202,7 +202,7 @@ export async function generateMessageDataFromQuestion(
       )
     ) {
       return createTextMessage(to, title, description);
-    } else if (question.type === Q.MSQ) {
+    } else if (question.type === Q.MSQ || question.type === Q.DDMS) {
       let bodyText = description;
 
       // Displaying choices in `index) choice` format
@@ -269,6 +269,7 @@ export function parseResponse(
     case Q.Email:
     case Q.Opinion:
     case Q.MCQ:
+    case Q.DDSS:
     // TODO: smiley, testimonial
     case Q.Smiley:
       response = message;
@@ -287,6 +288,12 @@ export function parseResponse(
     case Q.MSQ:
       const selectedChoices = message.split(" ").map((i) => Number(i));
       response = selectedChoices.map(
+        (index) => question.choices![session.language][index - 1]
+      );
+      break;
+    case Q.DDMS:
+      const selectedItems = message.split(" ").map((i) => Number(i));
+      response = selectedItems.map(
         (index) => question.choices![session.language][index - 1]
       );
       break;
