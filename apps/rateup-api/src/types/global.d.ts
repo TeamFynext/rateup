@@ -7,6 +7,23 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
+type ValidationRules = {
+  length?: {
+    min: string;
+    max: string;
+    errorMessage: string;
+  };
+  wordCount?: {
+    min: string;
+    max: string;
+    errorMessage: string;
+  };
+  textType?: {
+    type: string;
+    errorMessage: string;
+  } | null
+};
+
 export {};
 declare global {
   type Question = {
@@ -18,6 +35,7 @@ declare global {
     id: string;
     googleReview?: GoogleReview
     logic?: Array<LogicJump>
+    validationRules?: ValidationRules
   };
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.
