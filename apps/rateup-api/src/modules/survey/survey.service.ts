@@ -134,17 +134,17 @@ export async function getSurveyById(id: string) {
   return survey;
 }
 
-//---------------get surveys by landingId------------
+//---------------get lnding page by landingId------------
 export async function getSurveyBylandingId(landingid: string) {
-  const survey = await prisma.surveyLanding.findUnique({
+  const Landingpages = await prisma.surveyLanding.findUnique({
     where: {
       id: landingid,
     },
   });
   //-------------form array if survey ids ---------
   let surveyIds = [];
-  for (let i = 0; i < survey.surveys.length; i++) {
-    surveyIds.push(survey.surveys[i]);
+  for (let i = 0; i < Landingpages?.surveys?.length; i++) {
+    surveyIds.push(Landingpages.surveys[i]);
   }
 
  
@@ -157,9 +157,10 @@ export async function getSurveyBylandingId(landingid: string) {
       },
     },
   });
+ 
 
-  console.log(survey, ">>>> anding under", surveyResponse);
-  if (!survey || survey.surveys.length == 0) {
+  console.log( ">>>> anding under", surveyResponse);
+  if (!Landingpages || Landingpages.surveys.length == 0) {
     throw new Error(`Could not find survey with id ${landingid}`);
   }
   return surveyResponse;

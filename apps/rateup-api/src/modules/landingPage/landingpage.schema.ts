@@ -17,15 +17,22 @@ const createSurveyRequestSchema = z.object({
 const getLandingPageByIdParamsSchema = z.object({
     id: z.string(),
   });
+  const getLandingpagePublicResponseSchema = z.object({
+    title: z.string(),
+    suveys:z.any()
+  });
 
 export const { schemas: landingPageSchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
     getLandingPageByIdParamsSchema,
+    getLandingpagePublicResponseSchema
 
   },
   { $id: "landingPageSchema" }
 );
+
+
 
 export type CreateLandingPageInput = z.infer<typeof createSurveyRequestSchema>;
     export type GetLandingPageByIdParams = z.infer<typeof getLandingPageByIdParamsSchema>;

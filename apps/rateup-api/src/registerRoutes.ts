@@ -8,6 +8,7 @@ import { responsePublicRoutes } from "./modules/response/response.public.route";
 import { responseRoutes } from "./modules/response/response.route";
 import { responseSchemas } from "./modules/response/response.schema";
 import { surveyPublicRoutes } from "./modules/survey/survey.public.routes";
+import { landingPagePublicRoutes } from "./modules/landingPage/landingpage.public.routes";
 import { surveyRoutes } from "./modules/survey/survey.route";
 import { surveySchemas } from "./modules/survey/survey.schema";
 import { landingPageSchemas } from "./modules/landingPage/landingpage.schema";
@@ -52,6 +53,7 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(teamRoutes, { prefix: "api/team" });
     server.register(responseRoutes, { prefix: "api/response" });
     server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
+    server.register(landingPagePublicRoutes, { prefix: "api/public/landingpage" })
     server.register(responsePublicRoutes, { prefix: "api/public/response" })
     server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" })
     server.register(rgroupRoutes, { prefix: "api/rgroup" })
