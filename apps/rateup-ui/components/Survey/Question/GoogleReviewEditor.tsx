@@ -182,7 +182,7 @@ const GoogleReviewEditor = ({
 
   return (
     <Stack justify="space-between" sx={{height:'100%'}}>
-    <Title order={3}>Question Options</Title>
+    <Title order={3}>Google Reviews Setup</Title>
     <Paper p="xl" sx={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
     <Group align='center' position="center" pb="xl">
           <Switch.Group

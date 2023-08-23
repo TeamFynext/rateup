@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconDeviceSdCard, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -28,7 +28,7 @@ import {
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
-import { googleReviewSupportedTypes, logicSupportedTypes } from "../../../utils/data";
+import { googleReviewSupportedTypes, logicSupportedTypes, validationSupportedTypes } from "../../../utils/data";
 import { IconChevronRight } from "@tabler/icons-react";
 import { fi } from "@faker-js/faker";
 
@@ -233,9 +233,18 @@ export function QuestionDetailedView({
           )}
           {googleReviewSupportedTypes.includes(question?.type) && (
             <RateupButtonOutline
-              title={"Options"}
+              title={"Google Review"}
+              leftIcon={<IconStar />}
               size="sm"
               onClick={() => setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+            />
+          )}
+          {validationSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Custom Validation"}
+              leftIcon={<IconEdit />}
+              size="sm"
+              onClick={() => setActiveTab(QuestionTabsEnum.ValidationRulesEditor)}
             />
           )}
           <Space w="xl" />
