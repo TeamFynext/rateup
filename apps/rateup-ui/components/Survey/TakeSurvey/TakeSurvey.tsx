@@ -54,6 +54,7 @@ import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from '@mantine/hooks';
 import { parseLogicAction } from "../../../utils";
+import { validateQuestion } from "../../../utils/validation";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery('(min-width: 60em)');
@@ -453,6 +454,21 @@ function NextPrev({ prev, next }) {
         setErrorMsg("");
         setIsErrorInput(false);
       }
+
+      //custom validation rules
+      if(selectedQ?.validationRules && response && 
+        ( selectedQ?.type === 'Number' || selectedQ?.type === 'Text' || selectedQ?.type === 'TextArea' ) 
+      ){       
+        let error = validateQuestion(selectedQ, response)
+        if(error?.length > 0){
+          setIsErrorInput(true)
+          setErrorMsg(error?.length ? error : null);
+        }
+        if(!error){
+          setIsErrorInput(false)
+        }
+      }
+
   }, [response])
 
   function handleNextClick() {
@@ -493,12 +509,12 @@ function NextPrev({ prev, next }) {
           {isLastQuestion ?
 
             <RateupButtonBlue radius={"xl"} title={"Submit"}
-              disabled={(selectedQ?.required && !response) || isErrorInput}
+              disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
               size="lg" onClick={handleNextClick} />
             :
 
-            <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={(selectedQ?.required && !response) || isErrorInput}
+            <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={((selectedQ?.required  || selectedQ?.validationRules) && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
               size="lg" onClick={handleNextClick} rightIcon={<IconChevronRight />} />
           }

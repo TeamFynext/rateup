@@ -115,8 +115,10 @@ const ValidationRulesEditor = ({
         const updatedValues = { ...selectedQ?.validationRules };
         form.reset()
         setValues(updatedValues)
+      }else{
+        form.reset()
       }
-     }, [selectedQ]);
+     }, [selectedQ?.id]);
   
     const addRule = (ruleType: string) => {
       if (ruleType === 'textType') {
@@ -137,21 +139,20 @@ const ValidationRulesEditor = ({
     }; 
 
   const handleSave = async () => {
-      notifications.show({
-        id: 'load-data',
-        loading: true,
-        title: 'Saving validations',
-        message: `Hold on, your changes are getting updated...`,
-        autoClose: false,
-        withCloseButton: false,
-      });
-
       const validationResult = form.validate();
 
       if (validationResult?.hasErrors) {
           // There are validation errors, do not save the form
           return;
       }else{
+        notifications.show({
+          id: 'load-data',
+          loading: true,
+          title: 'Saving validations',
+          message: `Hold on, your changes are getting updated...`,
+          autoClose: false,
+          withCloseButton: false,
+        });
 
         const data =  { validationRules: { ...form.values }};
         console.log(data)
@@ -270,8 +271,8 @@ const ValidationRulesEditor = ({
       );
     })}
 
-{
-  Object.keys(values).length < 3 && (
+{ 
+ Object.keys(values).length < 3 && (
     <Group p="md" mt="xl" sx={{ maxWidth: '350px', backgroundColor: colors.yellow[0], borderRadius: "12px" }}>
       <Title order={4} sx={{ maxWidth: '120px' }}>Add Rule :</Title>
       <Select
