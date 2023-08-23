@@ -67,7 +67,7 @@ function TakeSurvey() {
   const theme = useMantineTheme();
   const isMobile = useMediaQuery('(max-width: 480px)');
 
-  const { setQuestionCount, setCurrentQuestionNo } = useContext(QuestionCountContext);
+  const { setQuestionCount, setCurrentQuestionNo,questionCount } = useContext(QuestionCountContext);
   const updateCompleted = useUpdateCompletedMutation();
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
@@ -100,7 +100,12 @@ function TakeSurvey() {
     );
   }
   if (isError || !selectedQ) {
-    return <Center sx={{ height: "100vh" }}>Something went wrong</Center>;
+    return <Center sx={{ height: "100vh" }}>
+      <Text fw={500} >
+      {questionCount==0?"No Questions found!":"Something went wrong!"}
+
+      </Text>
+    </Center>;
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
@@ -245,7 +250,7 @@ function TakeSurvey() {
 
           <Modal
             opened={opened}
-            title=""
+            title="hello"
             onClose={close}
             overlayProps={{
               color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],

@@ -48,16 +48,26 @@ import { useEffect, useState } from "react";
 import { getTimeSince } from "../../../utils";
 import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
 import { deleteLandingPage } from "../../../backend/LandingPage/landingpage.api";
+import ShareLandingPageModal from "./ShareLandingPageModal";
 export default function LandingPages() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
+  const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
+    useDisclosure(false);
+
   const selectedTeamId = "all";
   const [selectedLandingId, setSelectedLandingId] = useState(null);
+  const [shareLandindpageid, setshareLandindpageid] = useState(null);
 
   //---------set landing page id for editing--------
   const EditLandingPage = (selectedId) => {
     setSelectedLandingId(selectedId);
   };
-  console.log(selectedLandingId, ">>>sooaliio");
+  // console.log(shareLandindpageid, ">>>sooaliio");
+
+  //-----------set sharable landing page id ------
+  const shareLandingpageid = (landingid) => {
+    setshareLandindpageid(landingid);
+  };
   const {
     isLoading,
     error,
@@ -121,6 +131,8 @@ export default function LandingPages() {
               survey={s}
               open={open}
               EditLandingPage={EditLandingPage}
+              openlandingshare={openlandingshare}
+              shareLandingpageid={shareLandingpageid}
             />
           ))}
         </SimpleGrid>
@@ -135,6 +147,14 @@ export default function LandingPages() {
           surveyType={"web"}
           landingPageId={selectedLandingId}
         />
+
+        {/* //--------------share landing page----------- */}
+        <ShareLandingPageModal
+          open={landignOpened}
+          close={closelandingshare}
+          surveyType={"web"}
+          landingPageId={shareLandindpageid ? shareLandindpageid : null}
+        />
       </Container>
     </>
   );
@@ -147,7 +167,13 @@ interface SurveyLandingCardProps {
   // setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function SurveyCard({ survey, open, EditLandingPage }): JSX.Element {
+export function SurveyCard({
+  survey,
+  open,
+  EditLandingPage,
+  openlandingshare,
+  shareLandingpageid,
+}): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
 
@@ -162,6 +188,11 @@ export function SurveyCard({ survey, open, EditLandingPage }): JSX.Element {
     );
     return () => clearInterval(timeoutID);
   }, []);
+
+  // //--------share landing page id call back -----------
+  // const shareLandingPageidCallback =(landingid)=>{
+  //   shareLandingpageid(landingid)
+  // }
 
   return (
     <Paper
@@ -189,7 +220,11 @@ export function SurveyCard({ survey, open, EditLandingPage }): JSX.Element {
               open();
             }}
           />
-          <SurveyMenu survey={survey} />
+          <SurveyMenu
+            survey={survey}
+            openlandingshare={openlandingshare}
+            shareLandingpageid={shareLandingpageid}
+          />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" spacing="xs">
@@ -222,13 +257,11 @@ export function SurveyCard({ survey, open, EditLandingPage }): JSX.Element {
 }
 
 //-----------menu area ---------------
-function SurveyMenu({ survey}) {
+function SurveyMenu({ survey, openlandingshare, shareLandingpageid }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState("");
- 
 
   const [options, setOptions] = useState([]);
 
@@ -244,7 +277,6 @@ function SurveyMenu({ survey}) {
   const LandingPageDeleteMutation = useMutation({
     mutationFn: deleteLandingPage,
     onSuccess: () => {
-      
       notifications.update({
         id: "load-data",
         color: "teal",
@@ -269,8 +301,6 @@ function SurveyMenu({ survey}) {
     },
   });
 
- 
-
   return (
     <Menu width={200}>
       <Menu.Target>
@@ -289,9 +319,9 @@ function SurveyMenu({ survey}) {
       >
         <Menu.Item
           icon={<IconShare />}
-          // onClick={() => {
-          //   router.push(`/dashboard/surveys/${survey?.id}?tab=Share`);
-          // }}
+          onClick={(e) => {
+            shareLandingpageid(survey?.id), openlandingshare();
+          }}
         >
           Share
         </Menu.Item>
@@ -312,8 +342,6 @@ function SurveyMenu({ survey}) {
         >
           Delete
         </Menu.Item>
-
-        
       </Menu.Dropdown>
     </Menu>
   );

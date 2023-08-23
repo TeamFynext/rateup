@@ -1,9 +1,15 @@
 import { axiosClient } from "../apiClient";
 const LANDINGPAGEURL = "/landingpage";
+const LANDINGPAGE_PUBLIC_URL = "/public/landingpage";
 
 
 
 //---------delete landing page---------
 export async function deleteLandingPage(LandingId: string) {
   return await axiosClient.delete(`${LANDINGPAGEURL}/${LandingId}`);
+}
+
+export async function getPublicLandingPageSurveys(landingId: string) {
+  const res = await axiosClient.get(`${LANDINGPAGE_PUBLIC_URL}/surveys/${landingId}`);
+  return res.data;
 }
