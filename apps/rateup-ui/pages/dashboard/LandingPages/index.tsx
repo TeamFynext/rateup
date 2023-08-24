@@ -49,6 +49,7 @@ import { getTimeSince } from "../../../utils";
 import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
 import { deleteLandingPage } from "../../../backend/LandingPage/landingpage.api";
 import ShareLandingPageModal from "./ShareLandingPageModal";
+import { DeleteLandingPageConfirmation } from "../../../components/LandingPage/DeleteLandingConfirmation";
 export default function LandingPages() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
@@ -57,12 +58,13 @@ export default function LandingPages() {
   const selectedTeamId = "all";
   const [selectedLandingId, setSelectedLandingId] = useState(null);
   const [shareLandindpageid, setshareLandindpageid] = useState(null);
+  const [ShowDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   //---------set landing page id for editing--------
   const EditLandingPage = (selectedId) => {
     setSelectedLandingId(selectedId);
   };
-  // console.log(shareLandindpageid, ">>>sooaliio");
 
   //-----------set sharable landing page id ------
   const shareLandingpageid = (landingid) => {
@@ -82,12 +84,61 @@ export default function LandingPages() {
   }
 
   useEffect(() => {
-    console.log("survey DATA8888888::", surveyLandingsDataUser);
     queryClient.invalidateQueries(["surveysLanding", selectedTeamId]);
   }, [surveyLandingsDataUser, queryClient]);
 
-  // let surveyLandingsData = survetlandingsData?.data;
-  // console.log(surveyData.length, ">>>reforoooilo");
+  //------------delete landing page mutation ----------
+  const LandingPageDeleteMutation = useMutation({
+    mutationFn: deleteLandingPage,
+    onSuccess: () => {
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Deleted Landing Page Successfully!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 2000,
+      });
+      setShowDeleteConfirmation(false);
+      queryClient.invalidateQueries(["surveysLanding"]);
+    },
+    onError: (error: any) => {
+      // console.error("Error deleting Survey:", error.message);
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        title: "Delete Failed..!",
+        message: error?.response?.data?.error,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 4000,
+      });
+    },
+  });
+
+  const confirmDelete = (isDelete) => {
+    //-------if is delete is true then delete landing page ------
+    console.log(isDelete, ">>>ista delete", deleteId);
+    if (isDelete && deleteId != null) {
+      notifications.show({
+        id: "load-data",
+        loading: true,
+        title: "Deleting Landing page..",
+        message: `Hold on, landing page is getting deleted...`,
+        autoClose: false,
+        withCloseButton: false,
+      });
+      LandingPageDeleteMutation.mutate(deleteId);
+    }else{
+      setDeleteId(null);
+    setShowDeleteConfirmation(false);
+    }
+  };
+
+  const deleteLanding = (landingPageid) => {
+    setDeleteId(landingPageid);
+    setShowDeleteConfirmation(true);
+  };
+
   return (
     <>
       <Container fluid>
@@ -133,6 +184,7 @@ export default function LandingPages() {
               EditLandingPage={EditLandingPage}
               openlandingshare={openlandingshare}
               shareLandingpageid={shareLandingpageid}
+              deleteLanding={deleteLanding}
             />
           ))}
         </SimpleGrid>
@@ -155,6 +207,11 @@ export default function LandingPages() {
           surveyType={"web"}
           landingPageId={shareLandindpageid ? shareLandindpageid : null}
         />
+
+        <DeleteLandingPageConfirmation
+          showModal={ShowDeleteConfirmation}
+          confirmDelete={confirmDelete}
+        />
       </Container>
     </>
   );
@@ -164,7 +221,6 @@ export default function LandingPages() {
 interface SurveyLandingCardProps {
   survey: SurveyLanding;
   open: any;
-  // setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function SurveyCard({
@@ -173,13 +229,12 @@ export function SurveyCard({
   EditLandingPage,
   openlandingshare,
   shareLandingpageid,
+  deleteLanding,
 }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
 
-  console.log(survey, "istanbooool");
   const router = useRouter();
-  console.log(survey, ">>>>ooofolio");
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -215,7 +270,6 @@ export function SurveyCard({
           <IconPencil
             onClick={(e) => {
               e.stopPropagation(),
-                console.log("enter cikkkk"),
                 EditLandingPage(survey.id);
               open();
             }}
@@ -224,6 +278,7 @@ export function SurveyCard({
             survey={survey}
             openlandingshare={openlandingshare}
             shareLandingpageid={shareLandingpageid}
+            deleteLanding={deleteLanding}
           />
         </Group>
       </Flex>
@@ -237,27 +292,19 @@ export function SurveyCard({
       <Space h="lg" />
 
       <Flex justify={"space-between"} mt="xl" align={"center"}>
-        {/* <StatusBadge active={survey.active} /> */}
         <Text>Total Surveys : {survey?.surveys?.length}</Text>
-        {/* <Link
-          href={`/dashboard/surveys/${survey.id}?tab=Responses`}
-          style={{ color: theme.colors.blue[9] }}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Group spacing="4px">
-            <IconChartBar size={20} />
-            <Text>Responses</Text>
-          </Group>
-        </Link> */}
       </Flex>
     </Paper>
   );
 }
 
 //-----------menu area ---------------
-function SurveyMenu({ survey, openlandingshare, shareLandingpageid }) {
+function SurveyMenu({
+  survey,
+  openlandingshare,
+  shareLandingpageid,
+  deleteLanding,
+}) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -265,14 +312,6 @@ function SurveyMenu({ survey, openlandingshare, shareLandingpageid }) {
 
   const [options, setOptions] = useState([]);
 
-  // useEffect(() => {
-  //   const newOptions = teamsData?.map((team) => ({
-  //     value: team?.teamId,
-  //     label: team?.teamName,
-  //   }));
-
-  //   setOptions(newOptions);
-  // }, [teamsData]);
 
   const LandingPageDeleteMutation = useMutation({
     mutationFn: deleteLandingPage,
@@ -286,10 +325,8 @@ function SurveyMenu({ survey, openlandingshare, shareLandingpageid }) {
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveysLanding"]);
-      // queryClient.invalidateQueries(["surveysByTeam"]);
     },
     onError: (error: any) => {
-      console.error("Error deleting Survey:", error.message);
       notifications.update({
         id: "load-data",
         color: "red",
@@ -329,15 +366,7 @@ function SurveyMenu({ survey, openlandingshare, shareLandingpageid }) {
         <Menu.Item
           icon={<IconTrash />}
           onClick={() => {
-            notifications.show({
-              id: "load-data",
-              loading: true,
-              title: "Deleting Landing page..",
-              message: `Hold on, landing page is getting deleted...`,
-              autoClose: false,
-              withCloseButton: false,
-            });
-            LandingPageDeleteMutation.mutate(survey?.id);
+            deleteLanding(survey?.id);
           }}
         >
           Delete

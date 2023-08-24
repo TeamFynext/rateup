@@ -34,7 +34,6 @@ export default () => {
     data: Landingpagesurveys,
   } = usePublicLandingPageSurveys(landingid);
   const queryClient = useQueryClient();
-  console.log(Landingpagesurveys, "emanshuuuuu", landingid);
 
   return (
     <Container
@@ -44,10 +43,6 @@ export default () => {
       sx={{ background: "#F7F6FB", height: "100vh" }}
     >
       <>
-        {/* <Image pb={30} 
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
-              alt="RateUp Logo" width={140} height={35} /> */}
-
         <Image
           pb={30}
           src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`}
@@ -113,12 +108,7 @@ function Welcome({ setStartClicked, largeScreen }) {
   );
 }
 
-let survey1 =
-  "https://www.rateup.app/public/survey/06f95c13-fc22-438f-a7dd-f4f068ac4233?start=true";
-let survey2 =
-  "https://www.rateup.app/public/survey/24f3cdde-4833-46f6-9b82-6ded85e679f8?start=true";
-let survey3 =
-  "https://www.rateup.app/public/survey/74a86d7e-ec59-40e3-8bf5-4dbece9023e2?start=true";
+
 
 function StartPage({ largeScreen, Landingpagesurveys }) {
   return (
@@ -132,27 +122,19 @@ function StartPage({ largeScreen, Landingpagesurveys }) {
         Select one option :
       </Title>
 
-      {Landingpagesurveys.map((item,index)=>
-       <Link href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${item.id}?start=true`}>
-       <Button variant="outline" size={largeScreen ? "lg" : "sm"} tt={"capitalize"}>
-        {item.title}
-       </Button>
-     </Link>
-      )}
-
-     
-
-      {/* <Link href={`${survey2}`}>
-        <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
-          I have Aadhaar only [No Ration Card]
-        </Button>
-      </Link>
-
-      <Link href={`${survey3}`}>
-        <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
-          I have No Aadhaar & Ration Card
-        </Button>
-      </Link> */}
+      {Landingpagesurveys.map((item, index) => (
+        <Link
+          href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${item.id}?start=true`}
+        >
+          <Button
+            variant="outline"
+            size={largeScreen ? "lg" : "sm"}
+            tt={"capitalize"}
+          >
+            {item.title}
+          </Button>
+        </Link>
+      ))}
     </Stack>
   );
 }

@@ -10,7 +10,7 @@ import {
   Title,
   ActionIcon,
   Modal,
-  Flex
+  Flex,
 } from "@mantine/core";
 import {
   IconBrandFacebook,
@@ -27,7 +27,13 @@ import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
 import { getSurveys } from "../../../backend/surveys/survey.api";
-import { useCreateSurveyLandingPageMutation, useLandingPage, useSurveys, useUpdateCompletedMutation, useUpdateSurveyLandingPageMutation } from "../../../backend/surveys/surveys.query";
+import {
+  useCreateSurveyLandingPageMutation,
+  useLandingPage,
+  useSurveys,
+  useUpdateCompletedMutation,
+  useUpdateSurveyLandingPageMutation,
+} from "../../../backend/surveys/surveys.query";
 import { getTeamsByUser } from "../../../backend/team/team.api";
 
 interface FormValues {
@@ -36,14 +42,17 @@ interface FormValues {
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-export default function ShareLandingPageModal({ open, close, surveyType,landingPageId }) {
+export default function ShareLandingPageModal({
+  open,
+  close,
+  surveyType,
+  landingPageId,
+}) {
   const {
     isError,
     isLoading,
     data: surveys,
   } = useQuery(["surveys"], getSurveys);
-
-  console.log(landingPageId,">>ooshmav")
 
   //--------------get landing page details based on landing page id (prop)----------
   const {
@@ -55,10 +64,9 @@ export default function ShareLandingPageModal({ open, close, surveyType,landingP
   useEffect(() => {
     if (surveys) {
       form.setValues(LandingPage);
-    }},[LandingPage])
+    }
+  }, [LandingPage]);
 
-  // console.log(surveys,">>>surveyyysool",LandingPage)
-  // let teamSelectData = [];
   let SurveyListData = [];
 
   if (Array.isArray(surveys)) {
@@ -93,11 +101,17 @@ export default function ShareLandingPageModal({ open, close, surveyType,landingP
     form.reset();
   };
   const [isCreating, setIsCreating] = useState(false);
-  // console.log(form, ">>>insane form values");
-  const createSurveyLandingMutation = useCreateSurveyLandingPageMutation({ close, resetForm, setIsCreating });
-  const updateLandingMutation = useUpdateSurveyLandingPageMutation({ close, resetForm, setIsCreating });
+  const createSurveyLandingMutation = useCreateSurveyLandingPageMutation({
+    close,
+    resetForm,
+    setIsCreating,
+  });
+  const updateLandingMutation = useUpdateSurveyLandingPageMutation({
+    close,
+    resetForm,
+    setIsCreating,
+  });
 
-  console.log(form,">>>form values-----")
   const onSubmit = (e) => {
     e.preventDefault();
     const validationRes = form.validate();
@@ -106,8 +120,8 @@ export default function ShareLandingPageModal({ open, close, surveyType,landingP
       return;
     }
     setIsCreating(true);
-   
-    if(LandingPage?.id){
+
+    if (LandingPage?.id) {
       //--------------updating landing page -------
       notifications.show({
         id: "load-data",
@@ -118,7 +132,7 @@ export default function ShareLandingPageModal({ open, close, surveyType,landingP
         withCloseButton: false,
       });
       updateLandingMutation.mutate(form.values);
-    }else{
+    } else {
       //--------------creating new landing page--------------
       notifications.show({
         id: "load-data",
@@ -129,13 +143,12 @@ export default function ShareLandingPageModal({ open, close, surveyType,landingP
         withCloseButton: false,
       });
       createSurveyLandingMutation.mutate(form.values);
-
     }
   };
   if (isLoading) {
     return null;
   }
-  if (isError ) {
+  if (isError) {
     notifications.show({
       id: "load-data",
       color: "red",
@@ -152,43 +165,34 @@ export default function ShareLandingPageModal({ open, close, surveyType,landingP
         close();
       }}
       title="Share Landing Page"
-      // centered
       size={"50%"}
       radius={"lg"}
       shadow="lg"
-      // style={{minWidth:"700px"}}
     >
-     <Stack >
-      <Paper p="md" >
-        <SimpleGrid  spacing="xl" >
-          {/* //-----------------web survey share url ----------------- */}
-        
-            <Stack  p="md" dir="row">
+      <Stack>
+        <Paper p="md">
+          <SimpleGrid spacing="xl">
+            {/* //-----------------web survey share url ----------------- */}
+
+            <Stack p="md" dir="row">
               <Title order={4}>Share Survey</Title>
 
               <CopyLinkComponent
                 value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/landing/${landingPageId}`}
               />
             </Stack>
-         
-
-         
-        </SimpleGrid>
-      </Paper>
-    </Stack>
-      
+          </SimpleGrid>
+        </Paper>
+      </Stack>
     </Modal>
   );
 }
 
-
-
 const CopyLinkComponent = ({ value }) => {
   return (
-    <Flex  style={{flexDirection:'row',display:"flex",width:"100%"}}>
+    <Flex style={{ flexDirection: "row", display: "flex", width: "100%" }}>
       <TextInput
         sx={{ minWidth: "70%" }}
-        // size={"fit-content"}
         readOnly
         value={value}
         pr="sm"
