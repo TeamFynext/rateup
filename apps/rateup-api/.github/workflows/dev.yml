@@ -1,6 +1,8 @@
 name: prisma-migrate-dev
-on:
+on:  
   push:
+    paths:
+      - prisma/**
     branches:
       - dev
   workflow_dispatch:
