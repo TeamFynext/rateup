@@ -60,15 +60,15 @@ model User {
 }
 
 model Org {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime     @default(now())
-  name        String
-  owner       User         @relation(fields: [ownerId], references: [id])
-  ownerId     String       @db.Uuid
-  whatsappAccessToken        String?
-  members     OrgMember[]
-  teams       Team[]
-  invitations Invitation[]
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt           DateTime     @default(now())
+  name                String
+  owner               User         @relation(fields: [ownerId], references: [id])
+  ownerId             String       @db.Uuid
+  whatsappAccessToken String?
+  members             OrgMember[]
+  teams               Team[]
+  invitations         Invitation[]
 }
 
 model OrgMember {
@@ -94,9 +94,9 @@ model Team {
   members     TeamMember[]
   surveys     Survey[]
   invitations Invitation[]
-  
-  Respondent  Respondent[]
-  RGroup      RGroup[]
+
+  Respondent Respondent[]
+  RGroup     RGroup[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -157,6 +157,7 @@ model SurveyLanding {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime? @updatedAt
   title       String
+  header      String    @default("")
   description String?   @default("")
   surveys     String[]
   createdBy   String    @db.Uuid
@@ -201,8 +202,8 @@ model Respondent {
   id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt                   DateTime                      @default(now())
   name                        String?
-  phone                       String                        
-  email                       String?                       
+  phone                       String
+  email                       String?
   team                        Team?                         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId                      String?                       @db.Uuid
   responses                   SurveyResponse[]

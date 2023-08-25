@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $Sref } from "./landingpage.schema";
-import { getSurveyBylandingIdhandler } from "../survey/survey.controller";
+import { getLandingPageByIdHandler, getSurveyBylandingIdhandler } from "../survey/survey.controller";
 
 export async function landingPagePublicRoutes(server: FastifyInstance) {
   
@@ -11,13 +11,21 @@ export async function landingPagePublicRoutes(server: FastifyInstance) {
     {
         schema: {
             params: $Sref("getLandingPageByIdParamsSchema"),
-            // add response schema
-            // response: {
-            //   200: $Sref("getLandingpagePublicResponseSchema"),
-            // }
           },
     },
     getSurveyBylandingIdhandler
+  );
+
+  // get landingpage by id
+  server.get(
+    "/:id",
+    {
+      //----------to do ------verify access to landingpage session
+      schema: {
+        params: $Sref("getLandingPageByIdParamsSchema"),
+      },
+    },
+    getLandingPageByIdHandler
   );
 
   

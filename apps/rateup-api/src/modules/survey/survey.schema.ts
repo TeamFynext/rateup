@@ -20,6 +20,10 @@ const createSurveyLandingRequestSchema = z.object({
     required_error: "Title is required",
     invalid_type_error: "Title must be a string",
   }),
+  header: z.string({
+    required_error: "Header is required",
+    invalid_type_error: "Header must be a string",
+  }),
   surveys: z.array(z.string()),
 
 });
@@ -31,6 +35,10 @@ const createSurveyLandingResponseSchema = z.object({
   title: z.string({
     required_error: "Title is required",
     invalid_type_error: "Title must be a string",
+  }),
+  header: z.string({
+    required_error: "Header is required",
+    invalid_type_error: "Header must be a string",
   }),
   surveys: z.array(z.string()),
   id: z.string(),
@@ -76,6 +84,12 @@ const updateLandingPageRequestSchema = z.object({
     .string({
       required_error: "Title is required",
       invalid_type_error: "Title must be a string",
+    })
+    .optional(),
+  header: z
+    .string({
+      required_error: "Header is required",
+      invalid_type_error: "Header must be a string",
     })
     .optional(),
   surveys: z.array(z.string()).optional(),
