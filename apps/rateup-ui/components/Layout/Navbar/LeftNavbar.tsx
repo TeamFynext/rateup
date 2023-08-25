@@ -20,7 +20,8 @@ import {
   IconSocial,
   IconUsersGroup,
   IconClipboardData,
-  IconSpeakerphone
+  IconSpeakerphone,
+  IconPageBreak
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -106,8 +107,9 @@ const mockdata = [
   { icon: IconUsers, label: 'Members', href: '/dashboard/members' , role: 'SUPER_ADMIN'},
   { icon: IconCheckupList, label: 'Surveys', href: '/dashboard/surveys' },
   { icon: WhasappSurveyIcon, label: "WhatsApp Survey", href: "/dashboard/whatsappsurvey" },
-  { icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
-  { icon: IconSpeakerphone, label: "Promotion", href: '/dashboard/promotion'}
+  { icon: IconDeviceDesktopAnalytics, label: 'Testinomials', href: '/dashboard/' },
+  { icon: IconSpeakerphone, label: "Promotion", href: '/dashboard/promotion'},
+  { icon: IconPageBreak, label: "LandingPage", href: '/dashboard/LandingPages'}
 ];
 
 const LeftNavbar = () => {

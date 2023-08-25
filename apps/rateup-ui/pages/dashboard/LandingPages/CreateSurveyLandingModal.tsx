@@ -6,6 +6,10 @@ import {
   Select,
   Stack,
   TextInput,
+  Text,
+  createStyles,
+  Flex,
+  ScrollArea,
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
@@ -15,8 +19,15 @@ import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
 import { getSurveys } from "../../../backend/surveys/survey.api";
-import { useCreateSurveyLandingPageMutation, useLandingPage, useSurveys, useUpdateCompletedMutation, useUpdateSurveyLandingPageMutation } from "../../../backend/surveys/surveys.query";
+import {
+  useCreateSurveyLandingPageMutation,
+  useLandingPage,
+  useSurveys,
+  useUpdateCompletedMutation,
+  useUpdateSurveyLandingPageMutation,
+} from "../../../backend/surveys/surveys.query";
 import { getTeamsByUser } from "../../../backend/team/team.api";
+import SurveyCardList from "../../../components/Survey/SurveyCardList";
 
 interface FormValues {
   title: string;
@@ -24,15 +35,39 @@ interface FormValues {
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-export default function CreateSurveyLandingModal({ open, close, surveyType,landingPageId }) {
+
+const useStyles = createStyles((theme) => ({
+  customButton: {
+    backgroundColor: "black",
+    borderRadius: 8,
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "black !important",
+    },
+  },
+  cancelButton: {
+    backgroundColor: "grey",
+    borderRadius: 8,
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "grey !important",
+    },
+  },
+}));
+export default function CreateSurveyLandingModal({
+  open,
+  close,
+  surveyType,
+  landingPageId,
+  surveyIdArray,
+  mergeSurvey,
+}) {
   const {
     isError,
     isLoading,
     data: surveys,
   } = useQuery(["surveys"], getSurveys);
-
-  
-
+  const { classes, theme } = useStyles();
   //--------------get landing page details based on landing page id (prop)----------
   const {
     isLoading: isLandingPageLoading,
@@ -43,7 +78,14 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
   useEffect(() => {
     if (surveys) {
       form.setValues(LandingPage);
-    }},[LandingPage])
+    }
+  }, [LandingPage]);
+  //------------if survey data set survey data ---------
+  useEffect(() => {
+    if (surveyIdArray) {
+      form.setValues({ surveys: surveyIdArray });
+    }
+  }, [surveyIdArray]);
 
   // console.log(surveys,">>>surveyyysool",LandingPage)
   // let teamSelectData = [];
@@ -82,10 +124,18 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
   };
   const [isCreating, setIsCreating] = useState(false);
   // console.log(form, ">>>insane form values");
-  const createSurveyLandingMutation = useCreateSurveyLandingPageMutation({ close, resetForm, setIsCreating });
-  const updateLandingMutation = useUpdateSurveyLandingPageMutation({ close, resetForm, setIsCreating });
+  const createSurveyLandingMutation = useCreateSurveyLandingPageMutation({
+    close,
+    resetForm,
+    setIsCreating,
+  });
+  const updateLandingMutation = useUpdateSurveyLandingPageMutation({
+    close,
+    resetForm,
+    setIsCreating,
+  });
 
-  console.log(form,">>>form values-----")
+  console.log(form, ">>>form values-----");
   const onSubmit = (e) => {
     e.preventDefault();
     const validationRes = form.validate();
@@ -94,8 +144,8 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
       return;
     }
     setIsCreating(true);
-   
-    if(LandingPage?.id){
+
+    if (LandingPage?.id) {
       //--------------updating landing page -------
       notifications.show({
         id: "load-data",
@@ -106,7 +156,7 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
         withCloseButton: false,
       });
       updateLandingMutation.mutate(form.values);
-    }else{
+    } else {
       //--------------creating new landing page--------------
       notifications.show({
         id: "load-data",
@@ -117,13 +167,12 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
         withCloseButton: false,
       });
       createSurveyLandingMutation.mutate(form.values);
-
     }
   };
   if (isLoading) {
     return null;
   }
-  if (isError ) {
+  if (isError) {
     notifications.show({
       id: "load-data",
       color: "red",
@@ -133,6 +182,12 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
       autoClose: 3000,
     });
   }
+
+  //-------------get selected surveys callback----------
+  const getSelectedSurveys = (data) => {
+    console.log(data, ">>>selected surveys data-----");
+    form.setValues({ surveys: data });
+  };
   return (
     <Modal
       opened={open}
@@ -140,19 +195,35 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
         close();
         form.reset();
       }}
-      title="Create Survey Landing Page"
+      title=" "
       centered
+      size={"60%"}
+      padding={"md"}
+      radius={"lg"}
     >
+      <Text
+        sx={(theme) => ({
+          fontFamily: `Greycliff CF, ${theme.fontFamily}`,
+          fontWeight: 500,
+          fontSize: 30,
+        })}
+      >
+        Merge Your Surveys
+      </Text>
+
       <FormProvider form={form}>
         <form onSubmit={onSubmit}>
-          <Stack sx={{ minHeight: "300px" }} mt="xl">
+          <Stack sx={{}} mt="xl">
             <TextInput
               placeholder="Enter Landing title"
               label="Title"
               withAsterisk
+              size="md"
+              radius={"md"}
+              sx={{ padding: 5, borderRadius: 12 }}
               {...form.getInputProps("title")}
             />
-            <MultiSelect
+            {/* {!mergeSurvey &&  <MultiSelect
               withAsterisk
               label="Surveys"
               placeholder="Search surveys"
@@ -161,27 +232,21 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
               maxDropdownHeight="110"
               // TODO: Add a user-level language list
               data={teamSelectData}
-              // getCreateLabel={(query) => `+ Create ${query}`}
-              //@ts-ignore
-              // onCreate={(query) => {
-              //   if (form.values.languages.includes(query)) return;
-              //   form.setFieldValue("languages", [
-              //     ...form.values.languages,
-              //     query,
-              //   ]);
-              //   Languages.add(query);
-              // }}
               {...form.getInputProps("surveys")}
-            />
+            />} */}
 
-            {/* <Select
-              label="Team"
-              placeholder="Select team"
-              data={teamSelectData}
-              withAsterisk
-              maxDropdownHeight={110}
-              {...form.getInputProps("teamId")}
-            /> */}
+            {/* //---------------survey card list view ------------ */}
+            {!mergeSurvey && (
+              <>
+                <Text fw={500} >
+                  Select surveys
+                </Text>
+
+                <ScrollArea w={"100%"} h={250} offsetScrollbars>
+                  <SurveyCardList getSelectedSurveys={getSelectedSurveys} />
+                </ScrollArea>
+              </>
+            )}
             {/* //-----------------survey type ----------- */}
             {!surveyType && (
               <Select
@@ -193,11 +258,20 @@ export default function CreateSurveyLandingModal({ open, close, surveyType,landi
               />
             )}
             <Group position="right" pt="xl" mt="lg">
-              <Button variant="subtle" onClick={close}>
+              <Button
+                className={classes.cancelButton}
+                variant="subtle"
+                onClick={close}
+              >
                 Cancel
               </Button>
-              <Button variant="filled" type="submit" loading={isCreating}>
-                Submit
+              <Button
+                className={classes.customButton}
+                variant="filled"
+                type="submit"
+                loading={isCreating}
+              >
+                Merge
               </Button>
             </Group>
           </Stack>

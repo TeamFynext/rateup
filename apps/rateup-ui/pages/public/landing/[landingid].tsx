@@ -109,7 +109,6 @@ function Welcome({ setStartClicked, largeScreen }) {
 }
 
 
-
 function StartPage({ largeScreen, Landingpagesurveys }) {
   return (
     <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>

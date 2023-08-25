@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Modal, Group, Button,Flex,Text, Stack,createStyles, Image } from "@mantine/core";
-import bin from "../../public/images/bin.png"
 import { IconTrash, IconX } from "@tabler/icons-react";
 
 const useStyles = createStyles((theme) => ({
@@ -42,7 +41,7 @@ export function DeleteLandingPageConfirmation({showModal,confirmDelete}) {
        <IconTrash size="4rem" />
         <Text fw={500 } mt={0}> Are you sure you want to delete?</Text>
         <Flex justify={"center"} gap={20}>
-          <Button className={classes.cancelButton} w={90}  onClick={()=>confirmDelete(false)}>Cancel</Button>
+          <Button className={classes.cancelButton} w={90}  onClick={close}>Cancel</Button>
           <Button className={classes.okButton} w={90}  onClick={()=>confirmDelete(true)}>Ok</Button>
         </Flex>
       </Stack>

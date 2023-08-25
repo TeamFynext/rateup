@@ -103,7 +103,7 @@ export default function LandingPages() {
       queryClient.invalidateQueries(["surveysLanding"]);
     },
     onError: (error: any) => {
-      // console.error("Error deleting Survey:", error.message);
+      console.error("Error deleting Survey:", error.message);
       notifications.update({
         id: "load-data",
         color: "red",
@@ -128,9 +128,6 @@ export default function LandingPages() {
         withCloseButton: false,
       });
       LandingPageDeleteMutation.mutate(deleteId);
-    }else{
-      setDeleteId(null);
-    setShowDeleteConfirmation(false);
     }
   };
 
@@ -198,6 +195,21 @@ export default function LandingPages() {
           close={close}
           surveyType={"web"}
           landingPageId={selectedLandingId}
+          surveyIdArray={[]}
+          mergeSurvey={false}
+        />
+
+        {/* //--------------share landing page----------- */}
+        <ShareLandingPageModal
+          open={landignOpened}
+          close={closelandingshare}
+          surveyType={"web"}
+          landingPageId={shareLandindpageid ? shareLandindpageid : null}
+        />
+
+        <DeleteLandingPageConfirmation
+          showModal={ShowDeleteConfirmation}
+          confirmDelete={confirmDelete}
         />
 
         {/* //--------------share landing page----------- */}
