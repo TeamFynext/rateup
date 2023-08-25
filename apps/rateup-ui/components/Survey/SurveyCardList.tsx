@@ -73,86 +73,24 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export default function SurveyCardList({getSelectedSurveys}) {
+export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const { classes, theme } = useStyles();
-  const [createSurveyOpened, { open, close }] = useDisclosure(false);
-  const [
-    mergeSurveyOpened,
-    { open: openMergeSurvey, close: closeMergeSurvey },
-  ] = useDisclosure(false);
-  const [sort, setSort] = useState(false);
-  const { user, setUser } = useUser();
   const [surveyidArray, setSurveyIdArray] = useState([]);
-  const [options, setOptions] = useState([
-    {
-      value: "all",
-      label: "All Teams",
-      group: "Organization",
-    },
-  ]);
-  const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
 
-  const specificTeamIsSelected = selectedTeamId !== "all";
-
-  const {
-    isLoading,
-    error,
-    data: surveys,
-  } = useSurveys(specificTeamIsSelected);
+  const { isLoading, error, data: surveys } = useSurveys(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (selectedTeamId !== null) {
-      queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
-    }
-  }, [selectedTeamId, queryClient]);
+    //-----------callback function to get selected surveys to parent -------
+    getSelectedSurveys(surveyidArray);
+  }, [surveyidArray?.length, queryClient]);
+  //--------if survey ids array then set----------
   useEffect(() => {
-    
-      getSelectedSurveys(surveyidArray)
-
-   
-  }, [surveyidArray.length]);
-
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
-
-  let teamsData = teamsDataUser?.data?.data;
-
-  const {
-    isLoading: isLoadingSurveys,
-    error: errSurveysByTeams,
-    data: surveysByTeam,
-  } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
-
-  useEffect(() => {
-    //console.log("test.........."+JSON.stringify(teamsData))
-    if (teamsData?.length) {
-      const newOptions = teamsData?.map((team) => ({
-        value: team?.teamId,
-        label: team?.teamName,
-        group: "Team",
-      }));
-
-      setOptions((prev) => {
-        const uniqueValues = new Set(prev.map((option) => option.value));
-        const nonDuplicateOptions = newOptions.filter(
-          (option) => !uniqueValues.has(option.value)
-        );
-        return [...prev, ...nonDuplicateOptions];
-      });
+    if (LandingPage?.surveys?.length) {
+      setSurveyIdArray(LandingPage?.surveys);
     }
-  }, [teamsData]);
-
-  
-
-  // useEffect(() => {
-  //   queryClient.invalidateQueries(["surveys"]);
-  //   queryClient.invalidateQueries(["surveysByTeam"]);
-  // }, [surveyidArray.length]);
+    queryClient.invalidateQueries(["surveys"]);
+  }, [LandingPage?.surveys?.length]);
 
   if (isLoading)
     return (
@@ -175,10 +113,8 @@ export default function SurveyCardList({getSelectedSurveys}) {
       setSurveyIdArray([...surveyidArray, surveyid]);
     }
   };
-  console.log(surveyidArray, "hooo");
   //--------------check if survey is selected------
   const isChecked = (surveyid) => {
-    // console.log("enter check");
     let surveysarray = surveyidArray;
     let found = false;
     for (let i = 0; i < surveysarray.length; i++) {
@@ -187,13 +123,12 @@ export default function SurveyCardList({getSelectedSurveys}) {
         break;
       }
     }
-    // console.log(found,">>>found valu")
     return found;
   };
 
   return (
     <>
-      <Flex  style={{flexDirection:"column",width:"100%"}}>
+      <Flex style={{ flexDirection: "column", width: "100%" }}>
         <SimpleGrid
           cols={2}
           spacing={"lg"}
@@ -204,30 +139,16 @@ export default function SurveyCardList({getSelectedSurveys}) {
             { maxWidth: "md", cols: 1 },
           ]}
         >
-          {(specificTeamIsSelected
-            ? surveysByTeam?.data?.length > 0
-              ? [...surveysByTeam?.data]
-              : []
-            : [...surveys]
-          )
-            .slice()
-            .sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-            )
-            .map((s) => (
-              <SurveyCard
-                key={s.id}
-                survey={s}
-                teamsData={teamsData}
-                setSelectedTeamId={setSelectedTeamId}
-                handleCheckBox={handleCheckBox}
-                isChecked={isChecked}
-              />
-            ))}
+          {surveys.map((s) => (
+            <SurveyCard
+              key={s.id}
+              survey={s}
+              // survey={surveys}
+              // setSelectedTeamId={setSelectedTeamId}
+              handleCheckBox={handleCheckBox}
+              isChecked={isChecked}
+            />
+          ))}
         </SimpleGrid>
       </Flex>
     </>
@@ -236,21 +157,20 @@ export default function SurveyCardList({getSelectedSurveys}) {
 
 interface SurveyCardProps {
   survey: Survey;
-  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
+  // setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
   handleCheckBox: any;
   isChecked: any;
 }
 function SurveyCard({
   survey,
-  teamsData,
-  setSelectedTeamId,
+  // teamsData,
+  // setSelectedTeamId,
   handleCheckBox,
   isChecked,
-}: SurveyCardProps & { teamsData: any }): JSX.Element {
+}: SurveyCardProps & {}): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
-
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -281,7 +201,7 @@ function SurveyCard({
                 );
         }}
       >
-        <Flex justify={"space-between"} align={"center"} >
+        <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="xl" fw={700}>
             {survey.title}
           </Text>
@@ -293,6 +213,7 @@ function SurveyCard({
               onClick={(e) => {
                 handleCheckBox(e, survey?.id);
               }}
+              checked={isChecked(survey?.id)}
             ></Checkbox>
           </Group>
         </Flex>

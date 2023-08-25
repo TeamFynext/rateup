@@ -13,3 +13,7 @@ export async function getPublicLandingPageSurveys(landingId: string) {
   const res = await axiosClient.get(`${LANDINGPAGE_PUBLIC_URL}/surveys/${landingId}`);
   return res.data;
 }
+export async function getPublicLandingPage(landingId: string) {
+  const res = await axiosClient.get(`${LANDINGPAGE_PUBLIC_URL}/${landingId}`);
+  return res.data;
+}

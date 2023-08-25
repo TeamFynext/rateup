@@ -13,9 +13,9 @@ import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import { useRouter } from "next/router";
-import { useSurveysBylandingId } from "../../../backend/surveys/surveys.query";
+import { useLandingPage, useSurveysBylandingId } from "../../../backend/surveys/surveys.query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePublicLandingPageSurveys } from "../../../backend/LandingPage/landingpage.query";
+import { usePublicLandingPage, usePublicLandingPageSurveys } from "../../../backend/LandingPage/landingpage.query";
 
 export default () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
@@ -34,6 +34,13 @@ export default () => {
     data: Landingpagesurveys,
   } = usePublicLandingPageSurveys(landingid);
   const queryClient = useQueryClient();
+
+   //--------------get landing page details based on landing page id (prop)----------
+   const {
+    isLoading: isLandingPageLoading,
+    error: LandingPageError,
+    data: LandingPage,
+  } = usePublicLandingPage(landingid);
 
   return (
     <Container
@@ -56,6 +63,7 @@ export default () => {
             <StartPage
               largeScreen={largeScreen}
               Landingpagesurveys={Landingpagesurveys}
+              LandingPage={LandingPage}
             />
           ) : (
             <Welcome
@@ -109,7 +117,7 @@ function Welcome({ setStartClicked, largeScreen }) {
 }
 
 
-function StartPage({ largeScreen, Landingpagesurveys }) {
+function StartPage({ largeScreen, Landingpagesurveys,LandingPage }) {
   return (
     <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>
       <Title
@@ -118,7 +126,7 @@ function StartPage({ largeScreen, Landingpagesurveys }) {
         pb="sm"
         sx={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}
       >
-        Select one option :
+        {LandingPage?.header}
       </Title>
 
       {Landingpagesurveys.map((item, index) => (

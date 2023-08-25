@@ -31,6 +31,7 @@ import SurveyCardList from "../../../components/Survey/SurveyCardList";
 
 interface FormValues {
   title: string;
+  header: string;
   surveys: Array<Object>;
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
@@ -65,7 +66,8 @@ export default function CreateSurveyLandingModal({
   const {
     isError,
     isLoading,
-    data: surveys,
+    data: surveys
+    ,
   } = useQuery(["surveys"], getSurveys);
   const { classes, theme } = useStyles();
   //--------------get landing page details based on landing page id (prop)----------
@@ -87,7 +89,7 @@ export default function CreateSurveyLandingModal({
     }
   }, [surveyIdArray]);
 
-  // console.log(surveys,">>>surveyyysool",LandingPage)
+  // console.log(">>>surveyyysool",LandingPage)
   // let teamSelectData = [];
   let SurveyListData = [];
 
@@ -110,10 +112,12 @@ export default function CreateSurveyLandingModal({
   const form = useForm({
     initialValues: {
       title: "",
+      header: "",
       surveys: [],
     },
     validate: {
       title: (value) => (value.length ? null : "Cannot be empty"),
+      header: (value) => (value.length ? null : "Cannot be empty"),
       surveys: (values) =>
         values.length ? null : "Must contain atleast one survey",
     },
@@ -135,7 +139,6 @@ export default function CreateSurveyLandingModal({
     setIsCreating,
   });
 
-  console.log(form, ">>>form values-----");
   const onSubmit = (e) => {
     e.preventDefault();
     const validationRes = form.validate();
@@ -185,7 +188,6 @@ export default function CreateSurveyLandingModal({
 
   //-------------get selected surveys callback----------
   const getSelectedSurveys = (data) => {
-    console.log(data, ">>>selected surveys data-----");
     form.setValues({ surveys: data });
   };
   return (
@@ -223,6 +225,15 @@ export default function CreateSurveyLandingModal({
               sx={{ padding: 5, borderRadius: 12 }}
               {...form.getInputProps("title")}
             />
+            <TextInput
+              placeholder="Enter Landing header"
+              label="Header"
+              withAsterisk
+              size="md"
+              radius={"md"}
+              sx={{ padding: 5, borderRadius: 12 }}
+              {...form.getInputProps("header")}
+            />
             {/* {!mergeSurvey &&  <MultiSelect
               withAsterisk
               label="Surveys"
@@ -243,7 +254,7 @@ export default function CreateSurveyLandingModal({
                 </Text>
 
                 <ScrollArea w={"100%"} h={250} offsetScrollbars>
-                  <SurveyCardList getSelectedSurveys={getSelectedSurveys} />
+                  <SurveyCardList getSelectedSurveys={getSelectedSurveys} LandingPage={LandingPage}/>
                 </ScrollArea>
               </>
             )}
