@@ -1,6 +1,8 @@
 name: prisma-migrate-prod
 on:
   push:
+    paths:
+      - prisma/**
     branches:
       - main
   workflow_dispatch:
