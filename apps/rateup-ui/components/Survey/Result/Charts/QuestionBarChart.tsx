@@ -56,18 +56,18 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({ question, choices, 
     }
     else{    
     if (questionType === QuestionType.MSQ) {
-      choicesToUse = Array.from(new Set(data.flatMap(item => item.response[QuestionType.MSQ])));
+      choicesToUse = Array.from(new Set(data?.flatMap(item => item.response[QuestionType.MSQ])));
     } else if (questionType === QuestionType.DDSS) {
-      choicesToUse = Array.from(new Set(data.flatMap(item => item.response[QuestionType.DDSS])));
+      choicesToUse = Array.from(new Set(data?.flatMap(item => item.response[QuestionType.DDSS])));
     } else if (questionType === QuestionType.DDMS) {
-      choicesToUse = Array.from(new Set(data.flatMap(item => item.response[QuestionType.DDMS])));
+      choicesToUse = Array.from(new Set(data?.flatMap(item => item.response[QuestionType.DDMS])));
     }
   }
   }
 
   const choiceCounts = choicesToUse?.map((choice, index) => ({
     name: choice,
-    count: data.filter(item => {
+    count: data?.filter(item => {
       const response = item.response[questionType];
       return Array.isArray(response) ? response.includes(choice) : response === choice;
     }).length,
@@ -82,7 +82,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({ question, choices, 
 
           <Stack ml="xl" pt="sm">
                 <Text size="md" color="gray" mt="xl"> {questionType}</Text>
-                <Text size="md" color="gray">{data.length} responses</Text>
+                <Text size="md" color="gray">{data?.length} responses</Text>
              </Stack>
         </Stack>
 
