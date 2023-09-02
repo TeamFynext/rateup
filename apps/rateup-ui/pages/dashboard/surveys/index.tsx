@@ -127,12 +127,10 @@ export default function Surveys() {
   //----------close merge survey modal ---------
   const closeMergeSurvey = () => {
     setSurveyIdArray([]);
-    console.log("enter merge survey closeeeeeeeeeeeeeee");
     closeMergeSurveyModal();
   };
   
 
-  console.log(surveyidArray, "hoooo");
   useEffect(() => {
     //console.log("test.........."+JSON.stringify(teamsData))
     if (teamsData?.length) {

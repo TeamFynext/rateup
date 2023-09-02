@@ -22,10 +22,10 @@ const transparentWhite = theme.fn.rgba(theme.white, 0.7);
 
 if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const percentage = ((data.value / total) * 100).toFixed(2);
+    const percentage = ((data?.value / total) * 100).toFixed(2);
     return (
     <Paper px="sm" shadow='xl' style={{ backgroundColor: transparentWhite }}>
-        <p>{`${data.name}: ${data.value} (${percentage}%)`}</p>
+        <p>{`${data?.name}: ${data?.value} (${percentage}%)`}</p>
     </Paper>
     );
 }
@@ -43,9 +43,9 @@ interface QuestionPieChartProps {
 const QuestionPieChart: React.FC<QuestionPieChartProps> = ({ no, question, type, responseCount, data }) =>{
 
     const chartData = [
-        { name: 'Promoters', value: data.promoters },
-        { name: 'Detractors', value: data.detractors },
-        { name: 'Passives', value: data.passives }
+        { name: 'Promoters', value: data?.promoters },
+        { name: 'Detractors', value: data?.detractors },
+        { name: 'Passives', value: data?.passives }
       ];
 
 return    (
@@ -57,7 +57,7 @@ return    (
              <Stack ml="xl" pt="sm">
                 <Text size="md" color="gray" mt="xl"> {type}</Text>
                 <Text size="md" color="gray">{responseCount} responses</Text>
-                <Text mt="xl" pt="lg" size="lg" fw={500}>NPS Score = {data?.score.toFixed(2)}</Text>
+                <Text mt="xl" pt="lg" size="lg" fw={500}>NPS Score = {data?.score?.toFixed(2)}</Text>
              </Stack>
         </Stack>
 
