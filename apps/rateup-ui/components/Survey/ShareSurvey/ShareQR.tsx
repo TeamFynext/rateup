@@ -20,6 +20,7 @@ import Preview from "./Preview";
 import { notifications } from "@mantine/notifications";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import StyleTab from "./QRtabs/StyleTab";
 const ShareQR = ({ surveyId }) => {
 
   const [title, setTitle] = useState('QR Code')
@@ -35,6 +36,11 @@ const ShareQR = ({ surveyId }) => {
   const [qrColor, setQRColor] = useState("#010599FF")
   const [qrBgColor, setQRBgColor] = useState("#FFBF60FF")
 
+  const [activeBgStyle, setActiveBgStyle] = useState('Color')
+  const [gradient, setGradient] = useState({ start: '#EAD6EE', end: '#ACC0FE' });
+  const [bgImage, setBgImage] = useState(null);
+  const [bgTransparency, setBgTransparency] = useState(1);
+
   const [file, setFile] = useState<File | null>(null);
 
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
@@ -42,35 +48,40 @@ const ShareQR = ({ surveyId }) => {
   const [logoSrc, setLogoSrc] = useState('');
 
   useEffect(() => {
-    const uploadAndUpdate = async () => {
-      if (file) {
-        const fileKey = await uploadFile(file);
-        const data = { profilePhoto: fileKey };
-        if (typeof fileKey === "string") {
-          setLogoSrc(data?.profilePhoto)
+    //For server upload - template setup
 
-          notifications.show({
-            id: "load-data",
-            loading: true,
-            title: "Uploading image",
-            message: `Hold on, uploading your image in progress`,
-            autoClose: false,
-            withCloseButton: false,
-          });
-        }
-      }
-    };
-    uploadAndUpdate();
+    // const uploadAndUpdate = async () => {
+    //   if (file) {
+    //     notifications.show({
+    //       id: "load-data",
+    //       loading: true,
+    //       title: "Uploading image",
+    //       message: `Hold on, uploading your image in progress`,
+    //       autoClose: false,
+    //       withCloseButton: false,
+    //     });
+    //     const fileKey = await uploadFile(file);        
+    //     if (typeof fileKey === "string") {
+    //       setLogoSrc(fileKey)
+    //     }
+    //   }
+    // };
+    // uploadAndUpdate();
+
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setLogoSrc(url)
+    } else {
+      console.error('No file selected');
+    }
   }, [file]);
 
   function removePhoto() {
     setLogoSrc(null)
   }
 
-
-
   return (
-    <Paper shadow="sm" mt="xl" p="xl">
+    <Paper shadow="sm" my="xl" p="xl">
       <Title order={4} mb="xl" pb="md">Generate & Share QR Code</Title>
 
       <Tabs variant="pills" color="gray" defaultValue="text" >
@@ -96,7 +107,7 @@ const ShareQR = ({ surveyId }) => {
                           </Paper>
                   
                   </Tabs.Tab>
-                  <Tabs.Tab value="background">
+                  <Tabs.Tab value="style">
                   <Paper shadow="xs" radius="lg" p="md" sx={{ width: "100px", height: "100px", alignContent: 'center'}}>
                             <Center h="100%">
                                 <Stack align="center" spacing="0">
@@ -184,59 +195,28 @@ const ShareQR = ({ surveyId }) => {
             
             </Tabs.Panel>
 
-            <Tabs.Panel value="background" sx={{ minHeight: "350px"}}>
+            <Tabs.Panel value="style" sx={{ minHeight: "350px"}}>
               
-              <Stack>
-                <Group>
-                   <Title order={3} mt="xl" sx={{minWidth: "200px"}}>  Select Background</Title>
-                   
-                   <Radio.Group
-                    name="background"
-                    withAsterisk
-                    mt="md"
-                    ml="xl"
-                    value="Color"
-                  >
-                    <Group mt="xs">
-                      <Radio value="Color" label="Color" />
-                      <Radio value="Gradient" label="Gradient" />
-                      <Radio value="Image" label="Image" />
-                      <Radio value="Transparent" label="Transparent" />
-                    </Group>
-                  </Radio.Group>
+              <StyleTab 
+                backgroundColor = {backgroundColor}
+                setBackgroundColor = {setBackgroundColor}
+                qrColor = {qrColor}
+                setQRColor = { setQRColor}
+                qrBgColor = {qrBgColor}
+                setQRBgColor = { setQRBgColor}
 
-                </Group>
-                <Stack  sx={{maxWidth: "300px"}} ml="xl">
-                  <ColorInput placeholder="Select color" 
-                              value={backgroundColor} onChange={setBackgroundColor} />
-                </Stack>
-                
+                activeBgStyle = {activeBgStyle}
+                setActiveBgStyle = {setActiveBgStyle}
+                gradient = {gradient}
+                setGradient  = {setGradient}
+                bgImage  = {bgImage}
+                setBgImage  = {setBgImage}
+                bgTransparency  = {bgTransparency}
+                setBgTransparency  = {setBgTransparency}
 
-                <Group align="center" mt="sm">
-                   <Title order={3} mt="xl" sx={{minWidth: "200px"}}>  Select QR color</Title>
-                   <Radio.Group
-                    name="background"
-                    withAsterisk
-                    mt="md"
-                    ml="xl"
-                  >
-                    {/* <Group mt="xs">
-                      <Radio value="Color" label="Color" />
-                      <Radio value="Gradient" label="Gradient" />
-                    </Group> */}
-                  </Radio.Group>
+              />  
 
-                </Group>
-                <Stack  sx={{maxWidth: "300px"}} ml="xl">
-                    <ColorInput placeholder="Select color"  label="QR Color"
-                                value={qrColor} onChange={setQRColor} />
-                    <ColorInput placeholder="Select color" label="QR Background Color"
-                                value={qrBgColor} onChange={setQRBgColor} />
-                  </Stack>
-
-              </Stack>
-              
-              </Tabs.Panel>
+            </Tabs.Panel>
 
 
             <Tabs.Panel value="logo"  sx={{ minHeight: "350px"}}>
@@ -287,17 +267,23 @@ const ShareQR = ({ surveyId }) => {
               title={title} 
               description={description}
               url = {`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`}
+
               textSize = {textSize}
               descriptionSize = {descriptionSize}
               logoSize={logoSize}
+
               textColor = {textColor}
               descriptionColor= { descriptionColor}
               backgroundColor={backgroundColor}
               qrColor={qrColor}
               qrBgColor={qrBgColor}
               logo={logoSrc}
-              
-              
+
+              activeBgStyle={activeBgStyle}
+              gradient = {gradient}
+              bgImage  = {bgImage}
+              bgTransparency  = {bgTransparency}
+             
             />
 
           </Group>

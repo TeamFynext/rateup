@@ -24,34 +24,55 @@ interface iProps {
   qrColor : string,
   qrBgColor : string,
   logo : string,
+  gradient: { start: string; end: string; },
+  bgImage: string,
+  bgTransparency: number,
+  activeBgStyle: string
 }
 const Preview = ({ url, title, description, textSize, logoSize,
-   descriptionSize, textColor, descriptionColor , backgroundColor, qrColor, qrBgColor, logo  } : iProps) => {
+   descriptionSize, textColor, descriptionColor , backgroundColor, qrColor, qrBgColor, logo, 
+   gradient, bgTransparency, bgImage, activeBgStyle
+  } : iProps) => {
 
   const { Canvas } = useQRCode();
   const printRef = useRef();
 
   const [logoUrl, setLogoUrl] = useState('')
+  const [bgImgUrl, setBgImgUrl] = useState('')
 
-  useEffect(() => {
-    if(!logo || logo === ''){
-      setLogoUrl(null)
-    }else{
-      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`;
-      setLogoUrl(imgUrl);
+    // FOR server upload - template setup
 
-      notifications.update({
-        id: "load-data",
-        title: "Uploaded Logo",
-        color: "teal",
-        message: `Success updating the logo`,
-        withCloseButton: false,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
-      });
-    }
-  }, [logo])
-  
+  // useEffect(() => {
+  //   if(!logo || logo === ''){
+  //     setLogoUrl(null)
+  //   }else{
+  //     const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`;
+  //     setLogoUrl(imgUrl);
+
+  //     notifications.update({
+  //       id: "load-data",
+  //       title: "Uploaded Logo",
+  //       color: "teal",
+  //       message: `Success updating the logo`,
+  //       withCloseButton: false,
+  //       icon: <IconCheck size="1rem" />,
+  //       autoClose: 2000,
+  //     });
+  //   }
+  // }, [logo])
+
+  // FOR server upload - template setup
+
+  // useEffect(() => {
+  //   if(!bgImage || bgImage === ''){
+  //     setBgImgUrl(null)
+  //   }else{
+  //     const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${bgImage}`;
+  //     setBgImgUrl(imgUrl);
+  //     console.log(imgUrl)
+  //   }
+  // }, [bgImage])
+
 
   const downloadQrCode = async () => {
     const element = printRef.current;
@@ -76,9 +97,15 @@ const Preview = ({ url, title, description, textSize, logoSize,
         <Title order={3}> Preview </Title>
         <div ref={printRef}>
         <Paper shadow="xs" radius="lg"  p="md" 
-            sx={{ width: "250px", height: "330px", alignContent: 'center', background: `${backgroundColor}`}}>
+            sx={{ width: "250px", height: "330px", alignContent: 'center', 
+            backgroundColor: activeBgStyle === 'Color' ? backgroundColor : 'transparent',
+            backgroundImage: activeBgStyle === 'Gradient' 
+              ? `linear-gradient(${gradient.start}, ${gradient.end})` 
+              : activeBgStyle === 'Image' ? `url(${bgImage})` : 'none',
+            opacity: activeBgStyle === 'Transparent' ? bgTransparency : 1
+            }}>
 
-            <Stack p="lg">
+            <Stack p="lg" sx={{ opacity: 1}}>
 
           <Title order={4} sx={{fontSize: `${textSize}px`, color: `${textColor}`}} align='center'> {title} </Title>
           <Center>
@@ -96,7 +123,7 @@ const Preview = ({ url, title, description, textSize, logoSize,
               }}
               logo={
                 logo ? {
-                  src: logoUrl,
+                  src: logo,
                   options: {
                     width: logoSize,
                     x: undefined,
