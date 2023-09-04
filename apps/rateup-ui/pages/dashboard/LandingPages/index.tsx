@@ -117,7 +117,6 @@ export default function LandingPages() {
 
   const confirmDelete = (isDelete) => {
     //-------if is delete is true then delete landing page ------
-    console.log(isDelete, ">>>ista delete", deleteId);
     if (isDelete && deleteId != null) {
       notifications.show({
         id: "load-data",

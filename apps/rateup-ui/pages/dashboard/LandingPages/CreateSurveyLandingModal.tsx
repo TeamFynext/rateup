@@ -89,8 +89,6 @@ export default function CreateSurveyLandingModal({
     }
   }, [surveyIdArray]);
 
-  // console.log(">>>surveyyysool",LandingPage)
-  // let teamSelectData = [];
   let SurveyListData = [];
 
   if (Array.isArray(surveys)) {
@@ -127,7 +125,6 @@ export default function CreateSurveyLandingModal({
     form.reset();
   };
   const [isCreating, setIsCreating] = useState(false);
-  // console.log(form, ">>>insane form values");
   const createSurveyLandingMutation = useCreateSurveyLandingPageMutation({
     close,
     resetForm,

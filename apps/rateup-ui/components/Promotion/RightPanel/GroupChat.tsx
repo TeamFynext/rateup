@@ -19,7 +19,7 @@ export function GroupPanel() {
   // TODO: add loading ui
   if (isLoading || !rgroups) return <div>Loading...</div>
   if (error) {
-    console.log(error)
+    // console.log(error)
     return <div>Error</div>
   }
 
@@ -59,7 +59,7 @@ function ChatWindow({ rgroup, openDetails }) {
 
   if (isLoading || !rGroupSurveySendHistory) return <div>Loading...</div>
   if (error) {
-    console.log(error)
+    // console.log(error)
     return <div>Error</div>
   }
 

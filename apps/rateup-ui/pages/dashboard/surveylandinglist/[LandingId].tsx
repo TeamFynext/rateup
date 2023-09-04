@@ -65,7 +65,6 @@ export default ()=> {
 
   const router = useRouter();
   const { LandingId } = router.query;
-  console.log(LandingId,">>>>hoooookiolo")
 
   const [options, setOptions] = useState([
     {

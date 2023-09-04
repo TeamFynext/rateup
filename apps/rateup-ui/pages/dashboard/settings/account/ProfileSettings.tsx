@@ -116,6 +116,7 @@ const ProfileSettings = () => {
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
   useEffect(() => {
     const uploadAndUpdate = async () => {
+
       if (file) {
         const fileKey = await uploadFile(file);
         const data = { profilePhoto: fileKey };

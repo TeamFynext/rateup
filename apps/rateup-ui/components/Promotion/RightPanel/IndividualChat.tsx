@@ -21,7 +21,7 @@ export function IndividualsPanel() {
   const { isLoading, data: respondents, error } = useRespondents(selectedTeamId)
   if (isLoading || !respondents) return <div>Loading...</div>
   if (error) {
-    console.log(error)
+    // console.log(error)
     return <div>Error</div>
   }
 
@@ -78,7 +78,7 @@ function ChatWindow({ respondent, openDetails }) {
 
   if (isLoading || isResLoading) return <div>Loading...</div>
   if (error || !respondentSurveySendHistory || isResError || !respondentResponseHistory) {
-    console.log(error)
+    // console.log(error)
     return <div>Error</div>
   }
   const timeline = [

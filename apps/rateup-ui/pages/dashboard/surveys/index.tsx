@@ -166,7 +166,6 @@ export default function Surveys() {
   //--------handle check box click ----------
 
   const handleCheckBox = (e, surveyid, checked) => {
-    console.log(e.target.checked, "chckvalu");
     e.stopPropagation();
     if (surveyidArray.includes(surveyid)) {
       setSurveyIdArray(surveyidArray.filter((id) => id !== surveyid));

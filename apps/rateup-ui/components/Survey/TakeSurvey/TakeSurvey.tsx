@@ -641,7 +641,6 @@ function PhoneForm() {
   
   const handleInputBlur = () => {
     if (phoneError) {
-      console.log("Invalid phone number");
 
     }
     setIsFocused(false)
@@ -705,7 +704,7 @@ function EmailForm() {
 
   const handleInputBlur = () => {
     if (emailError) {
-      console.log("Invalid email");
+      // console.log("Invalid email");
     }
     setIsFocused(false)
   };

@@ -14,7 +14,7 @@ export const useCheckSession = () => {
           //console.log("session exists");
           router.push('/dashboard');
         } else {
-          console.log("session does not exist");
+          // console.log("session does not exist");
           setIsLoading(false);
         }
       } catch (error) {

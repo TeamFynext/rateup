@@ -38,7 +38,6 @@ export const getSurveysList = () =>
   });
 //----------get all survey landings-------------
 export async function getSurveyLandings() {
-  console.log("enter servicio");
   try {
     let surveyLandings: Array<SurveyLanding> = (
       await axiosClient.get(`${SURVEYURL}/surveylandings`)

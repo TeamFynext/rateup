@@ -58,7 +58,7 @@ const Responses = ({ survey }) => {
     };
 
     const openActions = (id) => {
-      console.log(id)
+      // console.log(id)
       selectedRowId === id ? setSelectedRowId('') : setSelectedRowId(id)
       selectedRowId !== id && open()
     }

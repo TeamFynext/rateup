@@ -155,7 +155,7 @@ const ValidationRulesEditor = ({
         });
 
         const data =  { validationRules: { ...form.values }};
-        console.log(data)
+        // console.log(data)
 
         await questionUpdateMutation.mutateAsync({
           qId: selectedQ.id,

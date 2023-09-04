@@ -47,7 +47,7 @@ export default ({ children }) => {
       });
 
       useEffect(() => {
-        console.log("query refetching...")
+        // console.log("query refetching...")
         if (userQueryData?.data) {
           setUserInfo(userQueryData); // update localStorage
         }

@@ -13,12 +13,14 @@ import { useRouteParams } from "../../../context/RouteParamsContext";
 import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
 import Result from "../../../components/Survey/Result/Result";
 import { useUser } from "../../../context/UserContext";
+import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
 
 enum TabEnum {
   Edit = "Edit",
   Share = "Share",
   Result = "Result",
   Settings = "Settings",
+  Theme = "Theme",
 }
 export default () => {
   const router = useRouter();
@@ -68,7 +70,7 @@ export default () => {
 
   if (isLoading || isSurveyLoading) return <Loader />;
   if (error || surveyError) {
-    console.log(error, surveyError);
+    // console.log(error, surveyError);
     return "An error has occurred";
   }
 
@@ -95,6 +97,7 @@ export default () => {
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value={TabEnum.Edit}>
@@ -139,6 +142,9 @@ export default () => {
                             size="1rem" />}
                     />
             </Tabs.Panel>
+            <Tabs.Panel value={TabEnum.Theme}>
+              <div></div>
+            </Tabs.Panel>
           </Group>
 
           <Space h="xl" />
@@ -161,6 +167,10 @@ export default () => {
           <Tabs.Panel value={TabEnum.Share}>
             <ShareSurvey survey={survey}/>
           </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Theme}>
+            <SurveyTheme survey={survey}/>
+          </Tabs.Panel>
+         
           
         </StyledTabs>
       </Stack>
