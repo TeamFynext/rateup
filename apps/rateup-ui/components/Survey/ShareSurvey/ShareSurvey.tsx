@@ -1,11 +1,10 @@
 import {
   Paper,
-  Text,
   Stack,
   Button,
   CopyButton,
   Group,
-  TextInput,
+  TextInput, 
   SimpleGrid,
   Title,
   ActionIcon,
@@ -18,15 +17,15 @@ import {
   IconMessage,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React from "react";
+import React, {useState} from "react";
+import ShareQR from "./ShareQR";
 
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
 
- // console.log(survey, ">>>istan survey");
   return (
     <Stack>
-      <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
+            <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
         <SimpleGrid cols={2} spacing="xl">
           {/* //-----------------web survey share url ----------------- */}
           {survey.type == "web" ? (
@@ -68,7 +67,11 @@ const ShareSurvey = ({ survey }) => {
             </Group>
           </Stack>
         </SimpleGrid>
-      </Paper>
+
+        
+           </Paper>
+
+           <ShareQR surveyId={surveyId} />
     </Stack>
   );
 };
