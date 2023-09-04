@@ -209,15 +209,53 @@ function Welcome({ onStart, isProtected, surveyId, largeScreen }) {
     if (surveyId) updateVisited.mutate(surveyId);
   }, []);
 
- 
-
   //-----------get welcome page styles and content-------------
   const {
     isLoading,
     error,
     data: surveyThemeData,
   } = usePublicWelcomeThemeBySurveyId(surveyId);
-  
+
+  useEffect(() => {
+    if (surveyThemeData?.descStyles?.fontFamily) {
+      loadFont(surveyThemeData?.descStyles?.fontFamily);
+    }
+    if (surveyThemeData?.headerStyles?.fontFamily) {
+      loadFont(surveyThemeData?.headerStyles?.fontFamily);
+    }
+    if (surveyThemeData?.buttonStyles?.fontFamily) {
+      loadFont(surveyThemeData?.buttonStyles?.fontFamily);
+    }
+  }, [surveyThemeData]);
+
+
+  let WebFont = undefined;
+  useEffect(() => {
+    (async () => {
+      if (window) {
+        WebFont = await import("webfontloader");
+      }
+    })();
+  }, [window]);
+
+  async function loadFont(fontFamily) {
+    if (window) {
+      WebFont = await import("webfontloader");
+      // Code that depends on the window object
+      if (fontFamily) {
+        await WebFont.load({
+          google: {
+            families: [fontFamily],
+          },
+          active: () => {
+            // callback();
+          },
+          inactive: () => {},
+        });
+      }
+    }
+  }
+
   const { classes } = useStyles();
   return (
     <>
@@ -261,30 +299,42 @@ function Welcome({ onStart, isProtected, surveyId, largeScreen }) {
           boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
         }}
         bg={"white"}
-        style={surveyThemeData?.bgstyles}
+        style={surveyThemeData?.bgStyles}
       >
+        <Image
+          fit="contain"
+          src={
+            surveyThemeData?.logoUrl
+              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.logoUrl}`
+              : ""
+          }
+          alt=" Logo "
+          style={surveyThemeData?.logoStyles}
+        />
         <Title
           order={1}
           sx={{ fontSize: largeScreen ? "4rem" : "3rem" }}
           tt={"capitalize"}
           style={surveyThemeData?.headerStyles}
         >
-          {surveyThemeData?.headerText ? surveyThemeData?.headerText : "Welcome"}
+          {surveyThemeData?.headerText
+            ? surveyThemeData?.headerText
+            : "Welcome"}
         </Title>
-        <Text style={surveyThemeData?.descStyles}   tt={"capitalize"}>
+        <Text style={surveyThemeData?.descStyles} tt={"capitalize"}>
           {surveyThemeData?.descText
             ? surveyThemeData?.descText
             : "Please fill the Survey.."}
         </Text>
         <Button
-       
           style={surveyThemeData?.buttonStyles}
           className={classes.ButtonStyles}
           onClick={isProtected ? open : onStart}
           size="lg"
-          
         >
-          {surveyThemeData?.buttonText ? surveyThemeData?.buttonText : "Go to survey"}
+          {surveyThemeData?.buttonText
+            ? surveyThemeData?.buttonText
+            : "Go to survey"}
         </Button>
         {/* <RateupButtonSecondary
           radius={"xl"}
@@ -293,8 +343,6 @@ function Welcome({ onStart, isProtected, surveyId, largeScreen }) {
           }
           onClick={isProtected ? open : onStart}
         /> */}
-
-        
       </Stack>
     </>
   );
