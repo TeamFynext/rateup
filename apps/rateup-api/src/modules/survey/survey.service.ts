@@ -149,7 +149,7 @@ export async function getSurveyBylandingId(landingid: string) {
 
  
   //----------get surveys from surveyids------------
-  console.log(surveyIds, ">>>fateeno");
+  // console.log(surveyIds, ">>>fateeno");
   const surveyResponse = await prisma.survey.findMany({
     where: {
       id: {
@@ -159,7 +159,7 @@ export async function getSurveyBylandingId(landingid: string) {
   });
  
 
-  console.log( ">>>> anding under", surveyResponse);
+  // console.log( ">>>> anding under", surveyResponse);
   if (!Landingpages || Landingpages.surveys.length == 0) {
     throw new Error(`Could not find survey with id ${landingid}`);
   }
@@ -223,7 +223,9 @@ export async function getSurveysByUserId(userId: string) {
  */
 
 export async function getSurveyLandingByUserId(userId: string) {
-  const surveysLanding = await prisma.surveyLanding.findMany({});
+  const surveysLanding = await prisma.surveyLanding.findMany({
+    where :{createdBy:userId}
+  });
 
   return surveysLanding;
 }

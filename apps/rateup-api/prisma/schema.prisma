@@ -254,3 +254,23 @@ model RGroupSurveySendHistory {
   surveyId  String   @db.Uuid
   createdAt DateTime @default(now())
 }
+
+//----------welcome page styles-----------
+model WelcomeTheme {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+  landingId    String?   @db.Uuid
+  surveyId     String?   @db.Uuid
+  headerText   String    @default("")
+  descText     String    @default("")
+  buttonText   String    @default("")
+  headerStyles Json    
+  descStyles   Json    
+  buttonStyles Json    
+  bgStyles     Json    
+  logoStyles   Json   
+  logoUrl      String?
+  bgUrl        String?
+  bgType       String?   @default("bgcolor")
+}
