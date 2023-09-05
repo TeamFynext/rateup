@@ -4,7 +4,6 @@ import {
   Loader,
   Select,
   Stack,
-  Tabs,
   Title,
   Space,
   Paper,
@@ -17,12 +16,22 @@ import {
   FileInput,
   Button,
   FileButton,
+  Tabs,
 } from "@mantine/core";
-import { IconUpload } from "@tabler/icons-react";
+import { IconColorPicker, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, useEffect } from "react";
 import { uploadFile } from "../../../../utils/file-upload/upload";
-
-function BackgroundStyles({ saveStyles, currentStyles, setCurrentstyles }) {
+import {
+  IconPhoto,
+  IconMessageCircle,
+  IconSettings,
+} from "@tabler/icons-react";
+function BackgroundStyles({
+  saveStyles,
+  currentStyles,
+  setCurrentstyles,
+  saveLoading,
+}) {
   const fileInputRef = useRef(null);
 
   const [backgroundStyles, setbackgroundStyles] = useState({
@@ -69,72 +78,89 @@ function BackgroundStyles({ saveStyles, currentStyles, setCurrentstyles }) {
       });
     }
   };
+  const handleTabChange = (newValue) => {
+    setCurrentstyles({ ...currentStyles, bgType: newValue });
+  };
   return (
     <Stack>
       <Stack mt={10}>
-        <Radio.Group value={currentStyles.bgType} onChange={handleChange}>
-          <Flex gap={10} align={"center"}>
-            <Radio value="bgcolor" color="dark" />
-            <span style={{ fontSize: "14px", fontWeight: 500, color: "black" }}>
-              Background color
-            </span>
-          </Flex>
-          <ColorPicker
-            format="rgba"
-            size="md"
-            value={backgroundStyles?.bgStyles?.backgroundColor}
-            onChange={(value) =>
-              setbackgroundStyles({
-                ...backgroundStyles,
-                bgStyles: {
-                  ...backgroundStyles.bgStyles,
-                  backgroundColor: value,
-                },
-              })
-            }
-            mt={10}
-          />
-          <Text>{backgroundStyles?.bgStyles?.backgroundColor}</Text>
-          <Flex gap={10} align={"center"} mt={20}>
-            <Radio value="bgimage" color="dark" />
-            <span style={{ fontSize: "14px", fontWeight: 500, color: "black" }}>
-              Background image
-            </span>
-          </Flex>
-          <FileInput
-            ref={fileInputRef}
-            mt={10}
-            display={"none"}
-            accept="image/*"
-            placeholder="Choose background image"
-            icon={<IconUpload size={14} />}
-            onChange={handleFileChange}
-          />
-
-         
-        </Radio.Group>
-
-        <FileButton onChange={handleFileChange} accept="image/png,image/jpeg">
-          {(props) => (
-            <Button
-            leftIcon={<IconUpload size={16} />}
-              fullWidth
-              size="md"
-              radius="18px"
-              h={50}
-              style={{border:"1px solid #D3D3D3"}}
-              variant="white"
-              color="dark"
-              // w={"lg"}
-              // p={20}
-              // gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
-              {...props}
-              loading={isFileLoading}
+        {/* //-------------tabs ------------ */}
+        <Tabs defaultValue={currentStyles?.bgType} radius="lg" onTabChange={handleTabChange}>
+          <Tabs.List grow>
+            <Tabs.Tab
+              value="bgcolor"
+              icon={<IconColorPicker size="1rem" />}
             >
-              Uplaod image
-            </Button>
-          )}
-        </FileButton>
+              <Text fw={500}> Color</Text>
+            </Tabs.Tab>
+            <Tabs.Tab value="bgimage" icon={<IconPhoto size="0.8rem" />}>
+              <Text fw={500}> Image</Text>
+            </Tabs.Tab>
+          </Tabs.List>
+
+          {/* //-------------BG COLOR----------------- */}
+          <Tabs.Panel value="bgcolor" pt="xs">
+            <ColorPicker
+              format="rgba"
+              size="lg"
+              value={backgroundStyles?.bgStyles?.backgroundColor}
+              onChange={(value) =>
+                setbackgroundStyles({
+                  ...backgroundStyles,
+                  bgStyles: {
+                    ...backgroundStyles.bgStyles,
+                    backgroundColor: value,
+                  },
+                })
+              }
+              mt={10}
+            />
+            {/* <Text>{backgroundStyles?.bgStyles?.backgroundColor}</Text> */}
+          </Tabs.Panel>
+
+          {/* //------------BGIMAGE------------ */}
+          <Tabs.Panel value="bgimage" pt="xs">
+            <FileInput
+              ref={fileInputRef}
+              mt={10}
+              display={"none"}
+              accept="image/*"
+              placeholder="Choose background image"
+              icon={<IconUpload size={14} />}
+              onChange={handleFileChange}
+            />
+
+            <FileButton
+              onChange={handleFileChange}
+              accept="image/png,image/jpeg"
+            >
+              {(props) => (
+                <Button
+                  leftIcon={<IconUpload size={16} />}
+                  fullWidth
+                  size="lg"
+                  radius="18px"
+                  h={50}
+                  style={{ border: "1px solid #D3D3D3" }}
+                  variant="white"
+                  color="dark"
+                  // w={"lg"}
+                  // p={20}
+                  // gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
+                  {...props}
+                  loading={isFileLoading}
+                >
+                  Upload image
+                </Button>
+              )}
+            </FileButton>
+          </Tabs.Panel>
+        </Tabs>
+
+        {/* //----------end tabs------------- */}
+       
+
+       
         <Flex justify={"center"}>
           <Button
             bg="black"
@@ -144,6 +170,7 @@ function BackgroundStyles({ saveStyles, currentStyles, setCurrentstyles }) {
             pr={40}
             mt={20}
             onClick={onSubmit}
+            loading={saveLoading}
           >
             {" "}
             Save

@@ -35,7 +35,7 @@ interface FormValues {
   };
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont }) {
+function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont,saveLoading }) {
   const form = useForm({
     initialValues: {
       name: "description",
@@ -100,6 +100,7 @@ function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont }) {
             Choose text color
           </Text>
           <ColorPicker
+           size="xl"
             format="rgba"
             {...form.getInputProps("descStyles.color")}
           />
@@ -112,6 +113,7 @@ function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont }) {
               pr={40}
               mt={20}
               onClick={onSubmit}
+              loading={saveLoading}
             >
               {" "}
               Save

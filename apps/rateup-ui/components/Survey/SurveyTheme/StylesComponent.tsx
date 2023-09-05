@@ -12,6 +12,7 @@ function StylesComponent({
   currentStyles,
   setCurrentstyles,
   loadFont,
+  saveLoading
 }) {
   return (
     <div>
@@ -36,6 +37,7 @@ function StylesComponent({
             saveStyles={saveStyles}
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
+            saveLoading={saveLoading}
           />
         </div>
       )}
@@ -46,6 +48,7 @@ function StylesComponent({
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
             loadFont={loadFont}
+            saveLoading={saveLoading}
           />
         </div>
       )}
@@ -56,6 +59,7 @@ function StylesComponent({
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
             loadFont={loadFont}
+            saveLoading={saveLoading}
           />
         </div>
       )}
@@ -66,6 +70,7 @@ function StylesComponent({
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
             loadFont={loadFont}
+            saveLoading={saveLoading}
           />
         </div>
       )}

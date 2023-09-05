@@ -16,14 +16,14 @@ const defaultStyles = {
   
   descStyles: {
     fontFamily: "Roboto",
-    fontWeight: "400",
+    fontWeight: 400,
     fontSize: "1.1rem",
     textAlign: "center",
     color: "#000000",
   },
   buttonStyles: {
     fontFamily: "Roboto",
-    fontWeight: "600",
+    fontWeight: 600,
     fontSize: "1rem",
     textAlign: "center",
     color: "#fff",
@@ -32,10 +32,11 @@ const defaultStyles = {
   },
   bgStyles: {
     fontFamily: "Roboto",
-    fontWeight: "600",
+    fontWeight: 600,
     fontSize: "1rem",
     textAlign: "center",
-    color: "#000000",
+    color: "rgba(143, 70, 70, 1)",
+    backgroundColor: "rgba(143, 70, 70, 1)",
     borderRadius:18
   },
   logoStyles: {
@@ -44,7 +45,7 @@ const defaultStyles = {
    
   },
  
-  bgType: "color",
+  bgType: "bgcolor",
  
   bgUrl: ""
 };

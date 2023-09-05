@@ -46,6 +46,7 @@ function HeaderStyles({
   currentStyles,
   setCurrentstyles,
   loadFont,
+  saveLoading
 }) {
   const form = useForm({
     initialValues: {
@@ -91,8 +92,10 @@ function HeaderStyles({
             data={fontList}
             name="fontFamily"
             {...form.getInputProps("headerStyles.fontFamily")}
+            
           />
           <Select
+           
             label="Font weight"
             // searchable
             name="fontWeight"
@@ -102,6 +105,7 @@ function HeaderStyles({
           <NumberInput
             min={10}
             max={100}
+            
             defaultValue={18}
             placeholder="size"
             label="Font Size"
@@ -112,6 +116,7 @@ function HeaderStyles({
             Choose text color
           </Text>
           <ColorPicker
+           size="xl"
             format="rgba"
             {...form.getInputProps("headerStyles.color")}
           />
@@ -125,6 +130,7 @@ function HeaderStyles({
               pr={40}
               mt={20}
               onClick={onSubmit}
+               loading={saveLoading}
             >
               {" "}
               Save

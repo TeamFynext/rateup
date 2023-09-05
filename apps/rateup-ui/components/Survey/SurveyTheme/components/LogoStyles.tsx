@@ -1,25 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Group,
-  Loader,
-  Select,
-  Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
-  Flex,
-  Text,
-  TextInput,
-  Card,
-  ColorPicker,
-  Radio,
-  FileInput,
-  NumberInput,
-  Button,
-  FileButton,
-} from "@mantine/core";
+import { Stack, Flex, NumberInput, Button, FileButton } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
 import { IconUpload } from "@tabler/icons-react";
 import { uploadFile } from "../../../../utils/file-upload/upload";
@@ -31,14 +11,14 @@ interface FormValues {
 
   logoStyles: {
     height: number;
-    witdth: number;
+    width: number;
   };
 }
 function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
   const form = useForm({
     initialValues: {
       name: "logo",
-      logoUrl:currentStyles?.logoUrl,
+      logoUrl: currentStyles?.logoUrl,
       logoStyles: currentStyles.logoStyles,
     },
   });
@@ -60,7 +40,6 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
     if (typeof fileKey === "string") {
       setisFileLoading(false);
       setCurrentstyles({ ...currentStyles, logoUrl: fileKey });
-     
     }
   };
   return (
@@ -72,17 +51,20 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
             max={100}
             // defaultValue={18}
             placeholder="height"
-            label="Height"
+            label="Height (px)"
             name="height"
+           
+            mt={"xs"}
             {...form.getInputProps("logoStyles.height")}
           />
           <NumberInput
             min={10}
             max={100}
-            mt={20}
+           
+            mt={"xs"}
             // defaultValue={18}
             placeholder="Width"
-            label="Width"
+            label="Width (px)"
             name="Width"
             {...form.getInputProps("logoStyles.width")}
           />
@@ -92,10 +74,11 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
               <Button
                 leftIcon={<IconUpload size={16} />}
                 fullWidth
-                size="md"
+              
                 radius="18px"
                 h={50}
-                mt={30}
+                size="md"
+                mt={"xs"}
                 style={{ border: "1px solid #D3D3D3" }}
                 variant="white"
                 color="dark"
@@ -105,7 +88,7 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
                 {...props}
                 loading={isFileLoading}
               >
-                Uplaod image
+                Upload image
               </Button>
             )}
           </FileButton>

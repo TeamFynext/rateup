@@ -26,6 +26,7 @@ function ButtonStyles({
   currentStyles,
   setCurrentstyles,
   loadFont,
+  saveLoading,
 }) {
   const [buttonStyle, setButtonStyle] = useState({
     name: "button",
@@ -72,6 +73,8 @@ function ButtonStyles({
           searchable
           nothingFound="No options"
           data={fontList}
+         
+          mt={"xs"}
           value={buttonStyle?.buttonStyles?.fontFamily}
           onChange={(value) => handleChange("fontFamily", value)}
         />
@@ -79,6 +82,8 @@ function ButtonStyles({
         <NumberInput
           min={0}
           max={50}
+         
+          // mt={"xs"}
           defaultValue={18}
           placeholder="radius"
           label="Border Radius"
@@ -89,6 +94,7 @@ function ButtonStyles({
           Choose background color
         </Text>
         <ColorPicker
+          size="xl"
           format="rgba"
           onChange={(value) => handleChange("backgroundColor", value)}
           value={buttonStyle?.buttonStyles.backgroundColor}
@@ -102,6 +108,7 @@ function ButtonStyles({
             pr={40}
             mt={20}
             onClick={onSubmit}
+            loading={saveLoading}
           >
             {" "}
             Save

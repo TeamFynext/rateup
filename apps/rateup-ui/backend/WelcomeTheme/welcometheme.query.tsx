@@ -6,16 +6,17 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 type MyProps = {
   // setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
   setIsLoading: React.Dispatch<React.SetStateAction<Boolean>>;
+  setSaveLoading: React.Dispatch<React.SetStateAction<Boolean>>;
 };
 
 //---------create welcome theme ------------
-export const useCreateWelcomeThemeMutation = ({ setIsLoading }: MyProps) => {
+export const useCreateWelcomeThemeMutation = ({ setIsLoading,setSaveLoading }: MyProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createWelcomeTheme,
     onSuccess: () => {
       notifications.update({
-        id: "load-data",
+        id: "create-survey-welcome",
         color: "teal",
         title: "Success",
         message: "theme Created...!",
@@ -23,18 +24,20 @@ export const useCreateWelcomeThemeMutation = ({ setIsLoading }: MyProps) => {
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveyWelcomeTheme"]);
+      setSaveLoading(false);
 
       setIsLoading(false);
     },
     onError: (error: any) => {
       notifications.show({
-        id: "load-data",
+        id: "create-survey-welcome",
         color: "red",
         title: "Failed",
         message: error?.response?.data?.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      setSaveLoading(false);
     },
   });
 
@@ -42,7 +45,7 @@ export const useCreateWelcomeThemeMutation = ({ setIsLoading }: MyProps) => {
 };
 
 //----------update welcome theme -------------
-export function useUpdateWelcomeTheme({ setIsLoading}:MyProps) {
+export function useUpdateWelcomeTheme({ setIsLoading,setSaveLoading}:MyProps) {
   const queryClient = useQueryClient();
 
   return useMutation((data: any) => updateWelcomeTheme(data), {
@@ -55,6 +58,7 @@ export function useUpdateWelcomeTheme({ setIsLoading}:MyProps) {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      setSaveLoading(false);
       setIsLoading(false);
       queryClient.invalidateQueries(["surveyWelcomeTheme"]);
     },
@@ -69,6 +73,7 @@ export function useUpdateWelcomeTheme({ setIsLoading}:MyProps) {
         autoClose: 3000,
       });
 
+      setSaveLoading(false);
       setIsLoading(false);
     },
   });
