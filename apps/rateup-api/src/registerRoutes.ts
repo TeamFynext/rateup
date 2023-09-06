@@ -23,11 +23,14 @@ import { rGroupSchemas } from "./modules/respondent/rgroup/rgroup.schema";
 import { rgroupRoutes } from "./modules/respondent/rgroup/rgroup.route";
 import { wasurveySchemas } from "./modules/whatsappSurvey/wasurvey.schema";
 import { WelcomeThemeSchema } from "./modules/welcomeTheme/welcometheme.schema";
+import { LandingThemeSchema } from "./modules/landingWelcomeTheme/landingTheme.schema";
 import { respondentRoutes } from "./modules/respondent/respondent/respondent.route";
 import { respondentSchemas } from "./modules/respondent/respondent/respondent.schema";
 import { LandingPageRoutes } from "./modules/landingPage/landingpage.route";
 import { WelcomeThemeRoutes } from "./modules/welcomeTheme/welcometheme.route";
 import { WelcomeThemePublicRoutes } from "./modules/welcomeTheme/welcometheme.public.routes";
+import { LandingThemeRoutes } from "./modules/landingWelcomeTheme/landingTheme.routes";
+import { LandingThemePublicRoutes } from "./modules/landingWelcomeTheme/landingTheme.public.routes";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [
@@ -42,7 +45,8 @@ export function registerRoutes(server: FastifyInstance): void {
         respondentSchemas,
         wasurveySchemas,
         landingPageSchemas,
-        WelcomeThemeSchema
+        WelcomeThemeSchema,
+        LandingThemeSchema
     ];
     for (const module of modules) {
         for (const schema of module) {
@@ -53,6 +57,8 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(LandingPageRoutes, { prefix: "api/landingpage" });
     server.register(WelcomeThemeRoutes, { prefix: "api/welcome" });
     server.register(WelcomeThemePublicRoutes, { prefix: "api/public/welcome" })
+    server.register(LandingThemeRoutes, { prefix: "api/landingtheme" });
+    server.register(LandingThemePublicRoutes, { prefix: "api/public/landingtheme" })
 
     server.register(questionRoutes, { prefix: "api/question/:surveyId" });
     server.register(userRoutes, { prefix: "api/user" });
