@@ -50,7 +50,7 @@ import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
 import { deleteLandingPage } from "../../../backend/LandingPage/landingpage.api";
 import ShareLandingPageModal from "./ShareLandingPageModal";
 import { DeleteLandingPageConfirmation } from "../../../components/LandingPage/DeleteLandingConfirmation";
-export default function LandingPages() {
+export default function LandingPagesList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
     useDisclosure(false);

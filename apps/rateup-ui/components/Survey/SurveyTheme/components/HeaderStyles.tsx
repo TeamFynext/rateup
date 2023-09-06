@@ -116,7 +116,8 @@ function HeaderStyles({
             Choose text color
           </Text>
           <ColorPicker
-           size="xl"
+          //  size="xl"
+          fullWidth
             format="rgba"
             {...form.getInputProps("headerStyles.color")}
           />

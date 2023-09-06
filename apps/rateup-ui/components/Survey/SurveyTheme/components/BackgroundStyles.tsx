@@ -85,24 +85,33 @@ function BackgroundStyles({
     <Stack>
       <Stack mt={10}>
         {/* //-------------tabs ------------ */}
-        <Tabs defaultValue={currentStyles?.bgType} radius="lg" onTabChange={handleTabChange}>
+        <Tabs
+          defaultValue={currentStyles?.bgType}
+          radius="lg"
+          onTabChange={handleTabChange}
+        >
+          <Radio.Group
+                name="bgType"
+                withAsterisk
+                mt="md"
+                ml="xl"
+                value={currentStyles?.bgType}
+              >
           <Tabs.List grow>
-            <Tabs.Tab
-              value="bgcolor"
-              icon={<IconColorPicker size="1rem" />}
-            >
-              <Text fw={500}> Color</Text>
+            <Tabs.Tab value="bgcolor">
+              <Radio value="bgcolor" label="Color" />
             </Tabs.Tab>
-            <Tabs.Tab value="bgimage" icon={<IconPhoto size="0.8rem" />}>
-              <Text fw={500}> Image</Text>
+            <Tabs.Tab value="bgimage">
+              <Radio value="bgimage" label="Image" />
             </Tabs.Tab>
           </Tabs.List>
+          </Radio.Group>
 
           {/* //-------------BG COLOR----------------- */}
           <Tabs.Panel value="bgcolor" pt="xs">
             <ColorPicker
               format="rgba"
-              size="lg"
+              fullWidth
               value={backgroundStyles?.bgStyles?.backgroundColor}
               onChange={(value) =>
                 setbackgroundStyles({
@@ -158,9 +167,7 @@ function BackgroundStyles({
         </Tabs>
 
         {/* //----------end tabs------------- */}
-       
 
-       
         <Flex justify={"center"}>
           <Button
             bg="black"

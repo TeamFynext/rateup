@@ -94,7 +94,7 @@ function ButtonStyles({
           Choose background color
         </Text>
         <ColorPicker
-          size="xl"
+        fullWidth
           format="rgba"
           onChange={(value) => handleChange("backgroundColor", value)}
           value={buttonStyle?.buttonStyles.backgroundColor}

@@ -100,7 +100,7 @@ function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont,save
             Choose text color
           </Text>
           <ColorPicker
-           size="xl"
+          fullWidth
             format="rgba"
             {...form.getInputProps("descStyles.color")}
           />

@@ -16,6 +16,8 @@ import { useRouter } from "next/router";
 import { useLandingPage, useSurveysBylandingId } from "../../../backend/surveys/surveys.query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePublicLandingPage, usePublicLandingPageSurveys } from "../../../backend/LandingPage/landingpage.query";
+import LandingWelcomepage from "./LandingWelcomePage";
+import LandingWelcomePage from "./LandingWelcomePage";
 
 export default () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
@@ -50,14 +52,15 @@ export default () => {
       sx={{ background: "#F7F6FB", height: "100vh" }}
     >
       <>
-        <Image
-          pb={30}
-          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`}
-          alt="Govt Logo"
-          width={largeScreen ? 600 : 310}
-        />
+      <Image
+              pb={30}
+              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+              alt="RateUp Logo"
+              width={140}
+              height={35}
+            />
       </>
-      <Paper p="sm" radius="lg" shadow="lg" sx={{ minHeight: "80vh" }}>
+      <Paper p="sm" radius="lg"  sx={{ minHeight: "80vh" }} bg={"#F7F6FB"}>
         <Container fluid>
           {startClicked ? (
             <StartPage
@@ -66,14 +69,15 @@ export default () => {
               LandingPage={LandingPage}
             />
           ) : (
-            <Welcome
+            <LandingWelcomePage
               largeScreen={largeScreen}
               setStartClicked={setStartClicked}
+              landingid={landingid?landingid:null}
             />
           )}
         </Container>
 
-        <Center>
+        <Center mt={20}>
           <Text fz="sm">Powered by </Text>
           <Image
             pl={10}
@@ -88,33 +92,7 @@ export default () => {
   );
 };
 
-function Welcome({ setStartClicked, largeScreen }) {
-  return (
-    <>
-      {/* .........Survey Welcome page.......... */}
-      <Stack
-        align="center"
-        justify="center"
-        spacing="xl"
-        sx={{ height: "70vh" }}
-      >
-        <Title order={1} sx={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
-          Welcome
-        </Title>
-        {/* <Text>landing survey name here </Text> */}
-        <Text>Lets get started with survey</Text>
-        <RateupButtonSecondary
-          radius={"xl"}
-          title="Start Survey"
-          size="lg"
-          onClick={() => {
-            setStartClicked(true);
-          }}
-        />
-      </Stack>
-    </>
-  );
-}
+
 
 
 function StartPage({ largeScreen, Landingpagesurveys,LandingPage }) {
@@ -133,6 +111,7 @@ function StartPage({ largeScreen, Landingpagesurveys,LandingPage }) {
         <Link
           href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${item.id}?start=true`}
         >
+          {/* //--------------survey name as button displayed here ------------------- */}
           <Button
             variant="outline"
             size={largeScreen ? "lg" : "sm"}
