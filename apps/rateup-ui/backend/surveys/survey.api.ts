@@ -31,6 +31,16 @@ export async function getSurveys() {
   }
 }
 
+export async function getActiveSurveysSummary() {
+  try {
+    let surveysSummary: Array<SurveySummary> = (await axiosClient.get(`${SURVEYURL}/summary/active`)).data;
+    return surveysSummary;
+  } catch (e) {
+    console.error(e);
+    return { error: "Error Occured!" };
+  }
+}
+
 export const getSurveysList = () =>
   axiosClient({
     url: `/survey`,

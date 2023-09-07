@@ -92,7 +92,7 @@ export default function Surveys() {
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
-
+  const { action } = useRouter().query;
   const specificTeamIsSelected = selectedTeamId !== "all";
 
   const {
@@ -107,6 +107,12 @@ export default function Surveys() {
       queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
     }
   }, [selectedTeamId, queryClient]);
+
+  useEffect(() => {
+    if (action === 'create') {
+      open()
+    }
+  }, [action]);
 
 
   const {

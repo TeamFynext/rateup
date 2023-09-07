@@ -108,7 +108,7 @@ const ShareQR = ({ surveyId }) => {
                   
                   </Tabs.Tab>
                   <Tabs.Tab value="style">
-                  <Paper shadow="xs" radius="lg" p="md" sx={{ width: "100px", height: "100px", alignContent: 'center'}}>
+                      <Paper shadow="xs" radius="lg" p="md" sx={{ width: "100px", height: "100px", alignContent: 'center'}}>
                             <Center h="100%">
                                 <Stack align="center" spacing="0">
                                   <ActionIcon size="xl">

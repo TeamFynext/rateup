@@ -13,6 +13,8 @@ interface Props {
     loading?: boolean
     fullWidth?: boolean
     mt?: string
+    py?: string
+    styles?:any
 }
 
 export const RateupButtonPrimary = ({ loading, fullWidth, type, sx, radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
@@ -40,7 +42,9 @@ export const RateupButtonPrimary = ({ loading, fullWidth, type, sx, radius, titl
     )
 }
 
-export const RateupButtonBlue = ({ loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonBlue = ({ 
+    loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size, ...other
+}: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -53,6 +57,7 @@ export const RateupButtonBlue = ({ loading, title, radius, sx, disabled, onClick
             size= {size}
             sx={sx}
             loading={loading}
+            {...other}
         >
             {title}
         </Button >

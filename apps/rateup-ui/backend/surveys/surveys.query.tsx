@@ -20,6 +20,7 @@ import {
   updateSurveyVisited,
   verifySurveyPassword,
   updateSurveyLandingPage,
+  getActiveSurveysSummary,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -93,6 +94,11 @@ export const useSurveys = (specificTeamIsSelected: boolean) => useQuery({
   enabled: !specificTeamIsSelected,
   queryKey: ['surveys'],
   queryFn: getSurveys
+})
+
+export const useSurveysSummary = () => useQuery({
+  queryKey: ['surveysSummary'],
+  queryFn: getActiveSurveysSummary
 })
 
 

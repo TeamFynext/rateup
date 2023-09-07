@@ -52,6 +52,42 @@ declare global {
     kioskMode: boolean;
     type: string;
   };
+
+
+  interface SurveySummary {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    title: string;
+    description: string;
+    languages: string[];
+    createdBy: string;
+    teamId: string;
+    active: boolean;
+    isProtected: boolean;
+    kioskMode: boolean;
+    type: string;
+    responses: {
+      id: string;
+      createdAt: string;
+      surveyId: string;
+      responses: Record<string, any>[];
+      language: string;
+      platform: string;
+      respondentId: string | null;
+    }[];
+    surveyStats: {
+      id: string;
+      surveyId: string;
+      visited: number;
+      started: number;
+      completed: number;
+    };
+    team: {
+      name: string;
+    };
+  }
+  
   type SurveyLanding = {
     id: string;
     title: string;

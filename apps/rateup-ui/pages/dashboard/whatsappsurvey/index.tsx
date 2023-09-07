@@ -68,11 +68,18 @@ export default function WhatsappSurveys() {
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
+  const { action } = useRouter().query;
 
   const teamIsSelected = selectedTeamId !== "all";
 
   const { isLoading, error, data: surveys } = useWhatsappSurveys(teamIsSelected);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (action === 'create') {
+      open()
+    }
+  }, [action]);
 
   useEffect(() => {
     if (selectedTeamId !== null) {

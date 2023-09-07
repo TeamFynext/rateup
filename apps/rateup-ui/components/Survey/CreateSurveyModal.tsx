@@ -107,6 +107,12 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       }}
       title="Create Survey"
       centered
+      styles={{
+        title: {
+          fontSize: '25px',
+          fontWeight: 700,
+          padding: "10px"
+        }}}
     >
       <FormProvider form={form} >
         <form onSubmit={onSubmit}>

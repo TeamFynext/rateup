@@ -60,6 +60,12 @@ export default function LandingPagesList() {
   const [shareLandindpageid, setshareLandindpageid] = useState(null);
   const [ShowDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const { action } = useRouter().query;
+  useEffect(() => {
+    if (action === 'create') {
+      open()
+    }
+  }, [action]);
 
   //---------set landing page id for editing--------
   const EditLandingPage = (selectedId) => {

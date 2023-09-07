@@ -24,10 +24,16 @@ export default function Teams() {
   // const sessionContext = useSessionContext();
   const [opened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
-  const router = useRouter();
+  const { action } = useRouter().query;
   const { user, setUser } = useUser();
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false)
+
+  useEffect(() => {
+    if (action === 'create') {
+      open()
+    }
+  }, [action]);
 
   const createTeamForm = useForm({
     initialValues: {
