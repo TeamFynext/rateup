@@ -98,6 +98,8 @@ model Team {
   Respondent Respondent[]
   RGroup     RGroup[]
 
+  menu Menu[]
+
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
 }
@@ -273,4 +275,54 @@ model WelcomeTheme {
   logoUrl      String?
   bgUrl        String?
   bgType       String?   @default("bgcolor")
+}
+model Menu {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime @default(now())
+  name         String // name of the menu
+  displayName  String // name displayed to clients (eg: Restaurant's Name)
+  locationText String // location of the restaurant
+  locationUrl  String // google maps url
+  websiteUrl   String // website url
+  websiteText  String // text to display for website url
+  logo         String // logo url
+
+  categories MenuCategory[]
+  // add a relation to team
+  team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String         @db.Uuid
+}
+
+model MenuCategory {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime   @default(now())
+  name      String
+  menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId    String     @db.Uuid
+  items     MenuItem[]
+  image     String
+}
+
+model MenuItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime @default(now())
+  name        String
+  description String
+  images      String[]
+  videoUrl    String?
+  // Since items might have different variants, we store price as a json.
+  // The json will have the following structure:
+  // {
+  //   "price": 100,    |  if there are no variants this is the price
+  //   "variants": [
+  //     {
+  //       "name": "small",
+  //       "price": 100
+  //     }
+  //   ]
+  // }
+
+  price      Json
+  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String       @db.Uuid
 }

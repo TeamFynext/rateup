@@ -73,6 +73,11 @@ const idParamRequestSchema = z.object({
   id: z.string()
 });
 
+// Could be used by other modules which are related to team
+const byTeamIdParamsSchema = z.object({
+  teamId: z.string()
+})
+
 
 export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
   {
@@ -85,7 +90,8 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     getTeamMembersRequestSchema,
     inviteCompleteRequestSchema,
     editTeamSchema,
-    idParamRequestSchema
+    idParamRequestSchema,
+    byTeamIdParamsSchema
   },
   { $id: "teamSchema" }
 );
@@ -98,6 +104,7 @@ export type GetTeamMembersInput = z.infer<typeof getTeamMembersRequestSchema>;
 export type InviteCompleteInput = z.infer<typeof inviteCompleteRequestSchema>;
 export type EditTeamInput = z.infer<typeof editTeamSchema>;
 export type IdParamInput = z.infer<typeof idParamRequestSchema>;
+export type ByTeamIdParams = z.infer<typeof byTeamIdParamsSchema>;
 
 
 

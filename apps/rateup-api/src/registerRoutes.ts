@@ -31,6 +31,12 @@ import { WelcomeThemeRoutes } from "./modules/welcomeTheme/welcometheme.route";
 import { WelcomeThemePublicRoutes } from "./modules/welcomeTheme/welcometheme.public.routes";
 import { LandingThemeRoutes } from "./modules/landingWelcomeTheme/landingTheme.routes";
 import { LandingThemePublicRoutes } from "./modules/landingWelcomeTheme/landingTheme.public.routes";
+import { menuSchemas } from "./modules/menu/menu.schema";
+import { menuRoutes } from "./modules/menu/menu.route";
+import { menuCategorySchemas } from "./modules/menu/category/category.schema";
+import { menuCategoryRoutes } from "./modules/menu/category/category.route";
+import { menuItemSchemas } from "./modules/menu/item/item.schema";
+import { menuItemRoutes } from "./modules/menu/item/item.route";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [
@@ -46,7 +52,11 @@ export function registerRoutes(server: FastifyInstance): void {
         wasurveySchemas,
         landingPageSchemas,
         WelcomeThemeSchema,
-        LandingThemeSchema
+        LandingThemeSchema,
+        WelcomeThemeSchema,
+        menuSchemas,
+        menuCategorySchemas,
+        menuItemSchemas
     ];
     for (const module of modules) {
         for (const schema of module) {
@@ -73,4 +83,7 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(whatsappRoutes, { prefix: "api/wa" })
     server.register(respondentRoutes, { prefix: "api/respondent" })
     server.register(waWebhookRoutes, { prefix: "webhook" })
+    server.register(menuRoutes, { prefix: "api/menu"})
+    server.register(menuCategoryRoutes, { prefix: "api/mcategory"})
+    server.register(menuItemRoutes, { prefix: "api/mitem"})
 }

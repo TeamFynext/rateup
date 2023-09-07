@@ -47,3 +47,7 @@ export enum LogicCondition {
   IncludesAllOf = "Includes All Of",
   Submitted = "is Submitted",
 }
+export enum MenuItemPriceType {
+  FIXED = "FIXED",
+  VARIANT = "VARIANT"
+}

@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessOfTeamAdmin } from "../../utils/auth";
-import { EditTeamInput, IdParamInput } from "./team.schema";
+import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth";
+import { ByTeamIdParams, EditTeamInput, IdParamInput } from "./team.schema";
 import Session from "supertokens-node/recipe/session";
 
 
@@ -25,3 +25,19 @@ export async function verifyTeamAdminAccess(
       reply.code(403).send({ message: "You don't have team admin access" });
     }
   }
+
+export async function verifyTeamAccess(
+    request: FastifyRequest<{
+        Params: ByTeamIdParams;
+    }>,
+    reply: FastifyReply
+) {
+    const teamId = request.params.teamId;
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+
+    const hasAccess = await hasAccessToTeam(teamId, userId);
+    if (!hasAccess) {
+        reply.code(403).send({ message: "You don't have access to this team" });
+    }
+}
