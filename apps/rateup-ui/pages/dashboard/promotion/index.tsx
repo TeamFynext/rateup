@@ -1,14 +1,16 @@
-import { Box, Container, Group, Loader, Select, Tabs, Text } from "@mantine/core";
+import { Box, Container, Flex, Loader, Select, Tabs, Text } from "@mantine/core";
 import { IndividualsPanel } from "../../../components/Promotion/RightPanel/IndividualChat";
 import { GroupPanel } from "../../../components/Promotion/RightPanel/GroupChat";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useQueryClient } from "@tanstack/react-query";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import SelectedTeamContext from "../../../context/SelectedTeam";
-
+import { PromotionTab } from "../../../types/enums";
 
 export default function Promotion() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [activeTab, setActiveTab] = useState(PromotionTab.Groups);
+  console.log(activeTab)
 
   // print selectedTeamId when changed 
   // useEffect(() => {
@@ -17,26 +19,18 @@ export default function Promotion() {
 
   return (
     <Container fluid>
-      <Tabs keepMounted={false} defaultValue="groups" sx={{ width: "100%" }} orientation="horizontal">
+      <Tabs keepMounted={false} value={activeTab} sx={{ width: "100%" }} orientation="horizontal">
         {/* TODO: Style tabs */}
-        <Group position="apart" m="xs">
-          <Tabs.List sx={{ marginBottom: "2px" }}>
-            <Tabs.Tab value="groups" >
-              Groups
-            </Tabs.Tab>
-            <Tabs.Tab value="individuals">
-              <Text>Individuals</Text>
-            </Tabs.Tab>
-          </Tabs.List>
+        <Flex justify={"end"} mb="xs">
           <TeamSelector selectedTeamId={selectedTeamId} setSelectedTeamId={setSelectedTeamId} />
-        </Group>
+        </Flex>
         <Box sx={{ border: "solid black 2px", borderRadius: "8px", height: "90vh", display: "flex" }}>
           <SelectedTeamContext.Provider value={{ selectedTeamId }}>
-          <Tabs.Panel value="groups" sx={{ flexGrow: 1 }}>
-            <GroupPanel />
+          <Tabs.Panel value={PromotionTab.Groups} sx={{ flexGrow: 1 }}>
+            <GroupPanel activeTab={activeTab} setActiveTab={setActiveTab} />
           </Tabs.Panel>
-          <Tabs.Panel value="individuals" sx={{ flexGrow: 1 }}>
-            <IndividualsPanel />
+          <Tabs.Panel value={PromotionTab.Individuals} sx={{ flexGrow: 1 }}>
+            <IndividualsPanel activeTab={activeTab} setActiveTab={setActiveTab} />
           </Tabs.Panel>
           </SelectedTeamContext.Provider>
         </Box>

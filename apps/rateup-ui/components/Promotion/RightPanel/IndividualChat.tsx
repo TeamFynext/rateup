@@ -1,9 +1,9 @@
-import { Flex, Divider, useMantineTheme, Box, Button, Group, Text, ActionIcon, Center, Avatar, TextInput, Stack } from "@mantine/core"
+import { Flex, Divider, useMantineTheme, Box, Button, Group, Text, ActionIcon, Center, Avatar, TextInput, Stack, Loader } from "@mantine/core"
 import dayjs from "dayjs"
 import { useState, useRef, useEffect, useContext } from "react"
 import { useRespondents, useRespondentSurveySendHistory, useRespondentResponseHistory, useSendSurveyToRespondentMutation, useRGroupsByRespondent } from "../../../backend/respondent/respondent/respondent.query"
 import { ResponseComponent, SurveySendDetailComponent, SendSurveyComponent } from "../ChatComponents"
-import ImportRespondents from "../ImportRespondents"
+import ImportRespondents, { ImportRespondentsModal } from "../ImportRespondents"
 import { SideBar } from "../Sidebar"
 import { MainWindowHeader } from "./ChatHeader"
 import { IconPencil, IconTrash, IconX } from "@tabler/icons-react"
@@ -12,14 +12,20 @@ import { notifications } from "@mantine/notifications"
 import { updateRespondent } from "../../../backend/respondent/respondent/respondent.api"
 import { useDeleteRespondentFromRGroupMutation } from "../../../backend/respondent/rgroup/rgroup.query"
 import SelectedTeamContext from "../../../context/SelectedTeam"
+import { AddRespondentsPanel } from "./AddRespondentsModal"
+import RightPanelRoot from "."
+import CenteredSpinner from "../../Loaders/CenteredSpinner"
 
 
-export function IndividualsPanel() {
+export function IndividualsPanel({ activeTab, setActiveTab }) {
   const [selected, setSelected] = useState(0)
-  const {selectedTeamId} = useContext(SelectedTeamContext)
+  const { selectedTeamId } = useContext(SelectedTeamContext)
+  const [importModalIsOpen, { open, close }] = useDisclosure(false)
 
   const { isLoading, data: respondents, error } = useRespondents(selectedTeamId)
-  if (isLoading || !respondents) return <div>Loading...</div>
+  if (isLoading || !respondents) {
+    return <CenteredSpinner />
+  }
   if (error) {
     // console.log(error)
     return <div>Error</div>
@@ -29,8 +35,9 @@ export function IndividualsPanel() {
 
   return (
     <Flex sx={{ height: "100%" }}>
-      <SideBar items={respondents.map(r => ({ id: r.id, name: r.phone }))} selected={selected} setSelected={setSelected} >
-        <ImportRespondents />
+      <SideBar activeTab={activeTab} setActiveTab={setActiveTab} items={respondents.map(r => ({ id: r.id, name: r.phone }))} selected={selected} setSelected={setSelected} >
+        <ImportRespondents onClick={open} />
+        <ImportRespondentsModal opened={importModalIsOpen} close={close} createGroup={false} />
       </SideBar>
       <Divider orientation="vertical" />
       <IndividualMainWindow respondent={selectedRespondent} />
@@ -46,7 +53,7 @@ function IndividualMainWindow({ respondent }) {
     close()
   }, [respondent])
 
-  if (!respondent) return <div></div>
+  if (!respondent) return <AddRespondentsPanel onClick={open} placeholder={"Add Respondent"} />
 
   if (showDetails) {
     return <DetailsWindow respondent={respondent} onClose={close} />
@@ -76,7 +83,11 @@ function ChatWindow({ respondent, openDetails }) {
     }
   }, [respondentResponseHistory, respondentSurveySendHistory])
 
-  if (isLoading || isResLoading) return <div>Loading...</div>
+  if (isLoading || isResLoading) {
+    return <RightPanelRoot>
+      <CenteredSpinner />
+    </RightPanelRoot>
+  }
   if (error || !respondentSurveySendHistory || isResError || !respondentResponseHistory) {
     // console.log(error)
     return <div>Error</div>
@@ -121,7 +132,11 @@ function ChatWindow({ respondent, openDetails }) {
 function DetailsWindow({ respondent, onClose }) {
   const { isLoading, isError, data: groups } = useRGroupsByRespondent(respondent.id);
   const deleteFromGroupMutation = useDeleteRespondentFromRGroupMutation()
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) {
+    return <RightPanelRoot>
+      <CenteredSpinner />
+    </RightPanelRoot>
+  }
   if (isError) return <div>Error</div>
 
   return (
@@ -149,7 +164,7 @@ function DetailsWindow({ respondent, onClose }) {
                         <Avatar size={"md"} radius="lg " />
                         <Text>{g.name}</Text>
                       </Group>
-                      <ActionIcon color="red" onClick={() => { deleteFromGroupMutation.mutate({respondentId: respondent.id, rgroupId: g.id}) }} >
+                      <ActionIcon color="red" onClick={() => { deleteFromGroupMutation.mutate({ respondentId: respondent.id, rgroupId: g.id }) }} >
                         <IconTrash />
                       </ActionIcon>
                     </Group>

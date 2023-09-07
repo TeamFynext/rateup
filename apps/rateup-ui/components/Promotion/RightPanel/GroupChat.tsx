@@ -2,22 +2,25 @@ import { Flex, Divider, useMantineTheme, Text, Box, Button, ActionIcon, Avatar, 
 import { useState, useRef, useEffect, useContext } from "react"
 import { useDeleteRespondentFromRGroupMutation, useDeleteRGroupMutation, useRespondentsByRGroup, useRGroups, useRGroupSurveySendHistory, useSendSurveyToRGroupMutation, useUpdateRGroupMutation } from "../../../backend/respondent/rgroup/rgroup.query"
 import { SurveySendDetailComponent, SendSurveyComponent } from "../ChatComponents"
-import ImportRespondents from "../ImportRespondents"
+import ImportRespondents, { ImportRespondentsModal } from "../ImportRespondents"
 import { SideBar } from "../Sidebar"
 import { MainWindowHeader } from "./ChatHeader"
 import { IconTrash } from "@tabler/icons-react"
 import { DetailsHeader, NameEditor } from "./IndividualChat"
 import { useDisclosure } from "@mantine/hooks"
-import { AddRespondents } from "./AddRespondentsModal"
+import { AddRespondents, AddRespondentsPanel } from "./AddRespondentsModal"
 import SelectedTeamContext from "../../../context/SelectedTeam"
+import CenteredSpinner from "../../Loaders/CenteredSpinner"
+import RightPanelRoot from "."
 
-export function GroupPanel() {
+export function GroupPanel({activeTab, setActiveTab}) {
   const [selected, setSelected] = useState(0)
   const { selectedTeamId } = useContext(SelectedTeamContext)
   const { isLoading, error, data: rgroups } = useRGroups(selectedTeamId)
+  const [importModalIsOpen, { open, close }] = useDisclosure(false)
 
   // TODO: add loading ui
-  if (isLoading || !rgroups) return <div>Loading...</div>
+  if (isLoading || !rgroups) return <CenteredSpinner />
   if (error) {
     // console.log(error)
     return <div>Error</div>
@@ -26,11 +29,12 @@ export function GroupPanel() {
   const selectedGroup = rgroups.find((r) => r.id === selected)
   return (
     <Flex sx={{ height: "100%" }}>
-      <SideBar items={rgroups} selected={selected} setSelected={setSelected} >
-        <ImportRespondents createGroup={true} />
+      <SideBar activeTab={activeTab} setActiveTab={setActiveTab} items={rgroups} selected={selected} setSelected={setSelected} >
+        <ImportRespondents onClick={open} />
+        <ImportRespondentsModal opened={importModalIsOpen} close={close} createGroup={true} />
       </SideBar>
       <Divider orientation="vertical" />
-      <GroupMainWindow rgroup={selectedGroup} />
+      <GroupMainWindow rgroup={selectedGroup} openCreateGroup={open} />
     </Flex>
   )
 }
@@ -57,7 +61,11 @@ function ChatWindow({ rgroup, openDetails }) {
     }
   }, [rGroupSurveySendHistory])
 
-  if (isLoading || !rGroupSurveySendHistory) return <div>Loading...</div>
+  if (isLoading || !rGroupSurveySendHistory) return (
+    <RightPanelRoot>
+      <CenteredSpinner />
+    </RightPanelRoot>
+  )
   if (error) {
     // console.log(error)
     return <div>Error</div>
@@ -68,7 +76,7 @@ function ChatWindow({ rgroup, openDetails }) {
   }
 
   return (
-    <Box sx={{ flex: 3 }} >
+    <RightPanelRoot>
       <Flex direction={"column"} sx={{ height: "100%" }}>
         <MainWindowHeader image={null} title={rgroup.name} onClick={openDetails} />
         <Box sx={{
@@ -87,7 +95,7 @@ function ChatWindow({ rgroup, openDetails }) {
         </Box>
         <SendSurveyComponent sendHandler={sendHandler} />
       </Flex>
-    </Box>
+    </RightPanelRoot>
   )
 }
 
@@ -98,7 +106,11 @@ function DetailsWindow({ rgroup, onClose }) {
   const deleteRespFromGroupMutation = useDeleteRespondentFromRGroupMutation()
   const deleteRGroup = useDeleteRGroupMutation()
   const updateRGroupMutation = useUpdateRGroupMutation(rgroup.id)
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return (
+    <RightPanelRoot>
+      <CenteredSpinner />
+    </RightPanelRoot>
+  )
   if (isError) return <div>Error</div>
 
   return (
@@ -159,7 +171,7 @@ function DetailsWindow({ rgroup, onClose }) {
   );
 }
 
-function GroupMainWindow({ rgroup }) {
+function GroupMainWindow({ rgroup, openCreateGroup }) {
   const { colors } = useMantineTheme();
   const [showDetails, { open, close }] = useDisclosure(false)
 
@@ -167,7 +179,7 @@ function GroupMainWindow({ rgroup }) {
     close()
   }, [rgroup])
 
-  if (!rgroup) return <div></div>
+  if (!rgroup) return <AddRespondentsPanel placeholder={"Add Group"} onClick={openCreateGroup} />
 
   if (showDetails) {
     return <DetailsWindow rgroup={rgroup} onClose={close} />

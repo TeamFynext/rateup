@@ -1,6 +1,7 @@
-import { useMantineTheme, Group, Avatar, Box, Divider, TextInput, Text } from "@mantine/core";
+import { useMantineTheme, Group, Avatar, Box, Divider, TextInput, Text, Title, Button } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import { useState, useMemo } from "react";
+import { PromotionTab } from "../../types/enums";
 
 export function ListItem({ onClick, name, isSelected }) {
   const { colors } = useMantineTheme();
@@ -17,7 +18,7 @@ export function ListItem({ onClick, name, isSelected }) {
   )
 }
 
-export function SideBar({ items, selected, setSelected, ...props }) {
+export function SideBar({ items, selected, setSelected, activeTab, setActiveTab, ...props }) {
   const { colors } = useMantineTheme()
   const [searchTerm, setSearchTerm] = useState("");
   const searchResults = useMemo(() => {
@@ -26,7 +27,8 @@ export function SideBar({ items, selected, setSelected, ...props }) {
   }, [searchTerm, items])
 
   return (
-    <Box sx={{ flex: 1, backgroundColor: colors.gray[1], borderRadius: "8px", position: "relative", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ flex: 2, backgroundColor: colors.gray[1], borderRadius: "8px", position: "relative", display: "flex", flexDirection: "column" }}>
+      <PromotionHeader activeTab={activeTab} setActiveTab={setActiveTab} />
       <SearchBar placeholder={"Search"} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       <Divider />
       <Box sx={{ overflow: "auto", flexGrow: 1 }}>
@@ -36,6 +38,46 @@ export function SideBar({ items, selected, setSelected, ...props }) {
       </Box>
       {props.children}
     </Box>
+  )
+}
+
+function PromotionHeader({ activeTab, setActiveTab }) {
+  const { colors } = useMantineTheme()
+
+  return <Box sx={{ backgroundColor: colors.blue[5], borderTopLeftRadius: "8px" }} p="lg">
+    <Group position="apart">
+      <Title sx={{
+        color: "white",
+      }}
+        order={2}
+      >
+        Promotion
+      </Title>
+      <Group position="apart">
+        <TabSwitchButton activeTab={activeTab} setActiveTab={setActiveTab} tabName={PromotionTab.Groups} />
+        <TabSwitchButton activeTab={activeTab} setActiveTab={setActiveTab} tabName={PromotionTab.Individuals} />
+      </Group>
+    </Group>
+  </Box>;
+}
+
+function TabSwitchButton({ activeTab, setActiveTab, tabName }) {
+  return (
+    <Button
+      // TODO: change to white
+
+      color="dark"
+      variant={activeTab === tabName ? "filled" : "outline"}
+      onClick={() => setActiveTab(tabName)}
+      sx={{
+        borderRadius: "100px",
+        scale: ".9",
+        fontSize: ".9rem",
+      }}
+    >
+      {tabName}
+    </Button>
+
   )
 }
 

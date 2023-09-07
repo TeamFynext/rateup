@@ -48,3 +48,11 @@ export enum LogicCondition {
   IncludesAllOf = "Includes All Of",
   Submitted = "is Submitted",
 }
+export enum PromotionTab {
+  Groups = "Groups",
+  Individuals = "Individuals",
+}
+export enum MenuItemPriceType {
+  FIXED = "FIXED",
+  VARIANT = "VARIANT"
+}

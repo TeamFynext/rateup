@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the backend
-import { QuestionType } from "./enums";
+import { QuestionType, MenuItemPriceType } from "./enums";
 
 type GoogleReview = {
   minRating?: number;
@@ -24,7 +24,7 @@ type ValidationRules = {
   } | null
 };
 
-export {};
+export { };
 declare global {
   type Question = {
     title: Zod.RecordType<string, string>;
@@ -101,7 +101,7 @@ declare global {
 
   type SurveyResponse = {
     id: string;
-    createdAt: Date;
+    createdAt: string;
     surveyId: string;
     responses: Array<QuestionResponse>;
     language: string;
@@ -155,4 +155,50 @@ declare global {
     response: any // Contains the response to match against
     action: LogicAction;
   }
+
+  type Menu = {
+    id: string
+    createdAt: string
+    name: string
+    displayName: string
+    locationUrl: string
+    locationText: string
+    websiteUrl: string
+    websiteText: string
+    teamId: string
+    logo: string
+  }
+
+  type MenuCategory = {
+    id: string
+    createdAt: string
+    name: string
+    menuId: string
+    image: string
+  }
+
+  type MenuItem = {
+    id: string
+    createdAt: string
+    name: string
+    description: string
+    images: string[]
+    videoUrl: string | null
+    price: {
+      type: MenuItemPriceType,
+      price?: number,
+      variants?: Array<{
+        price: number,
+        name: string,
+      }>
+    }
+    categoryId: string
+  }
+  interface FullCategory extends MenuCategory {
+    items: MenuItem[]
+  }
+  interface FullMenu extends Menu {
+    categories: FullCategory[]
+  }
+
 }

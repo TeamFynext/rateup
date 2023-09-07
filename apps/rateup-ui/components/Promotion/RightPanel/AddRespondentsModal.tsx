@@ -4,6 +4,8 @@ import { useRespondents } from "../../../backend/respondent/respondent/responden
 import { useAddRespondentsMutation, useRespondentsByRGroup } from "../../../backend/respondent/rgroup/rgroup.query";
 import { useContext } from "react";
 import SelectedTeamContext from "../../../context/SelectedTeam";
+import RightPanelRoot from ".";
+import { IconUserPlus } from "@tabler/icons-react";
 
 export function AddRespondents({ rgroupId }) {
   const [showModal, { open, close }] = useDisclosure(false)
@@ -42,7 +44,7 @@ function AddModal({ opened, onClose, rgroupId }) {
               <Checkbox
                 checked={respondentsToAdd.includes(r.id)}
                 onChange={(e) => {
-                 // console.log(e.target.checked, respondentsToAdd)
+                  // console.log(e.target.checked, respondentsToAdd)
                   if (e.target.checked) {
                     handlers.append(r.id)
                   } else {
@@ -75,12 +77,25 @@ function AddModal({ opened, onClose, rgroupId }) {
           onClick={() => {
             addRespondentsMutation.mutate(respondentsToAdd)
             onClose()
-           }}
-        disabled={respondentsToAdd.length === 0}
+          }}
+          disabled={respondentsToAdd.length === 0}
         >
-        Add Selected
-      </Button>
-    </Group>
+          Add Selected
+        </Button>
+      </Group>
     </Modal >
+  )
+}
+
+export function AddRespondentsPanel({ onClick, placeholder }) {
+  return (
+    <RightPanelRoot>
+      <Center h="100%">
+        <Stack onClick={onClick} align="center" sx={{ cursor: "pointer" }} >
+          <IconUserPlus size={"75px"} />
+          <Text>{placeholder}</Text>
+        </Stack>
+      </Center>
+    </RightPanelRoot>
   )
 }
