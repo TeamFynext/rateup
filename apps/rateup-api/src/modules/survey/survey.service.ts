@@ -215,6 +215,44 @@ export async function getSurveysByUserId(userId: string) {
   );
   return surveysWithoutQuestions;
 }
+
+/**
+ * Returns summary(responses, stats) of active surveys 
+ * from ALL TEAMs in which the user is a member of
+ * @param userId
+ * @returns Array of active surveys - responses, stats
+ */
+export async function getActiveSurveysSummmaryByUserId(userId: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData.map(
+    (item: { teamId: string }) => item.teamId
+  );
+  const surveys = await prisma.survey.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+      active: true
+    },
+    include: {
+      responses: true,
+      surveyStats: true,
+      team: {
+        select: {
+          name: true
+        }
+      }
+    },
+
+  });
+
+  const surveysWithoutQuestions = surveys.map((s) =>
+    excludeFields(s, ["questions", "password"])
+  );
+  return surveysWithoutQuestions;
+}
+
+
 /**
  * returns all whatsapp surveys
  * @param userId

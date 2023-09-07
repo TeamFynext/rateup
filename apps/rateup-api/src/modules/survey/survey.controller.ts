@@ -4,6 +4,7 @@ import {
   createSurvey,
   createSurveyLanding,
   deleteSurveyById,
+  getActiveSurveysSummmaryByUserId,
   getGoogleUrlBySurveyId,
   getSurveyById,
   getSurveyBylandingId,
@@ -245,6 +246,21 @@ export async function getSurveysHandler(
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
     const surveys = await getSurveysByUserId(userId);
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e);
+    reply.code(500);
+  }
+}
+
+export async function getActiveSurveysSummaryHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    const surveys = await getActiveSurveysSummmaryByUserId(userId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);

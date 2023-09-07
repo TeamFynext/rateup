@@ -15,6 +15,7 @@ import {
   getSurveyBylandingIdhandler,
   getLandingPageByIdHandler,
   updateSurveyLandingHandler,
+  getActiveSurveysSummaryHandler,
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
@@ -68,6 +69,10 @@ export async function surveyRoutes(server: FastifyInstance) {
 
   // get all surveys from user
   server.get("/", getSurveysHandler);
+
+  // get all active surveys summary from user
+  server.get("/summary/active", getActiveSurveysSummaryHandler);
+
   // get all surveys from user
   server.get("/surveylandings", getSurveysLandingHandler);
 
