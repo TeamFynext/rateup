@@ -3,7 +3,12 @@ import { CreateMenuCategoryInput, UpdateMenuCategoryInput } from "./category.sch
 
 export async function createMenuCategory(data: CreateMenuCategoryInput) {
     const category = await prisma.menuCategory.create({
-        data
+        data: {
+            ...data,
+            menuId: data.menuId,
+            name: data.name,
+            image: data.image,
+        }
     })
     return category;
 }

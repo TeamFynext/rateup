@@ -281,11 +281,11 @@ model Menu {
   createdAt    DateTime @default(now())
   name         String // name of the menu
   displayName  String // name displayed to clients (eg: Restaurant's Name)
-  locationText String // location of the restaurant
-  locationUrl  String // google maps url
-  websiteUrl   String // website url
-  websiteText  String // text to display for website url
-  logo         String // logo url
+  locationText String? // location of the restaurant
+  locationUrl  String? // google maps url
+  websiteUrl   String? // website url
+  websiteText  String? // text to display for website url
+  logo         String? // logo url
 
   categories MenuCategory[]
   // add a relation to team

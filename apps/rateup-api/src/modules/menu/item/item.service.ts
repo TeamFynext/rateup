@@ -4,7 +4,13 @@ import { CreateMenuItemInput } from "./item.schema";
 
 export async function createMenuItem(data: CreateMenuItemInput) {
     const menuItem = await prisma.menuItem.create({
-        data
+        data: {
+            ...data,
+            categoryId: data.categoryId,
+            description: data.description,
+            name: data.name,
+            price: data.price,
+        }
     });
     return menuItem;
 }

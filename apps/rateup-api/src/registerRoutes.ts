@@ -53,7 +53,6 @@ export function registerRoutes(server: FastifyInstance): void {
         landingPageSchemas,
         WelcomeThemeSchema,
         LandingThemeSchema,
-        WelcomeThemeSchema,
         menuSchemas,
         menuCategorySchemas,
         menuItemSchemas

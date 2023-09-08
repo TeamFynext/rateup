@@ -2,10 +2,20 @@ import prisma from "../../utils/prisma";
 import { CreateMenuInput, UpdateMenuInput } from "./menu.schema";
 
 export async function createMenu(data: CreateMenuInput) {
-    if(data.teamId === undefined) return;
+    if (data.teamId === undefined) return;
+    const { teamId, ...restOfData } = data;
     const menu = await prisma.menu.create({
-        // TODO: find cause of type error below
-        data: data
+        // TODO: find why name & displayName are optional in the schema
+        data: {
+            ...restOfData,
+            name: data.name,
+            displayName: data.displayName,
+            team: {
+                connect: {
+                    id: teamId
+                }
+            }
+        }
     })
     return menu;
 }
@@ -28,7 +38,7 @@ export async function getFullMenu(menuId: string) {
             categories: {
                 include: {
                     items: true
-                }                
+                }
             }
         }
     })

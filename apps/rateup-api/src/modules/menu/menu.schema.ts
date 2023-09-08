@@ -3,11 +3,11 @@ import { z } from 'zod'
 const menuInput = {
     name: z.string(),
     displayName: z.string(),
-    locationText: z.string(),
-    locationUrl: z.string(),
-    websiteText: z.string(),
-    websiteUrl: z.string(),
-    logo: z.string(),
+    locationText: z.string().optional(),
+    locationUrl: z.string().optional(),
+    websiteText: z.string().optional(),
+    websiteUrl: z.string().optional(),
+    logo: z.string().optional(),
     teamId: z.string(),
 }
 
