@@ -87,7 +87,7 @@ declare global {
       name: string;
     };
   }
-  
+
   type SurveyLanding = {
     id: string;
     title: string;
@@ -161,12 +161,12 @@ declare global {
     createdAt: string
     name: string
     displayName: string
-    locationUrl: string
-    locationText: string
-    websiteUrl: string
-    websiteText: string
+    locationUrl?: string
+    locationText?: string
+    websiteUrl?: string
+    websiteText?: string
     teamId: string
-    logo: string
+    logo?: string
   }
 
   type MenuCategory = {

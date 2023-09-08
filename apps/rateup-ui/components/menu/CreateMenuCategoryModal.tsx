@@ -12,7 +12,7 @@ interface CreateMenuCategoryModalProps {
   menuId: string,
   editingItem?: MenuCategory
 }
-export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }) {
+export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -141,7 +141,7 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }) 
             <Button variant="subtle" onClick={close}>
               Cancel
             </Button>
-            <Button variant="filled" type="submit" loading={isCreating}>
+            <Button variant="filled" type="submit" loading={isCreating} disabled={isUploading}>
               Submit
             </Button>
           </Group>

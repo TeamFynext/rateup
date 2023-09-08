@@ -18,6 +18,8 @@ interface CreateMenuItemModalProps {
 // If editingItem is passed, then we are editing an existing item
 export function CreateMenuItemModal({ opened, close, menuId, categoryId, editingItem }: CreateMenuItemModalProps) {
   const [isCreating, setIsCreating] = useState(false);
+  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
+
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -53,12 +55,14 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       },
     },
   });
+  const [selectedImage, setSelectedImage] = useState(form.values.images[0] || "");
 
   useEffect(() => {
     if (editingItem) {
       form.setValues(editingItem)
     } else {
       form.reset()
+      setImageToUpload(null)
     }
   }, [editingItem])
 
@@ -69,6 +73,7 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       close();
       setIsCreating(false);
       form.reset();
+      setImageToUpload(null)
     },
     () => {
       setIsCreating(false);
@@ -88,8 +93,6 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
     }
   )
 
-  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-
   useEffect(() => {
     const uploadAndUpdate = async () => {
       if (imageToUpload) {
@@ -103,7 +106,6 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
     uploadAndUpdate();
   }, [imageToUpload]);
 
-  const [selectedImage, setSelectedImage] = useState(form.values.images[0] || "");
   useEffect(() => {
     setSelectedImage(form.values.images[0] || "")
   }, [form.values.images])
@@ -121,7 +123,7 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       return;
     }
     setIsCreating(true)
-    if(values.price.type === MenuItemPriceType.FIXED) {
+    if (values.price.type === MenuItemPriceType.FIXED) {
       delete values.price.variants
     } else {
       delete values.price.price

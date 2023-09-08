@@ -48,11 +48,6 @@ export function CreateMenuModal({ opened, close, editingItem }) {
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
       displayName: (value) => (value.length ? null : "Cannot be empty"),
-      locationUrl: (value) => (value.length ? null : "Cannot be empty"),
-      locationText: (value) => (value.length ? null : "Cannot be empty"),
-      websiteUrl: (value) => (value.length ? null : "Cannot be empty"),
-      websiteText: (value) => (value.length ? null : "Cannot be empty"),
-      logo: (value) => (!!value ? null : "Must upload a logo"),
     },
   });
 
@@ -95,13 +90,15 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       <form onSubmit={form.onSubmit(onSubmit)}>
         <Stack>
           <TextInput
-            label="Name"
-            placeholder="Name"
+            label="Menu Name"
+            placeholder="Only displayed in dashboard"
+            withAsterisk
             {...form.getInputProps("name")}
           />
           <TextInput
             label="Display Name"
-            placeholder="Welcome to Paragon Restaurant"
+            placeholder="Paragon Restaurant"
+            withAsterisk
             {...form.getInputProps("displayName")}
           />
           <FileInput
@@ -117,7 +114,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
           </Text>
           <Group noWrap>
             <TextInput
-              label="Location Text"
+              label="Location Label"
               placeholder="Kannur Rd, near CH Over bridge"
               {...form.getInputProps("locationText")}
             />
@@ -129,7 +126,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
           </Group>
           <Group noWrap>
             <TextInput
-              label="Website Text"
+              label="Website Label"
               placeholder="paragonHotels.in"
               {...form.getInputProps("websiteText")}
             />

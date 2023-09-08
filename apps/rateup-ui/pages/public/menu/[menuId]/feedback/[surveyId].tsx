@@ -29,52 +29,58 @@ export default function () {
           <Grid.Col order={largeScreen ? 1 : 2} span={largeScreen ? 3 : 6}>
             <MenuButton />
           </Grid.Col>
-          <Grid.Col span={largeScreen ? 6 : 12} order={largeScreen ? 2 : 1} mih={"400px"}>
+          <Grid.Col span={largeScreen ? 6 : 12} order={largeScreen ? 2 : 1} mih={menu.logo ? "400px" : "200px"}>
             <Stack align="center"
               sx={{
                 padding: largeScreen ? "0 20px 0 20px" : "0"
               }}
             >
-              <img
-                width="100px"
-                height={"100px"}
-                src={getFileUrlFromKey(menu.logo)}
-                style={{
-                  borderRadius: "4px"
-                }}
-              />
+              {menu.logo && (
+                <img
+                  width="100px"
+                  height={"100px"}
+                  src={getFileUrlFromKey(menu.logo)}
+                  style={{
+                    borderRadius: "4px"
+                  }}
+                />
+              )}
               <div>
                 <Text align="center" >Welcome To</Text>
                 {/* TODO: make this text responsive? (if longer name, smaller font) */}
-                <Text align="center" fz={"max(4vw, 2rem)"} fw="bold" >{menu.displayName}</Text>
+                <Text align="center" fz={"max(3vw, 2rem)"} fw="bold" >{menu.displayName}</Text>
               </div>
               <Group w="100%" position="center">
-                <Group
-                  sx={{
-                    '&:hover': {
-                      cursor: "pointer",
-                      borderBottom: "1px solid white",
-                    },
-                    borderBottom: "1px solid transparent",
-                  }}
-                  onClick={() => window.open(menu.locationUrl, "_blank")}
-                >
-                  <IconMapPin />
-                  <Text maw={"80%"} >{menu.locationText}</Text>
-                </Group>
-                <Group
-                  sx={{
-                    '&:hover': {
-                      cursor: "pointer",
-                      borderBottom: "1px solid white",
-                    },
-                    borderBottom: "1px solid transparent",
-                  }}
-                  onClick={() => window.open(menu.websiteUrl, "_blank")}
-                >
-                  <IconWorld />
-                  <Text>{menu.websiteText}</Text>
-                </Group>
+                {(menu.locationText && menu.locationUrl) && (
+                  <Group
+                    sx={{
+                      '&:hover': {
+                        cursor: "pointer",
+                        borderBottom: "1px solid white",
+                      },
+                      borderBottom: "1px solid transparent",
+                    }}
+                    onClick={() => window.open(menu.locationUrl, "_blank")}
+                  >
+                    <IconMapPin />
+                    <Text maw={"80%"} >{menu.locationText}</Text>
+                  </Group>
+                )}
+                {(menu.websiteText && menu.websiteUrl) && (
+                  <Group
+                    sx={{
+                      '&:hover': {
+                        cursor: "pointer",
+                        borderBottom: "1px solid white",
+                      },
+                      borderBottom: "1px solid transparent",
+                    }}
+                    onClick={() => window.open(menu.websiteUrl, "_blank")}
+                  >
+                    <IconWorld />
+                    <Text>{menu.websiteText}</Text>
+                  </Group>
+                )}
               </Group>
             </Stack>
           </Grid.Col>
