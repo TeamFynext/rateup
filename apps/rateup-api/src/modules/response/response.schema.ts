@@ -3,15 +3,23 @@ import { buildJsonSchemas } from "fastify-zod";
 import { QuestionType } from "../../types/enums";
 import { ResponsePlatform } from "@prisma/client";
 
+
+// Individual question response
 const questionResponseSchema = z.object({
   questionId: z.string(),
   type: z.nativeEnum(QuestionType),
   response: z.record(z.nativeEnum(QuestionType), z.any()),
 });
+
+// Survey response
 const responseCore = {
   surveyId: z.string(),
   language: z.string(),
   responses: z.array(questionResponseSchema),
+  locationCoordinates: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).optional().default(undefined),
 };
 
 const createResponseInputSchema = z.object({
