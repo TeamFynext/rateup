@@ -71,7 +71,7 @@ export function QuestionDetailedView({
           value.trim().length > 0 ? null : "Title is required";
         } else {
           //-----------whatsapp text message support only 4096 charecters only----------
-          if (value.trim().length > 10) {
+          if (value.trim().length > 4096) {
             return "Charecter length exceed (Max 4096 charecters allowed)";
           } else if (value.trim().length == 0) {
             return "message is required";

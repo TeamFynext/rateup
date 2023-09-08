@@ -198,6 +198,7 @@ const mockdata = [
   ] },
   { icon: IconDeviceDesktopAnalytics, label: 'Testinomials', href: '/dashboard/' },
   { icon: IconSpeakerphone, label: "Promotion", href: '/dashboard/promotion'},
+  { icon: IconPageBreak, label: "Merge Survey", href: '/dashboard/LandingPages'},
   {icon: IconClipboardList, label: "Menu", href: '/dashboard/menu'}
 ];
 

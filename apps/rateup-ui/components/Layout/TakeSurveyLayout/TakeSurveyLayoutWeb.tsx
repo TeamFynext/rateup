@@ -90,9 +90,10 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
             >
               <Image
                 pb={30}
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`}
-                alt="Govt Logo"
-                width={largeScreen ? 600 : 310}
+                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+                alt="RateUp Logo"
+              width={140}
+              height={35}
               />
             </Link>
           )}

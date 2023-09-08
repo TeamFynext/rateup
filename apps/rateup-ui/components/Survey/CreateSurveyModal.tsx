@@ -82,6 +82,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       withCloseButton: false,
   });
     createSurveyMutation.mutate(form.values);
+    
   };
   if (isLoading) {
     return null;

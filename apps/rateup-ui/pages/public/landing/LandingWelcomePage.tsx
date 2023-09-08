@@ -160,7 +160,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
                 className={classes.ButtonStyles}
                 onClick={()=>setStartClicked(true)}
                 // size="xl"
-                w={150}
+                miw={150}
               >
                 {LandingWelcomeData?.buttonText}
               </Button>

@@ -17,6 +17,7 @@ import {
   createStyles,
   Flex,
   BackgroundImage,
+  Tooltip,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
@@ -177,12 +178,14 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
               // bg={"red"}
             >
               {surveyThemeData?.logoUrl && (
+               
                 <Image
                   fit="contain"
                   src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.logoUrl}`}
-                  alt=" Logo "
+                  alt=" Logoss "
                   style={surveyThemeData?.logoStyles}
                 />
+                
               )}
               <Title
                 order={1}
@@ -206,7 +209,8 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
                 className={classes.ButtonStyles}
                 onClick={isProtected ? open : onStart}
                 // size="xl"
-                w={150}
+                // w={150}
+                miw={150}
               >
                 {surveyThemeData?.buttonText}
               </Button>

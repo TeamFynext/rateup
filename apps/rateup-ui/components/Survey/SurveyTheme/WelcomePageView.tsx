@@ -15,6 +15,7 @@ import {
   BackgroundImage,
   Notification,
   Image,
+  Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
@@ -141,37 +142,41 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
               }}
               p={5}
             >
-              <Image
-                // pb={30}
+              <Tooltip label="Logo">
+                <Image
+                  // pb={30}
 
-                fit="contain"
-                src={
-                  currentStyles.logoUrl
-                    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${currentStyles.logoUrl}`
-                    : ""
-                }
-                alt=" Logo "
-                style={currentStyles?.logoStyles}
-              />
+                  fit="contain"
+                  src={
+                    currentStyles.logoUrl
+                      ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${currentStyles.logoUrl}`
+                      : ""
+                  }
+                  alt=" Logo "
+                  style={currentStyles?.logoStyles}
+                />
+              </Tooltip>
             </Flex>
 
             {/* //---------------------------- */}
-            <TextInput
-              placeholder={"Welcome"}
-              variant="unstyled"
-              size="xxl"
-              name="headerText"
-              mt={20}
-              onClick={(e) => e.stopPropagation()}
-              onFocus={(e) => {
-                e.stopPropagation(), handleFocus("header");
-              }}
-              styles={{
-                input: currentStyles?.headerStyles,
-              }}
-              value={currentStyles.headerText}
-              onChange={handleChange}
-            />
+           
+              <TextInput
+                placeholder={"Welcome"}
+                variant="unstyled"
+                size="xxl"
+                name="headerText"
+                mt={20}
+                onClick={(e) => e.stopPropagation()}
+                onFocus={(e) => {
+                  e.stopPropagation(), handleFocus("header");
+                }}
+                styles={{
+                  input: currentStyles?.headerStyles,
+                }}
+                value={currentStyles.headerText}
+                onChange={handleChange}
+              />
+            
             {/* //--------------------------- */}
             <TextInput
               onChange={handleChange}
@@ -197,11 +202,12 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
               mt={"10%"}
               style={currentStyles.buttonStyles}
               onClick={(e) => e.stopPropagation()}
+              
             >
               <TextInput
                 onChange={handleChange}
                 value={currentStyles.buttonText}
-                placeholder={"Welcome"}
+                placeholder={"Go to survey"}
                 variant="unstyled"
                 name="buttonText"
                 size="xs"
@@ -213,7 +219,7 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
                     color: "#fff",
                     fontSize: "18px",
                     textAlign: "center",
-                    width: "150px",
+                    minWidth: "150px",
                     alignSelf: "center",
                     fontWeight: 500,
                     fontFamily: currentStyles?.buttonStyles?.fontFamily

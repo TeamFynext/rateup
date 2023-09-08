@@ -131,6 +131,7 @@ export const useCreateSurveyMutation = ({
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
+      queryClient.invalidateQueries(["whatsappsurveys"]);
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);
       close();

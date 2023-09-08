@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import LandingWelcomeTheme from "../../../components/LandingPage/LandingWelcomeTheme/LandingWelcomeTheme";
 import LandingSurveysList from "./LandingSurveysList";
 import { useRouter } from "next/router";
+import ShareLandingPage from "../../../components/LandingPage/ShareLandingPage/ShareLandinPage";
 export default ()=> {
 
 
@@ -51,7 +52,7 @@ export default ()=> {
                 Welcome Page
               </Text>
             </Tabs.Tab>
-            <Tabs.Tab value="settings">
+            <Tabs.Tab value="share">
               <Text
                 sx={(theme) => ({
                   fontFamily: `Greycliff CF, ${theme.fontFamily}`,
@@ -72,6 +73,11 @@ export default ()=> {
          
               <LandingWelcomeTheme LandingId={LandingId?LandingId:null}/>
            
+        </Tabs.Panel>
+        {/* //-----------------share  ------------- */}
+        <Tabs.Panel value="share" pt="md">
+          {/* <LandingWelcomeTheme LandingId={LandingId ? LandingId : null} /> */}
+          <ShareLandingPage LandingId={LandingId ? LandingId : null}/>
         </Tabs.Panel>
       </StyledTabs>
     </Flex>
@@ -124,7 +130,7 @@ function StyledTabs(props: TabsProps) {
           },
 
           "&[data-active]": {
-            backgroundColor: theme.colors.blue[7],
+            backgroundColor: "#3F5BA9 ",
             borderColor: theme.colors.blue[7],
             color: theme.white,
             // borderRadius:8 
