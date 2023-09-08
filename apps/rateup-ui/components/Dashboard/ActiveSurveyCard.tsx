@@ -34,10 +34,10 @@ export default function ActiveSurveyCard({
         e.stopPropagation(),
           user?.role === "MEMBER"
             ? router.push(
-                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/results/${survey?.id}`
               )
             : router.push(
-                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/results/${survey?.id}`
               );
       }}
     >

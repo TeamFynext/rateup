@@ -14,6 +14,11 @@ interface Props {
     fullWidth?: boolean
     mt?: string
     py?: string
+    pl?: string
+    pr?: string
+    pb?: string
+    pt?: string
+    ml?: string
     styles?:any
 }
 
@@ -64,7 +69,8 @@ export const RateupButtonBlue = ({
     )
 }
 
-export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, radius, sx, disabled, 
+    onClick, leftIcon = null, rightIcon = null, variant, size, ...other }: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -80,13 +86,15 @@ export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, rad
             type={type}
             fullWidth={fullWidth}
             mt={mt}
+            {...other}
+
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size , ...other}: Props) => {
     return (
         <Button
             radius="lg"
@@ -101,13 +109,14 @@ export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null,
             onClick={onClick}
             variant="outline" 
             size= {size}
+            {...other}
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size , ...other }: Props) => {
     return (
         <Button
             radius={radius}
@@ -119,6 +128,7 @@ export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, lef
             onClick={onClick}
             variant="outline" 
             size= {size}
+            {...other}
         >
             {title}
         </Button >
