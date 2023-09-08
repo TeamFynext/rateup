@@ -302,7 +302,7 @@ model MenuCategory {
   menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId    String     @db.Uuid
   items     MenuItem[]
-  image     String
+  image     String?
 }
 
 model MenuItem {
