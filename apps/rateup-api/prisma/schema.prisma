@@ -149,6 +149,7 @@ model Survey {
   password    String?
   surveyStats SurveyStats?
   type        String           @default("web")
+  getLocation Boolean          @default(false)
 
   RespondentSurveySendHistory RespondentSurveySendHistory[]
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
@@ -166,16 +167,16 @@ model SurveyLanding {
 }
 
 model SurveyResponse {
-  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime         @default(now())
-  survey       Survey           @relation(fields: [surveyId], references: [id])
-  surveyId     String           @db.Uuid
-  responses    Json[]
-  language     String           @default("")
-  platform     ResponsePlatform @default(WEB)
-  // TODO: should this relation be a separate model?
-  respondent   Respondent?      @relation(fields: [respondentId], references: [id])
-  respondentId String?          @db.Uuid
+  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt           DateTime         @default(now())
+  survey              Survey           @relation(fields: [surveyId], references: [id])
+  surveyId            String           @db.Uuid
+  responses           Json[]
+  language            String           @default("")
+  platform            ResponsePlatform @default(WEB)
+  respondent          Respondent?      @relation(fields: [respondentId], references: [id])
+  respondentId        String?          @db.Uuid
+  locationCoordinates Json? // { latitude: string, longitude: string }
 }
 
 model SurveyStats {
@@ -267,15 +268,16 @@ model WelcomeTheme {
   headerText   String    @default("")
   descText     String    @default("")
   buttonText   String    @default("")
-  headerStyles Json    
-  descStyles   Json    
-  buttonStyles Json    
-  bgStyles     Json    
-  logoStyles   Json   
+  headerStyles Json
+  descStyles   Json
+  buttonStyles Json
+  bgStyles     Json
+  logoStyles   Json
   logoUrl      String?
   bgUrl        String?
   bgType       String?   @default("bgcolor")
 }
+
 model Menu {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt    DateTime @default(now())
@@ -300,7 +302,7 @@ model MenuCategory {
   menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId    String     @db.Uuid
   items     MenuItem[]
-  image     String
+  image     String?
 }
 
 model MenuItem {

@@ -4,7 +4,7 @@ import {z} from 'zod';
 const CreateMenuCategoryInput = {
     name: z.string(),
     menuId: z.string(),
-    image: z.string(),
+    image: z.string().optional(),
 }
 const CreateMenuCategorySchema = z.object(CreateMenuCategoryInput)
 

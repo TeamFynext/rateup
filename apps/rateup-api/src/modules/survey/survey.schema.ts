@@ -11,6 +11,7 @@ const surveyCore = {
   teamId: z.string({ required_error: "TeamId is required" }),
   active: z.boolean().default(true),
   type: z.string().default("web"),
+  getLocation: z.boolean().default(false),
 };
 const createSurveyRequestSchema = z.object({
   ...surveyCore,
@@ -66,6 +67,7 @@ const getSurveyPublicResponseSchema = z.object({
   isProtected: z.boolean(),
   type: z.string(),
   kioskMode: z.boolean(),
+  getLocation: z.boolean(),
 });
 
 const updateSurveyRequestSchema = z.object({
