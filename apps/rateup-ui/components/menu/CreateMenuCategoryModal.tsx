@@ -28,6 +28,7 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
     },
   });
 
+  // updates form values when editingItem changes
   useEffect(() => {
     if (editingItem) {
       form.setValues(editingItem)
@@ -36,6 +37,7 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
     }
   }, [editingItem])
 
+  // upload image when imageToUpload changes
   useEffect(() => {
     if (!imageToUpload) return
     setIsUploading(true)
@@ -80,10 +82,6 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
-      return;
-    }
-    if (!values.image) {
-      showErrorToast("Please add an image")
       return;
     }
     setIsCreating(true)

@@ -117,11 +117,6 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       return;
     }
 
-    // Image validation
-    if (values.images.length === 0) {
-      showErrorToast("Please add at least 1 image")
-      return;
-    }
     setIsCreating(true)
     if (values.price.type === MenuItemPriceType.FIXED) {
       delete values.price.variants

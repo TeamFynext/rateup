@@ -57,15 +57,20 @@ export default function () {
           sx={{
             padding: "0 20px 0 20px"
           }}
+          justify="center"
+          h="100%"
+          mb="lg"
         >
-          <img
-            width="100px"
-            height={"100px"}
-            style={{
-              borderRadius: "4px"
-            }}
-            src={getFileUrlFromKey(fullMenu.logo)}
-          />
+          {fullMenu.logo && (
+            <img
+              width="100px"
+              height={"100px"}
+              style={{
+                borderRadius: "4px"
+              }}
+              src={getFileUrlFromKey(fullMenu.logo)}
+            />
+          )}
           <div>
             <Text align="center" >Welcome To</Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}

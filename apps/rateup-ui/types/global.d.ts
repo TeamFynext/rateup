@@ -51,6 +51,7 @@ declare global {
     isProtected: boolean;
     kioskMode: boolean;
     type: string;
+    getLocation: boolean;
   };
 
 
@@ -105,6 +106,10 @@ declare global {
     surveyId: string;
     responses: Array<QuestionResponse>;
     language: string;
+    locationCoordinates?: {
+      latitute: number;
+      longitude: number;
+    }
   };
 
   type QuestionResponse = {

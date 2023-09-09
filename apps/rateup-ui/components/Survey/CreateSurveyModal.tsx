@@ -1,10 +1,13 @@
 import {
+  Box,
   Button,
   Group,
   Modal,
   MultiSelect,
   Select,
   Stack,
+  Switch,
+  Text,
   TextInput,
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
@@ -13,13 +16,14 @@ import { getTeamsByUser } from "../../backend/team/team.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useState} from 'react'
+import { useState } from 'react'
 
 interface FormValues {
   title: string;
   languages: Array<string>;
   teamId: string;
   type: string;
+  getLocation: boolean;
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
@@ -28,6 +32,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
     isError,
     isLoading,
     data: teams,
+    error,
   } = useQuery(["teamsByUser"], getTeamsByUser);
 
   let teamSelectData = teams?.data?.data?.map((team) => ({
@@ -48,6 +53,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       languages: [],
       teamId: null,
       type: surveyType ? surveyType : "web",
+      getLocation: false,
     },
     validate: {
       title: (value) => (value.length ? null : "Cannot be empty"),
@@ -80,16 +86,16 @@ export function CreateSurveyModal({ open, close, surveyType }) {
       message: `Hold on, your survey is getting created...`,
       autoClose: false,
       withCloseButton: false,
-  });
+    });
     createSurveyMutation.mutate(form.values);
-    
+
   };
   if (isLoading) {
     return null;
   }
   if (isError || !teams?.data?.data) {
-    // TODO: Handle error
-    // throw new Error("Failed to load teams");
+
+    console.error(error)
     notifications.show({
       id: "load-data",
       color: "red",
@@ -113,11 +119,12 @@ export function CreateSurveyModal({ open, close, surveyType }) {
           fontSize: '25px',
           fontWeight: 700,
           padding: "10px"
-        }}}
+        }
+      }}
     >
       <FormProvider form={form} >
         <form onSubmit={onSubmit}>
-          <Stack sx={{ minHeight: "300px"}} mt="xl">
+          <Stack sx={{ minHeight: "300px" }} mt="xl">
             <TextInput
               placeholder="Enter title"
               label="Title"
@@ -164,6 +171,18 @@ export function CreateSurveyModal({ open, close, surveyType }) {
                 {...form.getInputProps("type")}
               />
             )}
+            <Box>
+              <Switch
+                label="Save respondent's location"
+                {...form.getInputProps("getLocation")}
+              />
+              <Text
+                c="dimmed"
+                fz="xs"
+                >
+                  {`(Automatically fetched from the browser if the respondent allows it.)`}
+                </Text>
+            </Box>
             <Group position="right" pt="xl" mt="lg">
               <Button variant="subtle" onClick={close}>
                 Cancel

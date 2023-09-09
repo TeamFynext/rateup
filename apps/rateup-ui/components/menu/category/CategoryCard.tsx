@@ -58,7 +58,7 @@ export function CategoryCard({ category, handleDelete, handleEdit }: CategoryCar
             items.map((item) => (
               <tr key={item.id}>
                 <td width={100}>
-                  <img style={{ borderRadius: "4px", aspectRatio: "1/1" }} src={getFileUrlFromKey(item.images[0])} alt={item.name} width="100px" />
+                  <img style={{ borderRadius: "4px", aspectRatio: "1/1" }} src={item.images.length > 0 ? getFileUrlFromKey(item.images[0]) : "/images/no_image_template.jpeg"} alt={item.name} width="100px" />
                 </td>
                 <td>{item.name}</td>
                 <td>

@@ -28,7 +28,12 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       >
         <img
           width={"100%"}
-          src={getFileUrlFromKey(item.images[0])}
+          src={
+            item.images.length > 0 ? (
+              getFileUrlFromKey(item.images[0])
+            ) : (
+              "/images/no_image_template.jpeg"
+            )}
           style={{
             aspectRatio: "4 / 3",
           }} />

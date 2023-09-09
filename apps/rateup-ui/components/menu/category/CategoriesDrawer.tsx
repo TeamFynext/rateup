@@ -30,6 +30,8 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
           <Box
             key={c.id}
             mah="300px"
+            mih={"200px"}
+            miw="200px"
             sx={{
               overflow: "clip",
               position: "relative",
@@ -42,8 +44,14 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
             }}
           >
             <img
-              src={getFileUrlFromKey(c.image)}
-              width={"100%"} />
+              src={
+                c.image ? (
+                  getFileUrlFromKey(c.image)
+                ) : (
+                  "/images/no_image_template.jpeg"
+                )}
+              width={"100%"}
+            />
             <Box
               px="sm"
               py="2px"
