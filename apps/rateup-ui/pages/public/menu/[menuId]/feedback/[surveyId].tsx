@@ -18,6 +18,7 @@ export default function () {
       fluid px={largeScreen ? "10vw" : "1vw"} py="3vh"
       sx={{
         // TODO: add blur to background image
+        // TODO: add custom backgorund image
         backgroundImage: `url(${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg)`,
         backgroundSize: "cover",
         height: "100vh",
