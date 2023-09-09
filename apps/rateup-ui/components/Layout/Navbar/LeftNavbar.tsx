@@ -5,9 +5,7 @@ import {
   Center,
   Tooltip,
   UnstyledButton,
-  createStyles,
   Stack,
-  rem,
   Burger,
   useMantineTheme, Text, Group
 } from "@mantine/core";
@@ -20,71 +18,15 @@ import {
   IconSocial,
   IconSpeakerphone,
   IconPageBreak,
-  IconClipboardList
+  IconClipboardList,
+  IconChevronDown
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useMediaQuery } from '@mantine/hooks';
 import { useUser } from '../../../context/UserContext';
-
-const useStyles = createStyles((theme) => ({
-  iconlink: {
-    width: rem(50),
-    height: rem(50),
-    borderRadius: theme.radius.md,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    // transition: "background-color 0.3s ease",
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[0]
-        : theme.colors.gray[7],
-
-    "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[5]
-          : theme.colors.gray[0],
-    },
-  },
-
-  iconLabellink: {
-    height: rem(50),
-    borderRadius: theme.radius.md,
-    // transition: "background-color 0.3s ease",
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[0]
-        : theme.colors.gray[7],
-
-    "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[5]
-          : theme.colors.gray[0],
-    },
-  },
-
-  active: {
-    "&, &:hover": {
-      backgroundColor: theme.fn.variant({
-        variant: "light",
-        color: theme.primaryColor,
-      }).background,
-      color: theme.fn.variant({ variant: "light", color: theme.primaryColor })
-        .color,
-    },
-  },
-
-  navbar: {
-    transition: "width 0.3s ease"
-  },
-  submenuLink: {
-    paddingLeft: theme.spacing.md,
-  },
-
-}));
+import { useLeftNavStyles } from "./Navbar.styles";
+import { IconChevronUp } from "@tabler/icons-react";
 
 interface NavbarLinkProps {
   icon: React.FC<any>;
@@ -93,55 +35,58 @@ interface NavbarLinkProps {
   opened: boolean;
   submenus?:  NavbarLinkProps[];
   role?: string;
+  setOpened? : React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function NavbarLink({ icon: Icon, label, href , opened, submenus, role}: NavbarLinkProps) {
+function NavbarLink({ icon: Icon, label, href , opened, submenus, role, setOpened}: NavbarLinkProps) {
   const router = useRouter();
-  const { classes, cx } = useStyles();
-  const { user, setUser } = useUser();
+  const { classes, cx } = useLeftNavStyles();
+  const { user } = useUser();
 
   const isSubmenuActive = (submenus) => {
     return submenus?.some((submenu) => router.asPath === submenu.href) || false;
   };
   
   const isActive = router.asPath === href || isSubmenuActive(submenus);
-const [submenuOpen, setSubmenuOpen] = useState(isActive);
+  const [submenuOpen, setSubmenuOpen] = useState(isActive);
 
-  const handleSubmenuClick = () => {
-    setSubmenuOpen(!submenuOpen);
-  };
-
-  const handleMouseEnter = () => {
-    setSubmenuOpen(true);
-  }
-
-  const handleMouseLeave = () => {
-    setSubmenuOpen(false);
+  const handleMenuClick = () => {
+    if(submenus){
+      setSubmenuOpen(!submenuOpen)
+      !opened && submenus && router.push(submenus[0].href)
+      !opened && submenus && setOpened(true)
+    }else{
+      router.push(href);
+    }
   }
 
   if (role && user?.role !== role) {
     return null;
   }
 
+  const transitionClasses = {
+    transition: "all 0.8s ease", 
+  };
+  
   return (
-    <> 
+    <span style={opened ? transitionClasses : {}}> 
     {
-    
     opened ? 
-    <span           onMouseEnter={submenus ? handleMouseEnter : undefined}
-    onMouseLeave={submenus ? handleMouseLeave : undefined} >
-    <Link href={href} passHref>
+    <span>
         <UnstyledButton
-          className={cx(classes.iconLabellink, { [classes.active]: isActive })}
+          className={cx(classes.iconLabellink, { [classes.active]: isActive && submenus },  
+            { [classes.submenuActive]: isActive && !submenus })}
+          onClick={ handleMenuClick}
         >
-          <Group pl="sm" sx={{minWidth:"230px"}}>
-            <Icon size="1.2rem" stroke={1.5} />
-            <Text fz="md" >{label}</Text>
+          <Group px="sm" sx={{minWidth:"230px"}} position="apart">
+            <Group>
+               <Icon size="1.2rem" stroke={1.5} />
+              <Text fz="md" >{label}</Text>
+            </Group>
+            {submenus && (submenuOpen ? <IconChevronUp /> :<IconChevronDown />) }
           </Group>
-         
         </UnstyledButton>
         
-      </Link>
       {Array.isArray(submenus) && submenuOpen && submenus.map(submenu => 
             <Group className={cx(classes.submenuLink)}>
               <NavbarLink 
@@ -155,17 +100,16 @@ const [submenuOpen, setSubmenuOpen] = useState(isActive);
       </span>
     
   :
-    <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
-      <Link href={href} passHref>
+    <Tooltip label={label} position="right">
         <UnstyledButton
           className={cx(classes.iconlink, { [classes.active]: isActive })}
+          onClick={ handleMenuClick}
         >
           <Icon size="1.2rem" stroke={1.5} />
         </UnstyledButton>
-      </Link>
     </Tooltip>
   }
-    </>
+    </span>
   );
 }
 
@@ -196,18 +140,21 @@ const mockdata = [
     { icon: WhasappSurveyIcon, label: 'WhatsApp Survey', href: '/dashboard/whatsappsurvey' },
     { icon: IconPageBreak, label: 'Merge Surveys', href: '/dashboard/LandingPages' }
   ] },
-  { icon: IconDeviceDesktopAnalytics, label: 'Testinomials', href: '/dashboard/' },
+  { icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
   { icon: IconSpeakerphone, label: "Promotion", href: '/dashboard/promotion'},
-  { icon: IconPageBreak, label: "Merge Survey", href: '/dashboard/LandingPages'},
   {icon: IconClipboardList, label: "Menu", href: '/dashboard/menu'}
 ];
 
-const LeftNavbar = () => {
-  const [opened, setOpened] = useState(false);
+interface  iProps {
+  opened: boolean
+  setOpened : React.Dispatch<React.SetStateAction<boolean>>
+}
+
+const LeftNavbar = ({opened, setOpened}: iProps) => {
   const theme = useMantineTheme();
   const isLargerThanSm = useMediaQuery("(min-width: 768px)");
   const { user, setUser } = useUser();
-  const { classes, cx } = useStyles();
+  const { classes, cx } = useLeftNavStyles();
 
 
   const links = mockdata.map((link) => {
@@ -219,11 +166,11 @@ const LeftNavbar = () => {
 
     if (link?.role) {
       if (user?.role === link?.role) {
-        return <NavbarLink opened={opened} {...link} key={link.label}           submenus={submenusWithOpened}
+        return <NavbarLink opened={opened} setOpened={setOpened} {...link} key={link.label}           submenus={submenusWithOpened}
         />;
       }
     } else {
-      return <NavbarLink  opened={opened} {...link} key={link.label}           submenus={submenusWithOpened}
+      return <NavbarLink  opened={opened} setOpened= {setOpened} {...link} key={link.label}           submenus={submenusWithOpened}
       />;
     }
   });
@@ -240,21 +187,16 @@ const LeftNavbar = () => {
 
   return (
     <>
-<Navbar width={{ base: opened ? 260 : 90 }} p="md"  className={classes.navbar}
-onMouseEnter={handleMouseEnter}
- onMouseLeave={handleMouseLeave}>
+<Navbar width={{ base: opened ? 260 : 90 }} p="md"  className={classes.navbar}>
   <Group position={opened ? "apart" : "center"} mt={25}>
-  {
-  opened &&  <Link href="/dashboard">
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-             alt="RateUp Logo" width={130} height={30}  ml="sm"/>
-          </Link>
-        }
-
-          {
-  !opened &&   
   <Center >
-   
+  {
+  opened && 
+  <Link href="/dashboard">
+            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+             alt="RateUp Logo" width={130} height={30}  ml="sm" mr="50px"/>
+          </Link>
+  }
         <Burger
           opened={opened}
           onClick={() => {
@@ -262,9 +204,8 @@ onMouseEnter={handleMouseEnter}
           }}
           size="sm"
           color={theme.colors.gray[6]}
-        />      </Center>
-
-}
+        />      
+  </Center>
 
           </Group>
        

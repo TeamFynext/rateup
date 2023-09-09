@@ -1,4 +1,4 @@
-﻿import React, {useEffect} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {
     AppShell,
     useMantineTheme,
@@ -19,7 +19,7 @@ const useStyles = createStyles((theme) => ({
   
     appShellBody: {
       paddingLeft:"10vw",
-      paddingRight:"10vw"
+      paddingRight:"10vw",
     },
 
 }));
@@ -29,6 +29,7 @@ export default ({ children }) => {
     const theme = useMantineTheme();
     const { classes } = useStyles();
     const router = useRouter();
+    const [opened, setOpened] = useState(false);
 
     const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>('userInfo', null);
     const { setUser } = useUser();
@@ -47,7 +48,6 @@ export default ({ children }) => {
       });
 
       useEffect(() => {
-        // console.log("query refetching...")
         if (userQueryData?.data) {
           setUserInfo(userQueryData); // update localStorage
         }
@@ -80,13 +80,15 @@ export default ({ children }) => {
                             background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
                             padding:0 ,
                             margin: 0,
-                            paddingTop: '10px'
+                            paddingTop: '10px',
+                            marginLeft: opened ? "130px" : 0,
+                            transition: "margin-left 0.3s ease-in-out", 
                         },
                     }}
 
-                navbar={<LeftNavbar />}
+                navbar={<LeftNavbar opened={opened} setOpened={setOpened}/>}
                 header={
-                        <HeaderTabs />
+                        <HeaderTabs opened={opened}  />
                     }
                 >
                     <Container className={classes.appShellBody} fluid>

@@ -30,9 +30,14 @@ import { Navbar } from '../Navbar/Navbar';
 import { useStyles } from './Header.styles';
 import { useUser } from '../../../context/UserContext';
 
-export function HeaderTabs({mode} : {mode?: string}) {
+interface  iProps {
+  mode? : string
+  opened?: boolean
+}
+
+export function HeaderTabs({mode, opened} : iProps) {
   const { classes, theme, cx } = useStyles();
-  const [opened, { toggle }] = useDisclosure(false);
+  const [isOpen, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
   const [userProfileAvatar, setUserProfileAvatar] = useState(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`)
  const { user, setUser } = useUser();
@@ -92,7 +97,13 @@ export function HeaderTabs({mode} : {mode?: string}) {
 
   return (
     <div className={classes.header}>
-      <Container className={classes.mainSection} fluid>
+      <Container 
+          style={{
+            marginLeft: opened ? "130px" : "0", 
+            transition: "margin-left 0.3s ease-in-out", 
+          }}
+          className={classes.mainSection} 
+      fluid>
 
       {mode !== "GUEST" 
 
@@ -105,7 +116,7 @@ export function HeaderTabs({mode} : {mode?: string}) {
         
         
 
-          <Burger opened={opened} onClick={toggle} className={classes.burger} size="sm" />
+          <Burger opened={isOpen} onClick={toggle} className={classes.burger} size="sm" />
 
           <Group position="apart">
           {/* <Paper shadow="sm"
