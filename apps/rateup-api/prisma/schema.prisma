@@ -207,8 +207,8 @@ model Respondent {
   name                        String?
   phone                       String
   email                       String?
-  team                        Team?                         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                      String?                       @db.Uuid
+  team                        Team                          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                      String                        @db.Uuid
   responses                   SurveyResponse[]
   rgroups                     RespondentGroupRelation[]
   RespondentSurveySendHistory RespondentSurveySendHistory[]
