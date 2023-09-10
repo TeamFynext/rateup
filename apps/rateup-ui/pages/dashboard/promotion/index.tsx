@@ -1,11 +1,10 @@
 import { Box, Container, Flex, Loader, Select, Tabs, Text } from "@mantine/core";
-import { IndividualsPanel } from "../../../components/Promotion/RightPanel/IndividualChat";
-import { GroupPanel } from "../../../components/Promotion/RightPanel/GroupChat";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import SelectedTeamContext from "../../../context/SelectedTeam";
 import { PromotionTab } from "../../../types/enums";
+import PromotionRootPanel from "../../../components/Promotion/RootPanel";
 
 export default function Promotion() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -24,14 +23,9 @@ export default function Promotion() {
         <Flex justify={"end"} mb="xs">
           <TeamSelector selectedTeamId={selectedTeamId} setSelectedTeamId={setSelectedTeamId} />
         </Flex>
-        <Box sx={{ border: "solid black 2px", borderRadius: "8px", height: "90vh", display: "flex" }}>
+        <Box sx={{ height: "90vh" }}>
           <SelectedTeamContext.Provider value={{ selectedTeamId }}>
-          <Tabs.Panel value={PromotionTab.Groups} sx={{ flexGrow: 1 }}>
-            <GroupPanel activeTab={activeTab} setActiveTab={setActiveTab} />
-          </Tabs.Panel>
-          <Tabs.Panel value={PromotionTab.Individuals} sx={{ flexGrow: 1 }}>
-            <IndividualsPanel activeTab={activeTab} setActiveTab={setActiveTab} />
-          </Tabs.Panel>
+            <PromotionRootPanel activeTab={activeTab} setActiveTab={setActiveTab} />
           </SelectedTeamContext.Provider>
         </Box>
       </Tabs>
@@ -60,6 +54,9 @@ export function TeamSelector({ selectedTeamId, setSelectedTeamId }) {
     return <Text>Something went wrong!</Text>
   }
   const teams = teamRes?.data?.data;
+  if (!teams) {
+    return <Text>No teams found!</Text>
+  }
   const teamOptions = teams.map(team => ({ value: team.teamId, label: team.teamName }));
 
   return (

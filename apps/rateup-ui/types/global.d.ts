@@ -206,4 +206,20 @@ declare global {
     categories: FullCategory[]
   }
 
+  type Respondent = {
+    id: string
+    createdAt: Date
+    name: string | null
+    phone: string
+    email: string | null
+    teamId: string | null
+  }
+
+  type RGroup = {
+    id: string
+    createdAt: Date
+    name: string
+    teamId: string
+  }
+
 }

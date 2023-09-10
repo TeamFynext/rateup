@@ -1,43 +1,14 @@
-import { Flex, Divider, useMantineTheme, Text, Box, Button, ActionIcon, Avatar, Center, Group, Stack, Tooltip } from "@mantine/core"
-import { useState, useRef, useEffect, useContext } from "react"
-import { useDeleteRespondentFromRGroupMutation, useDeleteRGroupMutation, useRespondentsByRGroup, useRGroups, useRGroupSurveySendHistory, useSendSurveyToRGroupMutation, useUpdateRGroupMutation } from "../../../backend/respondent/rgroup/rgroup.query"
+import { Flex, useMantineTheme, Text, Box, Button, ActionIcon, Avatar, Center, Group, Stack, Tooltip } from "@mantine/core"
+import { useRef, useEffect } from "react"
+import { useDeleteRespondentFromRGroupMutation, useDeleteRGroupMutation, useRespondentsByRGroup, useRGroupSurveySendHistory, useSendSurveyToRGroupMutation, useUpdateRGroupMutation } from "../../../backend/respondent/rgroup/rgroup.query"
 import { SurveySendDetailComponent, SendSurveyComponent } from "../ChatComponents"
-import ImportRespondents, { ImportRespondentsModal } from "../ImportRespondents"
-import { SideBar } from "../Sidebar"
 import { MainWindowHeader } from "./ChatHeader"
 import { IconTrash } from "@tabler/icons-react"
 import { DetailsHeader, NameEditor } from "./IndividualChat"
 import { useDisclosure } from "@mantine/hooks"
 import { AddRespondents, AddRespondentsPanel } from "./AddRespondentsModal"
-import SelectedTeamContext from "../../../context/SelectedTeam"
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
 import RightPanelRoot from "."
-
-export function GroupPanel({activeTab, setActiveTab}) {
-  const [selected, setSelected] = useState(0)
-  const { selectedTeamId } = useContext(SelectedTeamContext)
-  const { isLoading, error, data: rgroups } = useRGroups(selectedTeamId)
-  const [importModalIsOpen, { open, close }] = useDisclosure(false)
-
-  // TODO: add loading ui
-  if (isLoading || !rgroups) return <CenteredSpinner />
-  if (error) {
-    // console.log(error)
-    return <div>Error</div>
-  }
-
-  const selectedGroup = rgroups.find((r) => r.id === selected)
-  return (
-    <Flex sx={{ height: "100%" }}>
-      <SideBar activeTab={activeTab} setActiveTab={setActiveTab} items={rgroups} selected={selected} setSelected={setSelected} >
-        <ImportRespondents onClick={open} />
-        <ImportRespondentsModal opened={importModalIsOpen} close={close} createGroup={true} />
-      </SideBar>
-      <Divider orientation="vertical" />
-      <GroupMainWindow rgroup={selectedGroup} openCreateGroup={open} />
-    </Flex>
-  )
-}
 
 function ChatWindow({ rgroup, openDetails }) {
   const { colors } = useMantineTheme();
@@ -76,32 +47,32 @@ function ChatWindow({ rgroup, openDetails }) {
   }
 
   return (
-    <RightPanelRoot>
-      <Flex direction={"column"} sx={{ height: "100%" }}>
-        <MainWindowHeader image={null} title={rgroup.name} onClick={openDetails} />
-        <Box sx={{
-          flex: "1 1 0",
-          backgroundColor: "white",
-          overflowY: "scroll",
-        }}
-        >
-          <Button onClick={scrollToBottom} variant="light" color="gray" fullWidth>Scroll to bottom</Button>
-          {
-            rGroupSurveySendHistory.map(({ survey, id, createdAt }) => {
-              return <SurveySendDetailComponent key={id} name={survey.title} createdAt={createdAt} />
-            })
-          }
-          <div ref={bottomRef}></div>
-        </Box>
-        <SendSurveyComponent sendHandler={sendHandler} />
-      </Flex>
-    </RightPanelRoot>
+    <Flex direction={"column"} sx={{ height: "100%" }}>
+      <MainWindowHeader title={rgroup.name} onClick={openDetails} />
+      <Box sx={{
+        flex: "1 1 0",
+        backgroundColor: "white",
+        overflowY: "scroll",
+      }}
+      >
+        {
+          rGroupSurveySendHistory.map(({ survey, id, createdAt }) => {
+            return <SurveySendDetailComponent key={id} name={survey.title} createdAt={createdAt} />
+          })
+        }
+        <div ref={bottomRef}></div>
+      </Box>
+      <SendSurveyComponent sendHandler={sendHandler} />
+    </Flex>
   )
 }
 
 
-
-function DetailsWindow({ rgroup, onClose }) {
+interface DetailsWindowProps {
+  rgroup: RGroup,
+  onClose: () => void
+}
+function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
   const { isLoading, isError, data: respondents } = useRespondentsByRGroup(rgroup.id)
   const deleteRespFromGroupMutation = useDeleteRespondentFromRGroupMutation()
   const deleteRGroup = useDeleteRGroupMutation()
@@ -114,15 +85,23 @@ function DetailsWindow({ rgroup, onClose }) {
   if (isError) return <div>Error</div>
 
   return (
-    <Flex direction={"column"} sx={{ height: "fill", flex: 3 }}>
-      <DetailsHeader title={rgroup.phone} onClose={onClose} />
+    <Flex direction={"column"} sx={{ height: "100%", flex: 3, backgroundColor: "#f0f0f0" }}>
+      <DetailsHeader title={rgroup.name} onClose={onClose} />
       <Box sx={{
         flex: "1 1 0",
-        backgroundColor: "whitesmoke",
         overflowY: "scroll",
       }}
       >
-        <Stack spacing={"xs"} >
+        <Stack
+          py="sm"
+          px="xs"
+          spacing={"xs"}
+          sx={{
+            '> *': {
+              borderRadius: "8px"
+            }
+          }}
+        >
           <Center sx={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
             <Avatar size={"xl"} radius="xl" />
             <NameEditor name={rgroup.name} onEdit={(name: string) => updateRGroupMutation.mutate({ name })} />
@@ -154,7 +133,14 @@ function DetailsWindow({ rgroup, onClose }) {
               }
             </Stack>
           </Flex>
-          <Stack p="sm" sx={{ backgroundColor: "white" }}>
+          <Stack
+           p="sm"
+           sx={{ 
+            backgroundColor: "inherit",
+            '> button': {
+              borderRadius: "100px"
+            }
+         }}>
             <AddRespondents rgroupId={rgroup.id} />
             <Button
               color="red"
@@ -171,7 +157,7 @@ function DetailsWindow({ rgroup, onClose }) {
   );
 }
 
-function GroupMainWindow({ rgroup, openCreateGroup }) {
+export function GroupMainWindow({ rgroup, openCreateGroup }) {
   const { colors } = useMantineTheme();
   const [showDetails, { open, close }] = useDisclosure(false)
 

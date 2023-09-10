@@ -2,14 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addRespondents, createRgroupFromPhoneNumbers, deleteRGroup, deleteRespondentFromRGroup, getRGroupSurveySendHistory, getRGroups, getRGroupsByTeamId, getRespondentsByRGroup, sendSurveyToRGroup, updateRGroup } from "./rgroup.api";
 import { notifications } from "@mantine/notifications";
 
-export const useRGroups = (teamId: string) => {
+export const useRGroups = (teamId: string, enabled: boolean) => {
   if (teamId) {
     return useQuery({
+      enabled,
       queryKey: ["rgroup", "team", teamId],
       queryFn: () => getRGroupsByTeamId(teamId)
     })
   } else {
     return useQuery({
+      enabled,
       queryKey: ["rgroup"],
       queryFn: () => getRGroups()
     })

@@ -23,7 +23,7 @@ function AddModal({ opened, onClose, rgroupId }) {
 
   const { selectedTeamId } = useContext(SelectedTeamContext)
 
-  const { data: respondents, isLoading, error } = useRespondents(selectedTeamId)
+  const { data: respondents, isLoading, error } = useRespondents(selectedTeamId, !!selectedTeamId)
   const { data: includedRespondents, isLoading: includedLoading, error: includedError } = useRespondentsByRGroup(rgroupId)
   const addRespondentsMutation = useAddRespondentsMutation(rgroupId)
 
@@ -89,13 +89,11 @@ function AddModal({ opened, onClose, rgroupId }) {
 
 export function AddRespondentsPanel({ onClick, placeholder }) {
   return (
-    <RightPanelRoot>
-      <Center h="100%">
-        <Stack onClick={onClick} align="center" sx={{ cursor: "pointer" }} >
-          <IconUserPlus size={"75px"} />
-          <Text>{placeholder}</Text>
-        </Stack>
-      </Center>
-    </RightPanelRoot>
+    <Center h="100%">
+      <Stack onClick={onClick} align="center" sx={{ cursor: "pointer" }} >
+        <IconUserPlus size={"75px"} />
+        <Text>{placeholder}</Text>
+      </Stack>
+    </Center>
   )
 }

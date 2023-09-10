@@ -13,7 +13,7 @@ export function SurveySendDetailComponent({ name, createdAt }) {
       <Box
         p="md"
         sx={{
-          backgroundColor: colors.dark[7],
+          background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%);",
           color: "white",
           height: "80px",
           width: "250px",
@@ -26,14 +26,12 @@ export function SurveySendDetailComponent({ name, createdAt }) {
       >
         <Text>{name}</Text>
         <Text sx={{
-          color: colors.dark[2],
           fontSize: "0.8rem",
           position: "absolute",
           bottom: "10px",
           right: "10px",
         }}>{dayjs(createdAt).format("DD-MM-YYYY")}</Text>
         <Text sx={{
-          color: colors.dark[2],
           fontSize: "0.8rem",
           position: "absolute",
           bottom: "10px",
@@ -110,8 +108,9 @@ export function SendSurveyComponent({ sendHandler }) {
     }
   }
   return (
-    <Group p="xs" sx={{ backgroundColor: colors.dark[7] }}>
+    <Flex gap={"md"} p="xs" sx={{ width: "100%" }} align={"center"}>
       <Autocomplete
+        radius={"xl"}
         placeholder="Search for survey to send"
         data={surveys.map(({ title }) => title)}
         sx={{ flexGrow: 1 }}
@@ -119,11 +118,15 @@ export function SendSurveyComponent({ sendHandler }) {
         onChange={setSelectedSurvey}
       />
       <Button
+        radius={"xl"}
         rightIcon={<IconSend size="1.1rem" />}
         onClick={handleSend}
+        sx={{
+          flexGrow: 0
+        }}
       >
         Send
       </Button>
-    </Group >
+    </Flex >
   )
 }
