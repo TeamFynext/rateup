@@ -31,11 +31,40 @@ const ByMenuIdParamsSchema = z.object({
     menuId: z.string(),
 })
 
+const menuPublicResponseSchema = z.object({
+    id: z.string(),
+    displayName: z.string(),
+    locationText: z.string().optional(),
+    locationUrl: z.string().optional(),
+    websiteText: z.string().optional(),
+    websiteUrl: z.string().optional(),
+    logo: z.string().optional(),
+})
+
+const fullMenuPublicResponseSchema = z.object({
+    ...menuPublicResponseSchema.shape,
+    categories: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        image: z.string().optional(),
+        items: z.array(z.object({
+            id: z.string(),
+            name: z.string(),
+            description: z.string().optional(),
+            images: z.array(z.string()).optional(),
+            videoUrl: z.string().optional(),
+            price: z.any(),
+        }))
+    }))
+})
+
 export const { schemas: menuSchemas, $ref: $Mref } = buildJsonSchemas({
     menuInputSchema,
     menuSchema,
     updateMenuInputSchema,
-    ByMenuIdParamsSchema
+    ByMenuIdParamsSchema,
+    menuPublicResponseSchema,
+    fullMenuPublicResponseSchema
 }, {
     $id: 'menuSchema'
 })
