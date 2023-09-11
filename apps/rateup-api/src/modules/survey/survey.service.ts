@@ -1,11 +1,14 @@
 import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
+  CreateSurveyLandingInput,
   UpdateGoogleLinkInput,
+  UpdateLandingPageInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
 import { getTeamsByUserId } from "../team/team.service";
+import defaultTheme from "../welcomeTheme/defaultTheme";
 const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
 
@@ -14,17 +17,92 @@ export async function createSurvey(
   createdBy: string
 ) {
   const survey = await prisma.survey.create({
-    data: { 
-      ...input, 
+    data: {
+      ...input,
       title: input.title,
       teamId: input.teamId,
-      createdBy 
-    },   
+      createdBy,
+    },
   });
+  //-------------create a default landing page theme todo-------------
+
+  let landingData = defaultTheme;
+
+  let LandingPage = await prisma.welcomeTheme.create({
+    data: {
+      ...landingData,
+      headerText: landingData.headerText,
+      descText: landingData.descText,
+      buttonText: landingData.buttonText,
+      headerStyles: landingData.headerStyles,
+      descStyles: landingData.descStyles,
+      buttonStyles: landingData.buttonStyles,
+      bgStyles: landingData.bgStyles,
+      logoStyles: landingData.logoStyles,
+      surveyId: survey.id,
+      bgUrl: landingData.bgUrl,
+      bgType: landingData.bgType,
+    },
+  });
+
   return survey;
 }
 
-export async function cloneSurvey(surveyId: string, userId: string, teamId: string) {
+//----------------create survey landing-----------------
+export async function createSurveyLanding(
+  input: CreateSurveyLandingInput,
+  createdBy: string
+) {
+  const Landing = await prisma.surveyLanding.create({
+    data: {
+      ...input,
+      title: input.title,
+      // teamId: input.teamId,
+      createdBy,
+    },
+  });
+  //-------------create a default landing page theme todo-------------
+
+  let landingData = defaultTheme;
+
+  let LandingPage = await prisma.welcomeTheme.create({
+    data: {
+      ...landingData,
+      headerText: landingData.headerText,
+      descText: landingData.descText,
+      buttonText: landingData.buttonText,
+      headerStyles: landingData.headerStyles,
+      descStyles: landingData.descStyles,
+      buttonStyles: landingData.buttonStyles,
+      bgStyles: landingData.bgStyles,
+      logoStyles: landingData.logoStyles,
+      landingId: Landing.id,
+      bgUrl: landingData.bgUrl,
+      bgType: landingData.bgType,
+    },
+  });
+  return Landing;
+}
+//----------------update survey landing page details-----------------
+export async function updateSurveyLanding(
+  id,
+  input: UpdateLandingPageInput
+  // createdBy: string
+) {
+  const Landing = await prisma.surveyLanding.update({
+    where: {
+      id,
+    },
+    data: input,
+  });
+  return Landing;
+}
+
+export async function cloneSurvey(
+  surveyId: string,
+  userId: string,
+  teamId: string
+) {
   const survey = await prisma.survey.findUnique({
     where: {
       id: surveyId,
@@ -39,24 +117,26 @@ export async function cloneSurvey(surveyId: string, userId: string, teamId: stri
         title: {
           startsWith: survey.title,
         },
-        teamId: survey.teamId
+        teamId: survey.teamId,
       },
       orderBy: {
-        title: 'asc'
-      }
+        title: "asc",
+      },
     });
 
     let maxCopyNumber = 0;
 
     existingSurveys.forEach((existingSurvey) => {
       const suffix = existingSurvey.title.slice(survey.title.length);
-      if(suffix.startsWith(' Copy ')) {
-        const copyNumberStr = suffix.slice(' Copy '.length);
+      if (suffix.startsWith(" Copy ")) {
+        const copyNumberStr = suffix.slice(" Copy ".length);
         const copyNumber = parseInt(copyNumberStr, 10);
-        console.log(`Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`);
-        if(!isNaN(copyNumber)) {
+        console.log(
+          `Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`
+        );
+        if (!isNaN(copyNumber)) {
           maxCopyNumber = Math.max(maxCopyNumber, copyNumber);
-          console.log('Found a valid copy number: ', maxCopyNumber);
+          console.log("Found a valid copy number: ", maxCopyNumber);
         }
       }
     });
@@ -75,9 +155,8 @@ export async function cloneSurvey(surveyId: string, userId: string, teamId: stri
     });
 
     return newSurvey;
-
   } else {
-    return "Survey not found to duplicate"
+    return "Survey not found to duplicate";
   }
 }
 
@@ -97,6 +176,34 @@ export async function getSurveyById(id: string) {
   return survey;
 }
 
+//---------------get lnding page by landingId------------
+export async function getSurveyBylandingId(landingid: string) {
+  const Landingpages = await prisma.surveyLanding.findUnique({
+    where: {
+      id: landingid,
+    },
+  });
+  //-------------form array if survey ids ---------
+  let surveyIds = [];
+  for (let i = 0; i < Landingpages?.surveys?.length; i++) {
+    surveyIds.push(Landingpages.surveys[i]);
+  }
+
+  //----------get surveys from surveyids------------
+  const surveyResponse = await prisma.survey.findMany({
+    where: {
+      id: {
+        in: surveyIds,
+      },
+    },
+  });
+
+  if (!Landingpages || Landingpages.surveys.length == 0) {
+    throw new Error(`Could not find survey with id ${landingid}`);
+  }
+  return surveyResponse;
+}
+
 export async function getGoogleUrlBySurveyId(id: string) {
   const survey = await prisma.survey.findUnique({
     where: {
@@ -107,10 +214,10 @@ export async function getGoogleUrlBySurveyId(id: string) {
     },
   });
 
-  if(survey){
+  if (survey) {
     const team = await prisma.team.findUnique({
       where: {
-        id: survey.teamId
+        id: survey.teamId,
       },
       select: {
         googleLink: true,
@@ -118,13 +225,10 @@ export async function getGoogleUrlBySurveyId(id: string) {
     });
 
     return team;
-
-  }else{
-    return { error: "Survey not found"}
+  } else {
+    return { error: "Survey not found" };
   }
-
 }
-
 
 /**
  * Returns surveys from ALL TEAMs in which the user is a member of
@@ -149,6 +253,42 @@ export async function getSurveysByUserId(userId: string) {
   );
   return surveysWithoutQuestions;
 }
+
+/**
+ * Returns summary(responses, stats) of active surveys
+ * from ALL TEAMs in which the user is a member of
+ * @param userId
+ * @returns Array of active surveys - responses, stats
+ */
+export async function getActiveSurveysSummmaryByUserId(userId: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData.map(
+    (item: { teamId: string }) => item.teamId
+  );
+  const surveys = await prisma.survey.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+      active: true,
+    },
+    include: {
+      responses: true,
+      surveyStats: true,
+      team: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  const surveysWithoutQuestions = surveys.map((s) =>
+    excludeFields(s, ["questions", "password"])
+  );
+  return surveysWithoutQuestions;
+}
+
 /**
  * returns all whatsapp surveys
  * @param userId
@@ -156,6 +296,15 @@ export async function getSurveysByUserId(userId: string) {
  * @author harshad
  */
 
+export async function getSurveyLandingByUserId(userId: string) {
+  const surveysLanding = await prisma.surveyLanding.findMany({
+    where: { createdBy: userId },
+  });
+
+  return surveysLanding;
+}
+
+//------------get landing surevey list --------
 export async function getWhatsappSurveysByUserId(userId: string, type: string) {
   const teamData = await getTeamsByUserId(userId);
   const teamIds: string[] = teamData.map(
@@ -209,8 +358,10 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
   return survey;
 }
 
-export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) {
-
+export async function updateGoogleLink(
+  id: string,
+  data: UpdateGoogleLinkInput
+) {
   const survey = await prisma.survey.findUnique({
     where: {
       id,
@@ -220,10 +371,10 @@ export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) 
     },
   });
 
-  if(survey){
+  if (survey) {
     const team = await prisma.team.update({
       where: {
-        id: survey.teamId
+        id: survey.teamId,
       },
       data: {
         googleLink: data.googleLink,
@@ -231,9 +382,8 @@ export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) 
     });
 
     return team;
-
-  }else{
-    return { error: "Survey not found"}
+  } else {
+    return { error: "Survey not found" };
   }
 }
 

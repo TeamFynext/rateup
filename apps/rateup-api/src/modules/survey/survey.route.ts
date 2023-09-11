@@ -9,7 +9,13 @@ import {
   updateSurveyByIdHandler,
   updateSurveyPasswordHandler,
   getWhatsappSurveysHandler,
-  updateGoogleLinkHandler
+  updateGoogleLinkHandler,
+  createSurveyLandingHandler,
+  getSurveysLandingHandler,
+  getSurveyBylandingIdhandler,
+  getLandingPageByIdHandler,
+  updateSurveyLandingHandler,
+  getActiveSurveysSummaryHandler,
 } from "./survey.controller";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
@@ -32,9 +38,43 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     createSurveyHandler
   );
+  // ----------create survey landing page ---------
+  server.post(
+    "/createlanding",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        body: $Sref("createSurveyLandingRequestSchema"),
+        response: {
+          201: $Sref("createSurveyLandingResponseSchema"),
+        },
+      },
+    },
+    createSurveyLandingHandler
+  );
+  // ----------create survey landing page ---------
+  server.post(
+    "/updatelanding/:id",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        body: $Sref("createSurveyLandingRequestSchema"),
+        response: {
+          201: $Sref("createSurveyLandingResponseSchema"),
+        },
+      },
+    },
+    updateSurveyLandingHandler
+  );
 
   // get all surveys from user
   server.get("/", getSurveysHandler);
+
+  // get all active surveys summary from user
+  server.get("/summary/active", getActiveSurveysSummaryHandler);
+
+  // get all surveys from user
+  server.get("/surveylandings", getSurveysLandingHandler);
 
   // get all whatsappsurveys from user
   server.get("/whatsappsurveys", getWhatsappSurveysHandler);
@@ -50,6 +90,29 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     getSurveyByIdHandler
   );
+  // get landingpage by id
+  server.get(
+    "/landingpage/:id",
+    {
+      //----------to do ------verify access to landingpage session
+      preHandler: [verifySession()],
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+      },
+    },
+    getLandingPageByIdHandler
+  );
+  // get survey by landingid
+  server.get(
+    "/landingsurveys/:id",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+      },
+    },
+    getSurveyBylandingIdhandler
+  );
 
   //duplicate survey
   server.post(
@@ -63,7 +126,6 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     cloneSurveyHandler
   );
-
 
   interface GetSurveyByTeamParams {
     id: string;
@@ -100,11 +162,10 @@ export async function surveyRoutes(server: FastifyInstance) {
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
         body: $Sref("updateSurveyRequestSchema"),
-      }
+      },
     },
     updateSurveyByIdHandler
-
-  )
+  );
 
   server.put(
     "/password-update/:id",
@@ -113,10 +174,10 @@ export async function surveyRoutes(server: FastifyInstance) {
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
         body: $Sref("updateSurveyPasswordRequestSchema"),
-      }
+      },
     },
     updateSurveyPasswordHandler
-  )
+  );
 
   server.put(
     "/googlelink-update/:id",
@@ -125,11 +186,8 @@ export async function surveyRoutes(server: FastifyInstance) {
       schema: {
         params: $Sref("idParamsSchema"),
         body: $Sref("updateGoogleLinkRequestSchema"),
-      }
+      },
     },
     updateGoogleLinkHandler
-  )
-  
+  );
 }
-
-

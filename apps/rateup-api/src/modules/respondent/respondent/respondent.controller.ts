@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createRespondentsIndividually, getRGroupsByRespondentId, getRespondentById, getRespondentResponseHistory as getRespondentResponseHistory, getRespondentSurveyHistory, updateRespondentById, getRespondents, getRGroupsByPhone, getRespondentSurveyHistoryByPhone } from "./respondent.service";
+import { createRespondentsIndividually, getRGroupsByRespondentId, getRespondentById, getRespondentResponseHistory as getRespondentResponseHistory, getRespondentSurveyHistory, updateRespondentById, getRespondents, getRGroupsByPhone, getRespondentSurveyHistoryByPhone, deleteRespondentById } from "./respondent.service";
 import { CreateRespondentsInput, RespondentByIdParams, UpdateRespondentInput, respondentByPhoneParamsSchema } from "./respondent.schema";
 import Session from "supertokens-node/recipe/session";
 import { getTeamsByUserId } from "../../team/team.service";
@@ -29,7 +29,7 @@ export async function getAllRespondentsHandler(
  * @param reply 
  */
 export async function getRespondentsByTeamIdHandler(
-    request: FastifyRequest<{ Params: {teamId: string} }>,
+    request: FastifyRequest<{ Params: { teamId: string } }>,
     reply: FastifyReply
 ) {
     const { teamId } = request.params;
@@ -38,23 +38,23 @@ export async function getRespondentsByTeamIdHandler(
 }
 
 export async function createRespondentsHandler(
-    request: FastifyRequest<{ Body: CreateRespondentsInput}>,
+    request: FastifyRequest<{ Body: CreateRespondentsInput }>,
     reply: FastifyReply
 
 ) {
-    const { body: {respondents, teamId} } = request;
+    const { body: { respondents, teamId } } = request;
     // TODO: replace with batch operation
-    if(!respondents.every(r => r.phone != undefined || r.phone != null)) {
+    if (!respondents.every(r => r.phone != undefined || r.phone != null)) {
         throw new Error("Phone should not be null")
         return
     }
     // TODO: fix the below hacky type-error-fix. Find out why phone is marked as optional in respondents array.
-    await createRespondentsIndividually(teamId, respondents as Array<{phone: string, name?: string}>);
+    await createRespondentsIndividually(teamId, respondents as Array<{ phone: string, name?: string }>);
     reply.code(201).send();
 }
 
 export async function getRespondentByIdHandler(
-    request: FastifyRequest<{ Params: RespondentByIdParams}>,
+    request: FastifyRequest<{ Params: RespondentByIdParams }>,
     reply: FastifyReply
 ) {
     const { respondentId } = request.params;
@@ -71,7 +71,7 @@ export async function getAllRespondentSurveyHistoryHandler(
     request: FastifyRequest<{ Params: respondentByPhoneParamsSchema }>,
     reply: FastifyReply
 ) {
-    const {phone } = request.params;
+    const { phone } = request.params;
     const teamIds = await getTeamIdsFromSession(request, reply);
 
     const surveyHistory = await getRespondentSurveyHistoryByPhone(phone, teamIds)
@@ -83,7 +83,7 @@ export async function getRespSurveyHistoryByRespondentIdHandler(
     reply: FastifyReply
 ) {
     const { respondentId } = request.params;
-    const surveyHistory = await getRespondentSurveyHistory( respondentId);
+    const surveyHistory = await getRespondentSurveyHistory(respondentId);
     reply.send(surveyHistory);
 }
 
@@ -91,9 +91,9 @@ export async function getAllRespondentResponseHistoryHandler(
     request: FastifyRequest<{ Params: RespondentByIdParams }>,
     reply: FastifyReply
 ) {
-    const {respondentId } = request.params;
+    const { respondentId } = request.params;
 
-    const surveyHistory = await getRespondentResponseHistory( respondentId);
+    const surveyHistory = await getRespondentResponseHistory(respondentId);
     reply.send(surveyHistory);
 }
 
@@ -102,9 +102,9 @@ export async function getRespResponseHistoryByRespondentIdHandler(
     reply: FastifyReply
 ) {
 
-    const {respondentId } = request.params;
+    const { respondentId } = request.params;
 
-    const surveyHistory = await getRespondentResponseHistory( respondentId);
+    const surveyHistory = await getRespondentResponseHistory(respondentId);
     reply.send(surveyHistory);
 }
 
@@ -124,9 +124,9 @@ export async function getAllRGroupsByPhoneHandler(
     reply: FastifyReply
 ) {
     const teamIds = await getTeamIdsFromSession(request, reply);
-    const {phone } = request.params;
+    const { phone } = request.params;
 
-    const rGroups = await getRGroupsByPhone( phone, teamIds)
+    const rGroups = await getRGroupsByPhone(phone, teamIds)
     reply.send(rGroups);
 }
 
@@ -134,9 +134,9 @@ export async function getRGroupsByRespondentIdHandler(
     request: FastifyRequest<{ Params: RespondentByIdParams }>,
     reply: FastifyReply
 ) {
-    const {respondentId } = request.params;
+    const { respondentId } = request.params;
 
-    const rGroups = await getRGroupsByRespondentId( respondentId);
+    const rGroups = await getRGroupsByRespondentId(respondentId);
     reply.send(rGroups);
 }
 
@@ -153,4 +153,14 @@ export async function getTeamIdsFromSession(request: FastifyRequest, reply: Fast
     const teams = await getTeamsByUserId(userId);
     const teamIds = teams.map(team => team.teamId);
     return teamIds;
+}
+
+export async function deleteRespondentByIdHandler(
+    request: FastifyRequest<{ Params: RespondentByIdParams }>,
+    reply: FastifyReply
+) {
+    const { respondentId } = request.params;
+
+    const res = await deleteRespondentById(respondentId);
+    reply.send(res)
 }

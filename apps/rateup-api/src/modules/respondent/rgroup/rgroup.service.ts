@@ -1,41 +1,37 @@
 import prisma from "../../../utils/prisma";
-import { getTeamsByUserId } from "../../team/team.service";
-import { createRespondent, getRespondent } from "../respondent/respondent.service";
 import { CreateRGroupInput, UpdateRgroupInput } from "./rgroup.schema";
-
 
 export async function createRGroupFromPhoneNumbers(input: CreateRGroupInput) {
 
-    // TODO: do batch operation & optimize the code
-    const { teamId } = input;
-    // 1. Gets or creates respondent for each phone number
-    const respondentIds = await Promise.all(input.data.map(async ({ phone, name }) => {
-        let respondent = await getRespondent(teamId, phone);
-        if (!respondent) {
-            respondent = await createRespondent(teamId, phone, name)
-        }
-        return respondent.id;
-    }))
-
-    // 2. Creates respondent group
     const rgroup = await prisma.rGroup.create({
         data: {
             name: input.name,
-            teamId
+            teamId: input.teamId
         }
     })
 
-    // 3. Creates respondent group relation
+    await prisma.respondent.createMany({
+        data: input.data.map((phoneNumber) => ({
+            phone: phoneNumber.phone,
+            name: phoneNumber.name,
+            teamId: input.teamId
+        })),
+        skipDuplicates: true
+    });
+    const phoneNumbers = input.data.map((phoneNumber) => phoneNumber.phone);
+    const respondents = await prisma.respondent.findMany({
+        where: {
+            phone: {
+                in: phoneNumbers
+            }
+        }
+    });
 
-    // refer connectOrCreate and optimize the code if possible.
-    // https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#connect-or-create
     await prisma.respondentGroupRelation.createMany({
-        data: [
-            ...respondentIds.map((respondentId) => ({
-                respondentId,
-                rgroupId: rgroup.id
-            }))
-        ]
+        data: respondents.map((respondent) => ({
+            respondentId: respondent.id,
+            rgroupId: rgroup.id
+        }))
     })
 }
 

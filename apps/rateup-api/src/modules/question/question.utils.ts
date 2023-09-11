@@ -3,7 +3,7 @@ import { QuestionType as Q } from "../../types/enums";
 import { arrayEquals } from "../../utils/array";
 
 // Copied from frontend. Update accordingly.
-export const logicSupportedTypes  = [Q.LD, Q.YN, Q.Rating, Q.Smiley, Q.Opinion, Q.MCQ, Q.MSQ]
+export const logicSupportedTypes  = [Q.LD, Q.YN, Q.Rating, Q.Smiley, Q.Opinion, Q.MCQ, Q.MSQ, Q.DDSS, Q.DDMS]
 export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], userResponse: any): LogicAction | string {
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
@@ -16,7 +16,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
     for (const logic of logicJumps) {
       switch (logic.condition) {
         case LogicCondition.Equals:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = arrayEquals(userResponse, logic.response);
           } else {
             flag = userResponse === logic.response;
@@ -28,13 +28,13 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         case LogicCondition.IncludesAllOf:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = logic.response.every((val: string) => userResponse.includes(val));
           }
           break;
 
         case LogicCondition.IncludesAnyOf:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = logic.response.some((val: string) => userResponse.includes(val));
           } else {
             flag = logic.response.includes(userResponse);
@@ -42,7 +42,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         case LogicCondition.IncludesNoneOf:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = logic.response.every((val: string) => !userResponse.includes(val));
           } else {
             flag = !logic.response.includes(userResponse);

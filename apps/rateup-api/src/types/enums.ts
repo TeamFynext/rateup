@@ -9,6 +9,8 @@ export enum QuestionType {
   Email = "Email",
   MCQ = "Multiple Choice",
   MSQ = "Multiple Select",
+  DDSS = "Dropdown SingleSelect",
+  DDMS = "Dropdown MultiSelect",
   Phone = "Phone",
   Photo = "Photo",
   Testimonial = "Testimonial",
@@ -44,4 +46,8 @@ export enum LogicCondition {
   IncludesAnyOf = "Includes Any Of",
   IncludesAllOf = "Includes All Of",
   Submitted = "is Submitted",
+}
+export enum MenuItemPriceType {
+  FIXED = "FIXED",
+  VARIANT = "VARIANT"
 }

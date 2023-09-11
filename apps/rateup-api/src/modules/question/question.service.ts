@@ -83,7 +83,8 @@ export async function updateQuestion(
 ) {
   const questions = await getQuestionsBySurveyId(surveyId);
   const index = questions.findIndex((q) => q.id === questionId);
-  questions[index] = { ...questions[index], ...input };
+  // questions[index] = { ...questions[index], ...input };
+  questions[index] = { ...questions[index], ...input } as Question;
 
   await updateQuestionsOnSurvey(surveyId, questions);
 }

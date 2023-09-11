@@ -208,4 +208,14 @@ export async function getRespondentsByPhone(phone: string, teams: string[]) {
     });
 
     return respondents;
-}   
+}
+
+export async function deleteRespondentById(id: string) {
+    const res = await prisma.respondent.delete({
+        where: {
+            id
+        }
+    });
+
+    return res;
+}

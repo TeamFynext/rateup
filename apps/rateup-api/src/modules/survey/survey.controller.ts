@@ -2,9 +2,13 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   cloneSurvey,
   createSurvey,
+  createSurveyLanding,
   deleteSurveyById,
+  getActiveSurveysSummmaryByUserId,
   getGoogleUrlBySurveyId,
   getSurveyById,
+  getSurveyBylandingId,
+  getSurveyLandingByUserId,
   getSurveysByTeam,
   getSurveysByUserId,
   getWhatsappSurveysByUserId,
@@ -12,12 +16,25 @@ import {
   updateGoogleLink,
   updateStartedSurvey,
   updateSurveyById,
+  updateSurveyLanding,
   updateSurveyPassword,
   updateVisitedSurvey,
   verifySurveyPassword,
 } from "./survey.service";
-import { CloneSurveyInput, CreateSurveyInput, GetSurveyByIdParams, IdParamInput, UpdateGoogleLinkInput, UpdateSurveyInput, UpdateSurveyPassword } from "./survey.schema";
+import {
+  CloneSurveyInput,
+  CreateSurveyInput,
+  CreateSurveyLandingInput,
+  GetSurveyByIdParams,
+  GetSurveyLandingByIdParams,
+  IdParamInput,
+  UpdateGoogleLinkInput,
+  UpdateSurveyInput,
+  UpdateSurveyPassword,
+} from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
+import { Prisma } from '@prisma/client';
+import { getLandingPageById } from "../landingPage/landingpage.service";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -32,8 +49,58 @@ export async function createSurveyHandler(
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
 
-    console.log(data,">>>data survey controller---")
+    // console.log(data, ">>>data survey controller---");
     const survey = await createSurvey(data, userId);
+    reply.code(201).send(survey);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
+
+//------------create survey landing handler--------------
+export async function createSurveyLandingHandler(
+  request: FastifyRequest<{
+    Body: CreateSurveyLandingInput;
+  }>,
+  reply: FastifyReply
+) {
+  const data = request.body;
+
+  // console.log("caretesurvye--213", data);
+  try {
+    // TODO add types for session
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+
+    // console.log(data, ">>>data survey controller---");
+    const survey = await createSurveyLanding(data, userId);
+    reply.code(201).send(survey);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
+//------------update survey landing handler--------------
+export async function updateSurveyLandingHandler(
+  request: FastifyRequest<{
+    Body: CreateSurveyLandingInput;
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  const data = request.body;
+
+  try {
+    // TODO add types for session
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    let landingId = request.params.id
+
+    // console.log(data, ">>>data survey controller---");
+    const survey = await updateSurveyLanding(landingId,data);
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);
@@ -58,6 +125,46 @@ export async function getSurveyByIdHandler(
     reply.code(500);
   }
 }
+//---------------get landing page by id ----------
+export async function getLandingPageByIdHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getLandingPageById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
+}
+
+
+
+//-----------get survey by landingid------------
+export async function getSurveyBylandingIdhandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    // console.log(request.params.id,'>>>>params lookups')
+    const survey = await getSurveyBylandingId(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
+}
 
 export async function fetchGoogleUrlBySurveyIdHandler(
   request: FastifyRequest<{
@@ -65,25 +172,22 @@ export async function fetchGoogleUrlBySurveyIdHandler(
   }>,
   reply: FastifyReply
 ) {
-
   let url;
 
   try {
-    url =  await getGoogleUrlBySurveyId(request.params.id);
+    url = await getGoogleUrlBySurveyId(request.params.id);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
     return;
   }
-  
-  if ("error" in url){
-    reply.code(404).send({ success: false, data: url});
-  }else{
-    reply.code(201).send({ success: true, data: url});
-  }
-  
-}
 
+  if ("error" in url) {
+    reply.code(404).send({ success: false, data: url });
+  } else {
+    reply.code(201).send({ success: true, data: url });
+  }
+}
 
 export async function cloneSurveyHandler(
   request: FastifyRequest<{
@@ -94,24 +198,23 @@ export async function cloneSurveyHandler(
 ) {
   let session = await Session.getSession(request, reply);
   let userId = session.getUserId();
-  let teamId  = request?.body?.teamId;
+  let teamId = request?.body?.teamId;
   let survey;
   try {
     survey = await cloneSurvey(request.params.id, userId, teamId);
 
     // Check if the survey is an error message
-    if (typeof survey === 'string') {
+    if (typeof survey === "string") {
       reply.code(400).send({ success: false, message: survey });
       return;
     }
-
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
     return;
   }
 
-  reply.code(201).send({ success: true, data: survey});
+  reply.code(201).send({ success: true, data: survey });
 }
 
 export async function getSurveyByTeamHandler(
@@ -137,14 +240,47 @@ export async function getSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    console.log("gtsurvey")
+    // console.log("gtsurvey");
     //const userId = request.session.getUserId();
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
-    const surveys = await getSurveysByUserId(userId)
+    const surveys = await getSurveysByUserId(userId);
     reply.send(surveys);
   } catch (e) {
-    console.error(e)
+    console.error(e);
+    reply.code(500);
+  }
+}
+
+export async function getActiveSurveysSummaryHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    const surveys = await getActiveSurveysSummmaryByUserId(userId);
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e);
+    reply.code(500);
+  }
+}
+
+//----------get survey landing -----------
+export async function getSurveysLandingHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    // console.log("gtsurvey");
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    const surveys = await getSurveyLandingByUserId(userId);
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e);
     reply.code(500);
   }
 }
@@ -156,15 +292,15 @@ export async function getWhatsappSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    console.log("gtsurvey")
+    // console.log("gtsurvey");
     //const userId = request.session.getUserId();
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
-    let type="whatsapp"
-    const surveys = await getWhatsappSurveysByUserId(userId,type)
+    let type = "whatsapp";
+    const surveys = await getWhatsappSurveysByUserId(userId, type);
     reply.send(surveys);
   } catch (e) {
-    console.error(e)
+    console.error(e);
     reply.code(500);
   }
 }
@@ -185,7 +321,15 @@ export async function deleteSurveyByIdHandler(
     }
   } catch (e) {
     console.log(e);
-    reply.code(500);
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
+      reply.code(400).send({
+        error: 'Cannot delete Survey because it has associated responses. Cleanup responses and Try Again!'
+      });
+    } else {
+      reply.code(500).send({
+        error: 'An unknown error occurred.'
+      });
+    }
   }
 }
 
@@ -211,7 +355,6 @@ export async function updateSurveyByIdHandler(
   }
 }
 
-
 export async function updateSurveyPasswordHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
@@ -225,7 +368,9 @@ export async function updateSurveyPasswordHandler(
       reply.code(404);
     } else {
       await updateSurveyPassword(request.params.id, request.body);
-      reply.code(200).send({ message: "Password Changes Updated successfully." });
+      reply
+        .code(200)
+        .send({ message: "Password Changes Updated successfully." });
     }
   } catch (e) {
     console.log(e);
@@ -241,14 +386,17 @@ export async function verifySurveyPasswordHandler(
   reply: FastifyReply
 ) {
   try {
-      const verifyPassword = await verifySurveyPassword(request.params.id, request.body);
-      if (!verifyPassword) {
-        reply.code(404);
-      } else {
-        reply.code(200).send({ status: "success", data: verifyPassword});
-      }
-    } catch (e) {
-    reply.code(500).send({status: "error", message: e});
+    const verifyPassword = await verifySurveyPassword(
+      request.params.id,
+      request.body
+    );
+    if (!verifyPassword) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success", data: verifyPassword });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
   }
 }
 
@@ -259,14 +407,14 @@ export async function visitedSurveyHandler(
   reply: FastifyReply
 ) {
   try {
-      const updateVisited = await updateVisitedSurvey(request.params.id);
-      if (!updateVisited) {
-        reply.code(404);
-      } else {
-        reply.code(200).send({ status: "success"});
-      }
-    } catch (e) {
-    reply.code(500).send({status: "error", message: e});
+    const updateVisited = await updateVisitedSurvey(request.params.id);
+    if (!updateVisited) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
   }
 }
 
@@ -277,14 +425,14 @@ export async function startedSurveyHandler(
   reply: FastifyReply
 ) {
   try {
-      const updateStarted = await updateStartedSurvey(request.params.id);
-      if (!updateStarted) {
-        reply.code(404);
-      } else {
-        reply.code(200).send({ status: "success"});
-      }
-    } catch (e) {
-    reply.code(500).send({status: "error", message: e});
+    const updateStarted = await updateStartedSurvey(request.params.id);
+    if (!updateStarted) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
   }
 }
 
@@ -295,14 +443,14 @@ export async function completedSurveyHandler(
   reply: FastifyReply
 ) {
   try {
-      const updateCompleted = await updateCompletedSurvey(request.params.id);
-      if (!updateCompleted) {
-        reply.code(404);
-      } else {
-        reply.code(200).send({ status: "success"});
-      }
-    } catch (e) {
-    reply.code(500).send({status: "error", message: e});
+    const updateCompleted = await updateCompletedSurvey(request.params.id);
+    if (!updateCompleted) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
   }
 }
 
@@ -316,10 +464,13 @@ export async function updateGoogleLinkHandler(
   try {
     const survey = await getSurveyById(request.params.id);
     if (!survey) {
-      reply.code(404).send({ message: "Survey not found."});
+      reply.code(404).send({ message: "Survey not found." });
     } else {
       await updateGoogleLink(request.params.id, request.body);
-      reply.code(200).send({ message: "Success", data: "Google Link Updated successfully." });
+      reply.code(200).send({
+        message: "Success",
+        data: "Google Link Updated successfully.",
+      });
     }
   } catch (e) {
     console.log(e);

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createRespondentsHandler, getAllRGroupsByPhoneHandler, getRespondentByIdHandler, getAllRespondentResponseHistoryHandler, getAllRespondentSurveyHistoryHandler, getAllRespondentsHandler, updateRespondentByIdHandler, getRespondentsByTeamIdHandler, getRespSurveyHistoryByRespondentIdHandler, getRespResponseHistoryByRespondentIdHandler, getRGroupsByRespondentIdHandler } from "./respondent.controller";
+import { createRespondentsHandler, getAllRGroupsByPhoneHandler, getRespondentByIdHandler, getAllRespondentResponseHistoryHandler, getAllRespondentSurveyHistoryHandler, getAllRespondentsHandler, updateRespondentByIdHandler, getRespondentsByTeamIdHandler, getRespSurveyHistoryByRespondentIdHandler, getRespResponseHistoryByRespondentIdHandler, getRGroupsByRespondentIdHandler, deleteRespondentByIdHandler } from "./respondent.controller";
 import { $Respondentref } from "./respondent.schema";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 
@@ -49,4 +49,13 @@ export async function respondentRoutes(server: FastifyInstance) {
         },
         getRGroupsByRespondentIdHandler
     );
+    server.delete(
+        "/:respondentId",
+        {
+            schema: {
+                params: $Respondentref("respondentByIdParamsSchema"),
+            }
+        },
+        deleteRespondentByIdHandler
+    )
 }

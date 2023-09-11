@@ -11,6 +11,23 @@ const logicJumpSchema = z.object({
   action: z.string()
 })
 
+const validationRulesSchema = z.object({
+  length: z.object({
+    min: z.string(),
+    max: z.string(),
+    errorMessage: z.string(),
+  }).optional(),
+  wordCount: z.object({
+    min: z.string(),
+    max: z.string(),
+    errorMessage: z.string(),
+  }).optional(),
+  textType: z.union([z.null(), z.object({
+    type: z.string(),
+    errorMessage: z.string(),
+  })]).optional(),
+});
+
 const questionCore = {
   title: z.record(z.string(), z.string()),
   description: z.record(z.string(), z.string()),
@@ -22,7 +39,8 @@ const questionCore = {
     minOpinion: z.number().optional(),
     reqOptions: z.array(z.string()).optional(),
   })]).optional(),
-  logic: z.array(logicJumpSchema).optional()
+  logic: z.array(logicJumpSchema).optional(),
+  validationRules: z.union([z.null(), validationRulesSchema]).optional(),
 };
 
 export const questionSchema = z.object({
@@ -65,6 +83,7 @@ const updateQuestionRequestSchema = z.object({
     minOpinion: z.number().optional(),
     reqOptions: z.array(z.string()).optional(),
   })]).optional(),
+  validationRules: z.union([z.null(), validationRulesSchema]).optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());

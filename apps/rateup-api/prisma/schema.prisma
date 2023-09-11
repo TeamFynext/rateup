@@ -60,14 +60,15 @@ model User {
 }
 
 model Org {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime     @default(now())
-  name        String
-  owner       User         @relation(fields: [ownerId], references: [id])
-  ownerId     String       @db.Uuid
-  members     OrgMember[]
-  teams       Team[]
-  invitations Invitation[]
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt           DateTime     @default(now())
+  name                String
+  owner               User         @relation(fields: [ownerId], references: [id])
+  ownerId             String       @db.Uuid
+  whatsappAccessToken String?
+  members             OrgMember[]
+  teams               Team[]
+  invitations         Invitation[]
 }
 
 model OrgMember {
@@ -93,9 +94,11 @@ model Team {
   members     TeamMember[]
   surveys     Survey[]
   invitations Invitation[]
-  whatsappAccessToken        String?
-  Respondent  Respondent[]
-  RGroup      RGroup[]
+
+  Respondent Respondent[]
+  RGroup     RGroup[]
+
+  menu Menu[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -127,41 +130,54 @@ model Invitation {
 }
 
 model Survey {
-  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime?        @updatedAt
-  title       String
-  description String?          @default("")
-  questions   Json[]           @default([])
-  languages   String[]
-  user        User             @relation(fields: [createdBy], references: [id])
-  createdBy   String           @db.Uuid
-  team        Team             @relation(fields: [teamId], references: [id])
-  teamId      String           @db.Uuid
-  active      Boolean          @default(true)
-  responses   SurveyResponse[]
-  sessions    WaSession[]
-  isProtected Boolean          @default(false)
-  kioskMode   Boolean          @default(false)
-  password    String?
-  surveyStats SurveyStats?
-  type        String           @default("web")
-
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime?        @updatedAt
+  title              String
+  description        String?          @default("")
+  questions          Json[]           @default([])
+  languages          String[]
+  user               User             @relation(fields: [createdBy], references: [id])
+  createdBy          String           @db.Uuid
+  team               Team             @relation(fields: [teamId], references: [id])
+  teamId             String           @db.Uuid
+  active             Boolean          @default(true)
+  responses          SurveyResponse[]
+  sessions           WaSession[]
+  isProtected        Boolean          @default(false)
+  kioskMode          Boolean          @default(false)
+  password           String?
+  surveyStats        SurveyStats?
+  type               String           @default("web")
+  getLocation        Boolean          @default(false)
+  welcomePageEnabled Boolean          @default(false)
   RespondentSurveySendHistory RespondentSurveySendHistory[]
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
 }
 
+model SurveyLanding {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime? @updatedAt
+  title              String
+  header             String    @default("")
+  description        String?   @default("")
+  surveys            String[]
+  createdBy          String    @db.Uuid
+  welcomePageEnabled Boolean   @default(false)
+}
+
 model SurveyResponse {
-  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime         @default(now())
-  survey       Survey           @relation(fields: [surveyId], references: [id])
-  surveyId     String           @db.Uuid
-  responses    Json[]
-  language     String           @default("")
-  platform     ResponsePlatform @default(WEB)
-  // TODO: should this relation be a separate model?
-  respondent   Respondent?      @relation(fields: [respondentId], references: [id])
-  respondentId String?          @db.Uuid
+  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt           DateTime         @default(now())
+  survey              Survey           @relation(fields: [surveyId], references: [id])
+  surveyId            String           @db.Uuid
+  responses           Json[]
+  language            String           @default("")
+  platform            ResponsePlatform @default(WEB)
+  respondent          Respondent?      @relation(fields: [respondentId], references: [id])
+  respondentId        String?          @db.Uuid
+  locationCoordinates Json? // { latitude: string, longitude: string }
 }
 
 model SurveyStats {
@@ -190,10 +206,10 @@ model Respondent {
   id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt                   DateTime                      @default(now())
   name                        String?
-  phone                       String                        
-  email                       String?                       
-  team                        Team?                         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                      String?                       @db.Uuid
+  phone                       String
+  email                       String?
+  team                        Team                          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                      String                        @db.Uuid
   responses                   SurveyResponse[]
   rgroups                     RespondentGroupRelation[]
   RespondentSurveySendHistory RespondentSurveySendHistory[]
@@ -241,4 +257,75 @@ model RGroupSurveySendHistory {
   survey    Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId  String   @db.Uuid
   createdAt DateTime @default(now())
+}
+
+//----------welcome page styles-----------
+model WelcomeTheme {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+  landingId    String?   @db.Uuid
+  surveyId     String?   @db.Uuid
+  headerText   String    @default("")
+  descText     String    @default("")
+  buttonText   String    @default("")
+  headerStyles Json
+  descStyles   Json
+  buttonStyles Json
+  bgStyles     Json
+  logoStyles   Json
+  logoUrl      String?
+  bgUrl        String?
+  bgType       String?   @default("bgcolor")
+}
+
+model Menu {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime @default(now())
+  name         String // name of the menu
+  displayName  String // name displayed to clients (eg: Restaurant's Name)
+  locationText String? // location of the restaurant
+  locationUrl  String? // google maps url
+  websiteUrl   String? // website url
+  websiteText  String? // text to display for website url
+  logo         String? // logo url
+
+  categories MenuCategory[]
+  // add a relation to team
+  team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String         @db.Uuid
+}
+
+model MenuCategory {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime   @default(now())
+  name      String
+  menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId    String     @db.Uuid
+  items     MenuItem[]
+  image     String?
+}
+
+model MenuItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime @default(now())
+  name        String
+  description String
+  images      String[]
+  videoUrl    String?
+  // Since items might have different variants, we store price as a json.
+  // The json will have the following structure:
+  // {
+  //   "price": 100,    |  if there are no variants this is the price
+  //   "variants": [
+  //     {
+  //       "name": "small",
+  //       "price": 100
+  //     }
+  //   ]
+  // }
+
+  price      Json
+  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String       @db.Uuid
 }
