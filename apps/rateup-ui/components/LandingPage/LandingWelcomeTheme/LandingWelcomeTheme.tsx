@@ -16,6 +16,7 @@ import {
   Notification,
   Image,
   Switch,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
@@ -162,18 +163,22 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
   const editSurvey = useEditLandingPageMutation(LandingId, setIsLoading);
 
   const handleSwitchChange = (e) => {
+    setIsLoading(true)
     editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
   };
 
   return (
     <Flex gap={20}>
       <Paper sx={{ flex: 5 }} shadow="xl">
+      <LoadingOverlay visible={IsLoading} overlayBlur={2} />
         <Flex mb={10} p={10}>
           {" "}
           <Switch
             label="Enable Welcome page"
             checked={LandingPageData?.welcomePageEnabled}
             color="dark"
+            ml={"md"}
+            mt={"md"}
             onChange={handleSwitchChange}
           />{" "}
         </Flex>

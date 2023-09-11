@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import {
   Paper,
   Text,
@@ -20,27 +20,49 @@ import {
   IconMail,
   IconMessage,
 } from "@tabler/icons-react";
-function ShareLandingPage({LandingId}) {
+function ShareLandingPage({ LandingId }) {
   return (
     <Stack>
-        <Paper p="md">
-          <SimpleGrid spacing="xl">
-            {/* //-----------------web survey share url ----------------- */}
+      <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
+        <SimpleGrid spacing="xl" cols={2}>
+          {/* //-----------------web survey share url ----------------- */}
 
-            <Stack p="md" dir="row">
-              <Title order={4}>Share Survey</Title>
+          <Stack p="md" dir="row">
+            <Title order={4}>Share Survey</Title>
 
-              <CopyLinkComponent
-                value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/landing/${LandingId}`}
-              />
-            </Stack>
-          </SimpleGrid>
-        </Paper>
-      </Stack>
-  )
+            <CopyLinkComponent
+              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/landing/${LandingId}`}
+            />
+          </Stack>
+
+          {/* //-----------icons part-------------- */}
+
+          <Stack sx={{ maxWidth: "400px" }} p="md">
+            <Title order={4} align="center">
+              How would you like to survey people?
+            </Title>
+            <Group position="center">
+              <ActionIcon size="xl" variant="light">
+                <IconMail size="2rem" />
+              </ActionIcon>
+              <ActionIcon size="xl" variant="light">
+                <IconBrandWhatsapp size="2rem" />
+              </ActionIcon>
+              <ActionIcon size="xl" variant="light">
+                <IconBrandFacebook size="2rem" />
+              </ActionIcon>
+              <ActionIcon size="xl" variant="light">
+                <IconMessage size="2rem" />
+              </ActionIcon>
+            </Group>
+          </Stack>
+        </SimpleGrid>
+      </Paper>
+    </Stack>
+  );
 }
 
-export default ShareLandingPage
+export default ShareLandingPage;
 
 const CopyLinkComponent = ({ value }) => {
   return (
