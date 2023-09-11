@@ -23,6 +23,11 @@ import ShareQR from "./ShareQR";
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
 
+  const getSurveyUrl=(surveyId)=>{
+    return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`
+
+  }
+
   return (
     <Stack>
       <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
@@ -69,7 +74,7 @@ const ShareSurvey = ({ survey }) => {
         </SimpleGrid>
       </Paper>
 
-      <ShareQR surveyId={surveyId} />
+      <ShareQR  url={getSurveyUrl(surveyId)}/>
     </Stack>
   );
 };

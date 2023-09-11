@@ -20,7 +20,11 @@ import {
   IconMail,
   IconMessage,
 } from "@tabler/icons-react";
+import ShareQR from "../../Survey/ShareSurvey/ShareQR";
 function ShareLandingPage({ LandingId }) {
+  const getLandingUrl = (LandingId) => {
+    return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/landing/${LandingId}`;
+  };
   return (
     <Stack>
       <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
@@ -58,6 +62,7 @@ function ShareLandingPage({ LandingId }) {
           </Stack>
         </SimpleGrid>
       </Paper>
+      <ShareQR url={getLandingUrl(LandingId)}/>
     </Stack>
   );
 }
