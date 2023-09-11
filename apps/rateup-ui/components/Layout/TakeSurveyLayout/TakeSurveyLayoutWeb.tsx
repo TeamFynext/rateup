@@ -52,6 +52,13 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
   useEffect(() => {
     if (start === true) setStartClicked(true);
   }, [start]);
+  useEffect(() => {
+    if (survey?.welcomePageEnabled){
+      setStartClicked(false);
+    }else{
+      setStartClicked(true);
+    }
+  }, [survey?.welcomePageEnabled]);
 
   const handleStartClick = () => {
     updateStarted.mutate(surveyId);
@@ -73,6 +80,7 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
         fluid
         px={largeScreen ? "10vw" : "5vw"}
         py="3vh"
+       
         sx={{ background: "#F7F6FB", minHeight: "100vh", height: "100%" }}
       >
         <>
@@ -102,13 +110,13 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
           p="sm"
           radius="lg"
           // shadow="lg"
-          sx={{ minHeight: "80vh", height: "100%" }}
+          sx={{ minHeight: "75vh", height: "100%" }}
           bg={"#F7F6FB"}
         >
-          <Container fluid>
+        <Paper radius="lg"   bg={"#fff"}>
             {/* .........Survey Header Section.......... */}
 
-            {startClicked ? (
+            {startClicked  ? (
               currentQuestionNo > 0 && (
                 <Grid
                   justify="center"
@@ -166,7 +174,7 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               />
             )}
             {startClicked && children.children}
-          </Container>
+          </Paper>
 
           <Center mt={20}>
             <Text fz="sm">Powered by </Text>

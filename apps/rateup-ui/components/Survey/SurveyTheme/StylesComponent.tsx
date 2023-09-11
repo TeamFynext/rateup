@@ -12,7 +12,8 @@ function StylesComponent({
   currentStyles,
   setCurrentstyles,
   loadFont,
-  saveLoading
+  saveLoading,
+  setbgImage
 }) {
   return (
     <div>
@@ -27,6 +28,7 @@ function StylesComponent({
             saveStyles={saveStyles}
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
+            saveLoading={saveLoading}
           />
         </div>
       )}
@@ -38,6 +40,7 @@ function StylesComponent({
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
             saveLoading={saveLoading}
+            setbgImage={setbgImage}
           />
         </div>
       )}

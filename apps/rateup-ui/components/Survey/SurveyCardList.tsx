@@ -125,7 +125,6 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     }
     return found;
   };
-
   return (
     <>
       <Flex style={{ flexDirection: "column", width: "100%" }}>
@@ -139,16 +138,19 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
             { maxWidth: "md", cols: 1 },
           ]}
         >
-          {surveys.map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              // survey={surveys}
-              // setSelectedTeamId={setSelectedTeamId}
-              handleCheckBox={handleCheckBox}
-              isChecked={isChecked}
-            />
-          ))}
+          {surveys.map((s) => {
+            if (s.type == "web")
+              return (
+                <SurveyCard
+                  key={s.id}
+                  survey={s}
+                  // survey={surveys}
+                  // setSelectedTeamId={setSelectedTeamId}
+                  handleCheckBox={handleCheckBox}
+                  isChecked={isChecked}
+                />
+              );
+          })}
         </SimpleGrid>
       </Flex>
     </>

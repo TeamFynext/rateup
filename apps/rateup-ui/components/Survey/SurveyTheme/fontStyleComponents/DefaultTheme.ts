@@ -47,6 +47,7 @@ const defaultStyles = {
  
   bgType: "bgcolor",
  
-  bgUrl: ""
+  bgUrl: "",
+  logoUrl: ""
 };
 export default defaultStyles;

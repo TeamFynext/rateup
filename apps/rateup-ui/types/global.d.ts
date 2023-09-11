@@ -52,6 +52,7 @@ declare global {
     kioskMode: boolean;
     type: string;
     getLocation: boolean;
+    welcomePageEnabled: boolean;
   };
 
 

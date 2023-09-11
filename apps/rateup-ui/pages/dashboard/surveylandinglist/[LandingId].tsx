@@ -19,18 +19,27 @@ import LandingWelcomeTheme from "../../../components/LandingPage/LandingWelcomeT
 import LandingSurveysList from "./LandingSurveysList";
 import { useRouter } from "next/router";
 import ShareLandingPage from "../../../components/LandingPage/ShareLandingPage/ShareLandinPage";
-export default ()=> {
-
-
+import { useLandingPage } from "../../../backend/surveys/surveys.query";
+export default () => {
   const router = useRouter();
   const { LandingId } = router.query;
 
+
+  if (Array.isArray(LandingId)) {
+    throw new Error("surveyId is an array");
+  }
+  const {
+    isLoading: isLandingPageLoading,
+    error: LandingPageError,
+    data: LandingPageData,
+  } = useLandingPage(LandingId);
+
   return (
     <Flex direction={"column"}>
-      <StyledTabs variant="pills" defaultValue="surveys" >
+      <StyledTabs variant="pills" defaultValue="surveys">
         <Flex justify={"center"}>
-          <Tabs.List grow >
-            <Tabs.Tab value="surveys" >
+          <Tabs.List grow>
+            <Tabs.Tab value="surveys">
               <Text
                 sx={(theme) => ({
                   fontFamily: `Greycliff CF, ${theme.fontFamily}`,
@@ -66,29 +75,25 @@ export default ()=> {
           </Tabs.List>
         </Flex>
 
-        <Tabs.Panel value="surveys" pt="md" >
-          <LandingSurveysList/>
+        <Tabs.Panel value="surveys" pt="md">
+          <LandingSurveysList />
         </Tabs.Panel>
         <Tabs.Panel value="welcome" pt="md">
-         
-              <LandingWelcomeTheme LandingId={LandingId?LandingId:null}/>
-           
+          <LandingWelcomeTheme LandingPageData={LandingPageData} LandingId={LandingId ? LandingId : null} />
         </Tabs.Panel>
         {/* //-----------------share  ------------- */}
         <Tabs.Panel value="share" pt="md">
           {/* <LandingWelcomeTheme LandingId={LandingId ? LandingId : null} /> */}
-          <ShareLandingPage LandingId={LandingId ? LandingId : null}/>
+          <ShareLandingPage  LandingId={LandingId ? LandingId : null} />
         </Tabs.Panel>
       </StyledTabs>
     </Flex>
   );
-}
-
+};
 
 function StyledTabs(props: TabsProps) {
   return (
     <Tabs
-    
       unstyled
       styles={(theme) => ({
         tab: {
@@ -133,7 +138,7 @@ function StyledTabs(props: TabsProps) {
             backgroundColor: "#3F5BA9 ",
             borderColor: theme.colors.blue[7],
             color: theme.white,
-            // borderRadius:8 
+            // borderRadius:8
           },
         },
 

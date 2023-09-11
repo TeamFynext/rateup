@@ -94,7 +94,7 @@ export default () => {
               }}
             >
               <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
+              {survey.type!="whatsapp" && <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>}
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>

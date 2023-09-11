@@ -102,7 +102,6 @@ function TakeSurvey() {
     if (survey.getLocation) {
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
-          console.log("position", { latitude: coords.latitude, longitude: coords.longitude });
           setCoordinates({ latitude: coords.latitude, longitude: coords.longitude });
         },
         (error) => {

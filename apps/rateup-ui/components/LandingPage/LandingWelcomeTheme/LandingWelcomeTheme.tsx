@@ -15,6 +15,7 @@ import {
   BackgroundImage,
   Notification,
   Image,
+  Switch,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
@@ -30,15 +31,25 @@ import { useQueryClient } from "@tanstack/react-query";
 import defaultStyles from "../../Survey/SurveyTheme/fontStyleComponents/DefaultTheme";
 import WelcomePageView from "../../Survey/SurveyTheme/WelcomePageView";
 import StylesComponent from "../../Survey/SurveyTheme/StylesComponent";
-import { useCreateLandingWelcomeThemeMutation, useUpdateLandingWelcomeTheme, uselandingWelcomeThemeByLandingId } from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
+import {
+  useCreateLandingWelcomeThemeMutation,
+  useUpdateLandingWelcomeTheme,
+  uselandingWelcomeThemeByLandingId,
+} from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
+import { useUpdateSurveyLandingPageMutation } from "../../../backend/surveys/surveys.query";
+import { useEditLandingPageMutation } from "../../../backend/LandingPage/landingpage.query";
+import { uploadFile } from "../../../utils/file-upload/upload";
 
-
-function LandingWelcomeTheme({ LandingId }) {
+function LandingWelcomeTheme({ LandingPageData, LandingId }) {
   const [selectedType, setSelectedType] = useState("header");
   const [IsLoading, setIsLoading] = useState(false);
-  const [currentStyles, setCurrentstyles] = useState(defaultStyles);
+  const [currentStyles, setCurrentstyles] = useState({
+    ...defaultStyles,
+    logoUrlNotUploaded: "",
+    bgUrlNotUploaded: "",
+  });
   const [saveLoading, setSaveLoading] = useState(false);
-
+  const [bgImage, setbgImage] = useState("");
   //--------create welcome theme page-------------
   const createWelcomeThemeMutation = useCreateLandingWelcomeThemeMutation({
     setIsLoading,
@@ -90,10 +101,35 @@ function LandingWelcomeTheme({ LandingId }) {
     }
   }, [welocmeTheme]);
 
+  useEffect(() => {
+    if (welocmeTheme?.bgUrl) {
+      setbgImage(
+        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`
+      );
+    }
+  }, [welocmeTheme?.bgUrl]);
+
+  //----------------upload image file ------------
+  const uploadImage = async (value) => {
+    const fileKey = await uploadFile(value);
+    if (typeof fileKey === "string") {
+      return fileKey;
+    }
+  };
+
   //--------save the styles-----------
-  const saveStyles = (styles) => {
+  const saveStyles = async (styles) => {
     setIsLoading(true);
     setSaveLoading(true);
+
+    if (currentStyles?.logoUrlNotUploaded) {
+      let logo = await uploadImage(currentStyles?.logoUrlNotUploaded);
+      currentStyles.logoUrl = logo;
+    }
+    if (currentStyles?.bgUrlNotUploaded) {
+      let logo = await uploadImage(currentStyles?.bgUrlNotUploaded);
+      currentStyles.bgUrl = logo;
+    }
     if (currentStyles?.id) {
       //----------update styles-----
       notifications.show({
@@ -123,13 +159,30 @@ function LandingWelcomeTheme({ LandingId }) {
     //
   };
 
+  const editSurvey = useEditLandingPageMutation(LandingId, setIsLoading);
+
+  const handleSwitchChange = (e) => {
+    editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
+  };
+
   return (
     <Flex gap={20}>
       <Paper sx={{ flex: 5 }} shadow="xl">
+        <Flex mb={10} p={10}>
+          {" "}
+          <Switch
+            label="Enable Welcome page"
+            checked={LandingPageData?.welcomePageEnabled}
+            color="dark"
+            onChange={handleSwitchChange}
+          />{" "}
+        </Flex>
         <WelcomePageView
           setSelectedType={setSelectedType}
           currentStyles={currentStyles}
           setCurrentstyles={setCurrentstyles}
+          bgImage={bgImage}
+          selectedType={selectedType}
         />
       </Paper>
 
@@ -141,6 +194,7 @@ function LandingWelcomeTheme({ LandingId }) {
           setCurrentstyles={setCurrentstyles}
           loadFont={loadFont}
           saveLoading={saveLoading}
+          setbgImage={setbgImage}
         />
       </Paper>
     </Flex>
@@ -148,4 +202,3 @@ function LandingWelcomeTheme({ LandingId }) {
 }
 
 export default LandingWelcomeTheme;
-

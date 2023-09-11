@@ -9,7 +9,6 @@ import PromotionRootPanel from "../../../components/Promotion/RootPanel";
 export default function Promotion() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [activeTab, setActiveTab] = useState(PromotionTab.Groups);
-  console.log(activeTab)
 
   // print selectedTeamId when changed 
   // useEffect(() => {

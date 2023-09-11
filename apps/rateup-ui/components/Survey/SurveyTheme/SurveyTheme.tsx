@@ -15,6 +15,7 @@ import {
   BackgroundImage,
   Notification,
   Image,
+  Switch,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
@@ -30,10 +31,19 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import defaultStyles from "./fontStyleComponents/DefaultTheme";
 import WelcomePageView from "./WelcomePageView";
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import { uploadFile } from "../../../utils/file-upload/upload";
+import { Welcome } from "../../Welcome/Welcome";
+let isFirst = true;
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
   const [IsLoading, setIsLoading] = useState(false);
-  const [currentStyles, setCurrentstyles] = useState(defaultStyles);
+  const [bgImage, setbgImage] = useState("");
+  const [currentStyles, setCurrentstyles] = useState({
+    ...defaultStyles,
+    logoUrlNotUploaded: "",
+    bgUrlNotUploaded: "",
+  });
   const [saveLoading, setSaveLoading] = useState(false);
 
   //--------create welcome theme page-------------
@@ -86,11 +96,36 @@ function SurveyTheme({ survey }) {
       setCurrentstyles(welocmeTheme);
     }
   }, [welocmeTheme]);
+  useEffect(() => {
+    if (welocmeTheme?.bgUrl) {
+      setbgImage(
+        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`
+      );
+    }
+  }, [welocmeTheme?.bgUrl]);
+
+  //----------------upload image file ------------
+  const uploadImage = async (value) => {
+    const fileKey = await uploadFile(value);
+    if (typeof fileKey === "string") {
+      return fileKey;
+    }
+  };
 
   //--------save the styles-----------
-  const saveStyles = (styles) => {
+  const saveStyles = async (styles) => {
     setIsLoading(true);
     setSaveLoading(true);
+
+    if (currentStyles?.logoUrlNotUploaded) {
+      let logo = await uploadImage(currentStyles?.logoUrlNotUploaded);
+      currentStyles.logoUrl = logo;
+    }
+    if (currentStyles?.bgUrlNotUploaded) {
+      let logo = await uploadImage(currentStyles?.bgUrlNotUploaded);
+      currentStyles.bgUrl = logo;
+    }
+
     if (currentStyles?.id) {
       //----------update styles-----
       notifications.show({
@@ -120,13 +155,30 @@ function SurveyTheme({ survey }) {
     //
   };
 
+  const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
+
+  const handleSwitchChange = (e) => {
+    editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
+  };
   return (
     <Flex gap={20}>
       <Paper sx={{ flex: 5 }} shadow="xl">
+        <Flex mb={10} p={10}>
+          {" "}
+          <Switch
+            label="Enable Welcome page"
+            checked={survey?.welcomePageEnabled}
+            color="dark"
+            onChange={handleSwitchChange}
+          />{" "}
+        </Flex>
+
         <WelcomePageView
           setSelectedType={setSelectedType}
+          selectedType={selectedType}
           currentStyles={currentStyles}
           setCurrentstyles={setCurrentstyles}
+          bgImage={bgImage}
         />
       </Paper>
 
@@ -138,6 +190,7 @@ function SurveyTheme({ survey }) {
           setCurrentstyles={setCurrentstyles}
           loadFont={loadFont}
           saveLoading={saveLoading}
+          setbgImage={setbgImage}
         />
       </Paper>
     </Flex>
@@ -145,4 +198,3 @@ function SurveyTheme({ survey }) {
 }
 
 export default SurveyTheme;
-

@@ -35,11 +35,6 @@ const useStyles = createStyles((theme) => ({
 }));
 function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
 
-  useEffect(() => {
-    // if (surveyId) updateVisited.mutate(surveyId);
-    if(landingid)console.log("enter landingid")
-  }, []);
-
 
    //-----------get welcome page styles and content-------------
    const {
@@ -92,7 +87,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
   const { classes } = useStyles();
 
 
-  console.log(landingid,">lookashl")
   return (
     <>
       {/* .........Survey Welcome page.......... */}
@@ -104,10 +98,11 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
           spacing="xl"
           sx={{
             height: "75vh",
+            width:"100% !important",
             borderRadius: 18,
-            boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
+            // boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
           }}
-          bg={"white"}
+          // bg={"red"}
           style={LandingWelcomeData?.bgStyles}
         >
           <BackgroundImage

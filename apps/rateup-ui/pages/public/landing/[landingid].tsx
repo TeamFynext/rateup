@@ -8,14 +8,20 @@ import {
   Container,
   Image,
 } from "@mantine/core";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import { useRouter } from "next/router";
-import { useLandingPage, useSurveysBylandingId } from "../../../backend/surveys/surveys.query";
+import {
+  useLandingPage,
+  useSurveysBylandingId,
+} from "../../../backend/surveys/surveys.query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePublicLandingPage, usePublicLandingPageSurveys } from "../../../backend/LandingPage/landingpage.query";
+import {
+  usePublicLandingPage,
+  usePublicLandingPageSurveys,
+} from "../../../backend/LandingPage/landingpage.query";
 import LandingWelcomepage from "./LandingWelcomePage";
 import LandingWelcomePage from "./LandingWelcomePage";
 
@@ -37,12 +43,21 @@ export default () => {
   } = usePublicLandingPageSurveys(landingid);
   const queryClient = useQueryClient();
 
-   //--------------get landing page details based on landing page id (prop)----------
-   const {
+  //--------------get landing page details based on landing page id (prop)----------
+  const {
     isLoading: isLandingPageLoading,
     error: LandingPageError,
     data: LandingPage,
   } = usePublicLandingPage(landingid);
+
+
+  useEffect(() => {
+    if (LandingPage?.welcomePageEnabled) {
+      setStartClicked(false);
+    } else {
+      setStartClicked(true);
+    }
+  }, [LandingPage?.welcomePageEnabled]);
 
   return (
     <Container
@@ -52,16 +67,16 @@ export default () => {
       sx={{ background: "#F7F6FB", height: "100vh" }}
     >
       <>
-      <Image
-              pb={30}
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-              alt="RateUp Logo"
-              width={140}
-              height={35}
-            />
+        <Image
+          pb={30}
+          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+          alt="RateUp Logo"
+          width={140}
+          height={35}
+        />
       </>
-      <Paper p="sm" radius="lg"  sx={{ minHeight: "80vh" }} bg={"#F7F6FB"}>
-        <Container fluid>
+      <Paper radius="lg" sx={{ minHeight: "75vh" }} bg={"#F7F6FB"}>
+        <Paper bg={"#F7F6FB"}>
           {startClicked ? (
             <StartPage
               largeScreen={largeScreen}
@@ -72,10 +87,10 @@ export default () => {
             <LandingWelcomePage
               largeScreen={largeScreen}
               setStartClicked={setStartClicked}
-              landingid={landingid?landingid:null}
+              landingid={landingid ? landingid : null}
             />
           )}
-        </Container>
+        </Paper>
 
         <Center mt={20}>
           <Text fz="sm">Powered by </Text>
@@ -92,12 +107,17 @@ export default () => {
   );
 };
 
-
-
-
-function StartPage({ largeScreen, Landingpagesurveys,LandingPage }) {
+function StartPage({ largeScreen, Landingpagesurveys, LandingPage }) {
   return (
-    <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>
+    <Stack
+      align="center"
+      justify="center"
+      spacing="xl"
+      // radius="lg"
+      sx={{ height: "70vh" }}
+      bg={"#fff"}
+      style={{borderRadius:18}}
+    >
       <Title
         order={3}
         mb="xl"
@@ -107,7 +127,7 @@ function StartPage({ largeScreen, Landingpagesurveys,LandingPage }) {
         {LandingPage?.header}
       </Title>
 
-      {Landingpagesurveys.map((item, index) => (
+      {Landingpagesurveys?.map((item, index) => (
         <Link
           href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${item.id}?start=true`}
         >

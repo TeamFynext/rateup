@@ -14,7 +14,7 @@ interface FormValues {
     width: number;
   };
 }
-function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
+function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading }) {
   const form = useForm({
     initialValues: {
       name: "logo",
@@ -34,13 +34,12 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
     saveStyles(form.values);
   };
 
-  const handleFileChange = async (value) => {
+  const handleFileChange =  (value) => {
     setisFileLoading(true);
-    const fileKey = await uploadFile(value);
-    if (typeof fileKey === "string") {
-      setisFileLoading(false);
-      setCurrentstyles({ ...currentStyles, logoUrl: fileKey });
-    }
+
+    setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: value });
+    setisFileLoading(false);
+
   };
   return (
     <Flex>
@@ -82,9 +81,6 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
                 style={{ border: "1px solid #D3D3D3" }}
                 variant="white"
                 color="dark"
-                // w={"lg"}
-                // p={20}
-                // gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
                 {...props}
                 loading={isFileLoading}
               >
@@ -102,6 +98,7 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles }) {
               pr={40}
               mt={20}
               onClick={onSubmit}
+              loading={saveLoading}
             >
               {" "}
               Save

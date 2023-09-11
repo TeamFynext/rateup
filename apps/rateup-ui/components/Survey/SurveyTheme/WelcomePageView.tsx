@@ -22,7 +22,13 @@ import React from "react";
 import { useEffect, useState, useRef } from "react";
 import StylesComponent from "./StylesComponent";
 
-function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
+function WelcomePageView({
+  setSelectedType,
+  currentStyles,
+  setCurrentstyles,
+  bgImage,
+  selectedType,
+}) {
   const form = useForm({
     initialValues: {
       headerText: currentStyles.headerText,
@@ -105,6 +111,28 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
   const bgTemp = {
     backgroundColor: "#fff",
   };
+
+  const getLogoUrl = () => {
+    if (currentStyles?.logoUrlNotUploaded) {
+      let url = URL.createObjectURL(currentStyles.logoUrlNotUploaded);
+      return url;
+    } else if (currentStyles?.logoUrl) {
+      let url = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${currentStyles.logoUrl}`;
+
+      return url;
+    }
+  };
+  const getBgUrl = () => {
+    // if(currentStyles.bgType == "bgcolor")return null
+    if (currentStyles?.bgUrlNotUploaded) {
+      let url = URL.createObjectURL(currentStyles?.bgUrlNotUploaded);
+      return url;
+    } else if (currentStyles?.bgUrl) {
+      let url = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${currentStyles.bgUrl}`;
+      return url;
+    }
+  };
+
   return (
     <Flex
       w={"100%"}
@@ -120,11 +148,7 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
     >
       <BackgroundImage
         style={{ height: "100%", width: "100%", objectFit: "contain" }}
-        src={
-          currentStyles.bgUrl && currentStyles.bgType != "bgcolor"
-            ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${currentStyles.bgUrl}`
-            : ""
-        }
+        src={bgImage && currentStyles.bgType != "bgcolor" ? bgImage : ""}
       >
         <form style={{ width: "100%", height: "100%" }}>
           <Flex
@@ -133,8 +157,6 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
             h={"100%"}
             direction={"column"}
           >
-            {/* <Text>{focusedInput}</Text> */}
-
             <Flex
               // bg={"gray"}
               onClick={(e) => {
@@ -144,14 +166,8 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
             >
               <Tooltip label="Logo">
                 <Image
-                  // pb={30}
-
                   fit="contain"
-                  src={
-                    currentStyles.logoUrl
-                      ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${currentStyles.logoUrl}`
-                      : ""
-                  }
+                  src={getLogoUrl()}
                   alt=" Logo "
                   style={currentStyles?.logoStyles}
                 />
@@ -159,24 +175,24 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
             </Flex>
 
             {/* //---------------------------- */}
-           
-              <TextInput
-                placeholder={"Welcome"}
-                variant="unstyled"
-                size="xxl"
-                name="headerText"
-                mt={20}
-                onClick={(e) => e.stopPropagation()}
-                onFocus={(e) => {
-                  e.stopPropagation(), handleFocus("header");
-                }}
-                styles={{
-                  input: currentStyles?.headerStyles,
-                }}
-                value={currentStyles.headerText}
-                onChange={handleChange}
-              />
-            
+
+            <TextInput
+              placeholder={"Welcome"}
+              variant="unstyled"
+              size="xxl"
+              name="headerText"
+              mt={20}
+              onClick={(e) => e.stopPropagation()}
+              onFocus={(e) => {
+                e.stopPropagation(), handleFocus("header");
+              }}
+              styles={{
+                input: currentStyles?.headerStyles,
+              }}
+              value={currentStyles.headerText}
+              onChange={handleChange}
+            />
+
             {/* //--------------------------- */}
             <TextInput
               onChange={handleChange}
@@ -202,7 +218,6 @@ function WelcomePageView({ setSelectedType, currentStyles, setCurrentstyles }) {
               mt={"10%"}
               style={currentStyles.buttonStyles}
               onClick={(e) => e.stopPropagation()}
-              
             >
               <TextInput
                 onChange={handleChange}

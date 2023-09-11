@@ -31,6 +31,7 @@ function BackgroundStyles({
   currentStyles,
   setCurrentstyles,
   saveLoading,
+  setbgImage,
 }) {
   const fileInputRef = useRef(null);
 
@@ -63,20 +64,15 @@ function BackgroundStyles({
     }
   };
 
-  const handleFileChange = async (value) => {
+  const handleFileChange =  (value) => {
     setisFileLoading(true);
-    const fileKey = await uploadFile(value);
-    if (typeof fileKey === "string") {
-      setisFileLoading(false);
-      setCurrentstyles({ ...currentStyles, bgUrl: fileKey });
-      setbackgroundStyles({
-        ...backgroundStyles,
-        bgStyles: {
-          ...backgroundStyles.bgStyles,
-          bgUrl: fileKey,
-        },
-      });
-    }
+    setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: value });
+    let url = URL.createObjectURL(value);
+
+    setbgImage(url)
+    setisFileLoading(false);
+
+    // }
   };
   const handleTabChange = (newValue) => {
     setCurrentstyles({ ...currentStyles, bgType: newValue });
@@ -91,20 +87,20 @@ function BackgroundStyles({
           onTabChange={handleTabChange}
         >
           <Radio.Group
-                name="bgType"
-                withAsterisk
-                mt="md"
-                ml="xl"
-                value={currentStyles?.bgType}
-              >
-          <Tabs.List grow>
-            <Tabs.Tab value="bgcolor">
-              <Radio value="bgcolor" label="Color" />
-            </Tabs.Tab>
-            <Tabs.Tab value="bgimage">
-              <Radio value="bgimage" label="Image" />
-            </Tabs.Tab>
-          </Tabs.List>
+            name="bgType"
+            withAsterisk
+            mt="md"
+            ml="xl"
+            value={currentStyles?.bgType}
+          >
+            <Tabs.List grow>
+              <Tabs.Tab value="bgcolor">
+                <Radio value="bgcolor" label="Color" />
+              </Tabs.Tab>
+              <Tabs.Tab value="bgimage">
+                <Radio value="bgimage" label="Image" />
+              </Tabs.Tab>
+            </Tabs.List>
           </Radio.Group>
 
           {/* //-------------BG COLOR----------------- */}
