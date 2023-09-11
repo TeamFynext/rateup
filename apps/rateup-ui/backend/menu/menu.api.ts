@@ -8,3 +8,25 @@ export const getMenuById = async (id: string) => (await axiosClient.get(`${MENU_
 export const getFullMenuById = async (menuId: string) => (await axiosClient.get(`${MENU_URL}/full/${menuId}`)).data as FullMenu;
 export const updateMenu = async ({ menuId, updatedData }) => await axiosClient.put(`${MENU_URL}/${menuId}`, updatedData);
 export const deleteMenu = async (id: string) => await axiosClient.delete(`${MENU_URL}/${id}`);
+
+// PUBLIC
+const PUBLIC_MENU_URL = "/public/menu";
+export const getMenuPublicById = async (id: string) => {
+  try {
+    const res = (await axiosClient.get(`${PUBLIC_MENU_URL}/${id}`));
+    return res.data as Menu;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export const getFullMenuPublicById = async (menuId: string) => {
+  try {
+    const res = (await axiosClient.get(`${PUBLIC_MENU_URL}/full/${menuId}`))
+    return res.data as FullMenu;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}

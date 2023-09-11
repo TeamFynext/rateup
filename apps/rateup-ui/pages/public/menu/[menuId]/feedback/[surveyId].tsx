@@ -1,17 +1,15 @@
 import { Center, Container, Grid, Group, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { useMenu } from "../../../../../backend/menu/menu.query";
 import { useRouter } from "next/router";
 import { IconMapPin, IconWorld } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
+import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 
 
-export default function () {
+export default function ({ menu }) {
   const largeScreen = useMediaQuery('(min-width: 60em)');
-  const { menuId } = useRouter().query as { menuId: string, surveyId: string }
-  const { data: menu, isError, isLoading } = useMenu(menuId)
 
-  if (isLoading || isError || !menu) return null
+  if (!menu) return null
 
   return (
     <Container
@@ -124,4 +122,21 @@ function MenuButton() {
         sx={{ cursor: "pointer" }}>Menu</Text>
     </Stack>
   );
+}
+
+// TODO: enable caching
+export async function getServerSideProps({ params }) {
+  const { menuId } = params
+  const menu = await getMenuPublicById(menuId)
+  if (!menu) {
+    return {
+      notFound: true,
+    }
+  } else {
+    return {
+      props: {
+        menu
+      }
+    }
+  }
 }

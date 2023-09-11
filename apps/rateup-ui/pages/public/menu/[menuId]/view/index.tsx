@@ -1,7 +1,5 @@
 import { ActionIcon, Container, Group, Paper, Stack, Text } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { useFullMenu } from "../../../../../backend/menu/menu.query";
-import { useRouter } from "next/router";
 import { IconMenu2 } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
 import { useEffect, useState } from "react";
@@ -9,11 +7,10 @@ import { CategoryChip } from "../../../../../components/menu/category/CategoryCh
 import { CategoryDisplay } from "../../../../../components/menu/category/CategoryDisplay";
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
+import { getFullMenuPublicById } from "../../../../../backend/menu/menu.api";
 
-export default function () {
+export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery('(min-width: 60em)');
-  const { menuId } = useRouter().query as { menuId: string }
-  const { data: fullMenu, isError, isLoading } = useFullMenu(menuId)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [drawerOpen, { open, close }] = useDisclosure()
@@ -22,9 +19,6 @@ export default function () {
     if (!fullMenu || selectedCategory || fullMenu.categories.length === 0) return
     setSelectedCategory(fullMenu.categories[0].id)
   }, [fullMenu])
-
-  if (isLoading || isError || !fullMenu) return null
-
 
   function handleCategoryChipClick(categoryId: string) {
     setSelectedCategory(categoryId)
@@ -132,4 +126,20 @@ export default function () {
       }
     </Paper>
   )
+}
+
+export async function getServerSideProps({ params }) {
+  const { menuId } = params
+  const fullMenu = await getFullMenuPublicById(menuId)
+  if (!fullMenu) {
+    return {
+      notFound: true,
+    }
+  } else {
+    return {
+      props: {
+        fullMenu
+      }
+    }
+  }
 }
