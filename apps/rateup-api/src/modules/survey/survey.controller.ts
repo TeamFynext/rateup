@@ -92,7 +92,7 @@ export async function updateSurveyLandingHandler(
 ) {
   const data = request.body;
 
-  // console.log("caretesurvye--213", data);
+  console.log("caretesurvye--213", data);
   try {
     // TODO add types for session
     //const userId = request.session.getUserId();

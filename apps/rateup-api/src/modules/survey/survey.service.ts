@@ -8,6 +8,7 @@ import {
   UpdateSurveyPassword,
 } from "./survey.schema";
 import { getTeamsByUserId } from "../team/team.service";
+import defaultTheme from "../welcomeTheme/defaultTheme";
 const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
 
@@ -23,6 +24,27 @@ export async function createSurvey(
       createdBy,
     },
   });
+  //-------------create a default landing page theme todo-------------
+
+  let landingData = defaultTheme;
+
+  let LandingPage = await prisma.welcomeTheme.create({
+    data: {
+      ...landingData,
+      headerText: landingData.headerText,
+      descText: landingData.descText,
+      buttonText: landingData.buttonText,
+      headerStyles: landingData.headerStyles,
+      descStyles: landingData.descStyles,
+      buttonStyles: landingData.buttonStyles,
+      bgStyles: landingData.bgStyles,
+      logoStyles: landingData.logoStyles,
+      surveyId: survey.id,
+      bgUrl: landingData.bgUrl,
+      bgType: landingData.bgType,
+    },
+  });
+
   return survey;
 }
 
@@ -31,7 +53,7 @@ export async function createSurveyLanding(
   input: CreateSurveyLandingInput,
   createdBy: string
 ) {
-  const survey = await prisma.surveyLanding.create({
+  const Landing = await prisma.surveyLanding.create({
     data: {
       ...input,
       title: input.title,
@@ -39,17 +61,37 @@ export async function createSurveyLanding(
       createdBy,
     },
   });
-  return survey;
+  //-------------create a default landing page theme todo-------------
+
+  let landingData = defaultTheme;
+
+  let LandingPage = await prisma.welcomeTheme.create({
+    data: {
+      ...landingData,
+      headerText: landingData.headerText,
+      descText: landingData.descText,
+      buttonText: landingData.buttonText,
+      headerStyles: landingData.headerStyles,
+      descStyles: landingData.descStyles,
+      buttonStyles: landingData.buttonStyles,
+      bgStyles: landingData.bgStyles,
+      logoStyles: landingData.logoStyles,
+      landingId: Landing.id,
+      bgUrl: landingData.bgUrl,
+      bgType: landingData.bgType,
+    },
+  });
+  return Landing;
 }
 //----------------update survey landing page details-----------------
 export async function updateSurveyLanding(
   id,
-  input: UpdateLandingPageInput,
+  input: UpdateLandingPageInput
   // createdBy: string
 ) {
   const Landing = await prisma.surveyLanding.update({
     where: {
-      id
+      id,
     },
     data: input,
   });
@@ -147,7 +189,6 @@ export async function getSurveyBylandingId(landingid: string) {
     surveyIds.push(Landingpages.surveys[i]);
   }
 
- 
   //----------get surveys from surveyids------------
   // console.log(surveyIds, ">>>fateeno");
   const surveyResponse = await prisma.survey.findMany({
@@ -157,7 +198,6 @@ export async function getSurveyBylandingId(landingid: string) {
       },
     },
   });
- 
 
   // console.log( ">>>> anding under", surveyResponse);
   if (!Landingpages || Landingpages.surveys.length == 0) {
@@ -217,7 +257,7 @@ export async function getSurveysByUserId(userId: string) {
 }
 
 /**
- * Returns summary(responses, stats) of active surveys 
+ * Returns summary(responses, stats) of active surveys
  * from ALL TEAMs in which the user is a member of
  * @param userId
  * @returns Array of active surveys - responses, stats
@@ -232,18 +272,17 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
       teamId: {
         in: teamIds,
       },
-      active: true
+      active: true,
     },
     include: {
       responses: true,
       surveyStats: true,
       team: {
         select: {
-          name: true
-        }
-      }
+          name: true,
+        },
+      },
     },
-
   });
 
   const surveysWithoutQuestions = surveys.map((s) =>
@@ -251,7 +290,6 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
   );
   return surveysWithoutQuestions;
 }
-
 
 /**
  * returns all whatsapp surveys
@@ -262,7 +300,7 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
 
 export async function getSurveyLandingByUserId(userId: string) {
   const surveysLanding = await prisma.surveyLanding.findMany({
-    where :{createdBy:userId}
+    where: { createdBy: userId },
   });
 
   return surveysLanding;
