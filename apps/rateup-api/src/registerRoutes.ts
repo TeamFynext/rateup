@@ -37,6 +37,7 @@ import { menuCategorySchemas } from "./modules/menu/category/category.schema";
 import { menuCategoryRoutes } from "./modules/menu/category/category.route";
 import { menuItemSchemas } from "./modules/menu/item/item.schema";
 import { menuItemRoutes } from "./modules/menu/item/item.route";
+import { menuPublicRoutes } from "./modules/menu/menu.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [
@@ -83,6 +84,7 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(respondentRoutes, { prefix: "api/respondent" })
     server.register(waWebhookRoutes, { prefix: "webhook" })
     server.register(menuRoutes, { prefix: "api/menu"})
+    server.register(menuPublicRoutes, { prefix: "api/public/menu"})
     server.register(menuCategoryRoutes, { prefix: "api/mcategory"})
     server.register(menuItemRoutes, { prefix: "api/mitem"})
 }
