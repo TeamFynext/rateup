@@ -71,7 +71,14 @@ export async function createResponseHandler(
       const coords = (response.location as any)?.coordinates as { latitude: number, longitude: number } || null;
       let location = null;
       if (!coords || !coords.latitude) {
-        location = await fetchLocationFromIp(request.ip);
+        let ip = request.ip
+        const forwardedFor = request.headers["x-forwarded-for"] as string || undefined;
+        log.info(`IP => ${request.ip} ${request.headers["x-forwarded-for"]}`);
+
+        if (forwardedFor) {
+          ip = forwardedFor.split(",")[0];
+        }
+        location = await fetchLocationFromIp(ip);
       } else {
         location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);
       }
