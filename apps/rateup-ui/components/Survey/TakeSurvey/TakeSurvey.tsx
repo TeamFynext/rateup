@@ -614,28 +614,6 @@ function NumberForm() {
   );
 }
 
-function NumberForm() {
-  const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { classes } = useStyles();
-
-  return (
-    <Paper shadow="sm"
-        className={classes.inputBox}
-      >
-      <NumberInput
-          size="sm"
-          type="number"
-          placeholder="Enter number input"
-          value={response || undefined}
-          onChange={(value) => updateResponse(value)}
-          //onBlur={handleInputBlur}
-          variant="unstyled"
-          //error={numberError && !isFocused  ? 'Invalid phone number' : null}
-        />
-    </Paper>
-
-  );
-}
 
 function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
