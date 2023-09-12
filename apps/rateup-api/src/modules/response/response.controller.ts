@@ -1,6 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateResponseInput, GetResponsesParams, DeleteResponseParamsSchema } from "./response.schema";
-import { createResponse, deleteResponse, fetchLocationFromIpAndUpdateResponse, getResponses, resetResponsesStats } from "./response.service";
+import { createResponse, deleteResponse, getResponses, resetResponsesStats, updateResponseLocation } from "./response.service";
+import { fetchLocationFromCoordinates, fetchLocationFromIp } from "../../utils/location";
+import { log } from "../../utils/logger";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -66,9 +68,15 @@ export async function createResponseHandler(
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
-      const coords = response.locationCoordinates as { latitude: number, longitude: number } || null;
+      const coords = (response.location as any)?.coordinates as { latitude: number, longitude: number } || null;
+      let location = null;
       if (!coords || !coords.latitude) {
-        await fetchLocationFromIpAndUpdateResponse(request.ip, response.id)
+        location = await fetchLocationFromIp(request.ip);
+      } else {
+        location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);
+      }
+      if (location) {
+        updateResponseLocation(response.id, location);
       }
     }
   } catch (e) {

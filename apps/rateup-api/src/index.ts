@@ -1,11 +1,10 @@
+require("dotenv").config();
 
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import supertokens from "supertokens-node";
 import { plugin } from "supertokens-node/framework/fastify";
 import { logOptions } from "./utils/logger";
-require("dotenv").config();
-
 import { errorHandler } from "supertokens-node/framework/fastify";
 import { SuperTokensConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
