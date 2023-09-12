@@ -132,7 +132,7 @@ const chartData = prepareData(questions, responses);
             <Title ml="xl" mt="xl" order={2}>NPS Overview</Title>
           )}
 
-        <Paper px="md" shadow="xs" style={{ marginBottom: '20px' , maxWidth:"800px"}}>
+        <Paper px="md" shadow="xs" py="xl" style={{ marginBottom: '20px' , maxWidth:"800px"}}>
           {chartData.filter(item =>
             item.type === QuestionType.Rating ||
             item.type === QuestionType.Smiley ||
