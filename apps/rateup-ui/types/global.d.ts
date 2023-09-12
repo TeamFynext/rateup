@@ -107,9 +107,14 @@ declare global {
     surveyId: string;
     responses: Array<QuestionResponse>;
     language: string;
-    locationCoordinates?: {
-      latitute: number;
-      longitude: number;
+    location?: {
+      coordinates?: {
+        latitude: number;
+        longitude: number;
+      },
+      city?: string;
+      state?: string;
+      country?: string;
     }
   };
 
