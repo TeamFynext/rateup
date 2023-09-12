@@ -6,7 +6,7 @@ import QuestionPieChart from './Charts/QuestionPieChart';
 import QuestionBarChart from './Charts/QuestionBarChart';
 import { Container } from '@mantine/core';
 import { QuestionType } from '../../../types/enums';
-import { Paper, Title, Divider, Stack , Select} from '@mantine/core';
+import { Paper, Title, Divider, Stack , Select, ScrollArea} from '@mantine/core';
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -123,6 +123,13 @@ const chartData = prepareData(questions, responses);
           sx={{maxWidth: "200px"}}
         />
 
+
+      </Stack>
+      <ScrollArea h={'60vh'}>
+
+        <Stack  style={{ marginBottom: '20px' , maxWidth:"1000px"}}>
+
+          
         {chartData.some(item =>
             item.type === QuestionType.Rating ||
             item.type === QuestionType.Smiley ||
@@ -148,26 +155,26 @@ const chartData = prepareData(questions, responses);
           ))}
         </Paper>
 
-      </Stack>
 
-    <Stack mt="xl" style={{ marginBottom: '20px' , maxWidth:"1200px"}}>
-      <Title order={2} ml="xl">Question Wise Overview</Title>
+          <Title order={2} ml="xl" mt="xl">Question Wise Overview</Title>
 
-      {chartData.filter(item =>
-        item.type === QuestionType.Rating ||
-        item.type === QuestionType.Smiley ||
-        item.type === QuestionType.LD ||
-        item.type === QuestionType.YN ||
-        item.type === QuestionType.Opinion ||
-        item.type === QuestionType.MCQ ||
-        item.type === QuestionType.MSQ ||
-        item.type === QuestionType.DDSS ||
-        item.type === QuestionType.DDMS
-      ).map((item, index) => (
-        <QuestionBarChart key={index} question={item.question} no={index + 1}
-          choices={item.choices} data={item.responses} questionType = {item.type}/>
-      ))}
-    </Stack>
+          {chartData.filter(item =>
+            item.type === QuestionType.Rating ||
+            item.type === QuestionType.Smiley ||
+            item.type === QuestionType.LD ||
+            item.type === QuestionType.YN ||
+            item.type === QuestionType.Opinion ||
+            item.type === QuestionType.MCQ ||
+            item.type === QuestionType.MSQ ||
+            item.type === QuestionType.DDSS ||
+            item.type === QuestionType.DDMS
+          ).map((item, index) => (
+            <QuestionBarChart key={index} question={item.question} no={index + 1}
+              choices={item.choices} data={item.responses} questionType = {item.type}/>
+          ))}
+        </Stack>
+
+        </ScrollArea>
 
     </Container>
 
