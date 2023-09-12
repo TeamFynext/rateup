@@ -140,8 +140,8 @@ const Responses = ({ survey }) => {
           >
             <td style={cellGap}> <Text color="dark.3">{dayjs(response.createdAt).format("DD-MM-YYYY")} </Text></td>
             {questions.map((q) => (
-              <td key={q.id} style={cellGap}>
-                <Text color="dark.3"> {getResponse(q.id, response)} </Text>
+              <td key={q.id} style={cellGap}  title={getResponse(q.id, response)} >
+                <Text color="dark.3" truncate="end" sx={{maxWidth:"150px"}}> {getResponse(q.id, response)} </Text>
                 
               </td>
             ))}

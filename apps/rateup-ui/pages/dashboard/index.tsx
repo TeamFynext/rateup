@@ -68,11 +68,14 @@ function prepareData(surveysSummary) {
       }
     });
   });
- 
-  return Object.keys(dateResponseCount)?.map(date => ({
+  let data = Object.keys(dateResponseCount)?.map(date => ({
     date: date,
-    count: dateResponseCount[date]
+    responses: dateResponseCount[date]
   }));
+
+  data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  return data;
 }
 
 
@@ -106,6 +109,31 @@ const filteredData = data?.filter(datum => {
   }
   return date.isAfter(periodStart);
 });
+
+interface iProps{
+  active?: any;
+  payload?: any;
+  label?: any
+}
+const CustomTooltip = ({ active, payload, label } : iProps) => {
+  if (active && payload && payload?.length) {
+    return (
+      <div className="custom-tooltip" 
+          style={{
+            background: '#fff',
+            padding: '2px 15px',
+            border: '1px solid #3F5BA9',
+            boxSizing: 'border-box',
+            borderRadius: '10px'
+          }}>
+        <p className="label">{`${dayjs(label).format('MMM DD, YYYY')}`}</p>
+        <p className="intro">{`Responses: ${payload[0].value}`}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
 
   return (
     <>
@@ -205,10 +233,10 @@ const filteredData = data?.filter(datum => {
                   </defs>
                   <XAxis dataKey="date" tickFormatter={(str) => dayjs(str).format('MMM DD')} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip content={<CustomTooltip />} />
                   {/* <Legend /> */}
                   <CartesianGrid stroke="#f5f5f5" />
-                  <Area type="monotone" dataKey="count" stroke="#3F5BA9" fillOpacity={1} fill="url(#colorCount)" />
+                  <Area type="monotone" dataKey="responses" stroke="#3F5BA9" fillOpacity={1} fill="url(#colorCount)" />
                 </AreaChart>
 
                 {/* TODO : dots showing only on hover, show dots always in area chart */}
