@@ -355,7 +355,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingRespon
     surveyId,
     responses,
     language: selectedLanguage,
-    locationCoordinates: coordinates,
+    location: { coordinates },
   })
     .then(() => {
       notifications.show({
