@@ -38,6 +38,8 @@ import { menuCategoryRoutes } from "./modules/menu/category/category.route";
 import { menuItemSchemas } from "./modules/menu/item/item.schema";
 import { menuItemRoutes } from "./modules/menu/item/item.route";
 import { menuPublicRoutes } from "./modules/menu/menu.public.route";
+import { contactFormSchemas } from "./modules/contactForm/contact.schema";
+import { contactPublicRoutes } from "./modules/contactForm/contact.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
     const modules = [
@@ -56,7 +58,8 @@ export function registerRoutes(server: FastifyInstance): void {
         LandingThemeSchema,
         menuSchemas,
         menuCategorySchemas,
-        menuItemSchemas
+        menuItemSchemas,
+        contactFormSchemas
     ];
     for (const module of modules) {
         for (const schema of module) {
@@ -87,4 +90,5 @@ export function registerRoutes(server: FastifyInstance): void {
     server.register(menuPublicRoutes, { prefix: "api/public/menu"})
     server.register(menuCategoryRoutes, { prefix: "api/mcategory"})
     server.register(menuItemRoutes, { prefix: "api/mitem"})
+    server.register(contactPublicRoutes, { prefix: "api/public/contact" })
 }

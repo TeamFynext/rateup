@@ -130,27 +130,27 @@ model Invitation {
 }
 
 model Survey {
-  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime?        @updatedAt
-  title              String
-  description        String?          @default("")
-  questions          Json[]           @default([])
-  languages          String[]
-  user               User             @relation(fields: [createdBy], references: [id])
-  createdBy          String           @db.Uuid
-  team               Team             @relation(fields: [teamId], references: [id])
-  teamId             String           @db.Uuid
-  active             Boolean          @default(true)
-  responses          SurveyResponse[]
-  sessions           WaSession[]
-  isProtected        Boolean          @default(false)
-  kioskMode          Boolean          @default(false)
-  password           String?
-  surveyStats        SurveyStats?
-  type               String           @default("web")
-  getLocation        Boolean          @default(false)
-  welcomePageEnabled Boolean          @default(false)
+  id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime?                     @updatedAt
+  title                       String
+  description                 String?                       @default("")
+  questions                   Json[]                        @default([])
+  languages                   String[]
+  user                        User                          @relation(fields: [createdBy], references: [id])
+  createdBy                   String                        @db.Uuid
+  team                        Team                          @relation(fields: [teamId], references: [id])
+  teamId                      String                        @db.Uuid
+  active                      Boolean                       @default(true)
+  responses                   SurveyResponse[]
+  sessions                    WaSession[]
+  isProtected                 Boolean                       @default(false)
+  kioskMode                   Boolean                       @default(false)
+  password                    String?
+  surveyStats                 SurveyStats?
+  type                        String                        @default("web")
+  getLocation                 Boolean                       @default(false)
+  welcomePageEnabled          Boolean                       @default(false)
   RespondentSurveySendHistory RespondentSurveySendHistory[]
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
 }
@@ -328,4 +328,13 @@ model MenuItem {
   price      Json
   category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId String       @db.Uuid
+}
+
+//homepage contact form
+model ContactForm {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  name      String
+  email     String
+  message   String
 }
