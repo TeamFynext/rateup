@@ -76,7 +76,8 @@ export async function createResponseHandler(
         log.info(`IP => ${request.ip} ${request.headers["x-forwarded-for"]}`);
 
         if (forwardedFor) {
-          ip = forwardedFor.split(",")[0];
+          const ips = forwardedFor.split(",");
+          ip = ips[ips.length - 1];
         }
         location = await fetchLocationFromIp(ip);
       } else {
