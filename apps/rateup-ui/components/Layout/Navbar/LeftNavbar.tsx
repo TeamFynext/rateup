@@ -14,12 +14,12 @@ import {
   IconSettings,
   IconLogout,
   IconUsers,
-  IconCheckupList,
   IconSocial,
   IconSpeakerphone,
   IconPageBreak,
   IconClipboardList,
-  IconChevronDown
+  IconChevronDown,
+  IconBrowser
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -134,7 +134,7 @@ const mockdata = [
     { icon: IconSocial, label: 'All Teams', href: '/dashboard/teams' },
     { icon: IconUsers, label: 'All Members', href: '/dashboard/members', role: 'SUPER_ADMIN' },
   ]  },
-  { icon: IconCheckupList, label: 'Surveys', href: '',
+  { icon: IconBrowser, label: 'Surveys', href: '',
   submenus: [
     { icon: IconSocial, label: 'Web Survey', href: '/dashboard/surveys' },
     { icon: WhasappSurveyIcon, label: 'WhatsApp Survey', href: '/dashboard/whatsappsurvey' },
