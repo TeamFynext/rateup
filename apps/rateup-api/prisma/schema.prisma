@@ -150,7 +150,7 @@ model Survey {
   surveyStats                 SurveyStats?
   type                        String                        @default("web")
   getLocation                 Boolean                       @default(false)
-  welcomePageEnabled          Boolean                       @default(false)
+  welcomePageEnabled          Boolean                       @default(true)
   RespondentSurveySendHistory RespondentSurveySendHistory[]
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
 }
@@ -164,7 +164,7 @@ model SurveyLanding {
   description        String?   @default("")
   surveys            String[]
   createdBy          String    @db.Uuid
-  welcomePageEnabled Boolean   @default(false)
+  welcomePageEnabled Boolean   @default(true)
 }
 
 model SurveyResponse {
