@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createRespondents, getAllRGroupsByRespondent, getRespondentSurveySendHistoryByRespondentId, getAllRespondents, sendSurveyToRespondent, getRespondentsByTeamId, getRespondentResponseHistoryByRespondentId } from "./respondent.api";
+import { createRespondents, getAllRGroupsByRespondent, getRespondentSurveySendHistoryByRespondentId, getAllRespondents, sendSurveyToRespondent, getRespondentsByTeamId, getRespondentResponseHistoryByRespondentId, deleteRespondent } from "./respondent.api";
 import { notifications } from "@mantine/notifications";
 
-export const useRespondents = (teamId: string) => useQuery({
+export const useRespondents = (teamId: string, enabled: boolean) => useQuery({
+  enabled: enabled,
   queryKey: ["respondent", teamId],
   queryFn: () => {
     if (teamId) {
@@ -14,6 +15,7 @@ export const useRespondents = (teamId: string) => useQuery({
 })
 
 export const useRespondentSurveySendHistory = (respondentId: string) => {
+  // TODO: change querykey. modifying respondentData should not invalidate surveyHistory
     return useQuery({
       queryKey: ["respondent", respondentId, "history", "surveys"],
       queryFn: () => getRespondentSurveySendHistoryByRespondentId(respondentId)
@@ -56,6 +58,21 @@ export const useCreateRespondentsMutation = (teamId: string) => {
     onSuccess: () => {
       notifications.show({
         message: "Respondents created successfully!",
+        color: "green",
+      })
+      queryClient.invalidateQueries(["respondent"])
+    }
+  })
+}
+
+export const useDeleteRespondentMutation = () => {
+  const queryClient = useQueryClient()
+  return useMutation((respondentId: string) => {
+    return deleteRespondent(respondentId)
+  }, {
+    onSuccess: () => {
+      notifications.show({
+        message: "Respondent deleted successfully!",
         color: "green",
       })
       queryClient.invalidateQueries(["respondent"])

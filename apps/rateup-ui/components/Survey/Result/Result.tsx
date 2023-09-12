@@ -4,6 +4,7 @@ import { Tabs } from '@mantine/core';
 import Responses from '../Response/Responses';
 import SurveyStats from './SurveyStats';
 import SurveySummary from './SurveySummary';
+import ResultsOverview from './ResultsOverview';
 
 const Result = ({survey}) => {
   return (
@@ -12,6 +13,9 @@ const Result = ({survey}) => {
     <Tabs.List mb="md" pb="md">
       <Tabs.Tab value="summary" >
               Summary
+        </Tabs.Tab>
+         <Tabs.Tab value="result" >
+              Result
         </Tabs.Tab>
         <Tabs.Tab value="stats" >
             Stats
@@ -24,7 +28,9 @@ const Result = ({survey}) => {
     <Tabs.Panel value="summary">
         <SurveySummary/>
       </Tabs.Panel>
-
+      <Tabs.Panel value="result">
+        <ResultsOverview />
+      </Tabs.Panel>
     <Tabs.Panel value="stats">
         <SurveyStats survey={survey} />
       </Tabs.Panel>

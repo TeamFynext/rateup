@@ -1,10 +1,19 @@
-import { useMantineTheme, Group, Avatar, Text } from "@mantine/core";
+import { useMantineTheme, Group, Text } from "@mantine/core";
 
-export function MainWindowHeader({ image, title, onClick }) {
+export function MainWindowHeader({ title, onClick }) {
   const { colors } = useMantineTheme();
   return (
-    <Group onClick={onClick} sx={{ backgroundColor: colors.dark[7], color: "white", cursor: "pointer" }} p={"xs"} >
-      <Avatar src={image} size={"md"} radius="xl" />
+    <Group
+      onClick={onClick}
+      sx={{
+        background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%);",
+        color: "white",
+        cursor: "pointer",
+        borderRadius: "8px",
+      }}
+      p={"lg"}
+      mih={"75px"}
+    >
       <Text>{title}</Text>
     </Group>
   )

@@ -18,7 +18,7 @@ import {
   Divider,
   NumberInput,
   Avatar,
-  Select
+  Select, MultiSelect
 } from "@mantine/core";
 import { forwardRef } from 'react';
 import { useDisclosure } from '@mantine/hooks';
@@ -54,9 +54,11 @@ import { useStyles } from "./TakeSurvey.styles";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from '@mantine/hooks';
 import { parseLogicAction } from "../../../utils";
+import { validateQuestion } from "../../../utils/validation";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery('(min-width: 60em)');
+  const [isSavingResponses, setIsSavingResponses] = useState(false)
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
@@ -65,8 +67,12 @@ function TakeSurvey() {
   const [opened, { open, close }] = useDisclosure(false);
   const theme = useMantineTheme();
   const isMobile = useMediaQuery('(max-width: 480px)');
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  }>(undefined);
 
-  const { setQuestionCount, setCurrentQuestionNo } = useContext(QuestionCountContext);
+  const { setQuestionCount, setCurrentQuestionNo, questionCount } = useContext(QuestionCountContext);
   const updateCompleted = useUpdateCompletedMutation();
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
@@ -90,6 +96,21 @@ function TakeSurvey() {
     setCurrentQuestionNo(index + 1)
   }, [selectedQ])
 
+  // Getting location coordinates
+  // TODO: fetching location is very slow. Plan what to do when user finishes survey before location is fetched
+  useEffect(() => {
+    if (survey.getLocation) {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          setCoordinates({ latitude: coords.latitude, longitude: coords.longitude });
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
+    }
+  }, [survey])
+
 
   if (isLoading) {
     return (
@@ -99,7 +120,12 @@ function TakeSurvey() {
     );
   }
   if (isError || !selectedQ) {
-    return <Center sx={{ height: "100vh" }}>Something went wrong</Center>;
+    return <Center sx={{ height: "100vh" }}>
+      <Text fw={500} >
+        {questionCount == 0 ? "No Questions found!" : "Something went wrong!"}
+
+      </Text>
+    </Center>;
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
@@ -154,53 +180,53 @@ function TakeSurvey() {
   };
 
   const finishSurvey = () => {
-      let shouldShowGoogleReview = false;
-      const { start } = router.query as { start: string };  //(TODO - Temp) change for survey merge 
+    setIsSavingResponses(true)
+    let shouldShowGoogleReview = false;
+    const { start } = router.query as { start: string };  //(TODO - Temp) change for survey merge 
 
-      for (let question of survey?.questions) {
-          if (question?.googleReview) {
-              let userResponse = responses.find(r => r?.questionId === question?.id);
-              if (userResponse) {
-                  switch (question?.type) {
-                      case "Rating":
-                          if (userResponse?.response?.Rating >= question?.googleReview?.minRating) {
-                              shouldShowGoogleReview = true;
-                          }
-                          break;
-                      case "Opinion Scale":
-                          if (userResponse?.response["Opinion Scale"] >= question?.googleReview?.minOpinion) {
-                              shouldShowGoogleReview = true;
-                          }
-                          break;
-                      case "Smiley":
-                          if (question?.googleReview?.reqOptions.includes(userResponse?.response?.Smiley)) {
-                              shouldShowGoogleReview = true;
-                          }
-                          break;
-                      default:
-                          break;
-                  }
+    for (let question of survey?.questions) {
+      if (question?.googleReview) {
+        let userResponse = responses.find(r => r?.questionId === question?.id);
+        if (userResponse) {
+          switch (question?.type) {
+            case "Rating":
+              if (userResponse?.response?.Rating >= question?.googleReview?.minRating) {
+                shouldShowGoogleReview = true;
               }
-          }
-
-          if (shouldShowGoogleReview) {
+              break;
+            case "Opinion Scale":
+              if (userResponse?.response["Opinion Scale"] >= question?.googleReview?.minOpinion) {
+                shouldShowGoogleReview = true;
+              }
+              break;
+            case "Smiley":
+              if (question?.googleReview?.reqOptions.includes(userResponse?.response?.Smiley)) {
+                shouldShowGoogleReview = true;
+              }
+              break;
+            default:
               break;
           }
+        }
       }
 
       if (shouldShowGoogleReview) {
-          console.log("Show Google Review");
-      } else {
-          console.log("Don't show Google Review");
+        break;
       }
-      submitSurvey({ surveyId, responses, selectedLanguage }).then(() => {
-        updateCompleted.mutate(surveyId)
-        let kioskMode = survey?.kioskMode ? "y" :"n"
-        kioskMode = start === 'true' ? "cs" : kioskMode // temp for static cs demo (TODO)
-        console.log(">>>"+kioskMode)
-        console.log(">>>"+survey?.kioskMode)
-        shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) :router.push(`${surveyId}/end?k=${kioskMode}`) 
-      });
+    }
+
+    // if (shouldShowGoogleReview) {
+    //     console.log("Show Google Review");
+    // } else {
+    //     console.log("Don't show Google Review");
+    // }
+
+    submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingResponses, coordinates }).then(() => {
+      updateCompleted.mutate(surveyId)
+      let kioskMode = survey?.kioskMode ? "y" : "n"
+      kioskMode = start === 'true' ? "cs" : kioskMode // temp for static cs demo (TODO)
+      shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) : router.push(`${surveyId}/end?k=${kioskMode}`)
+    });
   }
 
   const handlePrev = () => {
@@ -239,12 +265,12 @@ function TakeSurvey() {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container  h={isMobile ? "53vh" : "60vh"} size={"md"} sx={{ position: "relative" }}>
-              {/* TODO for mobile design 80vh */}
+        <Container h={isMobile ? "53vh" : "60vh"} size={"md"} sx={{ position: "relative" }}>
+          {/* TODO for mobile design 80vh */}
 
           <Modal
             opened={opened}
-            title=""
+            title="hello"
             onClose={close}
             overlayProps={{
               color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
@@ -253,9 +279,9 @@ function TakeSurvey() {
             }}
           >
 
-          <Modal.Header>
-            <Title order={2}>Confirm your responses</Title>
-          </Modal.Header>
+            <Modal.Header>
+              <Title order={2}>Confirm your responses</Title>
+            </Modal.Header>
 
             <Stack pb="5rem">
               <Divider />
@@ -265,55 +291,56 @@ function TakeSurvey() {
                     response => response.questionId === question.id
                   );
 
-                    return (
-                      <Stack key={question.id}>
-                        <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
-                        {response && (
-                          <Text pb="sm">
-                              {question.type === 'DateTime' ? (
-                                    dayjs(Object.values(response?.response)[0]).format('DD, MMM , YYYY')
-                                  ) : (
-                                    JSON.stringify(Object.values(response?.response)[0])
-                                  )}
-                              
-                          </Text>
-                        )}
-                       <Divider/>
-                      </Stack>
-                    );
-                  })}
-                </Stack>
+                  return (
+                    <Stack key={question.id}>
+                      <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
+                      {response && (
+                        <Text pb="sm">
+                          {question.type === 'DateTime' ? (
+                            dayjs(Object.values(response?.response)[0]).format('DD, MMM , YYYY')
+                          ) : (
+                            JSON.stringify(Object.values(response?.response)[0])
+                          )}
 
-                <div style={{ position: "fixed", bottom: 0, left: 10, right: 10,}}>
-                  <Group position="apart" p="lg" sx={{ background:'#fff'}}>
-                    <RateupButtonBlackOutline
-                      radius={"xl"}
-                      title={"Back"}
-                      size={largeScreen ? "lg" : "md"}
-                      onClick={close}
-                      leftIcon={<IconChevronLeft />}
-                    />
+                        </Text>
+                      )}
+                      <Divider />
+                    </Stack>
+                  );
+                })}
+              </Stack>
 
-                    <RateupButtonBlue
-                      radius={"xl"}
-                      title={"Confirm"}
-                      size={largeScreen ? "lg" : "md"}
-                      leftIcon={<IconCheck />}
-                      onClick={finishSurvey}
-                    />
-                  </Group>
-                </div>
+              <div style={{ position: "fixed", bottom: 0, left: 10, right: 10, }}>
+                <Group position="apart" p="lg" sx={{ background: '#fff' }}>
+                  <RateupButtonBlackOutline
+                    radius={"xl"}
+                    title={"Back"}
+                    size={largeScreen ? "lg" : "md"}
+                    onClick={close}
+                    leftIcon={<IconChevronLeft />}
+                  />
+
+                  <RateupButtonBlue
+                    loading={isSavingResponses}
+                    radius={"xl"}
+                    title={"Confirm"}
+                    size={largeScreen ? "lg" : "md"}
+                    leftIcon={<IconCheck />}
+                    onClick={finishSurvey}
+                  />
+                </Group>
+              </div>
             </Stack>
           </Modal>
 
 
           <Stack mt="xl">
             {/* <QuestionNo num={QnNo} /> */}
-            
-              <QuestionTitle largeScreen={largeScreen} />
-              <QuestionDesc  largeScreen={largeScreen}/>
-              <QuestionForm />
-              
+
+            <QuestionTitle largeScreen={largeScreen} />
+            <QuestionDesc largeScreen={largeScreen} />
+            <QuestionForm />
+
             <NextPrev next={handleNext} prev={handlePrev} />
           </Stack>
         </Container>
@@ -322,17 +349,19 @@ function TakeSurvey() {
   );
 }
 
-function submitSurvey({ surveyId, responses, selectedLanguage }) {
+function submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingResponses, coordinates }) {
   return createResponsePublic({
     surveyId,
     responses,
     language: selectedLanguage,
+    locationCoordinates: coordinates,
   })
     .then(() => {
       notifications.show({
         message: "Survey completed!",
         color: "teal",
       });
+      setIsSavingResponses(false)
     })
     .catch((e) => {
       console.error(e);
@@ -340,6 +369,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage }) {
         message: "Something went wrong",
         color: "red",
       });
+      setIsSavingResponses(false)
     });
 }
 
@@ -347,16 +377,16 @@ function QuestionNo({ num }) {
   return <Text size={"15px"}>Question: {num}</Text>;
 }
 
-function QuestionTitle({largeScreen}) {
+function QuestionTitle({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return <Text fw={500} size={largeScreen ? "30px" : "18px"}>{selectedQ.title[selectedLanguage]}</Text>;
 }
-function QuestionDesc({largeScreen}) {
+function QuestionDesc({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text size={largeScreen ? "15px" : "12px"} c="dimmed" pb={ largeScreen ? 20 : 10}>
+    <Text size={largeScreen ? "15px" : "12px"} c="dimmed" pb={largeScreen ? 20 : 10}>
       {selectedQ.description[selectedLanguage]}
     </Text>
   );
@@ -374,11 +404,11 @@ function getQuestionForm(type) {
     case Q.Text:
       return <TextForm />;
     case Q.TextArea:
-        return <TextAreaForm />;
+      return <TextAreaForm />;
     case Q.Number:
       return <NumberForm />;
     case Q.Phone:
-        return <PhoneForm />;
+      return <PhoneForm />;
     case Q.Email:
       return <EmailForm />;
     case Q.Rating:
@@ -397,6 +427,10 @@ function getQuestionForm(type) {
       return <MCQForm />;
     case Q.MSQ:
       return <MSQForm />;
+    case Q.DDSS:
+      return <DDSSForm />;
+    case Q.DDMS:
+      return <DDMSForm />;
     case Q.Testimonial:
       return <TestimonialForm />;
     case Q.DateTime:
@@ -417,29 +451,44 @@ function NextPrev({ prev, next }) {
 
   useEffect(() => {
     // TODO: check if rebase was done correctly
-      if(selectedQ?.required && response && selectedQ?.type === 'Email'){
-        setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
-        if(!(/^\S+@\S+$/.test(response))){
-          setIsErrorInput(false)
-        }
-      }else if(selectedQ?.required && response && selectedQ?.type === 'Phone'){
-        setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone")
-        if (!/^\d{10}$/.test(response)) {
-          setIsErrorInput(false)
-        }
-      }else if (selectedQ?.required && response && selectedQ?.type === 'Testimonial') {
-        const { name, testimonial } = response;
-        if (name?.length < 3 || testimonial?.length < 5) {
-          setErrorMsg("Name - min 3 characters, and \n testimonial - min 5 characters");
-          setIsErrorInput(true);
-        } else {
-          setErrorMsg("");
-          setIsErrorInput(false);
-        }
+    if (selectedQ?.required && response && selectedQ?.type === 'Email') {
+      setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
+      if (!(/^\S+@\S+$/.test(response))) {
+        setIsErrorInput(false)
+      }
+    } else if (selectedQ?.required && response && selectedQ?.type === 'Phone') {
+      setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone")
+      if (!/^\d{10}$/.test(response)) {
+        setIsErrorInput(false)
+      }
+    } else if (selectedQ?.required && response && selectedQ?.type === 'Testimonial') {
+      const { name, testimonial } = response;
+      if (name?.length < 3 || testimonial?.length < 5) {
+        setErrorMsg("Name - min 3 characters, and \n testimonial - min 5 characters");
+        setIsErrorInput(true);
       } else {
         setErrorMsg("");
         setIsErrorInput(false);
       }
+    } else {
+      setErrorMsg("");
+      setIsErrorInput(false);
+    }
+
+    //custom validation rules
+    if (selectedQ?.validationRules && response &&
+      (selectedQ?.type === 'Number' || selectedQ?.type === 'Text' || selectedQ?.type === 'TextArea')
+    ) {
+      let error = validateQuestion(selectedQ, response)
+      if (error?.length > 0) {
+        setIsErrorInput(true)
+        setErrorMsg(error?.length ? error : null);
+      }
+      if (!error) {
+        setIsErrorInput(false)
+      }
+    }
+
   }, [response])
 
   function handleNextClick() {
@@ -468,24 +517,24 @@ function NextPrev({ prev, next }) {
         <Text color="red">Note: * {errorMsg}</Text>
       }
       <Grid>
-          <Grid.Col span={6}>
-              {isFirstQuestion || (
-          <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
-                sx={{ position: "absolute", }}
-                size="lg" onClick={prev}/>
-            )}
-           </Grid.Col>
-              <Grid.Col span={6}>
+        <Grid.Col span={6}>
+          {isFirstQuestion || (
+            <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
+              sx={{ position: "absolute", }}
+              size="lg" onClick={prev} />
+          )}
+        </Grid.Col>
+        <Grid.Col span={6}>
 
           {isLastQuestion ?
 
             <RateupButtonBlue radius={"xl"} title={"Submit"}
-              disabled={(selectedQ?.required && !response) || isErrorInput}
+              disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
               size="lg" onClick={handleNextClick} />
             :
 
-            <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={(selectedQ?.required && !response) || isErrorInput}
+            <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
               size="lg" onClick={handleNextClick} rightIcon={<IconChevronRight />} />
           }
@@ -501,17 +550,17 @@ function TextForm() {
 
   return (
     <Paper shadow="sm"
-        className={classes.inputBox}
-      >
-        <Input
-            placeholder="Enter your answer"
-            value={response || ""}
-            onChange={(e) => updateResponse(e.currentTarget.value)}
-            sx={{ maxWidth: "400px" }}
-            variant="unstyled"
-            radius="xl"
-            size="sm"
-          />
+      className={classes.inputBox}
+    >
+      <Input
+        placeholder="Enter your answer"
+        value={response || ""}
+        onChange={(e) => updateResponse(e.currentTarget.value)}
+        sx={{ maxWidth: "400px" }}
+        variant="unstyled"
+        radius="xl"
+        size="sm"
+      />
     </Paper>
 
   );
@@ -523,20 +572,43 @@ function TextAreaForm() {
 
   return (
     <Paper shadow="sm"
-        className={classes.inputBox}
-      >
-          <Textarea
-            placeholder="Enter your answer"
-            value={response ? response.replace(', ', '\n') : ""}
-            onChange={(e) => {
-              const replacedValue = e.currentTarget.value.replace(/\n/g, ', ');
-              updateResponse(replacedValue)
-            }}
-            sx={{ maxWidth: "400px" }}
-            variant="unstyled"
-            radius="xl"
-            size="sm"
-          />
+      className={classes.inputBox}
+    >
+      <Textarea
+        placeholder="Enter your answer"
+        value={response ? response.replace(', ', '\n') : ""}
+        onChange={(e) => {
+          const replacedValue = e.currentTarget.value.replace(/\n/g, ', ');
+          updateResponse(replacedValue)
+        }}
+        sx={{ maxWidth: "400px" }}
+        variant="unstyled"
+        radius="xl"
+        size="sm"
+      />
+    </Paper>
+
+  );
+}
+
+function NumberForm() {
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { classes } = useStyles();
+
+  return (
+    <Paper shadow="sm"
+      className={classes.inputBox}
+    >
+      <NumberInput
+        size="sm"
+        type="number"
+        placeholder="Enter number input"
+        value={response || undefined}
+        onChange={(value) => updateResponse(value)}
+        //onBlur={handleInputBlur}
+        variant="unstyled"
+      //error={numberError && !isFocused  ? 'Invalid phone number' : null}
+      />
     </Paper>
 
   );
@@ -586,12 +658,12 @@ function PhoneForm() {
     label: string;
     description: string;
   }
-  
+
   const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
     ({ image, label, description, ...others }: ItemProps, ref) => (
       <div ref={ref} {...others}>
         <Group noWrap>
-          <Avatar src={image} sx={{minWidth: "50px"}}/>
+          <Avatar src={image} sx={{ minWidth: "50px" }} />
           <div>
             <Text size="sm">{label}</Text>
             <Text size="xs" opacity={0.65}>
@@ -606,13 +678,12 @@ function PhoneForm() {
   //TODO : save with 91 in db if required
 
   useEffect(() => {
-    if(response)
-    setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
+    if (response)
+      setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
   }, [response])
-  
+
   const handleInputBlur = () => {
     if (phoneError) {
-      console.log("Invalid phone number");
 
     }
     setIsFocused(false)
@@ -626,11 +697,11 @@ function PhoneForm() {
 
   return (
     <Paper shadow="sm"
-        className={classes.inputBox}
-      >
-        <Group>
+      className={classes.inputBox}
+    >
+      <Group>
         <Select
-          sx={{maxWidth: "140px"}}
+          sx={{ maxWidth: "140px" }}
           placeholder="Select Country Code"
           itemComponent={SelectItem}
           data={data}
@@ -643,7 +714,7 @@ function PhoneForm() {
             item.description.toLowerCase().includes(value.toLowerCase().trim())
           }
         />
-         <NumberInput
+        <NumberInput
           size="sm"
           max={9999999999}
           type="number"
@@ -653,9 +724,9 @@ function PhoneForm() {
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           variant="unstyled"
-          error={phoneError && !isFocused  ? 'Invalid phone number' : null}
+          error={phoneError && !isFocused ? 'Invalid phone number' : null}
         />
-        </Group>
+      </Group>
 
 
     </Paper>
@@ -676,7 +747,7 @@ function EmailForm() {
 
   const handleInputBlur = () => {
     if (emailError) {
-      console.log("Invalid email");
+      // console.log("Invalid email");
     }
     setIsFocused(false)
   };
@@ -689,18 +760,18 @@ function EmailForm() {
 
   return (
     <Paper shadow="sm"
-        className={classes.inputBox}
-      >
-    <TextInput
-      placeholder="Enter email address"
-      value={response || ""}
-      onChange={handleInputChange}
-      onBlur={handleInputBlur}
-      sx={{ maxWidth: "400px" }}
-      error={emailError && !isFocused  ? 'Invalid email' : null}
-      icon={<IconMail size="1.2rem" color="black" />}
-      variant="unstyled"
-    />
+      className={classes.inputBox}
+    >
+      <TextInput
+        placeholder="Enter email address"
+        value={response || ""}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        sx={{ maxWidth: "400px" }}
+        error={emailError && !isFocused ? 'Invalid email' : null}
+        icon={<IconMail size="1.2rem" color="black" />}
+        variant="unstyled"
+      />
     </Paper>
   );
 }
@@ -821,7 +892,7 @@ function SmileyForm() {
           variant={response === value ? "gradient" : "default"}
           gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
           onClick={() => updateResponse(value)}
-          sx={{minHeight:'70px', maxWidth:'90px'}}
+          sx={{ minHeight: '70px', maxWidth: '90px' }}
         >
           {/* <Stack> */}
           <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
@@ -905,6 +976,48 @@ function MSQForm() {
   );
 }
 
+function DDSSForm() {
+  const { selectedQ } = useContext(SelectedQContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const choices = selectedQ.choices[selectedLanguage];
+
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const data = choices.map((choice) => ({ value: choice, label: choice }));
+
+  return (
+    <Select
+      sx={{ minWidth: "300px", maxWidth: "500px" }}
+      label="Select one option"
+      placeholder="Pick one"
+      data={data}
+      value={response}
+      onChange={(e) => updateResponse(e)}
+    />
+  );
+}
+
+function DDMSForm() {
+  const { selectedQ } = useContext(SelectedQContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const choices = selectedQ.choices[selectedLanguage];
+
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const data = choices.map((choice) => ({ value: choice, label: choice }));
+
+  return (
+    <MultiSelect
+      sx={{ minWidth: "300px", maxWidth: "500px" }}
+      data={data}
+      value={response}
+      onChange={updateResponse}
+      label="Select one or more options"
+      placeholder="Pick one or more"
+    />
+  );
+}
+
 function DateForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const { classes } = useStyles();
@@ -939,7 +1052,7 @@ function TestimonialForm() {
   ) => {
     updateResponse({ ...response, testimonial: e.currentTarget.value });
   };
-
+  //TODO: image storage
   console.error("Image storage not implemented");
   const { classes } = useStyles();
 
@@ -948,13 +1061,13 @@ function TestimonialForm() {
       <Paper shadow="sm"
         className={classes.inputBox}
       >
-          <TextInput
-            placeholder="Enter your name"
-            value={response?.name}
-            onChange={handleNameChange}
-            sx={{ maxWidth: "400px" }}
-            variant="unstyled"
-          />
+        <TextInput
+          placeholder="Enter your name"
+          value={response?.name}
+          onChange={handleNameChange}
+          sx={{ maxWidth: "400px" }}
+          variant="unstyled"
+        />
       </Paper>
       <Paper shadow="sm"
         className={classes.inputBox}

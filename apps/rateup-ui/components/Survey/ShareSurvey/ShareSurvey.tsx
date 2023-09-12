@@ -1,6 +1,5 @@
 import {
   Paper,
-  Text,
   Stack,
   Button,
   CopyButton,
@@ -18,12 +17,17 @@ import {
   IconMessage,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useState } from "react";
+import ShareQR from "./ShareQR";
 
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
 
- // console.log(survey, ">>>istan survey");
+  const getSurveyUrl=(surveyId)=>{
+    return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`
+
+  }
+
   return (
     <Stack>
       <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
@@ -43,7 +47,7 @@ const ShareSurvey = ({ survey }) => {
               <Title order={6}>Share via whatsapp</Title>
 
               <CopyLinkComponent
-                value={"https://wa.me/9744520889?text="+survey.id}
+                value={"https://wa.me/9744520889?text=" + survey.id}
               />
             </Stack>
           )}
@@ -69,6 +73,8 @@ const ShareSurvey = ({ survey }) => {
           </Stack>
         </SimpleGrid>
       </Paper>
+
+      <ShareQR  url={getSurveyUrl(surveyId)}/>
     </Stack>
   );
 };

@@ -7,18 +7,23 @@ import { useRouter } from "next/router";
 
 export function useTeamsByUser(queryClient) {
     return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
+      staleTime: 1000 * 60 * 5, // 5 minutes,
       //refetchOnWindowFocus: "always",
       //refetchOnMount: "always",
       initialData: () => queryClient.getQueryData(["teamsByUser"]),
       onSuccess: (data) => {
-        console.log("Initial Prefetch Team Data:", queryClient.getQueryData(["teamsByUser"]));
+        //console.log("Initial Prefetch Team Data:", queryClient.getQueryData(["teamsByUser"]));
 
-        console.log("New fetch Team Data:", data);
+       // console.log("New fetch Team Data:", data);
       },
     });
 }
 
-export function useCreateTeamMutation(close, createTeamForm) {
+export function useCreateTeamMutation(
+  close : () => void, 
+  createTeamForm: any, 
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>
+  ) {
   const queryClient = useQueryClient();
   return useMutation((values) => handleCreateTeam(values), {
     onSuccess: () => {
@@ -31,6 +36,7 @@ export function useCreateTeamMutation(close, createTeamForm) {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      setIsCreating(false)
       close()
       createTeamForm.reset();
     },
@@ -44,6 +50,7 @@ export function useCreateTeamMutation(close, createTeamForm) {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      setIsCreating(false)
     },
   });
 }

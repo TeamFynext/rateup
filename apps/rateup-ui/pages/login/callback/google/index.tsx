@@ -12,7 +12,7 @@ async function handleGoogleCallback() {
         const response = await thirdPartySignInAndUp();
 
         if (response.status === "OK") {
-            console.log(response.user)
+           // console.log(response.user)
             if (response.createdNewUser) {
                 // sign up successful
 

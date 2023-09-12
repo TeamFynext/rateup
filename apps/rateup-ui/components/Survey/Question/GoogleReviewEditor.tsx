@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { QuestionTabsEnum } from '../EditSurvey';
-import { Paper, TextInput, Rating , Image, Group, Title, Stack, Switch, Text, SimpleGrid, Center, Button } from "@mantine/core";
+import { Paper, TextInput, Rating , Image, Group, Title, Stack, Switch, Text, SimpleGrid, Button } from "@mantine/core";
 import { RateupButtonSecondary } from '../../Button/RateupButtons';
 import { notifications } from '@mantine/notifications';
 import { IconInfoCircle, IconX } from '@tabler/icons-react';
@@ -25,8 +25,9 @@ const GoogleReviewEditor = ({
 }: IProps) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false)
+  const [isSaving, setIsSaving] = useState(false);
 
-  const questionUpdateMutation = useQuestionUpdateMutation(surveyId);
+  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
   const googleLinkUpdateMutation = useUpdateSurveyGoogleLinkMutation(surveyId, setLinkUpdateStatus);
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false);
@@ -35,11 +36,9 @@ const GoogleReviewEditor = ({
   const [minOpinion, setMinOpinion] = useState(6);
   const [selectedSmileys, setSelectedSmileys] = useState(['VeryHappy', 'Happy']);
 
-  selectedQ &&  console.log({ ...selectedQ })
-
   const updateGoogleReview = (googleReview: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, googleReview})
-    selectedQ &&  console.log({ ...selectedQ, googleReview})
+    //selectedQ &&  console.log({ ...selectedQ, googleReview})
    };
 
    useEffect(() => {
@@ -126,6 +125,7 @@ const GoogleReviewEditor = ({
 
       try {
         if(googleReviewLink !== googleLink){
+          setIsSaving(true);
           await googleLinkUpdateMutation.mutateAsync({
             data: { googleLink: googleReviewLink},
           });
@@ -182,7 +182,7 @@ const GoogleReviewEditor = ({
 
   return (
     <Stack justify="space-between" sx={{height:'100%'}}>
-    <Title order={3}>Question Options</Title>
+    <Title order={3}>Google Reviews Setup</Title>
     <Paper p="xl" sx={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
     <Group align='center' position="center" pb="xl">
           <Switch.Group
@@ -317,6 +317,7 @@ const GoogleReviewEditor = ({
             title={"Save"}
             size="md"
             onClick={handleSave}
+            loading={isSaving}
           />
       </Group>
 

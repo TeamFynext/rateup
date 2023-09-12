@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Modal, Space, Stack, TextInput, Textarea } from '@mantine/core'
+import { ActionIcon, Button, Modal, Space, Stack, Text, TextInput, Textarea } from '@mantine/core'
 import React, { useContext, useState } from 'react'
 import CSVReader from './CSVReader'
 import { readString } from 'react-papaparse'
@@ -11,12 +11,12 @@ import SelectedTeamContext from '../../context/SelectedTeam'
 
 
 const placeholder =
-  `phone,name
-917559054321,John Doe
-919550054321,Jane Doe
+`FORMAT:
+  phone,name
+  917559054321,John Doe
+  919550054321,Jane Doe
 
-
-Rules:
+RULES:
   - phone must have country code without '+' sign
   - name is optional
   - Must select team before importing (top right corner)
@@ -41,10 +41,10 @@ const parseCSV = (csvString: string): Promise<Array<{ phone: string, name?: stri
 }
 
 
-const ImportRespondentsModal = ({ opened, close, createGroup }) => {
+export const ImportRespondentsModal = ({ opened, close, createGroup }) => {
   const [groupName, setGroupName] = useState("")
   const [csvData, setCsvData] = useState("")
-  const {selectedTeamId} = useContext(SelectedTeamContext)
+  const { selectedTeamId } = useContext(SelectedTeamContext)
   const createRespondentsMutation = useCreateRespondentsMutation(selectedTeamId);
   const createGroupMutation = useCreateRGroupMutation(selectedTeamId);
 
@@ -71,15 +71,9 @@ const ImportRespondentsModal = ({ opened, close, createGroup }) => {
             onChange={(event) => setGroupName(event.currentTarget.value)}
           />
         )}
-        <Textarea
-          placeholder={placeholder}
-          label="Follow the format given in placeholder. Headers must be the same!"
-          autosize
-          maxRows={10}
-          minRows={5}
-          value={csvData}
-          onChange={(event) => setCsvData(event.currentTarget.value)}
-        />
+        <Text sx={{
+          whiteSpace: "pre-wrap",
+        }}>{placeholder}</Text>
         {/* TODO: replace below with a simple file upload & start parsing only when clicking 'Import' Button */}
         <CSVReader setCsvData={setCsvData} />
         <Space />
@@ -94,13 +88,11 @@ const ImportRespondentsModal = ({ opened, close, createGroup }) => {
     </Modal>
   )
 }
-function ImportRespondents({ createGroup = false }) {
-  const [importModalIsOpen, { open, close }] = useDisclosure(false)
+function ImportRespondents({ onClick }) {
 
   return (
-    <>
       <ActionIcon
-        onClick={open}
+        onClick={onClick}
         variant="filled"
         radius={"xl"}
         size={"xl"}
@@ -109,8 +101,6 @@ function ImportRespondents({ createGroup = false }) {
       >
         <IconPlus size="1.5rem" />
       </ActionIcon>
-      <ImportRespondentsModal opened={importModalIsOpen} close={close} createGroup={createGroup} />
-    </>
   )
 }
 export default ImportRespondents

@@ -1,4 +1,4 @@
-﻿import React, {useEffect} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {
     AppShell,
     useMantineTheme,
@@ -6,55 +6,70 @@ import {
     createStyles
 } from '@mantine/core';
 import { HeaderTabs } from './Header/Header';
-import { fetchUserInfo } from '../../backend/user/user.api';
-import { useQuery } from '@tanstack/react-query';
+import { IUserInfoApiResponse, fetchUserInfo } from '../../backend/user/user.api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '../../context/UserContext';
 import LeftNavbar from './Navbar/LeftNavbar';
 import { RouteParamsProvider } from '../../context/RouteParamsContext';
 import SessionAuth from '../SuperToken/SessionAuth';
 import { useRouter } from 'next/router';
+import useLocalStorage from '../../hooks/localStorage';
 
 const useStyles = createStyles((theme) => ({
   
     appShellBody: {
       paddingLeft:"10vw",
-      paddingRight:"10vw"
+      paddingRight:"10vw",
     },
 
 }));
-
 
 // @ts-ignore
 export default ({ children }) => {
     const theme = useMantineTheme();
     const { classes } = useStyles();
     const router = useRouter();
+    const [opened, setOpened] = useState(false);
 
-     const {
+    const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>('userInfo', null);
+    const { setUser } = useUser();
+    const queryClient = useQueryClient();
+
+    const {
         isLoading: isLoadingUserInfo,
-        data: userInfo,
+        data: userQueryData,
         error: errorUserInfo,
         refetch,
-     } = useQuery<UserInfoQueryData>({
-         queryKey: ["userInfoQuery"],
-         queryFn: () => fetchUserInfo(),
-        //refetchOnWindowFocus: "always",
-        // refetchOnMount: "always",
-         notifyOnChangeProps: ['data']
-    })
-    const { setUser } = useUser();
+      } = useQuery<IUserInfoApiResponse>({
+        queryKey: ["userInfoQuery"],
+        queryFn: fetchUserInfo,
+        notifyOnChangeProps: ['data'],
+        enabled: !userInfo, // fetch only if there is no data in localStorage
+      });
 
       useEffect(() => {
-        console.log("Query Fetched UserInfo:"+ JSON.stringify(userInfo?.data?.data))
-        !userInfo?.data?.data && refetch()
-        setUser(userInfo?.data?.data)
-
-        if(userInfo?.data?.data?.email && !userInfo?.data?.data?.orgId){
+        if (userQueryData?.data) {
+          setUserInfo(userQueryData); // update localStorage
+        }
+        if(userQueryData?.data?.email && !userQueryData?.data?.orgId){
             if (router.query.msg !== 'welcome') {
                 router.push('/signup?auth=google');
             }
         }
-      }, [userInfo])
+
+        if (!userQueryData) {
+            refetch();
+          }
+      }, [userQueryData]);
+
+      useEffect(() => {
+        setUser(userInfo?.data)
+
+        if(userInfo === null ) 
+            queryClient.invalidateQueries(["userInfoQuery"]);
+
+      }, [userInfo]);
+
 
     return (
         <SessionAuth>
@@ -63,12 +78,17 @@ export default ({ children }) => {
                 styles={{
                         main: {
                             background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                            padding:0 ,
+                            margin: 0,
+                            paddingTop: '10px',
+                            marginLeft: opened ? "130px" : 0,
+                            transition: "margin-left 0.3s ease-in-out", 
                         },
                     }}
 
-                navbar={<LeftNavbar />}
+                navbar={<LeftNavbar opened={opened} setOpened={setOpened}/>}
                 header={
-                        <HeaderTabs />
+                        <HeaderTabs opened={opened}  />
                     }
                 >
                     <Container className={classes.appShellBody} fluid>

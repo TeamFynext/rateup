@@ -6,12 +6,14 @@ import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import { useStyles } from "./EditSurvey.styles";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
+import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
   TypeSelection = "TypeSelection",
   LogicEditor = "LogicEditor",
   GoogleReviewEditor = "GoogleReviewEditor",
+  ValidationRulesEditor = "ValidationRulesEditor",
   None = "None",
 }
 interface EditSurveyProps {
@@ -83,6 +85,13 @@ export function EditSurvey({ questions, addQnTrigger,surveyType }: EditSurveyPro
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
             <GoogleReviewEditor
+                selectedQ={selectedQ}
+                setSelectedQ={setSelectedQ}
+                setActiveTab={setActiveTab}
+              />
+          </Tabs.Panel>
+          <Tabs.Panel value={QuestionTabsEnum.ValidationRulesEditor}>
+            <ValidationRulesEditor
                 selectedQ={selectedQ}
                 setSelectedQ={setSelectedQ}
                 setActiveTab={setActiveTab}

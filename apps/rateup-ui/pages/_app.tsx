@@ -41,7 +41,6 @@ export default function App({
   pageProps,
   ...appProps
 }: AppPropsWithLayout) {
-  console.log("route=", appProps.router.pathname);
   const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
   let LayoutComponent;
 
@@ -90,7 +89,7 @@ export default function App({
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
-        <link rel="shortcut icon" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.png" />
       </Head>
       {/* <SuperTokensWrapper> */}
         <MantineProvider withGlobalStyles withNormalizeCSS theme={styleOverride}>

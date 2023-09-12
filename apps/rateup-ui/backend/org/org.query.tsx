@@ -9,9 +9,9 @@ import { getTeamsMembersOfOrg, updateRole } from "./org.api";
     //refetchOnMount: "always",
     initialData: () => queryClient.getQueryData(["teamsMembersOfOrg"]),
     onSuccess: (data) => {
-     console.log("Initial Prefetch Members Data:", queryClient.getQueryData(["teamsMembersOfOrg"]));
+   //  console.log("Initial Prefetch Members Data:", queryClient.getQueryData(["teamsMembersOfOrg"]));
 
-     console.log("New fetch Members Data:", data);
+    // console.log("New fetch Members Data:", data);
     },
   });
 }

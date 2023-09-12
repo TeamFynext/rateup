@@ -13,9 +13,16 @@ interface Props {
     loading?: boolean
     fullWidth?: boolean
     mt?: string
+    py?: string
+    pl?: string
+    pr?: string
+    pb?: string
+    pt?: string
+    ml?: string
+    styles?:any
 }
 
-export const RateupButtonPrimary = ({ fullWidth, type, sx, radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonPrimary = ({ loading, fullWidth, type, sx, radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
     return (
         <Button
         radius={radius || "lg"}
@@ -33,13 +40,16 @@ export const RateupButtonPrimary = ({ fullWidth, type, sx, radius, title, disabl
             type={type}
             sx={sx}
             fullWidth={fullWidth}
+            loading={loading}
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonBlue = ({ title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonBlue = ({ 
+    loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size, ...other
+}: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -51,13 +61,16 @@ export const RateupButtonBlue = ({ title, radius, sx, disabled, onClick, leftIco
             variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
             size= {size}
             sx={sx}
+            loading={loading}
+            {...other}
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, radius, sx, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, radius, sx, disabled, 
+    onClick, leftIcon = null, rightIcon = null, variant, size, ...other }: Props) => {
     return (
         <Button
             radius={radius || "lg"}
@@ -73,13 +86,15 @@ export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, rad
             type={type}
             fullWidth={fullWidth}
             mt={mt}
+            {...other}
+
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size , ...other}: Props) => {
     return (
         <Button
             radius="lg"
@@ -94,13 +109,14 @@ export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null,
             onClick={onClick}
             variant="outline" 
             size= {size}
+            {...other}
         >
             {title}
         </Button >
     )
 }
 
-export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size }: Props) => {
+export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, leftIcon = null, rightIcon = null, variant, size , ...other }: Props) => {
     return (
         <Button
             radius={radius}
@@ -112,6 +128,7 @@ export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, lef
             onClick={onClick}
             variant="outline" 
             size= {size}
+            {...other}
         >
             {title}
         </Button >

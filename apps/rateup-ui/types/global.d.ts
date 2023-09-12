@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the backend
-import { QuestionType } from "./enums";
+import { QuestionType, MenuItemPriceType } from "./enums";
 
 type GoogleReview = {
   minRating?: number;
@@ -7,7 +7,24 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
-export {};
+type ValidationRules = {
+  length?: {
+    min: string;
+    max: string;
+    errorMessage: string;
+  };
+  wordCount?: {
+    min: string;
+    max: string;
+    errorMessage: string;
+  };
+  textType?: {
+    type: string;
+    errorMessage: string;
+  } | null
+};
+
+export { };
 declare global {
   type Question = {
     title: Zod.RecordType<string, string>;
@@ -18,6 +35,7 @@ declare global {
     id: string;
     googleReview?: GoogleReview
     logic?: Array<LogicJump>
+    validationRules?: ValidationRules
   };
 
   type Survey = {
@@ -30,17 +48,69 @@ declare global {
     createdBy: string;
     createdAt: string;
     teamId: string;
-    isProtected:boolean;
-    kioskMode:boolean;
-    type:string
+    isProtected: boolean;
+    kioskMode: boolean;
+    type: string;
+    getLocation: boolean;
+    welcomePageEnabled: boolean;
+  };
+
+
+  interface SurveySummary {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    title: string;
+    description: string;
+    languages: string[];
+    createdBy: string;
+    teamId: string;
+    active: boolean;
+    isProtected: boolean;
+    kioskMode: boolean;
+    type: string;
+    responses: {
+      id: string;
+      createdAt: string;
+      surveyId: string;
+      responses: Record<string, any>[];
+      language: string;
+      platform: string;
+      respondentId: string | null;
+    }[];
+    surveyStats: {
+      id: string;
+      surveyId: string;
+      visited: number;
+      started: number;
+      completed: number;
+    };
+    team: {
+      name: string;
+    };
+  }
+
+  type SurveyLanding = {
+    id: string;
+    title: string;
+    description: string | null;
+
+    surveys: string[];
+    createdBy: string;
+    createdAt: string;
+    type: string;
   };
 
   type SurveyResponse = {
     id: string;
-    createdAt: Date;
+    createdAt: string;
     surveyId: string;
     responses: Array<QuestionResponse>;
     language: string;
+    locationCoordinates?: {
+      latitute: number;
+      longitude: number;
+    }
   };
 
   type QuestionResponse = {
@@ -63,6 +133,8 @@ declare global {
       [QuestionType.Opinion]?: number;
       [QuestionType.MCQ]?: string;
       [QuestionType.MSQ]?: Array<string>;
+      [QuestionType.DDSS]?: string;
+      [QuestionType.DDMS]?: Array<string>;
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
@@ -89,4 +161,66 @@ declare global {
     response: any // Contains the response to match against
     action: LogicAction;
   }
+
+  type Menu = {
+    id: string
+    createdAt: string
+    name: string
+    displayName: string
+    locationUrl?: string
+    locationText?: string
+    websiteUrl?: string
+    websiteText?: string
+    teamId: string
+    logo?: string
+  }
+
+  type MenuCategory = {
+    id: string
+    createdAt: string
+    name: string
+    menuId: string
+    image: string
+  }
+
+  type MenuItem = {
+    id: string
+    createdAt: string
+    name: string
+    description: string
+    images: string[]
+    videoUrl: string | null
+    price: {
+      type: MenuItemPriceType,
+      price?: number,
+      variants?: Array<{
+        price: number,
+        name: string,
+      }>
+    }
+    categoryId: string
+  }
+  interface FullCategory extends MenuCategory {
+    items: MenuItem[]
+  }
+  interface FullMenu extends Menu {
+    categories: FullCategory[]
+  }
+
+  type Respondent = {
+    id: string
+    createdAt: Date
+    name: string | null
+    phone: string
+    email: string | null
+    teamId: string | null
+  }
+
+  type RGroup = {
+    id: string
+    createdAt: Date
+    name: string
+    teamId: string
+  }
+
 }

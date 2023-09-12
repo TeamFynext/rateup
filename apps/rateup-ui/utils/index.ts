@@ -53,7 +53,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
     for (const logic of logicJumps) {
       switch (logic.condition) {
         case LogicCondition.Equals:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = arrayEquals(userResponse, logic.response);
           } else {
             flag = userResponse === logic.response;
@@ -65,13 +65,13 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         case LogicCondition.IncludesAllOf:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = logic.response.every((val: string) => userResponse.includes(val));
           }
           break;
 
         case LogicCondition.IncludesAnyOf:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = logic.response.some((val: string) => userResponse.includes(val));
           } else {
             flag = logic.response.includes(userResponse);
@@ -79,7 +79,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         case LogicCondition.IncludesNoneOf:
-          if (type === QuestionType.MSQ) {
+          if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
             flag = logic.response.every((val: string) => !userResponse.includes(val));
           } else {
             flag = !logic.response.includes(userResponse);
@@ -91,7 +91,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         default:
-          console.error("Invalid LogicCondition: ", logic.condition);
+         // console.error("Invalid LogicCondition: ", logic.condition);
           break;
       }
       if (flag) {
@@ -101,7 +101,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
     return LogicAction.NextQ;
   } catch (e) {
     // TODO: show error toast if in dev mode
-    console.error(e);
+   // console.error(e);
     return LogicAction.NextQ;
   }
 }

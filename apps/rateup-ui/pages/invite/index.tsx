@@ -76,9 +76,7 @@ useEffect(() => {
 
 
 useEffect(() => {
-  console.log('====================================');
-  console.log(updateInviteMutation.error);
-  console.log('====================================');
+ 
 }, [updateInviteMutation.error])
 
 

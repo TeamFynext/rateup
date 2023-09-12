@@ -1,41 +1,109 @@
-import { useMantineTheme, Group, Avatar, Box, Divider, TextInput, Text } from "@mantine/core";
+import { useMantineTheme, Group, Avatar, Box, TextInput, Text, Title, Paper, Space, UnstyledButton } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
+import { PromotionTab } from "../../types/enums";
+import ImportRespondents, { ImportRespondentsModal } from "./ImportRespondents";
 
 export function ListItem({ onClick, name, isSelected }) {
   const { colors } = useMantineTheme();
-  const bg = isSelected ? colors.dark[7] : "initial";
+  const bg = isSelected ? "#F0F0F0" : "initial";
   return (
-    <Group p="xs" sx={{
-      borderBottom: "solid grey 1px", cursor: "pointer",
-      color: isSelected ? "white" : "black",
-      backgroundColor: bg
-    }} onClick={onClick}>
+    <Group
+      p="xs"
+      sx={{
+        cursor: "pointer",
+        backgroundColor: bg
+      }}
+      onClick={onClick}
+    >
       <Avatar size={"lg"} radius={"xl"} />
       <Text>{name}</Text>
     </Group>
   )
 }
 
-export function SideBar({ items, selected, setSelected, ...props }) {
-  const { colors } = useMantineTheme()
+export function LeftPanel({ items, activeTab, setActiveTab, importModalIsOpen,openImport, closeImport, selected, setSelected, ...props }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const searchResults = useMemo(() => {
-    if (!searchTerm) return items;
-    return items.filter(({ name }) => name.toLowerCase().includes(searchTerm.toLowerCase()))
-  }, [searchTerm, items])
+  const searchResults = searchTerm === "" ? items : items?.filter(({ name }) => name.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return (
-    <Box sx={{ flex: 1, backgroundColor: colors.gray[1], borderRadius: "8px", position: "relative", display: "flex", flexDirection: "column" }}>
-      <SearchBar placeholder={"Search"} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <Divider />
+    <Paper
+      sx={{
+        flex: 2, borderRadius: "8px",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        ...props.sx
+      }}
+    >
+      <PromotionHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+      <SearchBar
+        placeholder={"Search"}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
+      <Space h={"md"} />
+      {props.children}
       <Box sx={{ overflow: "auto", flexGrow: 1 }}>
-        {searchResults.map(({ name, id }) => (
+        {searchResults && searchResults.map(({ name, id }) => (
           <ListItem name={name} isSelected={id === selected} key={id} onClick={() => setSelected(id)} />
         ))}
       </Box>
-      {props.children}
-    </Box>
+      <ImportRespondents onClick={openImport} />
+      <ImportRespondentsModal opened={importModalIsOpen} close={closeImport} createGroup={activeTab === PromotionTab.Groups} />
+    </Paper>
+  )
+}
+
+function PromotionHeader({ activeTab, setActiveTab }) {
+  const theme = useMantineTheme()
+
+  return <Box
+    sx={{
+      borderRadius: "8px",
+      background: "linear-gradient(271deg, #3F5BA9 -6.39%, #49C8E9 204.31%);",
+      boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06);"
+    }}
+    p="lg"
+  >
+    <Group position="apart">
+      <Title sx={{
+        color: "white",
+      }}
+        order={2}
+      >
+        Promotion
+      </Title>
+      <Group position="center">
+        <TabSwitchButton activeTab={activeTab} setActiveTab={setActiveTab} tabName={PromotionTab.Groups} />
+        <TabSwitchButton activeTab={activeTab} setActiveTab={setActiveTab} tabName={PromotionTab.Individuals} />
+      </Group>
+    </Group>
+  </Box>;
+}
+
+function TabSwitchButton({ activeTab, setActiveTab, tabName }) {
+  const selected = activeTab === tabName;
+  return (
+    <UnstyledButton
+      py="xs"
+      px="xl"
+      onClick={() => setActiveTab(tabName)}
+      sx={{
+        borderRadius: "100px",
+        border: "2px solid white",
+        borderColor: "white",
+        backgroundColor: selected ? "white" : "transparent",
+        color: selected ? "#3F5BA9" : "white",
+        '&:hover': {
+          backgroundColor: "white !important",
+          color: "#3F5BA9 !important",
+        }
+      }}
+    >
+      {tabName}
+    </UnstyledButton>
+
   )
 }
 

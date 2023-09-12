@@ -1,16 +1,13 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState, forwardRef} from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
   ActionIcon,
-  Box,
   Checkbox,
   Group,
   Stack,
   TextInput,
-  Flex,
   Text,
-  Tabs,
   Space,
   Center,
   ScrollArea,
@@ -18,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconDeviceSdCard, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -31,7 +28,7 @@ import {
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
-import { googleReviewSupportedTypes, logicSupportedTypes } from "../../../utils/data";
+import { googleReviewSupportedTypes, logicSupportedTypes, validationSupportedTypes } from "../../../utils/data";
 import { IconChevronRight } from "@tabler/icons-react";
 import { fi } from "@faker-js/faker";
 
@@ -51,12 +48,12 @@ export function QuestionDetailedView({
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
+  const [isSaving, setIsSaving] = useState(false);
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const questionCreateMutation = useQuestionCreateMutation(surveyId);
-  const questionUpdateMutation = useQuestionUpdateMutation(surveyId);
+  const questionCreateMutation = useQuestionCreateMutation({surveyId, setIsSaving});
+  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
 
-  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm({
     // Any modifications to initialValues must be applied in the useEffect below
@@ -74,7 +71,7 @@ export function QuestionDetailedView({
           value.trim().length > 0 ? null : "Title is required";
         } else {
           //-----------whatsapp text message support only 4096 charecters only----------
-          if (value.trim().length > 10) {
+          if (value.trim().length > 4096) {
             return "Charecter length exceed (Max 4096 charecters allowed)";
           } else if (value.trim().length == 0) {
             return "message is required";
@@ -144,7 +141,7 @@ export function QuestionDetailedView({
       // Updating existing question
       questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
-    setIsSaving(false);
+    //setIsSaving(false);  
   };
 
   // TODO: show question type somewhere
@@ -236,9 +233,18 @@ export function QuestionDetailedView({
           )}
           {googleReviewSupportedTypes.includes(question?.type) && (
             <RateupButtonOutline
-              title={"Options"}
+              title={"Google Review"}
+              leftIcon={<IconStar />}
               size="sm"
               onClick={() => setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+            />
+          )}
+          {validationSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Custom Validation"}
+              leftIcon={<IconEdit />}
+              size="sm"
+              onClick={() => setActiveTab(QuestionTabsEnum.ValidationRulesEditor)}
             />
           )}
           <Space w="xl" />
@@ -357,6 +363,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
+    case QuestionType.DDSS:
+    case QuestionType.DDMS:
       return <ChoicesCreator qId={question.id} form={form} />;
     default:
       return null;

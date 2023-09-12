@@ -40,6 +40,7 @@ const ProfileSettings = () => {
       title: "",
       name: "",
       phone: "",
+      whatsappAccessToken: null,
     },
     validate: {
       title: (value) => {
@@ -70,8 +71,6 @@ const ProfileSettings = () => {
     },
   });
 
-  console.log(profileForm,">>>enfovo")
-
   const [isLoading, setIsLoading] = useState(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
 
@@ -81,6 +80,7 @@ const ProfileSettings = () => {
       title: values.title,
       name: values.name,
       phone: values.phone,
+      whatsappAccessToken: values.whatsappAccessToken,
     };
     updateProfile.mutate(data);
   };
@@ -116,6 +116,7 @@ const ProfileSettings = () => {
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
   useEffect(() => {
     const uploadAndUpdate = async () => {
+
       if (file) {
         const fileKey = await uploadFile(file);
         const data = { profilePhoto: fileKey };
@@ -245,6 +246,15 @@ const ProfileSettings = () => {
                 label="Phone"
                 placeholder="Enter your phone number"
                 {...profileForm?.getInputProps("phone")}
+              />
+            </Grid.Col>
+            <Grid.Col md={4}>
+              <TextInput
+                sx={{ maxWidth: "250px" }}
+                withAsterisk
+                label="whatsappAccessToken"
+                placeholder="Enter your whatsappAccessToken number"
+                {...profileForm?.getInputProps("whatsappAccessToken")}
               />
             </Grid.Col>
             

@@ -47,3 +47,8 @@ export async function getAllRGroupsByRespondent(respondentId: string) {
   const res = await axiosClient.get(`${RESPONDENTURL}/${respondentId}/groups`)
   return res.data
 }
+
+export async function deleteRespondent(respondentId: string) {
+  const res = await axiosClient.delete(`${RESPONDENTURL}/${respondentId}`)
+  return res.data
+}

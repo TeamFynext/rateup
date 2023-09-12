@@ -22,7 +22,6 @@ const OtherSettings = () => {
       }, [opened])
     
     const confirmReset = () => {
-        console.log(verifyEmail)
         if(user?.email === verifyEmail){
             notifications.show({
                 id: 'load-data',

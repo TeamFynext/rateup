@@ -46,6 +46,10 @@ const QuestionTypePreview = ({ type }) => {
             return null;
         case Q.MSQ:
             return null;
+        case Q.DDSS:
+            return null;
+        case Q.DDMS:
+            return null;
         case Q.Testimonial:
             return null;
         case Q.DateTime:

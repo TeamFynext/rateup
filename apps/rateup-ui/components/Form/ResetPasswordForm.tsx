@@ -34,7 +34,7 @@ const ResetPasswordForm = ({ mode }) => {
       }else{
         if(requestStatus === 'success'){
             setPage(ResetSteps.STEP_TWO)
-            console.log("Activating page 2")
+            //console.log("Activating page 2")
           }else{
             setPage(ResetSteps.STEP_ONE)
           }

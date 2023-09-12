@@ -110,7 +110,7 @@ const SurveySummary = () => {
       const totalResponses = Object.values(responseCounts).reduce((a, b) => a + b, 0);
       return (
         <Paper key={questionId} p="lg" style={{ marginBottom: '20px' }}>
-          <Text weight={700} mb="sm">{questionTitleMap[questionId][selectedLanguage]}</Text>
+          <Text weight={700} mb="sm">{selectedLanguage && questionTitleMap[questionId][selectedLanguage]}</Text>
           {Object.entries(responseCounts).map(([response, count]) => {
             const percentage = ((count / totalResponses) * 100).toFixed(2);
             const voteText = count > 1 ? 'votes' : 'vote';

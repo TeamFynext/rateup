@@ -6,7 +6,7 @@ export async function getUserEmail() {
         let accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
         email = accessTokenPayload.email
 
-        console.log("session....................."+ email)
+       // console.log("session....................."+ email)
     }
     return email ;
 }

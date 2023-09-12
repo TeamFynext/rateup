@@ -152,12 +152,12 @@ export default Members
 
 export async function getServerSideProps(context) {
   const queryClient = new QueryClient();
-  console.log("..........members ssr........")
+  //console.log("..........members ssr........")
   supertokensNode.init(backendConfig());
   const session = await getSessionWithRefreshHandling(context);
   const memberInitialData = await queryClient.prefetchQuery(["teamsMembersOfOrg"], () => fetchTeamsMembersOfOrg(session));
 
-  console.log("Prefetched Members: ", JSON.stringify(memberInitialData));
+  //console.log("Prefetched Members: ", JSON.stringify(memberInitialData));
   return {
     props: {
       dehydratedState: dehydrate(queryClient),

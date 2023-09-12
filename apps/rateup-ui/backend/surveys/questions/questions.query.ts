@@ -1,4 +1,3 @@
-import { IconCheck } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createQuestion, getQuestions, updateQuestion } from "./questions.api";
 import { notifications } from "@mantine/notifications";
@@ -13,7 +12,12 @@ interface QuestionUpdateMutationArgs {
   qId: string;
   data: any;
 }
-export const useQuestionCreateMutation = (surveyId: string) => {
+
+interface iProps {
+  surveyId: string
+  setIsSaving?: React.Dispatch<React.SetStateAction<boolean>>
+}
+export const useQuestionCreateMutation = ({surveyId, setIsSaving}:iProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: (data: any) => createQuestion(surveyId, data),
@@ -22,6 +26,7 @@ export const useQuestionCreateMutation = (surveyId: string) => {
         message: "Question created",
       });
       queryClient.invalidateQueries(["questions"]);
+      setIsSaving(false)
     },
     onError: (e) => {
       console.error(e);
@@ -29,11 +34,12 @@ export const useQuestionCreateMutation = (surveyId: string) => {
         message: "An error has occurred",
         color: "red",
       });
+      setIsSaving(false)
     },
   });
   return createMutation
 };
-export const useQuestionUpdateMutation = (surveyId: string) => {
+export const useQuestionUpdateMutation = ({surveyId, setIsSaving} : iProps) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ qId, data }: QuestionUpdateMutationArgs) => {
@@ -50,6 +56,7 @@ export const useQuestionUpdateMutation = (surveyId: string) => {
         // icon: <IconCheck />,
       });
       queryClient.invalidateQueries(["questions"]);
+      setIsSaving(false)
     },
     onError: (err) => {
       console.error(err);
@@ -57,6 +64,7 @@ export const useQuestionUpdateMutation = (surveyId: string) => {
         message: "Error updating question",
         color: "red",
       });
+      setIsSaving(false)
     },
   });
 
