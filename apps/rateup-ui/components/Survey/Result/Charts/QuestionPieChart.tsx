@@ -50,35 +50,37 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({ no, question, type,
 
 return    (
 
-    <Group>
-        <Stack ml="xl" sx={{minWidth: "400px"}}>
-             <Text  size="xl">{no}. {question}</Text>
+    <Group position='apart'>
+        <Stack ml="xl" sx={{width: '50%'}}>
+             <Text  size="md">{no}. {question}</Text>
 
              <Stack ml="xl" pt="sm">
-                <Text size="md" color="gray" mt="xl"> {type}</Text>
+                <Text size="md" color="gray" mt="sm"> {type}</Text>
                 <Text size="md" color="gray">{responseCount} responses</Text>
-                <Text mt="xl" pt="lg" size="lg" fw={500}>NPS Score = {data?.score?.toFixed(2)}</Text>
+                <Text mt="sm" pt="lg" size="lg" fw={500}>NPS Score = {data?.score?.toFixed(2)}</Text>
              </Stack>
         </Stack>
+        <Stack sx={{width: '42%'}}>
+            <PieChart width={300} height={270}>
+                <Pie
+                    dataKey="value"
+                    isAnimationActive={false}
+                    data={chartData}
+                    cx={100}
+                    cy={110}
+                    outerRadius={55}
+                    fill="#8884d8"
+                    label
+                >
+                    {chartData?.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip total={data?.total} />} />
+                <Legend />
+            </PieChart>
+        </Stack>
 
-        <PieChart width={300} height={270}>
-            <Pie
-                dataKey="value"
-                isAnimationActive={false}
-                data={chartData}
-                cx={100}
-                cy={110}
-                outerRadius={55}
-                fill="#8884d8"
-                label
-            >
-                {chartData?.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip total={data?.total} />} />
-            <Legend />
-        </PieChart>
         </Group>
 )};
 
