@@ -138,10 +138,11 @@ const Responses = ({ survey }) => {
             backgroundColor: selectedRowId === response.id ? 'silver' : '',
           }}
           >
-            <td style={cellGap}>{dayjs(response.createdAt).format("DD-MM-YYYY")}</td>
+            <td style={cellGap}> <Text color="dark.3">{dayjs(response.createdAt).format("DD-MM-YYYY")} </Text></td>
             {questions.map((q) => (
               <td key={q.id} style={cellGap}>
-                {getResponse(q.id, response)}
+                <Text color="dark.3"> {getResponse(q.id, response)} </Text>
+                
               </td>
             ))}
           </tr>
@@ -221,9 +222,13 @@ interface TableHeadProps {
     return (
       <thead style={stickyHeaderStyles}>
         <tr>
-          <th>Date</th>
+          <th><Text fz="sm" color="dark.9" fw="400">Date</Text></th>
           {questions.map((q) => (
-            <th key={q.id}>{q.title[selectedLanguage] || q.title['English']}</th>
+            <th key={q.id} title={ q.title[selectedLanguage] || q.title['English'] }>
+              <Text  color="dark.9" fz="sm" fw="400" truncate="end" sx={{maxWidth:"150px"}}>
+                   {q.title[selectedLanguage] || q.title['English']}
+              </Text>
+              </th>
           ))}
           {/* TODO : above 'English' given as a temporary fix,
            change default language for page survey/response/id */}

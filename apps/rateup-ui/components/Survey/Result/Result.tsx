@@ -8,18 +8,19 @@ import ResultsOverview from './ResultsOverview';
 
 const Result = ({survey}) => {
   return (
-    <StyledTabs defaultValue="summary" >
+    <StyledTabs defaultValue="stats" >
 
     <Tabs.List mb="md" pb="md">
+    <Tabs.Tab value="stats" >
+            Stats
+        </Tabs.Tab>
       <Tabs.Tab value="summary" >
               Summary
         </Tabs.Tab>
          <Tabs.Tab value="result" >
               Result
         </Tabs.Tab>
-        <Tabs.Tab value="stats" >
-            Stats
-        </Tabs.Tab>
+
         <Tabs.Tab value="responses">
             Responses
         </Tabs.Tab>

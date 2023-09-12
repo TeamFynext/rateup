@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from "next/router";
 import { useQuestions } from '../../../backend/surveys/questions/questions.query';
-import { Paper, Rating, Text, Group, Select , Chip, Stack, Button} from '@mantine/core';
+import { Paper, Rating, Text, Group, Select , Chip, ScrollArea, Button} from '@mantine/core';
 import { IconThumbDownFilled, IconThumbUpFilled } from '@tabler/icons-react';
 import { useResponses } from '../../../backend/surveys/response/response.query';
 
@@ -106,147 +106,152 @@ const SurveySummary = () => {
         mb="lg"
         sx={{maxWidth: "200px"}}
       />
-    {Object.entries(responseCounts).map(([questionId, responseCounts]) => {
-      const totalResponses = Object.values(responseCounts).reduce((a, b) => a + b, 0);
-      return (
-        <Paper key={questionId} p="lg" style={{ marginBottom: '20px' }}>
-          <Text weight={700} mb="sm">{selectedLanguage && questionTitleMap[questionId][selectedLanguage]}</Text>
-          {Object.entries(responseCounts).map(([response, count]) => {
-            const percentage = ((count / totalResponses) * 100).toFixed(2);
-            const voteText = count > 1 ? 'votes' : 'vote';
 
-            switch(responseTypeMap[questionId]) {
-              case 'Opinion Scale':
-                return (
-                    <Group key={response} pb="sm">
-                    <Chip color="indigo" variant="light" sx={{minWidth: "60px"}}>
-                      <b>{response} </b>
-                    </Chip>
-                    :
+    <ScrollArea h={'50vh'}>
 
-                    <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
-                    
-                  </Group>
-                );
-              case 'Multiple Choice':
-                return (
-                  <Group key={response} pb="sm">
-                    <Chip color="indigo" variant="light" sx={{minWidth: "120px"}}>
-                      {response} 
-                    </Chip>
-                    :
+        {Object.entries(responseCounts).map(([questionId, responseCounts]) => {
+          const totalResponses = Object.values(responseCounts).reduce((a, b) => a + b, 0);
+          return (
+            <Paper key={questionId} p="lg" style={{ marginBottom: '20px' }}>
+              <Text weight={400} mb="sm">{selectedLanguage && questionTitleMap[questionId][selectedLanguage]}</Text>
+              {Object.entries(responseCounts).map(([response, count]) => {
+                const percentage = ((count / totalResponses) * 100).toFixed(2);
+                const voteText = count > 1 ? 'votes' : 'vote';
 
-                    <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
-                    
-                  </Group>
-                );
-              case 'Rating':
-                return (
-                  <Group key={response}>
-                    <Rating value={parseInt(response)} readOnly />
-                    <Text>({count} {voteText})</Text>
-                  </Group>
-                );
+                switch(responseTypeMap[questionId]) {
+                  case 'Opinion Scale':
+                    return (
+                        <Group key={response} pb="sm">
+                        <Chip color="indigo" variant="light" sx={{minWidth: "60px"}}>
+                          <b>{response} </b>
+                        </Chip>
+                        :
 
-              case 'Like or Dislike':
-                return (
-                  <Group key={response}>
-                    {
-                      response === 'Like' 
-                      ? <Group align='center' mb="sm">  <Button
-                      color={"teal"}
-                      size="sm"
-                      px="md"
-                      radius="md"
-                      leftIcon={<IconThumbUpFilled /> }
-                      disabled
-                    >
-                    Like ({count})
-                  </Button> 
-                  
-                  {percentage}% 
-                  
-                  </Group>
-                       
-                      : <Group align='center'>                       <Button
-                      color={"red"}
-                      size="sm"
-                      px="md"
-                      radius="md"
-                      leftIcon={<IconThumbDownFilled /> }
-                      disabled
-                    >
-                    Dislike ({count})
-                  </Button>  {percentage}% </Group>
-
-                    }
-                      
-                  </Group>
-                );
-
-              case 'Yes or No':
-                return (
-                  <Group key={response}>
-                    {
-                      response === 'Yes' 
-                      ?
-                    <Group align='center'  mb="sm"
-                    >
-                        <Button
-                          color={"red"}
-                          size="sm"
-                          px="md"
-                          radius="md"
-                          disabled
-                        >
-                        Yes ({count})
-                      </Button>
-
-                      {percentage}% </Group>
-                      :
-
-                      <Group align='center'>
-                      <Button
-                        color={"red"}
-                        size="sm"
-                        px="md"
-                        radius="md"
-                        disabled
-                      >
-                      No ({count})
-                    </Button>
-
-                    {percentage}% </Group>
-                    }
-                      
-                  </Group>
-                );
-
-                case 'Multiple Select':
-                  return (
-                    <span key={response}>
-                      <Group pb="sm">
+                        <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
+                        
+                      </Group>
+                    );
+                  case 'Multiple Choice':
+                    return (
+                      <Group key={response} pb="sm">
                         <Chip color="indigo" variant="light" sx={{minWidth: "120px"}}>
                           {response} 
                         </Chip>
                         :
-                        <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
-                      </Group>
-                    </span>
-                  );
-                
-              default:
-                return (
-                  <div key={response}>
-                    <Text>{response} : {count} {voteText}</Text>
-                  </div>
-                );
-            }
-          })}
 
-        </Paper>
-      );
-    })}
+                        <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
+                        
+                      </Group>
+                    );
+                  case 'Rating':
+                    return (
+                      <Group key={response}>
+                        <Rating value={parseInt(response)} readOnly />
+                        <Text>({count} {voteText})</Text>
+                      </Group>
+                    );
+
+                  case 'Like or Dislike':
+                    return (
+                      <Group key={response}>
+                        {
+                          response === 'Like' 
+                          ? <Group align='center' mb="sm">  <Button
+                          color={"teal"}
+                          size="sm"
+                          px="md"
+                          radius="md"
+                          leftIcon={<IconThumbUpFilled /> }
+                          disabled
+                        >
+                        Like ({count})
+                      </Button> 
+                      
+                      {percentage}% 
+                      
+                      </Group>
+                          
+                          : <Group align='center'>                       <Button
+                          color={"red"}
+                          size="sm"
+                          px="md"
+                          radius="md"
+                          leftIcon={<IconThumbDownFilled /> }
+                          disabled
+                        >
+                        Dislike ({count})
+                      </Button>  {percentage}% </Group>
+
+                        }
+                          
+                      </Group>
+                    );
+
+                  case 'Yes or No':
+                    return (
+                      <Group key={response}>
+                        {
+                          response === 'Yes' 
+                          ?
+                        <Group align='center'  mb="sm"
+                        >
+                            <Button
+                              color={"red"}
+                              size="sm"
+                              px="md"
+                              radius="md"
+                              disabled
+                            >
+                            Yes ({count})
+                          </Button>
+
+                          {percentage}% </Group>
+                          :
+
+                          <Group align='center'>
+                          <Button
+                            color={"red"}
+                            size="sm"
+                            px="md"
+                            radius="md"
+                            disabled
+                          >
+                          No ({count})
+                        </Button>
+
+                        {percentage}% </Group>
+                        }
+                          
+                      </Group>
+                    );
+
+                    case 'Multiple Select':
+                      return (
+                        <span key={response}>
+                          <Group pb="sm">
+                            <Chip color="indigo" variant="light" sx={{minWidth: "120px"}}>
+                              {response} 
+                            </Chip>
+                            :
+                            <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
+                          </Group>
+                        </span>
+                      );
+                    
+                  default:
+                    return (
+                      <div key={response}>
+                        <Text>{response} : {count} {voteText}</Text>
+                      </div>
+                    );
+                }
+              })}
+
+            </Paper>
+          );
+        })}
+
+    </ScrollArea>
     </div>
   )
 }

@@ -270,19 +270,20 @@ function TakeSurvey() {
 
           <Modal
             opened={opened}
-            title="hello"
+            title="Confirm your responses"
             onClose={close}
             overlayProps={{
               color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
               opacity: 0.55,
               blur: 3,
             }}
+            styles={{
+              title: {
+              fontSize: '26px',
+              fontWeight: 700,
+              padding: "10px"
+            }}}
           >
-
-            <Modal.Header>
-              <Title order={2}>Confirm your responses</Title>
-            </Modal.Header>
-
             <Stack pb="5rem">
               <Divider />
               <Stack >

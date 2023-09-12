@@ -78,33 +78,33 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({ question, choices, 
     <Paper p="md" shadow="xs" style={{ marginBottom: '20px' }}>
       <Group>
         <Stack ml="xl" sx={{minWidth: "350px", maxWidth: "350px"}}>
-          <Text size="xl">{no}. {question}</Text>
+          <Text size="md">{no}. {question}</Text>
 
           <Stack ml="xl" pt="sm">
-                <Text size="md" color="gray" mt="xl"> {questionType}</Text>
+                <Text size="md" color="gray" mt="md"> {questionType}</Text>
                 <Text size="md" color="gray">{data?.length} responses</Text>
              </Stack>
         </Stack>
 
         <Stack  sx={{minWidth: "500px"}}>
-        <BarChart
-          width={500}
-          height={300}
-          data={choiceCounts}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          <Bar dataKey="count" fill="#fff" />
-        </BarChart>
+          <BarChart
+            width={500}
+            height={300}
+            data={choiceCounts}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            <Bar dataKey="count" fill="#fff" />
+          </BarChart>
         </Stack>
       </Group>
 
