@@ -84,7 +84,7 @@ const data = prepareData(surveysSummary);
 function getTotalCount(data) {
   let totalCount = 0;
   for (const item of data) {
-      totalCount += item.count;
+      totalCount += item?.responses;
   }
   return totalCount;
 }
