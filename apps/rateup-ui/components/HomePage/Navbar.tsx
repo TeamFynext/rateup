@@ -53,11 +53,11 @@ export function HomeNavbar() {
 
     return (
         <Box>
-            <Header withBorder={false}  height={60} px="md">
-                <Group position="apart" sx={{height: '100%'}}>
+            <Header withBorder={false}  height={110} p="md" fixed>
+                <Group position="apart" sx={{height: '100%'}} className={classes.wrapContainer}>
                     <Center>
-                        <Link href="/dashboard">
-                            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={100} height={26} />
+                        <Link href="/">
+                            <Image pt="2px" src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={172} height={45} />
                         </Link>
                     </Center>
                     <Group sx={{height: '100%'}} spacing={0} className={classes.hiddenMobile}>
@@ -168,6 +168,7 @@ export function HomeNavbar() {
                     <Group className={classes.hiddenMobile}>
                         <Button
                             variant="default"
+                            size='md'
                             onClick={() => {
                                 router.push({
                                     pathname: '/login',
@@ -182,6 +183,7 @@ export function HomeNavbar() {
                                 query: {type: 'sign_up'},
                             });
                         }}
+                        size='md'
                         >Sign up
                         </Button>
                     </Group>
@@ -214,7 +216,10 @@ export function HomeNavbar() {
                     </UnstyledButton>
                     <Collapse in={linksOpened}>{links}</Collapse>
                     <a href="#" className={classes.link}>
-                        Learn
+                        About
+                    </a>
+                    <a href="#" className={classes.link}>
+                        Contact
                     </a>
                     <a href="/dashboard" className={classes.link}>
                         Dashboard

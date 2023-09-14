@@ -32,15 +32,15 @@ export interface IUserData {
 export interface IUserInfoApiResponse {
     message: string;
     data: UserData;
-  }
+}
   
-  export const fetchUserInfo = async (): Promise<IUserInfoApiResponse> => {
-    const response = await axiosClient({
-      url: '/user/info',
-      method: 'GET',
-    });
-    return response.data as IUserInfoApiResponse;
-  };
+export const fetchUserInfo = async (): Promise<IUserInfoApiResponse> => {
+const response = await axiosClient({
+    url: '/user/info',
+    method: 'GET',
+});
+return response.data as IUserInfoApiResponse;
+};
 
 export const fetchUserProfile = () => axiosClient({
     url: `/user/profile`,

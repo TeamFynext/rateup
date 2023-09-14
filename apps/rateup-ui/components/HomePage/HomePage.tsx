@@ -1,4 +1,4 @@
-import { Container, Group, Stack , Text, Image, Center, Title, TextInput, Textarea, Divider} from '@mantine/core';
+import { Container, Group, Stack , Text, Image, Center, Title, Divider, Box} from '@mantine/core';
 import { HomeNavbar } from './Navbar';
 import useStyles from './HomePage.styles';
 import { RateupButtonPrimary, RateupButtonSecondary } from '../Button/RateupButtons';
@@ -6,6 +6,7 @@ import { IconChevronRight } from '@tabler/icons';
 import { useMediaQuery } from '@mantine/hooks';
 import Link from 'next/link';
 import { featuresData } from './FeaturesData';
+import ContactForm from './ContactForm';
 
 export function HomePage() {
     const { classes } = useStyles();
@@ -14,33 +15,33 @@ export function HomePage() {
 
     return (
         <Container fluid pt="xl" className={classes.layout}>            
-            <Container fluid className={classes.horizontalGaps}>
+            <Container fluid className={classes.wrapContainer}>
                  <HomeNavbar /> 
                 <Container fluid >
     {/* Top banner section */}
-                    <Group position="apart" mt="90px" mb="130px">
-                        <Stack sx={{width: '50%'}}>
-                            <Text fz="xl">Boost Your Credibility</Text>
+                    <Group position="apart" my={isMobile ? "100px":"130px"} >
+                        <Stack sx={{width: isMobile ? '100%' :'50%'}} pl="xs">
+                            <Text fz={isMobile ? "24px" : "36px"}>Boost Your Credibility</Text>
                             <Group  mt="-20px">
-                            <Text fz="xl">& Get</Text>
-                            <Text fz="xl" fw={700}ml="-7px">Rated Up</Text>
+                            <Text fz={isMobile ? "24px" : "36px"}>& Get</Text>
+                            <Text fz={isMobile ? "24px" : "36px"} fw={700}ml="-7px">Rated Up</Text>
 
                             <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/sparkles.png`}
                         width={40} height={40} />
                             </Group>
 
-                            <Text fz="xs" mb="lg">With Rate Up's <b>Loyalty Experience Platform</b>, you can connect with,
+                            <Text fz="20px" mb="lg">With Rate Up's <b>Loyalty Experience Platform</b>, you can connect with,
                                 interact with, and expand your customer connections.</Text>
 
                             <RateupButtonSecondary mt="xl" rightIcon={<IconChevronRight />} 
                             sx={{maxWidth:"200px"}}
-                            size="md"
+                            size="lg"
                             title="Get Started"/>
 
                         </Stack>
-                        <Stack >
-                        <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/b1.png`}
-                        width={465} height={300} />
+                        <Stack sx={{maxWidth: isMobile ? '100vw' :'50%'}}>
+                            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/b1.png`}
+                            width={465} height={300} />
                         </Stack>    
                     </Group>
                 </Container>
@@ -49,14 +50,15 @@ export function HomePage() {
     {/* Clients section*/}
 
         <Container fluid className={classes.yellowBox} >
-            <Center>
+            <Center className={classes.wrapContainer}>
                     <Text align='center' fz="xs" fw={500} mt="xl">TRUSTED BY TOP BUSINESSES</Text>
             </Center>
         </Container>
 
     {/* Features sections*/}
-        <Container fluid className={`${classes.horizontalGaps} ${classes.whiteBox}`} mt="-40px" py="100px">
-            <Title align="center" order={2} mb="xl"> Our Features </Title>
+        <Container fluid className={`${classes.whiteBox}`} mt="-40px" py="100px">
+            <Box className={classes.wrapContainer}>
+            <Title align="center" order={2} mb="xl" size="48px"> Our Features </Title>
             
             {featuresData.map((feature, index) => (
                 index % 2 === 0 ? (
@@ -81,17 +83,18 @@ export function HomePage() {
                 />
                 )
             ))}
+            </Box>
         </Container>
 
             <Container fluid  className={`${classes.horizontalGaps} `} py="80px">
 
                     <Stack>
 
-                        <Title align='center' order={1} color="#2564AE"> Obtain the standing you deserve </Title>
-                        <Text align='center' >Reviews enable new businesses to stand shoulder to shoulder with more established competition,<br/> and potentially gain a positive niche in people’s estimation and expectations</Text>
+                        <Title align='center' size={isMobile ? "38px" : "56px"} order={1} color="#2564AE"> Obtain the standing you deserve </Title>
+                        <Text align='center'  size="20px" mt="sm">Reviews enable new businesses to stand shoulder to shoulder with more established competition,<br/> and potentially gain a positive niche in people’s estimation and expectations</Text>
                         <Center mt="xl">
-                        <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/b2.png`}
-                        width={250} height={230} />                    </Center>
+                        <Image mt="sm" src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/b2.png`}
+                        width={280} height={260} />                    </Center>
 
                                         </Stack>
 
@@ -99,13 +102,13 @@ export function HomePage() {
             </Container>
 
     {/* Blue Box */}
-            <Container fluid  className={`${classes.horizontalGaps} ${classes.blueBox}`} >
+            <Container fluid  className={` ${classes.blueBox}`} >
                 
-                <Group position='apart'> 
-                    <Stack sx={{maxWidth:"60%"}}>
-                        <Title order={2}>Our loyalty programme</Title>
+                <Group position='apart' className={classes.wrapContainer}> 
+                    <Stack sx={{maxWidth: isMobile ? '100%' :'60%'}}>
+                        <Title order={2} size={isMobile ? "38px" : "60px"} >Our loyalty programme</Title>
 
-                        <Text>Make a distinctive loyalty programme that encourages people to choose to engage actively with your business.
+                        <Text  size="20px">Make a distinctive loyalty programme that encourages people to choose to engage actively with your business.
                              You'll generate more income from your current customers through stronger interaction between purchases, 
                              higher rates of repeat business, and greater customer advocacy, 
                             all while defending your profit margins from excessive discounting and rising acquisition expenses.</Text>
@@ -113,7 +116,7 @@ export function HomePage() {
                     </Stack> 
 
                     <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/loyalty.png`}
-                        width={200} height={200} />
+                        width={250} height={250} />
 
 
                 </Group>
@@ -123,47 +126,7 @@ export function HomePage() {
          
     {/*... Contact Form.... */}
 
-            <Container fluid  className={`${classes.horizontalGaps}`} py="100px">
-                
-                <Stack> 
-                    <Title order={2} sx={{fontSize: "36px"}} mb="md">Get in touch</Title>
-
-                    <Group > 
-
-                            <TextInput
-                                sx={{ maxWidth: "50%" }}
-                                label="Name"
-                                placeholder="Enter your full name"
-                               // {...contactForm.getInputProps("name")}
-                                withAsterisk
-                            />
-
-                            <TextInput
-                                sx={{ maxWidth: "50%" }}
-                                label="Email"
-                                placeholder="Enter your email"
-                                withAsterisk
-                            />
-
-                    </Group>
-
-
-                    <Textarea
-                        placeholder="Enter the message"
-                        label="Message"
-                        withAsterisk
-                        />
-
-                    <RateupButtonSecondary mt="xl" rightIcon={<IconChevronRight />} 
-                        sx={{maxWidth:"200px"}}
-                        size="md"
-                        title="Send Message"/>
-
-
-
-                </Stack>
-
-            </Container>
+         <ContactForm />
 
 
     {/*... Footer.... */}
@@ -175,7 +138,7 @@ export function HomePage() {
 
                         <Center>
 
-                        <Link href="/dashboard">
+                        <Link href="/">
                             <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
                         </Link>
 
@@ -214,13 +177,14 @@ export function HomePage() {
 }
 
 const FeatureLeft = ({ feature, title, description, img, w, h }) => {
+    const isMobile = useMediaQuery('(max-width: 480px)');
     return (
       <Group position="apart" mt="100px">
-        <Stack sx={{ width: '50%' }}>
-          <Text fz="sm" fw={700} color="yellow">{feature}</Text>
+        <Stack sx={{width: isMobile ? '100%' :'50%'}} >
+          <Text fz="24px" fw={700} color="yellow">{feature}</Text>
           
-          <Text fz="xl" fw="700" mt="-20px">{title}</Text>
-          <Text fz="xs" mb="lg">{description}</Text>
+          <Text fz="40px" fw="700" mt="-20px">{title}</Text>
+          <Text fz="20px" mb="lg">{description}</Text>
           
           <RateupButtonPrimary mt="xl" rightIcon={<IconChevronRight />} 
           sx={{ maxWidth: "200px" }} size="md" title="Explore More" />
@@ -233,16 +197,17 @@ const FeatureLeft = ({ feature, title, description, img, w, h }) => {
 };
 
 const FeatureRight = ({ feature, title, description, img, w, h }) => {
+    const isMobile = useMediaQuery('(max-width: 480px)');
     return (
       <Group position="apart" mt="100px">
          <Stack >
             <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/homepage/${img}`}
                         width={w} height={h} />
         </Stack>    
-        <Stack sx={{width: '60%'}}>
-            <Text fz="sm" fw={700} color="yellow">{feature}</Text>
-            <Text fz="xl" fw="700" mt="-20px">{title}</Text>
-            <Text fz="xs" mb="lg">{description} </Text>
+        <Stack sx={{width: isMobile ? '100%' :'60%'}}>
+            <Text fz="24px" fw={700} color="yellow">{feature}</Text>
+            <Text fz="40px" fw="700" mt="-20px">{title}</Text>
+            <Text fz="20px" mb="lg">{description} </Text>
 
             <RateupButtonPrimary mt="xl" rightIcon={<IconChevronRight />} 
             sx={{maxWidth:"200px"}}

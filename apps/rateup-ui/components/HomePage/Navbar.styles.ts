@@ -1,6 +1,12 @@
 import { createStyles, rem } from '@mantine/core';
 
 export const useNavStyles = createStyles((theme) => ({
+    wrapContainer: {
+        margin: '0 auto',
+        maxWidth: '1200px',
+        padding: '20px',
+        boxSizing: 'border-box' as const,
+    },
   link: {
       display: 'flex',
       alignItems: 'center',
@@ -10,7 +16,7 @@ export const useNavStyles = createStyles((theme) => ({
       textDecoration: 'none',
       color: theme.colorScheme === 'dark' ? theme.white : theme.black,
       fontWeight: 500,
-      fontSize: theme.fontSizes.xs,
+      fontSize: '18px',
 
       [theme.fn.smallerThan('sm')]: {
           height: rem(42),
