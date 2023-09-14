@@ -231,17 +231,7 @@ export default function CreateSurveyLandingModal({
               sx={{ padding: 5, borderRadius: 12 }}
               {...form.getInputProps("header")}
             />
-            {/* {!mergeSurvey &&  <MultiSelect
-              withAsterisk
-              label="Surveys"
-              placeholder="Search surveys"
-              searchable
-              // creatable
-              maxDropdownHeight="110"
-              // TODO: Add a user-level language list
-              data={teamSelectData}
-              {...form.getInputProps("surveys")}
-            />} */}
+            
 
             {/* //---------------survey card list view ------------ */}
             {!mergeSurvey && (
