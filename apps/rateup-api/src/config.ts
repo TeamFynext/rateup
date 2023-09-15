@@ -6,7 +6,6 @@ import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 
-let { Google } = ThirdPartyEmailPassword;
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
   : "http://localhost:3000";
@@ -70,10 +69,16 @@ export const SuperTokensConfig: TypeInput = {
       providers: [
         // We have provided you with development keys which you can use for testing.
         // IMPORTANT: Please replace them with your own OAuth keys for production use.
-        Google({
-          clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
-          clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
-        }),
+
+        {
+          config: {
+              thirdPartyId: "google",
+              clients: [{
+                  clientId:  process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
+                  clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+              }]
+          }
+        }
       ],
 
       override: {
@@ -81,9 +86,9 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             emailPasswordSignUp: async function (input) {
-              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
-                input.email
-              );
+             
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
+
               console.log(input);
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
@@ -94,9 +99,7 @@ export const SuperTokensConfig: TypeInput = {
               };
             },
             thirdPartySignInUp: async function (input) {
-              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
-                input.email
-              );
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
                 return originalImplementation.thirdPartySignInUp(input);

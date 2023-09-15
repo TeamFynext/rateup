@@ -242,14 +242,14 @@ export async function completeInvite(token: string) {
   if(!isUser){
     //Create new user , verify email
     const FAKE_PASSWORD = "qwerty123";
-    let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp(updatedInvitation.email, FAKE_PASSWORD);
+    let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp("public", updatedInvitation.email, FAKE_PASSWORD);
     if (signUpResult.status === "EMAIL_ALREADY_EXISTS_ERROR") {
         throw new Error('User already exists');
     }
 
-    const tokenRes = await EmailVerification.createEmailVerificationToken(signUpResult.user.id);
+    const tokenRes = await EmailVerification.createEmailVerificationToken("public", signUpResult.user.id);
     if (tokenRes.status === "OK") {
-        await EmailVerification.verifyEmailUsingToken(tokenRes.token);
+        await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
         let id = signUpResult.user.id
         let email = updatedInvitation.email
         const user = await createUser({ id, email });
@@ -278,7 +278,7 @@ export async function completeInvite(token: string) {
                 createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id)
         }
       // change password page
-      let passwordResetToken = await ThirdPartyEmailPassword.createResetPasswordToken(signUpResult.user.id);
+      let passwordResetToken = await ThirdPartyEmailPassword.createResetPasswordToken("public", signUpResult.user.id);
 
       if (passwordResetToken.status === "UNKNOWN_USER_ID_ERROR") {
           throw new Error("Should never come here");

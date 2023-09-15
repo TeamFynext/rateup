@@ -113,7 +113,7 @@ export async function changeUserPasswordHandler(
    }
 
    // call signin to check that input password is correct
-   let isPasswordValid = await ThirdPartyEmailPassword.emailPasswordSignIn(userInfo?.email, oldPassword)
+   let isPasswordValid = await ThirdPartyEmailPassword.emailPasswordSignIn(session!.getTenantId(), userInfo?.email, oldPassword)
 
    if (isPasswordValid.status !== "OK") {
        // TODO: handle incorrect password error
