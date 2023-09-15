@@ -10,11 +10,9 @@ import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 export function MenuCard({
   menu,
   handleEditClick,
-  openShare,
 }: {
   menu: Menu,
   handleEditClick: (menu: Menu) => void,
-  openShare: () => void,
 }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
@@ -53,7 +51,9 @@ export function MenuCard({
               <IconShare
                 onClick={(e) => {
                   e.stopPropagation(),
-                    openShare();
+                    router.push(
+                      `/dashboard/menu/${menu.id}?tab=Share`
+                    )
                 }}
               />
               <IconPencil

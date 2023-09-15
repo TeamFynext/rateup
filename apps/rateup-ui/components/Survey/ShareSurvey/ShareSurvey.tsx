@@ -23,14 +23,14 @@ import ShareQR from "./ShareQR";
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
 
-  const getSurveyUrl=(surveyId)=>{
+  const getSurveyUrl = (surveyId) => {
     return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`
 
   }
 
   return (
     <Stack>
-      <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
+      <Paper p="md" radius="md" shadow="lg">
         <SimpleGrid cols={2} spacing="xl">
           {/* //-----------------web survey share url ----------------- */}
           {survey.type == "web" ? (
@@ -47,6 +47,7 @@ const ShareSurvey = ({ survey }) => {
               <Title order={6}>Share via whatsapp</Title>
 
               <CopyLinkComponent
+                // TODO: move phone number to env
                 value={"https://wa.me/9744520889?text=" + survey.id}
               />
             </Stack>
@@ -74,26 +75,37 @@ const ShareSurvey = ({ survey }) => {
         </SimpleGrid>
       </Paper>
 
-      <ShareQR  url={getSurveyUrl(surveyId)}/>
+      <ShareQR url={getSurveyUrl(surveyId)} sx={{ borderRadius: "0.5rem" }} />
     </Stack>
   );
 };
 
-const CopyLinkComponent = ({ value }) => {
+interface CopyLinkComponentProps {
+  value: string;
+  disabled?: boolean;
+  label?: string;
+}
+export const CopyLinkComponent = ({ value, disabled = false, label = "" }: CopyLinkComponentProps) => {
   return (
-    <Group spacing={"0px"}>
+    <Group spacing={"0px"} align="end">
       <TextInput
-        sx={{ flexGrow: 1, maxWidth: "600px" }}
         readOnly
         value={value}
+        label={label}
         pr="sm"
-      ></TextInput>
+        disabled={disabled}
+        sx={{
+          maxWidth: "600px",
+          flexGrow: 1
+        }}
+      />
       <CopyButton value={value}>
         {({ copied, copy }) => (
           <Button
             color={copied ? "dark" : "yellow.6"}
             onClick={copy}
             rightIcon={<IconCopy />}
+            disabled={disabled}
           >
             {copied ? "Copied url" : "Copy url"}
           </Button>
