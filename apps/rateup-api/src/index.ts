@@ -23,7 +23,8 @@ server.register(cors, {
   credentials: true,
 });
 
-server.get("/api/ping", async () => {
+server.get("/api/ping", async (req) => {
+  console.log(req.headers)
   return { message: "pong!" };
 });
 
