@@ -48,9 +48,9 @@
     "react-export-table-to-excel": "^1.0.6",
     "react-papaparse": "^4.1.0",
     "recharts": "^2.7.3",
-    "supertokens-auth-react": "^0.32.1",
-    "supertokens-node": "^13.6.0",
-    "supertokens-web-js": "^0.5.0",
+    "supertokens-auth-react": "^0.34.2",
+    "supertokens-node": "^15.2.0",
+    "supertokens-web-js": "^0.7.3",
     "webfontloader": "^1.6.28",
     "zod": "^3.21.4"
   },

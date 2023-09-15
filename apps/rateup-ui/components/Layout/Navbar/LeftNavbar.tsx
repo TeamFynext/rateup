@@ -136,7 +136,7 @@ const mockdata = [
   ]  },
   { icon: IconBrowser, label: 'Surveys', href: '',
   submenus: [
-    { icon: IconSocial, label: 'Web Survey', href: '/dashboard/surveys' },
+    { icon: IconClipboardList, label: 'All Surveys', href: '/dashboard/surveys' },
     { icon: WhasappSurveyIcon, label: 'WhatsApp Survey', href: '/dashboard/whatsappsurvey' },
     { icon: IconPageBreak, label: 'Merge Surveys', href: '/dashboard/LandingPages' }
   ] },
