@@ -11,7 +11,6 @@ import SelectedTeamContext from "../../../context/SelectedTeam";
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [openCreateModal, { close, open }] = useDisclosure(false);
-  const [shareMenu, setShareMenu] = useState(undefined);
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
 
   function handleEditClick(menu: Menu) {
@@ -48,7 +47,7 @@ export default function MenuPage() {
           shadow="lg"
           radius="lg"
           sx={{ cursor: "pointer" }}
-          onClick={open}
+          onClick={handleCreateClick}
         >
           <Center h="100%">
             <Stack align="center">

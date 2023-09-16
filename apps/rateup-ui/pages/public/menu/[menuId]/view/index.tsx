@@ -38,7 +38,8 @@ export default function ({ fullMenu }) {
         px={largeScreen ? "10vw" : "1vw"} py="3vh"
         sx={{
           // TODO: add blur to background image
-          backgroundImage: `url(${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg)`,
+          background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${fullMenu.backgroundImage ? `url(${getFileUrlFromKey(fullMenu.backgroundImage)})` : ""}`,
+          backgroundColor: "#121212",
           backgroundPosition: "center",
           backgroundSize: "cover",
           height: "33vh",

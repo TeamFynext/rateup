@@ -16,8 +16,8 @@ export default function ({ menu }) {
       fluid px={largeScreen ? "10vw" : "1vw"} py="3vh"
       sx={{
         // TODO: add blur to background image
-        // TODO: add custom backgorund image
-        backgroundImage: `url(${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg)`,
+        background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${menu.backgroundImage ? `url(${getFileUrlFromKey(menu.backgroundImage)})` : ""}`,
+        backgroundColor: "#121212",
         backgroundSize: "cover",
         height: "100vh",
         color: "white"
