@@ -2,7 +2,7 @@ import prisma from "../../utils/prisma";
 import { createUser } from "../user/user.service";
 import { CreateTeamInput, EditTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, IdParamInput, InviteMemberInput } from "./team.schema";
 import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createEmailBody } from "../../utils/email/emailBody";
+import { createEmailBody } from "../../utils/email/supertoken/inviteEmail";
 import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import ThirdPartyEmailPassword from"supertokens-node/recipe/thirdpartyemailpassword";

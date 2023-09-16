@@ -5,6 +5,8 @@ import { createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset";
+import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -49,18 +51,7 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             sendEmail: async function (input) {
-              if (input.type === "PASSWORD_RESET") {
-                // You can change the path, domain of the reset password link,
-                // or even deep link it to your mobile app
-                return originalImplementation.sendEmail({
-                  ...input,
-                  passwordResetLink: input.passwordResetLink.replace(
-                    `${frontendUrl}/auth/reset-password`,
-                    `${frontendUrl}/login/reset-password`
-                  ),
-                });
-              }
-              return originalImplementation.sendEmail(input);
+              sendResetPasswordMail(input?.passwordResetLink, input.user.email)
             },
           };
         },
@@ -263,16 +254,11 @@ export const SuperTokensConfig: TypeInput = {
         override: (originalImplementation) => {
           return {
             ...originalImplementation,
-            sendEmail(input) {
-              return originalImplementation.sendEmail({
-                ...input,
-                emailVerifyLink: input.emailVerifyLink.replace(
-                  // This is: `${websiteDomain}${websiteBasePath}/verify-email`
-                  `${frontendUrl}/auth/verify-email`,
-                  `${frontendUrl}/login/verify-email`
-                ),
-              });
-            },
+
+            sendEmail: async function (input) {
+              sendVerifyMail(input.emailVerifyLink, input.user.email)
+            }
+
           };
         },
       },

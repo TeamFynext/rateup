@@ -4,7 +4,7 @@ export function createEmailBody(invite_link : string, email_id : string) {
     <table width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
             <td align="center" style="padding: 20px;">
-                <table width="600" cellspacing="0" cellpadding="0" border="0" style="padding: 10px 30px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <table width="800" cellspacing="0" cellpadding="0" border="0" style="padding: 10px 30px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <tr>
                         <td align="center" style="padding: 40px 0;">
                              <h1 style="font-size: 24px; margin-top: 20px;">Invite Request</h1>
@@ -28,5 +28,6 @@ export function createEmailBody(invite_link : string, email_id : string) {
             </td>
         </tr>
     </table>
+    </body>
         `;
 }

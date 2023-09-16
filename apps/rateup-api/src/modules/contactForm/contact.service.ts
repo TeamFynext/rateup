@@ -5,7 +5,12 @@ import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm";
 
 const prisma = new PrismaClient();
 
-export async function createMsg({ name, email, message }: CreateContactMessageInput) {
+export async function createMsg({ name, email, message, address }: CreateContactMessageInput) {
+
+  if (address?.length > 0) {
+      return "Error"
+  }
+
   const user = await prisma.contactForm.create({
     data: {
       name,
