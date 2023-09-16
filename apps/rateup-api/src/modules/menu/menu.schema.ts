@@ -8,6 +8,7 @@ const menuInput = {
     websiteText: z.string().optional(),
     websiteUrl: z.string().optional(),
     logo: z.string().optional(),
+    backgroundImage: z.string().optional(),
     teamId: z.string(),
 }
 
@@ -19,6 +20,7 @@ const updateMenuInputSchema = z.object({
     websiteText: z.string().optional(),
     websiteUrl: z.string().optional(),
     logo: z.string().optional(),
+    backgroundImage: z.string().optional(),
 })
 const menuInputSchema = z.object(menuInput)
 const menuCore = {
@@ -39,6 +41,7 @@ const menuPublicResponseSchema = z.object({
     websiteText: z.string().optional(),
     websiteUrl: z.string().optional(),
     logo: z.string().optional(),
+    backgroundImage: z.string().optional(),
 })
 
 const fullMenuPublicResponseSchema = z.object({

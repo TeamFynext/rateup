@@ -283,18 +283,18 @@ model WelcomeTheme {
 }
 
 model Menu {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime @default(now())
-  name         String // name of the menu
-  displayName  String // name displayed to clients (eg: Restaurant's Name)
-  locationText String? // location of the restaurant
-  locationUrl  String? // google maps url
-  websiteUrl   String? // website url
-  websiteText  String? // text to display for website url
-  logo         String? // logo url
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime @default(now())
+  name            String // name of the menu
+  displayName     String // name displayed to clients (eg: Restaurant's Name)
+  locationText    String? // location of the restaurant
+  locationUrl     String? // google maps url
+  websiteUrl      String? // website url
+  websiteText     String? // text to display for website url
+  logo            String? // logo url
+  backgroundImage String?
 
   categories MenuCategory[]
-  // add a relation to team
   team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId     String         @db.Uuid
 }
