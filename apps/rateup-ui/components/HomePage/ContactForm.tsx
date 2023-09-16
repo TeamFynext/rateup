@@ -15,6 +15,7 @@ const ContactForm = () => {
       name: "",
       email: "",
       message: "",
+      address:""
     },
     validate: {
       name: (value) => {
@@ -36,6 +37,9 @@ const ContactForm = () => {
         }
         return null; 
       },
+      address: (value) => {
+        return null; 
+      },
     },
   });
 
@@ -51,6 +55,7 @@ const ContactForm = () => {
       name: values.name,
       email: values.email,
       message: values.message,
+      address: values.address,
     };
     sendMessage.mutate(data);
   };
@@ -89,6 +94,14 @@ const ContactForm = () => {
                     withAsterisk
                     {...contactForm?.getInputProps("email")}
 
+                />
+
+              <TextInput
+                    sx={{ display: 'none'}}
+                    label="Address"
+                    placeholder="Enter your address"
+                   {...contactForm.getInputProps("address")}
+                    withAsterisk
                 />
         </Group>
 
