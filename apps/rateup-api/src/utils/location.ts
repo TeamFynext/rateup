@@ -38,3 +38,21 @@ export async function fetchLocationFromCoordinates(latitude: number, longitude: 
         return null;
     }
 }
+
+/**
+ * If coordinates are provided, uses them to fetch location information.
+ * Otherwise, ip address is used.
+ * @param ip 
+ * @param coords 
+ * @returns 
+ */
+export async function fetchLocation(ip: string, coords: { latitude: number, longitude: number}) {
+    let location = null;
+    if (!coords || !coords.latitude) {
+        location = await fetchLocationFromIp(ip);
+    } else {
+        location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);
+    }
+
+    return location;
+}

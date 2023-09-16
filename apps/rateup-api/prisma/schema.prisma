@@ -177,6 +177,7 @@ model SurveyResponse {
   platform     ResponsePlatform @default(WEB)
   respondent   Respondent?      @relation(fields: [respondentId], references: [id])
   respondentId String?          @db.Uuid
+  ip           String?
   location     Json? // { 
   //                      coordinates: {latitude: number, longitude: number},
   //                      city: string, state: string, country: string

@@ -79,13 +79,14 @@ interface Location {
     state: string,
     country: string
 }
-export async function updateResponseLocation(responseId: string, location: Location) {
+export async function updateResponse(responseId: string, data: { ip: string, location: Location }) {
     const response = await prisma.surveyResponse.update({
         where: {
             id: responseId
         },
         data: {
-            location: location as any
+            ip: data.ip,
+            location: data.location as any
         }
     })
     return response;

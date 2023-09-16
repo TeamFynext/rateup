@@ -1,8 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateResponseInput, GetResponsesParams, DeleteResponseParamsSchema } from "./response.schema";
-import { createResponse, deleteResponse, getResponses, resetResponsesStats, updateResponseLocation } from "./response.service";
-import { fetchLocationFromCoordinates, fetchLocationFromIp } from "../../utils/location";
-import { log } from "../../utils/logger";
+import { createResponse, deleteResponse, getResponses, resetResponsesStats, updateResponse } from "./response.service";
+import { fetchLocation } from "../../utils/location";
+import { getIp } from "../../utils/http";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -68,24 +68,14 @@ export async function createResponseHandler(
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
-      const coords = (response.location as any)?.coordinates as { latitude: number, longitude: number } || null;
-      let location = null;
-      if (!coords || !coords.latitude) {
-        let ip = request.ip
-        const forwardedFor = request.headers["x-forwarded-for"] as string || undefined;
-        log.info(`IP => ${request.ip} ${request.headers["x-forwarded-for"]}`);
+      const coords = (response.location as any)?.coordinates;
+      const ip = getIp(request);
+      let location = await fetchLocation(ip, coords);
+      if (!location) {
+        location = undefined;
+      }
 
-        if (forwardedFor) {
-          const ips = forwardedFor.split(",");
-          ip = ips[ips.length - 1];
-        }
-        location = await fetchLocationFromIp(ip);
-      } else {
-        location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);
-      }
-      if (location) {
-        updateResponseLocation(response.id, location);
-      }
+      await updateResponse(response.id, { ip, location });
     }
   } catch (e) {
     console.error(e);
