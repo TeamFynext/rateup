@@ -8,6 +8,7 @@ import { CategoryDisplay } from "../../../../../components/menu/category/Categor
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuPublicById } from "../../../../../backend/menu/menu.api";
+import axios from "axios";
 
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery('(min-width: 60em)');
@@ -131,6 +132,15 @@ export default function ({ fullMenu }) {
 
 export async function getServerSideProps({ params }) {
   const { menuId } = params
+  console.log('menuId: ', menuId)
+  console.log(process.env.NEXT_PUBLIC_FRONTEND_URL)
+  const res = await axios("https://ipapi.co/json/")
+  await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
+  if (res.status === 200) {
+    console.log('res.data: ', res.data)
+  } else {
+    console.error(res)
+  }
   const fullMenu = await getFullMenuPublicById(menuId)
   if (!fullMenu) {
     return {

@@ -36,7 +36,7 @@ export function MenuCard({
       sx={{ cursor: "pointer" }}
       onClick={() => {
         router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/menu/${menu.id}`
+          `/dashboard/menu/${menu.id}`
         );
       }}
     >

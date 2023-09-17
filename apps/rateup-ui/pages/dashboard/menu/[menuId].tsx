@@ -18,12 +18,18 @@ enum TabEnum {
   Edit = "Edit",
   Share = "Share",
 }
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from "../../../config/backendConfig";
+import Session from 'supertokens-node/recipe/session'
+import { getMenuCategoriesByMenuIdWithCustomAxios } from "../../../backend/menu/category/mCategory.api";
+import axios from "axios";
 
-export default () => {
+export default ({ categories: initialCategories }) => {
   const router = useRouter();
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
-  
+
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const deleteMutation = useDeleteMenuCategoryMutation(menuId, () => { }, () => { })
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
@@ -32,8 +38,8 @@ export default () => {
   const [activeTab, setActiveTab] = useState<TabEnum | null>(tab == TabEnum.Share ? TabEnum.Share : TabEnum.Edit);
 
   const { isLoading: isLoadingMenu, isError: isErrorMenu, data: menu } = useMenu(menuId)
-  const { isLoading, isError, data: categories } = useCategories(menuId);
-  
+  const { isLoading, isError, data: categories } = useCategories(menuId, initialCategories);
+
   useEffect(() => {
     if (tab && tab !== activeTab && Object.values(TabEnum).includes(tab as any)) {
       setActiveTab(tab as TabEnum)
@@ -43,6 +49,8 @@ export default () => {
   if (isLoading || isError) {
     return <CenteredSpinner />
   }
+
+  console.log('categories: ', categories)
 
   function handleCreateCategory() {
     setEditingCategory(null);
@@ -153,3 +161,66 @@ function ShareMenu({ teamId, menuId }) {
 
 
 
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  supertokensNode.init(backendConfig())
+  // TODO: use getSessionWithRefreshHandling(ctx) instead
+  let session;
+  try {
+    console.log('pinging: ', process.env.NEXT_PUBLIC_API_URL + '/api/ping')
+    await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
+
+    console.log("context.req => ", context.req.headers)
+    
+    session = await Session.getSession(context.req, context.res, {
+      overrideGlobalClaimValidators: () => {
+        // this makes it so that no custom session claims are checked
+        return []
+      }
+    })
+  //  console.log('session', session)
+  } catch (err: any) {
+    //console.log('err1: ', err)
+    if (err.type === Session.Error.TRY_REFRESH_TOKEN) {
+
+      return { props: { fromSupertokens: 'needs-refresh' } }
+    } else if (err.type === Session.Error.UNAUTHORISED) {
+      console.log('unauthorized error')
+      return { props: { fromSupertokens: 'needs-refresh' } }
+    }
+
+    throw err
+  }
+
+  try {
+    const { menuId } = context.params as { menuId: string };
+    console.log('access token: ', session.getAccessToken())
+    console.log(process.env.NEXT_PUBLIC_API_URL)
+    const axiosInstance = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_API_URL + '/api',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session!.getAccessToken()
+      },
+    })
+
+    const categories = await getMenuCategoriesByMenuIdWithCustomAxios(axiosInstance, { menuId })
+
+
+    return {
+      props: {
+        categories: categories.length > 0 ? [
+          {
+            fromServer: true,
+            ...categories[0]
+          },
+          ...categories.slice(1)
+        ] : []
+      },
+    }
+
+  } catch (err) {
+    console.log('err2: ', err)
+    return {}
+  }
+}
