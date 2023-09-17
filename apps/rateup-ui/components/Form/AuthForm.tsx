@@ -177,11 +177,13 @@ const AuthForm = ({
   async function googleSignInClicked() {
     try {
       const authUrl = await getAuthorisationURLWithQueryParamsAndSetState({
-        providerId: "google",
+        thirdPartyId: "google",
 
         // This is where Google should redirect the user back after login or error.
         // This URL goes on the Google's dashboard as well.
-        authorisationURL: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/login/callback/google`,
+       
+        frontendRedirectURI: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/login/callback/google`,
+
       });
 
       /*

@@ -5,7 +5,7 @@ import { TypeInput } from "supertokens-node/types";
 
 export const backendConfig = (): TypeInput => {
   return {
-    framework: "express",
+    framework: "fastify",
     supertokens: {
       // These are the connection details of the app you created on supertokens.com
       connectionURI: process.env.SUPERTOKEN_URI,
@@ -15,6 +15,6 @@ export const backendConfig = (): TypeInput => {
     recipeList: [
       SessionNode.init(),
     ],
-    isInServerlessEnv: false,
+    isInServerlessEnv: true,
   }
 }

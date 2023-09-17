@@ -8,6 +8,7 @@ import { CategoryDisplay } from "../../../../../components/menu/category/Categor
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuPublicById } from "../../../../../backend/menu/menu.api";
+import axios from "axios";
 
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery('(min-width: 60em)');
@@ -38,7 +39,8 @@ export default function ({ fullMenu }) {
         px={largeScreen ? "10vw" : "1vw"} py="3vh"
         sx={{
           // TODO: add blur to background image
-          backgroundImage: `url(${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg)`,
+          background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${fullMenu.backgroundImage ? `url(${getFileUrlFromKey(fullMenu.backgroundImage)})` : ""}`,
+          backgroundColor: "#121212",
           backgroundPosition: "center",
           backgroundSize: "cover",
           height: "33vh",
@@ -130,6 +132,15 @@ export default function ({ fullMenu }) {
 
 export async function getServerSideProps({ params }) {
   const { menuId } = params
+  console.log('menuId: ', menuId)
+  console.log(process.env.NEXT_PUBLIC_FRONTEND_URL)
+  const res = await axios("https://ipapi.co/json/")
+  await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
+  if (res.status === 200) {
+    console.log('res.data: ', res.data)
+  } else {
+    console.error(res)
+  }
   const fullMenu = await getFullMenuPublicById(menuId)
   if (!fullMenu) {
     return {

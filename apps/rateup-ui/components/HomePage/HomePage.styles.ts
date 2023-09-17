@@ -31,6 +31,13 @@ export default createStyles((theme) => ({
 
     },
 
+    wrapContainer: {
+        margin: '0 auto',
+        maxWidth: '1200px',
+        padding: '20px',
+        boxSizing: 'border-box' as const,
+    },
+
     horizontalGaps: {
         paddingRight: "100px",
         paddingLeft: "100px",

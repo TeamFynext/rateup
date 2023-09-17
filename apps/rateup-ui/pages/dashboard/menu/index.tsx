@@ -1,5 +1,5 @@
 import { Center, Container, Flex, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { TeamSelector } from "../promotion";
 import { IconPlus } from "@tabler/icons-react";
 import { useMenusByTeamId } from "../../../backend/menu/menu.query";
@@ -7,20 +7,12 @@ import { MenuCard } from "../../../components/menu/MenuCard";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuModal } from "../../../components/menu/CreateMenu";
 import SelectedTeamContext from "../../../context/SelectedTeam";
-import { ShareMenuModal } from "../../../components/menu/ShareMenuModal";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [openCreateModal, { close, open }] = useDisclosure(false);
-  const [shareMenu, setShareMenu] = useState(undefined);
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
 
-  function handleShareMenu(menu: Menu) {
-    setShareMenu(menu);
-  }
-  function handleShareMenuClose() {
-    setShareMenu(undefined);
-  }
   function handleEditClick(menu: Menu) {
     setEditingItem(menu);
     open();
@@ -55,7 +47,7 @@ export default function MenuPage() {
           shadow="lg"
           radius="lg"
           sx={{ cursor: "pointer" }}
-          onClick={open}
+          onClick={handleCreateClick}
         >
           <Center h="100%">
             <Stack align="center">
@@ -68,8 +60,7 @@ export default function MenuPage() {
         </Paper>
         <SelectedTeamContext.Provider value={{ selectedTeamId }}>
           {selectedTeamId && <CreateMenuModal opened={openCreateModal} close={handleCreateEditClose} editingItem={editingItem} />}
-          <DisplayMenus handleShareMenuOpen={handleShareMenu} handleEditClick={handleEditClick} />
-          <ShareMenuModal opened={!!shareMenu} close={handleShareMenuClose} menu={shareMenu} />
+          <DisplayMenus handleEditClick={handleEditClick} />
         </SelectedTeamContext.Provider>
       </SimpleGrid>
     </Container>
@@ -77,7 +68,7 @@ export default function MenuPage() {
 
 }
 
-function DisplayMenus({ handleShareMenuOpen, handleEditClick }) {
+function DisplayMenus({ handleEditClick }) {
   const { selectedTeamId } = useContext(SelectedTeamContext)
   const {
     isError, isLoading, data: menus,
@@ -88,7 +79,7 @@ function DisplayMenus({ handleShareMenuOpen, handleEditClick }) {
   return (
     <>
       {menus.map((menu) => (
-        <MenuCard key={menu.id} menu={menu} openShare={() => handleShareMenuOpen(menu)} handleEditClick={handleEditClick} />
+        <MenuCard key={menu.id} menu={menu} handleEditClick={handleEditClick} />
       ))}
     </>
   )

@@ -1,27 +1,56 @@
-import { Button, Container, Group, Stack, useMantineTheme } from "@mantine/core";
+import { Button, Container, Group, Paper, Select, SimpleGrid, Stack, Tabs } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CenteredSpinner from "../../../components/Loaders/CenteredSpinner";
 import { useCategories, useDeleteMenuCategoryMutation } from "../../../backend/menu/category/mCategory.query";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
 import { CategoryCard } from "../../../components/menu/category/CategoryCard";
+import StyledTabs from "../surveys/StyledTabs";
+import ShareQR from "../../../components/Survey/ShareSurvey/ShareQR";
+import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
+import { useMenu } from "../../../backend/menu/menu.query";
+import { CopyLinkComponent } from "../../../components/Survey/ShareSurvey/ShareSurvey";
 
-export default () => {
+enum TabEnum {
+  Edit = "Edit",
+  Share = "Share",
+}
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from "../../../config/backendConfig";
+import Session from 'supertokens-node/recipe/session'
+import { getMenuCategoriesByMenuIdWithCustomAxios } from "../../../backend/menu/category/mCategory.api";
+import axios from "axios";
+
+export default ({ categories: initialCategories }) => {
   const router = useRouter();
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
+
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const deleteMutation = useDeleteMenuCategoryMutation(menuId, () => { }, () => { })
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
-  const theme = useMantineTheme();
 
-  const { isLoading, isError, data: categories } = useCategories(menuId);
+  const { tab } = router.query;
+  const [activeTab, setActiveTab] = useState<TabEnum | null>(tab == TabEnum.Share ? TabEnum.Share : TabEnum.Edit);
+
+  const { isLoading: isLoadingMenu, isError: isErrorMenu, data: menu } = useMenu(menuId)
+  const { isLoading, isError, data: categories } = useCategories(menuId, initialCategories);
+
+  useEffect(() => {
+    if (tab && tab !== activeTab && Object.values(TabEnum).includes(tab as any)) {
+      setActiveTab(tab as TabEnum)
+    }
+  }, [tab])
+
   if (isLoading || isError) {
     return <CenteredSpinner />
   }
+
+  console.log('categories: ', categories)
 
   function handleCreateCategory() {
     setEditingCategory(null);
@@ -40,31 +69,158 @@ export default () => {
 
   return (
     <Container fluid>
-      <Group position="apart">
-        <Button
-          leftIcon={<IconPlus />}
-          onClick={handleCreateCategory}
-          variant="gradient"
-          radius={"12px"}
-          gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
-        >
-          Add Category
-        </Button>
-        <SearchBox
-          searchText={searchText}
-          setSearchText={setSearchText}
-        />
-      </Group>
-      <Stack mt="sm">
-        {categories.map((category) => (
-          <CategoryCard key={category.id} category={category} handleDelete={deleteMutation.mutate} handleEdit={handleEditCategory} />
-        ))}
-      </Stack>
-      <CreateMenuCategoryModal opened={openCreateModal} close={handleClose} menuId={menuId} editingItem={editingCategory} />
-    </Container>
+      <StyledTabs keepMounted={false} value={activeTab} onTabChange={setActiveTab as (tab: string) => void} >
+        <Group position="apart" mb="md">
+          <Button
+            leftIcon={<IconPlus />}
+            onClick={handleCreateCategory}
+            variant="gradient"
+            radius={"12px"}
+            gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
+            sx={{
+              visibility: activeTab === TabEnum.Edit ? "visible" : "hidden",
+            }}
+          >
+            Add Category
+          </Button>
+          <Tabs.List
+          >
+            <Tabs.Tab
+              value={TabEnum.Edit}
+            >
+              Edit
+            </Tabs.Tab>
+            <Tabs.Tab
+              value={TabEnum.Share}
+            >
+              Share
+            </Tabs.Tab>
+          </Tabs.List>
+          <SearchBox
+            searchText={searchText}
+            setSearchText={setSearchText}
+            sx={{
+              visibility: activeTab === TabEnum.Edit ? "visible" : "hidden",
+            }}
+          />
+        </Group>
+        <Tabs.Panel value={TabEnum.Edit}>
+          <Stack mt="sm">
+            {categories.map((category) => (
+              <CategoryCard key={category.id} category={category} handleDelete={deleteMutation.mutate} handleEdit={handleEditCategory} />
+            ))}
+          </Stack>
+          <CreateMenuCategoryModal opened={openCreateModal} close={handleClose} menuId={menuId} editingItem={editingCategory} />
+        </Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Share}>
+          {menu && <ShareMenu teamId={menu.teamId} menuId={menu.id} />}
+        </Tabs.Panel>
+      </StyledTabs>
+    </Container >
   )
 }
 
+function ShareMenu({ teamId, menuId }) {
+  const [selectedSurveyId, setSelectedSurveyId] = useState("")
+  const { data: res, isLoading, isError } = useSurveysByTeam(teamId, !!teamId)
+  const surveys = res?.data as Survey[]
+
+  if (isLoading || isError || !surveys) {
+    return null
+  }
+
+  const shareLink = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/menu/${menuId}/feedback/${selectedSurveyId}`
+  return (
+    <Stack>
+      <Paper px="md" py="lg" radius="md" shadow="lg">
+        <SimpleGrid cols={2} spacing="xl" sx={{
+          '& .mantine-InputWrapper-label': {
+            fontWeight: 600,
+            fontSize: "1.1rem",
+          }
+        }}>
+          <Select
+            label="Survey to share with"
+            placeholder="Select survey"
+            data={surveys.map((survey) => ({ value: survey.id, label: survey.title }))}
+            value={selectedSurveyId}
+            onChange={setSelectedSurveyId}
+          />
+          <CopyLinkComponent
+            value={!selectedSurveyId ? `Select survey first` : shareLink}
+            disabled={!selectedSurveyId}
+            label="Share Link"
+          />
+        </SimpleGrid>
+      </Paper>
+      <ShareQR url={shareLink} />
+    </Stack>
+  )
+};
 
 
 
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  supertokensNode.init(backendConfig())
+  // TODO: use getSessionWithRefreshHandling(ctx) instead
+  let session;
+  try {
+    console.log('pinging: ', process.env.NEXT_PUBLIC_API_URL + '/api/ping')
+    await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
+
+    console.log("context.req => ", context.req.headers)
+    
+    session = await Session.getSession(context.req, context.res, {
+      overrideGlobalClaimValidators: () => {
+        // this makes it so that no custom session claims are checked
+        return []
+      }
+    })
+  //  console.log('session', session)
+  } catch (err: any) {
+    //console.log('err1: ', err)
+    if (err.type === Session.Error.TRY_REFRESH_TOKEN) {
+
+      return { props: { fromSupertokens: 'needs-refresh' } }
+    } else if (err.type === Session.Error.UNAUTHORISED) {
+      console.log('unauthorized error')
+      return { props: { fromSupertokens: 'needs-refresh' } }
+    }
+
+    throw err
+  }
+
+  try {
+    const { menuId } = context.params as { menuId: string };
+    console.log('access token: ', session.getAccessToken())
+    console.log(process.env.NEXT_PUBLIC_API_URL)
+    const axiosInstance = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_API_URL + '/api',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session!.getAccessToken()
+      },
+    })
+
+    const categories = await getMenuCategoriesByMenuIdWithCustomAxios(axiosInstance, { menuId })
+
+
+    return {
+      props: {
+        categories: categories.length > 0 ? [
+          {
+            fromServer: true,
+            ...categories[0]
+          },
+          ...categories.slice(1)
+        ] : []
+      },
+    }
+
+  } catch (err) {
+    console.log('err2: ', err)
+    return {}
+  }
+}

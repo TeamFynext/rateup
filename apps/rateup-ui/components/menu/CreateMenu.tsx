@@ -1,14 +1,16 @@
 import { useCreateMenuMutation, useUpdateMenuMutation } from "../../backend/menu/menu.query";
 import { useContext, useEffect, useState } from "react";
-import { Button, FileInput, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Center, FileInput, Group, Modal, SimpleGrid, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import SelectedTeamContext from "../../context/SelectedTeam";
-import { getFileNameFromKey, uploadFile } from "../../utils/file-upload/upload";
+import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
 
 export function CreateMenuModal({ opened, close, editingItem }) {
   const { selectedTeamId } = useContext(SelectedTeamContext)
   const [isCreating, setIsCreating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const createMenuMutation = useCreateMenuMutation(selectedTeamId, close, setIsCreating)
   const updateMenuMutation = useUpdateMenuMutation(
     selectedTeamId,
@@ -20,19 +22,40 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       setIsCreating(false);
     }
   )
-  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
 
   useEffect(() => {
-    if (!imageToUpload) return;
-    uploadFile(imageToUpload)
+    if (!logo) return;
+
+    setIsUploading(true)
+    uploadFile(logo)
       .then((key) => {
         form.setFieldValue("logo", key);
+        setIsUploading(false)
       })
       .catch((err) => {
-        showErrorToast("Error uploading image. Please try again.");
+        showErrorToast("Error uploading logo. Please try again.");
         console.error(err);
+        setIsUploading(false)
       });
-  }, [imageToUpload])
+  }, [logo])
+
+  useEffect(() => {
+    if (!backgroundImage) return;
+
+    setIsUploading(true)
+    uploadFile(backgroundImage)
+      .then((key) => {
+        form.setFieldValue("backgroundImage", key);
+        setIsUploading(false)
+      })
+      .catch((err) => {
+        showErrorToast("Error uploading background image. Please try again.");
+        console.error(err);
+        setIsUploading(false)
+      });
+  }, [backgroundImage])
 
   const form = useForm({
     initialValues: editingItem || {
@@ -43,6 +66,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       websiteUrl: "",
       websiteText: "",
       logo: "",
+      backgroundImage: "",
       teamId: selectedTeamId,
     },
     validate: {
@@ -86,6 +110,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       }}
       title={editingItem ? "Edit Menu" : "Create Menu"}
       centered
+      size="auto"
     >
       <form onSubmit={form.onSubmit(onSubmit)}>
         <Stack>
@@ -101,18 +126,14 @@ export function CreateMenuModal({ opened, close, editingItem }) {
             withAsterisk
             {...form.getInputProps("displayName")}
           />
-          <FileInput
-            label="Upload Logo"
-            placeholder="Click here to upload logo"
-            accept="image/*"
-            multiple={false}
-            error={form.errors.logo && form.errors.logo}
-            onChange={setImageToUpload}
-          />
-          <Text>
-            {`Current Logo: ${form.values.logo ? getFileNameFromKey(form.values.logo) : "None"}`}
-          </Text>
-          <Group noWrap>
+          <Group
+            noWrap
+            sx={{
+              "& > *": {
+                flex: "1 1 50%",
+              }
+            }}
+          >
             <TextInput
               label="Location Label"
               placeholder="Kannur Rd, near CH Over bridge"
@@ -124,7 +145,14 @@ export function CreateMenuModal({ opened, close, editingItem }) {
               {...form.getInputProps("locationUrl")}
             />
           </Group>
-          <Group noWrap>
+          <Group
+            noWrap
+            sx={{
+              "& > *": {
+                flex: "1 1 50%",
+              }
+            }}
+          >
             <TextInput
               label="Website Label"
               placeholder="paragonHotels.in"
@@ -136,11 +164,64 @@ export function CreateMenuModal({ opened, close, editingItem }) {
               {...form.getInputProps("websiteUrl")}
             />
           </Group>
+          <SimpleGrid
+            cols={2}
+            spacing="md"
+            sx={{
+              "& img": {
+                borderRadius: "4px"
+              }
+            }}
+          >
+            <FileInput
+              label="Upload Logo"
+              placeholder="Click here to upload logo"
+              accept="image/*"
+              multiple={false}
+              error={form.errors.logo && form.errors.logo}
+              onChange={setLogo}
+            />
+            <FileInput
+              label="Upload background image"
+              placeholder="Click here to upload background image"
+              accept="image/*"
+              multiple={false}
+              error={form.errors.backgroundImage && form.errors.backgroundImage}
+              onChange={setBackgroundImage}
+            />
+            <Center>
+              <img
+                style={{
+                  maxHeight: "200px",
+                  maxWidth: "70%"
+                }}
+                src={
+                  form.values.logo ?
+                    getFileUrlFromKey(form.values.logo)
+                    : editingItem?.logo ?
+                      getFileUrlFromKey(editingItem.logo)
+                      : ""
+                }
+              />
+            </Center>
+            <Center>
+              <img
+                width="75%"
+                height="auto"
+                src={
+                  form.values.backgroundImage ?
+                    getFileUrlFromKey(form.values.backgroundImage)
+                    : editingItem?.backgroundImage ?
+                      getFileUrlFromKey(editingItem.backgroundImage) : ""
+                }
+              />
+            </Center>
+          </SimpleGrid>
           <Group position="right" pt="xl" mt="lg">
             <Button variant="subtle" onClick={close}>
               Cancel
             </Button>
-            <Button variant="filled" type="submit" loading={isCreating}>
+            <Button variant="filled" type="submit" loading={isCreating || isUploading}>
               Submit
             </Button>
           </Group>

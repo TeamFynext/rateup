@@ -14,6 +14,7 @@ import {
   ColorInput,
   Textarea,
   Slider,
+  Sx,
 } from "@mantine/core";
 import {
   IconBrandSketch,
@@ -28,7 +29,11 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import StyleTab from "./QRtabs/StyleTab";
 
-const ShareQR = ({ url }) => {
+interface ShareQRProps {
+  url: string;
+  sx?: Sx
+}
+const ShareQR = ({ url, sx }: ShareQRProps) => {
   const [title, setTitle] = useState("QR Code");
   const [description, setDescription] = useState("Scan QR code for details.");
 
@@ -92,7 +97,7 @@ const ShareQR = ({ url }) => {
   }
 
   return (
-    <Paper shadow="sm" my="xl" p="xl">
+    <Paper shadow="sm" my="xl" p="xl" sx={sx}>
       <Title order={4} mb="xl" pb="md">
         Generate & Share QR Code
       </Title>

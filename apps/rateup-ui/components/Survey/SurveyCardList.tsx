@@ -107,6 +107,17 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
 
   const handleCheckBox = (e, surveyid, checked) => {
     e.stopPropagation();
+    if (surveyidArray.length >= 4 && e.target.checked) {
+      notifications.show({
+        id: 'survey-merge-max',
+        
+        title:"Limit exceed",
+        message: 'Max 4 surveys can be merged.',
+       
+        autoClose: 2000,
+      });
+      return;
+    }
     if (surveyidArray.includes(surveyid)) {
       setSurveyIdArray(surveyidArray.filter((id) => id !== surveyid));
     } else {
@@ -144,8 +155,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
                 <SurveyCard
                   key={s.id}
                   survey={s}
-                  // survey={surveys}
-                  // setSelectedTeamId={setSelectedTeamId}
+                  
                   handleCheckBox={handleCheckBox}
                   isChecked={isChecked}
                 />
@@ -159,14 +169,11 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
 
 interface SurveyCardProps {
   survey: Survey;
-  // setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
   handleCheckBox: any;
   isChecked: any;
 }
 function SurveyCard({
   survey,
-  // teamsData,
-  // setSelectedTeamId,
   handleCheckBox,
   isChecked,
 }: SurveyCardProps & {}): JSX.Element {
@@ -192,16 +199,7 @@ function SurveyCard({
         withBorder
         radius="lg"
         sx={{ cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation(),
-            user?.role === "MEMBER"
-              ? router.push(
-                  `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
-                )
-              : router.push(
-                  `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
-                );
-        }}
+        
       >
         <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="xl" fw={700}>
@@ -230,8 +228,7 @@ function SurveyCard({
 
         <Flex justify={"space-between"} mt="xl" align={"center"}>
           <StatusBadge active={survey.active} />
-          {/* <Text>Total Responses : #</Text> */}
-          {/* //TODO */}
+          
           <Link
             href={`/dashboard/surveys/${survey.id}?tab=Responses`}
             style={{ color: theme.colors.blue[9] }}
