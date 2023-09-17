@@ -39,6 +39,7 @@ export async function getAllTeamsByOrgHandler(
   reply: FastifyReply
 ) {
   try {
+    //TODO:change all the status code to 404 when the requested resource is not found
     const teams = await getTeamsByOrgId({ orgId: request.params.orgId });
     if (!teams || teams.length === 0) {
       reply.code(200).send({ message: "No teams found for this organization" });
