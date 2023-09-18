@@ -3,7 +3,6 @@ import prisma from "../../utils/prisma";
 import { CreateResponseInput } from "./response.schema";
 import { getOrCreateRespondent } from "../respondent/respondent/respondent.service";
 import { getSurveyById } from "../survey/survey.service";
-import { fetchLocationCoordinatesFromIp } from "../../utils/location";
 
 export async function getResponses(surveyId: string) {
     const responses = await prisma.surveyResponse.findMany({
