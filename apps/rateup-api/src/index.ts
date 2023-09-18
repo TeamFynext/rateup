@@ -4,12 +4,11 @@ import Fastify from "fastify";
 import supertokens from "supertokens-node";
 import { plugin } from "supertokens-node/framework/fastify";
 import { logOptions } from "./utils/logger";
-require("dotenv").config();
-
 import { errorHandler } from "supertokens-node/framework/fastify";
 import { SuperTokensConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
 import formDataPlugin from "@fastify/formbody";
+import { parseArrayString } from "./utils/array";
 
 const server = Fastify({
   logger: logOptions,
@@ -18,12 +17,13 @@ const server = Fastify({
 supertokens.init(SuperTokensConfig);
 
 server.register(cors, {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: [process.env.FRONTEND_URL, ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url))],
   allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
   credentials: true,
 });
 
-server.get("/api/ping", async () => {
+server.get("/api/ping", async (req) => {
+  console.log(req.headers)
   return { message: "pong!" };
 });
 

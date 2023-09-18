@@ -15,7 +15,10 @@ import { landingPageSchemas } from "./modules/landingPage/landingpage.schema";
 import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
 import { userRoutes } from "./modules/user/user.route";
-import { waWebhookRoutes, whatsappRoutes } from "./modules/whatsappSurvey/wasurvey.route";
+import {
+  waWebhookRoutes,
+  whatsappRoutes,
+} from "./modules/whatsappSurvey/wasurvey.route";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
 import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
 import { userSchemas } from "./modules/user/user.schema";
@@ -38,53 +41,63 @@ import { menuCategoryRoutes } from "./modules/menu/category/category.route";
 import { menuItemSchemas } from "./modules/menu/item/item.schema";
 import { menuItemRoutes } from "./modules/menu/item/item.route";
 import { menuPublicRoutes } from "./modules/menu/menu.public.route";
-
+import { contactFormSchemas } from "./modules/contactForm/contact.schema";
+import { contactPublicRoutes } from "./modules/contactForm/contact.public.route";
+import { electionPublicRoutes } from "./modules/election/election.public.routes";
 export function registerRoutes(server: FastifyInstance): void {
-    const modules = [
-        surveySchemas,
-        questionSchemas,
-        orgSchemas,
-        teamSchemas,
-        responseSchemas,
-        uploadSchemas,
-        userSchemas,
-        rGroupSchemas,
-        respondentSchemas,
-        wasurveySchemas,
-        landingPageSchemas,
-        WelcomeThemeSchema,
-        LandingThemeSchema,
-        menuSchemas,
-        menuCategorySchemas,
-        menuItemSchemas
-    ];
-    for (const module of modules) {
-        for (const schema of module) {
-            server.addSchema(schema);
-        }
+  const modules = [
+    surveySchemas,
+    questionSchemas,
+    orgSchemas,
+    teamSchemas,
+    responseSchemas,
+    uploadSchemas,
+    userSchemas,
+    rGroupSchemas,
+    respondentSchemas,
+    wasurveySchemas,
+    landingPageSchemas,
+    WelcomeThemeSchema,
+    LandingThemeSchema,
+    menuSchemas,
+    menuCategorySchemas,
+    menuItemSchemas,
+    contactFormSchemas,
+  ];
+  for (const module of modules) {
+    for (const schema of module) {
+      server.addSchema(schema);
     }
-    server.register(surveyRoutes, { prefix: "api/survey" });
-    server.register(LandingPageRoutes, { prefix: "api/landingpage" });
-    server.register(WelcomeThemeRoutes, { prefix: "api/welcome" });
-    server.register(WelcomeThemePublicRoutes, { prefix: "api/public/welcome" })
-    server.register(LandingThemeRoutes, { prefix: "api/landingtheme" });
-    server.register(LandingThemePublicRoutes, { prefix: "api/public/landingtheme" })
+  }
+  server.register(surveyRoutes, { prefix: "api/survey" });
+  server.register(LandingPageRoutes, { prefix: "api/landingpage" });
+  server.register(WelcomeThemeRoutes, { prefix: "api/welcome" });
+  server.register(WelcomeThemePublicRoutes, { prefix: "api/public/welcome" });
+  server.register(LandingThemeRoutes, { prefix: "api/landingtheme" });
+  server.register(LandingThemePublicRoutes, {
+    prefix: "api/public/landingtheme",
+  });
 
-    server.register(questionRoutes, { prefix: "api/question/:surveyId" });
-    server.register(userRoutes, { prefix: "api/user" });
-    server.register(orgRoutes, { prefix: "api/org" });
-    server.register(teamRoutes, { prefix: "api/team" });
-    server.register(responseRoutes, { prefix: "api/response" });
-    server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
-    server.register(landingPagePublicRoutes, { prefix: "api/public/landingpage" })
-    server.register(responsePublicRoutes, { prefix: "api/public/response" })
-    server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" })
-    server.register(rgroupRoutes, { prefix: "api/rgroup" })
-    server.register(whatsappRoutes, { prefix: "api/wa" })
-    server.register(respondentRoutes, { prefix: "api/respondent" })
-    server.register(waWebhookRoutes, { prefix: "webhook" })
-    server.register(menuRoutes, { prefix: "api/menu"})
-    server.register(menuPublicRoutes, { prefix: "api/public/menu"})
-    server.register(menuCategoryRoutes, { prefix: "api/mcategory"})
-    server.register(menuItemRoutes, { prefix: "api/mitem"})
+  server.register(questionRoutes, { prefix: "api/question/:surveyId" });
+  server.register(userRoutes, { prefix: "api/user" });
+  server.register(orgRoutes, { prefix: "api/org" });
+  server.register(teamRoutes, { prefix: "api/team" });
+  server.register(responseRoutes, { prefix: "api/response" });
+  server.register(surveyPublicRoutes, { prefix: "api/public/survey" });
+  server.register(landingPagePublicRoutes, {
+    prefix: "api/public/landingpage",
+  });
+  server.register(responsePublicRoutes, { prefix: "api/public/response" });
+  server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" });
+  server.register(rgroupRoutes, { prefix: "api/rgroup" });
+  server.register(whatsappRoutes, { prefix: "api/wa" });
+  server.register(respondentRoutes, { prefix: "api/respondent" });
+  server.register(waWebhookRoutes, { prefix: "webhook" });
+  server.register(menuRoutes, { prefix: "api/menu" });
+  server.register(menuPublicRoutes, { prefix: "api/public/menu" });
+  server.register(menuCategoryRoutes, { prefix: "api/mcategory" });
+  server.register(menuItemRoutes, { prefix: "api/mitem" });
+  server.register(contactPublicRoutes, { prefix: "api/public/contact" });
+  //public routes for electionApp
+  server.register(electionPublicRoutes, { prefix: "api/public/election" });
 }

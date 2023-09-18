@@ -5,8 +5,9 @@ import { createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset";
+import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail";
 
-let { Google } = ThirdPartyEmailPassword;
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
   : "http://localhost:3000";
@@ -50,18 +51,7 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             sendEmail: async function (input) {
-              if (input.type === "PASSWORD_RESET") {
-                // You can change the path, domain of the reset password link,
-                // or even deep link it to your mobile app
-                return originalImplementation.sendEmail({
-                  ...input,
-                  passwordResetLink: input.passwordResetLink.replace(
-                    `${frontendUrl}/auth/reset-password`,
-                    `${frontendUrl}/login/reset-password`
-                  ),
-                });
-              }
-              return originalImplementation.sendEmail(input);
+              sendResetPasswordMail(input?.passwordResetLink, input.user.email)
             },
           };
         },
@@ -70,10 +60,16 @@ export const SuperTokensConfig: TypeInput = {
       providers: [
         // We have provided you with development keys which you can use for testing.
         // IMPORTANT: Please replace them with your own OAuth keys for production use.
-        Google({
-          clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
-          clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
-        }),
+
+        {
+          config: {
+              thirdPartyId: "google",
+              clients: [{
+                  clientId:  process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
+                  clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+              }]
+          }
+        }
       ],
 
       override: {
@@ -81,9 +77,9 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             emailPasswordSignUp: async function (input) {
-              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
-                input.email
-              );
+             
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
+
               console.log(input);
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
@@ -94,9 +90,7 @@ export const SuperTokensConfig: TypeInput = {
               };
             },
             thirdPartySignInUp: async function (input) {
-              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
-                input.email
-              );
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
                 return originalImplementation.thirdPartySignInUp(input);
@@ -260,16 +254,11 @@ export const SuperTokensConfig: TypeInput = {
         override: (originalImplementation) => {
           return {
             ...originalImplementation,
-            sendEmail(input) {
-              return originalImplementation.sendEmail({
-                ...input,
-                emailVerifyLink: input.emailVerifyLink.replace(
-                  // This is: `${websiteDomain}${websiteBasePath}/verify-email`
-                  `${frontendUrl}/auth/verify-email`,
-                  `${frontendUrl}/login/verify-email`
-                ),
-              });
-            },
+
+            sendEmail: async function (input) {
+              sendVerifyMail(input.emailVerifyLink, input.user.email)
+            }
+
           };
         },
       },
