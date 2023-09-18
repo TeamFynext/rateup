@@ -130,27 +130,27 @@ model Invitation {
 }
 
 model Survey {
-  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime?        @updatedAt
-  title              String
-  description        String?          @default("")
-  questions          Json[]           @default([])
-  languages          String[]
-  user               User             @relation(fields: [createdBy], references: [id])
-  createdBy          String           @db.Uuid
-  team               Team             @relation(fields: [teamId], references: [id])
-  teamId             String           @db.Uuid
-  active             Boolean          @default(true)
-  responses          SurveyResponse[]
-  sessions           WaSession[]
-  isProtected        Boolean          @default(false)
-  kioskMode          Boolean          @default(false)
-  password           String?
-  surveyStats        SurveyStats?
-  type               String           @default("web")
-  getLocation        Boolean          @default(false)
-  welcomePageEnabled Boolean          @default(false)
+  id                          String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime?                     @updatedAt
+  title                       String
+  description                 String?                       @default("")
+  questions                   Json[]                        @default([])
+  languages                   String[]
+  user                        User                          @relation(fields: [createdBy], references: [id])
+  createdBy                   String                        @db.Uuid
+  team                        Team                          @relation(fields: [teamId], references: [id])
+  teamId                      String                        @db.Uuid
+  active                      Boolean                       @default(true)
+  responses                   SurveyResponse[]
+  sessions                    WaSession[]
+  isProtected                 Boolean                       @default(false)
+  kioskMode                   Boolean                       @default(false)
+  password                    String?
+  surveyStats                 SurveyStats?
+  type                        String                        @default("web")
+  getLocation                 Boolean                       @default(false)
+  welcomePageEnabled          Boolean                       @default(true)
   RespondentSurveySendHistory RespondentSurveySendHistory[]
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
 }
@@ -164,20 +164,24 @@ model SurveyLanding {
   description        String?   @default("")
   surveys            String[]
   createdBy          String    @db.Uuid
-  welcomePageEnabled Boolean   @default(false)
+  welcomePageEnabled Boolean   @default(true)
 }
 
 model SurveyResponse {
-  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt           DateTime         @default(now())
-  survey              Survey           @relation(fields: [surveyId], references: [id])
-  surveyId            String           @db.Uuid
-  responses           Json[]
-  language            String           @default("")
-  platform            ResponsePlatform @default(WEB)
-  respondent          Respondent?      @relation(fields: [respondentId], references: [id])
-  respondentId        String?          @db.Uuid
-  locationCoordinates Json? // { latitude: string, longitude: string }
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime         @default(now())
+  survey       Survey           @relation(fields: [surveyId], references: [id])
+  surveyId     String           @db.Uuid
+  responses    Json[]
+  language     String           @default("")
+  platform     ResponsePlatform @default(WEB)
+  respondent   Respondent?      @relation(fields: [respondentId], references: [id])
+  respondentId String?          @db.Uuid
+  ip           String?
+  location     Json? // { 
+  //                      coordinates: {latitude: number, longitude: number},
+  //                      city: string, state: string, country: string
+  //                    }
 }
 
 model SurveyStats {
@@ -280,18 +284,18 @@ model WelcomeTheme {
 }
 
 model Menu {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime @default(now())
-  name         String // name of the menu
-  displayName  String // name displayed to clients (eg: Restaurant's Name)
-  locationText String? // location of the restaurant
-  locationUrl  String? // google maps url
-  websiteUrl   String? // website url
-  websiteText  String? // text to display for website url
-  logo         String? // logo url
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime @default(now())
+  name            String // name of the menu
+  displayName     String // name displayed to clients (eg: Restaurant's Name)
+  locationText    String? // location of the restaurant
+  locationUrl     String? // google maps url
+  websiteUrl      String? // website url
+  websiteText     String? // text to display for website url
+  logo            String? // logo url
+  backgroundImage String?
 
   categories MenuCategory[]
-  // add a relation to team
   team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId     String         @db.Uuid
 }
@@ -328,4 +332,13 @@ model MenuItem {
   price      Json
   category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId String       @db.Uuid
+}
+
+//homepage contact form
+model ContactForm {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  name      String
+  email     String
+  message   String
 }

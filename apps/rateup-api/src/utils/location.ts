@@ -1,12 +1,58 @@
 import axios from "axios";
+const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY;
 
-export async function fetchLocationCoordinatesFromIp(ip: string) {
-    const { data } = await axios.get(`https://ipapi.co/${ip}/latlong/`);
-    const [lat, long] = data.split(",");
-    const [parsedLat, parsedLong] = [parseFloat(lat), parseFloat(long)]
-    if (!parsedLat || !parsedLong) {
+export async function fetchLocationFromIp(ip: string) {
+    try {
+        const url = `https://api.geoapify.com/v1/ipinfo?ip=${ip}&apiKey=${GEOAPIFY_API_KEY}`
+        const res = await axios.get(url);
+        if (res.status !== 200) return null;
+        if (res.data.isPrivate) return null;
+
+        const {
+            city: { name: city },
+            state: { name: state },
+            country: { name: country },
+            location: coordinates
+        } = res.data;
+
+        return { coordinates, city, state, country };
+    } catch (e) {
+        console.error(e);
         return null;
-    } else {
-        return { latitude: parsedLat, longitude: parsedLong };
     }
+}
+
+export async function fetchLocationFromCoordinates(latitude: number, longitude: number) {
+
+    try {
+
+        const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${GEOAPIFY_API_KEY}`;
+        const res = await axios.get(url);
+        if (res.status !== 200) return null;
+
+        const { city, state, country } = res.data.features[0].properties;
+
+        return { coordinates: { latitude, longitude }, city, state, country };
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}
+
+/**
+ * If coordinates are provided, uses them to fetch location information.
+ * Otherwise, ip address is used.
+ * @param ip 
+ * @param coords 
+ * @returns 
+ */
+export async function fetchLocation(ip: string, coords: { latitude: number, longitude: number}) {
+    let location = null;
+    if (!coords || !coords.latitude) {
+        location = await fetchLocationFromIp(ip);
+    } else {
+        location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);
+    }
+
+    return location;
 }

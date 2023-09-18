@@ -71,21 +71,24 @@ export async function createResponse(input: CreateResponseInput) {
 
     return surveyResponse;
 }
-
-export async function updateResponseLocation(responseId: string, coords: { latitude: number, longitude: number }) {
+interface Location {
+    coordinates: {
+        latitude: number,
+        longitude: number
+    },
+    city: string,
+    state: string,
+    country: string
+}
+export async function updateResponse(responseId: string, data: { ip: string, location: Location }) {
     const response = await prisma.surveyResponse.update({
         where: {
             id: responseId
         },
         data: {
-            locationCoordinates: coords
+            ip: data.ip,
+            location: data.location as any
         }
     })
     return response;
-}
-
-export async function fetchLocationFromIpAndUpdateResponse(ip: string, responseId: string) {
-    const coords = await fetchLocationCoordinatesFromIp(ip);
-    if (!coords) return
-    await updateResponseLocation(responseId, coords);
 }

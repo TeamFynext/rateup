@@ -16,10 +16,12 @@ const responseCore = {
   surveyId: z.string(),
   language: z.string(),
   responses: z.array(questionResponseSchema),
-  locationCoordinates: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-  }).optional().default(undefined),
+  location: z.object({
+    coordinates: z.object({
+      latitude: z.number(),
+      longitude: z.number(),
+    }).optional().default(undefined),
+  })
 };
 
 const createResponseInputSchema = z.object({
