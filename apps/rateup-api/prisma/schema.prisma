@@ -94,11 +94,11 @@ model Team {
   members     TeamMember[]
   surveys     Survey[]
   invitations Invitation[]
+  Respondent  Respondent[]
+  RGroup      RGroup[]
 
-  Respondent Respondent[]
-  RGroup     RGroup[]
-
-  menu Menu[]
+  menu        Menu[]
+  tags        String[]     @default([])
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -153,6 +153,7 @@ model Survey {
   welcomePageEnabled          Boolean                       @default(true)
   RespondentSurveySendHistory RespondentSurveySendHistory[]
   RGroupSurveySendHistory     RGroupSurveySendHistory[]
+  tags                        String[]                      @default([])
 }
 
 model SurveyLanding {
@@ -182,6 +183,7 @@ model SurveyResponse {
   //                      coordinates: {latitude: number, longitude: number},
   //                      city: string, state: string, country: string
   //                    }
+  deviceData   Json?
 }
 
 model SurveyStats {
@@ -341,4 +343,14 @@ model ContactForm {
   name      String
   email     String
   message   String
+}
+
+
+//media associated with the election
+model Media{
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  type      String
+  name      String
+  image     String
 }
