@@ -1,9 +1,9 @@
-import { Container, Paper, Image,  Title, Flex , Space, Loader, Text} from '@mantine/core';
+import { Container, Paper, Image, Stack, Title, Flex , Space, Loader, Center,  Text, NavLink} from '@mantine/core';
 import { useRouter } from 'next/router';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { completeInvite } from '../../backend/team/team.api';
 import { notifications } from '@mantine/notifications';
-import { IconCheck,  } from '@tabler/icons-react';
+import { IconArrowAutofitLeft, IconCheck,  } from '@tabler/icons-react';
 import { useEffect } from 'react';
 import { RateupButtonPrimary } from '../../components/Button/RateupButtons';
 import styles from './styles.module.css';
@@ -178,7 +178,29 @@ useEffect(() => {
         </Container> 
         }
 
-        { updateInviteMutation.error && "Failed..! Error.... Try another invitation."}
+        { updateInviteMutation.error &&  <Stack>
+
+          
+          <Text>
+          Failed..! Error.... Try another invitation.
+          </Text>
+
+          <Space h="xl" /><Space h="xl" /><Space h="xl" /><Space h="xl" />
+        
+
+          <Center>
+          <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              <Link href="/login" style={{ textDecoration: 'none', }}>
+                <NavLink
+                  label="Go to Login"
+                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  variant="subtle"
+                />
+              </Link>
+            </Text>
+            </Center>
+        
+        </Stack>}
               
       </Flex>
 

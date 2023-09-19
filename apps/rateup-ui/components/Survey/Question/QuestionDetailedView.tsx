@@ -113,7 +113,7 @@ export function QuestionDetailedView({
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       setIsSaving(false);
-      return;
+      return 'error';
     }
 
     // converting to expected format
@@ -142,6 +142,7 @@ export function QuestionDetailedView({
       questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
     //setIsSaving(false);  
+    return 'saved';
   };
 
   // TODO: show question type somewhere
@@ -222,13 +223,15 @@ export function QuestionDetailedView({
           </Group>
         </Group>
 
-        <Group position="apart"  spacing="md">
+        <Group position="left"  spacing="md">
           {logicSupportedTypes.includes(question?.type) && (
               <RateupButtonOutline
               title={"Logic Jump"}
               leftIcon={<IconEdit />}
               size="sm"
-              onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.LogicEditor)}}
             />
           )}
           {googleReviewSupportedTypes.includes(question?.type) && (
@@ -236,7 +239,10 @@ export function QuestionDetailedView({
               title={"Google Review"}
               leftIcon={<IconStar />}
               size="sm"
-              onClick={() => setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+              }
             />
           )}
           {validationSupportedTypes.includes(question?.type) && (
@@ -244,16 +250,13 @@ export function QuestionDetailedView({
               title={"Custom Validation"}
               leftIcon={<IconEdit />}
               size="sm"
-              onClick={() => setActiveTab(QuestionTabsEnum.ValidationRulesEditor)}
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.ValidationRulesEditor)
+              }  }
             />
           )}
-          <Space w="xl" />
-          {question?.id && (
-            <Text c="blue.9" size="sm">
-              {" "}
-              Question Id: {question?.id}{" "}
-            </Text>
-          )}
+
         </Group>
       </Stack>
     </Stack>

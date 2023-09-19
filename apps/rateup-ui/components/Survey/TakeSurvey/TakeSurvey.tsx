@@ -18,7 +18,7 @@ import {
   Divider,
   NumberInput,
   Avatar,
-  Select, MultiSelect
+  Select, MultiSelect, ScrollArea
 } from "@mantine/core";
 import { forwardRef } from 'react';
 import { useDisclosure } from '@mantine/hooks';
@@ -284,24 +284,56 @@ function TakeSurvey() {
               padding: "10px"
             }}}
           >
-            <Stack pb="5rem">
+            <Stack pb="7rem">
               <Divider />
               <Stack >
                 {filteredQuestions.map(question => {
                   const response = responses.find(
                     response => response.questionId === question.id
                   );
-
                   return (
                     <Stack key={question.id}>
                       <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
                       {response && (
-                        <Text pb="sm">
-                          {question.type === 'DateTime' ? (
-                            dayjs(Object.values(response?.response)[0]).format('DD, MMM , YYYY')
-                          ) : (
-                            JSON.stringify(Object.values(response?.response)[0])
-                          )}
+                        <Text pb="sm" >
+                          
+                          {(() => {
+                              switch (question.type) {
+                                case Q.Rating:
+                                  return <Rating value={Object.values(response?.response)[0]}  readOnly />
+                                case Q.Photo:
+                                  const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${Object.values(response?.response)[0]}`;
+                                  return (
+                                    <Image
+                                      radius="md"
+                                      maw={240} mx="0px"
+                                      src={imgUrl}
+                                    />
+                                  );
+                                case Q.MSQ:
+                                case Q.DDMS:
+                                  const responseData = Object.values(response?.response)[0];
+                                  if (Array.isArray(responseData)) {
+                                    return responseData.map((item, index) => {
+                                      return <li key={index}>{item}</li>;
+                                    });
+                                  }
+                                  return <li>{responseData}</li>;
+                                
+                                case Q.DateTime:
+                                  return dayjs(Object.values(response?.response)[0]).format('DD, MMM , YYYY');
+
+                                case Q.Testimonial:
+                                  const data = Object.values(response?.response)[0];
+                                  return <Stack> 
+                                    <Group > <Text fw="400">Name: </Text>  <Text fw="300">{data.name}</Text> </Group>
+                                    <Group mt="-10px"> <Text fw="400">Testimonial: </Text>  <Text fw="300">{data.testimonial}</Text> </Group>
+                                  </Stack>
+
+                                default:
+                                  return JSON.stringify(Object.values(response?.response)[0]);
+                              }
+                            })()}
 
                         </Text>
                       )}
@@ -311,12 +343,12 @@ function TakeSurvey() {
                 })}
               </Stack>
 
-              <div style={{ position: "fixed", bottom: 0, left: 10, right: 10, }}>
-                <Group position="apart" p="lg" sx={{ background: '#fff' }}>
+              <div style={{ position: "fixed", bottom: 0, left: 10, right: 10 }}>
+                <Group position="apart" p="lg" pb={isMobile ?"50px" : "20px"} sx={{ background: '#fff'}}>
                   <RateupButtonBlackOutline
                     radius={"xl"}
                     title={"Back"}
-                    size={largeScreen ? "lg" : "md"}
+                    size={largeScreen ? "lg" : "sm"}
                     onClick={close}
                     leftIcon={<IconChevronLeft />}
                   />
@@ -325,7 +357,7 @@ function TakeSurvey() {
                     loading={isSavingResponses}
                     radius={"xl"}
                     title={"Confirm"}
-                    size={largeScreen ? "lg" : "md"}
+                    size={largeScreen ? "lg" : "sm"}
                     leftIcon={<IconCheck />}
                     onClick={finishSurvey}
                   />
@@ -381,7 +413,7 @@ function QuestionNo({ num }) {
 function QuestionTitle({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  return <Text fw={500} size={largeScreen ? "30px" : "18px"}>{selectedQ.title[selectedLanguage]}</Text>;
+  return <Text fw={500} size={largeScreen ? "30px" : "16px"}>{selectedQ.title[selectedLanguage]}</Text>;
 }
 function QuestionDesc({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
@@ -396,8 +428,20 @@ function QuestionDesc({ largeScreen }) {
 function QuestionForm() {
   const { selectedQ } = useContext(SelectedQContext);
   const { type } = selectedQ;
+  const isMobile = useMediaQuery('(max-width: 480px)');
 
-  return <Group>{getQuestionForm(type)}</Group>;
+  return <Group>
+
+      {(() => {
+        switch (type) {
+          case Q.DateTime:
+            return getQuestionForm(type);
+          default:
+            return getQuestionForm(type);
+        }
+      })()}
+
+    </Group> 
 }
 
 function getQuestionForm(type) {
@@ -449,6 +493,7 @@ function NextPrev({ prev, next }) {
 
   const [isErrorInput, setIsErrorInput] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
+  const isMobile = useMediaQuery('(max-width: 480px)');
 
   useEffect(() => {
     // TODO: check if rebase was done correctly
@@ -510,7 +555,7 @@ function NextPrev({ prev, next }) {
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
 
-    <Stack pb={40} sx={{ position: "absolute", bottom: "6vh", width: "100%" }}>
+    <Stack pb={40} sx={{ position: "absolute", bottom: isMobile ? "1vh": "5vh", width: "100%" }}>
       {selectedQ.required && !response &&
         <Text color="gray">Note: * Must attend to continue with next.</Text>
       }
@@ -522,7 +567,7 @@ function NextPrev({ prev, next }) {
           {isFirstQuestion || (
             <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
               sx={{ position: "absolute", }}
-              size="lg" onClick={prev} />
+              size={ isMobile ? "sm" : "lg"} onClick={prev} />
           )}
         </Grid.Col>
         <Grid.Col span={6}>
@@ -532,12 +577,12 @@ function NextPrev({ prev, next }) {
             <RateupButtonBlue radius={"xl"} title={"Submit"}
               disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
-              size="lg" onClick={handleNextClick} />
+              size={ isMobile ? "sm" : "lg"} onClick={handleNextClick} />
             :
 
             <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
               sx={{ position: "absolute", right: "5vw" }}
-              size="lg" onClick={handleNextClick} rightIcon={<IconChevronRight />} />
+              size={ isMobile ? "sm" : "lg"} onClick={handleNextClick} rightIcon={<IconChevronRight />} />
           }
         </Grid.Col>
       </Grid>
@@ -862,6 +907,7 @@ const SMILEY_OPTIONS = Object.entries(SmileyResponse).map(([type, value]) => ({
 }));
 function SmileyForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const isMobile = useMediaQuery('(max-width: 480px)');
   return (
     <Group>
       {SMILEY_OPTIONS.map(({ value, label }) => (
@@ -870,10 +916,18 @@ function SmileyForm() {
           variant={response === value ? "gradient" : "default"}
           gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
           onClick={() => updateResponse(value)}
-          sx={{ minHeight: '70px', maxWidth: '90px' }}
+          sx={{ minHeight: '30px', maxWidth: '70px', maxHeight: '70px' }}
+          styles={{
+            root: { 
+            padding: isMobile ? 5 : 10,
+            margin: 0,
+            height: isMobile ? '40px' : '60px'
+           },
+            inner: { padding:'0px' } }}
         >
           {/* <Stack> */}
-          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={isMobile ? 25 : 40} 
+          height={isMobile ? 25 : 40} />
           {/* <Text> {label}</Text>
 
           </Stack> */}

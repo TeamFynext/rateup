@@ -82,7 +82,7 @@ export default () => {
           onTabChange={(tab) => setActiveTab(tab as TabEnum)}
         >
           <Group position="apart">
-            <Title order={1} mb="sm">{survey.title}</Title>
+            <Title order={1} mb="sm" truncate='end' pr="xl" sx={{maxWidth:"350px"}} title={survey.title}>{survey.title}</Title>
             <Tabs.List
               sx={{
                 position: "absolute",

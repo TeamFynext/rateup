@@ -21,10 +21,12 @@ import {
   verifySurveyPassword,
   updateSurveyLandingPage,
   getActiveSurveysSummary,
+  CreateSurveyResponse,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
+import { useRouter } from "next/router";
 
 export const useSurvey = (surveyId: string) =>
   useQuery({
@@ -114,15 +116,20 @@ type MyProps = {
   setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
 };
 
+function isSurveyResponse(obj: CreateSurveyResponse | { error: string; }): obj is CreateSurveyResponse {
+  return (obj as CreateSurveyResponse).id !== undefined;
+}
+
 export const useCreateSurveyMutation = ({
   close,
   resetForm,
   setIsCreating,
 }: MyProps) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const createMutation = useMutation({
     mutationFn: createSurvey,
-    onSuccess: () => {
+    onSuccess: (data) => {
       notifications.update({
         id: "load-data",
         color: "teal",
@@ -131,12 +138,16 @@ export const useCreateSurveyMutation = ({
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["whatsappsurveys"]);
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
       close();
       setIsCreating(false);
       resetForm();
+      let res : CreateSurveyResponse | { error: string; } =   data;
+      if (isSurveyResponse(res)) {
+         router.push(`/dashboard/surveys/${res?.id}`)
+      }     
+      queryClient.invalidateQueries(["whatsappsurveys"]);
+      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(["surveysByTeam"]);
     },
     onError: (error: any) => {
       notifications.show({

@@ -46,9 +46,7 @@ export default function DashboardHome() {
     isLoading : isLoadingSummary,
     error: isErrorSummary,
     data: surveysSummary,
-  } = useSurveysSummary() as { isLoading: boolean; error: any; data: SurveySummary };
-
-
+  } = useSurveysSummary() as { isLoading: boolean; error: any; data: SurveySummary[] };
 
   useEffect(() => {
     if (!user?.role) {
@@ -56,7 +54,7 @@ export default function DashboardHome() {
     }
   }, []);
 
-function prepareData(surveysSummary) {
+function prepareData(surveysSummary: SurveySummary[] ) {
   let dateResponseCount = {};
   surveysSummary?.forEach(survey => {
     survey?.responses?.forEach(response => {

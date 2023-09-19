@@ -42,7 +42,6 @@ export function QuestionTypeSelection({
     setActiveTab(QuestionTabsEnum.Edit);
   };
 
-  //console.log(typeof(surveyType) ,">>surveyty")
   return (
     <Center sx={{ height: "100%" }}>
       <SimpleGrid cols={3}>
@@ -51,6 +50,7 @@ export function QuestionTypeSelection({
             key={type}
             leftIcon={<Icon />}
             variant="default"
+            styles={{ inner: { justifyContent: 'flex-start' } }}
             onClick={() => handleTypeSelection(type as QuestionType)}
           >
             <Text>{type}</Text>

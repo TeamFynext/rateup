@@ -81,7 +81,7 @@ export default function Surveys() {
     mergeSurveyOpened,
     { open: openMergeSurvey, close: closeMergeSurveyModal },
   ] = useDisclosure(false);
-  const [sort, setSort] = useState(false);
+  const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [options, setOptions] = useState([
@@ -386,12 +386,9 @@ export function SurveyCard({
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} truncate size="xl" fw={700}>
+        <Text mr={"sm"} sx={{maxWidth:'70%'}} truncate="end" size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type == "web" ? "blue" : "green"}>
-          {survey.type}
-        </Badge>
         <Group align={"center"} mt="sm" spacing="xs">
           <IconPencil />
           <SurveyMenu
@@ -407,17 +404,24 @@ export function SurveyCard({
           ></Checkbox>
         </Group>
       </Flex>
-      <Group align={"center"} mt="sm" spacing="xs">
-        <Avatar radius={"xl"} />
-        <Text size="sm" c="dimmed">
-          Created {timeSince}
-        </Text>
+      <Group position="apart" >    
+
+        <Group align={"center"} mt="sm" spacing="xs">
+          <Avatar radius={"xl"} />
+          <Text size="sm" c="dimmed">
+            Created {timeSince}
+          </Text>
+        </Group>    
+        <StatusBadge active={survey.active} />
       </Group>
+
       <Space h="xl" />
       <Space h="lg" />
 
       <Flex justify={"space-between"} mt="xl" align={"center"}>
-        <StatusBadge active={survey.active} />
+      <Badge mt="md" color={survey?.type == "web" ? "blue" : "green"}>
+          {survey.type}
+        </Badge>
         {/* <Text>Total Responses : #</Text> */}
         {/* //TODO */}
         <Link
@@ -616,7 +620,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
 
 function StatusBadge({ active }) {
   return (
-    <Badge color={active ? "green" : "yellow"}>
+    <Badge mt="md" color={active ? "green" : "yellow"}>
       {active ? "Active" : "Paused"}
     </Badge>
   );
