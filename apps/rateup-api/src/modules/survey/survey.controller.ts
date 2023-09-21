@@ -11,6 +11,7 @@ import {
   getSurveyLandingByUserId,
   getSurveysByTeam,
   getSurveysByUserId,
+  getWebSurveysByUserId,
   getWhatsappSurveysByUserId,
   updateCompletedSurvey,
   updateGoogleLink,
@@ -245,6 +246,22 @@ export async function getSurveysHandler(
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
     const surveys = await getSurveysByUserId(userId);
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e);
+    reply.code(500);
+  }
+}
+export async function getWebSurveysHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    // console.log("gtsurvey");
+    //const userId = request.session.getUserId();
+    let session = await Session.getSession(request, reply);
+    let userId = session.getUserId();
+    const surveys = await getWebSurveysByUserId(userId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);

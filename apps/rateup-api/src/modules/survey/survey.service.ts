@@ -253,6 +253,30 @@ export async function getSurveysByUserId(userId: string) {
   );
   return surveysWithoutQuestions;
 }
+/**
+ * Returns surveys from ALL TEAMs in which the user is a member of
+ * @param userId
+ * @returns Array of surveys without questions
+ */
+export async function getWebSurveysByUserId(userId: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData.map(
+    (item: { teamId: string }) => item.teamId
+  );
+  const surveys = await prisma.survey.findMany({
+    where: {
+      type:"web",
+      teamId: {
+        in: teamIds,
+      },
+    },
+  });
+
+  const surveysWithoutQuestions = surveys.map((s) =>
+    excludeFields(s, ["questions", "password"])
+  );
+  return surveysWithoutQuestions;
+}
 
 /**
  * Returns summary(responses, stats) of active surveys
