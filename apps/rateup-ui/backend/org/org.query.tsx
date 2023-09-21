@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { getTeamsMembersOfOrg, updateRole } from "./org.api";
+import { IUpdateLogo, getTeamsMembersOfOrg, updateOrgLogo, updateRole } from "./org.api";
 
  export function useTeamsMembersOfOrg(queryClient) {
   return useQuery(["orgTeamsDataQuery"], getTeamsMembersOfOrg, {
@@ -43,4 +43,37 @@ export function useUpdateRoleMutation() {
       });
     },
   });
+}
+
+export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
+  const queryClient = useQueryClient();
+    return useMutation((values : IUpdateLogo) => updateOrgLogo(values), {
+      onSuccess: () => {
+        notifications.update({
+          id: 'load-data',
+          color: 'teal',
+          title: 'Success',
+          message: 'Logo Updated Successfully!',
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+        setIsLoadingUpload(false)
+        queryClient.invalidateQueries(["userInfoQuery"]);
+        queryClient.resetQueries(['userInfoQuery']);
+        
+      },
+      onError: (error: any) => {
+        console.error("Error Logo Update:", error.message);
+        notifications.update({
+          id: 'load-data',
+          color: 'red',
+          title: 'Failed',
+          message: error?.response?.data?.message,
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+
+        setIsLoadingUpload(false)
+      },
+    });
 }

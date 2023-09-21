@@ -307,7 +307,7 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                             <ActionIcon size="xl">
                               <IconPageBreak size="2rem"  color="#595959" />
                             </ActionIcon>
-                            <Text align="center"  size="20px" fw={700} color="#595959">Landing Page</Text>
+                            <Text align="center"  size="20px" fw={700} color="#595959">Merge Survey</Text>
                         </Stack>
                       </Center>
                 </CardActionButton>

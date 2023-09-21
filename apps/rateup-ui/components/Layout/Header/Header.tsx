@@ -111,7 +111,15 @@ export function HeaderTabs({mode, opened} : iProps) {
 
         <Group position="apart">
           <Link href="/dashboard">
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
+          <Image
+            height={ user?.orgLogo ? 50 : 40}
+            src={
+              user?.orgLogo && user?.orgLogo !== 'REMOVED_PHOTO' ?
+              `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
+              : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`
+            }
+          />
+
           </Link>
         
         

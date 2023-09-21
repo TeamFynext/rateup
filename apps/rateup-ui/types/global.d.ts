@@ -151,6 +151,7 @@ declare global {
     userId: string,
     role: string
     orgId: string
+    orgLogo: string
     profilePhoto: string
   }
 

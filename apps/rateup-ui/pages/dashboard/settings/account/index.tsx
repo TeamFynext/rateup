@@ -3,6 +3,7 @@ import { Tabs } from '@mantine/core';
 import  StyledTabs  from './StyledTabs';
 import PasswordSettings from './PasswordSettings';
 import ProfileSettings from './ProfileSettings';
+import OrgSettings  from './OrgSettings';
 
 const AccountSettings = () => {
   return (
@@ -16,6 +17,9 @@ const AccountSettings = () => {
             <Tabs.Tab value="general">
               General
             </Tabs.Tab>
+            <Tabs.Tab value="organization">
+              Organization
+            </Tabs.Tab>
           </Tabs.List>
 
             <Tabs.Panel value="settings" >
@@ -24,6 +28,10 @@ const AccountSettings = () => {
 
             <Tabs.Panel value="general">
               <PasswordSettings />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="organization">
+              <OrgSettings />
             </Tabs.Panel>
 
        </StyledTabs> 
