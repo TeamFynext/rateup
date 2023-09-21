@@ -66,11 +66,11 @@ export async function getAllMpHandler(
       electionConfig.orgId
     );
     const media = await getAllMedia();
-    const mpMedia = media.filter((media) => media.type === "mp");
-    const partyMedia = media.filter((media) => media.type === "party");
+    const mpMedia = media.filter((media) => media?.type === "mp");
+    const partyMedia = media.filter((media) => media?.type === "party");
     const tagArray = constituencies
-      .filter((constituency) => constituency.tags.length != 0)
-      .map((constituency) => constituency.tags);
+      .filter((constituency) => constituency?.tags.length != 0)
+      .map((constituency) => constituency?.tags);
     //only true if query rank is true
     let surveyResponses: any;
     let surveys: any;
@@ -94,7 +94,6 @@ export async function getAllMpHandler(
         };
         resultSchema.name = retrieveTag(tag, "mp");
         resultSchema.state = retrieveTag(tag, "state");
-        console.log(retrieveTag(tag, "party"));
         resultSchema.image = mpMedia.find(
           (media) => media.name === retrieveTag(tag, "mp")
         ).image;
@@ -145,10 +144,10 @@ export async function getAllPartiesHandler(
       electionConfig.orgId
     );
     const media = await getAllMedia();
-    const partyMedia = media.filter((media) => media.type === "party");
+    const partyMedia = media.filter((media) => media?.type === "party");
     let tagArray = constituencies
-      .filter((constituency) => constituency.tags.length != 0)
-      .map((constituency) => retrieveTag(constituency.tags, "party"));
+      .filter((constituency) => constituency?.tags.length != 0)
+      .map((constituency) => retrieveTag(constituency?.tags, "party"));
     tagArray = [...new Set(tagArray)];
     let surveyResponses: any;
     let surveys: any;
@@ -169,7 +168,7 @@ export async function getAllPartiesHandler(
         };
         resultSchema.name = tag;
         resultSchema.image = partyMedia.find(
-          (media) => media.name === tag
+          (media) => media?.name === tag
         ).image;
         if (request.query.rank) {
           let groupedSurveys = surveys.filter((survey) =>
