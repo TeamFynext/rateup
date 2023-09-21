@@ -1,11 +1,5 @@
 /**
  * This file includes the controllers for the election module.
- *
- * tag[0] is state code
- * tag[1] is party name
- * tag[2] is mp name
- *
- * More description continues here.
  */
 
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -21,7 +15,7 @@ import { electionConfig } from "./election.config";
 import { GetSurveyByIdParams } from "../survey/survey.schema";
 import { rankQuerySchema } from "./election.schema";
 import { ratingObjectType } from "./election.types";
-import { average, compareByRating } from "./election.helper";
+import { average, compareByRating, retrieveTag } from "./election.utils";
 export async function getAllElectionConstituencyTeamByOrgHandler(
   request: FastifyRequest<{
     Params: GetTeamsByOrgInput;
@@ -98,14 +92,15 @@ export async function getAllMpHandler(
           rating: 0,
           no_of_responses: 0,
         };
-        resultSchema.name = tag[2].split("_")[1];
-        resultSchema.state = tag[0].split("_")[1];
+        resultSchema.name = retrieveTag(tag, "mp");
+        resultSchema.state = retrieveTag(tag, "state");
+        console.log(retrieveTag(tag, "party"));
         resultSchema.image = mpMedia.find(
-          (media) => media.name === tag[2].split("_")[1]
+          (media) => media.name === retrieveTag(tag, "mp")
         ).image;
-        resultSchema.party = tag[1].split("_")[1];
+        resultSchema.party = retrieveTag(tag, "party");
         resultSchema.partyLogo = partyMedia.find(
-          (media) => media.name === tag[1].split("_")[1]
+          (media) => media.name === retrieveTag(tag, "party")
         ).image;
         if (request.query.rank) {
           let filteredSurveyResponses = surveyResponses.filter(
@@ -153,7 +148,7 @@ export async function getAllPartiesHandler(
     const partyMedia = media.filter((media) => media.type === "party");
     let tagArray = constituencies
       .filter((constituency) => constituency.tags.length != 0)
-      .map((constituency) => constituency.tags[1].split("_")[1]);
+      .map((constituency) => retrieveTag(constituency.tags, "party"));
     tagArray = [...new Set(tagArray)];
     let surveyResponses: any;
     let surveys: any;
