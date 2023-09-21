@@ -12,7 +12,7 @@ import formDataPlugin from "@fastify/formbody";
 import { parseArrayString } from "./utils/array";
 
 const server = Fastify({
-  logger: logOptions,
+  // logger: logOptions,
 });
 
 supertokens.init(SuperTokensConfig);

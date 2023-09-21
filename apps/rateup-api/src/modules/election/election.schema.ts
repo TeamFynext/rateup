@@ -5,3 +5,9 @@ const mediaCore = {
   name: z.string(),
   image: z.string(),
 };
+
+const rankQuerySchema = z.object({
+  rank: z.boolean(),
+});
+
+export type rankQuerySchema = z.infer<typeof rankQuerySchema>;
