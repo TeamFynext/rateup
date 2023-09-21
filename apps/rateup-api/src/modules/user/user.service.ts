@@ -113,7 +113,14 @@ export async function getLoggedUserInfo(
     },
   });
 
-  return { userId, role, email, orgId, profilePhoto: profile?.profilePhoto };
+  let orgData = await prisma.org.findUnique({
+    where: { id: orgId },
+    select: {
+      logo: true,
+    },
+  });
+
+  return { userId, role, email, orgId, orgLogo: orgData?.logo, profilePhoto: profile?.profilePhoto };
 }
 
 export async function getLoggedUserProfile(
