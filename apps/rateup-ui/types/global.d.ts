@@ -149,6 +149,7 @@ declare global {
   type UserData = {
     email: string,
     userId: string,
+    userName: string;
     role: string
     orgId: string
     orgLogo: string

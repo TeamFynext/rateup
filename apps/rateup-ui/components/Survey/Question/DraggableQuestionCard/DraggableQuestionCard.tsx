@@ -1,14 +1,15 @@
-import { Badge, ActionIcon, Text, Box, useMantineTheme } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
+import { Badge, ActionIcon, Text, Box, useMantineTheme, Dialog,Group  } from "@mantine/core";
+import { useDisclosure, useHover } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { Draggable } from "react-beautiful-dnd";
 import { deleteQuestion } from "../../../../backend/surveys/questions/questions.api";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useStyles } from "./DraggableQuestionCard.styles";
+import { RateupButtonPrimary, RateupButtonSecondary } from "../../../Button/RateupButtons";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -32,6 +33,9 @@ export function DraggableQuestionCard({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const queryClient = useQueryClient();
   const theme = useMantineTheme();
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const questionDeleteMutation = useMutation({
     mutationFn: (qId: string) => deleteQuestion(surveyId, qId),
@@ -46,7 +50,27 @@ export function DraggableQuestionCard({
     questionDeleteMutation.mutate(qId);
   };
 
-  return (
+  return (<>
+   <Dialog opened={dialogOpened} withCloseButton onClose={closeDialog} size="lg" radius="md"  position={{top: '0', left:'40vw'}}>
+          <Text size="md" mb="xs" weight={500}>
+              Are you sure to delete this question?
+          </Text>
+
+          <Group align="center" pt="lg">
+          <RateupButtonSecondary onClick={closeDialog} loading={isLoading} size='md' title="Cancel" />
+
+          <RateupButtonPrimary 
+          
+            onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(e, question.id)
+            }} 
+            
+            loading={isLoading} size='md' title="Yes, Delete" />
+
+          </Group>
+      </Dialog>
+
     <Draggable key={question.id} index={index} draggableId={question.id}>
       {(provided, snapshot) => (
         <div ref={hoverRef}>
@@ -70,7 +94,7 @@ export function DraggableQuestionCard({
             <Text pl="xs" fw={500}>{question.title[selectedLanguage]}</Text>
             {true ? (
               <ActionIcon
-                onClick={(e) => handleDelete(e, question.id)}
+                onClick={toggle}
                 sx={{ position: "absolute", right: "5px" }}
               >
                 <IconTrash />
@@ -80,5 +104,6 @@ export function DraggableQuestionCard({
         </div>
       )}
     </Draggable>
+    </>
   );
 }
