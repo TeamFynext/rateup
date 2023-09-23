@@ -183,9 +183,12 @@ export async function getAllPartiesHandler(
               filteredResponses.push(sr);
             });
           });
-          let avg = average(
-            filteredResponses.map((fr) => fr.responses[0].response.Rating)
-          );
+          let avg;
+          if (filteredResponses.length > 0) {
+            avg = average(
+              filteredResponses.map((fr) => fr.responses[0].response.Rating)
+            );
+          }
           resultSchema.rating = avg;
           resultSchema.no_of_responses = filteredResponses.length;
         }
