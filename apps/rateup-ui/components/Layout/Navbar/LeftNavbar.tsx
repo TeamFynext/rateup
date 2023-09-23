@@ -19,7 +19,8 @@ import {
   IconPageBreak,
   IconClipboardList,
   IconChevronDown,
-  IconBrowser
+  IconBrowser,
+  IconMessage2Code
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -28,10 +29,11 @@ import { useUser } from '../../../context/UserContext';
 import { useLeftNavStyles } from "./Navbar.styles";
 import { IconChevronUp } from "@tabler/icons-react";
 
+// TODO: format
 interface NavbarLinkProps {
   icon: React.FC<any>;
   label: string;
-  href: string;
+  href?: string;
   opened: boolean;
   submenus?:  NavbarLinkProps[];
   role?: string;
@@ -141,7 +143,14 @@ const mockdata = [
     { icon: IconPageBreak, label: 'Merge Surveys', href: '/dashboard/LandingPages' }
   ] },
   { icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
-  { icon: IconSpeakerphone, label: "Promotion", href: '/dashboard/promotion'},
+  {
+    icon: IconSpeakerphone,
+    label: "Promotion",
+    submenus: [
+      { icon: IconSpeakerphone, label: 'Promotions', href: '/dashboard/promotion' },
+      { icon: IconMessage2Code, label: 'Templates', href: '/dashboard/promotion/templates' },
+    ]
+  },
   {icon: IconClipboardList, label: "Menu", href: '/dashboard/menu'}
 ];
 

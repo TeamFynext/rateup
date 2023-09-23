@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PromotionTab } from "../../types/enums";
 import ImportRespondents, { ImportRespondentsModal } from "./ImportRespondents";
 
+// Individual list item of chat (group or individual)
 export function ListItem({ onClick, name, isSelected }) {
   const { colors } = useMantineTheme();
   const bg = isSelected ? "#F0F0F0" : "initial";

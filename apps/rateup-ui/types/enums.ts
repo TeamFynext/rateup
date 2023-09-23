@@ -56,3 +56,8 @@ export enum MenuItemPriceType {
   FIXED = "FIXED",
   VARIANT = "VARIANT"
 }
+export enum WaTemplateStatus {
+  APPROVED = "APPROVED",
+  PENDING = "PENDING",
+  REJECTED = "REJECTED",
+}

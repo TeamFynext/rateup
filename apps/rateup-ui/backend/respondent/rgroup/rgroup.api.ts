@@ -16,8 +16,8 @@ export async function getRGroupSurveySendHistory(rgroupId: string) {
   return res.data
 }
 
-export async function sendSurveyToRGroup(rgroupId: string, surveyId: string) {
-  const res = await axiosClient.get(`wa/send/${surveyId}/rgroup/${rgroupId}`)
+export async function sendSurveyToRGroup(rgroupId: string, surveyId: string, templateId: string) {
+  const res = await axiosClient.get(`wa/send/${surveyId}/template/${templateId}/rgroup/${rgroupId}`)
   return res.data
 }
 

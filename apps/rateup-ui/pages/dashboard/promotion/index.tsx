@@ -33,7 +33,7 @@ export default function Promotion() {
 }
 
 // TODO: Since selecting team is required in many places, we could generalize this component and reuse it.
-export function TeamSelector({ selectedTeamId, setSelectedTeamId }) {
+export function TeamSelector({ selectedTeamId, setSelectedTeamId, label = "" }) {
   // TODO: add allowAll boolean prop to allow selecting all teams
   const queryClient = useQueryClient();
   // TODO: remove some nesting on results of the query?
@@ -64,6 +64,7 @@ export function TeamSelector({ selectedTeamId, setSelectedTeamId }) {
       data={teamOptions}
       defaultValue={teamOptions[0].value}
       onChange={setSelectedTeamId}
+      label={label}
     />
   )
 }

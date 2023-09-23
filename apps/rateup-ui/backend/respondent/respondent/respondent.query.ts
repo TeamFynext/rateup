@@ -16,17 +16,17 @@ export const useRespondents = (teamId: string, enabled: boolean) => useQuery({
 
 export const useRespondentSurveySendHistory = (respondentId: string) => {
   // TODO: change querykey. modifying respondentData should not invalidate surveyHistory
-    return useQuery({
-      queryKey: ["respondent", respondentId, "history", "surveys"],
-      queryFn: () => getRespondentSurveySendHistoryByRespondentId(respondentId)
-    })
+  return useQuery({
+    queryKey: ["respondent", respondentId, "history", "surveys"],
+    queryFn: () => getRespondentSurveySendHistoryByRespondentId(respondentId)
+  })
 }
 
 export const useRespondentResponseHistory = (respondentId: string) => {
-    return useQuery({
-      queryKey: ["respondent", respondentId, "history", "responses"],
-      queryFn: () => getRespondentResponseHistoryByRespondentId(respondentId)
-    })
+  return useQuery({
+    queryKey: ["respondent", respondentId, "history", "responses"],
+    queryFn: () => getRespondentResponseHistoryByRespondentId(respondentId)
+  })
 
 }
 
@@ -37,8 +37,8 @@ export const useRGroupsByRespondent = (respondentId: string) => useQuery({
 
 export const useSendSurveyToRespondentMutation = ({ respondentId }) => {
   const queryClient = useQueryClient()
-  return useMutation((surveyId: string) => {
-    return sendSurveyToRespondent(respondentId, surveyId)
+  return useMutation(({ surveyId, templateId }: { surveyId: string, templateId: string }) => {
+    return sendSurveyToRespondent(respondentId, surveyId, templateId)
   }, {
     onSuccess: () => {
       notifications.show({

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addRespondents, createRgroupFromPhoneNumbers, deleteRGroup, deleteRespondentFromRGroup, getRGroupSurveySendHistory, getRGroups, getRGroupsByTeamId, getRespondentsByRGroup, sendSurveyToRGroup, updateRGroup } from "./rgroup.api";
 import { notifications } from "@mantine/notifications";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export const useRGroups = (teamId: string, enabled: boolean) => {
   if (teamId) {
@@ -19,11 +20,11 @@ export const useRGroups = (teamId: string, enabled: boolean) => {
 }
 
 export const useRGroupSurveySendHistory = (rgroupId: string) => {
-    return useQuery({
-      queryKey: ["rgroup", rgroupId, "history", "surveys"],
-      queryFn: () => getRGroupSurveySendHistory(rgroupId)
-    })
-  }
+  return useQuery({
+    queryKey: ["rgroup", rgroupId, "history", "surveys"],
+    queryFn: () => getRGroupSurveySendHistory(rgroupId)
+  })
+}
 
 export const useRespondentsByRGroup = (rgroupId: string) => useQuery({
   queryKey: ["rgroup", rgroupId, "respondents"],
@@ -32,18 +33,21 @@ export const useRespondentsByRGroup = (rgroupId: string) => useQuery({
 
 export const useSendSurveyToRGroupMutation = ({ rgroupId }) => {
   const queryClient = useQueryClient()
-  return useMutation((surveyId: string) => {
-    return sendSurveyToRGroup(rgroupId, surveyId)
-  }, {
-    onSuccess: () => {
-      notifications.show({
-        message: "Survey sent successfully!",
-        color: "green",
-      })
-      queryClient.invalidateQueries(["rgroup", rgroupId, "history", "surveys"])
+  return useMutation(
+    ({ surveyId, templateId }: { surveyId: string, templateId: string }) => {
+      return sendSurveyToRGroup(rgroupId, surveyId, templateId)
+    },
+    {
+      onSuccess: () => {
+        showSuccessToast("Survey sent successfully")
+        queryClient.invalidateQueries(["rgroup", rgroupId, "history", "surveys"])
+      },
+      onError: () => {
+        showErrorToast("Error sending survey")
+      }
+    },
 
-    }
-  })
+  )
 }
 
 export const useCreateRGroupMutation = (teamId: string) => {
