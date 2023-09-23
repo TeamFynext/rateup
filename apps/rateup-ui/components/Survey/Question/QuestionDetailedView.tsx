@@ -7,15 +7,13 @@ import {
   Group,
   Stack,
   TextInput,
-  Text,
-  Space,
   Center,
   ScrollArea,
   Divider,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash } from "@tabler/icons-react";
+import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash, IconX } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -29,8 +27,7 @@ import {
 } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
 import { googleReviewSupportedTypes, logicSupportedTypes, validationSupportedTypes } from "../../../utils/data";
-import { IconChevronRight } from "@tabler/icons-react";
-import { fi } from "@faker-js/faker";
+import { notifications } from "@mantine/notifications";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -38,13 +35,16 @@ interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  surveyType?: String;
+  surveyType?: string;
+  surveyLanguages: string[],
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>
 }
 export function QuestionDetailedView({
   question,
   setSelectedQ,
   setActiveTab,
   surveyType,
+  surveyLanguages, setSelectedLanguage
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -108,15 +108,14 @@ export function QuestionDetailedView({
 
   const handleSave = () => {
     setIsSaving(true);
-
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       setIsSaving(false);
       return 'error';
-    }
+    }else{
 
-    // converting to expected format
+          // converting to expected format
     const { title, description, ...restOfTheData } = form.values;
     const formattedTitle = { ...question.title, [selectedLanguage]: title };
     const formattedDescription = {
@@ -141,6 +140,37 @@ export function QuestionDetailedView({
       // Updating existing question
       questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
+
+      let langList : string[] = surveyLanguages;
+      const missingLangs = []
+
+      langList.forEach((language : string) => {
+        if (language == selectedLanguage) {
+          return;
+        }
+        if (!question.title[language] || question.title[language] == '') {
+            missingLangs.push(language);
+          }
+        });
+
+        if(missingLangs.length > 0) {
+          setIsSaving(false);
+          setSelectedLanguage(missingLangs[0])
+          form.setFieldValue(title, '')
+          form.validate()
+          notifications.show({
+            id: 'errorn',
+            color: 'red',
+            title: `"${missingLangs[0]}" Question is missing`,
+            message: `Add question in ${missingLangs[0]} language  also`,
+            icon: <IconX size="1rem" />,
+            //autoClose: 5000,
+           // position: "bottom-center"
+          });
+          return 'error'
+        }
+      }  
+
     //setIsSaving(false);  
     return 'saved';
   };

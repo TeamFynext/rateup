@@ -94,7 +94,10 @@ export function DraggableQuestionCard({
             <Text pl="xs" fw={500}>{question.title[selectedLanguage]}</Text>
             {true ? (
               <ActionIcon
-                onClick={toggle}
+                onClick={() => {
+                  closeDialog()
+                  toggle()
+                }}
                 sx={{ position: "absolute", right: "5px" }}
               >
                 <IconTrash />

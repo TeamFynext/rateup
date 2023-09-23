@@ -19,9 +19,11 @@ export enum QuestionTabsEnum {
 interface EditSurveyProps {
   questions: Array<Question>;
   addQnTrigger?: number;
-  surveyType?: String;
+  surveyType?: string;
+  surveyLanguages: string[],
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>
 }
-export function EditSurvey({ questions, addQnTrigger,surveyType }: EditSurveyProps) {
+export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguages, setSelectedLanguage }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
     QuestionTabsEnum.None
   );
@@ -67,6 +69,8 @@ export function EditSurvey({ questions, addQnTrigger,surveyType }: EditSurveyPro
                 setSelectedQ={setSelectedQ}
                 setActiveTab={setActiveTab}
                 surveyType={surveyType}
+                surveyLanguages={surveyLanguages}
+                setSelectedLanguage={setSelectedLanguage}
               />
             )}
           </Tabs.Panel>

@@ -73,7 +73,7 @@ export default () => {
     // console.log(error, surveyError);
     return "An error has occurred";
   }
-
+  
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
       <Stack sx={{ height: "100%" }} >
@@ -153,7 +153,13 @@ export default () => {
           <Tabs.Panel value={TabEnum.Edit}>
             {/** TODO: Remove fixed height and make this responsive */}
             <Box sx={{ display: "flex", gap: 30, height: "70vh" }}>
-              <EditSurvey questions={questions} addQnTrigger={addQnTrigger} surveyType={survey.type}/>
+              <EditSurvey 
+                questions={questions} 
+                addQnTrigger={addQnTrigger} 
+                surveyType={survey.type}
+                surveyLanguages={survey.languages}
+                setSelectedLanguage={setSelectedLanguage}
+              />
             </Box>
           </Tabs.Panel>
 
