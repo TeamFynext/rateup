@@ -25,14 +25,14 @@ const config = {
 export async function sendMessage(messageData: WaSendMessageBody) {
   const phone_number_id = process.env.WA_PHONE_ID;
 
-  log.info(`sending message to %s \n%o`, messageData.to, messageData);
+  log.trace(`sending message to %s \n%o`, messageData.to, messageData);
   try {
     const res = await axios.post(
       `https://graph.facebook.com/v16.0/${phone_number_id}/messages`,
       messageData,
       config
     );
-    console.log(res.data, res.statusText)
+    log.trace(`sent successfully %o %o `, res.data, res.statusText)
   } catch (e: any) {
     log.error("Error sending message")
     console.log(e.response);
@@ -76,6 +76,7 @@ export async function getFirstQuestion(surveyId: string) {
 export async function createSession(
   phone: string,
   surveyId: string,
+  templateId: string,
   language: string = ""
 ) {
   log.info("Creating session \n%o\n", { phone, surveyId, language });
@@ -87,6 +88,7 @@ export async function createSession(
       surveyId: surveyId,
       currentQuestionId: firstQId,
       language: language,
+      templateId: templateId
     },
   });
 
@@ -107,13 +109,13 @@ export async function updateSession(phone: string, data: any) {
 
 export async function sendNextQuestion(session: WaSession, response: any) {
   const { currentQuestionId, surveyId } = session;
-  if(!currentQuestionId) {
+  if (!currentQuestionId) {
     log.error("CurrentQuestionId is null")
     throw new Error("CurrentQuestionId is null")
   }
   const questions = await getQuestionsBySurveyId(surveyId);
   const currentQuestion = questions.find(q => q.id === currentQuestionId)
-  if(!currentQuestion) {
+  if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found")
   }
   // TODO
@@ -206,54 +208,33 @@ export async function sendTextMessage(
 
 // TODO: move to .env & upgrade to v17.0?
 const WA_API_VERSION = "v16.0";
-const manager_config = {
-  headers: {
-    Authorization: "Bearer " + process.env.WA_MARKETING_API_TOKEN,
-  },
-};
-export async function getTemplates() {
-  try {
-    const wa_business_id = process.env.WA_BUSINESS_ID;
-  const res = await axios.get(
-    `https://graph.facebook.com/${WA_API_VERSION}/${wa_business_id}/message_templates`,
-    manager_config
-  );
-  console.log(res)
-  return res.data
-  } catch (e: any) {
-    log.error("Error getting templates")
-    console.log(e.response);
-  }
-  
-}
-
-export async function getSurveyConsentTemplate() {
-  const templates = await getTemplates();
-  const consentTemplate = templates.data.find((t: any) => t.name === "survey_consent");
-  return consentTemplate;
-}
-
-const templateQuery = {
-  name: "survey_consent",
-  language: {
-    code: "en"
-  }
-}
 
 /**
  * Creates a session with currentQuestionId as null & sends the template with name "survey_consent"
  * @param phone 
  * @param survey 
  */
-export async function sendSurveyToRespondent(phone: string, survey: Survey ) {
-   await prisma.waSession.create({
+export async function sendSurveyToRespondent(phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
+  log.trace("Sending survey to respondent %s", phone);
+  const session = await prisma.waSession.create({
     data: {
       phone,
       surveyId: survey.id,
       language: survey.languages[0],
+      templateId: dbTemplate.id
     }
   })
+  createSession
+  log.trace("Session created %o", session)
+  const { name, language } = dbTemplate.data;
+  const templateQuery = {
+    name,
+    language: {
+      code: language
+    }
+  }
   const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
+
   // TODO: send error if sending template failed
   await sendMessage(consentTemplateMessage);
 }

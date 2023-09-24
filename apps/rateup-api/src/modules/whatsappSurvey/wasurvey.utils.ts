@@ -3,11 +3,23 @@ import {
   LDResponse,
   QuestionType as Q,
   SmileyResponse,
+  WaEvent,
   YNResponse,
 } from "../../types/enums";
 import { WaSession } from "@prisma/client";
 import { log } from "../../utils/logger";
 
+export function getEventType(data: WaMessageBody) {
+  if (data.object === 'whatsapp_business_account') {
+    if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
+      return WaEvent.TemplateStatusChange;
+    } else if (data.entry[0].changes[0].field === WaEvent.Message) {
+      return WaEvent.Message;
+    }
+  }
+  log.error('Invalid data object', data);
+  return null;
+}
 export function getMessageObject(data: WaMessageBody) {
   if (data.entry[0].changes[0].value.messages.length > 1) {
     // TODO: Find out when this happens
@@ -309,4 +321,51 @@ export function parseResponse(
       throw new Error(`Not Implemented: question type => ${question.type}`);
   }
   return response;
+}
+
+
+const _templateStatusChangeEventSampleData = {
+  "entry": [
+    {
+      "id": "0", "time": 1695440875, "changes": [{
+        "field": "message_template_status_update",
+        "value": {
+          "event": "APPROVED",
+          "message_template_id": 12345678,
+          "message_template_name": "my_message_template",
+          "message_template_language": "pt-BR",
+          "reason": null
+        }
+      }]
+    }],
+  "object": "whatsapp_business_account"
+}
+const messageEventSampleData = {
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "0", "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "16505551111",
+              "phone_number_id": "123456123"
+            },
+            "contacts": [{
+              "profile": { "name": "test user name" }, "wa_id": "16315551181"
+            }],
+            "messages": [
+              {
+                "from": "16315551181",
+                "id": "ABGGFlA5Fpa",
+                "timestamp": "1504902988",
+                "type": "text",
+                "text": { "body": "this is a text message" }
+              }]
+
+          }
+        }]
+    }]
 }

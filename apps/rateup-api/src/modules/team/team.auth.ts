@@ -26,6 +26,11 @@ export async function verifyTeamAdminAccess(
     }
   }
 
+/**
+ * Verifies if the user has access to the teamId in the params
+ * @param request 
+ * @param reply 
+ */
 export async function verifyTeamAccess(
     request: FastifyRequest<{
         Params: ByTeamIdParams;

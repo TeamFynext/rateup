@@ -85,11 +85,13 @@ model OrgMember {
 }
 
 model Team {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime     @default(now())
-  name        String
-  code        String
-  googleLink  String?
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now())
+  name       String
+  code       String
+  googleLink String?
+  tags       String[] @default([])
+
   org         Org          @relation(fields: [orgId], references: [id])
   orgId       String       @db.Uuid
   members     TeamMember[]
@@ -97,9 +99,8 @@ model Team {
   invitations Invitation[]
   Respondent  Respondent[]
   RGroup      RGroup[]
-
   menu        Menu[]
-  tags        String[]     @default([])
+  templates   WaTemplate[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -198,14 +199,16 @@ model SurveyStats {
 
 // Whatsapp session
 model WaSession {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt         DateTime @default(now())
-  phone             String   @unique
-  survey            Survey   @relation(fields: [surveyId], references: [id])
-  surveyId          String   @db.Uuid
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime   @default(now())
+  phone             String     @unique
+  survey            Survey     @relation(fields: [surveyId], references: [id])
+  surveyId          String     @db.Uuid
+  template          WaTemplate @relation(fields: [templateId], references: [id])
+  templateId        String     @db.Uuid
   currentQuestionId String?
   responses         Json[]
-  language          String   @default("")
+  language          String     @default("")
 }
 
 // TODO: Add relation to team or org
@@ -252,18 +255,22 @@ model RespondentSurveySendHistory {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   survey       Survey     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId     String     @db.Uuid
+  template     WaTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId   String     @db.Uuid
   respondent   Respondent @relation(fields: [respondentId], references: [id], onDelete: Cascade)
   respondentId String     @db.Uuid
   createdAt    DateTime   @default(now())
 }
 
 model RGroupSurveySendHistory {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rgroup    RGroup   @relation(fields: [rgroupId], references: [id], onDelete: Cascade)
-  rgroupId  String   @db.Uuid
-  survey    Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId  String   @db.Uuid
-  createdAt DateTime @default(now())
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rgroup     RGroup     @relation(fields: [rgroupId], references: [id], onDelete: Cascade)
+  rgroupId   String     @db.Uuid
+  survey     Survey     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId   String     @db.Uuid
+  template   WaTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId String     @db.Uuid
+  createdAt  DateTime   @default(now())
 }
 
 //----------welcome page styles-----------
@@ -346,12 +353,24 @@ model ContactForm {
   message   String
 }
 
-
 //media associated with the election
-model Media{
+model Media {
   id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now())
   type      String
   name      String
   image     String
+}
+
+model WaTemplate {
+  id           String   @id @default(uuid()) @db.Uuid
+  createdAt    DateTime @default(now())
+  data         Json
+  acceptButton String // QuickReplyButton text which on clicking will send the survey to the user
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId       String   @db.Uuid
+
+  waSession                   WaSession[]
+  respondentSurveySendHistory RespondentSurveySendHistory[]
+  rgroupSurveySendHistory     RGroupSurveySendHistory[]
 }

@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the frontend
-import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition } from "./enums";
+import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus } from "./enums";
 
 type GoogleReview = {
   minRating?: number;
@@ -24,7 +24,7 @@ type ValidationRules = {
   } | null
 };
 
-export {};
+export { };
 declare global {
   type Question = {
     title: Zod.RecordType<string, string>;
@@ -70,5 +70,18 @@ declare global {
     condition: LogicCondition;
     response: any
     action: LogicAction;
+  }
+  type WaTemplateWithTypes = {
+    id: string
+    createdAt: Date
+    data: {
+      name: string
+      components: Array<any>
+      id: string
+      status: WaTemplateStatus
+      language: string
+    }
+    acceptButton: string
+    teamId: string
   }
 }
