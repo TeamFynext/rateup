@@ -66,6 +66,7 @@ model Org {
   owner               User         @relation(fields: [ownerId], references: [id])
   ownerId             String       @db.Uuid
   whatsappAccessToken String?
+  logo                String?
   members             OrgMember[]
   teams               Team[]
   invitations         Invitation[]

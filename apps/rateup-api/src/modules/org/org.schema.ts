@@ -24,15 +24,25 @@ const updateRoleSchema = z.object({
   role: z.string()
 });
 
+const updateLogoSchema = z.object({
+  logo: z.string().min(6)
+    .refine(value => value.includes('.'), {
+      message: 'Invalid photo.',
+    }),
+})
+
 export const { schemas: orgSchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createOrgRequestSchema,
     createOrgResponseSchema,
     idParamRequestSchema,
-    updateRoleSchema
+    updateRoleSchema,
+    updateLogoSchema    
   },
   { $id: "orgSchema" }
 );
+
 export type CreateOrgInput = z.infer<typeof createOrgRequestSchema>;
 export type IdParamInput = z.infer<typeof idParamRequestSchema>;
 export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
+export type UpdateLogoInput = z.infer<typeof updateLogoSchema>;
