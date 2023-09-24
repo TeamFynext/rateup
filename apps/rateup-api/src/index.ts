@@ -18,7 +18,7 @@ const server = Fastify({
 supertokens.init(SuperTokensConfig);
 
 server.register(cors, {
-  origin: [process.env.FRONTEND_URL, ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url))],
+  origin: [process.env.ELECTION_APP_URL,process.env.FRONTEND_URL, ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url))],
   allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
   credentials: true,
 });
