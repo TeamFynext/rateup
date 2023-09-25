@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { WaMessageBody } from "../../types/whatsapp.types";
 import {
   createListMessage,
-  createTemplateMessage,
+  getEventType,
   isValidResponse,
   parseMessage,
 } from "./wasurvey.utils";
@@ -11,8 +11,6 @@ import {
   deleteSession,
   getFirstQuestion,
   getSession,
-  getSurveyConsentTemplate,
-  getTemplates,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
@@ -29,7 +27,8 @@ import { SendSurveyToRGroupParams, SendSurveyToRespondentParams } from "./wasurv
 import { createRespondentSurveySendRecord, getRespondentById } from "../respondent/respondent/respondent.service";
 import { log } from "../../utils/logger";
 import { createRGroupSurveySendRecord, getRespondentsByRGroupId } from "../respondent/rgroup/rgroup.service";
-import prisma from "../../utils/prisma";
+import { getTemplate, getTemplateWithHSMId, updateTemplateInDb } from "../whatsapp/messageTemplates/wa_templates.service";
+import { WaEvent, WaTemplateStatus } from "../../types/enums";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -52,22 +51,52 @@ export function webhookSubscribeHandler(
   }
 }
 
+// TODO: handle multiple changes (changes.length > 1)
+// TODO: Check for usable types in whatsapp sdk (discontinued project)
 export async function whatsappEventHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
   const body = request.body as WaMessageBody;
-
-  if (!body.entry[0].changes[0].value.messages) {
-    // Not a message event. Probably a status update. Ignoring...
+  log.trace('WaEvent => %o', body);
+  const eventType = getEventType(body);
+  if (!eventType) {
+    // Ignoring...
     reply.code(200).send();
     return;
+  } else if (eventType === WaEvent.Message) {
+    log.trace("message => %o", parseMessage(body));
+    await whatsappMessageHandler(body);
+  } else if (eventType === WaEvent.TemplateStatusChange) {
+    log.trace("template status change => %o", body);
+    await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
   }
-  console.log(JSON.stringify(body, null, 2));
-  console.log(parseMessage(body));
-  await whatsappMessageHandler(body);
 
   reply.code(200).send();
+}
+interface changeValue {
+  event: WaTemplateStatus;
+  message_template_id: number;
+  message_template_name: string;
+  message_template_language: string;
+  reason: string | null;
+}
+
+async function templateStatusChangeHandler(changeValue: changeValue) {
+  const dbTemplate = await getTemplateWithHSMId(changeValue.message_template_id.toString());
+  if (!dbTemplate) {
+    log.error("Template not found in db");
+    return false;
+  } else {
+    const waTemplate = dbTemplate.data;
+    if (!Object.values(WaTemplateStatus).includes(changeValue.event)) {
+      log.error("Invalid status change value");
+      return false;
+    }
+    waTemplate.status = changeValue.event;
+    await updateTemplateInDb(dbTemplate.id, waTemplate);
+    return true;
+  }
 }
 
 async function whatsappMessageHandler(waMessage: WaMessageBody) {
@@ -80,13 +109,16 @@ async function whatsappMessageHandler(waMessage: WaMessageBody) {
     console.log(message)
     console.log(session.currentQuestionId)
     if (!session.currentQuestionId) {
-      // Survey Consent
-      if (message.toLocaleLowerCase() === "yes") {
+      // If no current question, then we assume this is the consent message (template)
+      const dbTemplate = await getTemplate(session.templateId);
+      if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
+        log.trace('User consented to survey')
         const firstQId = await getFirstQuestion(session.surveyId);
         session = await updateSession(from, { currentQuestionId: firstQId });
         await sendFirstQuestion(session);
       } else {
         // Delete session if user doesn't consent
+        log.trace('User did not consent to survey. \n reply => %s \n acceptText => %s', message, dbTemplate.acceptButton)
         await deleteSession(from);
         return;
       }
@@ -102,10 +134,13 @@ async function handleStartMessage(waMessage: WaMessageBody) {
   // delete any existing session if any
   await deleteSession(from);
   // create new session
-  const survey = await getSurveyById(message.split(" ")[1]);
+  const ids = message.split(" ")[1]; // format: /start <surveyId>/<templateId>
+  const [surveyId, templateId] = ids.split("/");
+  const survey = await getSurveyById(surveyId);
+  const dbTemplate = await getTemplate(templateId) as WaTemplateWithTypes;
   if (survey.languages.length > 1) {
     await handleLanguageSelection(from, survey);
-    await createSession(from, survey.id);
+    await createSession(from, survey.id, dbTemplate.data.id);
     return;
   }
   const session = await createSession(from, survey.id, survey.languages[0]);
@@ -204,8 +239,9 @@ export async function sendSurveyToRespondentHandler(
   >,
   reply: FastifyReply
 ) {
-  const { surveyId, respondentId } = request.params;
+  const { surveyId, respondentId, templateId } = request.params;
   const survey = await getSurveyById(surveyId);
+  const dbTemplate = await getTemplate(templateId);
   const respondent = await getRespondentById(respondentId);
   if (!respondent) {
     throw new Error("Respondent not found");
@@ -218,8 +254,8 @@ export async function sendSurveyToRespondentHandler(
     throw new Error("Respondent phone number not found");
   }
   await deleteSession(phone);
-  await sendSurveyToRespondent(phone, survey)
-  await createRespondentSurveySendRecord(respondentId, surveyId);
+  await sendSurveyToRespondent(phone, survey, dbTemplate)
+  await createRespondentSurveySendRecord(respondentId, surveyId, templateId);
   reply.code(200).send();
 }
 
@@ -229,11 +265,12 @@ export async function sendSurveyToRGroupHandler(
   }>,
   reply: FastifyReply
 ) {
-  const { surveyId, rgroupId } = request.params;
-  log.info(`Sending survey ${surveyId} to rgroup ${rgroupId}`);
+  const { surveyId, rgroupId, templateId } = request.params;
+  log.trace(`Preparing to send survey ${surveyId} to rgroup ${rgroupId}`);
   const survey = await getSurveyById(surveyId);
+  const dbTemplate = await getTemplate(templateId);
   const respondents = await getRespondentsByRGroupId(rgroupId);
-  log.info(respondents)
+  log.trace('respondents %o', respondents)
   if (!survey) {
     throw new Error("Survey not found");
   }
@@ -248,20 +285,11 @@ export async function sendSurveyToRGroupHandler(
     }
     // TODO: remove tracking of group-send-record individually and assume
     // if respondent is in a group, then they have received the survey?
-    await createRespondentSurveySendRecord(respondentId, surveyId);
+    await createRespondentSurveySendRecord(respondentId, surveyId, templateId);
     // TODO: We can only send templates first. Replace below with a template
-    console.log('Sending first question to respondent', phone)
-    await sendSurveyToRespondent(phone, survey)
+    await sendSurveyToRespondent(phone, survey, dbTemplate)
   }
 
-  await createRGroupSurveySendRecord(rgroupId, surveyId);
+  await createRGroupSurveySendRecord(rgroupId, surveyId, templateId);
   reply.code(200).send();
-}
-
-export async function getTemplatesHandler(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  const templates = await getTemplates();
-  reply.code(200).send(templates);
 }

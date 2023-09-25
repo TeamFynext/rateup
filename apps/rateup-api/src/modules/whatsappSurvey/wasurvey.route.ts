@@ -1,13 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { getTemplatesHandler, sendSurveyToRGroupHandler, sendSurveyToRespondentHandler, webhookSubscribeHandler, whatsappEventHandler } from "./wasurvey.controller";
+import { sendSurveyToRGroupHandler, sendSurveyToRespondentHandler, webhookSubscribeHandler, whatsappEventHandler } from "./wasurvey.controller";
 
 export async function waWebhookRoutes(server: FastifyInstance) {
   server.get("/", webhookSubscribeHandler);
   server.post("/", whatsappEventHandler);
 }
 
-export async function whatsappRoutes(server: FastifyInstance) {
-  server.get("/send/:surveyId/resp/:respondentId", sendSurveyToRespondentHandler );
-  server.get("/send/:surveyId/rgroup/:rgroupId", sendSurveyToRGroupHandler);
-  server.get("/templates", getTemplatesHandler);
+export async function whatsappSurveyRoutes(server: FastifyInstance) {
+  server.get("/send/:surveyId/template/:templateId/resp/:respondentId", sendSurveyToRespondentHandler );
+  server.get("/send/:surveyId/template/:templateId/rgroup/:rgroupId", sendSurveyToRGroupHandler);
+
 }
