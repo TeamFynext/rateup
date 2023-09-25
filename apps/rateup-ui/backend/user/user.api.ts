@@ -23,9 +23,11 @@ export interface IUpdateProfilePhoto{
 
 export interface IUserData {
     userId: string;
+    userName: string;
     role: string;
     email: string;
     orgId: string;
+    orgLogo: string
     profilePhoto: string;
   }
   

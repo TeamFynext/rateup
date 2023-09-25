@@ -66,8 +66,8 @@ function ChatWindow({ respondent, openDetails }) {
   ].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)))
 
 
-  const sendHandler = (surveyId) => {
-    sendSurveyMutation.mutate(surveyId)
+  const sendHandler = (surveyId: string, templateId: string) => {
+    sendSurveyMutation.mutate({ surveyId, templateId })
   }
 
 

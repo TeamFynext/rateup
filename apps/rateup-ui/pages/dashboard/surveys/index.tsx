@@ -19,21 +19,18 @@ import {
   Modal,
   Checkbox,
   Button,
-  createStyles,
+  createStyles, Dialog, ScrollArea
 } from "@mantine/core";
 import {
   IconChartBar,
   IconCopy,
   IconDots,
-  IconEdit,
-  IconMessage,
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
   IconShare,
   IconTrash,
   IconSelector,
-  IconChevronDown,
   IconPencil,
   IconSettings,
   IconCheck,
@@ -62,6 +59,7 @@ import {
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
+import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
 
 const useStyles = createStyles((theme) => ({
   customButton: {
@@ -81,9 +79,10 @@ export default function Surveys() {
     mergeSurveyOpened,
     { open: openMergeSurvey, close: closeMergeSurveyModal },
   ] = useDisclosure(false);
-  const [sort, setSort] = useState(false);
+  const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
   const [surveyidArray, setSurveyIdArray] = useState([]);
+  const [filterParam, setFilterParam] = useState('all')
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -181,7 +180,6 @@ export default function Surveys() {
   };
   //--------------check if survey is selected------
   const isChecked = (surveyid) => {
-    // console.log("enter check");
     let surveysarray = surveyidArray;
     let found = false;
     for (let i = 0; i < surveysarray.length; i++) {
@@ -190,7 +188,6 @@ export default function Surveys() {
         break;
       }
     }
-    // console.log(found,">>>found valu")
     return found;
   };
 
@@ -241,21 +238,9 @@ export default function Surveys() {
             </Button>
           )}
 
-          <Menu shadow="md" width={200} position="bottom-end" offset={2}>
-            <Menu.Target>
-              <RateupButtonPrimary
-                title={"Status"}
-                variant="subtle"
-                rightIcon={<IconChevronDown size="1rem" />}
-              />
-            </Menu.Target>
-            {/* 
-              <Menu.Dropdown >
-                <Menu.Item color="teal" icon={<IconCheck size={14} />}>Active</Menu.Item>
-                <Menu.Item color="red" icon={<IconX size={14} />}>Inactive</Menu.Item>
-              </Menu.Dropdown>
-               */}
-          </Menu>
+          <StatusFilterMenu
+            filterParam = {filterParam}
+            setFilterParam = {setFilterParam}/>
 
           <RateupButtonPrimary
             onClick={() => setSort(!sort)}
@@ -268,60 +253,70 @@ export default function Surveys() {
 
       <Space h="xl" />
 
-      <SimpleGrid
-        cols={4}
-        spacing={"lg"}
-        breakpoints={[
-          { minWidth: "xl", cols: 3 },
-          { minWidth: "lg", cols: 2 },
-          { minWidth: "md", cols: 2 },
-          { maxWidth: "md", cols: 1 },
-        ]}
-      >
-        {user?.role !== "MEMBER" && (
-          <Paper
-            p="md"
-            shadow="lg"
-            radius="lg"
-            sx={{ cursor: "pointer" }}
-            onClick={open}
-          >
-            <Center h="100%">
-              <Stack align="center">
-                <IconPlus size={36} />
-                <Text size="xl" fw={700}>
-                  Add Survey
-                </Text>
-              </Stack>
-            </Center>
-          </Paper>
-        )}
+        <SimpleGrid
+          cols={4}
+          spacing={"lg"}
+          breakpoints={[
+            { minWidth: "xl", cols: 3 },
+            { minWidth: "lg", cols: 2 },
+            { minWidth: "md", cols: 2 },
+            { maxWidth: "md", cols: 1 },
+          ]}
+        >
+          {user?.role !== "MEMBER" && (
+            <Paper
+              p="md"
+              shadow="lg"
+              radius="lg"
+              sx={{ cursor: "pointer" }}
+              onClick={open}
+            >
+              <Center h="100%">
+                <Stack align="center">
+                  <IconPlus size={36} />
+                  <Text size="xl" fw={700}>
+                    Add Survey
+                  </Text>
+                </Stack>
+              </Center>
+            </Paper>
+          )}
 
-        {(specificTeamIsSelected
-          ? surveysByTeam?.data?.length > 0
-            ? [...surveysByTeam?.data]
-            : []
-          : [...surveys]
-        )
-          .slice()
-          .sort((a, b) =>
-            sort
-              ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-              : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime()
+          {(specificTeamIsSelected
+            ? surveysByTeam?.data?.length > 0
+              ? [...surveysByTeam?.data]
+              : []
+            : [...surveys]
           )
-          .map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              teamsData={teamsData}
-              setSelectedTeamId={setSelectedTeamId}
-              handleCheckBox={handleCheckBox}
-              isChecked={isChecked}
-            />
-          ))}
-      </SimpleGrid>
+            .slice()
+            .sort((a, b) =>
+              sort
+                ? new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+                : new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime()
+            ).filter((s) => {
+              if(filterParam === 'active'){
+                return s.active === true;
+              }
+              else if(filterParam === 'paused') 
+              {
+                return s.active === false;
+              }else{
+                return true;
+              }
+            })
+            .map((s) => (
+              <SurveyCard
+                key={s.id}
+                survey={s}
+                teamsData={teamsData}
+                setSelectedTeamId={setSelectedTeamId}
+                handleCheckBox={handleCheckBox}
+                isChecked={isChecked}
+              />
+            ))}
+        </SimpleGrid>
       <CreateSurveyModal
         open={createSurveyOpened}
         close={close}
@@ -386,12 +381,9 @@ export function SurveyCard({
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} truncate size="xl" fw={700}>
+        <Text mr={"sm"} sx={{maxWidth:'70%'}} truncate="end" size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type == "web" ? "blue" : "green"}>
-          {survey.type}
-        </Badge>
         <Group align={"center"} mt="sm" spacing="xs">
           <IconPencil />
           <SurveyMenu
@@ -407,17 +399,24 @@ export function SurveyCard({
           ></Checkbox>
         </Group>
       </Flex>
-      <Group align={"center"} mt="sm" spacing="xs">
-        <Avatar radius={"xl"} />
-        <Text size="sm" c="dimmed">
-          Created {timeSince}
-        </Text>
+      <Group position="apart" >    
+
+        <Group align={"center"} mt="sm" spacing="xs">
+          <Avatar radius={"xl"} />
+          <Text size="sm" c="dimmed">
+            Created {timeSince}
+          </Text>
+        </Group>    
+        <StatusBadge active={survey.active} />
       </Group>
+
       <Space h="xl" />
       <Space h="lg" />
 
       <Flex justify={"space-between"} mt="xl" align={"center"}>
-        <StatusBadge active={survey.active} />
+      <Badge mt="md" color={survey?.type == "web" ? "blue" : "green"}>
+          {survey.type}
+        </Badge>
         {/* <Text>Total Responses : #</Text> */}
         {/* //TODO */}
         <Link
@@ -442,6 +441,9 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
   const router = useRouter();
 
   const [opened, { close, open }] = useDisclosure(false);
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const cloneSurvey = useCloneSurveyMutation({
     close,
@@ -545,6 +547,34 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         </Stack>
       </Modal>
 
+      <Dialog opened={dialogOpened} withCloseButton onClose={closeDialog} size="lg" radius="md">
+          <Text size="md" mb="xs" weight={500}>
+              Are you sure to delete this Survey?
+          </Text>
+
+          <Group align="center" pt="lg">
+          <RateupButtonSecondary onClick={closeDialog} loading={isLoading} size='md' title="Cancel" />
+
+          <RateupButtonPrimary 
+          
+            onClick={(e) => {
+                e.stopPropagation();
+                notifications.show({
+                  id: "load-data",
+                  loading: true,
+                  title: "Deleting survey..",
+                  message: `Hold on, survey is getting deleted...`,
+                  autoClose: false,
+                  withCloseButton: false,
+                });
+                surveyDeleteMutation.mutate(survey?.id);
+            }} 
+            
+            loading={isLoading} size='md' title="Yes, Delete" />
+
+          </Group>
+      </Dialog>
+
       <Menu.Target>
         <ActionIcon
           onClick={(e) => {
@@ -586,17 +616,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         </Menu.Item>
         <Menu.Item
           icon={<IconTrash />}
-          onClick={() => {
-            notifications.show({
-              id: "load-data",
-              loading: true,
-              title: "Deleting survey..",
-              message: `Hold on, survey is getting deleted...`,
-              autoClose: false,
-              withCloseButton: false,
-            });
-            surveyDeleteMutation.mutate(survey?.id);
-          }}
+          onClick={toggle}
         >
           Delete
         </Menu.Item>
@@ -616,7 +636,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
 
 function StatusBadge({ active }) {
   return (
-    <Badge color={active ? "green" : "yellow"}>
+    <Badge mt="md" color={active ? "green" : "yellow"}>
       {active ? "Active" : "Paused"}
     </Badge>
   );

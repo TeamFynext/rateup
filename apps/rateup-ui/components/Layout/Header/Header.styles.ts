@@ -22,10 +22,10 @@ export const useStyles = createStyles((theme) => ({
       paddingLeft: "20px",
       paddingRight:"30px",
       backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
-      '&:hover': {
-        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
-        boxShadow: theme.shadows.lg,
-      },
+      // '&:hover': {
+      //   backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
+      //   boxShadow: theme.shadows.lg,
+      // },
       [theme.fn.smallerThan('xs')]: {
         display: 'none',
       },

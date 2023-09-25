@@ -73,7 +73,7 @@ export default () => {
     // console.log(error, surveyError);
     return "An error has occurred";
   }
-
+  
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
       <Stack sx={{ height: "100%" }} >
@@ -82,7 +82,7 @@ export default () => {
           onTabChange={(tab) => setActiveTab(tab as TabEnum)}
         >
           <Group position="apart">
-            <Title order={1} mb="sm">{survey.title}</Title>
+            <Title order={1} mb="sm" truncate='end' pr="xl" sx={{maxWidth:"350px"}} title={survey.title}>{survey.title}</Title>
             <Tabs.List
               sx={{
                 position: "absolute",
@@ -153,7 +153,13 @@ export default () => {
           <Tabs.Panel value={TabEnum.Edit}>
             {/** TODO: Remove fixed height and make this responsive */}
             <Box sx={{ display: "flex", gap: 30, height: "70vh" }}>
-              <EditSurvey questions={questions} addQnTrigger={addQnTrigger} surveyType={survey.type}/>
+              <EditSurvey 
+                questions={questions} 
+                addQnTrigger={addQnTrigger} 
+                surveyType={survey.type}
+                surveyLanguages={survey.languages}
+                setSelectedLanguage={setSelectedLanguage}
+              />
             </Box>
           </Tabs.Panel>
 

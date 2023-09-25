@@ -13,7 +13,6 @@ const TeamMemberCard = ({member}) => {
   return (
     <Paper
     p="md"shadow="lg" radius="lg"
-    sx={{ cursor: "pointer" }}
     onClick={() => {
       //router.push(`teams/member/${member.id}`);
     }}
@@ -23,8 +22,7 @@ const TeamMemberCard = ({member}) => {
         {member.name}
       </Text>
       <Group align={"center"} mt="sm" spacing="xs">
-      {/* <IconPencil /> */}
-       <TeamMemberMenu status={member.status} inviteId={member.id} /> 
+      { member.status === "PENDING" && <TeamMemberMenu status={member.status} inviteId={member.id} /> }
       </Group>
       
     </Flex>

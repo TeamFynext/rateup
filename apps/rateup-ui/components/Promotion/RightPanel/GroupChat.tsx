@@ -42,8 +42,8 @@ function ChatWindow({ rgroup, openDetails }) {
     return <div>Error</div>
   }
 
-  const sendHandler = (surveyId: string) => {
-    sendSurveyMutation.mutate(surveyId)
+  const sendHandler = (surveyId: string, templateId: string) => {
+    sendSurveyMutation.mutate({surveyId, templateId})
   }
 
   return (

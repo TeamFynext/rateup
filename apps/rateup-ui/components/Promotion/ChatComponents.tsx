@@ -1,10 +1,12 @@
-import { useMantineTheme, Flex, Box, Container, Text, Autocomplete, Button, Group } from "@mantine/core";
+import { useMantineTheme, Flex, Box, Container, Text, Autocomplete, Button, Group, Select } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconSend } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useContext, useState } from "react";
 import { useSurveysByTeam } from "../../backend/surveys/surveys.query";
 import SelectedTeamContext from "../../context/SelectedTeam";
+import { useWaTemplates } from "../../backend/whatsapp/whatsapp.query";
+import { WaTemplateStatus } from "../../types/enums";
 
 export function SurveySendDetailComponent({ name, createdAt }) {
   const { colors } = useMantineTheme();
@@ -83,23 +85,38 @@ export function ResponseComponent({ createdAt, surveyTitle }) {
   )
 }
 
-export function SendSurveyComponent({ sendHandler }) {
+interface SendSurveyComponentProps {
+  sendHandler: (surveyId: string, templateId: string) => void
+}
+export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
   const { colors } = useMantineTheme();
   const { selectedTeamId } = useContext(SelectedTeamContext)
   const { isLoading, error, data: res } = useSurveysByTeam(selectedTeamId, !!selectedTeamId)
+  const { data: templates, isLoading: isTemplatesLoading } = useWaTemplates(selectedTeamId)
   const [selectedSurvey, setSelectedSurvey] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState("")
   const surveys = res?.data
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading || isTemplatesLoading) return <div>Loading...</div>
   if (error || !Array.isArray(surveys)) {
     // console.log(error)
     //console.log(surveys)
     return <div>Error</div>
   }
+
+  const approvedTemplates = templates.filter(({ data }) => data.status === WaTemplateStatus.APPROVED)
   const handleSend = () => {
-    const survey = surveys.find(({ title }) => title === selectedSurvey)
+    const template = approvedTemplates.find(({ data }) => data.name === selectedTemplate)
+    const survey = surveys.find(({ id }) => id === selectedSurvey)
+    if(!template) {
+      notifications.show({
+        message: "Please select a template to send",
+        color: "red",
+      })
+      return
+    }
     if (survey) {
-      sendHandler(survey.id)
+      sendHandler(survey.id, template.id)
     } else {
       notifications.show({
         message: "Please select a survey to send",
@@ -108,19 +125,29 @@ export function SendSurveyComponent({ sendHandler }) {
     }
   }
   return (
-    <Flex gap={"md"} p="xs" sx={{ width: "100%" }} align={"center"}>
+    <Flex gap={"4px"} p="xs" sx={{ width: "100%" }} align={"center"}>
       <Autocomplete
-        radius={"xl"}
+        radius={"sm"}
+        placeholder="Select Template"
+        data={approvedTemplates.map(({ data }) => ({ label: data.name, value: data.name, group: "Select Template" }))}
+        w="200px"
+        size="md"
+        onChange={setSelectedTemplate}
+      />
+
+      <Select
+        radius={"sm"}
         placeholder="Search for survey to send"
-        data={surveys.map(({ title }) => title)}
+        data={surveys.map(({ title, id }) => ({ value: id, label: title, group: "Select Survey" }))}
         sx={{ flexGrow: 1 }}
         size="md"
         onChange={setSelectedSurvey}
       />
       <Button
-        radius={"xl"}
+        radius={"sm"}
         rightIcon={<IconSend size="1.1rem" />}
         onClick={handleSend}
+        h="40px"
         sx={{
           flexGrow: 0
         }}

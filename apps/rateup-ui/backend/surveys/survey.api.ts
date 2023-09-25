@@ -4,7 +4,27 @@ const SURVEYURL = "/survey";
 const SURVEY_PUBLIC_URL = "/public/survey";
 const WHATSAPPSURVEYURL = "/whatsappsurvey";
 
-export const createSurvey = (data) => axiosClient.post(SURVEYURL, data);
+export interface CreateSurveyResponse {
+  title: string,
+  languages: string[],
+  teamId: string,
+  active: boolean,
+  type: string,
+  getLocation: boolean,
+  welcomePageEnabled: boolean,
+  id: string
+}
+
+export async function createSurvey(data) {
+  try {
+    let res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data)).data;
+    return res;
+  } catch (e) {
+    console.error(e);
+    return { error: "Error Occured!" };
+  }
+}
+
 export const createSurveyLandingPage = (data) =>
   axiosClient.post(`${SURVEYURL}/createlanding`, data);
 

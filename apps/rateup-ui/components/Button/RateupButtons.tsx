@@ -2,7 +2,8 @@ import { Button } from '@mantine/core';
 interface Props {
     title: string;
     disabled?: boolean
-    onClick?: () => void;
+    //onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void | (() => void) | (() => Promise<void>)
+    onClick?: any
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
     variant?: string;

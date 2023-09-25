@@ -20,8 +20,8 @@ export async function getRespondentSurveySendHistoryByRespondentId(respondentId:
   return res.data
 }
 
-export async function sendSurveyToRespondent(respondentId: string, surveyId: string) {
-  const res = await axiosClient.get(`wa/send/${surveyId}/resp/${respondentId}`)
+export async function sendSurveyToRespondent(respondentId: string, surveyId: string, templateId: string) {
+  const res = await axiosClient.get(`wa/send/${surveyId}/template/${templateId}/resp/${respondentId}`)
   return res.data
 }
 export async function getAllRespondantResponseHistory(phone: string) {

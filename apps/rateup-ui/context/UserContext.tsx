@@ -3,7 +3,9 @@ import { createContext, ReactNode, useContext, useState } from "react";
 interface User {
     role: string;
     userId: string;
+    userName: string;
     email: string;
+    orgLogo: string;
     profilePhoto: string
 }
 

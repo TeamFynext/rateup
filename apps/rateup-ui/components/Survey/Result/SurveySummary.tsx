@@ -107,6 +107,12 @@ const SurveySummary = () => {
         sx={{maxWidth: "200px"}}
       />
 
+    <Group position='center' p="xl">
+
+      {Object.entries(responseCounts).length === 0 && "No Quantitative question responses!"}
+
+    </Group>
+
     <ScrollArea h={'50vh'}>
 
         {Object.entries(responseCounts).map(([questionId, responseCounts]) => {
@@ -193,7 +199,7 @@ const SurveySummary = () => {
                         {
                           response === 'Yes' 
                           ?
-                        <Group align='center'  mb="sm"
+                        <Group align='center'  mb="md"
                         >
                             <Button
                               color={"red"}

@@ -6,6 +6,10 @@ function validateNameAndEmail(name: string, email: string): Record<string, strin
     errors.name = "Name is required.";
   }
 
+  if (name && name.length < 3) {
+    errors.name = "Name (min 3 characters)";
+  }
+
   // Validate email
   if (!email) {
     errors.email = "Email is required.";

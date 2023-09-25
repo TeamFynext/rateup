@@ -53,7 +53,8 @@ export function HeaderTabs({mode, opened} : iProps) {
   
   
   const userInfo = {
-    "name": user?.email,
+    "name": user?.userName,
+    "email": user?.email,
     "role": !user?.role ? "...error..."  : (user?.role === 'SUPER_ADMIN' ? "Super Admin" : (user?.role === 'ADMIN' ? "Admin" : "Team Member")),
     "image": userProfileAvatar
   };
@@ -111,7 +112,15 @@ export function HeaderTabs({mode, opened} : iProps) {
 
         <Group position="apart">
           <Link href="/dashboard">
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
+          <Image
+            height={ user?.orgLogo ? 50 : 40}
+            src={
+              user?.orgLogo && user?.orgLogo !== 'REMOVED_PHOTO' ?
+              `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
+              : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`
+            }
+          />
+
           </Link>
         
         
@@ -156,12 +165,12 @@ export function HeaderTabs({mode, opened} : iProps) {
                 className={cx(classes.user, { [classes.userActive]: userMenuOpened }, classes.cursor)}
               >
 
-                <Group>
+                <Group sx={{minWidth: '150px'}}>
                       <Avatar src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} />
 
                   <div style={{ flex: 1 }}>
                     <Text size="sm" weight={500} sx={{ lineHeight: 1 }} mr={6}>
-                      {userInfo.name}
+                      {userInfo.name ?userInfo.name : userInfo.email}
                     </Text>
 
                     <Text color="dimmed" size="xs">

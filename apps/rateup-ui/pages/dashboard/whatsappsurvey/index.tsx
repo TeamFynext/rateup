@@ -58,7 +58,7 @@ import { useUser } from "../../../context/UserContext";
 
 export default function WhatsappSurveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
-  const [sort, setSort] = useState(false);
+  const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
   const [options, setOptions] = useState([
     {

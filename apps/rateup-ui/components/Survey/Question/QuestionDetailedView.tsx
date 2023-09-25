@@ -7,15 +7,13 @@ import {
   Group,
   Stack,
   TextInput,
-  Text,
-  Space,
   Center,
   ScrollArea,
   Divider,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash } from "@tabler/icons-react";
+import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash, IconX } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -29,8 +27,7 @@ import {
 } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
 import { googleReviewSupportedTypes, logicSupportedTypes, validationSupportedTypes } from "../../../utils/data";
-import { IconChevronRight } from "@tabler/icons-react";
-import { fi } from "@faker-js/faker";
+import { notifications } from "@mantine/notifications";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -38,13 +35,16 @@ interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  surveyType?: String;
+  surveyType?: string;
+  surveyLanguages: string[],
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>
 }
 export function QuestionDetailedView({
   question,
   setSelectedQ,
   setActiveTab,
   surveyType,
+  surveyLanguages, setSelectedLanguage
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -108,15 +108,14 @@ export function QuestionDetailedView({
 
   const handleSave = () => {
     setIsSaving(true);
-
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       setIsSaving(false);
-      return;
-    }
+      return 'error';
+    }else{
 
-    // converting to expected format
+          // converting to expected format
     const { title, description, ...restOfTheData } = form.values;
     const formattedTitle = { ...question.title, [selectedLanguage]: title };
     const formattedDescription = {
@@ -141,7 +140,39 @@ export function QuestionDetailedView({
       // Updating existing question
       questionUpdateMutation.mutate({ qId: question.id, data: data });
     }
+
+      let langList : string[] = surveyLanguages;
+      const missingLangs = []
+
+      langList.forEach((language : string) => {
+        if (language == selectedLanguage) {
+          return;
+        }
+        if (!question.title[language] || question.title[language] == '') {
+            missingLangs.push(language);
+          }
+        });
+
+        if(missingLangs.length > 0) {
+          setIsSaving(false);
+          setSelectedLanguage(missingLangs[0])
+          form.setFieldValue(title, '')
+          form.validate()
+          notifications.show({
+            id: 'errorn',
+            color: 'red',
+            title: `"${missingLangs[0]}" Question is missing`,
+            message: `Add question in ${missingLangs[0]} language  also`,
+            icon: <IconX size="1rem" />,
+            //autoClose: 5000,
+           // position: "bottom-center"
+          });
+          return 'error'
+        }
+      }  
+
     //setIsSaving(false);  
+    return 'saved';
   };
 
   // TODO: show question type somewhere
@@ -222,13 +253,15 @@ export function QuestionDetailedView({
           </Group>
         </Group>
 
-        <Group position="apart"  spacing="md">
+        <Group position="left"  spacing="md">
           {logicSupportedTypes.includes(question?.type) && (
               <RateupButtonOutline
               title={"Logic Jump"}
               leftIcon={<IconEdit />}
               size="sm"
-              onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.LogicEditor)}}
             />
           )}
           {googleReviewSupportedTypes.includes(question?.type) && (
@@ -236,7 +269,10 @@ export function QuestionDetailedView({
               title={"Google Review"}
               leftIcon={<IconStar />}
               size="sm"
-              onClick={() => setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
+              }
             />
           )}
           {validationSupportedTypes.includes(question?.type) && (
@@ -244,16 +280,13 @@ export function QuestionDetailedView({
               title={"Custom Validation"}
               leftIcon={<IconEdit />}
               size="sm"
-              onClick={() => setActiveTab(QuestionTabsEnum.ValidationRulesEditor)}
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.ValidationRulesEditor)
+              }  }
             />
           )}
-          <Space w="xl" />
-          {question?.id && (
-            <Text c="blue.9" size="sm">
-              {" "}
-              Question Id: {question?.id}{" "}
-            </Text>
-          )}
+
         </Group>
       </Stack>
     </Stack>

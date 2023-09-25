@@ -17,3 +17,12 @@ export function showErrorToast(message: string, id=undefined) {
         autoClose: 2000,
     });
 }
+
+export function showWarnToast(message: string, id=undefined) {
+    notifications.show({
+        color: "yellow",
+        title: "Warning",
+        message: message,
+        autoClose: 2000,
+    });
+}

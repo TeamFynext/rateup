@@ -63,8 +63,8 @@ const ProfileSettings = () => {
         if (value.length < 10) {
           return "Min 10 digits long";
         }
-        if (value.length > 15) {
-          return "Invalid phone";
+        if (value.length > 10) {
+          return "Invalid phone (10 digits only allowed)";
         }
         return null;
       },

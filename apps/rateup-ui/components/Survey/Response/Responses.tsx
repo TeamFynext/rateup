@@ -120,6 +120,7 @@ const Responses = ({ survey }) => {
           title={"Download"} 
           size="md"
           radius={"lg"}
+          disabled={responseCount > 0 ? false : true}
           rightIcon={<IconChevronDown
             size="1rem" />}/>
 
@@ -127,8 +128,9 @@ const Responses = ({ survey }) => {
   </Grid>
 </Paper>
 
+{ responseCount > 0 &&
 <Paper p="xl" shadow="lg" radius="lg">
-  <ScrollArea style={{ width: '70vw', height: '50vh', overflow: 'auto', position: 'relative' }}>
+  <ScrollArea style={{ width: '100%', height: '50vh', overflow: 'auto', position: 'relative' }}>
     <Table highlightOnHover  ref={tableRef}>
       <TableHead questions={questions}  />
       <tbody>
@@ -197,7 +199,7 @@ const Responses = ({ survey }) => {
   </Modal>
 </Paper>
 
-
+      }
 </>
   )
 }
