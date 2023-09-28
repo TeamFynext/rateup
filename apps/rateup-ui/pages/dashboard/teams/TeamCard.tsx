@@ -8,7 +8,7 @@ const TeamCard = ({team, reftchTeams}) => {
   return (
     <Paper
       p="md"shadow="lg" radius="lg"
-      sx={{ cursor: "pointer", width:"250px", height:"140px" }}
+      style={{ cursor: "pointer", width:"250px", height:"140px" }}
       onClick={() => {
         router.push(`teams/${team.code}`);
       }}
@@ -18,9 +18,9 @@ const TeamCard = ({team, reftchTeams}) => {
           {team.teamName}
         </Text>        
       </Flex>
-      <Stack  mt="sm" spacing="xs">
+      <Stack  mt="sm" gap="xs">
 
-      <Group spacing="xs">
+      <Group gap="xs">
 
         <Text size="sm" c="dimmed">
           Code: 
@@ -30,7 +30,7 @@ const TeamCard = ({team, reftchTeams}) => {
         </Group>
 
 
-        <Group align={"center"} spacing="xs">
+        <Group align={"center"} gap="xs">
          <Text  fz="sm" c="dimmed">Total Members : </Text>
           <Text fw={500} fz="sm">{team.memberCount}</Text>
         </Group>

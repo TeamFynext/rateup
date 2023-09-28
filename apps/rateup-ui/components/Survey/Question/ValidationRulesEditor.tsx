@@ -170,14 +170,14 @@ const ValidationRulesEditor = ({
 
 
   return (
-    <Stack justify="space-between" sx={{height:'100%'}}>
+    <Stack justify="space-between" style={{height:'100%'}}>
       <Stack>
          <Title order={3}>Validation Editor</Title>
          <Text color="gray"> Add validation rules to the user input for this question.</Text>
          <Divider />
       </Stack>
     
-    <Paper  sx={{ minHeight: '300px', minWidth: '650px', maxWidth: '650px' }}>
+    <Paper  style={{ minHeight: '300px', minWidth: '650px', maxWidth: '650px' }}>
     <ScrollArea h={400}>
       <form>
     {Object.entries(values).map(([ruleType, ruleValues]) => {
@@ -185,9 +185,9 @@ const ValidationRulesEditor = ({
       
       return (
         <div key={ruleType}>
-          <Group align="center" mb="sm"  px="lg" py="sm" sx={{ backgroundColor: colors.blue[0], borderRadius: "12px", }}>
+          <Group align="center" mb="sm"  px="lg" py="sm" style={{ backgroundColor: colors.blue[0], borderRadius: "12px", }}>
 
-          <Title order={4} sx={{ maxWidth: '100px', minWidth: '100px'}}>
+          <Title order={4} style={{ maxWidth: '100px', minWidth: '100px'}}>
             {ruleType}
             
           </Title>
@@ -195,7 +195,7 @@ const ValidationRulesEditor = ({
             <>
             <Group>
               <TextInput
-                  sx={{ maxWidth: '100px'}}
+                  style={{ maxWidth: '100px'}}
                   label="Min"
                   value={ruleData.min}
                   onChange={(event) => {
@@ -210,7 +210,7 @@ const ValidationRulesEditor = ({
                 />
                 <TextInput
                   label="Max"
-                  sx={{ maxWidth: '100px'}}
+                  style={{ maxWidth: '100px'}}
                   value={ruleData.max}
                   onChange={(event) => {
                     const newValue: RuleValue = {
@@ -243,7 +243,7 @@ const ValidationRulesEditor = ({
             />
           )}
               <TextInput
-              sx={{ maxWidth: '300px'}}
+              style={{ maxWidth: '300px'}}
             label="Error Message"
             value={ruleData.errorMessage}
             onChange={(event) => {
@@ -259,7 +259,7 @@ const ValidationRulesEditor = ({
 
     <Group  px="xl">
       <ActionIcon
-        sx={{ position: "absolute", right: "20px" }}
+        style={{ position: "absolute", right: "20px" }}
         onClick={() => deleteRule(ruleType)}
       >
         <IconTrash color={colors.red[5]} />
@@ -273,8 +273,8 @@ const ValidationRulesEditor = ({
 
 { 
  Object.keys(values).length < 3 && (
-    <Group p="md" mt="xl" sx={{ maxWidth: '350px', backgroundColor: colors.yellow[0], borderRadius: "12px" }}>
-      <Title order={4} sx={{ maxWidth: '120px' }}>Add Rule :</Title>
+    <Group p="md" mt="xl" style={{ maxWidth: '350px', backgroundColor: colors.yellow[0], borderRadius: "12px" }}>
+      <Title order={4} style={{ maxWidth: '120px' }}>Add Rule :</Title>
       <Select
         placeholder="Select rule type"
         data={
@@ -291,7 +291,7 @@ const ValidationRulesEditor = ({
       
     </Paper>
 
-    <Group position="apart">
+    <Group justify="space-between">
         <RateupButtonSecondary
             title={"Cancel"}
             size="md"

@@ -111,7 +111,7 @@ const Responses = ({ survey }) => {
       <Text fz="xxl" fw={600}>Responses</Text>
     </Grid.Col>
   </Grid>
-<Paper p="xl" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} mb={30}>
+<Paper p="xl" shadow="lg" radius="lg" style={{ cursor: "pointer" }} mb={30}>
   <Grid justify="space-between" align="center">
     <Grid.Col span={3}><Title order={2}>Total Responses : {responseCount}</Title></Grid.Col>
           <Grid.Col span={3}>
@@ -143,7 +143,7 @@ const Responses = ({ survey }) => {
             <td style={cellGap}> <Text color="dark.3">{dayjs(response.createdAt).format("DD-MM-YYYY")} </Text></td>
             {questions.map((q) => (
               <td key={q.id} style={cellGap}  title={getResponse(q.id, response)} >
-                <Text color="dark.3" truncate="end" sx={{maxWidth:"150px"}}> {getResponse(q.id, response)} </Text>
+                <Text color="dark.3" truncate="end" style={{maxWidth:"150px"}}> {getResponse(q.id, response)} </Text>
                 
               </td>
             ))}
@@ -162,7 +162,7 @@ const Responses = ({ survey }) => {
         }
        
 
-            <Stack sx={{ display: isDeleteAction ? 'block' : 'none'}}>
+            <Stack style={{ display: isDeleteAction ? 'block' : 'none'}}>
             <Divider  pb="2rem"/>
 
             <Text  fz="lg"> Delete this Reponse </Text>
@@ -175,7 +175,7 @@ const Responses = ({ survey }) => {
                     To proceed further, type in your email id and click confirm delete.
                 </Text>
                 <TextInput
-                    sx={{maxWidth:"300px"}}
+                    style={{maxWidth:"300px"}}
                     withAsterisk
                     label="Verify email"
                     placeholder="Enter your login email"
@@ -224,10 +224,10 @@ interface TableHeadProps {
     return (
       <thead style={stickyHeaderStyles}>
         <tr>
-          <th><Text fz="sm" color="dark.9" fw="400">Date</Text></th>
+          <th><Text fz="sm" c="dark.9" fw="400">Date</Text></th>
           {questions.map((q) => (
             <th key={q.id} title={ q.title[selectedLanguage] || q.title['English'] }>
-              <Text  color="dark.9" fz="sm" fw="400" truncate="end" sx={{maxWidth:"150px"}}>
+              <Text  c="dark.9" fz="sm" fw="400" truncate="end" style={{maxWidth:"150px"}}>
                    {q.title[selectedLanguage] || q.title['English']}
               </Text>
               </th>

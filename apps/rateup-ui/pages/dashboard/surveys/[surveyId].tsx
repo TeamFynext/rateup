@@ -76,15 +76,17 @@ export default () => {
   
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
-      <Stack sx={{ height: "100%" }} >
+      <Stack style={{ height: "100%" }} >
         <StyledTabs
           value={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as TabEnum)}
+          onChange={(tab) => setActiveTab(tab as TabEnum)}
         >
-          <Group position="apart">
-            <Title order={1} mb="sm" truncate='end' pr="xl" sx={{maxWidth:"350px"}} title={survey.title}>{survey.title}</Title>
+          <Group justify="space-between">
+            <Title order={1} mb="sm"  pr="xl" 
+              style={{maxWidth:"350px", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
+             title={survey.title}> {survey.title}</Title>
             <Tabs.List
-              sx={{
+              style={{
                 position: "absolute",
                 width: "fit-content",
                 left: 0,
@@ -152,7 +154,7 @@ export default () => {
           
           <Tabs.Panel value={TabEnum.Edit}>
             {/** TODO: Remove fixed height and make this responsive */}
-            <Box sx={{ display: "flex", gap: 30, height: "70vh" }}>
+            <Box style={{ display: "flex", gap: 30, height: "70vh" }}>
               <EditSurvey 
                 questions={questions} 
                 addQnTrigger={addQnTrigger} 
@@ -174,9 +176,14 @@ export default () => {
           <Tabs.Panel value={TabEnum.Share}>
             <ShareSurvey survey={survey}/>
           </Tabs.Panel>
+
+
           <Tabs.Panel value={TabEnum.Theme}>
             <SurveyTheme survey={survey}/>
           </Tabs.Panel>
+
+          {/* TODO  fix mantine issue and Enable - TODO VERIFY MANTINE*/}
+
          
           
         </StyledTabs>

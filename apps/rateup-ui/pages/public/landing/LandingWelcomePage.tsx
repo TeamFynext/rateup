@@ -14,7 +14,6 @@ import {
   Modal,
   Group,
   Button,
-  createStyles,
   Flex,
   BackgroundImage,
 } from "@mantine/core";
@@ -22,17 +21,9 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import { usePublicWelcomeThemeByLandingId } from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
+import classes from './Landing.module.css';
 
 
-const useStyles = createStyles((theme) => ({
-  ButtonStyles: {
-    backgroundColor: "black",
-    borderRadius: 48,
-    padding: 10,
-    paddingLeft: 20,
-    paddingRight: 20,
-  },
-}));
 function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
 
 
@@ -84,8 +75,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
     }
   }
 
-  const { classes } = useStyles();
-
 
   return (
     <>
@@ -95,15 +84,13 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
         <Stack
           align="center"
           justify="center"
-          spacing="xl"
-          sx={{
+          gap="xl"
+          style={{
             height: "75vh",
-            width:"100% !important",
+            width: "100% !important",
             borderRadius: 18,
-            // boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
+            ...LandingWelcomeData?.bgStyles 
           }}
-          // bg={"red"}
-          style={LandingWelcomeData?.bgStyles}
         >
           <BackgroundImage
             style={{
@@ -135,10 +122,12 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
               )}
               <Title
                 order={1}
-                sx={{ fontSize: largeScreen ? "4rem" : "3rem" }}
+                style={{
+                  fontSize: largeScreen ? "4rem" : "3rem",
+                  ...LandingWelcomeData?.headerStyles
+                }}
                 tt={"capitalize"}
                 mt={25}
-                style={LandingWelcomeData?.headerStyles}
               >
                 {LandingWelcomeData?.headerText}
               </Title>
@@ -152,7 +141,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
               <Button
                 mt={20}
                 style={LandingWelcomeData?.buttonStyles}
-                className={classes.ButtonStyles}
+                className={classes.buttonStyles}
                 onClick={()=>setStartClicked(true)}
                 // size="xl"
                 miw={150}

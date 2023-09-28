@@ -97,7 +97,7 @@ const Preview = ({ url, title, description, textSize, logoSize,
         <Title order={3}> Preview </Title>
         <div ref={printRef}>
         <Paper shadow="xs" radius="lg"  p="md" 
-            sx={{ width: "250px", height: "330px", alignContent: 'center', 
+            style={{ width: "250px", height: "330px", alignContent: 'center', 
             backgroundColor: activeBgStyle === 'Color' ? backgroundColor : 'transparent',
             backgroundImage: activeBgStyle === 'Gradient' 
               ? `linear-gradient(${gradient.start}, ${gradient.end})` 
@@ -105,9 +105,9 @@ const Preview = ({ url, title, description, textSize, logoSize,
             opacity: activeBgStyle === 'Transparent' ? bgTransparency : 1
             }}>
 
-            <Stack p="lg" sx={{ opacity: 1}}>
+            <Stack p="lg" style={{ opacity: 1}}>
 
-          <Title order={4} sx={{fontSize: `${textSize}px`, color: `${textColor}`}} align='center'> {title} </Title>
+          <Title order={4} style={{fontSize: `${textSize}px`, color: `${textColor}`, textAlign:'center'}} > {title} </Title>
           <Center>
             <Canvas
               text={url}
@@ -134,7 +134,7 @@ const Preview = ({ url, title, description, textSize, logoSize,
             />
           </Center>
           
-          <Text align='center'  sx={{fontSize: `${descriptionSize}px`, color: `${descriptionColor}`}} > { description }</Text>
+          <Text  style={{fontSize: `${descriptionSize}px`, color: `${descriptionColor}`, textAlign:'center'}} > { description }</Text>
           </Stack>
 
         </Paper>

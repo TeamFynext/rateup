@@ -95,7 +95,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
 
     return (
         <>
-            <Stack h={300} pl="md" sx={{ maxWidth: "600px" }}>
+            <Stack h={300} pl="md" style={{ maxWidth: "600px" }}>
                 <Title order={2} pb="lg"> Team Settings</Title>
 
                 <Paper radius="md" px="md" py="xl" shadow='lg'>
@@ -108,7 +108,7 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                 </Paper>
 
                 <Dialog opened={opened} withCloseButton onClose={close} size="lg" radius="md">
-                    <Text size="md" mb="xs" weight={500}>
+                    <Text size="md" mb="xs" fw={500}>
                         Are you sure to delete this team?
                     </Text>
 
@@ -135,10 +135,10 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                 <form onSubmit={teamForm.onSubmit(onSubmit)}>
 
                     <Grid align='center'>
-                        <Grid.Col md={6} lg={4}>
+                        <Grid.Col span={{ md: 6, lg: 4 }}>
                             <Text size={'md'}>Team Name: </Text>
                         </Grid.Col>
-                        <Grid.Col md={6} lg={4}>
+                        <Grid.Col span={{ md: 6, lg: 4 }}>
                             <TextInput
                                 placeholder="Enter team name"
                                 required
@@ -148,10 +148,10 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                         </Grid.Col>
                     </Grid>
                     <Grid align='center'>
-                        <Grid.Col md={6} lg={4}>
+                        <Grid.Col span={{ md: 6, lg: 4 }} >
                             <Text size={'md'}>Team Code: </Text>
                         </Grid.Col>
-                        <Grid.Col md={6} lg={4}>
+                        <Grid.Col span={{ md: 6, lg: 4 }}>
                             <TextInput
                                 placeholder="Enter team code"
                                 required
@@ -161,10 +161,10 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                         </Grid.Col>
                     </Grid>
                     <Grid align='center'>
-                        <Grid.Col md={6} lg={4}>
+                        <Grid.Col span={{ md: 6, lg: 4 }}>
                             <Text size={'md'}>Google Reviews Link: </Text>
                         </Grid.Col>
-                        <Grid.Col md={6} lg={4}>
+                        <Grid.Col span={{ md: 6, lg: 4 }}>
                             <TextInput
                                 placeholder="Enter google url"
                                 required
@@ -174,10 +174,10 @@ const TeamSettings = ({ id, teamData }: { id: string, teamData: ITeamData }) => 
                         </Grid.Col>
                     </Grid>
                         <Grid align='center'>
-                            <Grid.Col md={6} lg={4}>
+                            <Grid.Col span={{ md: 6, lg: 4 }}>
                                 <Text size={'md'}>Whatsapp Access Token: </Text>
                             </Grid.Col>
-                            <Grid.Col md={6} lg={4}>
+                            <Grid.Col span={{ md: 6, lg: 4 }}>
                                 <TextInput
                                     placeholder="Enter whatsapp access token url"
                                     mt="md"

@@ -14,7 +14,7 @@ export function SurveySendDetailComponent({ name, createdAt }) {
     <Flex justify={"end"} m="sm">
       <Box
         p="md"
-        sx={{
+        style={{
           background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%);",
           color: "white",
           height: "80px",
@@ -27,13 +27,13 @@ export function SurveySendDetailComponent({ name, createdAt }) {
 
       >
         <Text>{name}</Text>
-        <Text sx={{
+        <Text style={{
           fontSize: "0.8rem",
           position: "absolute",
           bottom: "10px",
           right: "10px",
         }}>{dayjs(createdAt).format("DD-MM-YYYY")}</Text>
-        <Text sx={{
+        <Text style={{
           fontSize: "0.8rem",
           position: "absolute",
           bottom: "10px",
@@ -52,7 +52,7 @@ export function ResponseComponent({ createdAt, surveyTitle }) {
     <Container fluid m="sm">
       <Box
         p="md"
-        sx={{
+        style={{
           backgroundColor: "white",
           height: "80px",
           width: "250px",
@@ -63,17 +63,20 @@ export function ResponseComponent({ createdAt, surveyTitle }) {
         }}
 
       >
-        <Text align="end">
-          {`Filled: ${surveyTitle}`}
-        </Text>
-        <Text sx={{
+        <Group justify="flex-end">
+          <Text >
+            {`Filled: ${surveyTitle}`}
+          </Text>
+        </Group>
+        
+        <Text style={{
           color: colors.dark[2],
           fontSize: "0.8rem",
           position: "absolute",
           bottom: "10px",
           left: "10px",
         }}>{dayjs(createdAt).format("DD-MM-YYYY")}</Text>
-        <Text sx={{
+        <Text style={{
           color: colors.dark[2],
           fontSize: "0.8rem",
           position: "absolute",
@@ -125,7 +128,7 @@ export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
     }
   }
   return (
-    <Flex gap={"4px"} p="xs" sx={{ width: "100%" }} align={"center"}>
+    <Flex gap={"4px"} p="xs" style={{ width: "100%" }} align={"center"}>
       <Autocomplete
         radius={"sm"}
         placeholder="Select Template"
@@ -139,16 +142,16 @@ export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
         radius={"sm"}
         placeholder="Search for survey to send"
         data={surveys.map(({ title, id }) => ({ value: id, label: title, group: "Select Survey" }))}
-        sx={{ flexGrow: 1 }}
+        style={{ flexGrow: 1 }}
         size="md"
         onChange={setSelectedSurvey}
       />
       <Button
         radius={"sm"}
-        rightIcon={<IconSend size="1.1rem" />}
+        rightSection={<IconSend size="1.1rem" />}
         onClick={handleSend}
         h="40px"
-        sx={{
+        style={{
           flexGrow: 0
         }}
       >

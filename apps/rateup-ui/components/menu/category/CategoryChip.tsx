@@ -13,7 +13,7 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
         p="sm"
         onClick={() => onClick(categoryId)}
         key={categoryId}
-        sx={{
+        style={{
           borderRadius: "8px",
           backgroundColor: selected ? "#B06B2E" : "#A3A3A3",
           color: "white",

@@ -29,7 +29,7 @@ const ViewResponses = () => {
     <div>
       <Group>
          <Title   pb="xl" mb="xl">Survey: </Title>
-         <Title   pb="xl" mb="xl" color={ "blue.9" } pl="lg" ml="lg">{survey?.title}</Title>
+         <Title   pb="xl" mb="xl" c={ "blue.9" } pl="lg" ml="lg">{survey?.title}</Title>
       </Group>
 
       <Responses survey={survey} />

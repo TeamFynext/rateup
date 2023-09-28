@@ -9,6 +9,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { AddRespondents, AddRespondentsPanel } from "./AddRespondentsModal"
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
 import RightPanelRoot from "."
+import classes from './GroupChat.module.css'
 
 function ChatWindow({ rgroup, openDetails }) {
   const { colors } = useMantineTheme();
@@ -47,9 +48,9 @@ function ChatWindow({ rgroup, openDetails }) {
   }
 
   return (
-    <Flex direction={"column"} sx={{ height: "100%" }}>
+    <Flex direction={"column"} style={{ height: "100%" }}>
       <MainWindowHeader title={rgroup.name} onClick={openDetails} />
-      <Box sx={{
+      <Box style={{
         flex: "1 1 0",
         backgroundColor: "white",
         overflowY: "scroll",
@@ -85,9 +86,9 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
   if (isError) return <div>Error</div>
 
   return (
-    <Flex direction={"column"} sx={{ height: "100%", flex: 3, backgroundColor: "#f0f0f0" }}>
+    <Flex direction={"column"} style={{ height: "100%", flex: 3, backgroundColor: "#f0f0f0" }}>
       <DetailsHeader title={rgroup.name} onClose={onClose} />
-      <Box sx={{
+      <Box style={{
         flex: "1 1 0",
         overflowY: "scroll",
       }}
@@ -95,24 +96,26 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
         <Stack
           py="sm"
           px="xs"
-          spacing={"xs"}
-          sx={{
-            '> *': {
-              borderRadius: "8px"
-            }
-          }}
+          gap={"xs"}
+          // style={{
+          //   '> *': {
+          //     borderRadius: "8px"
+          //   }
+          // }}
+          className={classes.stackChildren}
+
         >
-          <Center sx={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
+          <Center style={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
             <Avatar size={"xl"} radius="xl" />
             <NameEditor name={rgroup.name} onEdit={(name: string) => updateRGroupMutation.mutate({ name })} />
           </Center>
-          <Flex direction={"column"} sx={{ backgroundColor: "white" }} p="xs">
-            <Text weight={"bolder"} variant="heading" size="lg">Members</Text>
+          <Flex direction={"column"} style={{ backgroundColor: "white" }} p="xs">
+            <Text fw={"bolder"} variant="heading" size="lg">Members</Text>
             <Stack>
               {
                 respondents.length === 0 ? <Text p="lg">No Members</Text> : (
                   respondents.map((r) => (
-                    <Group position="apart">
+                    <Group justify="space-between">
                       <Group>
                         <Avatar size={"md"} radius="lg " />
                         <Text>{r.name ? r.name : r.phone}</Text>
@@ -135,12 +138,15 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
           </Flex>
           <Stack
            p="sm"
-           sx={{ 
+           style={{ 
             backgroundColor: "inherit",
-            '> button': {
-              borderRadius: "100px"
-            }
-         }}>
+            // '> button': {
+            //   borderRadius: "100px"
+            // }
+         }}
+         className={classes.stackBtn}
+         
+         >
             <AddRespondents rgroupId={rgroup.id} />
             <Button
               color="red"

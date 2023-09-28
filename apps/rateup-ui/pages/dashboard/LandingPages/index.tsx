@@ -151,21 +151,15 @@ export default function LandingPagesList() {
         </Flex>
 
         <SimpleGrid
-          cols={4}
+          cols={{ base: 2, sm: 1, md:2, lg: 3, xl:3 }}
           mt={10}
-          spacing={"lg"}
-          breakpoints={[
-            { minWidth: "xl", cols: 3 },
-            { minWidth: "lg", cols: 2 },
-            { minWidth: "md", cols: 2 },
-            { maxWidth: "md", cols: 1 },
-          ]}
+          spacing={"lg"}          
         >
           <Paper
             p="md"
             shadow="lg"
             radius="lg"
-            sx={{ cursor: "pointer" }}
+            style={{ cursor: "pointer" }}
             onClick={open}
           >
             <Center h="100%">
@@ -271,7 +265,7 @@ export function SurveyCard({
       p="md"
       shadow="lg"
       radius="lg"
-      sx={{ cursor: "pointer" }}
+      style={{ cursor: "pointer" }}
       onClick={() => {
         router.push(
           `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveylandinglist/${survey?.id}`
@@ -283,7 +277,7 @@ export function SurveyCard({
           {survey.title}
         </Text>
 
-        <Group align={"center"} mt="sm" spacing="xs">
+        <Group align={"center"} mt="sm" gap="xs">
           <IconPencil
             onClick={(e) => {
               e.stopPropagation(),
@@ -299,7 +293,7 @@ export function SurveyCard({
           />
         </Group>
       </Flex>
-      <Group align={"center"} mt="sm" spacing="xs">
+      <Group align={"center"} mt="sm" gap="xs">
         <Avatar radius={"xl"} />
         <Text size="sm" c="dimmed">
           Created {timeSince}
@@ -372,7 +366,7 @@ function SurveyMenu({
         }}
       >
         <Menu.Item
-          icon={<IconShare />}
+          leftSection={<IconShare />}
           onClick={(e) => {
             shareLandingpageid(survey?.id), openlandingshare();
           }}
@@ -381,7 +375,7 @@ function SurveyMenu({
         </Menu.Item>
 
         <Menu.Item
-          icon={<IconTrash />}
+          leftSection={<IconTrash />}
           onClick={() => {
             deleteLanding(survey?.id);
           }}

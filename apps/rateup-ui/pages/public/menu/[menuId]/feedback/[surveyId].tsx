@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { IconMapPin, IconWorld } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
 import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
-
+import classes from './Feedback.module.css'
 
 export default function ({ menu }) {
   const largeScreen = useMediaQuery('(min-width: 60em)');
@@ -14,7 +14,7 @@ export default function ({ menu }) {
   return (
     <Container
       fluid px={largeScreen ? "10vw" : "1vw"} py="3vh"
-      sx={{
+      style={{
         // TODO: add blur to background image
         background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${menu.backgroundImage ? `url(${getFileUrlFromKey(menu.backgroundImage)})` : ""}`,
         backgroundColor: "#121212",
@@ -30,7 +30,7 @@ export default function ({ menu }) {
           </Grid.Col>
           <Grid.Col span={largeScreen ? 6 : 12} order={largeScreen ? 2 : 1} mih={menu.logo ? "400px" : "200px"}>
             <Stack align="center"
-              sx={{
+              style={{
                 padding: largeScreen ? "0 20px 0 20px" : "0"
               }}
             >
@@ -45,20 +45,21 @@ export default function ({ menu }) {
                 />
               )}
               <div>
-                <Text align="center" >Welcome To</Text>
+                <Text style={{ textAlign:'center' }} >Welcome To</Text>
                 {/* TODO: make this text responsive? (if longer name, smaller font) */}
-                <Text align="center" fz={"max(3vw, 2rem)"} fw="bold" >{menu.displayName}</Text>
+                <Text style={{ textAlign:'center' }} fz={"max(3vw, 2rem)"} fw="bold" >{menu.displayName}</Text>
               </div>
-              <Group w="100%" position="center">
+              <Group w="100%" justify="center">
                 {(menu.locationText && menu.locationUrl) && (
                   <Group
-                    sx={{
-                      '&:hover': {
-                        cursor: "pointer",
-                        borderBottom: "1px solid white",
-                      },
-                      borderBottom: "1px solid transparent",
-                    }}
+                    // style={{
+                    //   '&:hover': {
+                    //     cursor: "pointer",
+                    //     borderBottom: "1px solid white",
+                    //   },
+                    //   borderBottom: "1px solid transparent",
+                    // }}
+                    className={classes.hoverEffect}
                     onClick={() => window.open(menu.locationUrl, "_blank")}
                   >
                     <IconMapPin />
@@ -67,13 +68,14 @@ export default function ({ menu }) {
                 )}
                 {(menu.websiteText && menu.websiteUrl) && (
                   <Group
-                    sx={{
-                      '&:hover': {
-                        cursor: "pointer",
-                        borderBottom: "1px solid white",
-                      },
-                      borderBottom: "1px solid transparent",
-                    }}
+                    // sx={{
+                    //   '&:hover': {
+                    //     cursor: "pointer",
+                    //     borderBottom: "1px solid white",
+                    //   },
+                    //   borderBottom: "1px solid transparent",
+                    // }}
+                    className={classes.base1}
                     onClick={() => window.open(menu.websiteUrl, "_blank")}
                   >
                     <IconWorld />
@@ -95,7 +97,7 @@ export default function ({ menu }) {
 function FeedbackButton() {
   const router = useRouter()
   const { surveyId } = router.query as { surveyId: string }
-  return <Stack align="center" sx={{ cursor: "pointer" }}>
+  return <Stack align="center" style={{ cursor: "pointer" }}>
     <img
       onClick={() => {
         router.push(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`)
@@ -119,7 +121,7 @@ function MenuButton() {
         style={{ maxWidth: "min(200px, 40vw)", height: "auto", cursor: "pointer" }} />
       <Text
         onClick={handleClick}
-        sx={{ cursor: "pointer" }}>Menu</Text>
+        style={{ cursor: "pointer" }}>Menu</Text>
     </Stack>
   );
 }

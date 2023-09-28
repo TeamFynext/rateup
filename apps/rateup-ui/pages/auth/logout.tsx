@@ -30,7 +30,7 @@ const Logout = () => {
                 <div style={{ position: 'relative', height: '40px' }}>
                     <LoadingOverlay visible />
                 </div>
-                <Text align="center" size="xl" style={{ marginBottom: '10px', marginTop: '10px' }}>
+                <Text size="xl" style={{ marginBottom: '10px', marginTop: '10px',  textAlign:'center' }}>
                     Logging out...
                 </Text>
 

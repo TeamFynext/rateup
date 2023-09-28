@@ -60,7 +60,7 @@ const Members = () => {
       <td>
         {team?.members?.map((member, j: number) => (
     <Stack key={j}>            
-          <Grid  sx={{minWidth:"600px"}} py="lg" align='center'>
+          <Grid  style={{minWidth:"600px"}} py="lg" align='center'>
               <Grid.Col span={3}>{member?.name}</Grid.Col>
               <Grid.Col span={5}>{member?.email}</Grid.Col>
               <Grid.Col span={4}>
@@ -120,15 +120,16 @@ isLoadingTeamsUser ?
 
 <Table horizontalSpacing="xl" 
               verticalSpacing="lg" 
-              fontSize="md" 
+              //fontSize="md" 
+              style={{ fontSize: '20px'}}
               mt='lg'
-              striped highlightOnHover withBorder withColumnBorders>
+              striped highlightOnHover withTableBorder withColumnBorders>
           <thead>
             <tr>
               <th> <Text > Teams </Text></th>
               <th> 
 
-              <Grid sx={{minWidth:"600px"}}  >
+              <Grid style={{minWidth:"600px"}}  >
                 <Grid.Col span={3}>Member</Grid.Col>
                 <Grid.Col span={5}>Email</Grid.Col>
               <Grid.Col span={4}>Role</Grid.Col>

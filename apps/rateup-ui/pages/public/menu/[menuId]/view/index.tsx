@@ -29,7 +29,7 @@ export default function ({ fullMenu }) {
 
   return (
     <Paper
-      sx={{
+      style={{
         height: "100vh",
       }}
 
@@ -37,7 +37,7 @@ export default function ({ fullMenu }) {
       <Container
         fluid
         px={largeScreen ? "10vw" : "1vw"} py="3vh"
-        sx={{
+        style={{
           // TODO: add blur to background image
           background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${fullMenu.backgroundImage ? `url(${getFileUrlFromKey(fullMenu.backgroundImage)})` : ""}`,
           backgroundColor: "#121212",
@@ -50,7 +50,7 @@ export default function ({ fullMenu }) {
       >
         <Stack
           align="center"
-          sx={{
+          style={{
             padding: "0 20px 0 20px"
           }}
           justify="center"
@@ -68,7 +68,7 @@ export default function ({ fullMenu }) {
             />
           )}
           <div>
-            <Text align="center" >Welcome To</Text>
+            <Text style={{ textAlign:'center' }} >Welcome To</Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
             <Text fz={"max(3vw, 2rem)"} fw="bold" >{fullMenu.displayName}</Text>
           </div>
@@ -77,7 +77,7 @@ export default function ({ fullMenu }) {
       <Group
         px="2vw"
         m="sm"
-        noWrap
+        wrap="nowrap"
         pb="md"
 
       >
@@ -87,8 +87,8 @@ export default function ({ fullMenu }) {
           <IconMenu2 />
         </ActionIcon>
         <Group
-          noWrap
-          sx={{
+          wrap="nowrap"
+          style={{
             overflowX: "scroll",
           }}
         >

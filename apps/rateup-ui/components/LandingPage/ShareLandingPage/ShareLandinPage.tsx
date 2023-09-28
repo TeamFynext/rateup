@@ -27,7 +27,7 @@ function ShareLandingPage({ LandingId }) {
   };
   return (
     <Stack>
-      <Paper p="md" radius="md" shadow="lg" sx={{ minHeight: "200px" }}>
+      <Paper p="md" radius="md" shadow="lg" style={{ minHeight: "200px" }}>
         <SimpleGrid spacing="xl" cols={2}>
           {/* //-----------------web survey share url ----------------- */}
 
@@ -41,11 +41,13 @@ function ShareLandingPage({ LandingId }) {
 
           {/* //-----------icons part-------------- */}
 
-          <Stack sx={{ maxWidth: "400px" }} p="md">
-            <Title order={4} align="center">
+          <Stack style={{ maxWidth: "400px" }} p="md">
+            <Title order={4} style={{
+              textAlign:'center'
+            }}>
               How would you like to survey people?
             </Title>
-            <Group position="center">
+            <Group justify="center">
               <ActionIcon size="xl" variant="light">
                 <IconMail size="2rem" />
               </ActionIcon>
@@ -73,7 +75,7 @@ const CopyLinkComponent = ({ value }) => {
   return (
     <Flex style={{ flexDirection: "row", display: "flex", width: "100%" }}>
       <TextInput
-        sx={{ minWidth: "70%" }}
+        style={{ minWidth: "70%" }}
         readOnly
         value={value}
         pr="sm"
@@ -83,7 +85,7 @@ const CopyLinkComponent = ({ value }) => {
           <Button
             color={copied ? "dark" : "yellow.6"}
             onClick={copy}
-            rightIcon={<IconCopy />}
+            rightSection={<IconCopy />}
           >
             {copied ? "Copied url" : "Copy url"}
           </Button>

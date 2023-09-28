@@ -37,7 +37,7 @@ function AddModal({ opened, onClose, rgroupId }) {
   return (
     <Modal opened={opened} onClose={onClose} centered title={"Add Respondents"}>
       {/* TODO: add search */}
-      <Stack spacing={"sm"} p="sm" mah={"600px"} sx={{ overflowY: "auto" }}>
+      <Stack gap={"sm"} p="sm" mah={"600px"} style={{ overflowY: "auto" }}>
         {nonGroupMembers.map(r => {
           return (
             <Group>
@@ -62,7 +62,7 @@ function AddModal({ opened, onClose, rgroupId }) {
           )
         })}
       </Stack>
-      <Group position="right" >
+      <Group justify="flex-end" >
         <Button
           onClick={() => {
             handlers.setState([])
@@ -90,7 +90,7 @@ function AddModal({ opened, onClose, rgroupId }) {
 export function AddRespondentsPanel({ onClick, placeholder }) {
   return (
     <Center h="100%">
-      <Stack onClick={onClick} align="center" sx={{ cursor: "pointer" }} >
+      <Stack onClick={onClick} align="center" style={{ cursor: "pointer" }} >
         <IconUserPlus size={"75px"} />
         <Text>{placeholder}</Text>
       </Stack>

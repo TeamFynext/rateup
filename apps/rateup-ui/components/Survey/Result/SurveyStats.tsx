@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Paper, Title, Group, Text, Badge, Stack, Box, Select } from '@mantine/core';
 import { Map, Marker } from 'pigeon-maps';
 import { useResponses } from '../../../backend/surveys/response/response.query';
-
+import classes from './SurveyStats.module.css'
 enum LocationType {
   City = "city",
   State = "state",
@@ -22,36 +22,44 @@ const SurveyStats = ({ survey }) => {
     <Stack p="lg">
       <Title order={3}> User Stats</Title>
 
-      <Group position='apart' align='stretch' mih="400px">
+      <Group justify="space-between" align='stretch' mih="400px">
         <Stack
           justify='space-between'
-          sx={{
-            '> *': {
-              borderRadius: "0.5rem"
-            }
-          }}
+          // style={{
+          //   '> *': {
+          //     borderRadius: "0.5rem"
+          //   }
+          // }}  VERIFY MANTINE
+
+          className={classes.stackChildren}
         >
-          <Paper shadow='lg' p="md" sx={{ maxWidth: "200px" }}>
+          <Paper shadow='lg' p="md" style={{ maxWidth: "200px" }}>
             <Stack mt="md" mb="xs">
-              <Text weight={500} align='center'>{survey?.surveyStats?.visited || 0}</Text>
+              <Text fw={500} style={{
+              textAlign:'center'
+            }}>{survey?.surveyStats?.visited || 0}</Text>
               <Badge color="blue" variant="light">
                 Visited
               </Badge>
             </Stack>
           </Paper>
 
-          <Paper shadow='lg' p="md" sx={{ maxWidth: "200px" }}>
+          <Paper shadow='lg' p="md" style={{ maxWidth: "200px" }}>
             <Stack mt="md" mb="xs">
-              <Text weight={500} align='center'>{survey?.surveyStats?.started || 0}</Text>
+              <Text fw={500} style={{
+              textAlign:'center'
+            }}>{survey?.surveyStats?.started || 0}</Text>
               <Badge color="blue" variant="light">
                 Started
               </Badge>
             </Stack>
           </Paper>
 
-          <Paper shadow='lg' p="md" sx={{ maxWidth: "200px" }}>
+          <Paper shadow='lg' p="md" style={{ maxWidth: "200px" }}>
             <Stack mt="md" mb="xs">
-              <Text weight={500} align='center'>{survey?.surveyStats?.completed || 0}</Text>
+              <Text fw={500} style={{
+              textAlign:'center'
+            }}>{survey?.surveyStats?.completed || 0}</Text>
               <Badge color="blue" variant="light">
                 Completed
               </Badge>
@@ -64,14 +72,15 @@ const SurveyStats = ({ survey }) => {
         <Paper
 
           radius={"md"}
-          sx={{
-            overflow: "clip",
-            flexGrow: 1,
-            '@media (max-width: 1200px)': {
-              order: 3,
-              width: "100%",
-            },
-          }}
+          // style={{
+          //   overflow: "clip",
+          //   flexGrow: 1,
+          //   '@media (max-width: 1200px)': {
+          //     order: 3,
+          //     width: "100%",
+          //   },
+          // }}  VERIFY MANTINE
+          className={`${classes.overflowClip} ${classes.mediaQueryStyles}`}
           h="auto"
           mih={"400px"}
           w="400px"
@@ -106,18 +115,21 @@ const SurveyStats = ({ survey }) => {
 
         {/* Location-wise response frequency */}
         <Paper p="sm" radius={"md"} mih={400} maw={350}
-          sx={{
-            '@media (max-width: 1200px)': {
-              maxWidth: "unset",
-              flexGrow: 1
-            }
-          }}
+          // style={{
+          //   '@media (max-width: 1200px)': {
+          //     maxWidth: "unset",
+          //     flexGrow: 1
+          //   }
+          // }} VERIFY MANTINE
+          className={classes.mediaQueryStylesPaper}
         >
           <Stack>
             <Group
-              position='apart'
+              justify="space-between"
             >
-              <Text fz="lg" weight={700} align='center'>Top Traffic By:</Text>
+              <Text fz="lg" fw={700} style={{
+              textAlign:'center'
+            }}>Top Traffic By:</Text>
               <Select
                 radius={"xl"}
                 data={Object.values(LocationType)}
@@ -158,13 +170,13 @@ function LocationFrequencyDisplay({ sortedCount }: LocationFrequencyDisplayProps
     >
       {sortedCount.map(([name, count]) => (
         <Group
-          position='apart'
+        justify="space-between"
         >
           <Text c="#222">{name}</Text>
           <Text
             px="12px"
             py="2px"
-            sx={{
+            style={{
               backgroundColor: "#3F5BA9",
               borderRadius: "100px",
               color: "white",

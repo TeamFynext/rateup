@@ -1,0 +1,32 @@
+
+.forgot {
+  text-decoration: none;
+  color: #000;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}
+
+.createAcc {
+  text-decoration: none;
+  background: linear-gradient(160deg, #62CBE6, #3F5BA9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+.createAcc:hover {
+  text-decoration: underline;
+}
+
+
+.txtStyle {
+  text-decoration: none;
+}
+
+.txtStyle :hover {
+  text-decoration: underline;
+
+}
+

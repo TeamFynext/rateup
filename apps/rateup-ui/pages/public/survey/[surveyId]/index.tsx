@@ -42,11 +42,11 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
   return (
     <>
     <Stack pl="7vw" pt="10vh">
-      <Title weight={100}> Choose Your language and</Title>
+      <Title fw={100}> Choose Your language and</Title>
       <Title > let's get started!</Title>
     </Stack>
 
-    <Center sx={{ height: isMobile ? '40vh' : '45vh' }}>  
+    <Center style={{ height: isMobile ? '40vh' : '45vh' }}>  
     {/* TODO for mobile design 80vh */}
       <Select
         data={languages}

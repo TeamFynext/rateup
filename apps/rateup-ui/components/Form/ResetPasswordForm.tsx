@@ -19,10 +19,9 @@ import Link from 'next/link';
 import { useSendResetEmail, useSetNewPassword } from "../../utils/auth/resetPassword";
 import { ResetSteps } from "../../utils/enums";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
-import { useStyles } from "./FormStyle";
+import classes from "./FormStyle.module.css";
 
 const ResetPasswordForm = ({ mode }) => {
-  const { classes } = useStyles();
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
   const [page, setPage] = useState(token && rid==="emailpassword" ? ResetSteps.STEP_THREE : mode)
@@ -113,15 +112,15 @@ const onSubmit = isEmailPage
       {page !== ResetSteps.STEP_TWO ?
 
       <Container size={420} my={40}>
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7"}}>
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ background: "#F7F7F7"}}>
         <Link href="/">
-          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" w={140} h={36} />
         </Link>
 
         <Title
           mt="xl"
           order={2}
-          sx={(theme) => ({
+          style={(theme) => ({
             fontFamily: `Greycliff CF, ${theme.fontFamily}`,
             fontWeight: 900,
           })}
@@ -175,7 +174,7 @@ const onSubmit = isEmailPage
             fullWidth={true} type="submit"  loading ={isLoading}
             title={isEmailPage ? "Email Reset Link" : "Change Password"}
           />
-          <Group position="center" mt="xl" pt="xl">
+          <Group justify="center" mt="xl" pt="xl">
             {/* <Checkbox label="Remember me" /> */}
             <Anchor component="button" size="sm">
                <Link href='/login' className={classes.forgot}>
@@ -194,9 +193,9 @@ const onSubmit = isEmailPage
 
       :
       <Container  size={420} my={40}>
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7"}}>
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ background: "#F7F7F7"}}>
         <Link href="/">
-          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" w={140} h={36} />
         </Link>
             <Space h="lg" />
             <Title order={2}>Check your email</Title>
@@ -204,28 +203,28 @@ const onSubmit = isEmailPage
             <Text>A password reset email has been sent to <Text span c="blue" inherit>{emailTo}</Text> . If it exists in our system. </Text>
             <Space h="xl" />
 
-            <Group position="center" py="xl">
-               <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="email" width={90} height={60} />
+            <Group justify="center" py="xl">
+               <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`} alt="email" w={90} h={60} />
             </Group>
 
             <Space h="xl" />
 
-            <Text color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+            <Text c="blue.6" className={classes.txtStyle} 
               >
                 <Link href="/login/reset-password" style={{ textDecoration: 'none', }}>
                   <NavLink
                   label="Resend or change email"
-                  icon={<IconSend size="1rem" stroke={1.5} />}
+                  leftSection={<IconSend size="1rem" stroke={1.5} />}
                   rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
                   variant="subtle" 
                 />
                   </Link>
               </Text>
-            <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+            <Text inline c="blue.6"  className={classes.txtStyle}>
               <Link href="/login" style={{ textDecoration: 'none', }}>
                 <NavLink
                   label="Login"
-                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                   variant="subtle"
                 />
               </Link>

@@ -104,10 +104,10 @@ const SurveySummary = () => {
         onChange={(value) => setSelectedLanguage(value)} 
         label="Select Language" 
         mb="lg"
-        sx={{maxWidth: "200px"}}
+        style={{maxWidth: "200px"}}
       />
 
-    <Group position='center' p="xl">
+    <Group justify='center' p="xl">
 
       {Object.entries(responseCounts).length === 0 && "No Quantitative question responses!"}
 
@@ -119,7 +119,7 @@ const SurveySummary = () => {
           const totalResponses = Object.values(responseCounts).reduce((a, b) => a + b, 0);
           return (
             <Paper key={questionId} p="lg" style={{ marginBottom: '20px' }}>
-              <Text weight={400} mb="sm">{selectedLanguage && questionTitleMap[questionId][selectedLanguage]}</Text>
+              <Text fw={400} mb="sm">{selectedLanguage && questionTitleMap[questionId][selectedLanguage]}</Text>
               {Object.entries(responseCounts).map(([response, count]) => {
                 const percentage = ((count / totalResponses) * 100).toFixed(2);
                 const voteText = count > 1 ? 'votes' : 'vote';
@@ -128,7 +128,7 @@ const SurveySummary = () => {
                   case 'Opinion Scale':
                     return (
                         <Group key={response} pb="sm">
-                        <Chip color="indigo" variant="light" sx={{minWidth: "60px"}}>
+                        <Chip color="indigo" variant="light" style={{minWidth: "60px"}}>
                           <b>{response} </b>
                         </Chip>
                         :
@@ -140,7 +140,7 @@ const SurveySummary = () => {
                   case 'Multiple Choice':
                     return (
                       <Group key={response} pb="sm">
-                        <Chip color="indigo" variant="light" sx={{minWidth: "120px"}}>
+                        <Chip color="indigo" variant="light" style={{minWidth: "120px"}}>
                           {response} 
                         </Chip>
                         :
@@ -167,7 +167,7 @@ const SurveySummary = () => {
                           size="sm"
                           px="md"
                           radius="md"
-                          leftIcon={<IconThumbUpFilled /> }
+                          leftSection={<IconThumbUpFilled /> }
                           disabled
                         >
                         Like ({count})
@@ -182,7 +182,7 @@ const SurveySummary = () => {
                           size="sm"
                           px="md"
                           radius="md"
-                          leftIcon={<IconThumbDownFilled /> }
+                          leftSection={<IconThumbDownFilled /> }
                           disabled
                         >
                         Dislike ({count})
@@ -235,7 +235,7 @@ const SurveySummary = () => {
                       return (
                         <span key={response}>
                           <Group pb="sm">
-                            <Chip color="indigo" variant="light" sx={{minWidth: "120px"}}>
+                            <Chip color="indigo" variant="light" style={{minWidth: "120px"}}>
                               {response} 
                             </Chip>
                             :

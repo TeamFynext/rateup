@@ -50,7 +50,7 @@ import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { createResponsePublic } from "../../../backend/surveys/response/response.api";
 import { RateupButtonBlackOutline, RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
 import QuestionCountContext from "../../../context/QuestionCountContext";
-import { useStyles } from "./TakeSurvey.styles";
+import classes from "./TakeSurvey.module.css";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from '@mantine/hooks';
 import { parseLogicAction } from "../../../utils";
@@ -114,13 +114,13 @@ function TakeSurvey() {
 
   if (isLoading) {
     return (
-      <Center sx={{ height: "100vh" }}>
+      <Center style={{ height: "100vh" }}>
         <Loader />
       </Center>
     );
   }
   if (isError || !selectedQ) {
-    return <Center sx={{ height: "100vh" }}>
+    return <Center style={{ height: "100vh" }}>
       <Text fw={500} >
         {questionCount == 0 ? "No Questions found!" : "Something went wrong!"}
 
@@ -265,7 +265,7 @@ function TakeSurvey() {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container h={isMobile ? "53vh" : "60vh"} size={"md"} sx={{ position: "relative" }}>
+        <Container h={isMobile ? "53vh" : "60vh"} size={"md"} style={{ position: "relative" }}>
           {/* TODO for mobile design 80vh */}
 
           <Modal
@@ -273,7 +273,8 @@ function TakeSurvey() {
             title="Confirm your responses"
             onClose={close}
             overlayProps={{
-              color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
+              //color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
+              color: theme.colors.gray[2],
               opacity: 0.55,
               blur: 3,
             }}
@@ -344,7 +345,7 @@ function TakeSurvey() {
               </Stack>
 
               <div style={{ position: "fixed", bottom: 0, left: 10, right: 10 }}>
-                <Group position="apart" p="lg" pb={isMobile ?"50px" : "20px"} sx={{ background: '#fff'}}>
+                <Group gap="apart" p="lg" pb={isMobile ?"50px" : "20px"} style={{ background: '#fff'}}>
                   <RateupButtonBlackOutline
                     radius={"xl"}
                     title={"Back"}
@@ -555,7 +556,7 @@ function NextPrev({ prev, next }) {
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
 
-    <Stack pb={40} sx={{ position: "absolute", bottom: isMobile ? "1vh": "5vh", width: "100%" }}>
+    <Stack pb={40} style={{ position: "absolute", bottom: isMobile ? "1vh": "5vh", width: "100%" }}>
       {selectedQ.required && !response &&
         <Text color="gray">Note: * Must attend to continue with next.</Text>
       }
@@ -592,7 +593,6 @@ function NextPrev({ prev, next }) {
 
 function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { classes } = useStyles();
 
   return (
     <Paper shadow="sm"
@@ -602,7 +602,7 @@ function TextForm() {
         placeholder="Enter your answer"
         value={response || ""}
         onChange={(e) => updateResponse(e.currentTarget.value)}
-        sx={{ maxWidth: "400px" }}
+        style={{ maxWidth: "400px" }}
         variant="unstyled"
         radius="xl"
         size="sm"
@@ -614,7 +614,6 @@ function TextForm() {
 
 function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { classes } = useStyles();
 
   return (
     <Paper shadow="sm"
@@ -627,7 +626,7 @@ function TextAreaForm() {
           const replacedValue = e.currentTarget.value.replace(/\n/g, ', ');
           updateResponse(replacedValue)
         }}
-        sx={{ maxWidth: "400px" }}
+        style={{ maxWidth: "400px" }}
         variant="unstyled"
         radius="xl"
         size="sm"
@@ -639,7 +638,6 @@ function TextAreaForm() {
 
 function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { classes } = useStyles();
 
   return (
     <Paper shadow="sm"
@@ -647,7 +645,7 @@ function NumberForm() {
     >
       <NumberInput
         size="sm"
-        type="number"
+        //type="number" VERIFY MANTINE
         placeholder="Enter number input"
         value={response || undefined}
         onChange={(value) => updateResponse(value)}
@@ -662,7 +660,6 @@ function NumberForm() {
 
 function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { classes } = useStyles();
   const [phoneError, setPhoneError] = useState(null);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -685,8 +682,8 @@ function PhoneForm() {
   const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
     ({ image, label, description, ...others }: ItemProps, ref) => (
       <div ref={ref} {...others}>
-        <Group noWrap>
-          <Avatar src={image} sx={{ minWidth: "50px" }} />
+        <Group  wrap="nowrap">
+          <Avatar src={image} style={{ minWidth: "50px" }} />
           <div>
             <Text size="sm">{label}</Text>
             <Text size="xs" opacity={0.65}>
@@ -724,23 +721,23 @@ function PhoneForm() {
     >
       <Group>
         <Select
-          sx={{ maxWidth: "140px" }}
+          style={{ maxWidth: "140px" }}
           placeholder="Select Country Code"
-          itemComponent={SelectItem}
+         // itemComponent={SelectItem}
           data={data}
           searchable
           maxDropdownHeight={400}
           defaultValue={data[0].value}
-          nothingFound="No results"
-          filter={(value, item) =>
-            item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
-            item.description.toLowerCase().includes(value.toLowerCase().trim())
-          }
+          nothingFoundMessage="No results"
+          // filter={(value, item) =>
+          //   item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
+          //   item.description.toLowerCase().includes(value.toLowerCase().trim())
+          // }
         />
         <NumberInput
           size="sm"
           max={9999999999}
-          type="number"
+         // type="number"  VERIFY MANTINE
           placeholder="Enter 10 digit phone number"
           hideControls
           value={response || ""}
@@ -761,7 +758,6 @@ function EmailForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [emailError, setEmailError] = useState(null);
   const [isFocused, setIsFocused] = useState(false);
-  const { classes } = useStyles();
 
   useEffect(() => {
     if (response)
@@ -790,9 +786,9 @@ function EmailForm() {
         value={response || ""}
         onChange={handleInputChange}
         onBlur={handleInputBlur}
-        sx={{ maxWidth: "400px" }}
+        style={{ maxWidth: "400px" }}
         error={emailError && !isFocused ? 'Invalid email' : null}
-        icon={<IconMail size="1.2rem" color="black" />}
+        leftSection={<IconMail size="1.2rem" color="black" />}
         variant="unstyled"
       />
     </Paper>
@@ -815,7 +811,7 @@ function LDForm() {
           px="md"
           fullWidth
           radius="md"
-          leftIcon={<IconThumbUpFilled />}
+          leftSection={<IconThumbUpFilled />}
           onClick={() => updateResponse(LDResponse.Like)}
         >
           Like
@@ -829,7 +825,7 @@ function LDForm() {
           px="md"
           radius="md"
           fullWidth
-          leftIcon={<IconThumbDownFilled />}
+          leftSection={<IconThumbDownFilled />}
           onClick={() => updateResponse(LDResponse.Dislike)}
         >
           Dislike
@@ -861,7 +857,7 @@ function OpinionScaleForm() {
   }
 
   return (
-    <Group position="center" spacing="xs">
+    <Group justify="center" gap="xs">
       {renderButtons()}
     </Group>
   );
@@ -916,7 +912,7 @@ function SmileyForm() {
           variant={response === value ? "gradient" : "default"}
           gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
           onClick={() => updateResponse(value)}
-          sx={{ minHeight: '30px', maxWidth: '70px', maxHeight: '70px' }}
+          style={{ minHeight: '30px', maxWidth: '70px', maxHeight: '70px' }}
           styles={{
             root: { 
             padding: isMobile ? 5 : 10,
@@ -961,7 +957,7 @@ function ImageForm() {
       </Box>
 
       {file && (
-        <Text size="sm" align="center" mt="sm">
+        <Text size="sm"style={{ textAlign:'center' }} mt="sm">
           Picked file: {file.name}
         </Text>
       )}
@@ -1019,7 +1015,7 @@ function DDSSForm() {
 
   return (
     <Select
-      sx={{ minWidth: "300px", maxWidth: "500px" }}
+      style={{ minWidth: "300px", maxWidth: "500px" }}
       label="Select one option"
       placeholder="Pick one"
       data={data}
@@ -1040,7 +1036,7 @@ function DDMSForm() {
 
   return (
     <MultiSelect
-      sx={{ minWidth: "300px", maxWidth: "500px" }}
+      style={{ minWidth: "300px", maxWidth: "500px" }}
       data={data}
       value={response}
       onChange={updateResponse}
@@ -1052,7 +1048,6 @@ function DDMSForm() {
 
 function DateForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { classes } = useStyles();
   return (
     <Paper shadow="sm"
       className={classes.inputBox}
@@ -1064,7 +1059,7 @@ function DateForm() {
         maw={400}
         mx="auto"
         variant="unstyled"
-        icon={<IconCalendarEvent size="1.2rem" color="black" />}
+        leftSection={<IconCalendarEvent size="1.2rem" color="black" />}
 
       />
     </Paper>
@@ -1086,7 +1081,6 @@ function TestimonialForm() {
   };
   //TODO: image storage
   console.error("Image storage not implemented");
-  const { classes } = useStyles();
 
   return (
     <>
@@ -1097,7 +1091,7 @@ function TestimonialForm() {
           placeholder="Enter your name"
           value={response?.name}
           onChange={handleNameChange}
-          sx={{ maxWidth: "400px" }}
+          style={{ maxWidth: "400px" }}
           variant="unstyled"
         />
       </Paper>
@@ -1108,7 +1102,7 @@ function TestimonialForm() {
           placeholder="Enter your testimonial"
           value={response?.testimonial}
           onChange={handleTestimonialChange}
-          sx={{ maxWidth: "400px" }}
+          style={{ maxWidth: "400px" }}
           variant="unstyled"
         />
       </Paper>

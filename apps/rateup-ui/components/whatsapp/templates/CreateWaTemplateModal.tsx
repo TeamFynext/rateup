@@ -105,15 +105,15 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
 
         <Grid align="stretch">
           <Grid.Col span={6}
-            sx={{
-              '& .mantine-Input-rightSection': {
-                minWidth: "70px"
-              },
-              '& .mantine-Input-input': {
-                paddingRight: "70px"
-              }
+            // style={{
+            //   '& .mantine-Input-rightSection': {
+            //     minWidth: "70px"
+            //   },
+            //   '& .mantine-Input-input': {
+            //     paddingRight: "70px"
+            //   }
 
-            }}
+            // }}  //TODO VERIFY MANTINE
           >
             <TextInput
               label="Name"
@@ -177,7 +177,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
           <Grid.Col
             span={6}
             display={"flex"}
-            sx={{
+            style={{
               flexDirection: "column",
               alignItems: "center",
 
@@ -186,7 +186,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               fz="lg"
             >Preview</Text>
             <Container
-              sx={{
+              style={{
                 backgroundColor: "#efeae2",
                 borderRadius: "8px",
                 flexGrow: 1,
@@ -195,7 +195,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
             >
               <Stack
                 w="300px"
-                spacing={3}
+                gap={3}
               >
                 <ResponseMessageContainer
                   sx={{
@@ -203,7 +203,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
                   }}
                 >
                   <Text fw="bold"
-                    sx={{
+                    style={{
                       color: "#444"
                     }}>
                     {form.values.header}
@@ -230,7 +230,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
             </Container >
           </Grid.Col>
         </Grid>
-        <Group position="right" mt="sm">
+        <Group justify="flex-end" mt="sm">
           <Button
             variant="subtle"
             onClick={handleClose}
@@ -254,7 +254,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
 function LengthTracker({ form, fieldName, maxValue }) {
   const length = form.getInputProps(fieldName).value.trim().length;
   return (
-    <Text c="dimmed" fz={".8rem"} align="end" pr="sm">
+    <Group  justify="flex-end">
+    <Text c="dimmed" fz={".8rem"} pr="sm">
       <span
         style={{
           color: length > maxValue ? "red" : "inherit"
@@ -266,5 +267,6 @@ function LengthTracker({ form, fieldName, maxValue }) {
         {` / ${maxValue}`}
       </span>
     </Text>
+    </Group>
   )
 }

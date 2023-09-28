@@ -1,26 +1,16 @@
 import { IconChevronDown } from "@tabler/icons-react";
 import {
-  Menu,
+  Menu,Button,
   ActionIcon,
 } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 
 export function StatusFilterMenu({ filterParam, setFilterParam }){
   return (
-  <Menu shadow="md" width={80}  >
+  <Menu shadow="md" width={120}  >
          <Menu.Target>
-              <ActionIcon mr="lg" pt="7px" mt="0px"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                 <RateupButtonPrimary
-                    title={"Status"}
-                    variant="subtle"
-                    rightIcon={<IconChevronDown size="1rem" />}
-                  />
-              </ActionIcon>
-          </Menu.Target>
+        <Button variant="outline" color="rgba(13, 13, 13, 1)" radius="xl" rightSection={<IconChevronDown size="1rem" />}>Status</Button>
+  </Menu.Target>
 
           <Menu.Dropdown
             onClick={(e) => {

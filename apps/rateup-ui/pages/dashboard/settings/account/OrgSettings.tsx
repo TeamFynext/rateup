@@ -52,23 +52,23 @@ const OrgSettings = () => {
   }, [user.orgLogo]);
 
   return (
-    <Stack sx={{ maxWidth: "500px" }}>
+    <Stack style={{ maxWidth: "500px" }}>
 
     <Title order={2}> Organization Settings</Title>
     <Divider mt="sm" mb="xl"/>
     <Group>
 
-    <Stack justify="center" mr="xl" sx={{ minWidth: "200px" }}>
+    <Stack justify="center" mr="xl" style={{ minWidth: "200px" }}>
         <Image
             height={120}
             src={avatarSrc}
             alt="org logo"
-            withPlaceholder
-          />
+            fallbackSrc="https://placehold.co/600x400?text=OrgLogo"
+            />
 
     </Stack>
       
-      <Stack justify="center" sx={{ maxWidth: "200px" }}>
+      <Stack justify="center" style={{ maxWidth: "200px" }}>
               <FileButton onChange={setFile} accept="image/png,image/jpeg">
                 {(props) => (
                   <Button

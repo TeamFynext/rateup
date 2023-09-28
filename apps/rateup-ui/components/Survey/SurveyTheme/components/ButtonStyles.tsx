@@ -71,7 +71,7 @@ function ButtonStyles({
         <Select
           label="Font style"
           searchable
-          nothingFound="No options"
+          nothingFoundMessage="No options" //TODO VERIFY MANTINE 
           data={fontList}
          
           mt={"xs"}

@@ -10,7 +10,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
   return (
     <Paper
       mx="sm"
-      sx={{
+      style={{
         borderRadius: bordeRadius,
         boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.25)",
         height: "100%",
@@ -19,7 +19,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       onClick={() => setSelectedItem(item)}
     >
       <Box
-        sx={{
+        style={{
           width: "300px",
           aspectRatio: "4 / 3",
           overflow: "clip",
@@ -50,7 +50,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           {item.name}
         </Text>
         <Text
-          sx={{
+          style={{
             height: "100px"
           }}
           lineClamp={4}
@@ -59,14 +59,14 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
         </Text>
         <Group
           h="50px"
-          position="center"
-          spacing={"sm"}
+          justify="center"
+          gap={"sm"}
         >
           {item.price.variants?.length > 0 ? (
             item.price.variants.map((v, index) => (
               <Stack
                 align="center"
-                spacing={"0px"}
+                gap={"0px"}
                 key={index}
               >
                 <Text
@@ -75,7 +75,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
 
                 >{v.name}</Text>
                 <Text
-                  color="#AF6B2E"
+                  c="#AF6B2E"
                   fz="1.2rem"
                 >₹{v.price}</Text>
               </Stack>
@@ -83,7 +83,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
 
           ) : (
             <Text
-              color="#AF6B2E"
+              c="#AF6B2E"
               fz="1.2rem"
             >₹{item.price.price}</Text>
           )}

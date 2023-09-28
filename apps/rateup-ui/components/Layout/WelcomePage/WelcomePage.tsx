@@ -14,7 +14,6 @@ import {
   Modal,
   Group,
   Button,
-  createStyles,
   Flex,
   BackgroundImage,
   Tooltip,
@@ -34,15 +33,14 @@ import {
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 
-const useStyles = createStyles((theme) => ({
-  ButtonStyles: {
-    backgroundColor: "black",
-    borderRadius: 48,
-    padding: 10,
-    paddingLeft: 20,
-    paddingRight: 20,
-  },
-}));
+
+const buttonStyles = {
+  backgroundColor: "black",
+  borderRadius: "48px",
+  padding: "10px",
+  paddingLeft: "20px",
+  paddingRight: "20px",
+};
 
 function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -109,7 +107,6 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
     }
   }
 
-  const { classes } = useStyles();
   return (
     <>
       <Modal
@@ -132,7 +129,7 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
             onChange={(event) => setPasswordInput(event.target.value)}
           />
         </Box>
-        <Group position="center" pt={40}>
+        <Group justify="center" pt={40}>
           <RateupButtonPrimary
             onClick={() => updateSurveyPassword.mutate()}
             title={"Login"}
@@ -148,14 +145,14 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
         <Stack
           align="center"
           justify="center"
-          spacing="xl"
-          sx={{
+          gap="xl"
+          style={{
             height: "75vh",
             borderRadius: 18,
             boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
+            ...surveyThemeData?.bgStyles
           }}
           bg={"white"}
-          style={surveyThemeData?.bgStyles}
         >
           <BackgroundImage
             style={{
@@ -189,10 +186,9 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
               )}
               <Title
                 order={1}
-                sx={{ fontSize: largeScreen ? "4rem" : "3rem" }}
+                style={{ fontSize: largeScreen ? "4rem" : "3rem" , ...surveyThemeData?.headerStyles}}
                 tt={"capitalize"}
                 mt={25}
-                style={surveyThemeData?.headerStyles}
               >
                 {surveyThemeData?.headerText}
               </Title>
@@ -205,8 +201,8 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
               </Text>
               <Button
                 mt={20}
-                style={surveyThemeData?.buttonStyles}
-                className={classes.ButtonStyles}
+                style={{...surveyThemeData?.buttonStyles, ...buttonStyles}} //VERIFY MANTINE
+               // className={classes.ButtonStyles}
                 onClick={isProtected ? open : onStart}
                 // size="xl"
                 // w={150}

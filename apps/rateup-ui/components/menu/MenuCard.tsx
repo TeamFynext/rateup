@@ -33,21 +33,21 @@ export function MenuCard({
       shadow="lg"
       radius="lg"
       mih={"175px"}
-      sx={{ cursor: "pointer" }}
+      style={{ cursor: "pointer" }}
       onClick={() => {
         router.push(
           `/dashboard/menu/${menu.id}`
         );
       }}
     >
-      <Flex justify={"space-between"} direction={"column"} sx={{ height: "100%" }}>
+      <Flex justify={"space-between"} direction={"column"} style={{ height: "100%" }}>
         <Box>
           <Flex justify={"space-between"} align={"center"}>
 
             <Text mr={"sm"} truncate size="xl" fw={700}>
               {menu.name}
             </Text>
-            <Group align={"center"} mt="sm" spacing="xs">
+            <Group align={"center"} mt="sm" gap="xs">
               <IconShare
                 onClick={(e) => {
                   e.stopPropagation(),
@@ -107,7 +107,7 @@ function MenuCardMenu({ menuId, teamId, close }) {
         }}
       >
         <Menu.Item
-          icon={<IconTrash />}
+          leftSection={<IconTrash />}
           onClick={() => {
             deleteMutation.mutate(menuId);
           }}

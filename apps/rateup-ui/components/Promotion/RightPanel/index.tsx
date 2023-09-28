@@ -2,7 +2,7 @@ import { Box } from "@mantine/core";
 
 export default function RightPanelRoot(props) {
   return (
-    <Box sx={{ }}>
+    <Box style={{ }}>
       {props.children}
     </Box>
   )

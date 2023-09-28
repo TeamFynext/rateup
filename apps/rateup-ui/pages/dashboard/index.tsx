@@ -141,32 +141,9 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
           <Stack>
             <Group>
 
-            <Stack  sx={{width: '28%'}}>
+            <Stack  style={{width: '28%'}}>
 
-                <Paper sx={{height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg" 
-                    onClick={() => router.push("/dashboard/surveys")}>
-                    <Title align="center" order={2} size="36px" color="#3F5BA9">
-                       {(Array.isArray(surveys) && surveys.length) ? surveys.filter(s => s.active === true).length : 0}
-                      </Title>
-                    <Text align="center" mb="lg"  fw={700} fz="xl" color="#595959"> Active Surveys</Text>
-                </Paper>
-
-                <Paper sx={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
-                onClick={() => router.push("/dashboard/surveys")}>
-                    <Title align="center" order={2} size="36px" color="#3F5BA9">
-                       {Array.isArray(surveys) && surveys.length ? surveys.length : 0}
-                      </Title>
-                    <Text align="center" mb="lg" fw={700} fz="xl" color="#595959"> Total Surveys</Text>
-                </Paper>
-
-                <Paper sx={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
-                onClick={() => router.push("/dashboard/teams")}>
-                    <Title align="center" order={2} size="36px" color="#3F5BA9">{teamsDataUser?.data?.data?.length}</Title>
-                    <Text align="center" mb="lg" fw={700} fz="xl" color="#595959"> Total Teams</Text>
-                </Paper>
-
-           
-                  <RateupButtonBlue
+            <RateupButtonBlue
                     onClick={open}
                     title={"Create"}
                     leftIcon={<IconPlus size="2.2rem" />}
@@ -191,15 +168,40 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                     }}
                   />
 
+                <Paper style={{height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg" 
+                    onClick={() => router.push("/dashboard/surveys")}>
+                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px" >
+                       {(Array.isArray(surveys) && surveys.length) ? surveys.filter(s => s.active === true).length : 0}
+                      </Title>
+                    <Text style={{ textAlign:'center' }} mb="lg"  fw={700} fz="xl" color="#595959"> Active Surveys</Text>
+                </Paper>
+
+                <Paper style={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
+                onClick={() => router.push("/dashboard/surveys")}>
+                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px">
+                       {Array.isArray(surveys) && surveys.length ? surveys.length : 0}
+                      </Title>
+                    <Text style={{ textAlign:'center' }} mb="lg" fw={700} fz="xl" c="#595959"> Total Surveys</Text>
+                </Paper>
+
+                <Paper style={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
+                onClick={() => router.push("/dashboard/teams")}>
+                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px" >{teamsDataUser?.data?.data?.length}</Title>
+                    <Text style={{ textAlign:'center' }} mb="lg" fw={700} fz="xl" color="#595959"> Total Teams</Text>
+                </Paper>
+
+           
+                 
+
               </Stack>
 
               <Paper radius="md" px="xl" py="lg" my="xl" pt="xl" shadow="lg"
-              sx={{ width: "70%", height: "500px", alignContent: 'center'}}
+              style={{ width: "70%", height: "500px", alignContent: 'center'}}
               >
                 <Stack>
-                  <Group position="apart">
-                  <Title order={3}  color="gray">Overall Responses</Title>
-                      <Group  position="right"> 
+                  <Group justify="space-between">
+                  <Title order={3}  c="gray">Overall Responses</Title>
+                      <Group  justify="flex-end"> 
                       <Button variant={timePeriod === 'daily' ? "filled" :"subtle"}   radius="lg"
                               color={timePeriod === 'daily' ? "dark" :"gray"}
                               onClick={() => setTimePeriod('daily')}>
@@ -216,7 +218,11 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                       </Group>
                   </Group>
 
-                  <Text align="left" mb="md" mt="-15px" ml="md" fw={700} fz="xl" color="#595959"> {total}</Text>
+                    <Group justify="flex-start">
+                      <Text mb="md" mt="-15px" ml="md" fw={700} fz="xl" c="#595959"> {total}</Text>
+
+                    </Group>
+
 
                 </Stack>
                 
@@ -250,7 +256,7 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                 onClose={close}
                 title="Create new"
                 overlayProps={{
-                  color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
+                  color: theme.colors.dark[9] ,
                   opacity: 0.55,
                   blur: 3,
                 }}
@@ -267,22 +273,22 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                     sx={{ width: "160px", height: "100px", alignContent: 'center', cursor: 'pointer'}}
                     onClick={() => router.push("/dashboard/surveys?action=create")}>
                 <Center h="100%">
-                  <Stack align="center" spacing="0">
-                    <ActionIcon size="xl">
+                  <Stack align="center" gap="0">
+                    <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
                       <IconCheckupList size="2rem"  color="#595959"/>
                     </ActionIcon>
-                    <Text align="center"  size="20px" fw={700} color="#595959">Web Survey</Text>
+                    <Text style={{ textAlign:'center' }}  size="20px" fw={700} c="#595959">Web Survey</Text>
                   </Stack>
                 </Center>
               </CardActionButton>
               <CardActionButton  onClick={() => router.push("/dashboard/teams?action=create")}
                       sx={{ width: "170px", height: "100px", alignContent: 'center', cursor: 'pointer'}}>
                       <Center h="100%">
-                          <Stack align="center" spacing="0">
-                            <ActionIcon size="xl">
+                          <Stack align="center" gap="0">
+                            <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
                               <IconSocial size="2rem" color="#595959"  />
                             </ActionIcon>
-                            <Text align="center"  size="20px" fw={700} color="#595959">Team</Text>
+                            <Text style={{ textAlign:'center' }} size="20px" fw={700} color="#595959">Team</Text>
                         </Stack>
                       </Center>
                 </CardActionButton>
@@ -290,11 +296,11 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                     sx={{ width: "240px", height: "100px", alignContent: 'center', cursor: 'pointer'}}
                     onClick={() => router.push("/dashboard/whatsappsurvey?action=create")}>
                 <Center h="100%">
-                  <Stack align="center" spacing="0">
-                    <ActionIcon size="xl">
+                  <Stack align="center" gap="0">
+                    <ActionIcon size="xl" variant="subtle" color="#F8F8F9"> 
                       <IconBrandWhatsapp size="2rem"  color="#595959"/>
                     </ActionIcon>
-                    <Text align="center"  size="20px" fw={700} color="#595959">WhatsApp Survey</Text>
+                    <Text style={{ textAlign:'center' }} size="20px" fw={700} color="#595959">WhatsApp Survey</Text>
                   </Stack>
                 </Center>
               </CardActionButton>
@@ -303,11 +309,11 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                 <CardActionButton  onClick={() => router.push("/dashboard/LandingPages?action=create")}
                 sx={{ width: "180px", height: "100px", alignContent: 'center', cursor: 'pointer'}}>
                       <Center h="100%">
-                          <Stack align="center" spacing="0">
-                            <ActionIcon size="xl">
+                          <Stack align="center" gap="0">
+                            <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
                               <IconPageBreak size="2rem"  color="#595959" />
                             </ActionIcon>
-                            <Text align="center"  size="20px" fw={700} color="#595959">Merge Survey</Text>
+                            <Text style={{ textAlign:'center' }} size="20px" fw={700} color="#595959">Merge Survey</Text>
                         </Stack>
                       </Center>
                 </CardActionButton>
@@ -315,11 +321,11 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                 <CardActionButton   onClick={() => router.push("/dashboard/promotion?action=create")}
                     sx={{ width: "170px", height: "100px", alignContent: 'center', cursor: 'pointer'}}>
                       <Center h="100%">
-                          <Stack align="center" spacing="0">
-                            <ActionIcon size="xl">
+                          <Stack align="center" gap="0">
+                            <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
                               <IconSpeakerphone size="2rem"  color="#595959"/>
                             </ActionIcon>
-                            <Text align="center"  size="20px" fw={700} color="#595959">Promotion</Text>
+                            <Text style={{ textAlign:'center' }} size="20px" fw={700} color="#595959">Promotion</Text>
                         </Stack>
                       </Center>
                 </CardActionButton>
@@ -337,15 +343,15 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
             </Paper>
 
               <SimpleGrid
-                cols={4}
                 spacing={"lg"}
                 mb="xl" pb="xl" mx="sm"
-                breakpoints={[
-                  { minWidth: "xl", cols: 4 },
-                  { minWidth: "lg", cols: 4 },
-                  { minWidth: "md", cols: 2 },
-                  { maxWidth: "md", cols: 1 },
-                ]}
+                cols={{ base: 4, sm: 2, md:2, lg: 4 }}
+                // breakpoints={[  //TODO VERIFY MANTINE
+                //   { minWidth: "xl", cols: 4 },
+                //   { minWidth: "lg", cols: 4 },
+                //   { minWidth: "md", cols: 2 },
+                //   { maxWidth: "md", cols: 1 },
+                // ]}
               >
                       {(Array.isArray(surveysSummary) && (surveysSummary.length > 0 ? 
                         (surveysSummary.filter(s => s.active === true).map((s) => (

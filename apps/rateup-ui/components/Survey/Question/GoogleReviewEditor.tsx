@@ -181,10 +181,10 @@ const GoogleReviewEditor = ({
 
 
   return (
-    <Stack justify="space-between" sx={{height:'100%'}}>
+    <Stack justify="space-between" style={{height:'100%'}}>
     <Title order={3}>Google Reviews Setup</Title>
-    <Paper p="xl" sx={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
-    <Group align='center' position="center" pb="xl">
+    <Paper p="xl" style={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
+    <Group align='center' justify="center" pb="xl">
           <Switch.Group
             pb={30}
             label="Google Reviews"
@@ -204,7 +204,7 @@ const GoogleReviewEditor = ({
     </Group>
 
 {enableGoogleReview && (
-  <Stack px={30} py={10} sx={{ maxWidth: '600px' }}>
+  <Stack px={30} py={10} style={{ maxWidth: '600px' }}>
 
     <Group  pb={30}>
       {(() => {
@@ -214,18 +214,18 @@ const GoogleReviewEditor = ({
                 <SimpleGrid cols={3} spacing={30} >
                        <Text fw={500}>  Select the emojis for which Google Review to be enabled: </Text>
                        <Text fw={500}>  : </Text>
-                       <Group sx={{minWidth:"300px"}}>
+                       <Group style={{minWidth:"300px"}}>
                         {SMILEY_OPTIONS.map(({ value, label }) => (
                           <Button
                             key={value}
                             variant={selectedSmileys.includes(value) ? "gradient" : "default"}
                             gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
                             onClick={() => updateSmileyResponse(value)}
-                            sx={{minHeight:'10px', maxWidth:'70px'}}
+                            style={{minHeight:'10px', maxWidth:'70px'}}
 
                           >
                             {/* <Stack> */}
-                              <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={30} height={30} />
+                              <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} w={30} h={30} />
                               {/* <Text> {label}</Text>
 
                             </Stack> */}
@@ -254,7 +254,7 @@ const GoogleReviewEditor = ({
                        <Text fw={500}>  Select minimum scale value for enabling Google Review: </Text>
                        <Text fw={500}>  : </Text>
                        <Stack >
-                <Group sx={{minWidth:"300px"}}>
+                <Group style={{minWidth:"300px"}}>
                  {(
                   () => {
                     const buttons = [];
@@ -292,7 +292,7 @@ const GoogleReviewEditor = ({
     <Text fw={500}> Google Review Link </Text>
     <Text fw={500}>  : </Text>
         <TextInput
-          sx={{minWidth:"300px"}}
+          style={{minWidth:"300px"}}
           type="text"
           withAsterisk
           placeholder="Enter Google Review Link"
@@ -307,7 +307,7 @@ const GoogleReviewEditor = ({
 
 </Paper>
 
-    <Group position="apart">
+    <Group justify="space-between">
         <RateupButtonSecondary
             title={"Cancel"}
             size="md"

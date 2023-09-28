@@ -1,0 +1,17 @@
+
+.inputBox {
+  width: 90vw;
+  max-width: 500px;
+  color: var(--input-text-color, black);
+  border-radius: var(--input-border-radius, 8px);
+  transition: background-color 100ms ease;
+  background-color: var(--input-background-color, white);
+  padding: 6px var(--input-padding, 12px);
+  border-color: var(--input-border-color, blue);
+  border-width: 1px;
+  border-style: solid;
+}
+
+.inputBox:focus-within {
+  border-color: var(--input-focus-color, yellow);
+}

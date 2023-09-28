@@ -3,7 +3,6 @@ import {
     AppShell,
     useMantineTheme,
     Container,
-    createStyles
 } from '@mantine/core';
 import { HeaderTabs } from './Header/Header';
 import { IUserInfoApiResponse, fetchUserInfo } from '../../backend/user/user.api';
@@ -15,19 +14,17 @@ import SessionAuth from '../SuperToken/SessionAuth';
 import { useRouter } from 'next/router';
 import useLocalStorage from '../../hooks/localStorage';
 
-const useStyles = createStyles((theme) => ({
-  
+const classes = {
     appShellBody: {
-      paddingLeft:"10vw",
-      paddingRight:"10vw",
+      paddingLeft: '10vw',
+      paddingRight: '10vw',
+      marginTop: '23vh'
     },
-
-}));
+  };
 
 // @ts-ignore
 export default ({ children }) => {
     const theme = useMantineTheme();
-    const { classes } = useStyles();
     const router = useRouter();
     const [opened, setOpened] = useState(false);
 
@@ -75,9 +72,11 @@ export default ({ children }) => {
         <SessionAuth>
             <RouteParamsProvider>
                 <AppShell
+                // header={{ height: 160 }}
                 styles={{
                         main: {
-                            background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                            // background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                            background:theme.colors.gray[0],
                             padding:0 ,
                             margin: 0,
                             paddingTop: '10px',
@@ -85,15 +84,22 @@ export default ({ children }) => {
                             transition: "margin-left 0.3s ease-in-out", 
                         },
                     }}
-
-                navbar={<LeftNavbar opened={opened} setOpened={setOpened}/>}
-                header={
-                        <HeaderTabs opened={opened}  />
-                    }
+             
                 >
-                    <Container className={classes.appShellBody} fluid>
-                        {children}
-                    </Container>
+                    <AppShell.Navbar >
+                        <LeftNavbar opened={opened} setOpened={setOpened}/>
+                    </AppShell.Navbar>
+
+                     <AppShell.Header>
+                          <HeaderTabs opened={opened}  />
+                    </AppShell.Header>
+
+                    <AppShell.Main>
+                        <Container style={classes.appShellBody} fluid>
+                            {children}
+                        </Container>
+                    </AppShell.Main>
+                    
                     
                 </AppShell>
             </RouteParamsProvider>

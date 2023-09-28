@@ -34,7 +34,7 @@ const ShareSurvey = ({ survey }) => {
         <SimpleGrid cols={2} spacing="xl">
           {/* //-----------------web survey share url ----------------- */}
           {survey.type == "web" ? (
-            <Stack sx={{ maxWidth: "450px" }} p="md">
+            <Stack style={{ maxWidth: "450px" }} p="md">
               <Title order={4}>Share Survey</Title>
 
               <CopyLinkComponent
@@ -43,7 +43,7 @@ const ShareSurvey = ({ survey }) => {
             </Stack>
           ) : (
             //-----whatsapp survey share url copy section ----------
-            <Stack sx={{ maxWidth: "450px" }} p="md">
+            <Stack style={{ maxWidth: "450px" }} p="md">
               <Title order={6}>Share via whatsapp</Title>
 
               <CopyLinkComponent
@@ -53,11 +53,11 @@ const ShareSurvey = ({ survey }) => {
             </Stack>
           )}
 
-          <Stack sx={{ maxWidth: "400px" }} p="md">
-            <Title order={4} align="center">
+          <Stack style={{ maxWidth: "400px" }} p="md">
+            <Title order={4} style={{ textAlign:'center' }}>
               How would you like to survey people?
             </Title>
-            <Group position="center">
+            <Group justify="center">
               <ActionIcon size="xl" variant="light">
                 <IconMail size="2rem" />
               </ActionIcon>
@@ -87,14 +87,14 @@ interface CopyLinkComponentProps {
 }
 export const CopyLinkComponent = ({ value, disabled = false, label = "" }: CopyLinkComponentProps) => {
   return (
-    <Group spacing={"0px"} align="end">
+    <Group gap={"0px"} align="end">
       <TextInput
         readOnly
         value={value}
         label={label}
         pr="sm"
         disabled={disabled}
-        sx={{
+        style={{
           maxWidth: "600px",
           flexGrow: 1
         }}
@@ -104,7 +104,7 @@ export const CopyLinkComponent = ({ value, disabled = false, label = "" }: CopyL
           <Button
             color={copied ? "dark" : "yellow.6"}
             onClick={copy}
-            rightIcon={<IconCopy />}
+            rightSection={<IconCopy />}
             disabled={disabled}
           >
             {copied ? "Copied url" : "Copy url"}

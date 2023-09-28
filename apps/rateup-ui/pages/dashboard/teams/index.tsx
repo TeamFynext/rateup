@@ -163,14 +163,8 @@ export default function Teams() {
 
       {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
         <SimpleGrid
-          cols={4}
           spacing={"lg"}
-          breakpoints={[
-            { minWidth: "xl", cols: 3 },
-            { minWidth: "lg", cols: 2 },
-            { minWidth: "md", cols: 2 },
-            { maxWidth: "md", cols: 1 },
-          ]}
+          cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
         >
           {teamsDataUser?.data?.data
             ? teamsDataUser?.data?.data?.map((team, i: number) => (
@@ -192,7 +186,7 @@ export default function Teams() {
                     p="md"
                     shadow="lg"
                     radius="lg"
-                    sx={{ cursor: "pointer", width: "250px", height: "140px" }}
+                    style={{ cursor: "pointer", width: "250px", height: "140px" }}
                     onClick={open}
                   >
                     <Center h="100%">

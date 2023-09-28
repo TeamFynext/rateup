@@ -62,7 +62,7 @@ export const ImportRespondentsModal = ({ opened, close, createGroup }) => {
 
   return (
     <Modal opened={opened} onClose={close} title="Import Respondents" centered >
-      <Stack spacing="xs" style={{ marginBottom: 10 }}>
+      <Stack gap="xs" style={{ marginBottom: 10 }}>
         {createGroup && (
           <TextInput
             placeholder="Group Name"
@@ -71,7 +71,7 @@ export const ImportRespondentsModal = ({ opened, close, createGroup }) => {
             onChange={(event) => setGroupName(event.currentTarget.value)}
           />
         )}
-        <Text sx={{
+        <Text style={{
           whiteSpace: "pre-wrap",
         }}>{placeholder}</Text>
         {/* TODO: replace below with a simple file upload & start parsing only when clicking 'Import' Button */}
@@ -97,7 +97,7 @@ function ImportRespondents({ onClick }) {
         radius={"xl"}
         size={"xl"}
         color="yellow"
-        sx={{ position: "absolute", bottom: "1rem", right: "1rem" }}
+        style={{ position: "absolute", bottom: "1rem", right: "1rem" }}
       >
         <IconPlus size="1.5rem" />
       </ActionIcon>

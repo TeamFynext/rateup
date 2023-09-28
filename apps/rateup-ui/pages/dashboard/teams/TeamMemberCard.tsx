@@ -21,7 +21,7 @@ const TeamMemberCard = ({member}) => {
       <Text mr={"sm"} truncate size="xl" fw={700}>
         {member.name}
       </Text>
-      <Group align={"center"} mt="sm" spacing="xs">
+      <Group align={"center"} mt="sm" gap="xs">
       { member.status === "PENDING" && <TeamMemberMenu status={member.status} inviteId={member.id} /> }
       </Group>
       
@@ -30,7 +30,7 @@ const TeamMemberCard = ({member}) => {
     <Space h="xl" />
 
     <Flex justify={"flex-end"} mt="xl"  align={"center"}>
-        <Group spacing="4px">
+        <Group gap="4px">
             <Badge  color={ member.status === "PENDING" ? "yellow" : "green"}> {member.status} </Badge>
         </Group>
     </Flex>
@@ -113,7 +113,7 @@ function TeamMemberMenu({ status, inviteId }) {
         >
             {status === 'PENDING' &&
                 <Menu.Item
-                    icon={<IconTrash />}
+                    leftSection={<IconTrash />}
                     onClick={(e) =>  {
                         e.stopPropagation();
                         setDeleteInviteId(inviteId)

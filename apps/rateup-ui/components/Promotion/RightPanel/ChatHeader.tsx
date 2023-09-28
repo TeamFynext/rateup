@@ -5,7 +5,7 @@ export function MainWindowHeader({ title, onClick }) {
   return (
     <Group
       onClick={onClick}
-      sx={{
+      style={{
         background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%);",
         color: "white",
         cursor: "pointer",

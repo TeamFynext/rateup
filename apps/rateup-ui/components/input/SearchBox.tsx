@@ -15,10 +15,10 @@ export default function SearchBox({
   return (
     <TextInput
       placeholder={placeholder}
-      sx={sx}
+      style={sx}
       value={searchText}
       onChange={(e) => setSearchText(e.currentTarget.value)}
-      icon={<IconSearch />}
+      leftSection={<IconSearch />}
     />
   )
 }

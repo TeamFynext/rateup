@@ -4,9 +4,10 @@ import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
 import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
-import { useStyles } from "./EditSurvey.styles";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
+import classes from "./EditSurvey.module.css";
+
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -28,7 +29,6 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
     QuestionTabsEnum.None
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
-  const { classes } = useStyles();
 
   useEffect(() => {
     if (!selectedQ) return;
@@ -42,7 +42,7 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
 
   return (
     <>
-      <Paper p={"xl"} sx={{ flex: 2 }} shadow="lg" radius="lg"> 
+      <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg"> 
           <QuestionsSideBar
             questions={questions}
             selectedQ={selectedQ}
@@ -51,18 +51,18 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
             addQnTrigger={addQnTrigger}
         />
       </Paper>
-      <Paper p={"md"} sx={{ flex: 5 }} shadow="lg" radius="lg">
+      <Paper p={"md"} style={{ flex: 5 }} shadow="lg" radius="lg">
         <Tabs
           px={"md"}
           pb="md"
           value={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
-          sx={{ height: "100%" }}
+          onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
+          style={{ height: "100%" }}
           classNames={{
             panel: classes.panel,
           }}
         >
-          <Tabs.Panel value={QuestionTabsEnum.Edit} sx={{ height: "100%" }}>
+          <Tabs.Panel value={QuestionTabsEnum.Edit} style={{ height: "100%" }}>
             {selectedQ && (
               <QuestionDetailedView
                 question={selectedQ}
@@ -102,7 +102,7 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
               />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.None}>
-            <Center sx={{ height: "100%" }}>
+            <Center style={{ height: "100%" }}>
               <Text c="dimmed">Select a question to edit</Text>
             </Center>
           </Tabs.Panel>

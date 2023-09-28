@@ -7,8 +7,6 @@ import { IconArrowAutofitLeft, IconCheck,  } from '@tabler/icons-react';
 import { useEffect } from 'react';
 import { RateupButtonPrimary } from '../../components/Button/RateupButtons';
 import styles from './styles.module.css';
-import { HeaderTabs } from '../../components/Layout/Header/Header';
-import { UserMode } from '../../utils/enums';
 import { signOut } from "supertokens-web-js/recipe/session";
 import Link from 'next/link';
 
@@ -84,9 +82,9 @@ useEffect(() => {
     <>
           <Container size={420} my={40}>
 
-    <Paper withBorder shadow="md" p={30} mt={30} radius="md" sx={{ background: "#F7F7F7", minHeight: "600px"}}>
+    <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ background: "#F7F7F7", minHeight: "600px"}}>
         <Link href="/">
-          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={140} height={36} />
+          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" w={140} h={36} />
         </Link>
             <Flex
       gap="md"
@@ -98,7 +96,7 @@ useEffect(() => {
 
         <Space h="xl" />
         <Container>
-            <Title mb="xl" order={2} color='dark'>{title} Invitation</Title>
+            <Title mb="xl" order={2} style={{ color: '#000'}}>{title} Invitation</Title>
         </Container>
 
         {
@@ -189,11 +187,11 @@ useEffect(() => {
         
 
           <Center>
-          <Text inline color="blue.6" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          <Text inline c="blue.6" style={{ textDecoration: 'none'}} className={styles.txt}>
               <Link href="/login" style={{ textDecoration: 'none', }}>
                 <NavLink
                   label="Go to Login"
-                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                   variant="subtle"
                 />
               </Link>

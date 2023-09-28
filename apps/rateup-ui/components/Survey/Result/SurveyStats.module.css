@@ -1,0 +1,25 @@
+
+.stackChildren {
+  border-radius: "0.5rem"
+}
+
+
+.overflowClip {
+  overflow: clip;
+  flex-grow: 1;
+}
+
+@media (max-width: 1200px) {
+  .mediaQueryStyles {
+    order: 3;
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 1200px) {
+  .mediaQueryStylesPaper {
+    max-width: unset;
+    flex-grow: 1;
+  }
+}

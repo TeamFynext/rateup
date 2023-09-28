@@ -8,8 +8,9 @@ import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { Draggable } from "react-beautiful-dnd";
 import { deleteQuestion } from "../../../../backend/surveys/questions/questions.api";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useStyles } from "./DraggableQuestionCard.styles";
+import classes from "./DraggableQuestionCard.module.css";
 import { RateupButtonPrimary, RateupButtonSecondary } from "../../../Button/RateupButtons";
+import cx from 'clsx';
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -25,7 +26,6 @@ export function DraggableQuestionCard({
   handleOpenQuestion,
 }: DraggableQuestionCardProps) {
   
-  const { classes, cx } = useStyles();
   // TODO: ref lost when card is dragged to new place
   const { hovered, ref: hoverRef } = useHover();
   const router = useRouter();
@@ -52,7 +52,7 @@ export function DraggableQuestionCard({
 
   return (<>
    <Dialog opened={dialogOpened} withCloseButton onClose={closeDialog} size="lg" radius="md"  position={{top: '0', left:'40vw'}}>
-          <Text size="md" mb="xs" weight={500}>
+          <Text size="md" mb="xs" fw={500}>
               Are you sure to delete this question?
           </Text>
 
@@ -88,17 +88,18 @@ export function DraggableQuestionCard({
             <div {...provided.dragHandleProps} className={classes.dragHandle}>
               <IconGripVertical size={20} stroke={1.5} />
             </div>
-            <Badge bg={selected ? theme.colors.blue[9] : "yellow"} c={selected ? "white" : "black"} variant={selected ? "filled" : "light"}>
+            <Badge  style={{ minWidth: '30px'}} bg={selected ? theme.colors.blue[9] : "yellow"} c={selected ? "white" : "black"} variant={selected ? "filled" : "light"}>
               {index + 1}</Badge>
             {/* TODO: add truncate and make height fixed*/}
-            <Text pl="xs" fw={500}>{question.title[selectedLanguage]}</Text>
+            <Text pl="xs" fw={500} px="md">{question.title[selectedLanguage]}</Text>
             {true ? (
               <ActionIcon
                 onClick={() => {
                   closeDialog()
                   toggle()
                 }}
-                sx={{ position: "absolute", right: "5px" }}
+                variant="subtle" color="gray"
+                style={{ position: "absolute", right: "5px" }}
               >
                 <IconTrash />
               </ActionIcon>

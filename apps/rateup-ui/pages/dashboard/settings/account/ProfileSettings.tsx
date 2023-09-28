@@ -148,7 +148,7 @@ const ProfileSettings = () => {
       <Divider my="md" />
       <Stack pl="lg">
         <Grid align="center">
-          <Grid.Col md={6} lg={3}>
+          <Grid.Col span={{ md: 6, lg: 3 }}>
             <Avatar
               src={avatarSrc}
               alt={"Profile Picture"}
@@ -156,7 +156,7 @@ const ProfileSettings = () => {
               size={130}
             />
           </Grid.Col>
-          <Grid.Col md={6} lg={4}>
+          <Grid.Col span={{ md: 6, lg: 4 }}>
             <Stack>
               <Text size="lg" fw={500}>
                 {profileData?.data?.data?.name || "User"}
@@ -170,8 +170,8 @@ const ProfileSettings = () => {
               </Stack>
             </Stack>
           </Grid.Col>
-          <Grid.Col md={6} lg={3}>
-            <Stack justify="center" sx={{ maxWidth: "200px" }}>
+          <Grid.Col span={{ md: 6, lg: 3 }}>
+            <Stack justify="center" style={{ maxWidth: "200px" }}>
               <FileButton onChange={setFile} accept="image/png,image/jpeg">
                 {(props) => (
                   <Button
@@ -203,10 +203,10 @@ const ProfileSettings = () => {
         </Group>
         <Divider mb="xs" />
         <form onSubmit={profileForm.onSubmit(onSubmit)}>
-          <Grid sx={{ maxWidth: "550px" }}>
-            <Grid.Col md={2} lg={3}>
+          <Grid style={{ maxWidth: "550px" }}>
+            <Grid.Col span={{ md: 2, lg: 3 }}>
               <Select
-                sx={{ maxWidth: "200px" }}
+                style={{ maxWidth: "200px" }}
                 label="Title"
                 placeholder="Select"
                 data={[
@@ -218,9 +218,9 @@ const ProfileSettings = () => {
                 withAsterisk
               />
             </Grid.Col>
-            <Grid.Col md={6} lg={4}>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
               <TextInput
-                sx={{ maxWidth: "250px" }}
+                style={{ maxWidth: "250px" }}
                 label="Name"
                 placeholder="Enter your full name"
                 {...profileForm.getInputProps("name")}
@@ -228,10 +228,11 @@ const ProfileSettings = () => {
               />
             </Grid.Col>
           </Grid>
-          <Grid sx={{ maxWidth: "850px" }}>
-            <Grid.Col md={4}>
+          <Grid style={{ maxWidth: "850px" }}>
+            <Grid.Col span={{ md: 4}}>   
+            {/* //VERIFY MANTINE */}
               <TextInput
-                sx={{ maxWidth: "250px" }}
+                style={{ maxWidth: "250px" }}
                 disabled
                 label="Email"
                 placeholder="Enter your email"
@@ -239,18 +240,18 @@ const ProfileSettings = () => {
                 withAsterisk
               />
             </Grid.Col>
-            <Grid.Col md={4}>
+            <Grid.Col span={{ md: 4}}>
               <TextInput
-                sx={{ maxWidth: "250px" }}
+                style={{ maxWidth: "250px" }}
                 withAsterisk
                 label="Phone"
                 placeholder="Enter your phone number"
                 {...profileForm?.getInputProps("phone")}
               />
             </Grid.Col>
-            <Grid.Col md={4}>
+            <Grid.Col span={{ md: 4}}>
               <TextInput
-                sx={{ maxWidth: "250px" }}
+                style={{ maxWidth: "250px" }}
                 withAsterisk
                 label="whatsappAccessToken"
                 placeholder="Enter your whatsappAccessToken number"
@@ -260,8 +261,8 @@ const ProfileSettings = () => {
             
           </Grid>
 
-          <Grid justify="flex-start" mt="md" sx={{ maxWidth: "550px" }}>
-            <Grid.Col md={6} lg={6}>
+          <Grid justify="flex-start" mt="md" style={{ maxWidth: "550px" }}>
+            <Grid.Col span={{ md: 6, lg:4 }}>
               <RateupButtonSecondary
                 type="submit"
                 loading={isLoading}

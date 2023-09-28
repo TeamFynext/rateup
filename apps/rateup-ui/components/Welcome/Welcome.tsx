@@ -1,18 +1,17 @@
 import { Text, Title } from '@mantine/core';
-import useStyles from './Welcome.styles';
+import classes from './Welcome.module.css';
 
 export function Welcome() {
-    const { classes } = useStyles();
 
     return (
         <>
-            <Title className={classes.title} align="center" mt={100}>
+            <Title className={classes.title} mt={100}>
                 Welcome to{' '}
                 <Text inherit variant="gradient" component="span">
                     Rateup
                 </Text>
             </Title>
-            <Text color="dimmed" align="center" size="lg" sx={{ maxWidth: 580 }} mx="auto" mt="xl">
+            <Text c="dimmed" style={{ textAlign: "center",  maxWidth: 580}}  size="lg" mx="auto" mt="xl">
                 RateUp is a customer feedback analysis and management platform that helps businesses collect and analyze
                 customer feedback to improve their products and services. It allows them to send surveys, categorize and
                 prioritize feedback, and respond to customers directly through the platform. RateUp uses machine

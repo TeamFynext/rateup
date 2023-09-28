@@ -32,21 +32,17 @@ export default function MenuPage() {
         <TeamSelector selectedTeamId={selectedTeamId} setSelectedTeamId={setSelectedTeamId} />
       </Flex>
       <SimpleGrid
-        cols={4}
         spacing={"lg"}
-        breakpoints={[
-          { minWidth: "xl", cols: 3 },
-          { minWidth: "lg", cols: 2 },
-          { minWidth: "md", cols: 2 },
-          { maxWidth: "md", cols: 1 },
-        ]}
+        cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
+
+        //VERIFY MANTNE
       >
 
         <Paper
           p="xl"
           shadow="lg"
           radius="lg"
-          sx={{ cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
           onClick={handleCreateClick}
         >
           <Center h="100%">

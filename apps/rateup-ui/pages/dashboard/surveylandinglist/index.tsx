@@ -188,17 +188,10 @@ export default function SurveyLandingList() {
       <Space h="xl" />
 
       <SimpleGrid
-        cols={4}
         spacing={"lg"}
-        breakpoints={[
-          { minWidth: "xl", cols: 3 },
-          { minWidth: "lg", cols: 2 },
-          { minWidth: "md", cols: 2 },
-          { maxWidth: "md", cols: 1 },
-        ]}
+        cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
       >
        
-
         {
           (specificTeamIsSelected
             ? (surveysByTeam?.data?.length > 0 ? [...surveysByTeam?.data] : [])
@@ -248,7 +241,7 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       p="md"
       shadow="lg"
       radius="lg"
-      sx={{ cursor: "pointer" }}
+      style={{ cursor: "pointer" }}
       onClick={() => {
 
         user?.role === 'MEMBER'
@@ -266,13 +259,13 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
           {survey.title}
         </Text>
         <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
-        <Group align={"center"} mt="sm" spacing="xs">
+        <Group align={"center"} mt="sm" gap="xs">
 
           <IconPencil  />
           <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
         </Group>
       </Flex>
-      <Group align={"center"} mt="sm" spacing="xs">
+      <Group align={"center"} mt="sm" gap="xs">
         <Avatar radius={"xl"} />
         <Text size="sm" c="dimmed">
           Created {timeSince}
@@ -292,7 +285,7 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
             e.stopPropagation();
           }}
         >
-          <Group spacing="4px">
+          <Group gap="4px">
             <IconChartBar size={20} />
             <Text>Responses</Text>
           </Group>
@@ -360,8 +353,8 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         }}
       >
         <Stack >
-          <Text pr="xl" color="dark.2">Select the team in which the copy to be created.</Text>
-          <Group mt="md" sx={{ minHeight: "200px" }}
+          <Text pr="xl" c="dark.2">Select the team in which the copy to be created.</Text>
+          <Group mt="md" style={{ minHeight: "200px" }}
           >
             <Select
               label="Select Team"
@@ -401,7 +394,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         }}
       >
         <Menu.Item
-          icon={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+          leftSection={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
           onClick={() =>
             surveyUpdateMutation.mutate({ active: !survey.active })
           }
@@ -410,7 +403,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         </Menu.Item>
 
         <Menu.Item
-          icon={<IconShare />}
+          leftSection={<IconShare />}
           onClick={() => {
             router.push(`/dashboard/surveys/${survey?.id}?tab=Share`);
           }}
@@ -418,7 +411,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
           Share
         </Menu.Item>
         <Menu.Item
-          icon={<IconCopy />}
+          leftSection={<IconCopy />}
           onClick={() => {
             open()
           }}
@@ -426,7 +419,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
           Clone
         </Menu.Item>
         <Menu.Item
-          icon={<IconTrash />}
+          leftSection={<IconTrash />}
           onClick={() => {
             surveyDeleteMutation.mutate(survey?.id);
           }}
@@ -435,7 +428,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         </Menu.Item>
 
         <Menu.Item
-          icon={<IconSettings />}
+          leftSection={<IconSettings />}
           onClick={() => {
             router.push(`/dashboard/surveys/${survey?.id}?tab=Settings`);
           }}

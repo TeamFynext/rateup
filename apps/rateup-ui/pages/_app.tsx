@@ -1,7 +1,7 @@
 import React, { ReactElement, ReactNode, useEffect } from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider,createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import Layout from "../components/Layout/Layout";
 import SuperTokensReact, {
@@ -22,6 +22,8 @@ import { Hydrate } from '@tanstack/react-query'
 
 import SuperTokens from 'supertokens-web-js';
 import WithLoader from "../components/Layout/Loader/WithLoader";
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
@@ -75,11 +77,17 @@ export default function App({
     return null;
   }
 
-  const styleOverride = {
-    fontSizes: {
-      xxl: '1.8rem', 
-    }
-  }
+  // const styleOverride = {
+  //   fontSizes: {
+  //     xxl: '1.8rem', 
+  //   }
+  // } VERIFY
+
+  // const styleOverride = createTheme({
+  //   fontSizes: {
+  //     xxl: '1.8rem', 
+  //   }
+  // });
 
   return (
     <>
@@ -92,7 +100,10 @@ export default function App({
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
       {/* <SuperTokensWrapper> */}
-        <MantineProvider withGlobalStyles withNormalizeCSS theme={styleOverride}>
+        {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
+
+        <MantineProvider   >
+
           <Notifications />
           <QueryClientProvider client={queryClient}>
            <Hydrate state={pageProps.dehydratedState}>

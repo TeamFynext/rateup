@@ -103,7 +103,7 @@ export function QuestionsSideBar({
         >
 
       { !questionsState.length &&
-              <Paper  sx={{ cursor: "pointer", marginTop:"200px" }} onClick={handleAddQn} >
+              <Paper  style={{ cursor: "pointer", marginTop:"200px" }} onClick={handleAddQn} >
                 <Center h="100%">
                   <Stack align="center">
                     <IconPlus size={36}/>

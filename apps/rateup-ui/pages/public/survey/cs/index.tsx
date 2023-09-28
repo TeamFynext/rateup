@@ -9,7 +9,7 @@ const index = () => {
   const [startClicked, setStartClicked] = useState(false);
 
   return (
-      <Container fluid px="10vw" py="5vh"  sx={{ background: '#F7F6FB',  height: "100vh" }}>
+      <Container fluid px="10vw" py="5vh"  style={{ background: '#F7F6FB',  height: "100vh" }}>
           <>
           {/* <Image pb={30} 
               src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
@@ -17,9 +17,9 @@ const index = () => {
 
             <Image pb={30} 
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`} 
-                alt="Govt Logo" width={largeScreen ? 600 : 310}/>
+                alt="Govt Logo" w={largeScreen ? 600 : 310}/>
             </>
-          <Paper  p="sm" radius="lg" shadow="lg" sx={{ minHeight: "80vh" }}>
+          <Paper  p="sm" radius="lg" shadow="lg" style={{ minHeight: "80vh" }}>
             <Container fluid>
 
             {startClicked 
@@ -33,7 +33,7 @@ const index = () => {
 
           <Center>
             <Text  fz="sm">Powered by </Text>
-            <Image pl={10 }src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={80} height={20} />
+            <Image pl={10 }src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" w={80} h={20} />
           </Center>
           
           </Paper>
@@ -47,8 +47,8 @@ function Welcome({ setStartClicked, largeScreen }) {
   return (
     <>
       {/* .........Survey Welcome page.......... */}
-      <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>
-            <Title order={1} sx={{fontSize:  largeScreen ? '4rem' : '3rem' }}>Welcome</Title>
+      <Stack align="center" justify="center" gap="xl" style={{ height: "70vh" }}>
+            <Title order={1} style={{fontSize:  largeScreen ? '4rem' : '3rem' }}>Welcome</Title>
             <Text >Please fill the survey..</Text>
             <RateupButtonSecondary radius={"xl"} title="Start Survey" size="lg" onClick={() => {setStartClicked(true)}}/>
       </Stack>
@@ -61,8 +61,8 @@ let survey2="https://www.rateup.app/public/survey/24f3cdde-4833-46f6-9b82-6ded85
 let survey3="https://www.rateup.app/public/survey/74a86d7e-ec59-40e3-8bf5-4dbece9023e2?start=true"
 
 function StartPage({ largeScreen }){
-  return <Stack align="center" justify="center" spacing="xl" sx={{ height: "70vh" }}>
-                <Title order={3} mb="xl" pb="sm"  sx={{fontSize:  largeScreen ? '3rem' : '1.5rem' }}>Select one option :</Title>
+  return <Stack align="center" justify="center" gap="xl" style={{ height: "70vh" }}>
+                <Title order={3} mb="xl" pb="sm"  style={{fontSize:  largeScreen ? '3rem' : '1.5rem' }}>Select one option :</Title>
 
     <Link href={`${survey1}`}>
 

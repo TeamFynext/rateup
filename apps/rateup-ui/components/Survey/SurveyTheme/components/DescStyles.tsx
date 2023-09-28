@@ -76,7 +76,7 @@ function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont,save
           <Select
             label="Font style"
             searchable
-            nothingFound="No options"
+            nothingFoundMessage="No options"
             data={fontList}
             name="fontFamily"
             {...form.getInputProps("descStyles.fontFamily")}

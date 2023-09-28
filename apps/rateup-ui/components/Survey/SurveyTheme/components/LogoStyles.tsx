@@ -71,7 +71,7 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading })
           <FileButton onChange={handleFileChange} accept="image/png,image/jpeg">
             {(props) => (
               <Button
-                leftIcon={<IconUpload size={16} />}
+              leftSection={<IconUpload size={16} />}
                 fullWidth
               
                 radius="18px"

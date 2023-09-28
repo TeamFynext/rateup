@@ -1,0 +1,13 @@
+.content {
+  background-color: #161616;
+  color: white;
+  border-radius: 16px;
+}
+
+.header {
+  background-color: inherit;
+}
+
+.title {
+  font-size: 1.5rem;
+}

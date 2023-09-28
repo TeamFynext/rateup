@@ -14,7 +14,6 @@ import {
   ColorInput,
   Textarea,
   Slider,
-  Sx,
 } from "@mantine/core";
 import {
   IconBrandSketch,
@@ -31,7 +30,7 @@ import StyleTab from "./QRtabs/StyleTab";
 
 interface ShareQRProps {
   url: string;
-  sx?: Sx
+  sx?: any
 }
 const ShareQR = ({ url, sx }: ShareQRProps) => {
   const [title, setTitle] = useState("QR Code");
@@ -97,14 +96,15 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
   }
 
   return (
-    <Paper shadow="sm" my="xl" p="xl" sx={sx}>
+    <Paper shadow="sm" my="xl" p="xl" style = {{...sx}}> 
+     {/* //VERIFY mantine sx */}
       <Title order={4} mb="xl" pb="md">
         Generate & Share QR Code
       </Title>
 
       <Tabs variant="pills" color="gray" defaultValue="text">
         <Group>
-          <Stack justify="flex-start" sx={{ minWidth: "65%" }} mb="xl">
+          <Stack justify="flex-start" style={{ minWidth: "65%" }} mb="xl">
             {/*..... QR Editor Tab titles........ */}
             <Group>
               <Tabs.List>
@@ -113,18 +113,18 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                     shadow="xs"
                     radius="lg"
                     p="md"
-                    sx={{
+                    style={{
                       width: "100px",
                       height: "100px",
                       alignContent: "center",
                     }}
                   >
                     <Center h="100%">
-                      <Stack align="center" spacing="0">
+                      <Stack align="center" gap="0">
                         <ActionIcon size="xl">
                           <IconLetterCase size="2rem" />
                         </ActionIcon>
-                        <Text align="center">Text</Text>
+                        <Text style={{ textAlign:'center' }} c="#000">Text</Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -134,18 +134,18 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                     shadow="xs"
                     radius="lg"
                     p="md"
-                    sx={{
+                    style={{
                       width: "100px",
                       height: "100px",
                       alignContent: "center",
                     }}
                   >
                     <Center h="100%">
-                      <Stack align="center" spacing="0">
+                      <Stack align="center" gap="0">
                         <ActionIcon size="xl">
                           <IconPhotoEdit size="2rem" />
                         </ActionIcon>
-                        <Text align="center">Style</Text>
+                        <Text style={{ textAlign:'center' }} c="#000">Style</Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -155,18 +155,18 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                     shadow="xs"
                     radius="lg"
                     p="md"
-                    sx={{
+                    style={{
                       width: "100px",
                       height: "100px",
                       alignContent: "center",
                     }}
                   >
                     <Center h="100%">
-                      <Stack align="center" spacing="0">
+                      <Stack align="center" gap="0">
                         <ActionIcon size="xl">
                           <IconBrandSketch size="2rem" />
                         </ActionIcon>
-                        <Text align="center">Logo</Text>
+                        <Text style={{ textAlign:'center' }} c="#000">Logo</Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -177,18 +177,18 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                     shadow="xs"
                     radius="lg"
                     p="md"
-                    sx={{
+                    style={{
                       width: "100px",
                       height: "100px",
                       alignContent: "center",
                     }}
                   >
                     <Center h="100%">
-                      <Stack align="center" spacing="0">
+                      <Stack align="center" gap="0">
                         <ActionIcon size="xl">
                           <IconTemplate size="2rem" />
                         </ActionIcon>
-                        <Text align="center">Template</Text>
+                        <Text style={{ textAlign:'center' }} c="#000">Template</Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -198,14 +198,14 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
 
             {/*..... QR Editor Tab Panes........ */}
 
-            <Tabs.Panel value="text" sx={{ minHeight: "350px" }}>
+            <Tabs.Panel value="text" style={{ minHeight: "350px" }}>
               <Title order={3} mt="xl">
                 {" "}
                 Modify Text{" "}
               </Title>
 
               <Group>
-                <Stack sx={{ minWidth: "40%" }} mr="lg">
+                <Stack style={{ minWidth: "40%" }} mr="lg">
                   <TextInput
                     placeholder="Enter Title Here"
                     label="Title"
@@ -224,7 +224,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                   />
                 </Stack>
 
-                <Stack sx={{ minWidth: "20%" }} ml="xl">
+                <Stack style={{ minWidth: "20%" }} ml="xl">
                   <Stack>
                     <ColorInput
                       placeholder="Select color"
@@ -251,7 +251,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
               </Group>
             </Tabs.Panel>
 
-            <Tabs.Panel value="style" sx={{ minHeight: "350px" }}>
+            <Tabs.Panel value="style" style={{ minHeight: "350px" }}>
               <StyleTab
                 backgroundColor={backgroundColor}
                 setBackgroundColor={setBackgroundColor}
@@ -270,7 +270,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
               />
             </Tabs.Panel>
 
-            <Tabs.Panel value="logo" sx={{ minHeight: "350px" }}>
+            <Tabs.Panel value="logo" style={{ minHeight: "350px" }}>
               <Title order={3} mt="xl">
                 {" "}
                 Select a logo
@@ -278,8 +278,8 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
               <Text>This will appear at the center of the QR code.</Text>
 
               <Group>
-                <Stack sx={{ minWidth: "40%" }} mr="lg" mt="xl">
-                  <Stack justify="center" sx={{ maxWidth: "200px" }}>
+                <Stack style={{ minWidth: "40%" }} mr="lg" mt="xl">
+                  <Stack justify="center" style={{ maxWidth: "200px" }}>
                     <FileButton
                       onChange={setFile}
                       accept="image/png,image/jpeg"
@@ -306,7 +306,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                   </Stack>
                 </Stack>
 
-                <Stack sx={{ minWidth: "20%" }} ml="xl">
+                <Stack style={{ minWidth: "20%" }} ml="xl">
                   <Stack>
                     <Text>Logo Size</Text>
                     <Slider value={logoSize} onChange={setLogoSize} max={38} />
@@ -318,7 +318,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                 </Stack>
               </Group>
             </Tabs.Panel>
-            <Tabs.Panel value="template" sx={{ minHeight: "350px" }}>
+            <Tabs.Panel value="template" style={{ minHeight: "350px" }}>
               text tab content
             </Tabs.Panel>
           </Stack>

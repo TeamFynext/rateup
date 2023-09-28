@@ -46,13 +46,13 @@ const OtherSettings = () => {
     }
 
   return (
-    <Paper p="xl" sx={{maxWidth: "400px"}}>
+    <Paper p="xl" style={{maxWidth: "400px"}}>
         
         <Grid align='center'>
-                    <Grid.Col md={6} lg={5}>
+                    <Grid.Col span={{ base: 6, md: 6, lg: 5 , xl: 5}} >
                         <Text size={'md'}>Reset Data : </Text>
                     </Grid.Col>
-                    <Grid.Col md={6} lg={5}>
+                    <Grid.Col span={{ base: 6, md: 6, lg: 5 , xl: 5}}>
                         <RateupButtonPrimary onClick={open} title="Reset Responses & Stats" />
                     </Grid.Col>
         </Grid>
@@ -75,7 +75,7 @@ const OtherSettings = () => {
                     To proceed further, type in your email id and click confirm reset.
                 </Text>
                 <TextInput
-                    sx={{maxWidth:"300px"}}
+                    style={{maxWidth:"300px"}}
                     withAsterisk
                     label="Verify email"
                     placeholder="Enter your login email"

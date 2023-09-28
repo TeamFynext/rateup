@@ -5,6 +5,7 @@ import { useForm } from "@mantine/form";
 import SelectedTeamContext from "../../context/SelectedTeam";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
+import classes from './CreateMenu.module.css'
 
 export function CreateMenuModal({ opened, close, editingItem }) {
   const { selectedTeamId } = useContext(SelectedTeamContext)
@@ -127,12 +128,14 @@ export function CreateMenuModal({ opened, close, editingItem }) {
             {...form.getInputProps("displayName")}
           />
           <Group
-            noWrap
-            sx={{
-              "& > *": {
-                flex: "1 1 50%",
-              }
-            }}
+             wrap="nowrap"
+            // style={{
+            //   "& > *": {
+            //     flex: "1 1 50%",
+            //   }
+            // }}
+            className= {classes.groupChildElements}
+
           >
             <TextInput
               label="Location Label"
@@ -146,12 +149,14 @@ export function CreateMenuModal({ opened, close, editingItem }) {
             />
           </Group>
           <Group
-            noWrap
-            sx={{
-              "& > *": {
-                flex: "1 1 50%",
-              }
-            }}
+             wrap="nowrap"
+            // style={{
+            //   "& > *": {
+            //     flex: "1 1 50%",
+            //   }
+            // }}
+            className= {classes.groupChildElements}
+
           >
             <TextInput
               label="Website Label"
@@ -167,11 +172,13 @@ export function CreateMenuModal({ opened, close, editingItem }) {
           <SimpleGrid
             cols={2}
             spacing="md"
-            sx={{
-              "& img": {
-                borderRadius: "4px"
-              }
-            }}
+            className={classes.simpleGridImg}
+            //TODO VERIFY MANTINE
+            // style={{
+            //   "& img": {
+            //     borderRadius: "4px"
+            //   }
+            // }}
           >
             <FileInput
               label="Upload Logo"
@@ -217,7 +224,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
               />
             </Center>
           </SimpleGrid>
-          <Group position="right" pt="xl" mt="lg">
+          <Group justify="flex-end" pt="xl" mt="lg">
             <Button variant="subtle" onClick={close}>
               Cancel
             </Button>

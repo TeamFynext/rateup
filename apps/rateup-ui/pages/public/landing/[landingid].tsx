@@ -64,18 +64,18 @@ export default () => {
       fluid
       px="10vw"
       py="5vh"
-      sx={{ background: "#F7F6FB", height: "100vh" }}
+      style={{ background: "#F7F6FB", height: "100vh" }}
     >
       <>
         <Image
           pb={30}
           src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
           alt="RateUp Logo"
-          width={140}
-          height={35}
+          w={140}
+          h={35}
         />
       </>
-      <Paper radius="lg" sx={{ minHeight: "75vh" }} bg={"#F7F6FB"}>
+      <Paper radius="lg" style={{ minHeight: "75vh" }} bg={"#F7F6FB"}>
         <Paper bg={"#F7F6FB"}>
           {startClicked ? (
             <StartPage
@@ -98,8 +98,8 @@ export default () => {
             pl={10}
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
             alt="RateUp Logo"
-            width={80}
-            height={20}
+            w={80}
+            h={20}
           />
         </Center>
       </Paper>
@@ -112,17 +112,16 @@ function StartPage({ largeScreen, Landingpagesurveys, LandingPage }) {
     <Stack
       align="center"
       justify="center"
-      spacing="xl"
+      gap="xl"
       // radius="lg"
-      sx={{ height: "70vh" }}
+      style={{ height: "70vh", borderRadius:18 }}
       bg={"#fff"}
-      style={{borderRadius:18}}
     >
       <Title
         order={3}
         mb="xl"
         pb="sm"
-        sx={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}
+        style={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}
       >
         {LandingPage?.header}
       </Title>

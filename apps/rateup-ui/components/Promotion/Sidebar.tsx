@@ -3,6 +3,7 @@ import { IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import { PromotionTab } from "../../types/enums";
 import ImportRespondents, { ImportRespondentsModal } from "./ImportRespondents";
+import classes from './Sidebar.module.css'
 
 // Individual list item of chat (group or individual)
 export function ListItem({ onClick, name, isSelected }) {
@@ -11,7 +12,7 @@ export function ListItem({ onClick, name, isSelected }) {
   return (
     <Group
       p="xs"
-      sx={{
+      style={{
         cursor: "pointer",
         backgroundColor: bg
       }}
@@ -29,7 +30,7 @@ export function LeftPanel({ items, activeTab, setActiveTab, importModalIsOpen,op
 
   return (
     <Paper
-      sx={{
+    style={{
         flex: 2, borderRadius: "8px",
         position: "relative",
         display: "flex",
@@ -45,7 +46,7 @@ export function LeftPanel({ items, activeTab, setActiveTab, importModalIsOpen,op
       />
       <Space h={"md"} />
       {props.children}
-      <Box sx={{ overflow: "auto", flexGrow: 1 }}>
+      <Box style={{ overflow: "auto", flexGrow: 1 }}>
         {searchResults && searchResults.map(({ name, id }) => (
           <ListItem name={name} isSelected={id === selected} key={id} onClick={() => setSelected(id)} />
         ))}
@@ -60,22 +61,22 @@ function PromotionHeader({ activeTab, setActiveTab }) {
   const theme = useMantineTheme()
 
   return <Box
-    sx={{
+  style={{
       borderRadius: "8px",
       background: "linear-gradient(271deg, #3F5BA9 -6.39%, #49C8E9 204.31%);",
       boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06);"
     }}
     p="lg"
   >
-    <Group position="apart">
-      <Title sx={{
+    <Group justify="space-between">
+      <Title style={{
         color: "white",
       }}
         order={2}
       >
         Promotion
       </Title>
-      <Group position="center">
+      <Group justify="center">
         <TabSwitchButton activeTab={activeTab} setActiveTab={setActiveTab} tabName={PromotionTab.Groups} />
         <TabSwitchButton activeTab={activeTab} setActiveTab={setActiveTab} tabName={PromotionTab.Individuals} />
       </Group>
@@ -90,17 +91,18 @@ function TabSwitchButton({ activeTab, setActiveTab, tabName }) {
       py="xs"
       px="xl"
       onClick={() => setActiveTab(tabName)}
-      sx={{
+      style={{
         borderRadius: "100px",
         border: "2px solid white",
         borderColor: "white",
         backgroundColor: selected ? "white" : "transparent",
         color: selected ? "#3F5BA9" : "white",
-        '&:hover': {
-          backgroundColor: "white !important",
-          color: "#3F5BA9 !important",
-        }
+        // '&:hover': {
+        //   backgroundColor: "white !important",
+        //   color: "#3F5BA9 !important",
+        // }
       }}
+      className={classes.unstyledBtn}
     >
       {tabName}
     </UnstyledButton>
@@ -114,7 +116,7 @@ function SearchBar({ placeholder, searchTerm, setSearchTerm }) {
   return (
     <TextInput
       m={"sm"}
-      icon={<IconSearch size="1.1rem" stroke={1.5} />}
+      leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
       radius="xl"
       size="md"
       placeholder={placeholder}

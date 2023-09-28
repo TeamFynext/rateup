@@ -16,7 +16,6 @@ import {
   Modal,
   Group,
   Button,
-  createStyles,
   Flex,
   BackgroundImage,
 } from "@mantine/core";
@@ -29,7 +28,9 @@ function ProgressBar({ currentQuestionNo, questionCount }) {
       thickness={5}
       sections={[{ value: progressPercentage, color: "black" }]}
       label={
-        <Text color="black" weight={700} align="center" size="xs">
+        <Text c="black" fw={700} style={{
+          textAlign:'center'
+        }} size="xs">
           {currentQuestionNo}/{questionCount}
         </Text>
       }

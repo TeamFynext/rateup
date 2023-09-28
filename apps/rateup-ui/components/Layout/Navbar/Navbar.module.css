@@ -1,0 +1,57 @@
+.link {
+  text-decoration: none;
+  line-height: 20px;
+  font-weight: 600;
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+
+.iconlink {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  color: var(--iconlink-color, #666); 
+}
+
+.iconlink:hover {
+  background-color: var(--iconlink-hover-bg, #f0f0f0); 
+}
+
+.iconLabellink {
+  height: 50px;
+  border-radius: 8px; 
+  transition: transform 0.3s ease;
+  color: var(--iconLabellink-color, #666); 
+}
+
+.iconLabellink:hover {
+  background-color: var(--iconLabellink-hover-bg, #f0f0f0); 
+}
+
+.active,
+.active:hover {
+  background-color: var(--active-bg, #007bff); 
+  color: var(--active-color, white); 
+}
+
+.submenuActive,
+.submenuActive:hover {
+  color: var(--submenuActive-color, #007bff); 
+}
+
+.navbar {
+  transition: width 0.3s ease-in-out;
+}
+
+.submenuLink {
+  padding-left: var(--submenuLink-padding-left, 16px); 
+}

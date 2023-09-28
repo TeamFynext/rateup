@@ -69,15 +69,21 @@ export function CategoryCard({ category, handleDelete, handleEdit }: CategoryCar
                   </Text>
                 </td>
                 <td>{item.price.type === MenuItemPriceType.FIXED ? (
-                  <Text align="center"> ₹{item.price.price}</Text>
+                  <Text style={{
+                    textAlign:'center'
+                  }}> ₹{item.price.price}</Text>
                 ) : (
                   <Stack>
                     {item.price.variants.map(v => (
                       <Box>
-                        <Text c="dimmed" align="center" fz="md">
+                        <Text c="dimmed" style={{
+              textAlign:'center'
+            }} fz="md">
                           {v.name}
                         </Text>
-                        <Text align="center">
+                        <Text style={{
+              textAlign:'center'
+            }}>
                           ₹{v.price}
                         </Text>
                       </Box>
@@ -109,7 +115,9 @@ export function CategoryCard({ category, handleDelete, handleEdit }: CategoryCar
         </tbody>
       </Table>
       {items.length === 0 && (
-        <Text align="center" p="md">No items</Text>
+        <Text style={{
+          textAlign:'center'
+        }} p="md">No items</Text>
       )}
       <CreateMenuItemModal opened={createMenuItemModalOpened} close={close} categoryId={category.id} menuId={category.menuId} editingItem={editingItem} />
     </Paper>

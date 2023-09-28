@@ -11,7 +11,8 @@ const Login = () => {
 
   return (
     <>
-      {isLoading ? <LoadingOverlay visible={visible} overlayBlur={2} /> : <AuthForm mode={AuthMode.LOGIN} />}
+      {isLoading ? <LoadingOverlay visible={visible} overlayProps={{ blur: 2 }}
+ /> : <AuthForm mode={AuthMode.LOGIN} />}
     </>
   );
 };

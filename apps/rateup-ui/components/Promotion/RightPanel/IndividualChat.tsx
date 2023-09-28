@@ -11,6 +11,7 @@ import { useDeleteRespondentFromRGroupMutation } from "../../../backend/responde
 import { AddRespondentsPanel } from "./AddRespondentsModal"
 import RightPanelRoot from "."
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
+import classes from './IndividualChat.module.css'
 
 
 export function IndividualMainWindow({ respondent, openImport }) {
@@ -72,9 +73,9 @@ function ChatWindow({ respondent, openDetails }) {
 
 
   return (
-    <Flex direction={"column"} sx={{ height: "100%" }}>
+    <Flex direction={"column"} style={{ height: "100%" }}>
       <MainWindowHeader title={respondent.name ? respondent.name : respondent.phone} onClick={openDetails} />
-      <Box sx={{
+      <Box style={{
         flex: "1 1 0",
         backgroundColor: "white",
         overflowY: "scroll",
@@ -109,35 +110,37 @@ function DetailsWindow({ respondent, onClose }) {
   if (isError) return <div>Error</div>
 
   return (
-    <Flex direction={"column"} sx={{
+    <Flex direction={"column"} style={{
       height: "100%", flex: 3, backgroundColor: "#f0f0f0",
     }}>
       <DetailsHeader title={respondent.phone} onClose={onClose} />
-      <Box sx={{
+      <Box style={{
         flex: "1 1 0",
         overflowY: "scroll",
       }}
       >
         <Stack
-          spacing={"sm"}
+          gap={"sm"}
           py="sm"
           px="xs"
-          sx={{
-            '> *': {
-              borderRadius: "8px"
-            }
-          }} >
-          <Center sx={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
+          // style={{
+          //   '> *': {
+          //     borderRadius: "8px"
+          //   }
+          // }} 
+          className={classes.stackChildren}          
+          >
+          <Center style={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
             <Avatar size={"xl"} radius="xl" />
             <NameEditor name={respondent.name} onEdit={(name: string) => updateRespondent(respondent.id, { name })} />
           </Center>
-          <Flex direction={"column"} sx={{ backgroundColor: "white" }} p="xs">
-            <Text weight={"bolder"} variant="heading" size="lg">Groups</Text>
+          <Flex direction={"column"} style={{ backgroundColor: "white" }} p="xs">
+            <Text fw={"bolder"} variant="heading" size="lg">Groups</Text>
             <Stack>
               {
                 groups.length === 0 ? <Text p="lg">No groups</Text> : (
                   groups.map((g) => (
-                    <Group position="apart" p="lg">
+                    <Group justify="space-between" p="lg">
                       <Group>
                         <Avatar size={"md"} radius="lg " />
                         <Text>{g.name}</Text>
@@ -157,7 +160,7 @@ function DetailsWindow({ respondent, onClose }) {
             radius={"xl"}
             // TODO: add confirmation modal
             onClick={() => deleteRespondentMutation.mutate(respondent.id)}
-            leftIcon={<IconTrash />}
+            leftSection={<IconTrash />}
           >
             Delete Respondent
           </Button>
@@ -203,7 +206,7 @@ export function NameEditor({ name, onEdit }) {
 export function DetailsHeader({ title, onClose }) {
   return (
     <Group
-      sx={{
+    style={{
         background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%);",
         color: "white",
         cursor: "pointer",
@@ -213,11 +216,12 @@ export function DetailsHeader({ title, onClose }) {
       mih={"75px"}
     >
       <ActionIcon
-        sx={{
-          '&:hover': {
-            color: "black"
-          }
-        }}
+        // style={{
+        //   '&:hover': {
+        //     color: "black"
+        //   }
+        // }}
+        className={classes.actionBtn}
         c="white"
         onClick={onClose}
       >

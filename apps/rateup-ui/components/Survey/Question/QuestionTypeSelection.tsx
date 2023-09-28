@@ -43,12 +43,12 @@ export function QuestionTypeSelection({
   };
 
   return (
-    <Center sx={{ height: "100%" }}>
+    <Center style={{ height: "100%" }}>
       <SimpleGrid cols={3}>
         {surveyType==="web"? Object.entries(questionIcons).map(([type, Icon]) => (
           <Button
             key={type}
-            leftIcon={<Icon />}
+            leftSection={<Icon />}
             variant="default"
             styles={{ inner: { justifyContent: 'flex-start' } }}
             onClick={() => handleTypeSelection(type as QuestionType)}
@@ -58,7 +58,7 @@ export function QuestionTypeSelection({
         )):Object.entries(whatsappQuestionIcons).map(([type, Icon]) => (
           <Button
             key={type}
-            leftIcon={<Icon />}
+            leftSection={<Icon />}
             variant="default"
             onClick={() => handleTypeSelection(type as QuestionType)}
           >

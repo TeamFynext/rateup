@@ -61,11 +61,11 @@ export default () => {
       <Stack>
         <StyledTabs
           value={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as TabEnum)}
+          onChange={(tab) => setActiveTab(tab as TabEnum)}
         >
-          <Group position="apart">
+          <Group justify="space-between">
             <Tabs.List
-              sx={{
+              style={{
                 position: "absolute",
                 width: "fit-content",
                 left: 0,

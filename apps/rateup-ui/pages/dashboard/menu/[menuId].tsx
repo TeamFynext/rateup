@@ -69,15 +69,15 @@ export default ({ categories: initialCategories }) => {
 
   return (
     <Container fluid>
-      <StyledTabs keepMounted={false} value={activeTab} onTabChange={setActiveTab as (tab: string) => void} >
-        <Group position="apart" mb="md">
+      <StyledTabs keepMounted={false} value={activeTab} onChange={setActiveTab as (tab: string) => void} >
+        <Group justify="space-between" mb="md">
           <Button
-            leftIcon={<IconPlus />}
+            leftSection={<IconPlus />}
             onClick={handleCreateCategory}
             variant="gradient"
             radius={"12px"}
             gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
-            sx={{
+            style={{
               visibility: activeTab === TabEnum.Edit ? "visible" : "hidden",
             }}
           >
@@ -133,12 +133,16 @@ function ShareMenu({ teamId, menuId }) {
   return (
     <Stack>
       <Paper px="md" py="lg" radius="md" shadow="lg">
-        <SimpleGrid cols={2} spacing="xl" sx={{
-          '& .mantine-InputWrapper-label': {
-            fontWeight: 600,
-            fontSize: "1.1rem",
-          }
-        }}>
+        <SimpleGrid cols={2} spacing="xl" 
+        // style={{
+        //   '& .mantine-InputWrapper-label': {
+        //     fontWeight: 600,
+        //     fontSize: "1.1rem",
+        //   }
+        // }}
+        //TODO VERIFY MANTINE
+        
+        >
           <Select
             label="Survey to share with"
             placeholder="Select survey"

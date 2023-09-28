@@ -146,7 +146,7 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
     >
       <form onSubmit={form.onSubmit(onSubmit)}>
         <Flex gap="lg" align={"stretch"}>
-          <Stack sx={{ flex: 1 }}>
+          <Stack style={{ flex: 1 }}>
             <Text>
               Add Images (max 3)
             </Text>
@@ -158,7 +158,7 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
                     radius={"xs"}
                     variant="light"
                     color="red"
-                    leftIcon={<IconTrash />}
+                    leftSection={<IconTrash />}
                     onClick={() => {
                       // TODO: implement DELETE when s3 delete is implemented
                       form.removeListItem("images", form.values.images.findIndex((image) => image === selectedImage))
@@ -188,7 +188,7 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
               }
             </Group>
           </Stack>
-          <Stack sx={{ flex: 1 }}>
+          <Stack style={{ flex: 1 }}>
             <TextInput
               label="Name"
               placeholder="Name"
@@ -207,7 +207,7 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
               {...form.getInputProps("videoUrl")}
             />
             <PriceSection form={form} />
-            <Group position="right" pt="xl" mt="lg">
+            <Group justify="flex-end" pt="xl" mt="lg">
               <Button variant="subtle" onClick={close}>
                 Cancel
               </Button>
@@ -256,7 +256,7 @@ function PriceSection({ form }: { form: any }) {
               <Box
                 w="100px"
                 p={"xs"}
-                sx={{
+                style={{
                   border: "1px solid gray",
                   borderRadius: "8px",
                   aspectRatio: "1 / 1",

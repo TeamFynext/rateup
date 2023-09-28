@@ -27,6 +27,8 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
 import { useRouter } from "next/router";
+import { rem } from '@mantine/core';
+
 
 export const useSurvey = (surveyId: string) =>
   useQuery({
@@ -135,7 +137,7 @@ export const useCreateSurveyMutation = ({
         color: "teal",
         title: "Success",
         message: "Survey Created...!",
-        icon: <IconCheck size="1rem" />,
+        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
       });
       close();

@@ -8,7 +8,7 @@ import {
 const CardButton = ({title}) => {
   return (
       <Paper p="md" shadow="md" radius="md" 
-      sx={{ cursor: "pointer", height: 200,
+      style={{ cursor: "pointer", height: 200,
         width: 400, }}>
           <Center h="100%">
             <Stack align="center">

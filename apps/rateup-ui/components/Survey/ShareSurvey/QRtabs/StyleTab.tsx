@@ -69,7 +69,7 @@ const StyleTab = ( {
     <Tabs  defaultValue="Color" >
 
            <Group mb="xl">
-                <Title order={3} mt="xl" sx={{minWidth: "140px", maxWidth: "140px"}}>  Background</Title>
+                <Title order={3} mt="xl" style={{minWidth: "140px", maxWidth: "140px"}}>  Background</Title>
                 <Radio.Group
                 name="background"
                 withAsterisk
@@ -97,13 +97,13 @@ const StyleTab = ( {
 
             </Group>
 
-            <Tabs.Panel value="Color"  sx={{ minHeight: "70px"}} >
-              <Stack  sx={{maxWidth: "300px"}} ml="xl">
+            <Tabs.Panel value="Color"  style={{ minHeight: "70px"}} >
+              <Stack  style={{maxWidth: "300px"}} ml="xl">
                 <ColorInput placeholder="Select color"  label="Select Color"
                             value={backgroundColor} onChange={setBackgroundColor} />
               </Stack>
             </Tabs.Panel>
-            <Tabs.Panel value="Gradient" sx={{ minHeight: "70px"}} >
+            <Tabs.Panel value="Gradient" style={{ minHeight: "70px"}} >
               <Group>
                 <ColorInput placeholder="Select color" label="Start Color"
                               value={gradient.start} onChange={(e) => setGradient({ ...gradient, start: e })} />
@@ -112,8 +112,8 @@ const StyleTab = ( {
                 />
               </Group>          
             </Tabs.Panel>
-            <Tabs.Panel value="Image"  sx={{ minHeight: "70px"}} >
-              <Stack justify="center" sx={{ maxWidth: "200px" }}>
+            <Tabs.Panel value="Image"  style={{ minHeight: "70px"}} >
+              <Stack justify="center" style={{ maxWidth: "200px" }}>
                     <FileButton 
                     onChange={setFile}
                     accept="image/png,image/jpeg">
@@ -129,7 +129,7 @@ const StyleTab = ( {
                  </Stack>
                   
             </Tabs.Panel>
-            <Tabs.Panel value="Transparent" sx={{ minHeight: "70px"}}  ml="lg">
+            <Tabs.Panel value="Transparent" style={{ minHeight: "70px"}}  ml="lg">
               <Text mb="md">Transparency:</Text>
             <div className="tab-panel">
               <input type="range" min="0" max="1" step="0.1" value={bgTransparency} 
@@ -143,7 +143,7 @@ const StyleTab = ( {
             
 
             <Group align="center" mt="sm">
-                <Title order={3} mt="xl" sx={{maxWidth: "150px"}}>  QR Styles</Title>
+                <Title order={3} mt="xl" style={{maxWidth: "150px"}}>  QR Styles</Title>
                 <Radio.Group
                 name="background"
                 withAsterisk
@@ -157,7 +157,7 @@ const StyleTab = ( {
               </Radio.Group>
 
             </Group>
-            <Stack  sx={{maxWidth: "300px"}} ml="xl">
+            <Stack  style={{maxWidth: "300px"}} ml="xl">
                 <ColorInput placeholder="Select color"  label="QR Color"
                             value={qrColor} onChange={setQRColor} />
                 <ColorInput placeholder="Select color" label="QR Background Color"

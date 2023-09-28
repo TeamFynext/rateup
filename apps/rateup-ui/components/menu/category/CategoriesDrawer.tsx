@@ -1,6 +1,6 @@
 import { Box, Drawer, Stack, Text } from "@mantine/core";
-import { DrawerStyles } from "./CategoriesDrawerStyles";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import classes from "./CategoriesDrawerStyles.module.css";
 
 interface CategoriesDrawerProps {
   opened: boolean;
@@ -8,7 +8,6 @@ interface CategoriesDrawerProps {
   categories: FullCategory[];
 }
 export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawerProps) {
-  const { classes } = DrawerStyles();
 
   return (
     <Drawer
@@ -32,7 +31,7 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
             mah="300px"
             mih={"200px"}
             miw="200px"
-            sx={{
+            style={{
               overflow: "clip",
               position: "relative",
               borderRadius: "16px",
@@ -55,7 +54,7 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
             <Box
               px="sm"
               py="2px"
-              sx={{
+              style={{
                 backgroundColor: "black",
                 borderRadius: "8px",
                 position: "absolute",
@@ -68,8 +67,9 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
                 c="white"
                 w={"100%"}
                 fw={600}
-                align="center"
-                sx={{}}
+                style={{
+                  textAlign:'center'
+                }}  
 
               >{c.name}</Text>
             </Box>

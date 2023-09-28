@@ -84,7 +84,7 @@ function BackgroundStyles({
         <Tabs
           defaultValue={currentStyles?.bgType}
           radius="lg"
-          onTabChange={handleTabChange}
+          onChange={handleTabChange}
         >
           <Radio.Group
             name="bgType"
@@ -131,7 +131,7 @@ function BackgroundStyles({
               display={"none"}
               accept="image/*"
               placeholder="Choose background image"
-              icon={<IconUpload size={14} />}
+              leftSection={<IconUpload size={14} />}  //VERIFY MANTINE
               onChange={handleFileChange}
             />
 
@@ -141,7 +141,7 @@ function BackgroundStyles({
             >
               {(props) => (
                 <Button
-                  leftIcon={<IconUpload size={16} />}
+                  leftSection={<IconUpload size={16} />}
                   fullWidth
                   size="lg"
                   radius="18px"

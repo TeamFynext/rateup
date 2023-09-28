@@ -85,23 +85,27 @@ function HeaderStyles({
     <Flex>
       <Stack w={"100%"} justify={"center"}>
         <form style={{ width: "100%", justifyContent: "center" }}>
+
           <Select
             label="Font style"
             searchable
-            nothingFound="No options"
+            nothingFoundMessage="No options"
             data={fontList}
             name="fontFamily"
             {...form.getInputProps("headerStyles.fontFamily")}
-            
           />
-          <Select
-           
+          
+          {/* <Select
             label="Font weight"
             // searchable
             name="fontWeight"
             {...form.getInputProps("headerStyles.fontWeight")}
             data={FontWeights}
-          />
+          /> */}
+
+          {/* TODO  VERIFY MANTINE  - FIX number value to string */}
+          
+
           <NumberInput
             min={10}
             max={100}

@@ -18,13 +18,13 @@ interface CustomTooltipProps {
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, total }) => {
 
 const theme = useMantineTheme();
-const transparentWhite = theme.fn.rgba(theme.white, 0.7);
+// const transparentWhite = theme.fn.rgba(theme.white, 0.7); VERIFY MANTINE
 
 if (active && payload && payload.length) {
     const data = payload[0].payload;
     const percentage = ((data?.value / total) * 100).toFixed(2);
     return (
-    <Paper px="sm" shadow='xl' style={{ backgroundColor: transparentWhite }}>
+    <Paper px="sm" shadow='xl' style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
         <p>{`${data?.name}: ${data?.value} (${percentage}%)`}</p>
     </Paper>
     );
@@ -50,8 +50,8 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({ no, question, type,
 
 return    (
 
-    <Group position='apart'>
-        <Stack ml="xl" sx={{width: '50%'}}>
+    <Group justify="space-between">
+        <Stack ml="xl" style={{width: '50%'}}>
              <Text  size="md">{no}. {question}</Text>
 
              <Stack ml="xl" pt="sm">
@@ -60,7 +60,7 @@ return    (
                 <Text mt="sm" pt="lg" size="lg" fw={500}>NPS Score = {data?.score?.toFixed(2)}</Text>
              </Stack>
         </Stack>
-        <Stack sx={{width: '42%'}}>
+        <Stack style={{width: '42%'}}>
             <PieChart width={300} height={270}>
                 <Pie
                     dataKey="value"

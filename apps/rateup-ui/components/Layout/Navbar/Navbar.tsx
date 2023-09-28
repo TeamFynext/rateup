@@ -1,14 +1,13 @@
 import { useRouter } from 'next/router';
 import { Breadcrumbs, Image, Text} from '@mantine/core';
 import Link from 'next/link';
-import { useStyles } from './Navbar.styles';
+import classes from './Navbar.module.css';
 import { useRouteParams } from '../../../context/RouteParamsContext';
 
 export const Navbar = () => {
   const router = useRouter();
   const { pathname, query } = router;
   const pathParts = pathname.split('/').filter(path => path);
-  const { classes } = useStyles();
   const routeParams = useRouteParams();
 
   return (

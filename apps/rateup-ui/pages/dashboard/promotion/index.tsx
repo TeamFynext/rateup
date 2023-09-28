@@ -17,12 +17,12 @@ export default function Promotion() {
 
   return (
     <Container fluid>
-      <Tabs keepMounted={false} value={activeTab} sx={{ width: "100%" }} orientation="horizontal">
+      <Tabs keepMounted={false} value={activeTab} style={{ width: "100%" }} orientation="horizontal">
         {/* TODO: Style tabs */}
         <Flex justify={"end"} mb="xs">
           <TeamSelector selectedTeamId={selectedTeamId} setSelectedTeamId={setSelectedTeamId} />
         </Flex>
-        <Box sx={{ height: "90vh" }}>
+        <Box style={{ height: "90vh" }}>
           <SelectedTeamContext.Provider value={{ selectedTeamId }}>
             <PromotionRootPanel activeTab={activeTab} setActiveTab={setActiveTab} />
           </SelectedTeamContext.Provider>

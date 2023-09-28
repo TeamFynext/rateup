@@ -53,17 +53,17 @@ const PasswordSettings = () => {
       <Title order={2}> Password Settings </Title>
       <Divider my="md" mb="md" />
 
-      <Stack h={300} mt="md" pl="md" sx={{ maxWidth: "800px" }}>
+      <Stack h={300} mt="md" pl="md" style={{ maxWidth: "800px" }}>
         <Title order={3} mt="md"> Change Password </Title>
             <Text color='dark.1'>Enter your existing password and new password to change.</Text>
         <Divider />
             <form onSubmit={passwordForm.onSubmit(onSubmit)}>
 
             <Grid align='center'>
-              <Grid.Col  md={6} lg={4}>
+              <Grid.Col span={{ md: 6, lg: 4 }}>
               <Text size={'md'}>Current Password: </Text>
               </Grid.Col>
-              <Grid.Col md={6} lg={4}>
+              <Grid.Col span={{ md: 6, lg: 4 }}>
                  <PasswordInput
                   placeholder="Enter existing password"
                   required
@@ -74,10 +74,10 @@ const PasswordSettings = () => {
            </Grid>
           <Divider my="sm" />
            <Grid align='center'>
-              <Grid.Col  md={6} lg={4}>
+              <Grid.Col  span={{ md: 6, lg: 4 }}>
               <Text size={'md'}>New Password: </Text>
               </Grid.Col>
-              <Grid.Col md={6} lg={4}>
+              <Grid.Col span={{ md: 6, lg: 4 }}>
                <PasswordInput
                   placeholder="Enter new password"
                   required
@@ -89,10 +89,10 @@ const PasswordSettings = () => {
           <Divider my="sm" />
 
            <Grid align='center'>
-              <Grid.Col  md={6} lg={4}>
+              <Grid.Col  span={{ md: 6, lg: 4 }}>
               <Text size={'md'}>Confirm Password: </Text>
               </Grid.Col>
-              <Grid.Col md={6} lg={4}>
+              <Grid.Col span={{ md: 6, lg: 4 }}>
                 <PasswordInput
                   placeholder="Enter new password again"
                   required

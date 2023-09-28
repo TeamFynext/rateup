@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Navbar,
+  AppShell,
   Image,
   Center,
   Tooltip,
@@ -26,8 +26,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useMediaQuery } from '@mantine/hooks';
 import { useUser } from '../../../context/UserContext';
-import { useLeftNavStyles } from "./Navbar.styles";
+import classes from "./Navbar.module.css";
 import { IconChevronUp } from "@tabler/icons-react";
+import cx from 'clsx';
 
 // TODO: format
 interface NavbarLinkProps {
@@ -42,7 +43,6 @@ interface NavbarLinkProps {
 
 function NavbarLink({ icon: Icon, label, href , opened, submenus, role, setOpened}: NavbarLinkProps) {
   const router = useRouter();
-  const { classes, cx } = useLeftNavStyles();
   const { user } = useUser();
 
   const isSubmenuActive = (submenus) => {
@@ -80,7 +80,7 @@ function NavbarLink({ icon: Icon, label, href , opened, submenus, role, setOpene
             { [classes.submenuActive]: isActive && !submenus })}
           onClick={ handleMenuClick}
         >
-          <Group px="sm" sx={{minWidth:"230px"}} position="apart">
+          <Group px="sm" style={{minWidth:"230px"}} justify="space-between">
             <Group>
                <Icon size="1.2rem" stroke={1.5} />
               <Text fz="md" >{label}</Text>
@@ -163,8 +163,6 @@ const LeftNavbar = ({opened, setOpened}: iProps) => {
   const theme = useMantineTheme();
   const isLargerThanSm = useMediaQuery("(min-width: 768px)");
   const { user, setUser } = useUser();
-  const { classes, cx } = useLeftNavStyles();
-
 
   const links = mockdata.map((link) => {
 
@@ -193,17 +191,18 @@ const LeftNavbar = ({opened, setOpened}: iProps) => {
   }
 
 
-
   return (
     <>
-<Navbar width={{ base: opened ? 260 : 90 }} p="md"  className={classes.navbar}>
-  <Group position={opened ? "apart" : "center"} mt={25}>
-  <Center >
+
+{/* TODO VERIFY MANTINE width={{ base: opened ? 260 : 90 }} */} 
+
+<AppShell.Navbar p="md" style={{ width: opened ? 260 : 90}}  className={classes.navbar}>
+  <Group justify={opened ? "space-between" : "center"}   mt={25}>
   {
   opened && 
   <Link href="/dashboard">
             <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-             alt="RateUp Logo" width={130} height={30}  ml="sm" mr="50px"/>
+             alt="RateUp Logo" w={120} h={30}  ml="sm" mr="50px"/>
           </Link>
   }
         <Burger
@@ -214,29 +213,27 @@ const LeftNavbar = ({opened, setOpened}: iProps) => {
           size="sm"
           color={theme.colors.gray[6]}
         />      
-  </Center>
 
           </Group>
-       
-      {isLargerThanSm && (
-        <Navbar.Section grow mt={50}>
-          <Stack justify="center" spacing={0}>
+          {isLargerThanSm && (
+
+       <Stack justify="space-between" style={{height: '100%'}}>
+          <Stack mt={50} justify="center" gap={0}>
             {links}
           </Stack>
-        </Navbar.Section>
-      )}
-      <Navbar.Section>
-        <Stack justify="center" spacing={0}>
-          <NavbarLink
-            opened={opened}
-            icon={IconSettings}
-            label="Settings"
-            href="/dashboard/settings/account"
-          />
-          <NavbarLink opened={opened} icon={IconLogout} label="Logout" href="/logout" />
+          <Stack justify="center" gap={0}>
+            <NavbarLink
+              opened={opened}
+              icon={IconSettings}
+              label="Settings"
+              href="/dashboard/settings/account"
+            />
+            <NavbarLink opened={opened} icon={IconLogout} label="Logout" href="/logout" />
+          </Stack>
         </Stack>
-      </Navbar.Section>
-    </Navbar>
+              )}
+
+    </AppShell.Navbar>
     </>
   );
 };

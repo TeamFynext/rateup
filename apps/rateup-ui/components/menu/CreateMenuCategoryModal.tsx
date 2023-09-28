@@ -135,7 +135,7 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
               </Button>
             )}
           </FileButton>
-          <Group position="right" pt="xl" mt="lg">
+          <Group justify="flex-end" pt="xl" mt="lg">
             <Button variant="subtle" onClick={close}>
               Cancel
             </Button>

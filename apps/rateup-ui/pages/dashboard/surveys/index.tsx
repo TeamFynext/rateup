@@ -19,7 +19,7 @@ import {
   Modal,
   Checkbox,
   Button,
-  createStyles, Dialog, ScrollArea
+  Dialog, 
 } from "@mantine/core";
 import {
   IconChartBar,
@@ -60,20 +60,9 @@ import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
-
-const useStyles = createStyles((theme) => ({
-  customButton: {
-    backgroundColor: "black",
-    borderRadius: 18,
-    color: "#fff",
-    "&:hover": {
-      backgroundColor: "grey !important",
-    },
-  },
-}));
+import classes from './Survey.module.css';
 
 export default function Surveys() {
-  const { classes, theme } = useStyles();
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [
     mergeSurveyOpened,
@@ -87,7 +76,7 @@ export default function Surveys() {
     {
       value: "all",
       label: "All Teams",
-      group: "Organization",
+      //group: "Organization",
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
@@ -137,12 +126,11 @@ export default function Surveys() {
   
 
   useEffect(() => {
-    //console.log("test.........."+JSON.stringify(teamsData))
     if (teamsData?.length) {
       const newOptions = teamsData?.map((team) => ({
         value: team?.teamId,
         label: team?.teamName,
-        group: "Team",
+       // group: "Team",
       }));
 
       setOptions((prev) => {
@@ -219,6 +207,7 @@ export default function Surveys() {
             value={selectedTeamId}
             onChange={(value) => setSelectedTeamId(value)}
           />
+          
         </Flex>
 
         <Flex
@@ -254,21 +243,22 @@ export default function Surveys() {
       <Space h="xl" />
 
         <SimpleGrid
-          cols={4}
           spacing={"lg"}
-          breakpoints={[
-            { minWidth: "xl", cols: 3 },
-            { minWidth: "lg", cols: 2 },
-            { minWidth: "md", cols: 2 },
-            { maxWidth: "md", cols: 1 },
-          ]}
+          cols={{ base: 4, sm: 2, md: 2, lg: 2 , xl: 3}}
+
+          // breakpoints={[
+          //   { minWidth: "xl", cols: 3 },
+          //   { minWidth: "lg", cols: 2 },
+          //   { minWidth: "md", cols: 2 },
+          //   { maxWidth: "md", cols: 1 },
+          // ]}   //VERIFYCSS //TODO
         >
           {user?.role !== "MEMBER" && (
             <Paper
               p="md"
               shadow="lg"
               radius="lg"
-              sx={{ cursor: "pointer" }}
+              style={{ cursor: "pointer", color: '#000', background: '#EDEDED' }}
               onClick={open}
             >
               <Center h="100%">
@@ -368,7 +358,7 @@ export function SurveyCard({
       p="md"
       shadow="lg"
       radius="lg"
-      sx={{ cursor: "pointer" }}
+      style={{ cursor: "pointer" }}
       onClick={(e) => {
         e.stopPropagation(),
           user?.role === "MEMBER"
@@ -381,10 +371,10 @@ export function SurveyCard({
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} sx={{maxWidth:'70%'}} truncate="end" size="xl" fw={700}>
+        <Text mr={"sm"} style={{maxWidth:'70%'}} truncate="end" size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Group align={"center"} mt="sm" spacing="xs">
+        <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
           <SurveyMenu
             survey={survey}
@@ -399,9 +389,9 @@ export function SurveyCard({
           ></Checkbox>
         </Group>
       </Flex>
-      <Group position="apart" >    
+      <Group justify="space-between" >    
 
-        <Group align={"center"} mt="sm" spacing="xs">
+        <Group align={"center"} mt="sm" gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
             Created {timeSince}
@@ -426,7 +416,7 @@ export function SurveyCard({
             e.stopPropagation();
           }}
         >
-          <Group spacing="4px">
+          <Group gap="4px">
             <IconChartBar size={20} />
             <Text>Responses</Text>
           </Group>
@@ -521,7 +511,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
           <Text pr="xl" color="dark.2">
             Select the team in which the copy to be created.
           </Text>
-          <Group mt="md" sx={{ minHeight: "200px" }}>
+          <Group mt="md" style={{ minHeight: "200px" }}>
             <Select
               label="Select Team"
               maxDropdownHeight={150}
@@ -548,7 +538,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
       </Modal>
 
       <Dialog opened={dialogOpened} withCloseButton onClose={closeDialog} size="lg" radius="md">
-          <Text size="md" mb="xs" weight={500}>
+          <Text size="md" mb="xs" fw={500}>
               Are you sure to delete this Survey?
           </Text>
 
@@ -576,7 +566,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
       </Dialog>
 
       <Menu.Target>
-        <ActionIcon
+        <ActionIcon variant="subtle"  color="gray"
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -590,7 +580,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         }}
       >
         <Menu.Item
-          icon={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+          leftSection={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
           onClick={() =>
             surveyUpdateMutation.mutate({ active: !survey.active })
           }
@@ -599,7 +589,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         </Menu.Item>
 
         <Menu.Item
-          icon={<IconShare />}
+          leftSection={<IconShare />}
           onClick={() => {
             router.push(`/dashboard/surveys/${survey?.id}?tab=Share`);
           }}
@@ -607,7 +597,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
           Share
         </Menu.Item>
         <Menu.Item
-          icon={<IconCopy />}
+          leftSection={<IconCopy />}
           onClick={() => {
             open();
           }}
@@ -615,14 +605,14 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
           Clone
         </Menu.Item>
         <Menu.Item
-          icon={<IconTrash />}
+          leftSection={<IconTrash />}
           onClick={toggle}
         >
           Delete
         </Menu.Item>
 
         <Menu.Item
-          icon={<IconSettings />}
+          leftSection={<IconSettings />}
           onClick={() => {
             router.push(`/dashboard/surveys/${survey?.id}?tab=Settings`);
           }}

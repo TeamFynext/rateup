@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import useStyles from './HomePage.styles';
+import classes from './HomePage.module.css';
 import { Container, Group, Stack, Title, TextInput, Textarea, Text} from '@mantine/core';
 import { RateupButtonSecondary } from '../Button/RateupButtons';
 import { IconChevronRight } from '@tabler/icons-react';
@@ -8,7 +8,6 @@ import { useSendContactFormMutation } from '../../backend/homepage/homepage.quer
 import { useMediaQuery } from '@mantine/hooks';
 
 const ContactForm = () => {
-  const { classes } = useStyles();
 
   const contactForm = useForm({
     initialValues: {
@@ -80,7 +79,7 @@ const ContactForm = () => {
 
         <Group > 
                 <TextInput
-                    sx={{ maxWidth:  isMobile ? '100%' :'50%'}}
+                    style={{ maxWidth:  isMobile ? '100%' :'50%'}}
                     label="Name"
                     placeholder="Enter your full name"
                    {...contactForm.getInputProps("name")}
@@ -88,7 +87,7 @@ const ContactForm = () => {
                 />
 
                 <TextInput
-                    sx={{ maxWidth:  isMobile ? '100%' :'50%' }}
+                    style={{ maxWidth:  isMobile ? '100%' :'50%' }}
                     label="Email"
                     placeholder="Enter your email"
                     withAsterisk
@@ -97,7 +96,7 @@ const ContactForm = () => {
                 />
 
               <TextInput
-                    sx={{ display: 'none'}}
+                    style={{ display: 'none'}}
                     label="Address"
                     placeholder="Enter your address"
                    {...contactForm.getInputProps("address")}

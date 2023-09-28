@@ -2,12 +2,10 @@ import {
   Button,
   Group,
   Modal,
-  MultiSelect,
   Select,
   Stack,
   TextInput,
   Text,
-  createStyles,
   Flex,
   ScrollArea,
 } from "@mantine/core";
@@ -28,6 +26,8 @@ import {
 } from "../../../backend/surveys/surveys.query";
 import { getTeamsByUser } from "../../../backend/team/team.api";
 import SurveyCardList from "../../../components/Survey/SurveyCardList";
+import classes from './LandingPages.module.css';
+
 
 interface FormValues {
   title: string;
@@ -37,24 +37,7 @@ interface FormValues {
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 
-const useStyles = createStyles((theme) => ({
-  customButton: {
-    backgroundColor: "black",
-    borderRadius: 8,
-    color: "#fff",
-    "&:hover": {
-      backgroundColor: "black !important",
-    },
-  },
-  cancelButton: {
-    backgroundColor: "grey",
-    borderRadius: 8,
-    color: "#fff",
-    "&:hover": {
-      backgroundColor: "grey !important",
-    },
-  },
-}));
+
 export default function CreateSurveyLandingModal({
   open,
   close,
@@ -69,7 +52,6 @@ export default function CreateSurveyLandingModal({
     data: surveys
     ,
   } = useQuery(["surveys"], getSurveys);
-  const { classes, theme } = useStyles();
   //--------------get landing page details based on landing page id (prop)----------
   const {
     isLoading: isLandingPageLoading,
@@ -201,7 +183,7 @@ export default function CreateSurveyLandingModal({
       radius={"lg"}
     >
       <Text
-        sx={(theme) => ({
+        style={(theme) => ({
           fontFamily: `Greycliff CF, ${theme.fontFamily}`,
           fontWeight: 500,
           fontSize: 30,
@@ -212,14 +194,14 @@ export default function CreateSurveyLandingModal({
 
       <FormProvider form={form}>
         <form onSubmit={onSubmit}>
-          <Stack sx={{}} mt="xl">
+          <Stack mt="xl">
             <TextInput
               placeholder="Enter Landing title"
               label="Title"
               withAsterisk
               size="md"
               radius={"md"}
-              sx={{ padding: 5, borderRadius: 12 }}
+              style={{ padding: 5, borderRadius: 12 }}
               {...form.getInputProps("title")}
             />
             <TextInput
@@ -228,7 +210,7 @@ export default function CreateSurveyLandingModal({
               withAsterisk
               size="md"
               radius={"md"}
-              sx={{ padding: 5, borderRadius: 12 }}
+              style={{ padding: 5, borderRadius: 12 }}
               {...form.getInputProps("header")}
             />
             
@@ -255,7 +237,7 @@ export default function CreateSurveyLandingModal({
                 {...form.getInputProps("type")}
               />
             )}
-            <Group position="right" pt="xl" mt="lg">
+            <Group justify="flex-end" pt="xl" mt="lg">
               <Button
                 className={classes.cancelButton}
                 variant="subtle"

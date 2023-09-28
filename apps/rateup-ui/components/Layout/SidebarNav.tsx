@@ -14,15 +14,15 @@ function SidebarLink({ icon, color, label, href }: MainLinkProps) {
     const router = useRouter();
     return (
         <UnstyledButton
-          sx={(theme) => ({
+          style={(theme) => ({
                 display: 'block',
                 width: '100%',
                 padding: theme.spacing.xs,
                 borderRadius: theme.radius.sm,
-                color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+                color:  theme.colors.dark[0],
                 '&:hover': {
                     backgroundColor:
-                        theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+                    theme.colors.dark[0],
                 },
             })}
           onClick={() => {

@@ -192,7 +192,7 @@ const CopyLinkComponent = ({ value }) => {
   return (
     <Flex style={{ flexDirection: "row", display: "flex", width: "100%" }}>
       <TextInput
-        sx={{ minWidth: "70%" }}
+        style={{ minWidth: "70%" }}
         readOnly
         value={value}
         pr="sm"
@@ -202,7 +202,7 @@ const CopyLinkComponent = ({ value }) => {
           <Button
             color={copied ? "dark" : "yellow.6"}
             onClick={copy}
-            rightIcon={<IconCopy />}
+            rightSection={<IconCopy />}
           >
             {copied ? "Copied url" : "Copy url"}
           </Button>

@@ -14,7 +14,6 @@ import {
   Modal,
   Group,
   Button,
-  createStyles,
   Flex,
   BackgroundImage,
 } from "@mantine/core";
@@ -81,7 +80,7 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
         px={largeScreen ? "10vw" : "5vw"}
         py="3vh"
        
-        sx={{ background: "#F7F6FB", minHeight: "100vh", height: "100%" }}
+        style={{ background: "#F7F6FB", minHeight: "100vh", height: "100%" }}
       >
         <>
           {!start ? (
@@ -89,8 +88,8 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               pb={30}
               src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
               alt="RateUp Logo"
-              width={140}
-              height={35}
+              w={140}
+              h={35}
             />
           ) : (
             <Link
@@ -100,8 +99,8 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
                 pb={30}
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
                 alt="RateUp Logo"
-              width={140}
-              height={35}
+              w={140}
+              h={35}
               />
             </Link>
           )}
@@ -110,7 +109,7 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
           p="sm"
           radius="lg"
           // shadow="lg"
-          sx={{ minHeight: "75vh", height: "100%" }}
+          style={{ minHeight: "75vh", height: "100%" }}
           bg={"#F7F6FB"}
         >
         <Paper radius="lg"   bg={"#fff"}>
@@ -125,36 +124,39 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
                   columns={24}
                 >
                   <Grid.Col
-                    md={4}
-                    lg={4}
-                    xs={24}
+                    span={{ base: 4, xs:24, md: 4, lg: 4 }}
+                    // md={4}
+                    // lg={4}
+                    // xs={24}
                     order={2}
-                    orderSm={1}
-                    orderXs={1}
+                    // orderSm={1}
+                    // orderXs={1}   //TODO VERIFY MANTINE
                   >
                     <Center>
                       <Text>Question: {currentQuestionNo}</Text>
                     </Center>
                   </Grid.Col>
                   <Grid.Col
-                    md={16}
-                    lg={16}
-                    xs={24}
+                    span={{ base: 16, xs:24, md: 16, lg: 16 }}
+                   // md={16}
+                   // lg={16}
+                   // xs={24}
                     order={1}
-                    orderSm={2}
-                    orderXs={2}
+                    //orderSm={2}
+                    //orderXs={2} //TODO VERIFY MANTINE
                   >
                     <Center>
                       <Title order={2}>{survey.title}</Title>
                     </Center>
                   </Grid.Col>
                   <Grid.Col
-                    md={4}
-                    lg={4}
-                    xs={24}
+                   span={{ base: 4, xs:24, md: 4, lg: 4 }}
+                    // md={4}
+                    // lg={4}
+                    // xs={24}
                     order={3}
-                    orderSm={3}
-                    orderXs={3}
+                    // orderSm={3}
+                    // orderXs={3} //TODO VERIFY MANTINE
                   >
                     <Center>
                       <ProgressBar
@@ -182,8 +184,8 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               pl={10}
               src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
               alt="RateUp Logo"
-              width={80}
-              height={20}
+              w={80}
+              h={20}
             />
           </Center>
         </Paper>

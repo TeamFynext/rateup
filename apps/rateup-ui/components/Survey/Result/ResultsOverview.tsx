@@ -120,7 +120,7 @@ const chartData = prepareData(questions, responses);
           onChange={(value) => setSelectedLanguage(value)} 
           label="Select Language" 
           mb="lg"
-          sx={{maxWidth: "200px"}}
+          style={{maxWidth: "200px"}}
         />
 
 

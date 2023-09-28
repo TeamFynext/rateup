@@ -1,6 +1,4 @@
 import {
-  Center,
-  Container,
   Paper,
   Title,
   Text,
@@ -19,24 +17,9 @@ import {
   Modal,
   Checkbox,
   Button,
-  createStyles,
 } from "@mantine/core";
 import {
   IconChartBar,
-  IconCopy,
-  IconDots,
-  IconEdit,
-  IconMessage,
-  IconPlayerPause,
-  IconPlayerPlay,
-  IconPlus,
-  IconShare,
-  IconTrash,
-  IconSelector,
-  IconChevronDown,
-  IconPencil,
-  IconSettings,
-  IconCheck,
 } from "@tabler/icons-react";
 
 import Link from "next/link";
@@ -62,19 +45,8 @@ import CreateSurveyLandingModal from "../../pages/dashboard/LandingPages/CreateS
 import { getTimeSince } from "../../utils";
 import { deleteSurvey, updateSurvey } from "../../backend/surveys/survey.api";
 
-const useStyles = createStyles((theme) => ({
-  customButton: {
-    backgroundColor: "black",
-    borderRadius: 18,
-    color: "#fff",
-    "&:hover": {
-      backgroundColor: "grey !important",
-    },
-  },
-}));
 
 export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
-  const { classes, theme } = useStyles();
   const [surveyidArray, setSurveyIdArray] = useState([]);
 
   const { isLoading, error, data: surveys } = useSurveys(false);
@@ -140,14 +112,8 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     <>
       <Flex style={{ flexDirection: "column", width: "100%" }}>
         <SimpleGrid
-          cols={2}
+          cols={{ base: 2, sm: 1, md: 2, lg: 5 , xl: 2}}
           spacing={"lg"}
-          breakpoints={[
-            { minWidth: "xl", cols: 2 },
-            { minWidth: "lg", cols: 2 },
-            { minWidth: "md", cols: 2 },
-            { maxWidth: "md", cols: 1 },
-          ]}
         >
           {surveys.map((s) => {
             if (s.type == "web")
@@ -198,7 +164,7 @@ function SurveyCard({
         shadow="lg"
         withBorder
         radius="lg"
-        sx={{ cursor: "pointer" }}
+        style={{ cursor: "pointer" }}
         
       >
         <Flex justify={"space-between"} align={"center"}>
@@ -208,7 +174,7 @@ function SurveyCard({
           <Badge color={survey?.type == "web" ? "blue" : "green"}>
             {survey.type}
           </Badge>
-          <Group align={"center"} mt="sm" spacing="xs">
+          <Group align={"center"} mt="sm" gap="xs">
             <Checkbox
               onClick={(e) => {
                 handleCheckBox(e, survey?.id);
@@ -217,7 +183,7 @@ function SurveyCard({
             ></Checkbox>
           </Group>
         </Flex>
-        <Group align={"center"} mt="sm" spacing="xs">
+        <Group align={"center"} mt="sm" gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
             Created {timeSince}
@@ -236,7 +202,7 @@ function SurveyCard({
               e.stopPropagation();
             }}
           >
-            <Group spacing="4px">
+            <Group gap="4px">
               <IconChartBar size={20} />
               <Text>Responses</Text>
             </Group>

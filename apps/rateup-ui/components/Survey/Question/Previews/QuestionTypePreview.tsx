@@ -10,9 +10,9 @@ import {
     Rating,
     Text, Avatar,
     TextInput, Paper, Input,
-    Box, Image, Textarea
+    Box, Image, Textarea, OptionsFilter
 } from "@mantine/core";
-import { useStyles } from '../../TakeSurvey/TakeSurvey.styles';
+import classes from '../../TakeSurvey/TakeSurvey.module.css';
 import { IconMail, IconThumbDownFilled, IconThumbUpFilled } from '@tabler/icons-react';
 import { DateInput } from '@mantine/dates';
 import { IconCalendarEvent } from '@tabler/icons-react';
@@ -59,15 +59,13 @@ const QuestionTypePreview = ({ type }) => {
     }
 
     function TextForm() {
-        const { classes } = useStyles();
-
         return (
             <Paper shadow="sm"
                 className={classes.inputBox}
             >
                 <Input
                     placeholder="Enter text input"
-                    sx={{ width: '70vw', maxWidth: "400px" }}
+                    style={{ width: '70vw', maxWidth: "400px" }}
                     variant="unstyled"
                     radius="xl"
                     size="sm"
@@ -78,8 +76,6 @@ const QuestionTypePreview = ({ type }) => {
     }
 
     function TextAreaForm() {
-        const { classes } = useStyles();
-
         return (
             <Paper shadow="sm"
                 className={classes.inputBox}
@@ -87,7 +83,7 @@ const QuestionTypePreview = ({ type }) => {
 
             <Textarea
                         placeholder="Enter multiline text input"
-                        sx={{ maxWidth: "400px" }}
+                        style={{ maxWidth: "400px" }}
                         variant="unstyled"
                         radius="xl"
                         size="sm"
@@ -98,15 +94,14 @@ const QuestionTypePreview = ({ type }) => {
     }
 
     function NumberForm() {
-        const { classes } = useStyles();
-      
+     
         return (
           <Paper shadow="sm"
               className={classes.inputBox}
             >
             <NumberInput
                 size="sm"
-                type="number"
+                //type="number"  //VERIFY MANTINE
                 placeholder="Enter number input"
                 variant="unstyled"
               />
@@ -116,7 +111,6 @@ const QuestionTypePreview = ({ type }) => {
       }
 
       function PhoneForm() {
-        const { classes } = useStyles();
      
         const data = [
           {
@@ -137,8 +131,8 @@ const QuestionTypePreview = ({ type }) => {
         const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
           ({ image, label, description, ...others }: ItemProps, ref) => (
             <div ref={ref} {...others}>
-              <Group noWrap>
-                <Avatar src={image} sx={{minWidth: "50px"}}/>
+              <Group wrap="nowrap">
+                <Avatar src={image} style={{minWidth: "50px"}}/>
                 <div>
                   <Text size="sm">{label}</Text>
                   <Text size="xs" opacity={0.65}>
@@ -149,6 +143,14 @@ const QuestionTypePreview = ({ type }) => {
             </div>
           )
         );
+
+        // const optionsFilter: OptionsFilter = ({ options, search }) => {
+        //     const splittedSearch = search.toLowerCase().trim().split(' ');
+        //     return (options as ComboboxItem[]).filter((option) => {
+        //       const words = option.label.toLowerCase().trim().split(' ');
+        //       return splittedSearch.every((searchWord) => words.some((word) => word.includes(searchWord)));
+        //     });
+        //   };
         
         return (
           <Paper shadow="sm"
@@ -156,23 +158,23 @@ const QuestionTypePreview = ({ type }) => {
             >
               <Group>
               <Select
-                sx={{maxWidth: "140px"}}
+                style={{maxWidth: "140px"}}
                 placeholder="Select Country Code"
-                itemComponent={SelectItem}
+               // itemComponent={SelectItem} //TODO
                 data={data}
                 searchable
                 maxDropdownHeight={400}
                 defaultValue={data[0].value}
-                nothingFound="No results"
-                filter={(value, item) =>
-                  item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
-                  item.description.toLowerCase().includes(value.toLowerCase().trim())
-                }
+               // nothingFound="No results"   //TODO
+                // filter={(value, item) =>
+                //   item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
+                //   item.description.toLowerCase().includes(value.toLowerCase().trim())
+                // } TODO  VERIFY MANTINE FILTER
               />
                <NumberInput
                 size="sm"
                 max={9999999999}
-                type="number"
+               // type="number"  VERIFY MANTINE
                 placeholder="Enter 10 digit phone number"
                 hideControls
                 variant="unstyled"
@@ -185,15 +187,14 @@ const QuestionTypePreview = ({ type }) => {
       }
 
     function EmailForm() {
-        const { classes } = useStyles();
         return (
             <Paper shadow="sm"
                 className={classes.inputBox}
             >
                 <TextInput
                     placeholder="Enter email address"
-                    sx={{ width: '70vw', maxWidth: "400px" }}
-                    icon={<IconMail size="1.2rem" color="black" />}
+                    style={{ width: '70vw', maxWidth: "400px" }}
+                    leftSection={<IconMail size="1.2rem" color="black" />}
                     variant="unstyled"
                 />
             </Paper>
@@ -217,7 +218,7 @@ const QuestionTypePreview = ({ type }) => {
                         px="md"
                         fullWidth
                         radius="md"
-                        leftIcon={<IconThumbUpFilled />}
+                        leftSection={<IconThumbUpFilled />}
                     >
                         Like
                     </Button>
@@ -230,7 +231,7 @@ const QuestionTypePreview = ({ type }) => {
                         px="md"
                         radius="md"
                         fullWidth
-                        leftIcon={<IconThumbDownFilled />}
+                        leftSection={<IconThumbDownFilled />}
                     >
                         Dislike
                     </Button>
@@ -259,7 +260,7 @@ const QuestionTypePreview = ({ type }) => {
         }
 
         return (
-            <Group position="center" spacing="xs">
+            <Group justify="center" gap="xs">
                 {renderButtons()}
             </Group>
         );
@@ -308,10 +309,10 @@ const QuestionTypePreview = ({ type }) => {
                         key={value}
                         variant={"default"}
                         gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
-                        sx={{ height: '90px', width: '90px' }}
+                        style={{ height: '90px', width: '90px' }}
                     >
                         {/* <Stack> */}
-                        <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={50} height={50} />
+                        <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} w={50} h={50} />
                         {/* <Text> {label}</Text>
       
                 </Stack> */}
@@ -337,7 +338,9 @@ const QuestionTypePreview = ({ type }) => {
                 </Box>
 
                 {file && (
-                    <Text size="sm" align="center" mt="sm">
+                    <Text size="sm" style={{
+                        textAlign:'center'
+                      }} mt="sm">
                         Selected file: {file.name}
                     </Text>
                 )}
@@ -346,7 +349,6 @@ const QuestionTypePreview = ({ type }) => {
     }
 
     function DateForm() {
-        const { classes } = useStyles();
         return (
             <Paper shadow="sm"
                 className={classes.inputBox}
@@ -358,7 +360,7 @@ const QuestionTypePreview = ({ type }) => {
                     maw={400}
                     mx="auto"
                     variant="unstyled"
-                    icon={<IconCalendarEvent size="1.2rem" color="black" />}
+                    leftSection={<IconCalendarEvent size="1.2rem" color="black" />}
 
                 />
             </Paper>

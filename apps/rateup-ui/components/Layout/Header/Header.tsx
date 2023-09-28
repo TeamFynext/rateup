@@ -2,33 +2,20 @@ import { useState , useEffect} from 'react';
 import {
   Container,
   Avatar,
-  Autocomplete,
   Group,
   Text,
   Menu,
   Paper,
-  Burger,
-  rem,
   Image,
   Space,
-  ActionIcon
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import {
-  IconLogout,
-  IconSearch,
-  IconUsers,
-  IconCheckupList,
-  IconGitBranch,
-  IconSettings,
-  IconChevronDown,
-  IconSun,
-  IconMoon,
-} from '@tabler/icons-react';
+
 import Link from 'next/link';
 import { Navbar } from '../Navbar/Navbar';
-import { useStyles } from './Header.styles';
+import classes from './Header.module.css';
 import { useUser } from '../../../context/UserContext';
+import cx from 'clsx';
 
 interface  iProps {
   mode? : string
@@ -36,7 +23,6 @@ interface  iProps {
 }
 
 export function HeaderTabs({mode, opened} : iProps) {
-  const { classes, theme, cx } = useStyles();
   const [isOpen, { toggle }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
   const [userProfileAvatar, setUserProfileAvatar] = useState(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`)
@@ -59,61 +45,26 @@ export function HeaderTabs({mode, opened} : iProps) {
     "image": userProfileAvatar
   };
 
-  const MenuItemWithLink = ({ icon, href, children }) => (
-   
-      <Link href={href} className={classes.link}>
-         <Menu.Item icon={icon}>{children}</Menu.Item>
-      </Link>
-  );
-  
-  // const menuItems = [
-  //   {
-  //     icon: <IconCheckupList size="0.9rem" color={theme.colors.yellow[6]} stroke={1.5} />,
-  //     href: "/dashboard/surveys",
-  //     text: "Surveys",
-  //   },
-  //   {
-  //     icon: <IconUsers size="0.9rem" color={theme.colors.blue[6]} stroke={1.5} />,
-  //     href: "/dashboard/teams",
-  //     text: "Teams",
-  //   },
-  //   {
-  //     icon: <IconGitBranch size="0.9rem" color={theme.colors.red[6]} stroke={1.5} />,
-  //     href: "/dashboard/",
-  //     text: "Branches",
-  //   },
-  //   {
-  //     icon: <IconSettings size="0.9rem" stroke={1.5} />,
-  //     href: "/dashboard/settings",
-  //     text: "Settings",
-  //   },
-  //   {
-  //     icon: <IconLogout size="0.9rem" stroke={1.5} />,
-  //     href: "/auth/logout",
-  //     text: "Logout",
-  //     isDivider: true,
-  //     color: "red",
-  //   },
-  // ];
-
   return (
     <div className={classes.header}>
       <Container 
+          className={classes.mainSection} 
           style={{
             marginLeft: opened ? "130px" : "0", 
             transition: "margin-left 0.3s ease-in-out", 
+            paddingLeft: '10vw',
+            paddingRight: '10vw'
           }}
-          className={classes.mainSection} 
       fluid>
 
       {mode !== "GUEST" 
 
         ?
 
-        <Group position="apart">
+        <Group justify="space-between">
           <Link href="/dashboard">
           <Image
-            height={ user?.orgLogo ? 50 : 40}
+            h={ user?.orgLogo ? 50 : 40}
             src={
               user?.orgLogo && user?.orgLogo !== 'REMOVED_PHOTO' ?
               `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
@@ -123,35 +74,11 @@ export function HeaderTabs({mode, opened} : iProps) {
 
           </Link>
         
-        
+      
+          {/* <Burger opened={isOpen} onClick={toggle} className={classes.burger} size="sm" /> */}
 
-          <Burger opened={isOpen} onClick={toggle} className={classes.burger} size="sm" />
+          <Group justify="space-between">
 
-          <Group position="apart">
-          {/* <Paper shadow="sm"
-                className={classes.searchBox}
-              >
-              <Autocomplete
-                className={classes.search}
-                placeholder="Search Surveys"
-                icon={<IconSearch size="1.3rem" stroke={1.3} />}
-                data={['Feedback', 'Testinomials', 'lorem ipsum', ]}
-                variant="unstyled"
-                size='md'
-              />
-          </Paper> */}
-              {/* <Paper shadow="sm"
-                className={classes.colorModeBox}
-              >
-                <Group position="apart">
-                  <ActionIcon size="xl" radius="xl" variant="transparent">
-                  <IconMoon />
-                </ActionIcon>
-                  <ActionIcon color="yellow" size="xl" radius="xl">
-                  <IconSun />
-               </ActionIcon>
-                </Group>
-            </Paper> */}
           <Menu
             width={260}
             position="bottom-end"
@@ -165,15 +92,15 @@ export function HeaderTabs({mode, opened} : iProps) {
                 className={cx(classes.user, { [classes.userActive]: userMenuOpened }, classes.cursor)}
               >
 
-                <Group sx={{minWidth: '150px'}}>
+                <Group style={{minWidth: '150px'}}>
                       <Avatar src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} />
 
                   <div style={{ flex: 1 }}>
-                    <Text size="sm" weight={500} sx={{ lineHeight: 1 }} mr={6}>
+                    <Text size="sm" fw={500} style={{ lineHeight: 1 }} mr={6}>
                       {userInfo.name ?userInfo.name : userInfo.email}
                     </Text>
 
-                    <Text color="dimmed" size="xs">
+                    <Text c="dimmed" size="xs">
                       {userInfo.role}
                     </Text>
                     
@@ -202,7 +129,7 @@ export function HeaderTabs({mode, opened} : iProps) {
         :
 
           <Link href="/">
-            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={150} height={40} />
+            <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" w={150} h={40} />
           </Link>
 
       }

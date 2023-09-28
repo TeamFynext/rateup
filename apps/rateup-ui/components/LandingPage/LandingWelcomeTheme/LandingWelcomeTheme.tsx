@@ -169,8 +169,8 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
 
   return (
     <Flex gap={20}>
-      <Paper sx={{ flex: 5 }} shadow="xl">
-      <LoadingOverlay visible={IsLoading} overlayBlur={2} />
+      <Paper style={{ flex: 5 }} shadow="xl">
+      <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
         <Flex mb={10} p={10}>
           {" "}
           <Switch
@@ -191,7 +191,7 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
         />
       </Paper>
 
-      <Paper p={"xl"} sx={{ flex: 2 }} shadow="lg" radius="lg">
+      <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg">
         <StylesComponent
           selectedType={selectedType ? selectedType : "header"}
           saveStyles={saveStyles}

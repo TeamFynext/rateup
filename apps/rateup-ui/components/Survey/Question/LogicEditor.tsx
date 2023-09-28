@@ -70,7 +70,7 @@ const LogicEditor = ({
 
   if (!logicSupportedTypes.includes(selectedQ.type)) {
     return (
-      <Center sx={{ height: "100%" }}>
+      <Center style={{ height: "100%" }}>
         <Stack>
           <p>Logic is not supported for this question type</p>
           <RateupButtonSecondary
@@ -93,8 +93,8 @@ const LogicEditor = ({
   };
   return (
 
-    <Stack justify="space-between" sx={{ height: '100%' }}>
-      <Stack spacing={"xs"} sx={{ overflowY: "auto", height: "100%" }}>
+    <Stack justify="space-between" style={{ height: '100%' }}>
+      <Stack gap={"xs"} style={{ overflowY: "auto", height: "100%" }}>
         {
           currentLogicJumps.map((currentLogic, index) => (
             <ConditionBlock
@@ -109,7 +109,7 @@ const LogicEditor = ({
         }
         <Button
           variant="outline"
-          leftIcon={<IconPlus />}
+          leftSection={<IconPlus />}
           maw={200}
           onClick={handleAddNewJump}
         >
@@ -117,7 +117,7 @@ const LogicEditor = ({
         </Button>
       </Stack>
 
-      <Group position="apart">
+      <Group justify="space-between">
         <RateupButtonSecondary
           title={"Cancel"}
           size="md"
@@ -231,7 +231,7 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
     })
   }, [selectedCondition, selectedAction, matchData])
   return (
-    <Group spacing="xs" sx={{ backgroundColor: colors.blue[0], borderRadius: "12px", position: "relative" }} p={"xs"} >
+    <Group gap="xs" style={{ backgroundColor: colors.blue[0], borderRadius: "12px", position: "relative" }} p={"xs"} >
       <Text>
         If answer
       </Text>
@@ -282,7 +282,7 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
         onChange={setSelectedAction as any}
       />
       <ActionIcon
-        sx={{ position: "absolute", right: "12px" }}
+        style={{ position: "absolute", right: "12px" }}
         onClick={handleDelete}
       >
         <IconTrash color={colors.red[5]} />

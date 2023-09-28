@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Group, Button,Flex,Text, Stack,createStyles, Image } from "@mantine/core";
+import { Modal, Group, Button,Flex,Text, Stack, Image } from "@mantine/core";
 import { IconTrash, IconX } from "@tabler/icons-react";
 
-const useStyles = createStyles((theme) => ({
+const classes = {
 cancelButton:{
   borderRadius:4,
   background:"#9C9C9C",
@@ -18,10 +18,9 @@ okButton:{
   fontWeight:500,
 
 },
-}))
-export function DeleteLandingPageConfirmation({showModal,confirmDelete}) {
+}
 
-  const {classes, theme} = useStyles();
+export function DeleteLandingPageConfirmation({showModal,confirmDelete}) {
  
   const [opened, { open, close }] = useDisclosure(false);
   useEffect(() => {
@@ -41,8 +40,8 @@ export function DeleteLandingPageConfirmation({showModal,confirmDelete}) {
        <IconTrash size="4rem" />
         <Text fw={500 } mt={0}> Are you sure you want to delete?</Text>
         <Flex justify={"center"} gap={20}>
-          <Button className={classes.cancelButton} w={90}  onClick={close}>Cancel</Button>
-          <Button className={classes.okButton} w={90}  onClick={()=>confirmDelete(true)}>Ok</Button>
+          <Button style={classes.cancelButton} w={90}  onClick={close}>Cancel</Button>
+          <Button style={classes.okButton} w={90}  onClick={()=>confirmDelete(true)}>Ok</Button>
         </Flex>
       </Stack>
     </Modal>

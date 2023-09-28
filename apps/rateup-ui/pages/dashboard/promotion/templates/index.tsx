@@ -69,7 +69,7 @@ export default function () {
             <Menu.Target>
               <Button
                 variant="subtle"
-                rightIcon={<IconChevronDown />}
+                rightSection={<IconChevronDown />}
                 radius={"xl"}
                 color="dark"
               >
@@ -77,8 +77,8 @@ export default function () {
               </Button>
             </Menu.Target>
             <Menu.Dropdown >
-              <Menu.Item color="teal" icon={<IconCheck size={14} />}>Active</Menu.Item>
-              <Menu.Item color="red" icon={<IconX size={14} />}>Inactive</Menu.Item>
+              <Menu.Item color="teal" leftSection={<IconCheck size={14} />}>Active</Menu.Item>
+              <Menu.Item color="red" leftSection={<IconX size={14} />}>Inactive</Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Flex>
@@ -87,20 +87,14 @@ export default function () {
       <Space h="xl" />
 
       <SimpleGrid
-        cols={4}
         spacing={"lg"}
-        breakpoints={[
-          { minWidth: "xl", cols: 3 },
-          { minWidth: "lg", cols: 2 },
-          { minWidth: "md", cols: 2 },
-          { maxWidth: "md", cols: 1 },
-        ]}
+        cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
       >
         <Paper
           p="md"
           shadow="lg"
           radius="lg"
-          sx={{ cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
           onClick={handleCreateClick}
         >
           <Center h="100%">
@@ -151,7 +145,7 @@ function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
         shadow="lg"
         withBorder
         radius="lg"
-        sx={{ cursor: "pointer" }}
+        style={{ cursor: "pointer" }}
         onClick={onClick}
       >
         <Flex justify={"space-between"} align={"center"}>
@@ -162,7 +156,7 @@ function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
             <TemplateMenu template={template} deleteMutation={deleteMutation} onEditClick={onEditClick}  />
           </StopPropagation>
         </Flex>
-        <Group align={"center"} mt="sm" spacing="xs">
+        <Group align={"center"} mt="sm" gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
             Created {timeSince}
@@ -189,13 +183,13 @@ function TemplateMenu({ template, deleteMutation, onEditClick }) {
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          icon={<IconPencil />}
+          leftSection={<IconPencil />}
           onClick={onEditClick}
         >
           Edit
         </Menu.Item>
         <Menu.Item
-          icon={<IconTrash />}
+          leftSection={<IconTrash />}
           onClick={() => {
             deleteMutation.mutate(template.id)
           }}

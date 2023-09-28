@@ -30,16 +30,16 @@ export const RateupButtonPrimary = ({ loading, fullWidth, type, sx, radius, titl
             px="xl"
             style={{
                 color: "black",
+                ...sx
             }}
             disabled={disabled}
             color='yellow'
-            leftIcon={leftIcon}
-            rightIcon={rightIcon}
+            leftSection={leftIcon}
+            rightSection={rightIcon}
             onClick={onClick}
             variant={variant}
             size= {size}
             type={type}
-            sx={sx}
             fullWidth={fullWidth}
             loading={loading}
         >
@@ -56,12 +56,12 @@ export const RateupButtonBlue = ({
             radius={radius || "lg"}
             px="xl"
             disabled={disabled}
-            leftIcon={leftIcon}
-            rightIcon={rightIcon}
+            leftSection={leftIcon}
+            rightSection={rightIcon}
             onClick={onClick}
             variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
             size= {size}
-            sx={sx}
+            style={sx}
             loading={loading}
             {...other}
         >
@@ -77,12 +77,12 @@ export const RateupButtonSecondary = ({ mt, fullWidth, type, loading, title, rad
             radius={radius || "lg"}
             px="xl"
             disabled={disabled}
-            leftIcon={leftIcon}
-            rightIcon={rightIcon}
+            leftSection={leftIcon}
+            rightSection={rightIcon}
             onClick={onClick}
             color="dark"
             size= {size}
-            sx={sx}
+            style={sx}
             loading={loading}
             type={type}
             fullWidth={fullWidth}
@@ -105,8 +105,8 @@ export const RateupButtonOutline = ({ title, disabled, onClick, leftIcon = null,
             }}
             disabled={disabled}
             color='yellow'
-            leftIcon={leftIcon}
-            rightIcon={rightIcon}
+            leftSection={leftIcon}
+            rightSection={rightIcon}
             onClick={onClick}
             variant="outline" 
             size= {size}
@@ -124,8 +124,8 @@ export const RateupButtonBlackOutline = ({ radius, title, disabled, onClick, lef
             px="xl"
             disabled={disabled}
             color='dark'
-            leftIcon={leftIcon}
-            rightIcon={rightIcon}
+            leftSection={leftIcon}
+            rightSection={rightIcon}
             onClick={onClick}
             variant="outline" 
             size= {size}

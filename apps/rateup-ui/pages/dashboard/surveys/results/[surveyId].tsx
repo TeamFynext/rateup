@@ -48,7 +48,7 @@ const ViewResults = () => {
       <Group>
          <Title   pb="xl" mb="xl">Survey: </Title>
          <Group  pb="xl" mb="xl"  pl="lg" ml="lg">
-         <Title   color={ "blue.9" }>{survey?.title}</Title>
+         <Title   c={ "blue.9" }>{survey?.title}</Title>
          {
           user?.role !== "MEMBER" &&  <RateupButtonOutline ml="50px" onClick={editSurvey}
                                         title="Edit"

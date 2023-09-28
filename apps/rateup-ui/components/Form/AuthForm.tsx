@@ -39,7 +39,7 @@ import { GoogleButton } from "../Button/SocialButtons";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import { useCreateUserMutation } from "../../backend/user/user.query";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
-import { useStyles } from "./FormStyle";
+import classes from "./FormStyle.module.css";
 
 const AuthForm = ({
   mode,
@@ -52,7 +52,6 @@ const AuthForm = ({
   const { token, rid } = router.query;
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
-  const { classes } = useStyles();
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
       if (token && rid === "emailverification") {
@@ -228,14 +227,14 @@ const AuthForm = ({
             p={30}
             mt={30}
             radius="md"
-            sx={{ background: "#F7F7F7" }}
+            style={{ background: "#F7F7F7" }}
           >
             <Link href="/">
               <Image
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
                 alt="RateUp Logo"
-                width={140}
-                height={36}
+                w={140}
+                h={36}
               />
             </Link>
 
@@ -244,7 +243,7 @@ const AuthForm = ({
                 my="xl"
                 pb="lg"
                 order={2}
-                sx={(theme) => ({
+                style={(theme) => ({
                   fontFamily: `Greycliff CF, ${theme.fontFamily}`,
                   fontWeight: 900,
                 })}
@@ -256,7 +255,7 @@ const AuthForm = ({
                 <Title
                   order={2}
                   mt="xl"
-                  sx={(theme) => ({
+                  style={(theme) => ({
                     fontFamily: `Greycliff CF, ${theme.fontFamily}`,
                     fontWeight: 900,
                   })}
@@ -385,8 +384,10 @@ const AuthForm = ({
                   isLogin ? "Sign in" : authType ? "Finish SignUp" : "Sign up"
                 }
               />
-              <Group position="center" mt="lg">
-                <Anchor component="button" size="sm" align="center">
+              <Group justify="center" mt="lg">
+                <Anchor component="button" size="sm" style={{
+                  textAlign:'center'
+                }}>
                   {isLogin && (
                     <Link
                       href="/login/reset-password"
@@ -404,16 +405,14 @@ const AuthForm = ({
                 <Text
                   mt="xl"
                   inline
-                  color="blue.6"
-                  sx={{
-                    textDecoration: "none",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
+                  c="blue.6"
+                  className={classes.txtStyle}
+                  
                 >
                   <Link href="/auth/logout" style={{ textDecoration: "none" }}>
                     <NavLink
                       label="Logout"
-                      icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                      leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                       variant="subtle"
                     />
                   </Link>
@@ -430,7 +429,7 @@ const AuthForm = ({
             p={30}
             mt={30}
             radius="md"
-            sx={{ background: "#F7F7F7" }}
+            style={{ background: "#F7F7F7" }}
           >
             <Link href="/">
               <Image
@@ -449,7 +448,7 @@ const AuthForm = ({
             </Text>
 
             <Space h="xl" />
-            <Group position="center" py="xl">
+            <Group justify="center" py="xl">
               <Image
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`}
                 alt="email"
@@ -460,17 +459,14 @@ const AuthForm = ({
             <Space h="xl" />
 
             <Text
-              color="blue.6"
-              sx={{
-                textDecoration: "none",
-                "&:hover": { textDecoration: "underline" },
-              }}
+              c="blue.6"
+              className={classes.txtStyle}
               onClick={sendEmail}
             >
               <NavLink
-                sx={{ fontWeight: 620 }}
+                style={{ fontWeight: 620 }}
                 label="Resend or change email"
-                icon={<IconSend size="1rem" stroke={1.5} />}
+                leftSection={<IconSend size="1rem" stroke={1.5} />}
                 rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
                 variant="subtle"
               />
@@ -478,17 +474,15 @@ const AuthForm = ({
 
             <Text
               inline
-              color="blue.6"
-              sx={{
-                textDecoration: "none",
-                "&:hover": { textDecoration: "underline" },
-              }}
+              c="blue.6"
+              className={classes.txtStyle}
+
             >
               <Link href="/auth/logout" style={{ textDecoration: "none" }}>
                 <NavLink
-                  sx={{ fontWeight: 620 }}
+                  style={{ fontWeight: 620 }}
                   label="Logout"
-                  icon={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                   variant="subtle"
                 />
               </Link>

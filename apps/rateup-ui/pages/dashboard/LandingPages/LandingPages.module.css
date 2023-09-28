@@ -1,0 +1,19 @@
+.customButton {
+  background-color: black;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.customButton:hover {
+  background-color: black !important;
+}
+
+.cancelButton {
+  background-color: grey;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.cancelButton:hover {
+  background-color: grey !important;
+}

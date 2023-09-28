@@ -177,10 +177,10 @@ export function QuestionDetailedView({
 
   // TODO: show question type somewhere
   return (
-    <Stack justify="space-between" sx={{ height: "100%" }}>
-      <ScrollArea sx={{ height: "80%" }}>
+    <Stack justify="space-between" style={{ height: "100%" }}>
+      <ScrollArea style={{ height: "80%" }}>
         <Stack>
-          <Stack justify="space-between" sx={{ height: "100%" }}>
+          <Stack justify="space-between" style={{ height: "100%" }}>
             <TextInput
               fw={800}
               fz="lg"
@@ -190,7 +190,7 @@ export function QuestionDetailedView({
                   fontWeight: 700, // set custom font size for this TextInput
                 },
               }}
-              sx={{
+              style={{
                 marginBottom: "20px", // add 30px bottom margin
               }}
               variant="unstyled"
@@ -228,8 +228,8 @@ export function QuestionDetailedView({
 
       <Divider />
 
-      <Stack pt="sm" sx={{ height: "20%", position: "sticky", bottom: "0" }}>
-        <Group position="apart" spacing="sm">
+      <Stack pt="sm" style={{ height: "20%", position: "sticky", bottom: "0" }}>
+        <Group justify="space-between" gap="sm">
           <Checkbox
             label="Required"
             color="dark"
@@ -253,7 +253,7 @@ export function QuestionDetailedView({
           </Group>
         </Group>
 
-        <Group position="left"  spacing="md">
+        <Group justify="flex-start"  gap="md">
           {logicSupportedTypes.includes(question?.type) && (
               <RateupButtonOutline
               title={"Logic Jump"}
@@ -336,7 +336,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
 
   return (
     <>
-      <Stack py="xs" spacing={"xs"}>
+      <Stack py="xs" gap={"xs"}>
         {choices.map((choice, i) => (
           <Choice
             key={choice}
@@ -372,7 +372,7 @@ function Choice({ choice, onDelete }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
 
   return (
-    <Group ref={ref} sx={{ height: "30px" }}>
+    <Group ref={ref} style={{ height: "30px" }}>
       <Checkbox label={choice} checked={false} readOnly />
       {hovered && (
         <ActionIcon

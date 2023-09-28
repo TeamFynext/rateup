@@ -15,7 +15,7 @@ const Signup = () => {
  
      return (
        <>
-         {isLoading ? <LoadingOverlay visible={visible} overlayBlur={2} /> : <AuthForm mode={AuthMode.SIGNUP} />}
+         {isLoading ? <LoadingOverlay visible={visible} style={{ textAlign:'center' }} /> : <AuthForm mode={AuthMode.SIGNUP} />}
        </>
      );
    }else{

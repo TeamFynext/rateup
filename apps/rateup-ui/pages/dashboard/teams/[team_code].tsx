@@ -183,7 +183,7 @@ const TeamDetails = () => {
 
         <StyledTabs
           value={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as TabEnum)}
+          onChange={(tab) => setActiveTab(tab as TabEnum)}
         >
 
   <Flex
@@ -194,7 +194,7 @@ const TeamDetails = () => {
       <Title order={1} mb="sm">{teamsMembersData?.data?.team?.name || "Team"}</Title>
       <Group>
         <Tabs.List
-              sx={{
+              style={{
                 position: "absolute",
                 width: "fit-content",
                 left: 0,
@@ -213,16 +213,11 @@ const TeamDetails = () => {
             {/** TODO: Remove fixed height and make this responsive */}
 
             <SimpleGrid
-                            cols={4}
                             spacing={"lg"}
-                            breakpoints={[
-                            { minWidth: "xl", cols: 3 },
-                            { minWidth: "lg", cols: 2 },
-                            { minWidth: "md", cols: 2 },
-                            { maxWidth: "md", cols: 1 },
-                            ]}
+                            cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
+                            
                             >
-                            <Paper p="md" shadow="lg" radius="lg" sx={{ cursor: "pointer" }} onClick={open}>
+                            <Paper p="md" shadow="lg" radius="lg" style={{ cursor: "pointer" }} onClick={open}>
                                 <Center h="100%">
                                     <Stack align="center">
                                     <IconPlus size={36}/>

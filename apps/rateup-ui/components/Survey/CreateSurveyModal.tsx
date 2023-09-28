@@ -3,20 +3,21 @@ import {
   Button,
   Group,
   Modal,
-  MultiSelect,
   Select,
   Stack,
   Switch,
   Text,
   TextInput,
 } from "@mantine/core";
+import { PillsInput, Pill, Combobox, CheckIcon, useCombobox } from '@mantine/core';
+
 import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
 import { getTeamsByUser } from "../../backend/team/team.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface FormValues {
   title: string;
@@ -27,6 +28,7 @@ interface FormValues {
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
+
 export function CreateSurveyModal({ open, close, surveyType }) {
   const {
     isError,
@@ -47,7 +49,9 @@ export function CreateSurveyModal({ open, close, surveyType }) {
     label: type,
   }));
 
-  const form = useForm({
+  const [languages, setLanguages] = useState<string[]>([]);
+
+   const form = useForm({
     initialValues: {
       title: "",
       languages: [],
@@ -64,9 +68,21 @@ export function CreateSurveyModal({ open, close, surveyType }) {
     },
   });
 
+  useEffect(() => {
+    form.setFieldValue('languages', languages)
+    console.log(languages)
+  }, [languages])
+
   const resetForm = () => {
     form.reset()
+    setLanguages([])
   }
+
+  useEffect(() => {
+    form.reset()
+    setLanguages([])
+  }, [open])
+
   const [isCreating, setIsCreating] = useState(false);
 
   const createSurveyMutation = useCreateSurveyMutation({ close, resetForm, setIsCreating });
@@ -124,34 +140,19 @@ export function CreateSurveyModal({ open, close, surveyType }) {
     >
       <FormProvider form={form} >
         <form onSubmit={onSubmit}>
-          <Stack sx={{ minHeight: "300px" }} mt="xl">
+          <Stack style={{ minHeight: "300px" }} mt="xl">
             <TextInput
               placeholder="Enter title"
               label="Title"
               withAsterisk
               {...form.getInputProps("title")}
             />
-            <MultiSelect
-              withAsterisk
-              label="Languages"
-              placeholder="Type to create new language"
-              searchable
-              creatable
-              maxDropdownHeight="110"
-              // TODO: Add a user-level language list
-              data={Array.from(Languages)}
-              getCreateLabel={(query) => `+ Create ${query}`}
-              //@ts-ignore
-              onCreate={(query) => {
-                if (form.values.languages.includes(query)) return;
-                form.setFieldValue("languages", [
-                  ...form.values.languages,
-                  query,
-                ]);
-                Languages.add(query);
-              }}
-              {...form.getInputProps("languages")}
-            />
+
+
+{/* // TODO: Add a user-level language list */}
+
+
+            <MultiSelectCreatable value={languages} setValue={setLanguages} errors={form.errors.languages} />
 
             <Select
               label="Team"
@@ -183,7 +184,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
                   {`(Automatically fetched from the browser if the respondent allows it.)`}
                 </Text>
             </Box>
-            <Group position="right" pt="xl" mt="lg">
+            <Group justify="flex-end" pt="xl" mt="lg">
               <Button variant="subtle" onClick={close}>
                 Cancel
               </Button>
@@ -195,5 +196,117 @@ export function CreateSurveyModal({ open, close, surveyType }) {
         </form>
       </FormProvider>
     </Modal>
+  );
+}
+
+
+interface iProps {
+  value: string[];
+  setValue: React.Dispatch<React.SetStateAction<string[]>>;
+  errors: any
+}
+
+export function MultiSelectCreatable({ value, setValue, errors} : iProps) {
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+    onDropdownOpen: () => combobox.updateSelectedOptionIndex('active'),
+  });
+
+
+  useEffect(() => {
+    console.log(errors)
+
+  }, [errors])
+  
+
+  let languages= Array.from(Languages);
+  const [search, setSearch] = useState('');
+  const [data, setData] = useState(languages);
+
+  const exactOptionMatch = data.some((item) => item === search);
+
+  const handleValueSelect = (val: string) => {
+    if (val === '$create') {
+      setData((current) => [...current, search]);
+      setValue((current) => [...current, search]);
+      setSearch('');
+    } else {
+      setValue((current) =>
+        current.includes(val) ? current.filter((v) => v !== val) : [...current, val]
+      );
+    }
+  };
+
+  const handleValueRemove = (val: string) =>
+    setValue((current) => current.filter((v) => v !== val));
+
+  const values = value.map((item) => (
+    <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
+      {item}
+    </Pill>
+  ));
+
+  const options = languages
+    .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
+    .map((item) => (
+      <Combobox.Option                 title="Language"
+      value={item} key={item} active={value.includes(item)}>
+        <Group gap="sm">
+          {value.includes(item) ? <CheckIcon size={12} /> : null}
+          <span>{item}</span>
+        </Group>
+      </Combobox.Option>
+    ));
+
+  return (
+    <Combobox  store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
+      <Combobox.DropdownTarget >
+
+        <PillsInput 
+          error={errors ? errors : false}
+          label="Languages" 
+          withAsterisk 
+          onClick={() => combobox.openDropdown()}
+        >
+          
+          <Pill.Group  >
+            {values}
+
+            <Combobox.EventsTarget>
+                <PillsInput.Field
+                  onFocus={() => combobox.openDropdown()}
+                  onBlur={() => combobox.closeDropdown()}
+                  value={search}
+                  placeholder="Select languages"
+                  onChange={(event) => {
+                    combobox.updateSelectedOptionIndex();
+                    setSearch(event.currentTarget.value);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Backspace' && search.length === 0) {
+                      event.preventDefault();
+                      handleValueRemove(value[value.length - 1]);
+                    }
+                  }}
+                />
+            </Combobox.EventsTarget>
+          </Pill.Group>
+        </PillsInput>
+      </Combobox.DropdownTarget>
+
+      <Combobox.Dropdown>
+        <Combobox.Options>
+          {options}
+
+          {!exactOptionMatch && search.trim().length > 0 && (
+            <Combobox.Option value="$create">+ Create {search}</Combobox.Option>
+          )}
+
+          {exactOptionMatch && search.trim().length > 0 && options.length === 0 && (
+            <Combobox.Empty>Nothing found</Combobox.Empty>
+          )}
+        </Combobox.Options>
+      </Combobox.Dropdown>
+    </Combobox>
   );
 }

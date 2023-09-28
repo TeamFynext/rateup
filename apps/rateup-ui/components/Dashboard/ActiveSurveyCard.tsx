@@ -29,7 +29,7 @@ export default function ActiveSurveyCard({
     <Paper
       shadow="lg"
       radius="lg"
-      sx={{ cursor: "pointer", paddingBottom: 0, }}
+      style={{ cursor: "pointer", paddingBottom: 0, }}
       onClick={(e) => {
         e.stopPropagation(),
           user?.role === "MEMBER"
@@ -48,21 +48,31 @@ export default function ActiveSurveyCard({
             </Text>
           </Flex>
     
-          <Group position='apart'  spacing="xs" px="lg">
-            <Text align="center"  color="#595959"> {survey?.team?.name}</Text>
+          <Group justify="space-between"  gap="xs" px="lg">
+            <Text style={{
+              textAlign:'center'
+            }}  c="#595959"> {survey?.team?.name}</Text>
             <Badge color={survey?.type == "web" ? "blue" : "green"}>
               {survey?.type}
             </Badge>
           </Group>
 
-          <Group position='apart'spacing="xs"  px="lg">
-            <Stack align="center" sx={{width: '45%', height:"105px"}}  px="xl" pb="sm" >
-                <Title align="center" order={2} size="30px" color="#3F5BA9">{responsesCount ? responsesCount : 0}</Title>
-                <Text align="center"  mt="-15px"  fw={700} fz="lg" color="#595959"> Responses</Text>
+          <Group justify="space-between" gap="xs"  px="lg">
+            <Stack align="center" style={{width: '45%', height:"105px"}}  px="xl" pb="sm" >
+                <Title style={{
+              textAlign:'center'
+            }} order={2} size="30px" c="#3F5BA9">{responsesCount ? responsesCount : 0}</Title>
+                <Text style={{
+              textAlign:'center'
+            }}  mt="-15px"  fw={700} fz="lg" c="#595959"> Responses</Text>
             </Stack>
-            <Stack align="center" sx={{width: '45%', height:"105px"}} px="xl" pb="sm" >
-                <Title align="center" order={2} size="30px" color="#3F5BA9">{visitedCount ? visitedCount : 0}</Title>
-                <Text align="center" mt="-15px"  fw={700} fz="lg" color="#595959"> Visited</Text>
+            <Stack align="center" style={{width: '45%', height:"105px"}} px="xl" pb="sm" >
+                <Title style={{
+              textAlign:'center'
+            }} order={2} size="30px" c="#3F5BA9">{visitedCount ? visitedCount : 0}</Title>
+                <Text style={{
+              textAlign:'center'
+            }} mt="-15px"  fw={700} fz="lg" color="#595959"> Visited</Text>
             </Stack>
           </Group>
 

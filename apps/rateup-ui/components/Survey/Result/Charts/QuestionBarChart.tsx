@@ -19,11 +19,11 @@ interface CustomTooltipProps {
 
 export const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
   const theme = useMantineTheme();
-  const transparentWhite = theme.fn.rgba(theme.white, 0.9);
+  //const transparentWhite = theme.fn.rgba(theme.white, 0.9); //VERIFY MANTINE
 
   if (active && payload && payload.length) {
     return (
-      <Paper p="lg" shadow='xl'  style={{ backgroundColor: transparentWhite }}>
+      <Paper p="lg" shadow='xl'  style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}>
         <Stack>
           <Title order={5}> {label} </Title>
           <Text>Count: { payload[0].value}</Text>
@@ -77,7 +77,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({ question, choices, 
   return (
     <Paper p="md" shadow="xs" style={{ marginBottom: '20px' }}>
       <Group>
-        <Stack ml="xl" sx={{minWidth: "350px", maxWidth: "350px"}}>
+        <Stack ml="xl" style={{minWidth: "350px", maxWidth: "350px"}}>
           <Text size="md">{no}. {question}</Text>
 
           <Stack ml="xl" pt="sm">
@@ -86,7 +86,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({ question, choices, 
              </Stack>
         </Stack>
 
-        <Stack  sx={{minWidth: "500px"}}>
+        <Stack  style={{minWidth: "500px"}}>
           <BarChart
             width={500}
             height={300}

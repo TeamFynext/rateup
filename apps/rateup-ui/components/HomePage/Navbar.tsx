@@ -1,5 +1,5 @@
 import {
-    Header,Container,
+    AppShell, Container,
     HoverCard,
     Group,
     Button,
@@ -19,31 +19,34 @@ import {
     Image
 } from '@mantine/core';
 import Link from 'next/link';
-import {useDisclosure} from '@mantine/hooks';
+import {useDisclosure, useHeadroom} from '@mantine/hooks';
 import {
+    IconBluetooth,
     IconChevronDown} from '@tabler/icons-react';
 import {useRouter} from 'next/router';
-import {useNavStyles} from './Navbar.styles';
+import classes from './Navbar.module.css';
 import { navData } from './NavData';
 
 export function HomeNavbar() {
     const [drawerOpened, {toggle: toggleDrawer, close: closeDrawer}] = useDisclosure(false);
     const [linksOpened, {toggle: toggleLinks}] = useDisclosure(false);
-    const { classes, theme } = useNavStyles();
+    const pinned = useHeadroom({ fixedAt: 120 });
+
 
     const router = useRouter();
 
     const links = navData.map((item) => (
         <UnstyledButton className={classes.subLink} key={item.title}>
-            <Group noWrap align="flex-start">
+            <Group wrap="nowrap" align="flex-start">
                 <ThemeIcon size={34} variant="default" radius="md">
-                    <item.icon size={rem(22)} color={theme.fn.primaryColor()}/>
+                    <item.icon size={rem(22)} color='blue.9'/>
+                    {/* TODO primary color var add above */}
                 </ThemeIcon>
                 <div>
                     <Text size="sm" fw={500}>
                         {item.title}
                     </Text>
-                    <Text size="xs" color="dimmed">
+                    <Text size="xs" c="dimmed">
                         {item.description}
                     </Text>
                 </div>
@@ -53,14 +56,16 @@ export function HomeNavbar() {
 
     return (
         <Box>
-            <Header withBorder={false}  height={110} p="md" fixed>
-                <Group position="apart" sx={{height: '100%'}} className={classes.wrapContainer}>
+                <AppShell header={{ height: 110, collapsed: !pinned, offset: false }} >
+
+            <AppShell.Header withBorder={false}  h={110} p="md" >
+                <Group justify="space-between" style={{height: '100%'}} className={classes.wrapContainer}>
                     <Center>
                         <Link href="/">
-                            <Image pt="2px" src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" width={172} height={45} />
+                            <Image pt="2px" src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} alt="RateUp Logo" w={172} h={45} />
                         </Link>
                     </Center>
-                    <Group sx={{height: '100%'}} spacing={0} className={classes.hiddenMobile}>
+                    <Group style={{height: '100%'}} gap={0} className={classes.hiddenMobile}>
                     <a href="#" className={classes.link}>
                             About
                         </a>
@@ -71,13 +76,13 @@ export function HomeNavbar() {
                                         <Box component="span" mr={5}>
                                             Product
                                         </Box>
-                                        <IconChevronDown size={16} color={theme.fn.primaryColor()}/>
+                                        <IconChevronDown size={16} color='blue.9'/>
                                     </Center>
                                 </a>
                             </HoverCard.Target>
 
-                            <HoverCard.Dropdown sx={{overflow: 'hidden'}}>
-                                <Group position="apart" px="md">
+                            <HoverCard.Dropdown style={{overflow: 'hidden'}}>
+                                <Group justify="space-between" px="md">
                                     <Text fw={500}>Features</Text>
                                     <Anchor href="#" fz="xs">
                                         View all
@@ -87,7 +92,8 @@ export function HomeNavbar() {
                                 <Divider
                                     my="sm"
                                     mx="-md"
-                                    color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}
+                                   // color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}
+                                   color="gray.1"
                                 />
 
                                 <SimpleGrid cols={2} spacing={0}>
@@ -95,7 +101,7 @@ export function HomeNavbar() {
                                 </SimpleGrid>
 
                                 <div className={classes.dropdownFooter}>
-                                    <Group position="apart">
+                                    <Group justify="space-between">
                                         <div>
                                             <Text fw={500} fz="sm">
                                                 Get started
@@ -121,13 +127,13 @@ export function HomeNavbar() {
                                         <Box component="span" mr={5}>
                                             Others
                                         </Box>
-                                        <IconChevronDown size={16} color={theme.fn.primaryColor()}/>
+                                        <IconChevronDown size={16} color='blue.9'/>
                                     </Center>
                                 </a>
                             </HoverCard.Target>
 
-                            <HoverCard.Dropdown sx={{overflow: 'hidden'}}>
-                                <Group position="apart" px="md">
+                            <HoverCard.Dropdown style={{overflow: 'hidden'}}>
+                                <Group justify="space-between" px="md">
                                     <Text fw={500}>Resources</Text>
                                     <Anchor href="#" fz="xs">
                                         View all
@@ -137,7 +143,8 @@ export function HomeNavbar() {
                                 <Divider
                                     my="sm"
                                     mx="-md"
-                                    color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}
+                                   // color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}
+                                   color="dark.5"
                                 />
 
                                 <SimpleGrid cols={2} spacing={0}>
@@ -145,7 +152,7 @@ export function HomeNavbar() {
                                 </SimpleGrid>
 
                                 <div className={classes.dropdownFooter}>
-                                    <Group position="apart">
+                                    <Group justify="space-between">
                                         <div>
                                             <Text fw={500} fz="sm">
                                                 Get started
@@ -189,7 +196,8 @@ export function HomeNavbar() {
                     </Group>
                     <Burger opened={drawerOpened} onClick={toggleDrawer} className={classes.hiddenDesktop}/>
                 </Group>
-            </Header>
+            </AppShell.Header>
+            </AppShell>
 
             <Drawer
                 opened={drawerOpened}
@@ -201,7 +209,7 @@ export function HomeNavbar() {
                 zIndex={1000000}
             >
                 <ScrollArea h={`calc(100vh - ${rem(60)})`} mx="-md">
-                    <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}/>
+                    <Divider my="sm" color='dark.5'/>
 
                     <a href="#" className={classes.link}>
                         Home
@@ -211,7 +219,7 @@ export function HomeNavbar() {
                             <Box component="span" mr={5}>
                                 Features
                             </Box>
-                            <IconChevronDown size={16} color={theme.fn.primaryColor()}/>
+                            <IconChevronDown size={16} color='blue.9'/>
                         </Center>
                     </UnstyledButton>
                     <Collapse in={linksOpened}>{links}</Collapse>
@@ -224,8 +232,8 @@ export function HomeNavbar() {
                     <a href="/dashboard" className={classes.link}>
                         Dashboard
                     </a>
-                    <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'}/>
-                    <Group position="center" grow pb="xl" px="md">
+                    <Divider my="sm" color='dark.5'/>
+                    <Group justify="center" grow pb="xl" px="md">
                         <Button variant="default">Log in</Button>
                         <Button>Sign up</Button>
                     </Group>

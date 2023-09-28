@@ -1,17 +1,16 @@
 import { Box, Group, Modal, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { ItemDetailedViewModalStyles } from "./itemDetailedViewModal.styles";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { extractVideoId } from "../../../utils/youtube/url";
 import YoutubeEmbed from "../../youtube/YoutubeEmbed";
+import classes from "./itemDetailedViewModal.module.css";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
   onClose: () => void;
 }
 export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalProps) {
-  const { classes } = ItemDetailedViewModalStyles();
   const [selectedMedia, setSelectedMedia] = useState<string>(
     item.videoUrl ? item.videoUrl : item.images[0]
   );
@@ -36,7 +35,7 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
       <Stack align="center">
         <Box>
           <Box
-            sx={{
+            style={{
               width: "400px",
               height: "300px",
               overflow: "clip",
@@ -65,7 +64,7 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
               )}
           </Box>
 
-          <Group position="center" mt="sm">
+          <Group justify="center" mt="sm">
             {item.images.map(imageKey => (
               <img
                 key={imageKey}
@@ -79,7 +78,7 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
                 onClick={() => setSelectedMedia(imageKey)} />
             ))}
             <Box
-              sx={{
+              style={{
                 position: "relative",
               }}
               onClick={() => setSelectedMedia(item.videoUrl)}
@@ -113,15 +112,17 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
           <Text
             fz="1.5rem"
             fw={600}
-            align="center"
+            style={{
+              textAlign:'center'
+            }}
           >{item.name}</Text>
           <Text
-            align="center"
             c="dimmed"
             w={"350px"}
             h="100px"
-            sx={{
-              overflowY: "auto"
+            style={{
+              overflowY: "auto",
+              textAlign:'center'
             }}
           >{item.description}</Text>
         </Box>
@@ -130,7 +131,7 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
             item.price.variants.map((v, i) => (
               <Stack
                 align="center"
-                spacing={"0px"}
+                gap={"0px"}
                 key={i}
               >
                 <Text

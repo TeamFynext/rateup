@@ -33,7 +33,7 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
 
   return (
     <Flex
-      sx={{
+      style={{
         width: "100%",
         height: "100%",
       }}
@@ -72,20 +72,20 @@ function RightPanel({
   openImport
 }) {
   return <Paper
-    sx={{
+    style={{
       flex: 7,
       boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06);",
       borderRadius: "8px",
       overflow: "clip"
     }}
   >
-    <Tabs.Panel value={PromotionTab.Groups} sx={{ flexGrow: 1, height: "100%" }}>
+    <Tabs.Panel value={PromotionTab.Groups} style={{ flexGrow: 1, height: "100%" }}>
       <GroupMainWindow
         openCreateGroup={openImport}
         rgroup={items?.find(({ id }) => id === selected)}
       />
     </Tabs.Panel>
-    <Tabs.Panel value={PromotionTab.Individuals} sx={{ flexGrow: 1, height: "100%" }}>
+    <Tabs.Panel value={PromotionTab.Individuals} style={{ flexGrow: 1, height: "100%" }}>
       <IndividualMainWindow
         openImport={openImport}
         respondent={items?.find(({ id }) => id === selected)}
