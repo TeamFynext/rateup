@@ -21,9 +21,7 @@ enum TabEnum {
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../config/backendConfig";
-import Session from 'supertokens-node/recipe/session'
-import { getMenuCategoriesByMenuIdWithCustomAxios } from "../../../backend/menu/category/mCategory.api";
-import axios from "axios";
+import { getMenuCategoriesByMenuIdWithCustomToken } from "../../../backend/menu/category/mCategory.api";
 
 export default ({ categories: initialCategories }) => {
   const router = useRouter();
@@ -46,11 +44,9 @@ export default ({ categories: initialCategories }) => {
     }
   }, [tab])
 
-  if (isLoading || isError) {
+  if (!categories && (isLoading || isError)) {
     return <CenteredSpinner />
   }
-
-  console.log('categories: ', categories)
 
   function handleCreateCategory() {
     setEditingCategory(null);
@@ -133,7 +129,7 @@ function ShareMenu({ teamId, menuId }) {
   return (
     <Stack>
       <Paper px="md" py="lg" radius="md" shadow="lg">
-        <SimpleGrid cols={2} spacing="xl" 
+        <SimpleGrid cols={2} spacing="xl"
         // style={{
         //   '& .mantine-InputWrapper-label': {
         //     fontWeight: 600,
@@ -141,7 +137,7 @@ function ShareMenu({ teamId, menuId }) {
         //   }
         // }}
         //TODO VERIFY MANTINE
-        
+
         >
           <Select
             label="Survey to share with"
@@ -162,69 +158,29 @@ function ShareMenu({ teamId, menuId }) {
   )
 };
 
-
-
-
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  supertokensNode.init(backendConfig())
-  // TODO: use getSessionWithRefreshHandling(ctx) instead
-  let session;
   try {
-    console.log('pinging: ', process.env.NEXT_PUBLIC_API_URL + '/api/ping')
-    await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
+    supertokensNode.init(backendConfig())
+    const { menuId } = context.params as { menuId: string };
 
-    console.log("context.req => ", context.req.headers)
-    
-    session = await Session.getSession(context.req, context.res, {
-      overrideGlobalClaimValidators: () => {
-        // this makes it so that no custom session claims are checked
-        return []
-      }
-    })
-  //  console.log('session', session)
-  } catch (err: any) {
-    //console.log('err1: ', err)
-    if (err.type === Session.Error.TRY_REFRESH_TOKEN) {
-
-      return { props: { fromSupertokens: 'needs-refresh' } }
-    } else if (err.type === Session.Error.UNAUTHORISED) {
-      console.log('unauthorized error')
-      return { props: { fromSupertokens: 'needs-refresh' } }
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: { categories: [] } }
     }
 
-    throw err
-  }
-
-  try {
-    const { menuId } = context.params as { menuId: string };
-    console.log('access token: ', session.getAccessToken())
-    console.log(process.env.NEXT_PUBLIC_API_URL)
-    const axiosInstance = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL + '/api',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + session!.getAccessToken()
-      },
-    })
-
-    const categories = await getMenuCategoriesByMenuIdWithCustomAxios(axiosInstance, { menuId })
-
-
+    const categories = await getMenuCategoriesByMenuIdWithCustomToken(accessToken, { menuId })
     return {
       props: {
-        categories: categories.length > 0 ? [
-          {
-            fromServer: true,
-            ...categories[0]
-          },
-          ...categories.slice(1)
-        ] : []
+        categories: categories
       },
     }
 
   } catch (err) {
-    console.log('err2: ', err)
-    return {}
+    console.log(err)
+    return {
+      props: {
+        categories: []
+      },
+    }
   }
 }

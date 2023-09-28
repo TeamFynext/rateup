@@ -1,4 +1,3 @@
-import { AxiosInstance } from "axios";
 import { axiosClient } from "../../apiClient";
 
 const MENUCATEGORY_URL = "/mcategory";
@@ -10,13 +9,16 @@ export const getMenuCategoryById = async (id: string) => (await axiosClient.get(
 export const updateMenuCategory = async ({ categoryId, menuCategory }) => await axiosClient.put(`${MENUCATEGORY_URL}/${categoryId}`, menuCategory);
 export const deleteMenuCategory = async (categoryId: string) => await axiosClient.delete(`${MENUCATEGORY_URL}/${categoryId}`);
 
-export const getMenuCategoriesByMenuIdWithCustomAxios = async (axiosInstance: AxiosInstance, { menuId }) => {
+export const getMenuCategoriesByMenuIdWithCustomToken = async (token: string, { menuId }) => {
   try {
-    const response = await axiosInstance.get(`${MENUCATEGORY_URL}/all/${menuId}`);
+    const response = await axiosClient.get(`${MENUCATEGORY_URL}/all/${menuId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data
-
   } catch (error) {
-    //console.error('Error fetching menu categories by menu id:', error);
-    return { error };
+    console.log(error)
+    return [];
   }
 }
