@@ -4,6 +4,8 @@ import { createMenuCategory, deleteMenuCategory, getMenuCategories, updateMenuCa
 import { ByMenuIdParams } from "../menu.schema";
 import Session from "supertokens-node/recipe/session";
 import { hasAccessToMenu } from "../menu.auth";
+import { authorizeBySessionOrJWT } from "../../../utils/auth";
+import { log } from "../../../utils/logger";
 
 export async function createMenuCategoryHandler(
     request: FastifyRequest<{ Body: CreateMenuCategoryInput }>,
@@ -25,8 +27,24 @@ export async function getAllMenuCategoriesHandler(
     request: FastifyRequest<{Params: ByMenuIdParams}>,
     reply: FastifyReply
 ) {
-    const categories = await getMenuCategories(request.params.menuId)
-    reply.send(categories);
+    try {
+        const userId = await authorizeBySessionOrJWT(request, reply);
+        if (!userId) {
+            log.error("User Id not found")
+            reply.code(401).send({ message: "Unauthorized" });
+            return
+        }
+        const hasAccess = hasAccessToMenu(request.params.menuId, userId);
+        if (!hasAccess) {
+            reply.code(403).send({ message: "You don't have access to this menu" });
+            return
+        }
+        const categories = await getMenuCategories(request.params.menuId)
+        reply.send(categories);
+    } catch (err) {
+        console.log(err)
+        reply.code(500)
+    }
 }
 
 export async function getMenuCategoryHandler(
