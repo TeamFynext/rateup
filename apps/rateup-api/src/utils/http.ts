@@ -11,3 +11,17 @@ export function getIp(request: FastifyRequest) {
 
     return ip
 }
+
+export function getCookieValue(cookieName: string, cookie: string) {
+    if (!cookie) {
+        return undefined;
+    }
+    const cookies = cookie.split(';');
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === cookieName) {
+            return value;
+        }
+    }
+    return undefined;
+}

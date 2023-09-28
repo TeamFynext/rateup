@@ -155,7 +155,7 @@ export enum Gender {
 }
 
 export async function updateUserProfile(
-  { title, name, phone,whatsappAccessToken }: UpdateProfileSchema,
+  { title, name, phone, whatsappAccessToken }: UpdateProfileSchema,
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -172,9 +172,9 @@ export async function updateUserProfile(
       },
     });
     const updateOrg = await prisma.org.updateMany({
-      where: { ownerId:updateUser.id },
+      where: { ownerId: updateUser.id },
       data: {
-       whatsappAccessToken
+        whatsappAccessToken
       },
     });
   });
@@ -218,6 +218,13 @@ async function getOrgIdAndRole({ id }: userInfoParams) {
     },
   });
   return orgMember;
+}
+
+export async function getUserByEmail(email: string) {
+  const user = await prisma.user.findUnique({
+    where: { email: email },
+  });
+  return user;
 }
 
 export { createUser, getOrgIdAndRole };
