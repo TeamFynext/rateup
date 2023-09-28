@@ -68,7 +68,7 @@ export default function ({ fullMenu }) {
             />
           )}
           <div>
-            <Text style={{ textAlign:'center' }} >Welcome To</Text>
+            <Text style={{ textAlign: 'center' }} >Welcome To</Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
             <Text fz={"max(3vw, 2rem)"} fw="bold" >{fullMenu.displayName}</Text>
           </div>
@@ -132,15 +132,6 @@ export default function ({ fullMenu }) {
 
 export async function getServerSideProps({ params }) {
   const { menuId } = params
-  console.log('menuId: ', menuId)
-  console.log(process.env.NEXT_PUBLIC_FRONTEND_URL)
-  const res = await axios("https://ipapi.co/json/")
-  await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
-  if (res.status === 200) {
-    console.log('res.data: ', res.data)
-  } else {
-    console.error(res)
-  }
   const fullMenu = await getFullMenuPublicById(menuId)
   if (!fullMenu) {
     return {

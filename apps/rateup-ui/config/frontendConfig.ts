@@ -6,10 +6,11 @@ import EmailVerification from "supertokens-web-js/recipe/emailverification";
 
 export const frontendConfig = () => {
   return {
-    enableDebugLogs: true,
     appInfo,
     recipeList: [
-      Session.init(),
+      Session.init({
+        tokenTransferMethod: "header"
+      }),
       ThirdPartyEmailPassword.init(),
       EmailVerification.init(),
     ],
