@@ -71,6 +71,7 @@ function TeamMemberMenu({ status, inviteId }) {
                     id: 'load-data',
                     color: 'teal',
                     title: 'Success',
+                    loading: false,
                     message: 'Invite deleted successfully.',
                     icon: <IconCheck size="1rem" />,
                     autoClose: 3000,
@@ -84,6 +85,7 @@ function TeamMemberMenu({ status, inviteId }) {
             notifications.update({
                 id: 'load-data',
                 color: 'red',
+                loading: false,
                 title: 'Failed',
                 message: error.message,
                 icon: <IconCheck size="1rem" />,

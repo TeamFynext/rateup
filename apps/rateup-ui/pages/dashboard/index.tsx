@@ -17,8 +17,13 @@ import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { AreaChart , XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area } from 'recharts';
 import dayjs from 'dayjs';
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from "../../config/backendConfig";
+import { fetchTeamsByUserWithCustomToken } from "../../backend/team/team.api";
+import { getActiveSurveysSummaryWithCustomToken } from "../../backend/surveys/survey.api";
 
-export default function DashboardHome() {
+export default function DashboardHome({teamData: initialTeamData, summaryData: initialSummaryData }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useUser();
@@ -38,7 +43,7 @@ export default function DashboardHome() {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
+  } = useTeamsByUser(queryClient, initialTeamData);
 
   //TODO avoid above two api calls, merge required datas into surveysSummary
 
@@ -46,7 +51,7 @@ export default function DashboardHome() {
     isLoading : isLoadingSummary,
     error: isErrorSummary,
     data: surveysSummary,
-  } = useSurveysSummary() as { isLoading: boolean; error: any; data: SurveySummary[] };
+  } = useSurveysSummary(initialSummaryData) as { isLoading: boolean; error: any; data: SurveySummary[] };
 
   useEffect(() => {
     if (!user?.role) {
@@ -186,7 +191,8 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
 
                 <Paper style={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
                 onClick={() => router.push("/dashboard/teams")}>
-                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px" >{teamsDataUser?.data?.data?.length}</Title>
+                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px" >
+                      {initialTeamData?.length || teamsDataUser?.data?.data?.length}</Title>
                     <Text style={{ textAlign:'center' }} mb="lg" fw={700} fz="xl" color="#595959"> Total Teams</Text>
                 </Paper>
 
@@ -392,4 +398,37 @@ function CardActionButton({ children, ...props }) {
         {children}
       </Paper>
   )
+}
+
+
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+
+  try {
+    supertokensNode.init(backendConfig())
+
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: {  teamData: [], summaryData: null  } }
+    }
+
+    const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
+    const summaryData = await getActiveSurveysSummaryWithCustomToken(accessToken);
+
+    return {
+      props: {
+        teamData: teamData?.data || null,
+        summaryData: summaryData || null
+      },
+    }
+
+  } catch (err) {
+    console.log(err)
+    return {
+      props: {
+        teamData: [],
+        summaryData: null
+      },
+    }
+  }
 }

@@ -44,6 +44,20 @@ export const getTeamsByUser = () => axiosClient({
     method: 'GET',
 })
 
+export const fetchTeamsByUserWithCustomToken = async (token: string) => {
+    try {
+        const response = await axiosClient.get(`/team/user`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        });
+        return response.data
+    } catch (error) {
+        console.log(error)
+        return [];
+    }
+}
+
 export const deleteTeamById = (id: String) => axiosClient({
     url: `/team/${id}`,
     method: 'DELETE',

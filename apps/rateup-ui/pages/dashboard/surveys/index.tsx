@@ -19,7 +19,7 @@ import {
   Modal,
   Checkbox,
   Button,
-  Dialog, 
+  Dialog, rem
 } from "@mantine/core";
 import {
   IconChartBar,
@@ -49,6 +49,7 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteSurvey,
+  getSurveysWithCustomToken,
   updateSurvey,
 } from "../../../backend/surveys/survey.api";
 import {
@@ -61,8 +62,11 @@ import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
 import classes from './Survey.module.css';
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from "../../../config/backendConfig";
 
-export default function Surveys() {
+export default function Surveys({ surveys: initialSurveys}) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [
     mergeSurveyOpened,
@@ -87,7 +91,7 @@ export default function Surveys() {
     isLoading,
     error,
     data: surveys,
-  } = useSurveys(specificTeamIsSelected);
+  } = useSurveys(specificTeamIsSelected, initialSurveys);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -459,11 +463,12 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
       //   message: "Deleted!",
       // });
       notifications.update({
-        id: "load-data",
+        id: "delete-data",
         color: "teal",
         title: "Success",
         message: "Deleted Survey Successfully!",
-        icon: <IconCheck size="1rem" />,
+        loading: false,
+        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveys"]);
@@ -473,6 +478,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
       console.error("Error deleting Survey:", error.message);
       notifications.update({
         id: "load-data",
+        loading: false,
         color: "red",
         title: "Delete Failed..!",
         message: error?.response?.data?.error,
@@ -550,7 +556,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
             onClick={(e) => {
                 e.stopPropagation();
                 notifications.show({
-                  id: "load-data",
+                  id: "delete-data",
                   loading: true,
                   title: "Deleting survey..",
                   message: `Hold on, survey is getting deleted...`,
@@ -630,4 +636,31 @@ function StatusBadge({ active }) {
       {active ? "Active" : "Paused"}
     </Badge>
   );
+}
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig())
+
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: {  surveys: [] } }
+    }
+
+    const surveys = await getSurveysWithCustomToken(accessToken)
+
+    return {
+      props: {
+        surveys: surveys || null
+      },
+    }
+
+  } catch (err) {
+    console.log(err)
+    return {
+      props: {
+        surveys: []
+      },
+    }
+  }
 }

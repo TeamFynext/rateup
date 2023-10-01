@@ -30,12 +30,16 @@ import { useRouter } from "next/router";
 import { rem } from '@mantine/core';
 
 
-export const useSurvey = (surveyId: string) =>
-  useQuery({
-    enabled: !!surveyId,
+export const useSurvey = (surveyId: string, initialData = null) => {
+  return useQuery({
     queryKey: ["survey", surveyId],
+    enabled: !!surveyId || initialData === null,
+    initialData: initialData,
     queryFn: () => getSurvey(surveyId),
-  });
+  })
+}
+
+
   //------------get landing page -----------
 export const useLandingPage = (LandingpageId: string) =>
   useQuery({
@@ -43,27 +47,34 @@ export const useLandingPage = (LandingpageId: string) =>
     queryKey: ["survey", LandingpageId],
     queryFn: () => getLandingpage(LandingpageId),
   });
+
 export const useSurveysBylandingId = (landingId: string) =>
   useQuery({
     enabled: !!landingId,
     queryKey: ["landingSurveys", landingId],
     queryFn: () => getSurveyByLandingId(landingId),
   });
+
 //------------whatsapp survey --------------
 //----@author:harshad-----------
-export const useWhatsappSurveys = (teamIsSelected) =>
-  useQuery({
-    enabled: !teamIsSelected,
+
+export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null ) => {
+  return useQuery({
+    enabled: !teamIsSelected || surveyInitial === null,
     queryKey: ["whatsappsurveys"],
     queryFn: getWhatsappSurveys,
+    initialData: surveyInitial,
   });
+}
 
-export const usePublicSurvey = (surveyId: string) =>
-  useQuery({
-    enabled: !!surveyId,
+export const usePublicSurvey = (surveyId: string, surveyInitial = null ) => {
+  return useQuery({
+    enabled: !!surveyId || surveyInitial === null,
     queryKey: ["public-survey", surveyId],
     queryFn: () => getPublicSurvey(surveyId),
+    initialData: surveyInitial,
   });
+}
 
 export const usePublicSurveyGoogleLink = (surveyId: string) =>
   useQuery({
@@ -94,17 +105,23 @@ export const useSurveysLanding = (teamIsSelected) =>
 //     onSuccess: (data) => {},
 //   });
 // }
-export const useSurveys = (specificTeamIsSelected: boolean) => useQuery({
-  enabled: !specificTeamIsSelected,
-  queryKey: ['surveys'],
-  queryFn: getSurveys
-})
+export const useSurveys = (specificTeamIsSelected: boolean, initialSurveys = null) => {
+  return useQuery({
+      enabled: !specificTeamIsSelected || initialSurveys === null,
+      queryKey: ['surveys'],
+      initialData: initialSurveys,
+      queryFn: getSurveys
+    }) 
+  }
 
-export const useSurveysSummary = () => useQuery({
-  queryKey: ['surveysSummary'],
-  queryFn: getActiveSurveysSummary
-})
-
+export const useSurveysSummary = (initialSummaryData = null) => {
+  return useQuery({
+    queryKey: ['surveysSummary'],
+    enabled: initialSummaryData === null,
+    initialData: initialSummaryData,
+    queryFn: getActiveSurveysSummary,
+  })
+}
 
 export const useSurveysByTeam = (teamId: string, specificTeamIsSelected) => useQuery({
   enabled: specificTeamIsSelected,
@@ -135,6 +152,7 @@ export const useCreateSurveyMutation = ({
       notifications.update({
         id: "load-data",
         color: "teal",
+        loading: false,
         title: "Success",
         message: "Survey Created...!",
         icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
@@ -185,6 +203,7 @@ export const useCreateSurveyLandingPageMutation = ({
       notifications.update({
         id: "load-data",
         color: "teal",
+        loading: false,
         title: "Success",
         message: "Survey Landing Page created Created...!",
         icon: <IconCheck size="1rem" />,
@@ -230,6 +249,7 @@ export const useUpdateSurveyLandingPageMutation = ({
       notifications.update({
         id: "load-data",
         color: "teal",
+        loading: false,
         title: "Success",
         message: "Survey Landing Page Updated...!",
         icon: <IconCheck size="1rem" />,

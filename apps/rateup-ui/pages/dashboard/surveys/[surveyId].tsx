@@ -8,12 +8,17 @@ import { useQuestions } from "../../../backend/surveys/questions/questions.query
 import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "./StyledTabs";
 import { RateupButtonBlackOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { IconChevronDown, IconPlus } from "@tabler/icons-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
 import Result from "../../../components/Survey/Result/Result";
 import { useUser } from "../../../context/UserContext";
 import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from "../../../config/backendConfig";
+import { getSurveyWithCustomToken } from "../../../backend/surveys/survey.api";
+import { getQuestionsWithCustomToken } from "../../../backend/surveys/questions/questions.api";
 
 enum TabEnum {
   Edit = "Edit",
@@ -22,11 +27,11 @@ enum TabEnum {
   Settings = "Settings",
   Theme = "Theme",
 }
-export default () => {
+export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) => {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
-  const { user, setUser } = useUser();
+  const { user } = useUser();
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -36,9 +41,9 @@ export default () => {
     isLoading: isSurveyLoading,
     error: surveyError,
     data: survey,
-  } = useSurvey(surveyId);
+  } = useSurvey(surveyId, surveyInitial);
 
-  const { isLoading, error, data: questions } = useQuestions(surveyId);
+  const { isLoading, error, data: questions } = useQuestions(surveyId, questionsinitial);
 
   const { update } = useRouteParams();
   useEffect(() => {
@@ -192,3 +197,34 @@ export default () => {
     </SelectedLanguageContext.Provider>
   );
 };
+
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig())
+    const { surveyId } = context.params as { surveyId: string };
+
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: { surveyData: [], questionsData:[] } }
+    }
+
+    const surveyData = await getSurveyWithCustomToken(accessToken, { surveyId })
+    const questionsData = await getQuestionsWithCustomToken(accessToken, { surveyId })
+
+    return {
+      props: {
+        surveyData: surveyData || null,
+        questionsData: questionsData || null
+      },
+    }
+
+  } catch (err) {
+    console.log(err)
+    return {
+      props: {
+        surveyData: [], questionsData:[]
+      },
+    }
+  }
+}

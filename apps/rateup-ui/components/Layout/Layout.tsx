@@ -13,6 +13,9 @@ import { RouteParamsProvider } from '../../context/RouteParamsContext';
 import SessionAuth from '../SuperToken/SessionAuth';
 import { useRouter } from 'next/router';
 import useLocalStorage from '../../hooks/localStorage';
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from '../../config/backendConfig';
 
 const classes = {
     appShellBody: {

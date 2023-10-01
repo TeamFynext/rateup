@@ -70,6 +70,7 @@ const TeamDetails = () => {
                     id: 'load-data',
                     color: 'teal',
                     title: 'Success',
+                    loading: false,
                     message: 'Invite sent successfully.',
                     icon: <IconCheck size="1rem" />,
                     autoClose: 3000,
@@ -83,6 +84,7 @@ const TeamDetails = () => {
             notifications.update({
                 id: 'load-data',
                 color: 'red',
+                loading: false,
                 title: 'Failed',
                 message: error?.response?.data?.message || error.message,
                 icon: <IconCheck size="1rem" />,

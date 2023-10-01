@@ -101,6 +101,7 @@ export default function LandingPagesList() {
         id: "load-data",
         color: "teal",
         title: "Success",
+        loading: false,
         message: "Deleted Landing Page Successfully!",
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
@@ -113,6 +114,7 @@ export default function LandingPagesList() {
       notifications.update({
         id: "load-data",
         color: "red",
+        loading: false,
         title: "Delete Failed..!",
         message: error?.response?.data?.error,
         icon: <IconCheck size="1rem" />,
@@ -331,6 +333,7 @@ function SurveyMenu({
         id: "load-data",
         color: "teal",
         title: "Success",
+        loading: false,
         message: "Deleted Landing Page Successfully!",
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
@@ -341,6 +344,7 @@ function SurveyMenu({
       notifications.update({
         id: "load-data",
         color: "red",
+        loading: false,
         title: "Delete Failed..!",
         message: error?.response?.data?.error,
         icon: <IconCheck size="1rem" />,

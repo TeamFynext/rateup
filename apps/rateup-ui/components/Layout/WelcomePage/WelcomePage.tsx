@@ -1,36 +1,25 @@
 import {
   Box,
-  Grid,
   Title,
-  Paper,
   TextInput,
   Space,
   Text,
-  Center,
   Stack,
-  Container,
   Image,
-  RingProgress,
   Modal,
   Group,
   Button,
   Flex,
   BackgroundImage,
-  Tooltip,
 } from "@mantine/core";
-import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import {
-  usePublicSurvey,
-  useUpdateStartedMutation,
-  useUpdateVisitedMutation,
   useVerifySurveyPwdMutation,
 } from "../../../backend/surveys/surveys.query";
 import { usePublicWelcomeThemeBySurveyId } from "../../../backend/WelcomeTheme/welcometheme.query";
 import {
   RateupButtonPrimary,
-  RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 
 
@@ -44,7 +33,6 @@ const buttonStyles = {
 
 function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
   const [opened, { open, close }] = useDisclosure(false);
-
   const [passwordInput, setPasswordInput] = useState("");
 
   const updateSurveyPassword = useVerifySurveyPwdMutation(
@@ -52,12 +40,6 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
     passwordInput,
     onStart
   );
-
-  const updateVisited = useUpdateVisitedMutation();
-
-  useEffect(() => {
-    if (surveyId) updateVisited.mutate(surveyId);
-  }, []);
 
   //-----------get welcome page styles and content-------------
   const {

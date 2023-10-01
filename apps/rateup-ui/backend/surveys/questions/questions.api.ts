@@ -7,11 +7,28 @@ const QUESTION_URL = "/question";
 export async function createQuestion(surveyId: string, data) {
     return axiosClient.post(`${QUESTION_URL}/${surveyId}`, data)
 }
+
+
 export async function getQuestions(surveyId: string) {
     if(!surveyId) return []
     const res = await axiosClient.get(`${QUESTION_URL}/${surveyId}`)
     return res.data as Question[]
 }
+
+export const getQuestionsWithCustomToken = async (token: string, { surveyId }) => {
+    try {
+      const response = await axiosClient.get(`${QUESTION_URL}/${surveyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data as Survey
+    } catch (error) {
+      console.log(error)
+      return [];
+    }
+}
+
 
 export async function deleteQuestion(surveyId: string, questionId: string) {
     return axiosClient.delete(`${QUESTION_URL}/${surveyId}/${questionId}`)

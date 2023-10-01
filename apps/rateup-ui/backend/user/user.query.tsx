@@ -117,6 +117,7 @@ export function useCreateUserMutation(setIsLoading) {
             notifications.update({
               id: 'load-data',
               color: 'teal',
+              loading: false,
               title: 'Success',
               message: 'Profile Photo Updated Successfully!',
               icon: <IconCheck size="1rem" />,
@@ -133,6 +134,7 @@ export function useCreateUserMutation(setIsLoading) {
             notifications.update({
               id: 'load-data',
               color: 'red',
+              loading: false,
               title: 'Failed',
               message: error?.response?.data?.message,
               icon: <IconCheck size="1rem" />,

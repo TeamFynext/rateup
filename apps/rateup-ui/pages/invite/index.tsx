@@ -35,6 +35,7 @@ const updateInviteMutation = useMutation(() => acceptInvite(), {
                 id: 'load-data',
                 color: 'teal',
                 title: 'Success',
+                loading: false,
                 message: 'Invite Accepted successfully.',
                 icon: <IconCheck size="1rem" />,
                 autoClose: 3000,
@@ -46,6 +47,7 @@ const updateInviteMutation = useMutation(() => acceptInvite(), {
         notifications.update({
             id: 'load-data',
             color: 'red',
+            loading: false,
             title: 'Failed',
             message: error.message,
             icon: <IconCheck size="1rem" />,

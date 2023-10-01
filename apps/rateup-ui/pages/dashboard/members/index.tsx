@@ -4,17 +4,15 @@ import { useRouter } from "next/router";
 import { Flex, Badge, Title, Stack, Grid, Select, 
   Loader , Table, Text, Paper, Divider, useMantineTheme} from '@mantine/core';
 import { useTeamsMembersOfOrg, useUpdateRoleMutation } from '../../../backend/org/org.query';
-import { QueryClient, dehydrate, useQueryClient } from '@tanstack/react-query'
 import { backendConfig } from '../../../config/backendConfig';
-import { getSessionWithRefreshHandling } from '../../../utils/auth/getSessionWithRefreshHandling';
 import supertokensNode from 'supertokens-node'
-import { fetchTeamsMembersOfOrg } from '../../../backend/ssr/org.api';
 import { notifications } from '@mantine/notifications';
+import { getSurveyWithCustomToken } from '../../../backend/org/org.api';
+import { GetServerSidePropsContext } from "next";
 
-const Members = () => {
+const Members = ( { membersData: membersInitialData } ) => {
   const router = useRouter();
   const { user, setUser } = useUser();
-  const queryClient = useQueryClient();
   const theme = useMantineTheme();
 
 
@@ -27,7 +25,7 @@ const Members = () => {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsMembersOfOrg(queryClient);
+  } = useTeamsMembersOfOrg(membersInitialData);
 
   const updateRole = useUpdateRoleMutation();
 
@@ -45,7 +43,9 @@ const Members = () => {
     });
   }
 
-  const rows = teamsDataUser?.data?.data?.map((team, i) => (
+  let membersData = membersInitialData || teamsDataUser?.data
+
+  const rows = membersData?.data?.map((team, i) => (
     <tr key={i}>
       <td>
         <Stack align='center'>
@@ -151,17 +151,29 @@ isLoadingTeamsUser ?
 export default Members
 
 
-export async function getServerSideProps(context) {
-  const queryClient = new QueryClient();
-  //console.log("..........members ssr........")
-  supertokensNode.init(backendConfig());
-  const session = await getSessionWithRefreshHandling(context);
-  const memberInitialData = await queryClient.prefetchQuery(["teamsMembersOfOrg"], () => fetchTeamsMembersOfOrg(session));
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig())
 
-  //console.log("Prefetched Members: ", JSON.stringify(memberInitialData));
-  return {
-    props: {
-      dehydratedState: dehydrate(queryClient),
-    },
-  };
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: { membersData: [] } }
+    }
+
+    const membersData = await getSurveyWithCustomToken(accessToken)
+
+    return {
+      props: {
+        membersData: membersData || null
+      },
+    }
+
+  } catch (err) {
+    console.log(err)
+    return {
+      props: {
+        membersData: []
+      },
+    }
+  }
 }

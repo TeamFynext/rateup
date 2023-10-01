@@ -3,18 +3,15 @@ import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { IUpdateLogo, getTeamsMembersOfOrg, updateOrgLogo, updateRole } from "./org.api";
 
- export function useTeamsMembersOfOrg(queryClient) {
-  return useQuery(["orgTeamsDataQuery"], getTeamsMembersOfOrg, {
-    //refetchOnWindowFocus: "always",
-    //refetchOnMount: "always",
-    initialData: () => queryClient.getQueryData(["teamsMembersOfOrg"]),
-    onSuccess: (data) => {
-   //  console.log("Initial Prefetch Members Data:", queryClient.getQueryData(["teamsMembersOfOrg"]));
-
-    // console.log("New fetch Members Data:", data);
-    },
-  });
+export const useTeamsMembersOfOrg = (initialData = null) => {
+  return useQuery({
+    queryKey: ["orgTeamsDataQuery"],
+    enabled: initialData === null,
+    initialData: initialData,
+    queryFn: () => getTeamsMembersOfOrg,
+  })
 }
+
 
 export function useUpdateRoleMutation() {
   const queryClient = useQueryClient();
@@ -23,6 +20,7 @@ export function useUpdateRoleMutation() {
     onSuccess: () => {
       notifications.update({
         id: 'load-data',
+        loading: false,
         color: 'teal',
         title: 'Success',
         message: 'Member Role Updated Successfully!',
@@ -35,6 +33,7 @@ export function useUpdateRoleMutation() {
       console.error("Error Role Update:", error.message);
       notifications.update({
         id: 'load-data',
+        loading: false,
         color: 'red',
         title: 'Failed',
         message: error?.response?.data?.message,
@@ -51,6 +50,7 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
       onSuccess: () => {
         notifications.update({
           id: 'load-data',
+          loading: false,
           color: 'teal',
           title: 'Success',
           message: 'Logo Updated Successfully!',
@@ -66,6 +66,7 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
         console.error("Error Logo Update:", error.message);
         notifications.update({
           id: 'load-data',
+          loading: false,
           color: 'red',
           title: 'Failed',
           message: error?.response?.data?.message,

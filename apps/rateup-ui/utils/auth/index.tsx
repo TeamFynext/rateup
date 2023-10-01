@@ -153,6 +153,7 @@ export const useConsumeVerificationCode = () => {
         notifications.update({
           id: 'verify-email',
           color: 'teal',
+          loading: false,
           title: 'Success',
           message: "Verified email successfully.",
           icon: <IconCheck size="1rem" />,

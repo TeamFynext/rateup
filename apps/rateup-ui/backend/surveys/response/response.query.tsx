@@ -22,6 +22,7 @@ export function useResetResponsesStats(
 
       notifications.update({
         id: "load-data",
+        loading: false,
         color: response?.success ? "green" : "red",
         title: response?.success ? "Reset Success" : "Failed Reset",
         message: response?.success ? "Cleaned up responses & Stats" : "Please try again",
@@ -36,6 +37,7 @@ export function useResetResponsesStats(
       notifications.update({
         id: "load-data",
         color:  "red",
+        loading: false,
         title:  "Failed Reset",
         message: error.message,
         icon: <IconX size="1rem" />,
@@ -61,6 +63,7 @@ export function useDeleteResponse(
 
       notifications.update({
         id: "load-data",
+        loading: false,
         color: response?.success ? "green" : "red",
         title: response?.success ? "Delete Success" : "Failed Delete",
         message: response?.success ? "Deleted Response successfully" : "Please try again",
@@ -75,6 +78,7 @@ export function useDeleteResponse(
       notifications.update({
         id: "load-data",
         color:  "red",
+        loading: false,
         title:  "Failed Delete",
         message: error.message,
         icon: <IconX size="1rem" />,

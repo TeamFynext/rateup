@@ -21,6 +21,7 @@ export const useCreateLandingWelcomeThemeMutation = ({ setIsLoading,setSaveLoadi
         color: "teal",
         title: "Success",
         message: "theme Created...!",
+        loading: false,
         // icon: <IconCheck size="1rem" />,
         autoClose: 2000
       });
@@ -55,6 +56,7 @@ export function useUpdateLandingWelcomeTheme({ setIsLoading,setSaveLoading}:MyPr
         id: "load-data",
         color: "teal",
         title: "Success",
+        loading: false,
         message: "theme Updated Successfully!",
         // icon: <IconCheck size="1rem" />,
         autoClose: 3000,
@@ -69,6 +71,7 @@ export function useUpdateLandingWelcomeTheme({ setIsLoading,setSaveLoading}:MyPr
         id: "load-data",
         color: "red",
         title: "Failed",
+        loading: false,
         message: error?.response?.data?.message,
         // icon: <IconCheck size="1rem" />,
         autoClose: 3000

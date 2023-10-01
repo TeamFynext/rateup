@@ -5,16 +5,18 @@ import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/router";
 
-export function useTeamsByUser(queryClient) {
-    return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
+export function useTeamsByUser(queryClient, initialData = null) {
+
+  return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
       staleTime: 1000 * 60 * 5, // 5 minutes,
       //refetchOnWindowFocus: "always",
       //refetchOnMount: "always",
-      initialData: () => queryClient.getQueryData(["teamsByUser"]),
+      enabled: initialData === null,
+      initialData: initialData,
       onSuccess: (data) => {
         //console.log("Initial Prefetch Team Data:", queryClient.getQueryData(["teamsByUser"]));
 
-       // console.log("New fetch Team Data:", data);
+        //console.log("New fetch Team Data:", data);
       },
     });
 }
@@ -32,6 +34,7 @@ export function useCreateTeamMutation(
         id: 'load-data',
         color: 'teal',
         title: 'Success',
+        loading: false,
         message: 'Team created successfully.',
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
@@ -46,6 +49,7 @@ export function useCreateTeamMutation(
         id: 'load-data',
         color: 'red',
         title: 'Failed',
+        loading: false,
         message: error?.response?.data?.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
@@ -96,6 +100,7 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
       notifications.update({
         id: 'load-data',
         color: 'teal',
+        loading: false,
         title: 'Delete Success',
         message: 'Team deleted successfully.',
         icon: <IconCheck size="1rem" />,
@@ -109,6 +114,7 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
       notifications.update({
         id: 'load-data',
         color: 'red',
+        loading: false,
         title: 'Failed',
         message: error.message,
         icon: <IconCheck size="1rem" />,

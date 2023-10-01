@@ -45,6 +45,7 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteSurvey,
+  getWhatsappSurveysWithCustomToken,
   updateSurvey,
 } from "../../../backend/surveys/survey.api";
 import {
@@ -55,8 +56,11 @@ import {
 } from "../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useUser } from "../../../context/UserContext";
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { backendConfig } from "../../../config/backendConfig";
 
-export default function WhatsappSurveys() {
+export default function WhatsappSurveys({ surveys: initialSurveys}) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
@@ -72,7 +76,7 @@ export default function WhatsappSurveys() {
 
   const teamIsSelected = selectedTeamId !== "all";
 
-  const { isLoading, error, data: surveys } = useWhatsappSurveys(teamIsSelected);
+  const { isLoading, error, data: surveys } = useWhatsappSurveys(teamIsSelected, initialSurveys);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -470,4 +474,32 @@ function StatusBadge({ active }) {
       {active ? "Active" : "Paused"}
     </Badge>
   );
+}
+
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig())
+
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: {  surveys: [] } }
+    }
+
+    const surveys = await getWhatsappSurveysWithCustomToken(accessToken)
+
+    return {
+      props: {
+        surveys: surveys || null
+      },
+    }
+
+  } catch (err) {
+    console.log(err)
+    return {
+      props: {
+        surveys: []
+      },
+    }
+  }
 }

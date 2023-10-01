@@ -2,11 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createQuestion, getQuestions, updateQuestion } from "./questions.api";
 import { notifications } from "@mantine/notifications";
 
-export const useQuestions = (surveyId) =>
-  useQuery({
+
+export const useQuestions = (surveyId: string, initialData = null) => {
+  return useQuery({
     queryKey: ["questions", surveyId],
+    enabled: !!surveyId || initialData === null,
+    initialData: initialData,
     queryFn: () => getQuestions(surveyId),
-  });
+  })
+}
 
 interface QuestionUpdateMutationArgs {
   qId: string;

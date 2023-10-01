@@ -22,8 +22,6 @@ import React, { useState, useEffect } from "react";
 import {
   usePublicSurvey,
   useUpdateStartedMutation,
-  useUpdateVisitedMutation,
-  useVerifySurveyPwdMutation,
 } from "../../../backend/surveys/surveys.query";
 
 import QuestionCountContext from "../../../context/QuestionCountContext";

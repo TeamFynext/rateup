@@ -14,14 +14,13 @@ import {
   useTeamsByUser,
 } from "../../../backend/team/team.query";
 import TeamCard from "./TeamCard";
-import { QueryClient, dehydrate, useQueryClient } from "@tanstack/react-query";
-import supertokensNode from "supertokens-node";
+import { useQueryClient } from "@tanstack/react-query";
 import { backendConfig } from "../../../config/backendConfig";
-import { fetchTeamsByUser } from "../../../backend/ssr/team.api";
-import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
+import { GetServerSidePropsContext } from "next";
+import supertokensNode from "supertokens-node";
+import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api";
 
-export default function Teams() {
-  // const sessionContext = useSessionContext();
+export default function Teams({teamData: initialTeamData }) {
   const [opened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const { action } = useRouter().query;
@@ -62,9 +61,9 @@ export default function Teams() {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
+  } = useTeamsByUser(queryClient, initialTeamData);
 
-  let teamsData = teamsDataUser?.data;
+  let teamsData = initialTeamData || teamsDataUser?.data;
 
   const onSubmit = (values) => {
     handleSubmit(values);
@@ -85,10 +84,6 @@ export default function Teams() {
     });
     createTeamMutation.mutate(values);
   };
-
-  // if (sessionContext.loading === true) {
-  //     return null;
-  // }
 
   return (
     <>
@@ -206,8 +201,8 @@ export default function Teams() {
                         ?.sort((a, b) => a.id - b.id)
                         .reverse()
                     : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
-                  ).map((team) => (
-                    <Grid.Col span="content">
+                  ).map((team, key) => (
+                    <Grid.Col span="content" key={key}>
                       <TeamCard
                         key={team.teamId}
                         team={team}
@@ -243,19 +238,30 @@ export default function Teams() {
   );
 }
 
-export async function getServerSideProps(context) {
-  const queryClient = new QueryClient();
 
-  supertokensNode.init(backendConfig());
-  const session = await getSessionWithRefreshHandling(context);
-  const teamInitialData = await queryClient.prefetchQuery(["teamsByUser"], () =>
-    fetchTeamsByUser(session)
-  );
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig())
 
- // console.log("Prefetched Teams: ", JSON.stringify(teamInitialData));
-  return {
-    props: {
-      dehydratedState: dehydrate(queryClient),
-    },
-  };
+    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    if (!accessToken) {
+      return { props: {  teamData: [] } }
+    }
+
+    const teamData = await fetchTeamsByUserWithCustomToken(accessToken)
+
+    return {
+      props: {
+        teamData: teamData || null
+      },
+    }
+
+  } catch (err) {
+    console.log(err)
+    return {
+      props: {
+        teamData: []
+      },
+    }
+  }
 }
