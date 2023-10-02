@@ -30,6 +30,9 @@ const updateLogoSchema = z.object({
       message: 'Invalid photo.',
     }),
 })
+const byOrgIdParams = z.object({
+  orgId: z.string()
+})
 
 export const { schemas: orgSchemas, $ref: $Sref } = buildJsonSchemas(
   {
@@ -37,7 +40,8 @@ export const { schemas: orgSchemas, $ref: $Sref } = buildJsonSchemas(
     createOrgResponseSchema,
     idParamRequestSchema,
     updateRoleSchema,
-    updateLogoSchema    
+    updateLogoSchema,
+    byOrgIdParams
   },
   { $id: "orgSchema" }
 );
@@ -46,3 +50,4 @@ export type CreateOrgInput = z.infer<typeof createOrgRequestSchema>;
 export type IdParamInput = z.infer<typeof idParamRequestSchema>;
 export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
 export type UpdateLogoInput = z.infer<typeof updateLogoSchema>;
+export type ByOrgIdParams = z.infer<typeof byOrgIdParams>;

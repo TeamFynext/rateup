@@ -1,13 +1,9 @@
-import { WaMessageBody, WaSendMessageBody } from "../../types/whatsapp.types";
-import {
-  LDResponse,
-  QuestionType as Q,
-  SmileyResponse,
-  WaEvent,
-  YNResponse,
-} from "../../types/enums";
 import { WaSession } from "@prisma/client";
-import { log } from "../../utils/logger";
+import { WaEvent, YNResponse, LDResponse, SmileyResponse } from "../../../types/enums";
+import { WaMessageBody, WaSendMessageBody } from "../../../types/whatsapp.types";
+import { log } from "../../../utils/logger";
+import { QuestionType as Q } from "../../../types/enums";
+
 
 export function getEventType(data: WaMessageBody) {
   if (data.object === 'whatsapp_business_account') {

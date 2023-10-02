@@ -1,34 +1,36 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { WaMessageBody } from "../../types/whatsapp.types";
 import {
   createListMessage,
   getEventType,
   isValidResponse,
   parseMessage,
+  parseResponse,
 } from "./wasurvey.utils";
 import {
   createSession,
   deleteSession,
-  getFirstQuestion,
+  getFirstQuestionId,
   getSession,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
-  sendSurveyToRespondent,
+  sendSurveyToWaCustomer,
   sendTextMessage,
   updateResponses,
   updateSession,
 } from "./wasurvey.service";
-import { getQuestionById } from "../question/question.service";
-import { getSurveyById } from "../survey/survey.service";
-import { Survey, WaSession } from "@prisma/client";
-import { parseResponse } from "./wasurvey.utils";
-import { SendSurveyToRGroupParams, SendSurveyToRespondentParams } from "./wasurvey.schema";
-import { createRespondentSurveySendRecord, getRespondentById } from "../respondent/respondent/respondent.service";
-import { log } from "../../utils/logger";
-import { createRGroupSurveySendRecord, getRespondentsByRGroupId } from "../respondent/rgroup/rgroup.service";
-import { getTemplate, getTemplateWithHSMId, updateTemplateInDb } from "../whatsapp/messageTemplates/wa_templates.service";
-import { WaEvent, WaTemplateStatus } from "../../types/enums";
+import { WaSession, Survey } from "@prisma/client";
+import { WaEvent, WaTemplateStatus } from "../../../types/enums";
+import { log } from "../../../utils/logger";
+import { ByOrgIdParams } from "../../org/org.schema";
+import { getQuestionById } from "../../question/question.service";
+import { getSurveyById } from "../../survey/survey.service";
+import { getWaCustomerById, createWaCustomerSurveySendRecord } from "../customer/waCustomer/waCustomer.service";
+import { getWaCustomersByWaCustomerGroupId, createWaCustomerGroupSurveySendRecord } from "../customer/waCustomerGroup/waCustomerGroup.service";
+import { getTemplateWithHSMId, updateTemplateInDb, getTemplate } from "../messageTemplates/wa_templates.service";
+import { getWaSettings } from "../settings/wa_settings.service";
+import { SendSurveyToWaCustomerParams, SendSurveyToWaCustomerGroupParams } from "./wasurvey.schema";
+import { WaMessageBody } from "../../../types/whatsapp.types";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -36,28 +38,44 @@ interface subscribeQuery {
   "hub.verify_token": string;
   "hub.challenge": string;
 }
-export function webhookSubscribeHandler(
-  request: FastifyRequest,
+export async function webhookSubscribeHandler(
+  request: FastifyRequest<{
+    Params: ByOrgIdParams;
+  }>,
   reply: FastifyReply
 ) {
-  const query = request.query as subscribeQuery;
-  if (
-    query["hub.mode"] === "subscribe" &&
-    query["hub.verify_token"] === process.env["WA_TOKEN"]
-  ) {
-    reply.code(200).send(query["hub.challenge"]);
-  } else {
-    reply.code(403).send("Error, wrong validation token");
+  try {
+    const query = request.query as subscribeQuery;
+    const orgId = request.params.orgId;
+    const waSettings = await getWaSettings(orgId);
+    if (!waSettings) {
+      throw new Error("WA settings not found");
+    }
+    if (
+      query["hub.mode"] === "subscribe" &&
+      query["hub.verify_token"] === waSettings.webhookPassword
+    ) {
+      log.trace('Webhook subscription successful\n%o', { orgId })
+      reply.code(200).send(query["hub.challenge"]);
+    } else {
+      reply.code(403).send("Error, wrong validation token");
+    }
+  } catch (e) {
+    log.error(e)
+    reply.code(500)
   }
 }
 
 // TODO: handle multiple changes (changes.length > 1)
 // TODO: Check for usable types in whatsapp sdk (discontinued project)
 export async function whatsappEventHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Params: ByOrgIdParams;
+  }>,
   reply: FastifyReply
 ) {
   const body = request.body as WaMessageBody;
+  const { orgId } = request.params;
   log.trace('WaEvent => %o', body);
   const eventType = getEventType(body);
   if (!eventType) {
@@ -66,7 +84,7 @@ export async function whatsappEventHandler(
     return;
   } else if (eventType === WaEvent.Message) {
     log.trace("message => %o", parseMessage(body));
-    await whatsappMessageHandler(body);
+    await whatsappMessageHandler(orgId, body);
   } else if (eventType === WaEvent.TemplateStatusChange) {
     log.trace("template status change => %o", body);
     await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
@@ -99,51 +117,55 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
   }
 }
 
-async function whatsappMessageHandler(waMessage: WaMessageBody) {
+async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
   // check for '/start' command
   const { message, from } = parseMessage(waMessage);
   if (message.startsWith("/start")) {
-    await handleStartMessage(waMessage);
+    await handleStartMessage(orgId, waMessage);
   } else {
-    let session = await getSession(from);
-    console.log(message)
-    console.log(session.currentQuestionId)
+    let session = await getSession(orgId, from);
+    log.trace(message)
     if (!session.currentQuestionId) {
       // If no current question, then we assume this is the consent message (template)
       const dbTemplate = await getTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
-        const firstQId = await getFirstQuestion(session.surveyId);
-        session = await updateSession(from, { currentQuestionId: firstQId });
+        const firstQId = await getFirstQuestionId(session.surveyId);
+        session = await updateSession(orgId, from, { currentQuestionId: firstQId });
+        log.trace('sending first question')
         await sendFirstQuestion(session);
       } else {
         // Delete session if user doesn't consent
         log.trace('User did not consent to survey. \n reply => %s \n acceptText => %s', message, dbTemplate.acceptButton)
-        await deleteSession(from);
+        await sendTextMessage(session, 'No Worries', 'Have a great day!')
+        await deleteSession(orgId, from);
         return;
       }
     } else {
-      // Respondent is in the middle of a survey
-      await handleReplyMessage(waMessage);
+      // WaCustomer is in the middle of a survey
+      await handleReplyMessage(orgId, waMessage);
     }
   }
 }
 
-async function handleStartMessage(waMessage: WaMessageBody) {
+async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   const { from, message } = parseMessage(waMessage);
   // delete any existing session if any
-  await deleteSession(from);
+  await deleteSession(orgId, from);
   // create new session
   const ids = message.split(" ")[1]; // format: /start <surveyId>/<templateId>
   const [surveyId, templateId] = ids.split("/");
   const survey = await getSurveyById(surveyId);
   const dbTemplate = await getTemplate(templateId) as WaTemplateWithTypes;
+  const firstQId = await getFirstQuestionId(survey.id);
+
   if (survey.languages.length > 1) {
-    await handleLanguageSelection(from, survey);
-    await createSession(from, survey.id, dbTemplate.data.id);
+    const session = await createSession(from, survey.id, dbTemplate.data.id, dbTemplate.orgId, firstQId);
+    await handleLanguageSelection(session, survey);
     return;
   }
-  const session = await createSession(from, survey.id, survey.languages[0]);
+  const session = await createSession(from, survey.id, dbTemplate.orgId, dbTemplate.orgId, survey.languages[0], firstQId);
+  console.log(session)
   await sendFirstQuestion(session);
 }
 
@@ -156,9 +178,9 @@ async function sendFirstQuestion(session: WaSession) {
   await sendQuestion(firstQuestion!, session);
 }
 
-async function handleReplyMessage(waMessage: WaMessageBody) {
+async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   const { from, message } = parseMessage(waMessage);
-  let session = await getSession(from);
+  let session = await getSession(orgId, from);
   if (!session) {
     // TODO: send error message
     return;
@@ -180,7 +202,7 @@ async function handleReplyMessage(waMessage: WaMessageBody) {
 
   const response = parseResponse(message, question, session);
   if (!isValidResponse(response, question, session.language)) {
-    await sendTextMessage(from, "Invalid response. Please try again.", "");
+    await sendTextMessage(session, "Invalid response. Please try again.", "");
     await sendQuestion(question, session);
     return;
   }
@@ -197,20 +219,19 @@ async function handleReplyMessage(waMessage: WaMessageBody) {
   ).filter((r) => r.questionId !== session.currentQuestionId);
   const updatedResponses = [...currentResponses, formattedResponse] as any;
 
-  await updateResponses(from, updatedResponses);
+  session = await updateResponses(session.orgId, session.phone, updatedResponses);
   await sendNextQuestion(session, message);
 }
 
-async function handleLanguageSelection(from: string, survey: Survey) {
+async function handleLanguageSelection(session: WaSession, survey: Survey) {
   const message = createListMessage(
-    from,
+    session.phone,
     "Please select your preferred language",
     "",
     "View languages",
     survey.languages
   );
-
-  await sendMessage(message);
+  await sendMessage(session.orgId, message);
 }
 
 async function handleLanguageResponse(session: WaSession, message: string) {
@@ -218,12 +239,12 @@ async function handleLanguageResponse(session: WaSession, message: string) {
 
   // if language is not valid, send error message
   if (survey.languages.includes(message)) {
-    session = await updateSession(session.phone, { language: message });
+    session = await updateSession(session.orgId, session.phone, { language: message });
     await sendFirstQuestion(session);
     return;
   } else {
     await sendTextMessage(
-      session.phone,
+      session,
       "Invalid language. Please try again.",
       ""
     );
@@ -233,63 +254,64 @@ async function handleLanguageResponse(session: WaSession, message: string) {
 
 // TODO: generalize above functions and optimize code
 // TODO: create handleStartSurvey(surveyId, phone)
-export async function sendSurveyToRespondentHandler(
+export async function sendSurveyToWaCustomerHandler(
   request: FastifyRequest<
-    { Params: SendSurveyToRespondentParams }
+    { Params: SendSurveyToWaCustomerParams }
   >,
   reply: FastifyReply
 ) {
-  const { surveyId, respondentId, templateId } = request.params;
+  const { surveyId, waCustomerId, templateId } = request.params;
   const survey = await getSurveyById(surveyId);
   const dbTemplate = await getTemplate(templateId);
-  const respondent = await getRespondentById(respondentId);
-  if (!respondent) {
-    throw new Error("Respondent not found");
+  const waCustomer = await getWaCustomerById(waCustomerId);
+  if (!waCustomer) {
+    throw new Error("WaCustomer not found");
   }
   if (!survey) {
     throw new Error("Survey not found");
   }
-  const phone = respondent.phone;
+  const phone = waCustomer.phone;
   if (!phone) {
-    throw new Error("Respondent phone number not found");
+    throw new Error("WaCustomer phone number not found");
   }
-  await deleteSession(phone);
-  await sendSurveyToRespondent(phone, survey, dbTemplate)
-  await createRespondentSurveySendRecord(respondentId, surveyId, templateId);
+  // TODO: throw error if there is a session already
+  await deleteSession(dbTemplate.orgId, phone);
+  await sendSurveyToWaCustomer(phone, survey, dbTemplate)
+  await createWaCustomerSurveySendRecord(waCustomerId, surveyId, templateId);
   reply.code(200).send();
 }
 
-export async function sendSurveyToRGroupHandler(
+export async function sendSurveyToWaCustomerGroupHandler(
   request: FastifyRequest<{
-    Params: SendSurveyToRGroupParams
+    Params: SendSurveyToWaCustomerGroupParams
   }>,
   reply: FastifyReply
 ) {
-  const { surveyId, rgroupId, templateId } = request.params;
-  log.trace(`Preparing to send survey ${surveyId} to rgroup ${rgroupId}`);
+  const { surveyId, waCustomerGroupId, templateId } = request.params;
+  log.trace(`Preparing to send survey ${surveyId} to waCustomerGroup ${waCustomerGroupId}`);
   const survey = await getSurveyById(surveyId);
   const dbTemplate = await getTemplate(templateId);
-  const respondents = await getRespondentsByRGroupId(rgroupId);
-  log.trace('respondents %o', respondents)
+  const waCustomers = await getWaCustomersByWaCustomerGroupId(waCustomerGroupId);
+  log.trace('waCustomers %o', waCustomers)
   if (!survey) {
     throw new Error("Survey not found");
   }
 
   // TODO: limit rate of sending messages
-  // Currently executing sequentially. We can parallelize this after implementing rate limiting
-  for (const { phone, id: respondentId } of respondents) {
+  //TODO: Currently executing sequentially. We can parallelize this after implementing rate limiting
+  for (const { phone, id: waCustomerId } of waCustomers) {
     try {
-      await deleteSession(phone);
+      await deleteSession(dbTemplate.orgId, phone);
     } catch (e) {
       log.error(e)
     }
     // TODO: remove tracking of group-send-record individually and assume
-    // if respondent is in a group, then they have received the survey?
-    await createRespondentSurveySendRecord(respondentId, surveyId, templateId);
+    // if waCustomer is in a group, then they have received the survey?
+    await createWaCustomerSurveySendRecord(waCustomerId, surveyId, templateId);
     // TODO: We can only send templates first. Replace below with a template
-    await sendSurveyToRespondent(phone, survey, dbTemplate)
+    await sendSurveyToWaCustomer(phone, survey, dbTemplate)
   }
 
-  await createRGroupSurveySendRecord(rgroupId, surveyId, templateId);
+  await createWaCustomerGroupSurveySendRecord(waCustomerGroupId, surveyId, templateId);
   reply.code(200).send();
 }

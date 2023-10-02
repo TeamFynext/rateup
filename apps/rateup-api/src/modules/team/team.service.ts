@@ -474,3 +474,11 @@ export async function editTeam({ name, code, googleLink }: EditTeamInput, params
 
   return user;
 }
+
+export async function getTeamById(teamId: string) {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+  });
+
+  return team;
+}

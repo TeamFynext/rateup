@@ -2,7 +2,7 @@ import { WaButtonType, WaTemplateCategory, WaTemplateComponentType, WaTemplateSu
 import { CreateWaTemplateFormattedInput, CreateWaTemplateInput } from "./wa_templates.schema";
 
 export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplateFormattedInput {
-    // TODO: remove any
+    // TODO: remove 'any' type
     let components: any = [
         {
             "type": WaTemplateComponentType.BODY,

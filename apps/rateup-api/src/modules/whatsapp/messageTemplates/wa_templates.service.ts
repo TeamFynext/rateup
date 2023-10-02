@@ -1,21 +1,26 @@
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
-import { waAxios } from "../wa_axios";
+import { getWaSettings } from "../settings/wa_settings.service";
+import { callWhatsappApi } from "../wa_axios";
 import { CreateWaTemplateFormattedInput, CreateWaTemplateInput, WaTemplateFormatted } from "./wa_templates.schema";
 import { generateTemplate } from "./wa_templates.utils";
 
-const wa_business_id = process.env.WA_BUSINESS_ID;
 
 /**
  * fetches templates from WhatsApp Business API
  * @returns 
  */
-export async function fetchTemplates() {
+export async function fetchTemplates(orgId: string) {
     try {
+        log.trace("Fetching whatsappSettings from db")
+        const waSettings = await getWaSettings(orgId);
+
         log.trace("Fetching templates from whatsapp")
-        const res = await waAxios.get(
-            `/${wa_business_id}/message_templates`,
-        );
+        const res = await callWhatsappApi(
+            `/${waSettings.businessId}/message_templates`,
+            "GET",
+            waSettings.accessToken
+        )
         log.trace(" Templates fetched from whatsapp %o", res.data.data)
         return res.data.data
     } catch (e: any) {
@@ -24,11 +29,14 @@ export async function fetchTemplates() {
     }
 }
 
-export async function fetchTemplate(templateName: string) {
+export async function fetchTemplate(templateName: string, orgId: string) {
     try {
+        const waSettings = await getWaSettings(orgId);
         log.trace('fetching template %s', templateName);
-        const { data: { data: templates } } = await waAxios.get(
-            `${wa_business_id}/message_templates?name=${templateName}`
+        const { data: { data: templates } } = await callWhatsappApi(
+            `/${waSettings.businessId}/message_templates?name=${templateName}`,
+            "GET",
+            waSettings.accessToken
         )
         return templates[0]
     } catch (e) {
@@ -36,25 +44,14 @@ export async function fetchTemplate(templateName: string) {
     }
 }
 
-/**
- * Gets templates from db
- * @param teamId 
- * @returns 
- */
-export async function getTemplates(teamIds: Array<string>) {
-    try {
-        const res = await prisma.waTemplate.findMany({
-            where: {
-                teamId: {
-                    in: teamIds
-                }
-            }
-        })
-        return res
-    } catch (e: any) {
-        log.error("Error getting templates from db \n%o", e)
-        return []
-    }
+export async function getTemplatesByOrgId(orgId: string) {
+    const templates = await prisma.waTemplate.findMany({
+        where: {
+            orgId: orgId
+        }
+    })
+    return templates as WaTemplateWithTypes[];
+
 }
 
 export async function getTemplate(templateId: string) {
@@ -93,40 +90,38 @@ export async function getTemplateWithHSMId(hsmId: string) {
  * @param template 
  * @returns 
  */
-export async function createTemplate(template: CreateWaTemplateFormattedInput) {
-    try {
-        const wa_business_id = process.env.WA_BUSINESS_ID;
-        const res = await waAxios.post(
-            `/${wa_business_id}/message_templates`,
+export async function createTemplate(orgId: string, template: CreateWaTemplateFormattedInput) {
+        const waSettings = await getWaSettings(orgId);
+        const res = await callWhatsappApi(
+            `/${waSettings.businessId}/message_templates`,
+            "POST",
+            waSettings.accessToken,
             template
-        );
+        )
         if (res.status === 200) {
             log.trace("Template Created in whatsapp %o", res.data)
         } else {
             // TODO: Parse error and send status to client
             log.error("Error creating template in whatsapp res => %o,\ntemplate => %o", res.data, template)
+            throw new Error("Error creating template in whatsapp")
         }
         return { ...template, ...res.data }
-    } catch (e: any) {
-        log.error("Error creating template")
-        console.log(e);
-    }
 }
 
 /**
  * Saves template to db
  * @param template 
  * @param acceptButton 
- * @param teamId 
+ * @param orgId 
  * @returns 
  */
-export async function saveTemplate(template: WaTemplateFormatted, acceptButton: string, teamId: string) {
+export async function saveTemplate(template: WaTemplateFormatted, acceptButton: string, orgId: string) {
     try {
         const res = await prisma.waTemplate.create({
             data: {
                 data: template,
                 acceptButton: acceptButton,
-                teamId: teamId
+                orgId: orgId
             }
         })
         log.trace("Template saved to db %o", res)
@@ -139,17 +134,20 @@ export async function saveTemplate(template: WaTemplateFormatted, acceptButton: 
 
 /**
  * Sends delete request to WhatsApp Business API
+ * @param orgId
  * @param templateId 
  * @param templateName 
  * @returns 
  */
-export async function deleteTemplate(templateId: string, templateName: string) {
+export async function deleteTemplate(orgId: string, templateId: string, templateName: string) {
     log.trace("Sending Delete req %o", { templateId, templateName })
     try {
-        const wa_business_id = process.env.WA_BUSINESS_ID;
-        const res = await waAxios.delete(
-            `/${wa_business_id}/message_templates?hsm_id=${templateId}&name=${templateName}`,
-        );
+        const waSettings = await getWaSettings(orgId);
+        const res = await callWhatsappApi(
+            `/${waSettings.businessId}/message_templates?hsm_id=${templateId}&name=${templateName}`,
+            "DELETE",
+            waSettings.accessToken
+        )
         log.trace("Template deleted from whatsapp %o", res.data)
         return true
     } catch (e: any) {
@@ -200,11 +198,15 @@ export async function updateTemplateInDb(templateId: string, template: WaTemplat
  * @param hsm_id 
  * @param data 
  */
-export async function editTemplate(hsm_id: string, components: Array<any>) {
+export async function editTemplate(orgId: string, hsm_id: string, components: Array<any>) {
+
     log.trace(`Updating template %o`, { templateId: hsm_id, components })
     try {
-        const res = await waAxios.post(
+        const waSettings = await getWaSettings(orgId);
+        const res = await callWhatsappApi(
             `/${hsm_id}`,
+            "POST",
+            waSettings.accessToken,
             { components }
         )
         if (res.status === 200) {
@@ -223,11 +225,11 @@ export async function editTemplate(hsm_id: string, components: Array<any>) {
  * First updates template in WhatsApp Business API then updates in db
  */
 export async function updateTemplate(templateId: string, data: CreateWaTemplateInput) {
-    const template = await getTemplate(templateId) as any;
+    const template = await getTemplate(templateId);
     const { components } = generateTemplate(data)
-    const res = await editTemplate(template.data.id, components)
+    const res = await editTemplate(template.orgId, template.data.id, components)
     if (res) {
-        const updatedTemplate = await fetchTemplate(template.data.name);
+        const updatedTemplate = await fetchTemplate(template.data.name, template.orgId);
         const res = await updateTemplateInDb(templateId, updatedTemplate)
         return res
     } else {
@@ -235,11 +237,16 @@ export async function updateTemplate(templateId: string, data: CreateWaTemplateI
     }
 }
 
-export async function syncTemplates(teamIds: Array<string>) {
+/**
+ * Syncs templates from WhatsApp Business API to db
+ * @param orgId 
+ * @returns 
+ */
+export async function syncTemplates(orgId: string) {
     try {
-        log.trace("Syncing templates for teamIds %o", teamIds)
-        const waTemplates = await fetchTemplates();
-        const dbTemplates = await getTemplates(teamIds);
+        log.trace("Syncing templates for orgId %s", orgId)
+        const waTemplates = await fetchTemplates(orgId);
+        const dbTemplates = await getTemplatesByOrgId(orgId)
 
         console.log(waTemplates, dbTemplates)
         let idToHSMIdMap = {}

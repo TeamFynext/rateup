@@ -1,33 +1,42 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { createTemplate, deleteTemplate, deleteTemplateFromDb, getTemplate, getTemplates, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
+import { createTemplate, deleteTemplate, deleteTemplateFromDb, getTemplate, getTemplatesByOrgId, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
 import { CreateWaTemplateInput, ByTemplateIdParamsSchema, WaTemplateFormatted } from "./wa_templates.schema";
 import { generateTemplate } from "./wa_templates.utils";
-import { ByTeamIdParams } from "../../team/team.schema";
 import { log } from "../../../utils/logger";
 import Session from "supertokens-node/recipe/session";
-import { getTeamsByUserId } from "../../team/team.service";
+import { getOrgIdAndRole } from "../../user/user.service";
+import { Role } from "@prisma/client";
+import { getUserIdFromRequest } from "../../../utils/auth";
 
 export async function getTemplatesHandler(
-  request: FastifyRequest<{
-    Params: ByTeamIdParams
-  }>,
+  request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const templates = await getTemplates([request.params.teamId]);
+  const userId = await getUserIdFromRequest(request, reply);
+  const { orgId } = await getOrgIdAndRole({ id: userId });
+  const templates = await getTemplatesByOrgId(orgId);
   reply.code(200).send(templates);
 }
 
 export async function createTemplateHandler(
   request: FastifyRequest<{
-    Body: CreateWaTemplateInput,
-    Params: ByTeamIdParams
+    Body: CreateWaTemplateInput
   }>,
   reply: FastifyReply
 ) {
-  const formattedTemplate = generateTemplate(request.body)
-  const template = await createTemplate(formattedTemplate);
-  await saveTemplate(template, request.body.acceptButton, request.params.teamId)
-  reply.code(200);
+  try {
+    const userId = await getUserIdFromRequest(request, reply);
+    const { orgId } = await getOrgIdAndRole({ id: userId })
+    // TODO: restrict access to super admin and admin?
+
+    const formattedTemplate = generateTemplate(request.body)
+    const template = await createTemplate(orgId, formattedTemplate);
+    await saveTemplate(template, request.body.acceptButton, orgId)
+    reply.code(200);
+  } catch (e) {
+    log.error("Error creating template \n%o", e)
+    reply.code(500);
+  }
 }
 
 export async function updateTemplateHandler(
@@ -37,6 +46,20 @@ export async function updateTemplateHandler(
   }>,
   reply: FastifyReply
 ) {
+  const userId = await getUserIdFromRequest(request, reply);
+  const { orgId } = await getOrgIdAndRole({ id: userId });
+  const template = await getTemplate(request.params.templateId);
+
+  if (!template) {
+    reply.status(404);
+    log.trace("Template not found")
+    return;
+  } else if (template.orgId !== orgId) {
+    log.trace("User %s tried to update template %s from another org", userId, request.params.templateId)
+    reply.status(403);
+    return;
+  }
+
   const updatedTemplate = await updateTemplate(request.params.templateId, request.body);
   if (updatedTemplate) {
     reply.status(200).send(updatedTemplate)
@@ -53,9 +76,15 @@ export async function deleteTemplateHandler(
 ) {
   const { templateId } = request.params;
   try {
-    const { data: template } = await getTemplate(templateId);
+    const { data: template, orgId } = await getTemplate(templateId);
+    const userId = await getUserIdFromRequest(request, reply);
+    const { orgId: userOrg } = await getOrgIdAndRole({ id: userId });
+    if (userOrg !== orgId) {
+      reply.code(403);
+      return;
+    }
     const { id, name } = template as WaTemplateFormatted;
-    const deleted = await deleteTemplate(id, name);
+    const deleted = await deleteTemplate(orgId, id, name);
     if (deleted) {
       await deleteTemplateFromDb(templateId);
       reply.code(200);
@@ -73,10 +102,13 @@ export async function syncTemplatesHandler(
 ) {
   const session = await Session.getSession(request, reply);
   const userId = session.getUserId();
+  const { orgId, role } = await getOrgIdAndRole({ id: userId });
 
-  const teams = await getTeamsByUserId(userId);
-  const teamIds = teams.map(team => team.teamId);
-  const synced = await syncTemplates(teamIds);
+  if (role !== Role.SUPER_ADMIN && role !== Role.ADMIN) {
+    reply.code(403);
+    return;
+  }
+  const synced = await syncTemplates(orgId);
   if (synced) {
     reply.code(200);
   } else {

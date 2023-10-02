@@ -36,7 +36,6 @@ const updateProfileSchema = z.object({
   title: z.string().min(3),
   name: z.string().min(4),
   phone: z.string().min(10),
-  whatsappAccessToken: z.any(),
 });
 
 const updateProfilePhotoSchema = z.object({

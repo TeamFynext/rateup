@@ -6,7 +6,10 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { getUserByEmail } from "../modules/user/user.service";
 
-
+export async function getUserIdFromRequest(request: FastifyRequest, reply: FastifyReply) {
+  let session = await Session.getSession(request, reply);
+  return session.getUserId();
+}
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {

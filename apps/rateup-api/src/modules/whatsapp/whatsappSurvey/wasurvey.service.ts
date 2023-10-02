@@ -1,37 +1,28 @@
-import axios from "axios";
-import { WaSendMessageBody } from "../../types/whatsapp.types";
-import prisma from "../../utils/prisma";
-import {
-  getQuestionById,
-  getQuestionsBySurveyId,
-} from "../question/question.service";
-import { ResponsePlatform, Survey, WaSession } from "@prisma/client";
-import {
-  createTemplateMessage,
-  createTextMessage,
-  generateMessageDataFromQuestion,
-} from "./wasurvey.utils";
-import { LogicAction } from "../../types/enums";
-import { createResponse } from "../response/response.service";
-import { log } from "../../utils/logger";
-import { parseLogicAction } from "../question/question.utils";
+import { WaSession, ResponsePlatform, Survey } from "@prisma/client";
+import { LogicAction } from "../../../types/enums";
+import { WaSendMessageBody } from "../../../types/whatsapp.types";
+import { log } from "../../../utils/logger";
+import prisma from "../../../utils/prisma";
+import { getQuestionsBySurveyId, getQuestionById } from "../../question/question.service";
+import { parseLogicAction } from "../../question/question.utils";
+import { createResponse } from "../../response/response.service";
+import { getWaSettings } from "../settings/wa_settings.service";
+import { callWhatsappApi } from "../wa_axios";
+import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage } from "./wasurvey.utils";
 
-const config = {
-  headers: {
-    Authorization: "Bearer " + process.env.WA_ACCESS_TOKEN,
-  },
-};
 
-export async function sendMessage(messageData: WaSendMessageBody) {
-  const phone_number_id = process.env.WA_PHONE_ID;
+
+export async function sendMessage(orgId: string, messageData: WaSendMessageBody) {
+  const waSettings = await getWaSettings(orgId);
 
   log.trace(`sending message to %s \n%o`, messageData.to, messageData);
   try {
-    const res = await axios.post(
-      `https://graph.facebook.com/v16.0/${phone_number_id}/messages`,
-      messageData,
-      config
-    );
+    const res = await callWhatsappApi(
+      `/${waSettings.phoneId}/messages`,
+      "POST",
+      waSettings.accessToken,
+      messageData
+    )
     log.trace(`sent successfully %o %o `, res.data, res.statusText)
   } catch (e: any) {
     log.error("Error sending message")
@@ -39,10 +30,13 @@ export async function sendMessage(messageData: WaSendMessageBody) {
   }
 }
 
-export async function getSession(phone: string) {
+export async function getSession(orgId: string, phone: string) {
   const session = await prisma.waSession.findUnique({
     where: {
-      phone: phone,
+      phone_orgId: {
+        phone: phone,
+        orgId: orgId,
+      }
     },
   });
   if (!session) {
@@ -50,12 +44,15 @@ export async function getSession(phone: string) {
   }
   return session;
 }
-export async function deleteSession(phone: string) {
-  log.info("Deleting previous sessions if any", { phone });
+export async function deleteSession(orgId: string, phone: string) {
+  log.info("Deleting previous sessions if any for %o", { phone, orgId });
   try {
     await prisma.waSession.delete({
       where: {
-        phone: phone,
+        phone_orgId: {
+          phone,
+          orgId
+        }
       },
     });
   } catch (e: any) {
@@ -67,9 +64,8 @@ export async function deleteSession(phone: string) {
   }
 }
 
-export async function getFirstQuestion(surveyId: string) {
+export async function getFirstQuestionId(surveyId: string) {
   const questions = await getQuestionsBySurveyId(surveyId);
-  console.log(questions)
   return questions[0].id;
 }
 
@@ -77,18 +73,20 @@ export async function createSession(
   phone: string,
   surveyId: string,
   templateId: string,
-  language: string = ""
+  orgId: string,
+  language: string = "",
+  currentQuestionId?: string
 ) {
   log.info("Creating session \n%o\n", { phone, surveyId, language });
 
-  const firstQId = await getFirstQuestion(surveyId);
   const session = await prisma.waSession.create({
     data: {
       phone: phone,
       surveyId: surveyId,
-      currentQuestionId: firstQId,
       language: language,
-      templateId: templateId
+      templateId: templateId,
+      orgId: orgId,
+      currentQuestionId: currentQuestionId,
     },
   });
 
@@ -96,14 +94,18 @@ export async function createSession(
   return session;
 }
 
-export async function updateSession(phone: string, data: any) {
-  log.info("Updating session \n%o\n", { phone, data });
+export async function updateSession(orgId: string, phone: string, data: any) {
+  log.trace("Updating session \n%o\n", { phone, orgId, data });
   const session = await prisma.waSession.update({
     where: {
-      phone: phone,
+      phone_orgId: {
+        phone: phone,
+        orgId: orgId,
+      }
     },
     data: data,
   });
+  log.trace("Session updated \n%o\n", session)
   return session;
 }
 
@@ -134,8 +136,8 @@ export async function sendNextQuestion(session: WaSession, response: any) {
       "Thank You",
       "Have a nice day!"
     );
-    await saveResponses(session.phone);
-    await sendMessage(ThankYouMessage);
+    await saveResponses(session);
+    await sendMessage(session.orgId, ThankYouMessage);
   } else {
     // 'next' is a question id
     const nextQuestion = await getQuestionById(surveyId, next);
@@ -146,11 +148,14 @@ export async function sendNextQuestion(session: WaSession, response: any) {
   }
 }
 
-async function updateCurrentQuestion(newQId: string, from: string) {
-  log.info("Updating current question for %s => %s\n", from, newQId);
+async function updateCurrentQuestion(orgId: string, from: string, newQId: string) {
+  log.trace("Updating current question for %o => %s\n", { from, orgId }, newQId);
   await prisma.waSession.update({
     where: {
-      phone: from,
+      phone_orgId: {
+        phone: from,
+        orgId: orgId,
+      },
     },
     data: {
       currentQuestionId: newQId,
@@ -159,23 +164,18 @@ async function updateCurrentQuestion(newQId: string, from: string) {
 }
 export async function sendQuestion(question: Question, session: WaSession) {
   const message = await generateMessageDataFromQuestion(session, question);
-  await updateCurrentQuestion(question.id, session.phone);
-  await sendMessage(message);
+  await updateCurrentQuestion(session.orgId, session.phone, question.id,);
+  await sendMessage(session.orgId, message);
 }
-async function saveResponses(phone: string) {
-  // fetching latest session
-  const session = await getSession(phone);
-  if (!session) {
-    throw new Error("No session found");
-  }
+async function saveResponses(session: WaSession) {
+  log.trace("Saving responses for %o", session)
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 
   const surveyResponse = {
     surveyId: session.surveyId,
     responses: questionResponses,
-    phone,
-    // TODO lang
+    phone: session.phone,
     language: session.language,
     platform: ResponsePlatform.WHATSAPP,
   };
@@ -184,12 +184,16 @@ async function saveResponses(phone: string) {
 }
 
 export async function updateResponses(
+  orgId: string,
   phone: string,
   responses: Array<QuestionResponse>
 ) {
-  await prisma.waSession.update({
+  return await prisma.waSession.update({
     where: {
-      phone: phone,
+      phone_orgId: {
+        phone,
+        orgId: orgId,
+      }
     },
     data: {
       responses: responses as any,
@@ -198,33 +202,23 @@ export async function updateResponses(
 }
 
 export async function sendTextMessage(
-  to: string,
+  session: WaSession,
   title: string,
   description: string = ""
 ) {
-  const messageData = createTextMessage(to, title, description);
-  await sendMessage(messageData);
+  const messageData = createTextMessage(session.phone, title, description);
+  await sendMessage(session.orgId, messageData);
 }
-
-// TODO: move to .env & upgrade to v17.0?
-const WA_API_VERSION = "v16.0";
 
 /**
  * Creates a session with currentQuestionId as null & sends the template with name "survey_consent"
  * @param phone 
  * @param survey 
  */
-export async function sendSurveyToRespondent(phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
-  log.trace("Sending survey to respondent %s", phone);
-  const session = await prisma.waSession.create({
-    data: {
-      phone,
-      surveyId: survey.id,
-      language: survey.languages[0],
-      templateId: dbTemplate.id
-    }
-  })
-  createSession
+export async function sendSurveyToWaCustomer(phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
+  log.trace("Sending survey to waCustomer %s", phone);
+  // TODO: implement language selection
+  const session = await createSession(phone, survey.id, dbTemplate.id, dbTemplate.orgId, survey.languages[0])
   log.trace("Session created %o", session)
   const { name, language } = dbTemplate.data;
   const templateQuery = {
@@ -236,5 +230,5 @@ export async function sendSurveyToRespondent(phone: string, survey: Survey, dbTe
   const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
 
   // TODO: send error if sending template failed
-  await sendMessage(consentTemplateMessage);
+  await sendMessage(session.orgId, consentTemplateMessage);
 }

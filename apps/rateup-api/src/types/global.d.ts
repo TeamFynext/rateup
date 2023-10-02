@@ -82,6 +82,6 @@ declare global {
       language: string
     }
     acceptButton: string
-    teamId: string
+    orgId: string
   }
 }

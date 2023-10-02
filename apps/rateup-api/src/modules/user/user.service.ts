@@ -155,38 +155,21 @@ export enum Gender {
 }
 
 export async function updateUserProfile(
-  { title, name, phone, whatsappAccessToken }: UpdateProfileSchema,
+  { title, name, phone }: UpdateProfileSchema,
   request: FastifyRequest,
   reply: FastifyReply
 ) {
   let session = await Session.getSession(request, reply);
   let userId = session.getUserId();
 
-  const result = await prisma.$transaction(async (prisma) => {
-    const updateUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        gender: title as Gender,
-        name,
-        phone,
-      },
-    });
-    const updateOrg = await prisma.org.updateMany({
-      where: { ownerId: updateUser.id },
-      data: {
-        whatsappAccessToken
-      },
-    });
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      gender: title as Gender,
+      name,
+      phone,
+    },
   });
-
-  // const user = await prisma.user.update({
-  //   where: { id: userId },
-  //   data: {
-  //     gender: title as Gender,
-  //     name,
-  //     phone,
-  //   },
-  // });
 
   return result;
 }
