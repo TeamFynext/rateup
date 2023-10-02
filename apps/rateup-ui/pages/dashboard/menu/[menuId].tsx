@@ -176,7 +176,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
   } catch (err) {
-    console.log(err)
+    console.error(err)
     return {
       props: {
         categories: []

@@ -76,7 +76,7 @@ declare global {
       responses: Record<string, any>[];
       language: string;
       platform: string;
-      respondentId: string | null;
+      waCustomerId: string | null;
     }[];
     surveyStats: {
       id: string;
@@ -214,7 +214,7 @@ declare global {
     categories: FullCategory[]
   }
 
-  type Respondent = {
+  type WaCustomer = {
     id: string
     createdAt: Date
     name: string | null
@@ -223,7 +223,7 @@ declare global {
     teamId: string | null
   }
 
-  type RGroup = {
+  type WaCustomerGroup = {
     id: string
     createdAt: Date
     name: string

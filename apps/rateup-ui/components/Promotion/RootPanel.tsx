@@ -1,15 +1,13 @@
 import { useDisclosure } from "@mantine/hooks";
-import ImportRespondents, { ImportRespondentsModal } from "./ImportRespondents";
-import { ListItem, LeftPanel } from "./Sidebar";
-import { Box, Flex, Paper, Tabs, Text } from "@mantine/core";
+import { LeftPanel } from "./Sidebar";
+import {  Flex, Paper, Tabs } from "@mantine/core";
 import { PromotionTab } from "../../types/enums";
-import { useRespondents } from "../../backend/respondent/respondent/respondent.query";
-import CenteredSpinner from "../Loaders/CenteredSpinner";
 import { useContext, useState } from "react";
 import SelectedTeamContext from "../../context/SelectedTeam";
-import { useRGroups } from "../../backend/respondent/rgroup/rgroup.query";
 import { IndividualMainWindow } from "./RightPanel/IndividualChat";
 import { GroupMainWindow } from "./RightPanel/GroupChat";
+import { useWaCustomers } from "../../backend/whatsapp/customer/waCustomer/waCustomer.query";
+import { useWaCustomerGroups } from "../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query";
 
 export default function PromotionRootPanel({ activeTab, setActiveTab }) {
   const [importModalIsOpen, { open, close }] = useDisclosure(false)
@@ -19,17 +17,17 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
     isLoading: groupsLoading,
     error: groupsError,
     data: rgroups
-  } = useRGroups(selectedTeamId, activeTab === PromotionTab.Groups)
+  } = useWaCustomerGroups(selectedTeamId, activeTab === PromotionTab.Groups)
   const {
-    isLoading: respondentsLoading,
-    data: respondents,
-    error: respondentsError
-  } = useRespondents(selectedTeamId, activeTab === PromotionTab.Individuals)
+    isLoading: waCustomersLoading,
+    data: waCustomers,
+    error: waCustomersError
+  } = useWaCustomers(selectedTeamId, activeTab === PromotionTab.Individuals)
 
   const [selected, setSelected] = useState(0)
 
   // TODO: handle loading ui
-  const items = activeTab === PromotionTab.Groups ? rgroups : respondents;
+  const items = activeTab === PromotionTab.Groups ? rgroups : waCustomers;
 
   return (
     <Flex
@@ -47,7 +45,7 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
         setActiveTab={setActiveTab}
         sx={{
           flex: 3,
-          boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06);",
+          boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
           borderRadius: "8px"
         }}
         importModalIsOpen={importModalIsOpen}
@@ -74,7 +72,7 @@ function RightPanel({
   return <Paper
     style={{
       flex: 7,
-      boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06);",
+      boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
       borderRadius: "8px",
       overflow: "clip"
     }}
@@ -88,7 +86,7 @@ function RightPanel({
     <Tabs.Panel value={PromotionTab.Individuals} style={{ flexGrow: 1, height: "100%" }}>
       <IndividualMainWindow
         openImport={openImport}
-        respondent={items?.find(({ id }) => id === selected)}
+        waCustomer={items?.find(({ id }) => id === selected)}
       />
     </Tabs.Panel>
   </Paper>;

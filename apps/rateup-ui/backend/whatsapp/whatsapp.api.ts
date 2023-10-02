@@ -1,16 +1,17 @@
+import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient"
 
-const TEMPLATES_URL = '/wa1/templates'
+const TEMPLATES_URL = `${WHATSAPP_URL}/templates`
 /**
  * Fetches whatsapp templates using orgId user belongs to.
  */
-export const getWaTemplates = async (teamId: string) => {
-  const res = await axiosClient.get(TEMPLATES_URL + `/${teamId}`);
+export const getWaTemplates = async () => {
+  const res = await axiosClient.get(TEMPLATES_URL);
   return res.data;
 }
 
-export const createWaTemplate = async (teamId: string, templateData: any) => {
-  return axiosClient.post(`${TEMPLATES_URL}/${teamId}`, templateData);
+export const createWaTemplate = async (templateData: any) => {
+  return axiosClient.post(`${TEMPLATES_URL}`, templateData);
 }
 export const deleteWaTemplate = async (id: string) => {
   return axiosClient.delete(`${TEMPLATES_URL}/${id}`)

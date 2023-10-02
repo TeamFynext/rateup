@@ -1,19 +1,14 @@
 import { Box, Container, Flex, Loader, Select, Tabs, Text } from "@mantine/core";
-import { useTeamsByUser } from "../../../backend/team/team.query";
+import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import SelectedTeamContext from "../../../context/SelectedTeam";
-import { PromotionTab } from "../../../types/enums";
-import PromotionRootPanel from "../../../components/Promotion/RootPanel";
+import SelectedTeamContext from "../../../../context/SelectedTeam";
+import { PromotionTab } from "../../../../types/enums";
+import PromotionRootPanel from "../../../../components/Promotion/RootPanel";
 
 export default function Promotion() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [activeTab, setActiveTab] = useState(PromotionTab.Groups);
-
-  // print selectedTeamId when changed 
-  // useEffect(() => {
-  //   console.log(selectedTeamId);
-  // }, [selectedTeamId])
 
   return (
     <Container fluid>
@@ -35,9 +30,8 @@ export default function Promotion() {
 // TODO: Since selecting team is required in many places, we could generalize this component and reuse it.
 export function TeamSelector({ selectedTeamId, setSelectedTeamId, label = "" }) {
   // TODO: add allowAll boolean prop to allow selecting all teams
-  const queryClient = useQueryClient();
   // TODO: remove some nesting on results of the query?
-  const { data: teamRes, isLoading: teamsLoading, isError } = useTeamsByUser(queryClient);
+  const { data: teamRes, isLoading: teamsLoading, isError, error } = useTeamsByUser(undefined, null);
 
   useEffect(() => {
     // Setting the default teamId to the first team in the list
@@ -45,12 +39,13 @@ export function TeamSelector({ selectedTeamId, setSelectedTeamId, label = "" }) 
       setSelectedTeamId(teamRes?.data?.data[0]?.teamId);
     }
   }, [teamRes, selectedTeamId])
-
-  if (teamsLoading || !teamRes) {
-    return <Loader />
-  }
   if (isError) {
+    console.error(error)
     return <Text>Something went wrong!</Text>
+  }
+  if (teamsLoading) {
+    console.log('teamRes', teamRes)
+    return <Loader />
   }
   const teams = teamRes?.data?.data;
   if (!teams) {

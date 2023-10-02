@@ -1,69 +1,69 @@
 import { Flex, useMantineTheme, Box, Button, Group, Text, ActionIcon, Center, Avatar, TextInput, Stack } from "@mantine/core"
 import dayjs from "dayjs"
 import { useState, useRef, useEffect } from "react"
-import { useRespondentSurveySendHistory, useRespondentResponseHistory, useSendSurveyToRespondentMutation, useRGroupsByRespondent, useDeleteRespondentMutation } from "../../../backend/respondent/respondent/respondent.query"
 import { ResponseComponent, SurveySendDetailComponent, SendSurveyComponent } from "../ChatComponents"
 import { MainWindowHeader } from "./ChatHeader"
 import { IconPencil, IconTrash, IconX } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
-import { updateRespondent } from "../../../backend/respondent/respondent/respondent.api"
-import { useDeleteRespondentFromRGroupMutation } from "../../../backend/respondent/rgroup/rgroup.query"
-import { AddRespondentsPanel } from "./AddRespondentsModal"
 import RightPanelRoot from "."
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
 import classes from './IndividualChat.module.css'
+import { updateWaCustomer } from "../../../backend/whatsapp/customer/waCustomer/waCustomer.api"
+import { useDeleteWaCustomerFromWaCustomerGroupMutation } from "../../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query"
+import { AddWaCustomersPanel } from "./AddWaCustomersModal"
+import { useWaCustomerSurveySendHistory, useWaCustomerResponseHistory, useSendSurveyToWaCustomerMutation, useWaCustomerGroupsByWaCustomer, useDeleteWaCustomerMutation } from "../../../backend/whatsapp/customer/waCustomer/waCustomer.query"
 
 
-export function IndividualMainWindow({ respondent, openImport }) {
+export function IndividualMainWindow({ waCustomer, openImport }) {
   const { colors } = useMantineTheme();
   const [showDetails, { open, close }] = useDisclosure(false)
 
   useEffect(() => {
     close()
-  }, [respondent])
+  }, [waCustomer])
 
-  if (!respondent) return <AddRespondentsPanel onClick={openImport} placeholder={"Add Respondent"} />
+  if (!waCustomer) return <AddWaCustomersPanel onClick={openImport} placeholder={"Add WaCustomer"} />
 
   if (showDetails) {
-    return <DetailsWindow respondent={respondent} onClose={close} />
+    return <DetailsWindow waCustomer={waCustomer} onClose={close} />
   } else {
-    return (<ChatWindow respondent={respondent} openDetails={open} />)
+    return (<ChatWindow waCustomer={waCustomer} openDetails={open} />)
   }
 }
 
 
 
-function ChatWindow({ respondent, openDetails }) {
+function ChatWindow({ waCustomer, openDetails }) {
   const { colors } = useMantineTheme();
   const bottomRef = useRef(null);
 
   // TODO: BUG: below fetch not refetching immediately after mutation
-  const { isLoading, error, data: respondentSurveySendHistory } = useRespondentSurveySendHistory(respondent.id);
-  const { isLoading: isResLoading, error: isResError, data: respondentResponseHistory } = useRespondentResponseHistory(respondent.id)
-  const sendSurveyMutation = useSendSurveyToRespondentMutation({ respondentId: respondent.id })
+  const { isLoading, error, data: waCustomerSurveySendHistory } = useWaCustomerSurveySendHistory(waCustomer.id);
+  const { isLoading: isResLoading, error: isResError, data: waCustomerResponseHistory } = useWaCustomerResponseHistory(waCustomer.id)
+  const sendSurveyMutation = useSendSurveyToWaCustomerMutation({ waCustomerId: waCustomer.id })
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
-    if (respondentResponseHistory && respondentSurveySendHistory) {
+    if (waCustomerResponseHistory && waCustomerSurveySendHistory) {
       scrollToBottom()
     }
-  }, [respondentResponseHistory, respondentSurveySendHistory])
+  }, [waCustomerResponseHistory, waCustomerSurveySendHistory])
 
   if (isLoading || isResLoading) {
     return <RightPanelRoot>
       <CenteredSpinner />
     </RightPanelRoot>
   }
-  if (error || !respondentSurveySendHistory || isResError || !respondentResponseHistory) {
-    // console.log(error)
+  if (error || !waCustomerSurveySendHistory || isResError || !waCustomerResponseHistory) {
+    console.log(error)
     return <div>Error</div>
   }
   const timeline = [
-    ...respondentResponseHistory.map(r => ({ ...r, type: "response" })),
-    ...respondentSurveySendHistory.map(r => ({ ...r, type: "send" }))
+    ...waCustomerResponseHistory.map(r => ({ ...r, type: "response" })),
+    ...waCustomerSurveySendHistory.map(r => ({ ...r, type: "send" }))
   ].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)))
 
 
@@ -74,7 +74,7 @@ function ChatWindow({ respondent, openDetails }) {
 
   return (
     <Flex direction={"column"} style={{ height: "100%" }}>
-      <MainWindowHeader title={respondent.name ? respondent.name : respondent.phone} onClick={openDetails} />
+      <MainWindowHeader title={waCustomer.name ? waCustomer.name : waCustomer.phone} onClick={openDetails} />
       <Box style={{
         flex: "1 1 0",
         backgroundColor: "white",
@@ -97,10 +97,10 @@ function ChatWindow({ respondent, openDetails }) {
   )
 }
 
-function DetailsWindow({ respondent, onClose }) {
-  const { isLoading, isError, data: groups } = useRGroupsByRespondent(respondent.id);
-  const deleteFromGroupMutation = useDeleteRespondentFromRGroupMutation()
-  const deleteRespondentMutation = useDeleteRespondentMutation()
+function DetailsWindow({ waCustomer, onClose }) {
+  const { isLoading, isError, data: groups } = useWaCustomerGroupsByWaCustomer(waCustomer.id);
+  const deleteFromGroupMutation = useDeleteWaCustomerFromWaCustomerGroupMutation()
+  const deleteWaCustomerMutation = useDeleteWaCustomerMutation()
 
   if (isLoading) {
     return <RightPanelRoot>
@@ -113,7 +113,7 @@ function DetailsWindow({ respondent, onClose }) {
     <Flex direction={"column"} style={{
       height: "100%", flex: 3, backgroundColor: "#f0f0f0",
     }}>
-      <DetailsHeader title={respondent.phone} onClose={onClose} />
+      <DetailsHeader title={waCustomer.phone} onClose={onClose} />
       <Box style={{
         flex: "1 1 0",
         overflowY: "scroll",
@@ -128,11 +128,11 @@ function DetailsWindow({ respondent, onClose }) {
           //     borderRadius: "8px"
           //   }
           // }} 
-          className={classes.stackChildren}          
-          >
+          className={classes.stackChildren}
+        >
           <Center style={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
             <Avatar size={"xl"} radius="xl" />
-            <NameEditor name={respondent.name} onEdit={(name: string) => updateRespondent(respondent.id, { name })} />
+            <NameEditor name={waCustomer.name} onEdit={(name: string) => updateWaCustomer(waCustomer.id, { name })} />
           </Center>
           <Flex direction={"column"} style={{ backgroundColor: "white" }} p="xs">
             <Text fw={"bolder"} variant="heading" size="lg">Groups</Text>
@@ -145,7 +145,7 @@ function DetailsWindow({ respondent, onClose }) {
                         <Avatar size={"md"} radius="lg " />
                         <Text>{g.name}</Text>
                       </Group>
-                      <ActionIcon color="red" onClick={() => { deleteFromGroupMutation.mutate({ respondentId: respondent.id, rgroupId: g.id }) }} >
+                      <ActionIcon color="red" onClick={() => { deleteFromGroupMutation.mutate({ waCustomerId: waCustomer.id, rgroupId: g.id }) }} >
                         <IconTrash />
                       </ActionIcon>
                     </Group>
@@ -159,10 +159,10 @@ function DetailsWindow({ respondent, onClose }) {
             color="red"
             radius={"xl"}
             // TODO: add confirmation modal
-            onClick={() => deleteRespondentMutation.mutate(respondent.id)}
+            onClick={() => deleteWaCustomerMutation.mutate(waCustomer.id)}
             leftSection={<IconTrash />}
           >
-            Delete Respondent
+            Delete WaCustomer
           </Button>
         </Stack>
       </Box>
@@ -176,7 +176,7 @@ export function NameEditor({ name, onEdit }) {
 
   const handleEdit = () => {
     // TODO: create mutation?
-    // Currently not invalidating query since we dont want to refetch all respondents just for a name change
+    // Currently not invalidating query since we dont want to refetch all waCustomers just for a name change
     onEdit(nameValue)
     close()
   }
@@ -206,8 +206,8 @@ export function NameEditor({ name, onEdit }) {
 export function DetailsHeader({ title, onClose }) {
   return (
     <Group
-    style={{
-        background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%);",
+      style={{
+        background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%)",
         color: "white",
         cursor: "pointer",
         borderRadius: "8px",

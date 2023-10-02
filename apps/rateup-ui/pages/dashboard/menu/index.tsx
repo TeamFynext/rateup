@@ -1,6 +1,6 @@
 import { Center, Container, Flex, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useContext, useState } from "react";
-import { TeamSelector } from "../promotion";
+import { TeamSelector } from "../whatsapp/promotion";
 import { IconPlus } from "@tabler/icons-react";
 import { useMenusByTeamId } from "../../../backend/menu/menu.query";
 import { MenuCard } from "../../../components/menu/MenuCard";

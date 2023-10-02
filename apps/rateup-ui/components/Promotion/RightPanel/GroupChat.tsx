@@ -1,15 +1,15 @@
 import { Flex, useMantineTheme, Text, Box, Button, ActionIcon, Avatar, Center, Group, Stack, Tooltip } from "@mantine/core"
 import { useRef, useEffect } from "react"
-import { useDeleteRespondentFromRGroupMutation, useDeleteRGroupMutation, useRespondentsByRGroup, useRGroupSurveySendHistory, useSendSurveyToRGroupMutation, useUpdateRGroupMutation } from "../../../backend/respondent/rgroup/rgroup.query"
 import { SurveySendDetailComponent, SendSurveyComponent } from "../ChatComponents"
 import { MainWindowHeader } from "./ChatHeader"
 import { IconTrash } from "@tabler/icons-react"
 import { DetailsHeader, NameEditor } from "./IndividualChat"
 import { useDisclosure } from "@mantine/hooks"
-import { AddRespondents, AddRespondentsPanel } from "./AddRespondentsModal"
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
 import RightPanelRoot from "."
 import classes from './GroupChat.module.css'
+import { useWaCustomerGroupSurveySendHistory, useSendSurveyToWaCustomerGroupMutation, useWaCustomersByWaCustomerGroup, useDeleteWaCustomerFromWaCustomerGroupMutation, useDeleteWaCustomerGroupMutation, useUpdateWaCustomerGroupMutation } from "../../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query"
+import { AddWaCustomers, AddWaCustomersPanel } from "./AddWaCustomersModal"
 
 function ChatWindow({ rgroup, openDetails }) {
   const { colors } = useMantineTheme();
@@ -20,8 +20,8 @@ function ChatWindow({ rgroup, openDetails }) {
     isLoading,
     error,
     data: rGroupSurveySendHistory
-  } = useRGroupSurveySendHistory(rgroup.id);
-  const sendSurveyMutation = useSendSurveyToRGroupMutation({ rgroupId: rgroup.id })
+  } = useWaCustomerGroupSurveySendHistory(rgroup.id);
+  const sendSurveyMutation = useSendSurveyToWaCustomerGroupMutation({ rgroupId: rgroup.id })
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -39,12 +39,12 @@ function ChatWindow({ rgroup, openDetails }) {
     </RightPanelRoot>
   )
   if (error) {
-    // console.log(error)
+    console.log(error)
     return <div>Error</div>
   }
 
   const sendHandler = (surveyId: string, templateId: string) => {
-    sendSurveyMutation.mutate({surveyId, templateId})
+    sendSurveyMutation.mutate({ surveyId, templateId })
   }
 
   return (
@@ -70,14 +70,14 @@ function ChatWindow({ rgroup, openDetails }) {
 
 
 interface DetailsWindowProps {
-  rgroup: RGroup,
+  rgroup: WaCustomerGroup,
   onClose: () => void
 }
 function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
-  const { isLoading, isError, data: respondents } = useRespondentsByRGroup(rgroup.id)
-  const deleteRespFromGroupMutation = useDeleteRespondentFromRGroupMutation()
-  const deleteRGroup = useDeleteRGroupMutation()
-  const updateRGroupMutation = useUpdateRGroupMutation(rgroup.id)
+  const { isLoading, isError, data: waCustomers } = useWaCustomersByWaCustomerGroup(rgroup.id)
+  const deleteRespFromGroupMutation = useDeleteWaCustomerFromWaCustomerGroupMutation()
+  const deleteWaCustomerGroup = useDeleteWaCustomerGroupMutation()
+  const updateWaCustomerGroupMutation = useUpdateWaCustomerGroupMutation(rgroup.id)
   if (isLoading) return (
     <RightPanelRoot>
       <CenteredSpinner />
@@ -107,14 +107,14 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
         >
           <Center style={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
             <Avatar size={"xl"} radius="xl" />
-            <NameEditor name={rgroup.name} onEdit={(name: string) => updateRGroupMutation.mutate({ name })} />
+            <NameEditor name={rgroup.name} onEdit={(name: string) => updateWaCustomerGroupMutation.mutate({ name })} />
           </Center>
           <Flex direction={"column"} style={{ backgroundColor: "white" }} p="xs">
             <Text fw={"bolder"} variant="heading" size="lg">Members</Text>
             <Stack>
               {
-                respondents.length === 0 ? <Text p="lg">No Members</Text> : (
-                  respondents.map((r) => (
+                waCustomers.length === 0 ? <Text p="lg">No Members</Text> : (
+                  waCustomers.map((r) => (
                     <Group justify="space-between">
                       <Group>
                         <Avatar size={"md"} radius="lg " />
@@ -124,7 +124,7 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
                         <ActionIcon
                           color="red"
                           onClick={() => {
-                            deleteRespFromGroupMutation.mutate({ respondentId: r.id, rgroupId: rgroup.id })
+                            deleteRespFromGroupMutation.mutate({ waCustomerId: r.id, rgroupId: rgroup.id })
                           }}
                         >
                           <IconTrash />
@@ -137,21 +137,21 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
             </Stack>
           </Flex>
           <Stack
-           p="sm"
-           style={{ 
-            backgroundColor: "inherit",
-            // '> button': {
-            //   borderRadius: "100px"
-            // }
-         }}
-         className={classes.stackBtn}
-         
-         >
-            <AddRespondents rgroupId={rgroup.id} />
+            p="sm"
+            style={{
+              backgroundColor: "inherit",
+              // '> button': {
+              //   borderRadius: "100px"
+              // }
+            }}
+            className={classes.stackBtn}
+
+          >
+            <AddWaCustomers rgroupId={rgroup.id} />
             <Button
               color="red"
               onClick={() => {
-                deleteRGroup.mutate(rgroup.id)
+                deleteWaCustomerGroup.mutate(rgroup.id)
               }}
             >
               <Text >Delete Group</Text>
@@ -171,7 +171,7 @@ export function GroupMainWindow({ rgroup, openCreateGroup }) {
     close()
   }, [rgroup])
 
-  if (!rgroup) return <AddRespondentsPanel placeholder={"Add Group"} onClick={openCreateGroup} />
+  if (!rgroup) return <AddWaCustomersPanel placeholder={"Add Group"} onClick={openCreateGroup} />
 
   if (showDetails) {
     return <DetailsWindow rgroup={rgroup} onClose={close} />

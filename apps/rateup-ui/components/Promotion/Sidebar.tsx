@@ -2,8 +2,8 @@ import { useMantineTheme, Group, Avatar, Box, TextInput, Text, Title, Paper, Spa
 import { IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import { PromotionTab } from "../../types/enums";
-import ImportRespondents, { ImportRespondentsModal } from "./ImportRespondents";
 import classes from './Sidebar.module.css'
+import ImportWaCustomers, { ImportWaCustomersModal } from "./ImportWaCustomers";
 
 // Individual list item of chat (group or individual)
 export function ListItem({ onClick, name, isSelected }) {
@@ -51,8 +51,8 @@ export function LeftPanel({ items, activeTab, setActiveTab, importModalIsOpen,op
           <ListItem name={name} isSelected={id === selected} key={id} onClick={() => setSelected(id)} />
         ))}
       </Box>
-      <ImportRespondents onClick={openImport} />
-      <ImportRespondentsModal opened={importModalIsOpen} close={closeImport} createGroup={activeTab === PromotionTab.Groups} />
+      <ImportWaCustomers onClick={openImport} />
+      <ImportWaCustomersModal opened={importModalIsOpen} close={closeImport} createGroup={activeTab === PromotionTab.Groups} />
     </Paper>
   )
 }
@@ -63,8 +63,8 @@ function PromotionHeader({ activeTab, setActiveTab }) {
   return <Box
   style={{
       borderRadius: "8px",
-      background: "linear-gradient(271deg, #3F5BA9 -6.39%, #49C8E9 204.31%);",
-      boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06);"
+      background: "linear-gradient(271deg, #3F5BA9 -6.39%, #49C8E9 204.31%)",
+      boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)"
     }}
     p="lg"
   >

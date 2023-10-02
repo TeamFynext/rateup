@@ -8,16 +8,17 @@ import { useRouter } from "next/router";
 export function useTeamsByUser(queryClient, initialData = null) {
 
   return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
-      staleTime: 1000 * 60 * 5, // 5 minutes,
+      //staleTime: 1000 * 60 * 5, // 5 minutes,
       //refetchOnWindowFocus: "always",
       //refetchOnMount: "always",
       enabled: initialData === null,
       initialData: initialData,
       onSuccess: (data) => {
         //console.log("Initial Prefetch Team Data:", queryClient.getQueryData(["teamsByUser"]));
-
-        //console.log("New fetch Team Data:", data);
       },
+      onError: (error) => {
+        console.error("Error fetching team data:", error);
+      }
     });
 }
 

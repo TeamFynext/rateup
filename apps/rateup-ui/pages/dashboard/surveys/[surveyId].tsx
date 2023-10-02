@@ -27,7 +27,7 @@ enum TabEnum {
   Settings = "Settings",
   Theme = "Theme",
 }
-export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) => {
+export default ({ surveyData: surveyInitial, questionsData: questionsinitial }) => {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
@@ -59,7 +59,7 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
       `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${surveyId}`
     )
   }, [user])
-  
+
 
   useEffect(() => {
     if (tab && Object.values(TabEnum).includes(tab as any)) {
@@ -75,10 +75,10 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
 
   if (isLoading || isSurveyLoading) return <Loader />;
   if (error || surveyError) {
-    // console.log(error, surveyError);
+    console.log(error, surveyError);
     return "An error has occurred";
   }
-  
+
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
       <Stack style={{ height: "100%" }} >
@@ -87,9 +87,9 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
           onChange={(tab) => setActiveTab(tab as TabEnum)}
         >
           <Group justify="space-between">
-            <Title order={1} mb="sm"  pr="xl" 
-              style={{maxWidth:"350px", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
-             title={survey.title}> {survey.title}</Title>
+            <Title order={1} mb="sm" pr="xl"
+              style={{ maxWidth: "350px", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              title={survey.title}> {survey.title}</Title>
             <Tabs.List
               style={{
                 position: "absolute",
@@ -101,22 +101,22 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
               }}
             >
               <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-              {survey.type!="whatsapp" && <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>}
+              {survey.type != "whatsapp" && <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>}
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
-              
+
             </Tabs.List>
 
             <Tabs.Panel value={TabEnum.Edit}>
               <Group>
-            <Badge color={survey?.type=="web"?"blue":"green"}>{survey.type}</Badge>
+                <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
 
                 <Select
-                    data={survey.languages}
-                    value={selectedLanguage}
-                    onChange={setSelectedLanguage}
-                  />
+                  data={survey.languages}
+                  value={selectedLanguage}
+                  onChange={setSelectedLanguage}
+                />
 
                 {/* <RateupButtonPrimary onClick={() => {setaddQnTrigger(addQnTrigger+1)}} title={"Add Question"}
                         rightIcon={<IconPlus
@@ -124,31 +124,31 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
                           size="md"
                     /> */}
               </Group>
-  
+
             </Tabs.Panel>
 
             <Tabs.Panel value={TabEnum.Settings}>
-            <div></div>
+              <div></div>
             </Tabs.Panel>
-            
+
             <Tabs.Panel value={TabEnum.Share}>
               <div></div>
             </Tabs.Panel>
 
             <Tabs.Panel value={TabEnum.Result}>
-                <RateupButtonBlackOutline 
-                  title={"All"} 
-                  radius={"lg"}
-                  size="md"
-                  rightIcon={<IconChevronDown
-                    size="1rem" />}
-                />
-                <RateupButtonPrimary
-                        title={"Filter"}
-                        variant="subtle"
-                        rightIcon={<IconChevronDown
-                            size="1rem" />}
-                    />
+              <RateupButtonBlackOutline
+                title={"All"}
+                radius={"lg"}
+                size="md"
+                rightIcon={<IconChevronDown
+                  size="1rem" />}
+              />
+              <RateupButtonPrimary
+                title={"Filter"}
+                variant="subtle"
+                rightIcon={<IconChevronDown
+                  size="1rem" />}
+              />
             </Tabs.Panel>
             <Tabs.Panel value={TabEnum.Theme}>
               <div></div>
@@ -156,13 +156,13 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
           </Group>
 
           <Space h="xl" />
-          
+
           <Tabs.Panel value={TabEnum.Edit}>
             {/** TODO: Remove fixed height and make this responsive */}
             <Box style={{ display: "flex", gap: 30, height: "70vh" }}>
-              <EditSurvey 
-                questions={questions} 
-                addQnTrigger={addQnTrigger} 
+              <EditSurvey
+                questions={questions}
+                addQnTrigger={addQnTrigger}
                 surveyType={survey.type}
                 surveyLanguages={survey.languages}
                 setSelectedLanguage={setSelectedLanguage}
@@ -171,26 +171,26 @@ export default ( {surveyData: surveyInitial, questionsData: questionsinitial} ) 
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Settings}>
-            <SurveySettings surveyId={surveyId} survey={survey}  />
+            <SurveySettings surveyId={surveyId} survey={survey} />
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Result}>
-            <Result survey={survey}/>
+            <Result survey={survey} />
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Share}>
-            <ShareSurvey survey={survey}/>
+            <ShareSurvey survey={survey} />
           </Tabs.Panel>
 
 
           <Tabs.Panel value={TabEnum.Theme}>
-            <SurveyTheme survey={survey}/>
+            <SurveyTheme survey={survey} />
           </Tabs.Panel>
 
           {/* TODO  fix mantine issue and Enable - TODO VERIFY MANTINE*/}
 
-         
-          
+
+
         </StyledTabs>
       </Stack>
       {/* <Title>hello google</Title> */}
@@ -206,7 +206,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
     if (!accessToken) {
-      return { props: { surveyData: [], questionsData:[] } }
+      return { props: { surveyData: [], questionsData: [] } }
     }
 
     const surveyData = await getSurveyWithCustomToken(accessToken, { surveyId })
@@ -223,7 +223,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     console.log(err)
     return {
       props: {
-        surveyData: [], questionsData:[]
+        surveyData: [], questionsData: []
       },
     }
   }

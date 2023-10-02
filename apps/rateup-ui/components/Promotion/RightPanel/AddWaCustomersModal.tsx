@@ -1,18 +1,17 @@
-import { Box, Button, Center, Checkbox, Flex, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Center, Checkbox, Flex, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState } from "@mantine/hooks";
-import { useRespondents } from "../../../backend/respondent/respondent/respondent.query";
-import { useAddRespondentsMutation, useRespondentsByRGroup } from "../../../backend/respondent/rgroup/rgroup.query";
 import { useContext } from "react";
 import SelectedTeamContext from "../../../context/SelectedTeam";
-import RightPanelRoot from ".";
 import { IconUserPlus } from "@tabler/icons-react";
+import { useWaCustomers } from "../../../backend/whatsapp/customer/waCustomer/waCustomer.query";
+import { useWaCustomersByWaCustomerGroup, useAddWaCustomersMutation } from "../../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query";
 
-export function AddRespondents({ rgroupId }) {
+export function AddWaCustomers({ rgroupId }) {
   const [showModal, { open, close }] = useDisclosure(false)
   return (
     <>
       <Button variant="outline" onClick={open}>
-        <Text >Add Respondent</Text>
+        <Text >Add WaCustomer</Text>
       </Button>
       <AddModal onClose={close} opened={showModal} rgroupId={rgroupId} />
     </>
@@ -23,28 +22,27 @@ function AddModal({ opened, onClose, rgroupId }) {
 
   const { selectedTeamId } = useContext(SelectedTeamContext)
 
-  const { data: respondents, isLoading, error } = useRespondents(selectedTeamId, !!selectedTeamId)
-  const { data: includedRespondents, isLoading: includedLoading, error: includedError } = useRespondentsByRGroup(rgroupId)
-  const addRespondentsMutation = useAddRespondentsMutation(rgroupId)
+  const { data: waCustomers, isLoading, error } = useWaCustomers(selectedTeamId, !!selectedTeamId)
+  const { data: includedWaCustomers, isLoading: includedLoading, error: includedError } = useWaCustomersByWaCustomerGroup(rgroupId)
+  const addWaCustomersMutation = useAddWaCustomersMutation(rgroupId)
 
-  const [respondentsToAdd, handlers] = useListState<string>([])
-  if (isLoading || includedLoading || !respondents || !includedRespondents) return <div>Loading...</div>
+  const [waCustomersToAdd, handlers] = useListState<string>([])
+  if (isLoading || includedLoading || !waCustomers || !includedWaCustomers) return <div>Loading...</div>
   if (error || includedError) return <div>Error</div>
 
   // TODO: create api for getting nonMembers?
-  const nonGroupMembers = respondents.filter(r => !includedRespondents.some(ir => ir.id === r.id))
+  const nonGroupMembers = waCustomers.filter(r => !includedWaCustomers.some(ir => ir.id === r.id))
 
   return (
-    <Modal opened={opened} onClose={onClose} centered title={"Add Respondents"}>
+    <Modal opened={opened} onClose={onClose} centered title={"Add WaCustomers"}>
       {/* TODO: add search */}
       <Stack gap={"sm"} p="sm" mah={"600px"} style={{ overflowY: "auto" }}>
         {nonGroupMembers.map(r => {
           return (
             <Group>
               <Checkbox
-                checked={respondentsToAdd.includes(r.id)}
+                checked={waCustomersToAdd.includes(r.id)}
                 onChange={(e) => {
-                  // console.log(e.target.checked, respondentsToAdd)
                   if (e.target.checked) {
                     handlers.append(r.id)
                   } else {
@@ -75,10 +73,10 @@ function AddModal({ opened, onClose, rgroupId }) {
         </Button>
         <Button
           onClick={() => {
-            addRespondentsMutation.mutate(respondentsToAdd)
+            addWaCustomersMutation.mutate(waCustomersToAdd)
             onClose()
           }}
-          disabled={respondentsToAdd.length === 0}
+          disabled={waCustomersToAdd.length === 0}
         >
           Add Selected
         </Button>
@@ -87,7 +85,7 @@ function AddModal({ opened, onClose, rgroupId }) {
   )
 }
 
-export function AddRespondentsPanel({ onClick, placeholder }) {
+export function AddWaCustomersPanel({ onClick, placeholder }) {
   return (
     <Center h="100%">
       <Stack onClick={onClick} align="center" style={{ cursor: "pointer" }} >

@@ -34,11 +34,11 @@ import {
   IconPencil,
   IconSettings,
 } from "@tabler/icons-react";
-import { RateupButtonPrimary, RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import { RateupButtonPrimary, RateupButtonSecondary } from "../../../../components/Button/RateupButtons";
 import Link from "next/link";
-import { getTimeSince } from "../../../utils";
+import { getTimeSince } from "../../../../utils";
 import { useDisclosure } from "@mantine/hooks";
-import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
+import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
@@ -47,20 +47,21 @@ import {
   deleteSurvey,
   getWhatsappSurveysWithCustomToken,
   updateSurvey,
-} from "../../../backend/surveys/survey.api";
+} from "../../../../backend/surveys/survey.api";
 import {
   useCloneSurveyMutation,
   useSurveys,
   useWhatsappSurveys,
   useSurveysByTeam,
-} from "../../../backend/surveys/surveys.query";
-import { useTeamsByUser } from "../../../backend/team/team.query";
-import { useUser } from "../../../context/UserContext";
+} from "../../../../backend/surveys/surveys.query";
+
+import { useTeamsByUser } from "../../../../backend/team/team.query";
+import { useUser } from "../../../../context/UserContext";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
-import { backendConfig } from "../../../config/backendConfig";
+import { backendConfig } from "../../../../config/backendConfig";
 
-export default function WhatsappSurveys({ surveys: initialSurveys}) {
+export default function WhatsappSurveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
@@ -68,7 +69,7 @@ export default function WhatsappSurveys({ surveys: initialSurveys}) {
     {
       value: "all",
       label: "All Teams",
-     // group: "Organization",
+      // group: "Organization",
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
@@ -201,26 +202,26 @@ export default function WhatsappSurveys({ surveys: initialSurveys}) {
       <Space h="xl" />
 
       <SimpleGrid
-        cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
+        cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
       >
-         {user?.role !== 'MEMBER' &&  
+        {user?.role !== 'MEMBER' &&
 
-              <Paper
-                p="md"
-                shadow="lg"
-                radius="lg"
-                style={{ cursor: "pointer" }}
-                onClick={open}
-              >
-                <Center h="100%">
-                  <Stack align="center">
-                    <IconPlus size={36} />
-                    <Text size="xl" fw={700}>
-                      Add Survey
-                    </Text>
-                  </Stack>
-                </Center>
-              </Paper>
+          <Paper
+            p="md"
+            shadow="lg"
+            radius="lg"
+            style={{ cursor: "pointer" }}
+            onClick={open}
+          >
+            <Center h="100%">
+              <Stack align="center">
+                <IconPlus size={36} />
+                <Text size="xl" fw={700}>
+                  Add Survey
+                </Text>
+              </Stack>
+            </Center>
+          </Paper>
         }
 
         {(teamIsSelected
@@ -233,15 +234,15 @@ export default function WhatsappSurveys({ surveys: initialSurveys}) {
           .sort((a, b) =>
             sort
               ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
+              new Date(a.createdAt).getTime()
               : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime()
+              new Date(b.createdAt).getTime()
           )
           .map((s) => (
             <SurveyCard key={s.id} survey={s} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
           ))}
       </SimpleGrid>
-      <CreateSurveyModal open={createSurveyOpened} close={close} surveyType={"whatsapp"}/>
+      <CreateSurveyModal open={createSurveyOpened} close={close} surveyType={"whatsapp"} />
     </Container>
   );
 }
@@ -250,7 +251,7 @@ interface SurveyCardProps {
   survey: Survey;
   setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
-export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & {teamsData: any}): JSX.Element {
+export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & { teamsData: any }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
@@ -273,24 +274,24 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       radius="lg"
       style={{ cursor: "pointer" }}
       onClick={() => {
-        user?.role === 'MEMBER' 
-        
-        ? router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
-        )
-        : router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
-        )
+        user?.role === 'MEMBER'
+
+          ? router.push(
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+          )
+          : router.push(
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
+          )
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
         <Text mr={"sm"} truncate size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type=="web"?"blue":"green"}>{survey.type}</Badge>
+        <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
-          <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId}/>
+          <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" gap="xs">
@@ -329,18 +330,18 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
   const [cloneSurveyId, setCloneSurveyId] = useState('')
   const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState('')
-  const cloneSurvey = useCloneSurveyMutation({close, selectedTeamID, setSelectedTeamId});
+  const cloneSurvey = useCloneSurveyMutation({ close, selectedTeamID, setSelectedTeamId });
 
   const [options, setOptions] = useState([]);
-  
-useEffect(() => {
-  const newOptions = teamsData?.map((team) => ({
-    value: team?.teamId,
-    label: team?.teamName,
-  }));
 
-  setOptions(newOptions)
-}, [teamsData])
+  useEffect(() => {
+    const newOptions = teamsData?.map((team) => ({
+      value: team?.teamId,
+      label: team?.teamName,
+    }));
+
+    setOptions(newOptions)
+  }, [teamsData])
 
 
 
@@ -370,42 +371,42 @@ useEffect(() => {
   return (
     <Menu width={200}>
 
-      <Modal size="sm" centered opened={opened} onClose={close}  
-      title={
-        <h2 >
-          Clone Survey
-        </h2>
-      }
+      <Modal size="sm" centered opened={opened} onClose={close}
+        title={
+          <h2 >
+            Clone Survey
+          </h2>
+        }
         onClick={(event) => {
           event.stopPropagation();
-        }}  
+        }}
       >
         <Stack >
           <Text pr="xl" color="dark.2">Select the team in which the copy to be created.</Text>
-          <Group  mt="md"         style={{minHeight:"200px"}}
->
-              <Select
-                label="Select Team"
-                maxDropdownHeight={150} 
-                mt="xs"
-                placeholder="Pick one"
-                data={options}
-                value={selectedTeamID}
-                onChange={(value) => setSelectedTeamID(value)}
-                onClick={(event) => {
-                  event.stopPropagation();
-                }}
-              />  
+          <Group mt="md" style={{ minHeight: "200px" }}
+          >
+            <Select
+              label="Select Team"
+              maxDropdownHeight={150}
+              mt="xs"
+              placeholder="Pick one"
+              data={options}
+              value={selectedTeamID}
+              onChange={(value) => setSelectedTeamID(value)}
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            />
           </Group>
           <Group mt="xl">
-            <RateupButtonSecondary title="Cancel" onClick={close} />              
+            <RateupButtonSecondary title="Cancel" onClick={close} />
             <RateupButtonPrimary title="Submit" onClick={() => {
               cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
             }} />
           </Group>
 
-          </Stack>
-        </Modal>
+        </Stack>
+      </Modal>
 
       <Menu.Target>
         <ActionIcon
@@ -483,7 +484,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
     if (!accessToken) {
-      return { props: {  surveys: [] } }
+      return { props: { surveys: [] } }
     }
 
     const surveys = await getWhatsappSurveysWithCustomToken(accessToken)

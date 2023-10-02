@@ -1,13 +1,12 @@
-import { ActionIcon, Button, Modal, Space, Stack, Text, TextInput, Textarea } from '@mantine/core'
+import { ActionIcon, Button, Modal, Space, Stack, Text, TextInput } from '@mantine/core'
 import React, { useContext, useState } from 'react'
 import CSVReader from './CSVReader'
 import { readString } from 'react-papaparse'
 import { ParseResult } from 'papaparse'
-import { useCreateRespondentsMutation } from '../../backend/respondent/respondent/respondent.query'
-import { useDisclosure } from '@mantine/hooks'
 import { IconPlus } from '@tabler/icons-react'
-import { useCreateRGroupMutation } from '../../backend/respondent/rgroup/rgroup.query'
 import SelectedTeamContext from '../../context/SelectedTeam'
+import { useCreateWaCustomersMutation } from '../../backend/whatsapp/customer/waCustomer/waCustomer.query'
+import { useCreateWaCustomerGroupMutation } from '../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query'
 
 
 const placeholder =
@@ -41,19 +40,19 @@ const parseCSV = (csvString: string): Promise<Array<{ phone: string, name?: stri
 }
 
 
-export const ImportRespondentsModal = ({ opened, close, createGroup }) => {
+export const ImportWaCustomersModal = ({ opened, close, createGroup }) => {
   const [groupName, setGroupName] = useState("")
   const [csvData, setCsvData] = useState("")
   const { selectedTeamId } = useContext(SelectedTeamContext)
-  const createRespondentsMutation = useCreateRespondentsMutation(selectedTeamId);
-  const createGroupMutation = useCreateRGroupMutation(selectedTeamId);
+  const createWaCustomersMutation = useCreateWaCustomersMutation(selectedTeamId);
+  const createGroupMutation = useCreateWaCustomerGroupMutation(selectedTeamId);
 
   const handleImport = async (csvString) => {
     const results = await parseCSV(csvString);
     if (createGroup) {
       createGroupMutation.mutate({ rgroupName: groupName, phoneNumbers: results });
     } else {
-      createRespondentsMutation.mutate(results);
+      createWaCustomersMutation.mutate(results);
     }
     setGroupName("");
     setCsvData("");
@@ -61,7 +60,7 @@ export const ImportRespondentsModal = ({ opened, close, createGroup }) => {
   }
 
   return (
-    <Modal opened={opened} onClose={close} title="Import Respondents" centered >
+    <Modal opened={opened} onClose={close} title="Import WaCustomers" centered >
       <Stack gap="xs" style={{ marginBottom: 10 }}>
         {createGroup && (
           <TextInput
@@ -88,7 +87,7 @@ export const ImportRespondentsModal = ({ opened, close, createGroup }) => {
     </Modal>
   )
 }
-function ImportRespondents({ onClick }) {
+function ImportWaCustomers({ onClick }) {
 
   return (
       <ActionIcon
@@ -103,4 +102,4 @@ function ImportRespondents({ onClick }) {
       </ActionIcon>
   )
 }
-export default ImportRespondents
+export default ImportWaCustomers

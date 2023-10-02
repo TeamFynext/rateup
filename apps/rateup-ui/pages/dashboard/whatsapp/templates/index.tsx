@@ -1,6 +1,5 @@
 import { Container, Flex, Title, Menu, Space, SimpleGrid, Paper, Center, Stack, Text, Avatar, Group, Button, Badge, useMantineTheme, ActionIcon, Modal } from "@mantine/core";
-import { IconChevronDown, IconPlus, IconCheck, IconX, IconDots, IconTrash, IconPencil } from "@tabler/icons-react";
-import { TeamSelector } from "..";
+import { IconChevronDown, IconPlus, IconCheck, IconX, IconDots, IconTrash, IconPencil, IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useDeleteWaTemplateMutation, useWaTemplates } from "../../../../backend/whatsapp/whatsapp.query";
 import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
@@ -10,9 +9,8 @@ import { getTimeSince } from "../../../../utils";
 import { StopPropagation } from "../../../../components/containers/StopPropagation";
 
 export default function () {
-  const [selectedTeamId, setSelectedTeamId] = useState("");
-  const { data: templates, isLoading, error } = useWaTemplates(selectedTeamId)
-  const templateDeleteMutation = useDeleteWaTemplateMutation(selectedTeamId)
+  const { data: templates, isLoading, error } = useWaTemplates()
+  const templateDeleteMutation = useDeleteWaTemplateMutation()
   const [isCreateModalOpened, { open, close }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -48,12 +46,8 @@ export default function () {
           wrap="wrap"
           mb="md"
         >
-          <Title order={1}>Surveys : </Title>
-
-          <TeamSelector
-            selectedTeamId={selectedTeamId}
-            setSelectedTeamId={setSelectedTeamId}
-          />
+          <Title order={1}>Templates</Title>
+          {/* TODO: Add sync button*/}
         </Flex>
 
         <Flex
@@ -88,7 +82,7 @@ export default function () {
 
       <SimpleGrid
         spacing={"lg"}
-        cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
+        cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
       >
         <Paper
           p="md"
@@ -153,7 +147,7 @@ function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
             {template.data.name}
           </Text>
           <StopPropagation>
-            <TemplateMenu template={template} deleteMutation={deleteMutation} onEditClick={onEditClick}  />
+            <TemplateMenu template={template} deleteMutation={deleteMutation} onEditClick={onEditClick} />
           </StopPropagation>
         </Flex>
         <Group align={"center"} mt="sm" gap="xs">

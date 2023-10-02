@@ -20,7 +20,8 @@ import {
   IconClipboardList,
   IconChevronDown,
   IconBrowser,
-  IconMessage2Code
+  IconMessage2Code,
+  IconBrandWhatsapp
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -118,15 +119,22 @@ function NavbarLink({ icon: Icon, label, href , opened, submenus, role, setOpene
 export const DashBoardIcon = () => (
   <Image
     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/nav/dashboard.svg`}
-    maw={23}
     alt="Dashboard"
+    style={{
+      width: "20px",
+      height: "20px",
+    }}
   />
 );
 export const WhasappSurveyIcon = () => (
   <Image
     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/nav/whatsappSurvey.svg`}
-    maw={23}
+    color="black"
     alt="Dashboard"
+    style={{
+      width: "20px",
+      height: "20px",
+    }}
   />
 );
 
@@ -139,16 +147,17 @@ const mockdata = [
   { icon: IconBrowser, label: 'Surveys', href: '',
   submenus: [
     { icon: IconClipboardList, label: 'All Surveys', href: '/dashboard/surveys' },
-    { icon: WhasappSurveyIcon, label: 'WhatsApp Survey', href: '/dashboard/whatsappsurvey' },
     { icon: IconPageBreak, label: 'Merge Surveys', href: '/dashboard/LandingPages' }
   ] },
   { icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
   {
-    icon: IconSpeakerphone,
-    label: "Promotion",
+    icon: IconBrandWhatsapp,
+    label: "WhatsApp",
     submenus: [
-      { icon: IconSpeakerphone, label: 'Promotions', href: '/dashboard/promotion' },
-      { icon: IconMessage2Code, label: 'Templates', href: '/dashboard/promotion/templates' },
+      { icon: WhasappSurveyIcon, label: 'Survey', href: '/dashboard/whatsapp/surveys' },
+      { icon: IconSpeakerphone, label: 'Promotion', href: '/dashboard/whatsapp/promotion' },
+      { icon: IconMessage2Code, label: 'Templates', href: '/dashboard/whatsapp/templates' },
+      { icon: IconSettings, label: 'Settings', href: '/dashboard/whatsapp/settings'}
     ]
   },
   {icon: IconClipboardList, label: "Menu", href: '/dashboard/menu'}

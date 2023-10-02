@@ -70,7 +70,6 @@ export function CreateSurveyModal({ open, close, surveyType }) {
 
   useEffect(() => {
     form.setFieldValue('languages', languages)
-    console.log(languages)
   }, [languages])
 
   const resetForm = () => {
@@ -174,14 +173,14 @@ export function CreateSurveyModal({ open, close, surveyType }) {
             )}
             <Box>
               <Switch
-                label="Save respondent's location"
+                label="Save Respondent's location"
                 {...form.getInputProps("getLocation")}
               />
               <Text
                 c="dimmed"
                 fz="xs"
                 >
-                  {`(Automatically fetched from the browser if the respondent allows it.)`}
+                  {`(Automatically fetched from the browser if the waCustomer allows it.)`}
                 </Text>
             </Box>
             <Group justify="flex-end" pt="xl" mt="lg">

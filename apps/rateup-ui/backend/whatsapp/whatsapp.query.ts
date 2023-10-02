@@ -2,19 +2,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createWaTemplate, deleteWaTemplate, getWaTemplates, syncTemplates, updateWaTemplate } from "./whatsapp.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
-export const useWaTemplates = (teamId: string) => useQuery({
-  enabled: !!teamId,
-  queryKey: ['watemplates', teamId],
-  queryFn: async () => await getWaTemplates(teamId),
+export const useWaTemplates = () => useQuery({
+  queryKey: ['watemplates'],
+  queryFn: async () => await getWaTemplates(),
 })
 
-export const useCreateTemplateMutation = (teamId: string, onSuccess, onError) => {
+export const useCreateTemplateMutation = (onSuccess, onError) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (templateData: any) => createWaTemplate(teamId, templateData),
+    mutationFn: (templateData: any) => createWaTemplate(templateData),
     onSuccess: () => {
       showSuccessToast("Template Created Successfully");
-      queryClient.invalidateQueries(["watemplates", teamId])
+      queryClient.invalidateQueries(["watemplates"])
       onSuccess()
     },
     onError: () => {
@@ -26,13 +25,13 @@ export const useCreateTemplateMutation = (teamId: string, onSuccess, onError) =>
   return createMutation
 }
 
-export const useUpdateTemplateMutation = (teamId: string, onSuccess?, onError?) => {
+export const useUpdateTemplateMutation = (onSuccess?, onError?) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ templateId, templateData }: any) => updateWaTemplate(templateId, templateData),
     onSuccess: () => {
       showSuccessToast("Template Updated Successfully");
-      queryClient.invalidateQueries(["watemplates", teamId])
+      queryClient.invalidateQueries(["watemplates",])
       onSuccess?.()
     },
     onError: () => {
@@ -43,13 +42,13 @@ export const useUpdateTemplateMutation = (teamId: string, onSuccess?, onError?) 
   return updateMutation
 }
 
-export const useDeleteWaTemplateMutation = (teamId: string, onSuccess?, onError?) => {
+export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: deleteWaTemplate,
     onSuccess: () => {
       showSuccessToast("Template Deleted Successfully");
-      queryClient.invalidateQueries(["watemplates", teamId])
+      queryClient.invalidateQueries(["watemplates"])
       onSuccess?.()
     },
     onError: () => {

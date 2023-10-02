@@ -2,7 +2,6 @@ import { Grid, TextInput, Textarea, Container, Stack, Group, Button, Text, Modal
 import { useForm } from "@mantine/form";
 import { ResponseMessageContainer, QuickReplyButton } from "../MessageComponents";
 import { useCreateTemplateMutation, useUpdateTemplateMutation } from "../../../backend/whatsapp/whatsapp.query";
-import { TeamSelector } from "../../../pages/dashboard/promotion";
 import { useEffect, useState } from "react";
 import { parseTemplate } from "../../../utils/whatsapp/templates";
 import { WaTemplateStatus } from "../../../types/enums";
@@ -39,8 +38,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     }
   })
 
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
-
   useEffect(() => {
     if (parsedTemplate) {
       form.setValues(parsedTemplate)
@@ -48,7 +45,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
   }, [editingItem])
 
   const createTemplateMutation = useCreateTemplateMutation(
-    selectedTeamId,
     () => {
       form.reset();
       onClose();
@@ -60,7 +56,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
   )
 
   const updateTemplateMutation = useUpdateTemplateMutation(
-    selectedTeamId,
     () => {
       form.reset();
       onClose();
@@ -123,11 +118,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
                 <LengthTracker form={form} fieldName="name" maxValue={512} />
               }
               disabled={!!editingItem}
-            />
-            <TeamSelector
-              selectedTeamId={selectedTeamId}
-              setSelectedTeamId={setSelectedTeamId}
-              label="Select Team"
             />
             <TextInput
               label="Header"
@@ -198,7 +188,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
                 gap={3}
               >
                 <ResponseMessageContainer
-                  sx={{
+                  style={{
                     width: "100%",
                   }}
                 >
