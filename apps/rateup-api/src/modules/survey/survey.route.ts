@@ -21,11 +21,9 @@ import {
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
 import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
-import { getWebSurveysByUserId } from "./survey.service";
+import { checkSession } from "../../utils/checkSession";
 
 export async function surveyRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", verifySession());
-
   // create survey
   server.post(
     "/",
@@ -76,7 +74,11 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.get("/web", getWebSurveysHandler);
 
   // get all active surveys summary from user
-  server.get("/summary/active", getActiveSurveysSummaryHandler);
+  server.get(
+    "/summary/active", {
+    preHandler: checkSession,
+  },
+    getActiveSurveysSummaryHandler);
 
   // get all surveys from user
   server.get("/surveylandings", getSurveysLandingHandler);

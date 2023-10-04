@@ -121,7 +121,7 @@ export const authorizeBySessionOrJWT = async (request: FastifyRequest, reply: Fa
 }
 
 
-const verifyJWT = (jwt: string) => {
+export const verifyJWT = (jwt: string) => {
   return new Promise((resolve, reject) => {
     JsonWebToken.verify(jwt, getKey, {}, function (err, decoded) {
       if (err) {

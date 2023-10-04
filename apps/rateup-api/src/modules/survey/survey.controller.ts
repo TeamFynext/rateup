@@ -101,7 +101,7 @@ export async function updateSurveyLandingHandler(
     let landingId = request.params.id
 
     // console.log(data, ">>>data survey controller---");
-    const survey = await updateSurveyLanding(landingId,data);
+    const survey = await updateSurveyLanding(landingId, data);
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);
@@ -274,8 +274,7 @@ export async function getActiveSurveysSummaryHandler(
   reply: FastifyReply
 ) {
   try {
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
+    const userId = request.userId;
     const surveys = await getActiveSurveysSummmaryByUserId(userId);
     reply.send(surveys);
   } catch (e) {

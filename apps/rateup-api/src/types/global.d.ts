@@ -85,3 +85,9 @@ declare global {
     orgId: string
   }
 }
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    userId: string
+  }
+}
