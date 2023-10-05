@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  AppShell,
   Image,
   Center,
   Tooltip,
@@ -271,9 +270,6 @@ const LeftNavbar = ({ opened, setOpened }: iProps) => {
 
   return (
     <Flex className={classes.navbar} direction={"column"} p="md">
-      {/* TODO VERIFY MANTINE width={{ base: opened ? 260 : 90 }} */}
-
-      {/* <AppShell.Navbar p="md" style={{ width: opened ? 260 : 90}}  className={classes.navbar}> */}
       <Group justify={opened ? "space-between" : "center"} mt={25}>
         {opened && (
           <Link href="/dashboard">
@@ -317,8 +313,6 @@ const LeftNavbar = ({ opened, setOpened }: iProps) => {
           </Stack>
         </Stack>
       )}
-
-      {/* </AppShell.Navbar> */}
     </Flex>
   );
 };

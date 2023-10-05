@@ -1,6 +1,4 @@
 import {
-  AppShell,
-  Container,
   HoverCard,
   Group,
   Button,
@@ -21,7 +19,7 @@ import {
 } from "@mantine/core";
 import Link from "next/link";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
-import { IconBluetooth, IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import classes from "./Navbar.module.css";
 import { navData } from "./NavData";
@@ -55,9 +53,6 @@ export function HomeNavbar() {
 
   return (
     <Box>
-      {/* <AppShell header={{ height: 110, collapsed: !pinned, offset: false }} > */}
-
-      {/* <AppShell.Header withBorder={false}  h={110} p="md" > */}
       <Group
         justify="space-between"
         style={{ height: "100%" }}
@@ -228,8 +223,6 @@ export function HomeNavbar() {
           className={classes.hiddenDesktop}
         />
       </Group>
-      {/* </AppShell.Header> */}
-      {/* </AppShell> */}
 
       <Drawer
         opened={drawerOpened}
