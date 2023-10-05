@@ -14,7 +14,8 @@
     "jest:watch": "jest --watch",
     "prettier:check": "prettier --check \"**/*.{ts,tsx}\"",
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
-    "test": "npm run prettier:check && npm run lint && npm run typecheck && npm run jest"
+    "test": "npm run prettier:check && npm run lint && npm run typecheck && npm run jest",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@emotion/react": "^11.10.4",
@@ -69,12 +70,17 @@
     "@typescript-eslint/eslint-plugin": "^5.30.0",
     "@typescript-eslint/parser": "^5.30.0",
     "babel-loader": "^8.2.4",
+    "husky": "^8.0.3",
     "jest": "^27.5.1",
+    "lint-staged": "^14.0.1",
     "postcss": "^8.4.30",
     "postcss-preset-mantine": "^1.7.0",
     "postcss-simple-vars": "^7.0.1",
-    "prettier": "^2.7.1",
+    "prettier": "^3.0.3",
     "ts-jest": "^27.1.4",
     "typescript": "4.8.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
   }
 }
