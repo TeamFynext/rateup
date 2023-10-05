@@ -56,8 +56,7 @@ export async function getTeamsByUserHandler(
   reply: FastifyReply
 ) {
   try {
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
+    const userId = request.userId;
     const teams = await getTeamsByUserId(userId);
     if (!teams || teams.length === 0) {
       reply.code(200).send({ message: "No teams found." });

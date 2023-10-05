@@ -103,14 +103,24 @@ export const authorizeBySessionOrJWT = async (request: FastifyRequest, reply: Fa
         reply.code(401).send({ message: "Unauthorized" });
         return
       }
-      const decoded = await verifyJWT(token)
-      const { email } = decoded as any;
-      const user = await getUserByEmail(email)
-      if (!user) {
-        reply.code(401).send({ message: "Unauthorized" });
-        return
-      } else {
-        userId = user.id
+
+      try {
+        const decoded = await verifyJWT(token)
+
+        const { email } = decoded as any;
+        const user = await getUserByEmail(email)
+        if (!user) {
+          reply.code(401).send({ message: "Unauthorized" });
+          return
+        } else {
+          userId = user.id
+        }
+      } catch (err) {   
+        if (err?.message === 'Token has expired') {
+          reply.code(401).send({ message: "Token has expired" });
+        } else {
+          throw err;
+        }
       }
     }
     return userId
@@ -120,12 +130,15 @@ export const authorizeBySessionOrJWT = async (request: FastifyRequest, reply: Fa
   }
 }
 
-
 export const verifyJWT = (jwt: string) => {
   return new Promise((resolve, reject) => {
     JsonWebToken.verify(jwt, getKey, {}, function (err, decoded) {
       if (err) {
-        reject(err)
+        if (err?.name === 'TokenExpiredError') {
+          reject(new Error('Token has expired'));
+        } else {
+          reject(err);
+        }
       } else {
         resolve(decoded)
       }

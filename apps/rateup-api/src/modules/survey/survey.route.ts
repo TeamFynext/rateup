@@ -24,6 +24,7 @@ import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
 import { checkSession } from "../../utils/checkSession";
 
 export async function surveyRoutes(server: FastifyInstance) {
+  server.addHook("preHandler", checkSession);
   // create survey
   server.post(
     "/",
@@ -75,10 +76,7 @@ export async function surveyRoutes(server: FastifyInstance) {
 
   // get all active surveys summary from user
   server.get(
-    "/summary/active", {
-    preHandler: checkSession,
-  },
-    getActiveSurveysSummaryHandler);
+    "/summary/active", getActiveSurveysSummaryHandler);
 
   // get all surveys from user
   server.get("/surveylandings", getSurveysLandingHandler);

@@ -15,6 +15,7 @@ import {
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { verifyTeamAdminAccess } from "./team.auth";
+import { checkSession } from "../../utils/checkSession";
 
 
 export async function teamRoutes(server: FastifyInstance) {
@@ -47,7 +48,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get(
     "/user",
     {
-      preHandler: [verifySession()],
+      preHandler: checkSession,
     },
     getTeamsByUserHandler
   )

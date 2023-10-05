@@ -3,6 +3,7 @@ import { createOrgHandler, getAllTeamsAndMembers, updateLogoHandler, updateRoleC
 import { $Sref } from "./org.schema";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
+import { checkSession } from "../../utils/checkSession";
 
 export async function orgRoutes(server: FastifyInstance) {
   // create survey
@@ -22,7 +23,7 @@ export async function orgRoutes(server: FastifyInstance) {
   server.get(
     "/members",
     {
-      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
     },
     getAllTeamsAndMembers
   );
