@@ -59,16 +59,6 @@ export function HeaderTabs({ mode, opened }: iProps) {
       className={classes.header}
       style={{ paddingLeft: opened ? "30px" : "30px" }}
     >
-      {/* // <Container
-      //   className={classes.mainSection}
-      //   style={{
-      //     marginLeft: opened ? "130px" : "0",
-      //     transition: "margin-left 0.3s ease-in-out",
-      //     paddingLeft: '10vw',
-      //     paddingRight: '10vw'
-      //   }}
-      // > */}
-
       {mode !== "GUEST" ? (
         <Group justify="space-between">
           <Link href="/dashboard">
@@ -151,8 +141,6 @@ export function HeaderTabs({ mode, opened }: iProps) {
       <Space h="lg" />
       {mode !== "GUEST" && <Navbar />}
       <Space h="lg" />
-
-      {/* </Container> */}
     </div>
   );
 }

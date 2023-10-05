@@ -21,19 +21,15 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import { usePublicWelcomeThemeByLandingId } from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
-import classes from './Landing.module.css';
+import classes from "./Landing.module.css";
 
-
-function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
-
-
-   //-----------get welcome page styles and content-------------
-   const {
+function LandingWelcomePage({ setStartClicked, largeScreen, landingid }) {
+  //-----------get welcome page styles and content-------------
+  const {
     isLoading,
     error,
     data: LandingWelcomeData,
   } = usePublicWelcomeThemeByLandingId(landingid);
-
 
   useEffect(() => {
     if (LandingWelcomeData?.descStyles?.fontFamily) {
@@ -46,7 +42,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
       loadFont(LandingWelcomeData?.buttonStyles?.fontFamily);
     }
   }, [LandingWelcomeData]);
-
 
   let WebFont = undefined;
   useEffect(() => {
@@ -75,7 +70,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
     }
   }
 
-
   return (
     <>
       {/* .........Survey Welcome page.......... */}
@@ -89,7 +83,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
             height: "75vh",
             width: "100% !important",
             borderRadius: 18,
-            ...LandingWelcomeData?.bgStyles 
+            ...LandingWelcomeData?.bgStyles,
           }}
         >
           <BackgroundImage
@@ -100,7 +94,8 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
               borderRadius: 18,
             }}
             src={
-              LandingWelcomeData?.bgUrl && LandingWelcomeData.bgType != "bgcolor"
+              LandingWelcomeData?.bgUrl &&
+              LandingWelcomeData.bgType != "bgcolor"
                 ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${LandingWelcomeData.bgUrl}`
                 : ""
             }
@@ -110,7 +105,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
               align={"center"}
               h={"100%"}
               direction={"column"}
-              // bg={"red"}
             >
               {LandingWelcomeData?.logoUrl && (
                 <Image
@@ -124,7 +118,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
                 order={1}
                 style={{
                   fontSize: largeScreen ? "4rem" : "3rem",
-                  ...LandingWelcomeData?.headerStyles
+                  ...LandingWelcomeData?.headerStyles,
                 }}
                 tt={"capitalize"}
                 mt={25}
@@ -142,7 +136,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen,landingid }) {
                 mt={20}
                 style={LandingWelcomeData?.buttonStyles}
                 className={classes.buttonStyles}
-                onClick={()=>setStartClicked(true)}
+                onClick={() => setStartClicked(true)}
                 // size="xl"
                 miw={150}
               >
