@@ -1,18 +1,24 @@
 .header {
-  padding-top: var(--header-padding-top, 16px); 
+  /* width: 100%; */
+  padding-top: var(--header-padding-top, 16px);
   background-color: var(--header-bg-color, #f0f0f0);
+  padding-left: 3vw;
+  padding-right: 3vw;
+  padding-top: 3vh;
+  padding-bottom: 2vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .mainSection {
-  /* padding-bottom: var(--mainSection-padding-bottom, 16px); */
-  padding-left: 10vw;
-  padding-right: 10vw;
-  padding-top: 3vh;
+  width: 100%;
+  padding-bottom: var(--mainSection-padding-bottom, 16px);
+  max-width: 1300px;
 }
 
 .user {
-  color: var(--user-color, #000); 
-  padding: var(--user-padding, 4px 16px); 
+  color: var(--user-color, #000);
+  padding: var(--user-padding, 4px 16px);
   border-radius: var(--user-border-radius, 8px);
   transition: background-color 100ms ease;
   padding-left: 20px;
@@ -26,7 +32,7 @@
 }
 
 .userActive {
-  background-color: var(--user-active-bg-color, #fff); 
+  background-color: var(--user-active-bg-color, #fff);
 }
 
 .link {
@@ -34,18 +40,18 @@
 }
 
 .colorModeBox {
-  background-color: var(--colorModeBox-bg-color, #fff); 
-  border-radius: var(--colorModeBox-border-radius, 8px); 
-  padding: var(--colorModeBox-padding, 4px 16px); 
+  background-color: var(--colorModeBox-bg-color, #fff);
+  border-radius: var(--colorModeBox-border-radius, 8px);
+  padding: var(--colorModeBox-padding, 4px 16px);
 }
 
 .searchBox {
-  width: var(--searchBox-width, 25vw); 
-  color: var(--searchBox-color, #000); 
-  border-radius: var(--searchBox-border-radius, 8px); 
+  width: var(--searchBox-width, 25vw);
+  color: var(--searchBox-color, #000);
+  border-radius: var(--searchBox-border-radius, 8px);
   transition: background-color 100ms ease;
   background-color: var(--searchBox-bg-color, #fff);
-  padding: var(--searchBox-padding, 4px 16px); 
+  padding: var(--searchBox-padding, 4px 16px);
 }
 
 .search {

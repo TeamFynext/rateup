@@ -1,4 +1,12 @@
-import { Center, Container, Flex, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
+import {
+  Center,
+  Container,
+  Flex,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useContext, useState } from "react";
 import { TeamSelector } from "../whatsapp/promotion";
 import { IconPlus } from "@tabler/icons-react";
@@ -27,9 +35,12 @@ export default function MenuPage() {
   }
 
   return (
-    <Container fluid>
+    <>
       <Flex justify={"end"} mb="xs">
-        <TeamSelector selectedTeamId={selectedTeamId} setSelectedTeamId={setSelectedTeamId} />
+        <TeamSelector
+          selectedTeamId={selectedTeamId}
+          setSelectedTeamId={setSelectedTeamId}
+        />
       </Flex>
       <SimpleGrid
         spacing={"lg"}
@@ -37,7 +48,6 @@ export default function MenuPage() {
 
         //VERIFY MANTNE
       >
-
         <Paper
           p="xl"
           shadow="lg"
@@ -55,22 +65,25 @@ export default function MenuPage() {
           </Center>
         </Paper>
         <SelectedTeamContext.Provider value={{ selectedTeamId }}>
-          {selectedTeamId && <CreateMenuModal opened={openCreateModal} close={handleCreateEditClose} editingItem={editingItem} />}
+          {selectedTeamId && (
+            <CreateMenuModal
+              opened={openCreateModal}
+              close={handleCreateEditClose}
+              editingItem={editingItem}
+            />
+          )}
           <DisplayMenus handleEditClick={handleEditClick} />
         </SelectedTeamContext.Provider>
       </SimpleGrid>
-    </Container>
-  )
-
+    </>
+  );
 }
 
 function DisplayMenus({ handleEditClick }) {
-  const { selectedTeamId } = useContext(SelectedTeamContext)
-  const {
-    isError, isLoading, data: menus,
-  } = useMenusByTeamId(selectedTeamId);
+  const { selectedTeamId } = useContext(SelectedTeamContext);
+  const { isError, isLoading, data: menus } = useMenusByTeamId(selectedTeamId);
 
-  if (isLoading || isError) return null
+  if (isLoading || isError) return null;
 
   return (
     <>
@@ -78,5 +91,5 @@ function DisplayMenus({ handleEditClick }) {
         <MenuCard key={menu.id} menu={menu} handleEditClick={handleEditClick} />
       ))}
     </>
-  )
+  );
 }

@@ -1,0 +1,25 @@
+.list {
+  border-radius: 15px;
+  border: 2px solid var(--tertiary-color);
+  width: fit-content;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+  margin: auto;
+}
+.tab {
+  background-color: #fff;
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+}
+.tab[data-active] {
+  background-color: var(--tertiary-color);
+  color: var(--mantine-color-white);
+  border-radius: 12px;
+}
+.tab[data-active]:hover {
+  background-color: var(--mantine-color-blue-filled-hover);
+}
+.panel {
+  height: 100%;
+}

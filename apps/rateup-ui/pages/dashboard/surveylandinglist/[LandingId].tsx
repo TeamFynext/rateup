@@ -20,7 +20,7 @@ import LandingSurveysList from "./LandingSurveysList";
 import { useRouter } from "next/router";
 import ShareLandingPage from "../../../components/LandingPage/ShareLandingPage/ShareLandinPage";
 import { useLandingPage } from "../../../backend/surveys/surveys.query";
-import StyledTabs from "../surveys/StyledTabs";
+import StyledTabs from "../../../components/styled/StyledTabs";
 
 enum TabEnum {
   Surveys = "Surveys",
@@ -50,11 +50,9 @@ export default () => {
     data: LandingPageData,
   } = useLandingPage(LandingId);
 
-
   if (Array.isArray(LandingId)) {
     throw new Error("surveyId is an array");
   }
-  
 
   return (
     <Flex direction={"column"}>
@@ -80,7 +78,6 @@ export default () => {
               <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
             </Tabs.List>
 
-
             <Tabs.Panel value={TabEnum.WelcomePage}>
               <div></div>
             </Tabs.Panel>
@@ -97,11 +94,14 @@ export default () => {
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.WelcomePage}>
-          <LandingWelcomeTheme LandingPageData={LandingPageData} LandingId={LandingId ? LandingId : null} />
+            <LandingWelcomeTheme
+              LandingPageData={LandingPageData}
+              LandingId={LandingId ? LandingId : null}
+            />
           </Tabs.Panel>
 
           <Tabs.Panel value={TabEnum.Share}>
-          <ShareLandingPage  LandingId={LandingId ? LandingId : null} />
+            <ShareLandingPage LandingId={LandingId ? LandingId : null} />
           </Tabs.Panel>
         </StyledTabs>
       </Stack>

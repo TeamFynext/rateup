@@ -1,0 +1,10 @@
+:root {
+  --primary-color: #ffffff;
+  --secondary-color: #000000;
+  --tertiary-color: #1c518e;
+  --grey-color: #494949;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}

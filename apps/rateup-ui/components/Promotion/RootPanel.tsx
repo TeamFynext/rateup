@@ -1,6 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import { LeftPanel } from "./Sidebar";
-import {  Flex, Paper, Tabs } from "@mantine/core";
+import { Flex, Paper, Tabs } from "@mantine/core";
 import { PromotionTab } from "../../types/enums";
 import { useContext, useState } from "react";
 import SelectedTeamContext from "../../context/SelectedTeam";
@@ -10,21 +10,21 @@ import { useWaCustomers } from "../../backend/whatsapp/customer/waCustomer/waCus
 import { useWaCustomerGroups } from "../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query";
 
 export default function PromotionRootPanel({ activeTab, setActiveTab }) {
-  const [importModalIsOpen, { open, close }] = useDisclosure(false)
-  const { selectedTeamId } = useContext(SelectedTeamContext)
+  const [importModalIsOpen, { open, close }] = useDisclosure(false);
+  const { selectedTeamId } = useContext(SelectedTeamContext);
 
   const {
     isLoading: groupsLoading,
     error: groupsError,
-    data: rgroups
-  } = useWaCustomerGroups(selectedTeamId, activeTab === PromotionTab.Groups)
+    data: rgroups,
+  } = useWaCustomerGroups(selectedTeamId, activeTab === PromotionTab.Groups);
   const {
     isLoading: waCustomersLoading,
     data: waCustomers,
-    error: waCustomersError
-  } = useWaCustomers(selectedTeamId, activeTab === PromotionTab.Individuals)
+    error: waCustomersError,
+  } = useWaCustomers(selectedTeamId, activeTab === PromotionTab.Individuals);
 
-  const [selected, setSelected] = useState(0)
+  const [selected, setSelected] = useState(0);
 
   // TODO: handle loading ui
   const items = activeTab === PromotionTab.Groups ? rgroups : waCustomers;
@@ -32,8 +32,7 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
   return (
     <Flex
       style={{
-        width: "100%",
-        height: "100%",
+        height: "--webkit-fill-available",
       }}
       gap={"md"}
     >
@@ -46,13 +45,12 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
         sx={{
           flex: 3,
           boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
-          borderRadius: "8px"
+          borderRadius: "8px",
         }}
         importModalIsOpen={importModalIsOpen}
         openImport={open}
         closeImport={close}
-      >
-      </LeftPanel>
+      ></LeftPanel>
       <RightPanel
         activeTab={activeTab}
         selected={selected}
@@ -60,34 +58,37 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
         openImport={open}
       />
     </Flex>
-  )
+  );
 }
 
-function RightPanel({
-  activeTab,
-  selected,
-  items,
-  openImport
-}) {
-  return <Paper
-    style={{
-      flex: 7,
-      boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
-      borderRadius: "8px",
-      overflow: "clip"
-    }}
-  >
-    <Tabs.Panel value={PromotionTab.Groups} style={{ flexGrow: 1, height: "100%" }}>
-      <GroupMainWindow
-        openCreateGroup={openImport}
-        rgroup={items?.find(({ id }) => id === selected)}
-      />
-    </Tabs.Panel>
-    <Tabs.Panel value={PromotionTab.Individuals} style={{ flexGrow: 1, height: "100%" }}>
-      <IndividualMainWindow
-        openImport={openImport}
-        waCustomer={items?.find(({ id }) => id === selected)}
-      />
-    </Tabs.Panel>
-  </Paper>;
+function RightPanel({ activeTab, selected, items, openImport }) {
+  return (
+    <Paper
+      style={{
+        flex: 7,
+        boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
+        borderRadius: "8px",
+        overflow: "clip",
+      }}
+    >
+      <Tabs.Panel
+        value={PromotionTab.Groups}
+        style={{ flexGrow: 1, height: "100%" }}
+      >
+        <GroupMainWindow
+          openCreateGroup={openImport}
+          rgroup={items?.find(({ id }) => id === selected)}
+        />
+      </Tabs.Panel>
+      <Tabs.Panel
+        value={PromotionTab.Individuals}
+        style={{ flexGrow: 1, height: "100%" }}
+      >
+        <IndividualMainWindow
+          openImport={openImport}
+          waCustomer={items?.find(({ id }) => id === selected)}
+        />
+      </Tabs.Panel>
+    </Paper>
+  );
 }
