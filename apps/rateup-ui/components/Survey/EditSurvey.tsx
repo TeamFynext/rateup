@@ -1,4 +1,4 @@
-import { Paper, Center, Text, Tabs } from "@mantine/core";
+import { Paper, Center, Text, Tabs, Flex } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
@@ -7,7 +7,6 @@ import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import classes from "./EditSurvey.module.css";
-
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -21,12 +20,18 @@ interface EditSurveyProps {
   questions: Array<Question>;
   addQnTrigger?: number;
   surveyType?: string;
-  surveyLanguages: string[],
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>
+  surveyLanguages: string[];
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
 }
-export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguages, setSelectedLanguage }: EditSurveyProps) {
+export function EditSurvey({
+  questions,
+  addQnTrigger,
+  surveyType,
+  surveyLanguages,
+  setSelectedLanguage,
+}: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
-    QuestionTabsEnum.None
+    QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
 
@@ -41,14 +46,14 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
   }, [questions]);
 
   return (
-    <>
-      <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg"> 
-          <QuestionsSideBar
-            questions={questions}
-            selectedQ={selectedQ}
-            setSelectedQ={setSelectedQ}
-            setActiveTab={setActiveTab}
-            addQnTrigger={addQnTrigger}
+    <Flex w={"100%"}>
+      <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg">
+        <QuestionsSideBar
+          questions={questions}
+          selectedQ={selectedQ}
+          setSelectedQ={setSelectedQ}
+          setActiveTab={setActiveTab}
+          addQnTrigger={addQnTrigger}
         />
       </Paper>
       <Paper p={"md"} style={{ flex: 5 }} shadow="lg" radius="lg">
@@ -82,24 +87,21 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
-            <LogicEditor
-              selectedQ={selectedQ}
-              setActiveTab={setActiveTab}
-            />
+            <LogicEditor selectedQ={selectedQ} setActiveTab={setActiveTab} />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
             <GoogleReviewEditor
-                selectedQ={selectedQ}
-                setSelectedQ={setSelectedQ}
-                setActiveTab={setActiveTab}
-              />
+              selectedQ={selectedQ}
+              setSelectedQ={setSelectedQ}
+              setActiveTab={setActiveTab}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.ValidationRulesEditor}>
             <ValidationRulesEditor
-                selectedQ={selectedQ}
-                setSelectedQ={setSelectedQ}
-                setActiveTab={setActiveTab}
-              />
+              selectedQ={selectedQ}
+              setSelectedQ={setSelectedQ}
+              setActiveTab={setActiveTab}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.None}>
             <Center style={{ height: "100%" }}>
@@ -108,6 +110,6 @@ export function EditSurvey({ questions, addQnTrigger, surveyType, surveyLanguage
           </Tabs.Panel>
         </Tabs>
       </Paper>
-    </>
+    </Flex>
   );
 }

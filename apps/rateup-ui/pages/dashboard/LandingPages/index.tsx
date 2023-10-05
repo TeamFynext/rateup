@@ -62,8 +62,8 @@ export default function LandingPagesList() {
   const [deleteId, setDeleteId] = useState(null);
   const { action } = useRouter().query;
   useEffect(() => {
-    if (action === 'create') {
-      open()
+    if (action === "create") {
+      open();
     }
   }, [action]);
 
@@ -145,87 +145,85 @@ export default function LandingPagesList() {
 
   return (
     <>
-      <Container fluid>
-        <Flex justify={"space-between"} align={"center"}>
-          <Text mr={"sm"} truncate size="xl" fw={700}>
-            Create your survey Landing Page
-          </Text>
-        </Flex>
+      <Flex justify={"space-between"} align={"center"}>
+        <Text mr={"sm"} truncate size="xl" fw={700}>
+          Create your survey Landing Page
+        </Text>
+      </Flex>
 
-        <SimpleGrid
-          cols={{ base: 2, sm: 1, md:2, lg: 3, xl:3 }}
-          mt={10}
-          spacing={"lg"}          
+      <SimpleGrid
+        cols={{ base: 2, sm: 1, md: 2, lg: 3, xl: 3 }}
+        mt={10}
+        spacing={"lg"}
+      >
+        <Paper
+          p="md"
+          shadow="lg"
+          radius="lg"
+          style={{ cursor: "pointer" }}
+          onClick={open}
         >
-          <Paper
-            p="md"
-            shadow="lg"
-            radius="lg"
-            style={{ cursor: "pointer" }}
-            onClick={open}
-          >
-            <Center h="100%">
-              <Stack align="center">
-                <IconPlus size={36} />
-                <Text size="xl" fw={700}>
-                  Add Landing Page
-                </Text>
-              </Stack>
-            </Center>
-          </Paper>
+          <Center h="100%">
+            <Stack align="center">
+              <IconPlus size={36} />
+              <Text size="xl" fw={700}>
+                Add Landing Page
+              </Text>
+            </Stack>
+          </Center>
+        </Paper>
 
-          {surveyLandingData.map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              open={open}
-              EditLandingPage={EditLandingPage}
-              openlandingshare={openlandingshare}
-              shareLandingpageid={shareLandingpageid}
-              deleteLanding={deleteLanding}
-            />
-          ))}
-        </SimpleGrid>
-        {surveyLandingData.length == 0 && (
-          <Text ta={"center"} fw={600}>
-            No Landing pages found
-          </Text>
-        )}
-        <CreateSurveyLandingModal
-          open={createSurveyOpened}
-          close={close}
-          surveyType={"web"}
-          landingPageId={selectedLandingId}
-          surveyIdArray={[]}
-          mergeSurvey={false}
-        />
+        {surveyLandingData.map((s) => (
+          <SurveyCard
+            key={s.id}
+            survey={s}
+            open={open}
+            EditLandingPage={EditLandingPage}
+            openlandingshare={openlandingshare}
+            shareLandingpageid={shareLandingpageid}
+            deleteLanding={deleteLanding}
+          />
+        ))}
+      </SimpleGrid>
+      {surveyLandingData.length == 0 && (
+        <Text ta={"center"} fw={600}>
+          No Landing pages found
+        </Text>
+      )}
+      <CreateSurveyLandingModal
+        open={createSurveyOpened}
+        close={close}
+        surveyType={"web"}
+        landingPageId={selectedLandingId}
+        surveyIdArray={[]}
+        mergeSurvey={false}
+      />
 
-        {/* //--------------share landing page----------- */}
-        <ShareLandingPageModal
-          open={landignOpened}
-          close={closelandingshare}
-          surveyType={"web"}
-          landingPageId={shareLandindpageid ? shareLandindpageid : null}
-        />
+      {/* //--------------share landing page----------- */}
+      <ShareLandingPageModal
+        open={landignOpened}
+        close={closelandingshare}
+        surveyType={"web"}
+        landingPageId={shareLandindpageid ? shareLandindpageid : null}
+      />
 
-        <DeleteLandingPageConfirmation
-          showModal={ShowDeleteConfirmation}
-          confirmDelete={confirmDelete}
-        />
+      <DeleteLandingPageConfirmation
+        showModal={ShowDeleteConfirmation}
+        confirmDelete={confirmDelete}
+      />
 
-        {/* //--------------share landing page----------- */}
-        <ShareLandingPageModal
-          open={landignOpened}
-          close={closelandingshare}
-          surveyType={"web"}
-          landingPageId={shareLandindpageid ? shareLandindpageid : null}
-        />
+      {/* //--------------share landing page----------- */}
+      <ShareLandingPageModal
+        open={landignOpened}
+        close={closelandingshare}
+        surveyType={"web"}
+        landingPageId={shareLandindpageid ? shareLandindpageid : null}
+      />
 
-        <DeleteLandingPageConfirmation
-          showModal={ShowDeleteConfirmation}
-          confirmDelete={confirmDelete}
-        />
-      </Container>
+      <DeleteLandingPageConfirmation
+        showModal={ShowDeleteConfirmation}
+        confirmDelete={confirmDelete}
+      />
     </>
   );
 }
@@ -252,7 +250,7 @@ export function SurveyCard({
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(survey.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -270,7 +268,7 @@ export function SurveyCard({
       style={{ cursor: "pointer" }}
       onClick={() => {
         router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveylandinglist/${survey?.id}`
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveylandinglist/${survey?.id}`,
         );
       }}
     >
@@ -282,8 +280,7 @@ export function SurveyCard({
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil
             onClick={(e) => {
-              e.stopPropagation(),
-                EditLandingPage(survey.id);
+              e.stopPropagation(), EditLandingPage(survey.id);
               open();
             }}
           />
@@ -324,7 +321,6 @@ function SurveyMenu({
   const [selectedTeamID, setSelectedTeamID] = useState("");
 
   const [options, setOptions] = useState([]);
-
 
   const LandingPageDeleteMutation = useMutation({
     mutationFn: deleteLandingPage,

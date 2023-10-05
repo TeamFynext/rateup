@@ -1,7 +1,37 @@
-import { Container, Flex, Title, Menu, Space, SimpleGrid, Paper, Center, Stack, Text, Avatar, Group, Button, Badge, useMantineTheme, ActionIcon, Modal } from "@mantine/core";
-import { IconChevronDown, IconPlus, IconCheck, IconX, IconDots, IconTrash, IconPencil, IconRefresh } from "@tabler/icons-react";
+import {
+  Container,
+  Flex,
+  Title,
+  Menu,
+  Space,
+  SimpleGrid,
+  Paper,
+  Center,
+  Stack,
+  Text,
+  Avatar,
+  Group,
+  Button,
+  Badge,
+  useMantineTheme,
+  ActionIcon,
+  Modal,
+} from "@mantine/core";
+import {
+  IconChevronDown,
+  IconPlus,
+  IconCheck,
+  IconX,
+  IconDots,
+  IconTrash,
+  IconPencil,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { useDeleteWaTemplateMutation, useWaTemplates } from "../../../../backend/whatsapp/whatsapp.query";
+import {
+  useDeleteWaTemplateMutation,
+  useWaTemplates,
+} from "../../../../backend/whatsapp/whatsapp.query";
 import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
 import { CreateWaTemplateModal } from "../../../../components/whatsapp/templates/CreateWaTemplateModal";
 import { useDisclosure } from "@mantine/hooks";
@@ -9,8 +39,8 @@ import { getTimeSince } from "../../../../utils";
 import { StopPropagation } from "../../../../components/containers/StopPropagation";
 
 export default function () {
-  const { data: templates, isLoading, error } = useWaTemplates()
-  const templateDeleteMutation = useDeleteWaTemplateMutation()
+  const { data: templates, isLoading, error } = useWaTemplates();
+  const templateDeleteMutation = useDeleteWaTemplateMutation();
   const [isCreateModalOpened, { open, close }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -28,7 +58,7 @@ export default function () {
     setEditingItem(null);
   }
   return (
-    <Container fluid>
+    <>
       <Flex
         mih={50}
         gap="md"
@@ -58,7 +88,6 @@ export default function () {
           direction="row"
           wrap="wrap"
         >
-
           <Menu shadow="md" width={200}>
             <Menu.Target>
               <Button
@@ -70,9 +99,13 @@ export default function () {
                 Status
               </Button>
             </Menu.Target>
-            <Menu.Dropdown >
-              <Menu.Item color="teal" leftSection={<IconCheck size={14} />}>Active</Menu.Item>
-              <Menu.Item color="red" leftSection={<IconX size={14} />}>Inactive</Menu.Item>
+            <Menu.Dropdown>
+              <Menu.Item color="teal" leftSection={<IconCheck size={14} />}>
+                Active
+              </Menu.Item>
+              <Menu.Item color="red" leftSection={<IconX size={14} />}>
+                Inactive
+              </Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Flex>
@@ -80,10 +113,7 @@ export default function () {
 
       <Space h="xl" />
 
-      <SimpleGrid
-        spacing={"lg"}
-        cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
-      >
+      <SimpleGrid spacing={"lg"} cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}>
         <Paper
           p="md"
           shadow="lg"
@@ -100,23 +130,24 @@ export default function () {
             </Stack>
           </Center>
         </Paper>
-        {templates && templates.map(t => (
-          <TemplateCard
-            key={t.id}
-            template={t}
-            deleteMutation={templateDeleteMutation}
-            onClick={() => handleEditClick(t)}
-            onEditClick={() => handleEditClick(t)}
-          />
-        ))}
+        {templates &&
+          templates.map((t) => (
+            <TemplateCard
+              key={t.id}
+              template={t}
+              deleteMutation={templateDeleteMutation}
+              onClick={() => handleEditClick(t)}
+              onEditClick={() => handleEditClick(t)}
+            />
+          ))}
       </SimpleGrid>
       <CreateWaTemplateModal
         opened={isCreateModalOpened}
         onClose={handleClose}
         editingItem={editingItem}
       />
-    </Container>
-  )
+    </>
+  );
 }
 
 function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
@@ -127,7 +158,7 @@ function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
     setTimeSince(getTimeSince(template.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(template.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -147,7 +178,11 @@ function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
             {template.data.name}
           </Text>
           <StopPropagation>
-            <TemplateMenu template={template} deleteMutation={deleteMutation} onEditClick={onEditClick} />
+            <TemplateMenu
+              template={template}
+              deleteMutation={deleteMutation}
+              onEditClick={onEditClick}
+            />
           </StopPropagation>
         </Flex>
         <Group align={"center"} mt="sm" gap="xs">
@@ -169,26 +204,24 @@ function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
 function TemplateMenu({ template, deleteMutation, onEditClick }) {
   return (
     <Menu width={200}>
-      <Menu.Target >
-        <ActionIcon
-        >
+      <Menu.Target>
+        <ActionIcon>
           <IconDots />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item
-          leftSection={<IconPencil />}
-          onClick={onEditClick}
-        >
+        <Menu.Item leftSection={<IconPencil />} onClick={onEditClick}>
           Edit
         </Menu.Item>
         <Menu.Item
           leftSection={<IconTrash />}
           onClick={() => {
-            deleteMutation.mutate(template.id)
+            deleteMutation.mutate(template.id);
           }}
-        >Delete</Menu.Item>
+        >
+          Delete
+        </Menu.Item>
       </Menu.Dropdown>
     </Menu>
-  )
+  );
 }

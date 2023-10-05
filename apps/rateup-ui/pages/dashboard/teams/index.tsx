@@ -1,11 +1,25 @@
-﻿﻿﻿﻿import { RateupButtonOutline, RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { Flex, Title, Loader, Space, Paper,Grid, Text, Stack, Center, SimpleGrid} from '@mantine/core';
-import { Box, Modal, TextInput } from '@mantine/core';
-import { useEffect, useState } from 'react';
-import { notifications } from '@mantine/notifications';
-import { useDisclosure } from '@mantine/hooks';
-import { IconPlus, IconReload, IconSelector } from '@tabler/icons-react';
-import { useRouter } from 'next/router'
+﻿import {
+  RateupButtonOutline,
+  RateupButtonPrimary,
+} from "../../../components/Button/RateupButtons";
+import {
+  Flex,
+  Title,
+  Loader,
+  Space,
+  Paper,
+  Grid,
+  Text,
+  Stack,
+  Center,
+  SimpleGrid,
+} from "@mantine/core";
+import { Box, Modal, TextInput } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { notifications } from "@mantine/notifications";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlus, IconReload, IconSelector } from "@tabler/icons-react";
+import { useRouter } from "next/router";
 import CardButton from "../../../components/Card";
 import { useUser } from "../../../context/UserContext";
 import { useForm } from "@mantine/form";
@@ -20,17 +34,17 @@ import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api";
 
-export default function Teams({teamData: initialTeamData }) {
+export default function Teams({ teamData: initialTeamData }) {
   const [opened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const { action } = useRouter().query;
   const { user, setUser } = useUser();
   const queryClient = useQueryClient();
-  const [isCreating, setIsCreating] = useState(false)
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    if (action === 'create') {
-      open()
+    if (action === "create") {
+      open();
     }
   }, [action]);
 
@@ -69,11 +83,14 @@ export default function Teams({teamData: initialTeamData }) {
     handleSubmit(values);
   };
 
-
-  const createTeamMutation = useCreateTeamMutation(close, createTeamForm, setIsCreating);
+  const createTeamMutation = useCreateTeamMutation(
+    close,
+    createTeamForm,
+    setIsCreating,
+  );
 
   const handleSubmit = async (values) => {
-    setIsCreating(true)
+    setIsCreating(true);
     notifications.show({
       id: "load-data",
       loading: true,
@@ -102,10 +119,13 @@ export default function Teams({teamData: initialTeamData }) {
               placeholder="Enter team code"
               {...createTeamForm.getInputProps("code")}
             />
-            
           </Box>
           <Box pt={20}>
-            <RateupButtonPrimary  loading={isCreating} type="submit" title={"Create"} />
+            <RateupButtonPrimary
+              loading={isCreating}
+              type="submit"
+              title={"Create"}
+            />
           </Box>
         </form>
       </Modal>
@@ -123,7 +143,7 @@ export default function Teams({teamData: initialTeamData }) {
           gap="md"
           justify="flex-start"
           align="flex-start"
-          direction="column"
+          direction="row"
           wrap="wrap"
         >
           <Title order={1}>Teams</Title>
@@ -159,7 +179,7 @@ export default function Teams({teamData: initialTeamData }) {
       {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
         <SimpleGrid
           spacing={"lg"}
-          cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
+          cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
         >
           {teamsDataUser?.data?.data
             ? teamsDataUser?.data?.data?.map((team, i: number) => (
@@ -181,7 +201,11 @@ export default function Teams({teamData: initialTeamData }) {
                     p="md"
                     shadow="lg"
                     radius="lg"
-                    style={{ cursor: "pointer", width: "250px", height: "140px" }}
+                    style={{
+                      cursor: "pointer",
+                      width: "250px",
+                      height: "140px",
+                    }}
                     onClick={open}
                   >
                     <Center h="100%">
@@ -238,30 +262,30 @@ export default function Teams({teamData: initialTeamData }) {
   );
 }
 
-
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   try {
-    supertokensNode.init(backendConfig())
+    supertokensNode.init(backendConfig());
 
-    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    let accessToken =
+      context.req.cookies["st-access-token"] ||
+      context.req.cookies["sAccessToken"];
     if (!accessToken) {
-      return { props: {  teamData: [] } }
+      return { props: { teamData: [] } };
     }
 
-    const teamData = await fetchTeamsByUserWithCustomToken(accessToken)
+    const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
 
     return {
       props: {
-        teamData: teamData || null
+        teamData: teamData || null,
       },
-    }
-
+    };
   } catch (err) {
-    console.log(err)
+    console.log(err);
     return {
       props: {
-        teamData: []
+        teamData: [],
       },
-    }
+    };
   }
 }

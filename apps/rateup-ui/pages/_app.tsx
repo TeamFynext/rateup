@@ -1,7 +1,7 @@
 import React, { ReactElement, ReactNode, useEffect } from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
-import { MantineProvider,createTheme } from "@mantine/core";
+import { MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import Layout from "../components/Layout/Layout";
 import SuperTokensReact, {
@@ -10,21 +10,18 @@ import SuperTokensReact, {
 } from "supertokens-auth-react";
 import { frontendConfig } from "../config/frontendConfig";
 //import Session from "supertokens-auth-react/recipe/session";
-import Session from 'supertokens-web-js/recipe/session';
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import Session from "supertokens-web-js/recipe/session";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextPage } from "next";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { UserProvider } from "../context/UserContext";
-import { Hydrate } from '@tanstack/react-query'
+import { Hydrate } from "@tanstack/react-query";
 
-import SuperTokens from 'supertokens-web-js';
+import SuperTokens from "supertokens-web-js";
 import WithLoader from "../components/Layout/Loader/WithLoader";
-import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
-
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import "../styles/global.css";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -58,7 +55,6 @@ export default function App({
     }
   }
 
-
   useEffect(() => {
     async function doRefresh() {
       if (pageProps.fromSupertokens === "needs-refresh") {
@@ -79,13 +75,13 @@ export default function App({
 
   // const styleOverride = {
   //   fontSizes: {
-  //     xxl: '1.8rem', 
+  //     xxl: '1.8rem',
   //   }
   // } VERIFY
 
   // const styleOverride = createTheme({
   //   fontSizes: {
-  //     xxl: '1.8rem', 
+  //     xxl: '1.8rem',
   //   }
   // });
 
@@ -100,25 +96,24 @@ export default function App({
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
       {/* <SuperTokensWrapper> */}
-        {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
+      {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
 
-        <MantineProvider   >
-
-          <Notifications />
-          <QueryClientProvider client={queryClient}>
-           <Hydrate state={pageProps.dehydratedState}>
+      <MantineProvider>
+        <Notifications />
+        <QueryClientProvider client={queryClient}>
+          <Hydrate state={pageProps.dehydratedState}>
             <UserProvider>
-            <LayoutComponent>
+              <LayoutComponent>
                 <WithLoader>
-                   <Component {...pageProps} />
+                  <Component {...pageProps} />
                 </WithLoader>
-            </LayoutComponent>
+              </LayoutComponent>
             </UserProvider>
-            <ReactQueryDevtools initialIsOpen={false}  position="bottom-right"/>
-            </Hydrate>
-          </QueryClientProvider>
-          <Notifications />
-        </MantineProvider>
+            <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+          </Hydrate>
+        </QueryClientProvider>
+        <Notifications />
+      </MantineProvider>
       {/* </SuperTokensWrapper> */}
     </>
   );

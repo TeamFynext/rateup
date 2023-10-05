@@ -100,7 +100,7 @@ function SurveyTheme({ survey }) {
   useEffect(() => {
     if (welocmeTheme?.bgUrl) {
       setbgImage(
-        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`
+        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`,
       );
     }
   }, [welocmeTheme?.bgUrl]);
@@ -159,14 +159,13 @@ function SurveyTheme({ survey }) {
   const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
 
   const handleSwitchChange = (e) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
   };
   return (
-    <Flex gap={20}>
-      <Paper style={{ flex: 5 }} shadow="xl">
-        <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }}
- />
+    <Flex gap={20} bg={"red"} h="100%">
+      <Paper style={{ flex: 0.7 }} shadow="xl" h={"100%"}>
+        <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
         <Flex mb={10} p={10}>
           {" "}
           <Switch
@@ -188,7 +187,7 @@ function SurveyTheme({ survey }) {
         />
       </Paper>
 
-      <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg">
+      <Paper p={"xl"} style={{ flex: 0.3 }} shadow="lg" radius="lg">
         <StylesComponent
           selectedType={selectedType ? selectedType : "header"}
           saveStyles={saveStyles}

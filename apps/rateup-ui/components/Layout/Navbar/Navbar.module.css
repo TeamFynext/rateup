@@ -10,7 +10,6 @@
   text-decoration: underline;
 }
 
-
 .iconlink {
   width: 50px;
   height: 50px;
@@ -19,39 +18,43 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.3s ease;
-  color: var(--iconlink-color, #666); 
+  color: var(--iconlink-color, #666);
 }
 
 .iconlink:hover {
-  background-color: var(--iconlink-hover-bg, #f0f0f0); 
+  background-color: var(--iconlink-hover-bg, #f0f0f0);
 }
 
 .iconLabellink {
   height: 50px;
-  border-radius: 8px; 
+  border-radius: 8px;
   transition: transform 0.3s ease;
-  color: var(--iconLabellink-color, #666); 
+  color: var(--iconLabellink-color, #666);
 }
 
 .iconLabellink:hover {
-  background-color: var(--iconLabellink-hover-bg, #f0f0f0); 
+  background-color: var(--iconLabellink-hover-bg, #f0f0f0);
 }
 
 .active,
 .active:hover {
-  background-color: var(--active-bg, #007bff); 
-  color: var(--active-color, white); 
+  background-color: var(--active-bg, #007bff);
+  color: var(--active-color, white);
 }
 
 .submenuActive,
 .submenuActive:hover {
-  color: var(--submenuActive-color, #007bff); 
+  color: var(--submenuActive-color, #007bff);
 }
 
 .navbar {
+  z-index: 9999;
   transition: width 0.3s ease-in-out;
+  box-shadow:
+    rgba(0, 0, 0, 0.12) 0px 1px 3px,
+    rgba(0, 0, 0, 0.24) 0px 1px 2px;
 }
 
 .submenuLink {
-  padding-left: var(--submenuLink-padding-left, 16px); 
+  padding-left: var(--submenuLink-padding-left, 16px);
 }

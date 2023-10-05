@@ -19,7 +19,8 @@ import {
   Modal,
   Checkbox,
   Button,
-  Dialog, rem
+  Dialog,
+  rem,
 } from "@mantine/core";
 import {
   IconChartBar,
@@ -61,12 +62,12 @@ import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
-import classes from './Survey.module.css';
+import classes from "./Survey.module.css";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../config/backendConfig";
 
-export default function Surveys({ surveys: initialSurveys}) {
+export default function Surveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [
     mergeSurveyOpened,
@@ -75,7 +76,7 @@ export default function Surveys({ surveys: initialSurveys}) {
   const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
   const [surveyidArray, setSurveyIdArray] = useState([]);
-  const [filterParam, setFilterParam] = useState('all')
+  const [filterParam, setFilterParam] = useState("all");
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -101,11 +102,10 @@ export default function Surveys({ surveys: initialSurveys}) {
   }, [selectedTeamId, queryClient]);
 
   useEffect(() => {
-    if (action === 'create') {
-      open()
+    if (action === "create") {
+      open();
     }
   }, [action]);
-
 
   const {
     isLoading: isLoadingTeamsUser,
@@ -127,20 +127,19 @@ export default function Surveys({ surveys: initialSurveys}) {
     setSurveyIdArray([]);
     closeMergeSurveyModal();
   };
-  
 
   useEffect(() => {
     if (teamsData?.length) {
       const newOptions = teamsData?.map((team) => ({
         value: team?.teamId,
         label: team?.teamName,
-       // group: "Team",
+        // group: "Team",
       }));
 
       setOptions((prev) => {
         const uniqueValues = new Set(prev.map((option) => option.value));
         const nonDuplicateOptions = newOptions.filter(
-          (option) => !uniqueValues.has(option.value)
+          (option) => !uniqueValues.has(option.value),
         );
         return [...prev, ...nonDuplicateOptions];
       });
@@ -184,12 +183,11 @@ export default function Surveys({ surveys: initialSurveys}) {
   };
 
   return (
-    <Container fluid>
+    <>
       <Flex
         mih={50}
         gap="md"
         justify="space-between"
-        align="center"
         direction="row"
         wrap="wrap"
       >
@@ -211,7 +209,6 @@ export default function Surveys({ surveys: initialSurveys}) {
             value={selectedTeamId}
             onChange={(value) => setSelectedTeamId(value)}
           />
-          
         </Flex>
 
         <Flex
@@ -232,8 +229,9 @@ export default function Surveys({ surveys: initialSurveys}) {
           )}
 
           <StatusFilterMenu
-            filterParam = {filterParam}
-            setFilterParam = {setFilterParam}/>
+            filterParam={filterParam}
+            setFilterParam={setFilterParam}
+          />
 
           <RateupButtonPrimary
             onClick={() => setSort(!sort)}
@@ -246,71 +244,70 @@ export default function Surveys({ surveys: initialSurveys}) {
 
       <Space h="xl" />
 
-        <SimpleGrid
-          spacing={"lg"}
-          cols={{ base: 4, sm: 2, md: 2, lg: 2 , xl: 3}}
+      <SimpleGrid
+        spacing={"lg"}
+        cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
 
-          // breakpoints={[
-          //   { minWidth: "xl", cols: 3 },
-          //   { minWidth: "lg", cols: 2 },
-          //   { minWidth: "md", cols: 2 },
-          //   { maxWidth: "md", cols: 1 },
-          // ]}   //VERIFYCSS //TODO
-        >
-          {user?.role !== "MEMBER" && (
-            <Paper
-              p="md"
-              shadow="lg"
-              radius="lg"
-              style={{ cursor: "pointer", color: '#000', background: '#EDEDED' }}
-              onClick={open}
-            >
-              <Center h="100%">
-                <Stack align="center">
-                  <IconPlus size={36} />
-                  <Text size="xl" fw={700}>
-                    Add Survey
-                  </Text>
-                </Stack>
-              </Center>
-            </Paper>
-          )}
+        // breakpoints={[
+        //   { minWidth: "xl", cols: 3 },
+        //   { minWidth: "lg", cols: 2 },
+        //   { minWidth: "md", cols: 2 },
+        //   { maxWidth: "md", cols: 1 },
+        // ]}   //VERIFYCSS //TODO
+      >
+        {user?.role !== "MEMBER" && (
+          <Paper
+            p="md"
+            shadow="lg"
+            radius="lg"
+            style={{ cursor: "pointer", color: "#000", background: "#EDEDED" }}
+            onClick={open}
+          >
+            <Center h="100%">
+              <Stack align="center">
+                <IconPlus size={36} />
+                <Text size="xl" fw={700}>
+                  Add Survey
+                </Text>
+              </Stack>
+            </Center>
+          </Paper>
+        )}
 
-          {(specificTeamIsSelected
-            ? surveysByTeam?.data?.length > 0
-              ? [...surveysByTeam?.data]
-              : []
-            : [...surveys]
+        {(specificTeamIsSelected
+          ? surveysByTeam?.data?.length > 0
+            ? [...surveysByTeam?.data]
+            : []
+          : [...surveys]
+        )
+          .slice()
+          .sort((a, b) =>
+            sort
+              ? new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+              : new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime(),
           )
-            .slice()
-            .sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-            ).filter((s) => {
-              if(filterParam === 'active'){
-                return s.active === true;
-              }
-              else if(filterParam === 'paused') 
-              {
-                return s.active === false;
-              }else{
-                return true;
-              }
-            })
-            .map((s) => (
-              <SurveyCard
-                key={s.id}
-                survey={s}
-                teamsData={teamsData}
-                setSelectedTeamId={setSelectedTeamId}
-                handleCheckBox={handleCheckBox}
-                isChecked={isChecked}
-              />
-            ))}
-        </SimpleGrid>
+          .filter((s) => {
+            if (filterParam === "active") {
+              return s.active === true;
+            } else if (filterParam === "paused") {
+              return s.active === false;
+            } else {
+              return true;
+            }
+          })
+          .map((s) => (
+            <SurveyCard
+              key={s.id}
+              survey={s}
+              teamsData={teamsData}
+              setSelectedTeamId={setSelectedTeamId}
+              handleCheckBox={handleCheckBox}
+              isChecked={isChecked}
+            />
+          ))}
+      </SimpleGrid>
       <CreateSurveyModal
         open={createSurveyOpened}
         close={close}
@@ -325,7 +322,7 @@ export default function Surveys({ surveys: initialSurveys}) {
         surveyIdArray={surveyidArray}
         mergeSurvey={true}
       ></CreateSurveyLandingModal>
-    </Container>
+    </>
   );
 }
 
@@ -350,7 +347,7 @@ export function SurveyCard({
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(survey.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -367,15 +364,21 @@ export function SurveyCard({
         e.stopPropagation(),
           user?.role === "MEMBER"
             ? router.push(
-                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
+                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
               )
             : router.push(
-                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
+                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
               );
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} style={{maxWidth:'70%'}} truncate="end" size="xl" fw={700}>
+        <Text
+          mr={"sm"}
+          style={{ maxWidth: "70%" }}
+          truncate="end"
+          size="xl"
+          fw={700}
+        >
           {survey.title}
         </Text>
         <Group align={"center"} mt="sm" gap="xs">
@@ -393,14 +396,13 @@ export function SurveyCard({
           ></Checkbox>
         </Group>
       </Flex>
-      <Group justify="space-between" >    
-
+      <Group justify="space-between">
         <Group align={"center"} mt="sm" gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
             Created {timeSince}
           </Text>
-        </Group>    
+        </Group>
         <StatusBadge active={survey.active} />
       </Group>
 
@@ -408,7 +410,7 @@ export function SurveyCard({
       <Space h="lg" />
 
       <Flex justify={"space-between"} mt="xl" align={"center"}>
-      <Badge mt="md" color={survey?.type == "web" ? "blue" : "green"}>
+        <Badge mt="md" color={survey?.type == "web" ? "blue" : "green"}>
           {survey.type}
         </Badge>
         {/* <Text>Total Responses : #</Text> */}
@@ -543,36 +545,49 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         </Stack>
       </Modal>
 
-      <Dialog opened={dialogOpened} withCloseButton onClose={closeDialog} size="lg" radius="md">
-          <Text size="md" mb="xs" fw={500}>
-              Are you sure to delete this Survey?
-          </Text>
+      <Dialog
+        opened={dialogOpened}
+        withCloseButton
+        onClose={closeDialog}
+        size="lg"
+        radius="md"
+      >
+        <Text size="md" mb="xs" fw={500}>
+          Are you sure to delete this Survey?
+        </Text>
 
-          <Group align="center" pt="lg">
-          <RateupButtonSecondary onClick={closeDialog} loading={isLoading} size='md' title="Cancel" />
+        <Group align="center" pt="lg">
+          <RateupButtonSecondary
+            onClick={closeDialog}
+            loading={isLoading}
+            size="md"
+            title="Cancel"
+          />
 
-          <RateupButtonPrimary 
-          
+          <RateupButtonPrimary
             onClick={(e) => {
-                e.stopPropagation();
-                notifications.show({
-                  id: "delete-data",
-                  loading: true,
-                  title: "Deleting survey..",
-                  message: `Hold on, survey is getting deleted...`,
-                  autoClose: false,
-                  withCloseButton: false,
-                });
-                surveyDeleteMutation.mutate(survey?.id);
-            }} 
-            
-            loading={isLoading} size='md' title="Yes, Delete" />
-
-          </Group>
+              e.stopPropagation();
+              notifications.show({
+                id: "delete-data",
+                loading: true,
+                title: "Deleting survey..",
+                message: `Hold on, survey is getting deleted...`,
+                autoClose: false,
+                withCloseButton: false,
+              });
+              surveyDeleteMutation.mutate(survey?.id);
+            }}
+            loading={isLoading}
+            size="md"
+            title="Yes, Delete"
+          />
+        </Group>
       </Dialog>
 
       <Menu.Target>
-        <ActionIcon variant="subtle"  color="gray"
+        <ActionIcon
+          variant="subtle"
+          color="gray"
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -610,10 +625,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         >
           Clone
         </Menu.Item>
-        <Menu.Item
-          leftSection={<IconTrash />}
-          onClick={toggle}
-        >
+        <Menu.Item leftSection={<IconTrash />} onClick={toggle}>
           Delete
         </Menu.Item>
 
@@ -640,27 +652,28 @@ function StatusBadge({ active }) {
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   try {
-    supertokensNode.init(backendConfig())
+    supertokensNode.init(backendConfig());
 
-    let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
+    let accessToken =
+      context.req.cookies["st-access-token"] ||
+      context.req.cookies["sAccessToken"];
     if (!accessToken) {
-      return { props: {  surveys: [] } }
+      return { props: { surveys: [] } };
     }
 
-    const surveys = await getSurveysWithCustomToken(accessToken)
+    const surveys = await getSurveysWithCustomToken(accessToken);
 
     return {
       props: {
-        surveys: surveys || null
+        surveys: surveys || null,
       },
-    }
-
+    };
   } catch (err) {
-    console.log(err)
+    console.log(err);
     return {
       props: {
-        surveys: []
+        surveys: [],
       },
-    }
+    };
   }
 }

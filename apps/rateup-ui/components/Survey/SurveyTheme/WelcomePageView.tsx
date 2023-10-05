@@ -136,9 +136,10 @@ function WelcomePageView({
   return (
     <Flex
       w={"100%"}
+      bg="red"
       align={"center"}
-      h={"75vh"}
       p={30}
+      h="100%"
       style={
         currentStyles.bgType == "bgcolor" ? currentStyles?.bgStyles : bgTemp
       }

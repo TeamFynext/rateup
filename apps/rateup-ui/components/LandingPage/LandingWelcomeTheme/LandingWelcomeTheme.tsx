@@ -105,7 +105,7 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
   useEffect(() => {
     if (welocmeTheme?.bgUrl) {
       setbgImage(
-        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`
+        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`,
       );
     }
   }, [welocmeTheme?.bgUrl]);
@@ -163,14 +163,14 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
   const editSurvey = useEditLandingPageMutation(LandingId, setIsLoading);
 
   const handleSwitchChange = (e) => {
-    setIsLoading(true)
+    // setIsLoading(true)
     editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
   };
 
   return (
     <Flex gap={20}>
       <Paper style={{ flex: 5 }} shadow="xl">
-      <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
+        {/* <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} /> */}
         <Flex mb={10} p={10}>
           {" "}
           <Switch
