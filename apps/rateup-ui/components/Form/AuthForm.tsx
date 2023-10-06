@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { HeaderTabs } from "../../components/Layout/Header/Header";
 import {
   IconSend,
   IconArrowAutofitLeft,
@@ -15,12 +14,9 @@ import {
   Text,
   TextInput,
   PasswordInput,
-  Checkbox,
   Anchor,
   Paper,
-  Stack,
   Group,
-  Button,
   Image,
   NavLink,
   Center,
@@ -435,8 +431,8 @@ const AuthForm = ({
               <Image
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
                 alt="RateUp Logo"
-                width={140}
-                height={36}
+                w={140}
+                h={36}
               />
             </Link>
             <Space h="lg" />
@@ -452,8 +448,8 @@ const AuthForm = ({
               <Image
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`}
                 alt="email"
-                width={90}
-                height={60}
+                w={90}
+                h={60}
               />
             </Group>
             <Space h="xl" />

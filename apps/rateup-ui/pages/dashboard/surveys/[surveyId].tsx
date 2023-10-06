@@ -32,6 +32,7 @@ import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../config/backendConfig";
 import { getSurveyWithCustomToken } from "../../../backend/surveys/survey.api";
 import { getQuestionsWithCustomToken } from "../../../backend/surveys/questions/questions.api";
+import { checkTokenExpiry } from "../../../utils/supertoken";
 
 enum TabEnum {
   Edit = "Edit",
@@ -89,7 +90,7 @@ export default ({
 
   useEffect(() => {
     if (survey) {
-      setSelectedLanguage(survey.languages[0]);
+      setSelectedLanguage(survey?.languages?.[0]);
     }
   }, [survey]);
 
@@ -247,6 +248,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const questionsData = await getQuestionsWithCustomToken(accessToken, {
       surveyId,
     });
+
+    const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
 
     return {
       props: {

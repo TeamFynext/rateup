@@ -150,7 +150,7 @@ export function MultiSelectCreatable({ value, setValue, errors} : iProps) {
     const handleValueRemove = (val: string) =>
       setValue((current) => current.filter((v) => v !== val));
   
-    const values = value.map((item) => (
+    const values = value?.map((item) => (
       <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
         {item}
       </Pill>
@@ -160,9 +160,9 @@ export function MultiSelectCreatable({ value, setValue, errors} : iProps) {
       .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
       .map((item) => (
         <Combobox.Option                 title="Language"
-        value={item} key={item} active={value.includes(item)}>
+        value={item} key={item} active={value?.includes(item)}>
           <Group gap="sm">
-            {value.includes(item) ? <CheckIcon size={12} /> : null}
+            {value?.includes(item) ? <CheckIcon size={12} /> : null}
             <span>{item}</span>
           </Group>
         </Combobox.Option>

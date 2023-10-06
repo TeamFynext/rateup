@@ -20,7 +20,7 @@ export const Navbar = () => {
 
         return (
           <Link className={classes.link} href={`/${pathParts.slice(0, index + 1).join('/')}`} key={index}>
-            <Text color={index === pathParts.length - 1 ? "blue.9" : "dark.2"}>
+            <Text c={index === pathParts.length - 1 ? "blue.9" : "dark.2"} fw="500">
               {part.charAt(0).toUpperCase() + part.slice(1)}
             </Text>
           </Link>

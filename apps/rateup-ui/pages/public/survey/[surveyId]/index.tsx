@@ -10,6 +10,7 @@ import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../../config/backendConfig";
 import { getPublicSurveyWithCustomToken, updateSurveyStartedWithCustomToken, updateSurveyVisitedWithCustomToken } from "../../../../backend/surveys/survey.api";
+import { checkTokenExpiry } from "../../../../utils/supertoken";
 
 export default function Page( {surveyData: surveyInitial} ) {
   const router = useRouter();
@@ -79,6 +80,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     const surveyData = await getPublicSurveyWithCustomToken(accessToken, { surveyId })
+
+    const tokenExpiryCheck = checkTokenExpiry([surveyData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
 
     if(surveyData?.welcomePageEnabled){
       await updateSurveyVisitedWithCustomToken(accessToken, surveyId )

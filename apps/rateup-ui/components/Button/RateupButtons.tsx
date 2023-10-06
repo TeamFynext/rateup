@@ -59,7 +59,8 @@ export const RateupButtonBlue = ({
             leftSection={leftIcon}
             rightSection={rightIcon}
             onClick={onClick}
-            variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
+            variant='filled'
+            color='#1C518E'
             size= {size}
             style={sx}
             loading={loading}

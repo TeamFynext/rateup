@@ -54,7 +54,11 @@ export const fetchTeamsByUserWithCustomToken = async (token: string) => {
         return response.data
     } catch (error) {
         console.log(error)
-        return [];
+        if(error?.response?.data?.message){
+            return error?.response?.data?.message;
+           }else{
+            return []
+        }
     }
 }
 

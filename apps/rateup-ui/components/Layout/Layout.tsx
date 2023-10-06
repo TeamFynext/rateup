@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
-import { useMantineTheme, Flex } from "@mantine/core";
+import { Flex } from "@mantine/core";
 import { HeaderTabs } from "./Header/Header";
 import {
   IUserInfoApiResponse,
@@ -7,15 +7,14 @@ import {
 } from "../../backend/user/user.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "../../context/UserContext";
-import LeftNavbar from "./Navbar/LeftNavbar";
 import { RouteParamsProvider } from "../../context/RouteParamsContext";
 import SessionAuth from "../SuperToken/SessionAuth";
 import { useRouter } from "next/router";
 import useLocalStorage from "../../hooks/localStorage";
+import LeftNavbar from "./Navbar/LeftNavbar";
 
 // @ts-ignore
 export default ({ children }) => {
-  const theme = useMantineTheme();
   const router = useRouter();
   const [opened, setOpened] = useState(false);
 

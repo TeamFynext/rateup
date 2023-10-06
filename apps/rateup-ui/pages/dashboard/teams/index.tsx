@@ -33,6 +33,7 @@ import { backendConfig } from "../../../config/backendConfig";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api";
+import { checkTokenExpiry } from "../../../utils/supertoken";
 
 export default function Teams({ teamData: initialTeamData }) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -274,6 +275,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
+
+    const tokenExpiryCheck = checkTokenExpiry([teamData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
 
     return {
       props: {

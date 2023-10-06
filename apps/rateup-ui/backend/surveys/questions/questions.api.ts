@@ -25,7 +25,11 @@ export const getQuestionsWithCustomToken = async (token: string, { surveyId }) =
       return response.data as Survey
     } catch (error) {
       console.log(error)
-      return [];
+      if(error?.response?.data?.message){
+        return error?.response?.data?.message;
+       }else{
+        return []
+       }
     }
 }
 

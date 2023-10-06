@@ -61,7 +61,11 @@ export const getSurveysWithCustomToken = async (token: string) => {
       return response.data as Array<Survey>
   } catch (error) {
       console.log(error)
-      return {};
+      if(error?.response?.data?.message){
+        return error?.response?.data?.message;
+       }else{
+        return {}
+       }
   }
 }
 
@@ -84,8 +88,12 @@ export const getActiveSurveysSummaryWithCustomToken = async (token: string) => {
       });
       return response.data as Array<SurveySummary>
   } catch (error) {
-      console.log(error)
-      return {};
+     console.log(error)
+     if(error.response.data.message){
+      return error.response.data.message;
+     }else{
+      return {}
+     }
   }
 }
 
@@ -141,7 +149,11 @@ export const getWhatsappSurveysWithCustomToken = async (token: string) => {
     return surveys
   } catch (error) {
     console.log(error)
-    return [];
+    if(error?.response?.data?.message){
+      return error?.response?.data?.message;
+     }else{
+      return []
+     }
   }
 }
 
@@ -162,7 +174,11 @@ export const getSurveyWithCustomToken = async (token: string, { surveyId }) => {
     return response.data as Survey
   } catch (error) {
     console.log(error)
-    return [];
+    if(error?.response?.data?.message){
+      return error?.response?.data?.message;
+     }else{
+      return []
+     }
   }
 }
 
@@ -194,7 +210,11 @@ export const getPublicSurveyWithCustomToken = async (token: string, { surveyId }
     return response.data
   } catch (error) {
     console.log(error)
-    return [];
+    if(error?.response?.data?.message){
+      return error?.response?.data?.message;
+     }else{
+      return []
+     }
   }
 }
 
@@ -248,7 +268,11 @@ export const updateSurveyVisitedWithCustomToken = async (token: string, surveyId
       return response
   } catch (error) {
       console.log(error)
-      return {};
+      if(error?.response?.data?.message){
+        return error?.response?.data?.message;
+       }else{
+        return {}
+       }
   }
 }
 
@@ -267,7 +291,11 @@ export const updateSurveyStartedWithCustomToken = async (token: string, surveyId
       return response
   } catch (error) {
       console.log(error)
-      return {};
+      if(error?.response?.data?.message){
+        return error?.response?.data?.message;
+       }else{
+        return {}
+       }
   }
 }
 

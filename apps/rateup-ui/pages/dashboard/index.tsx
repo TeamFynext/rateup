@@ -22,6 +22,7 @@ import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../config/backendConfig";
 import { fetchTeamsByUserWithCustomToken } from "../../backend/team/team.api";
 import { getActiveSurveysSummaryWithCustomToken } from "../../backend/surveys/survey.api";
+import { checkTokenExpiry } from "../../utils/supertoken";
 
 export default function DashboardHome({teamData: initialTeamData, summaryData: initialSummaryData }) {
   const router = useRouter();
@@ -172,18 +173,17 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
                     
                     }}
                   />
-
                 <Paper style={{height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg" 
                     onClick={() => router.push("/dashboard/surveys")}>
-                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px" >
+                    <Title style={{ textAlign:'center', color: "#1C518E" }} order={2} size="36px" >
                        {(Array.isArray(surveys) && surveys.length) ? surveys.filter(s => s.active === true).length : 0}
                       </Title>
-                    <Text style={{ textAlign:'center' }} mb="lg"  fw={700} fz="xl" color="#595959"> Active Surveys</Text>
+                    <Text style={{ textAlign:'center' }} mb="lg"  fw={700} fz="xl" c="#595959"> Active Surveys</Text>
                 </Paper>
 
                 <Paper style={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
                 onClick={() => router.push("/dashboard/surveys")}>
-                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px">
+                    <Title style={{ textAlign:'center', color: "#1C518E" }} order={2} size="36px">
                        {Array.isArray(surveys) && surveys.length ? surveys.length : 0}
                       </Title>
                     <Text style={{ textAlign:'center' }} mb="lg" fw={700} fz="xl" c="#595959"> Total Surveys</Text>
@@ -191,9 +191,9 @@ const CustomTooltip = ({ active, payload, label } : iProps) => {
 
                 <Paper style={{ height:"105px", cursor:'pointer'}} radius="md" px="xl" py="sm"  shadow="lg"
                 onClick={() => router.push("/dashboard/teams")}>
-                    <Title style={{ textAlign:'center', color: "#3F5BA9" }} order={2} size="36px" >
+                    <Title style={{ textAlign:'center', color: "#1C518E" }} order={2} size="36px" >
                       {initialTeamData?.length || teamsDataUser?.data?.data?.length}</Title>
-                    <Text style={{ textAlign:'center' }} mb="lg" fw={700} fz="xl" color="#595959"> Total Teams</Text>
+                    <Text style={{ textAlign:'center' }} mb="lg" fw={700} fz="xl" c="#595959"> Total Teams</Text>
                 </Paper>
 
            
@@ -409,16 +409,21 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     let accessToken = context.req.cookies['st-access-token'] || context.req.cookies['sAccessToken']
     if (!accessToken) {
-      return { props: {  teamData: [], summaryData: null  } }
+      return { props: {  teamData: [], summaryData: []  } }
     }
 
     const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
     const summaryData = await getActiveSurveysSummaryWithCustomToken(accessToken);
 
+    const tokenExpiryCheck = checkTokenExpiry([teamData, summaryData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
     return {
       props: {
         teamData: teamData?.data || null,
-        summaryData: summaryData || null
+        summaryData: summaryData || [],
       },
     }
 
@@ -427,7 +432,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     return {
       props: {
         teamData: [],
-        summaryData: null
+        summaryData: [],
       },
     }
   }

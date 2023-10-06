@@ -63,6 +63,7 @@ import { useUser } from "../../../../context/UserContext";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../../config/backendConfig";
+import { checkTokenExpiry } from "../../../../utils/supertoken";
 
 export default function WhatsappSurveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -514,6 +515,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     const surveys = await getWhatsappSurveysWithCustomToken(accessToken);
+
+    const tokenExpiryCheck = checkTokenExpiry([surveys]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
 
     return {
       props: {

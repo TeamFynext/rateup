@@ -10,3 +10,18 @@ export async function getUserEmail() {
     }
     return email ;
 }
+
+
+export function checkTokenExpiry(args) {
+    for (let arg of args) {
+      if (arg === 'Token has expired') {
+        return {
+          props: {
+            fromSupertokens: 'needs-refresh'
+          },
+        };
+      }
+    }
+    return null;
+  }
+  

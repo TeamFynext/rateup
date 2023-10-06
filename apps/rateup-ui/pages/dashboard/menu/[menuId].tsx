@@ -34,6 +34,7 @@ import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../config/backendConfig";
 import { getMenuCategoriesByMenuIdWithCustomToken } from "../../../backend/menu/category/mCategory.api";
+import { checkTokenExpiry } from "../../../utils/supertoken";
 
 export default ({ categories: initialCategories }) => {
   const router = useRouter();
@@ -211,10 +212,13 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       return { props: { categories: [] } };
     }
 
-    const categories = await getMenuCategoriesByMenuIdWithCustomToken(
-      accessToken,
-      { menuId },
-    );
+    const categories = await getMenuCategoriesByMenuIdWithCustomToken(accessToken, { menuId })
+
+    const tokenExpiryCheck = checkTokenExpiry([categories]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
     return {
       props: {
         categories: categories,
