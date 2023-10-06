@@ -2,7 +2,7 @@ import { UserRole } from "../enums";
 
 export function retrieveRole(
   role: typeof UserRole.ADM | typeof UserRole.SUPADM,
-) {
+): string | "Super Admin" | "Admin" {
   if (role === UserRole.SUPADM)
     return UserRole.SUPADM.split("_")
       .map(

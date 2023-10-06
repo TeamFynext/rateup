@@ -1,45 +1,39 @@
-import { Flex, Group,Stack,  Paper, Space, Text,Badge, useMantineTheme } from '@mantine/core';
-import { useRouter } from 'next/router';
-import React from 'react'
+import { Flex, Stack, Paper, Text, Badge } from "@mantine/core";
+import { useRouter } from "next/router";
+import React from "react";
 
-const TeamCard = ({team, reftchTeams}) => {
-    const theme = useMantineTheme();
-    const router = useRouter();
+const TeamCard = ({ team }) => {
+  const router = useRouter();
   return (
     <Paper
-      p="md"shadow="lg" radius="lg"
-      style={{ cursor: "pointer", width:"250px", height:"140px" }}
+      p="md"
+      shadow="md"
+      radius="lg"
+      style={{ cursor: "pointer", minWidth: "300px", height: "140px" }}
       onClick={() => {
         router.push(`teams/${team.code}`);
       }}
     >
-      <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} truncate size="xl" fw={700}>
-          {team.teamName}
-        </Text>        
+      <Flex justify={"space-between"} align={"center"} h={"100%"}>
+        <Stack gap={0}>
+          <Badge color="var(--tertiary-color)" variant="outline">
+            {team.code}{" "}
+          </Badge>
+          <Text mr={"sm"} truncate size="xl" fw={700}>
+            {team.teamName}
+          </Text>
+        </Stack>
+        <Stack align={"center"} gap={0}>
+          <Text fw={700} fz="xl" color="var(--tertiary-color)">
+            {team.memberCount}
+          </Text>
+          <Text fz="sm" color="var(--tertiary-color)" fw={"400"}>
+            Members
+          </Text>
+        </Stack>
       </Flex>
-      <Stack  mt="sm" gap="xs">
-
-      <Group gap="xs">
-
-        <Text size="sm" c="dimmed">
-          Code: 
-
-        </Text>
-        <Badge color="blue.9" variant="outline">{team.code} </Badge>
-        </Group>
-
-
-        <Group align={"center"} gap="xs">
-         <Text  fz="sm" c="dimmed">Total Members : </Text>
-          <Text fw={500} fz="sm">{team.memberCount}</Text>
-        </Group>
-      </Stack>
-      <Space h="xl" />
-      <Space h="lg" />
-
     </Paper>
-  )
-}
+  );
+};
 
-export default TeamCard
+export default TeamCard;
