@@ -1,0 +1,20 @@
+.root {
+  position: relative;
+}
+.input {
+  height: 70px;
+  border-radius: 12px;
+  color: black;
+}
+.input:focus {
+  border: 1px solid var(--tertiary-color);
+}
+.label {
+  position: absolute;
+  pointer-events: none;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-gray-5);
+  padding-left: var(--mantine-spacing-sm);
+  padding-top: calc(var(--mantine-spacing-sm) / 2);
+  z-index: 1;
+}

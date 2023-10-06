@@ -1,14 +1,12 @@
 ﻿import { useRouter } from "next/router";
 
-export default function Settings(){
+export default function Settings() {
+  const router = useRouter();
+  router.push("/dashboard/settings/user");
 
-    const router = useRouter();
-    router.push("/dashboard/settings/account")
-
-    return (
-        <>
-            <h2>Settings</h2>
-        </>
-    );
-
+  return (
+    <>
+      <h2>Settings</h2>
+    </>
+  );
 }
