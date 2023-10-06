@@ -24,6 +24,7 @@ import supertokensNode from "supertokens-node";
 import { notifications } from "@mantine/notifications";
 import { getSurveyWithCustomToken } from "../../../backend/org/org.api";
 import { GetServerSidePropsContext } from "next";
+import { checkTokenExpiry } from "../../../utils/supertoken";
 
 const Members = ({ membersData: membersInitialData }) => {
   const router = useRouter();
@@ -166,6 +167,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     const membersData = await getSurveyWithCustomToken(accessToken);
+
+    const tokenExpiryCheck = checkTokenExpiry([membersData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
 
     return {
       props: {

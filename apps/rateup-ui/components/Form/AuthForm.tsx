@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { HeaderTabs } from "../../components/Layout/Header/Header";
 import {
   IconSend,
   IconArrowAutofitLeft,
@@ -15,12 +14,9 @@ import {
   Text,
   TextInput,
   PasswordInput,
-  Checkbox,
   Anchor,
   Paper,
-  Stack,
   Group,
-  Button,
   Image,
   NavLink,
   Center,
@@ -180,9 +176,8 @@ const AuthForm = ({
 
         // This is where Google should redirect the user back after login or error.
         // This URL goes on the Google's dashboard as well.
-       
-        frontendRedirectURI: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/login/callback/google`,
 
+        frontendRedirectURI: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/login/callback/google`,
       });
 
       /*
@@ -370,7 +365,6 @@ const AuthForm = ({
                     {...signUpForm.getInputProps("inviteCode")}
                     mt="md"
                   />
-                 
                 </>
               )}
 
@@ -385,9 +379,13 @@ const AuthForm = ({
                 }
               />
               <Group justify="center" mt="lg">
-                <Anchor component="button" size="sm" style={{
-                  textAlign:'center'
-                }}>
+                <Anchor
+                  component="button"
+                  size="sm"
+                  style={{
+                    textAlign: "center",
+                  }}
+                >
                   {isLogin && (
                     <Link
                       href="/login/reset-password"
@@ -402,17 +400,13 @@ const AuthForm = ({
 
             {authType && (
               <Center mt="xl">
-                <Text
-                  mt="xl"
-                  inline
-                  c="blue.6"
-                  className={classes.txtStyle}
-                  
-                >
+                <Text mt="xl" inline c="blue.6" className={classes.txtStyle}>
                   <Link href="/auth/logout" style={{ textDecoration: "none" }}>
                     <NavLink
                       label="Logout"
-                      leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                      leftSection={
+                        <IconArrowAutofitLeft size="1rem" stroke={1.5} />
+                      }
                       variant="subtle"
                     />
                   </Link>
@@ -435,8 +429,8 @@ const AuthForm = ({
               <Image
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
                 alt="RateUp Logo"
-                width={140}
-                height={36}
+                w={140}
+                h={36}
               />
             </Link>
             <Space h="lg" />
@@ -452,17 +446,13 @@ const AuthForm = ({
               <Image
                 src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`}
                 alt="email"
-                width={90}
-                height={60}
+                w={90}
+                h={60}
               />
             </Group>
             <Space h="xl" />
 
-            <Text
-              c="blue.6"
-              className={classes.txtStyle}
-              onClick={sendEmail}
-            >
+            <Text c="blue.6" className={classes.txtStyle} onClick={sendEmail}>
               <NavLink
                 style={{ fontWeight: 620 }}
                 label="Resend or change email"
@@ -472,17 +462,14 @@ const AuthForm = ({
               />
             </Text>
 
-            <Text
-              inline
-              c="blue.6"
-              className={classes.txtStyle}
-
-            >
+            <Text inline c="blue.6" className={classes.txtStyle}>
               <Link href="/auth/logout" style={{ textDecoration: "none" }}>
                 <NavLink
                   style={{ fontWeight: 620 }}
                   label="Logout"
-                  leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+                  leftSection={
+                    <IconArrowAutofitLeft size="1rem" stroke={1.5} />
+                  }
                   variant="subtle"
                 />
               </Link>

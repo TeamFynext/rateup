@@ -1,96 +1,110 @@
-import { axiosClient } from '../apiClient'
+import { axiosClient } from "../apiClient";
 
 export interface ICreateTeam {
-    name: string; 
-    orgId: string; 
-    userId: string;
-    whatsappAccessToken:string
+  name: string;
+  orgId: string;
+  userId: string;
+  whatsappAccessToken: string;
 }
 
 export interface IInviteMember {
-    name: string; 
-    orgId: string; 
-    invitedBy: string;
-    teamId: string;
-    email: string;
+  name: string;
+  orgId: string;
+  invitedBy: string;
+  teamId: string;
+  email: string;
 }
 
 export interface IEditTeam {
-    name: string; 
-    googleLink: string; 
-    code: string; 
-    whatsappAccessToken: string; 
+  name: string;
+  googleLink: string;
+  code: string;
+  whatsappAccessToken: string;
 }
 
-export const createTeam = (data: ICreateTeam) => axiosClient({
+export const createTeam = (data: ICreateTeam) =>
+  axiosClient({
     url: `/team`,
-    method: 'POST',
-    data: data
-})
+    method: "POST",
+    data: data,
+  });
 
-export const editTeam = (teamId: string , data: IEditTeam) => axiosClient({
+export const editTeam = (teamId: string, data: IEditTeam) =>
+  axiosClient({
     url: `/team/edit/${teamId}`,
-    method: 'PUT',
-    data: data
-})
+    method: "PUT",
+    data: data,
+  });
 
-export const getTeamsByOrg = (orgId: String) => axiosClient({
+export const getTeamsByOrg = (orgId: String) =>
+  axiosClient({
     url: `/team/${orgId}`,
-    method: 'GET',
-})
+    method: "GET",
+  });
 
-export const getTeamsByUser = () => axiosClient({
+export const getTeamsByUser = () =>
+  axiosClient({
     url: `/team/user`,
-    method: 'GET',
-})
+    method: "GET",
+  });
 
 export const fetchTeamsByUserWithCustomToken = async (token: string) => {
-    try {
-        const response = await axiosClient.get(`/team/user`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        });
-        return response.data
-    } catch (error) {
-        console.log(error)
-        return [];
+  try {
+    const response = await axiosClient.get(`/team/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    if (error?.response?.data?.message) {
+      return error?.response?.data?.message;
+    } else {
+      return [];
     }
-}
+  }
+};
 
-export const deleteTeamById = (id: String) => axiosClient({
+export const deleteTeamById = (id: String) =>
+  axiosClient({
     url: `/team/${id}`,
-    method: 'DELETE',
-})
+    method: "DELETE",
+  });
 
-export const inviteTeamMember = (data: IInviteMember) => axiosClient({
+export const inviteTeamMember = (data: IInviteMember) =>
+  axiosClient({
     url: `/team/invite`,
-    method: 'POST',
-    data: data
-})
+    method: "POST",
+    data: data,
+  });
 
-export const completeInvite = (inviteToken: String) => axiosClient({
+export const completeInvite = (inviteToken: String) =>
+  axiosClient({
     url: `/team/complete-invite/${inviteToken}`,
-    method: 'POST',
-})
+    method: "POST",
+  });
 
-export const deleteInviteById = (id: String) => axiosClient({
+export const deleteInviteById = (id: String) =>
+  axiosClient({
     url: `/team/invite/${id}`,
-    method: 'DELETE',
-})
+    method: "DELETE",
+  });
 
-
-export const getTeamMembers= (teamId: String) => axiosClient({
+export const getTeamMembers = (teamId: String) =>
+  axiosClient({
     url: `/team/members/${teamId}`,
-    method: 'GET',
-})
+    method: "GET",
+  });
 
-export const getTeamMembersFromInvitation= (teamId: String) => axiosClient({
+export const getTeamMembersFromInvitation = (teamId: String) =>
+  axiosClient({
     url: `/team/invitation/${teamId}`,
-    method: 'GET',
-})
+    method: "GET",
+  });
 
-export const getTeamSurveys= (teamId: String) => axiosClient({
+export const getTeamSurveys = (teamId: String) =>
+  axiosClient({
     url: `/survey/team/${teamId}`,
-    method: 'GET',
-})
+    method: "GET",
+  });

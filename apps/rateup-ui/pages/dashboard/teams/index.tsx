@@ -35,6 +35,7 @@ import { backendConfig } from "../../../config/backendConfig";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api";
+import { checkTokenExpiry } from "../../../utils/supertoken";
 import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 
@@ -229,6 +230,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
+
+    const tokenExpiryCheck = checkTokenExpiry([teamData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
 
     return {
       props: {
