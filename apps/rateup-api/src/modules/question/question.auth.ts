@@ -9,10 +9,8 @@ export async function verifySurveyAccess(
   }>,
   reply: FastifyReply
 ) {
-  let session = await Session.getSession(request, reply);
-
   const surveyId = request.params.surveyId;
-  let userId = session.getUserId();
+  const userId = request.userId;
 
   const hasAccess = await hasAccessToSurvey(surveyId, userId);
 
