@@ -1,81 +1,89 @@
-import React, { useEffect, useState } from 'react';
-import { Stack, Paper, Group, Title, Switch, TextInput } from '@mantine/core';
-import { RateupButtonSecondary } from '../../Button/RateupButtons';
-import { useUpdateSurveyPwdMutation } from '../../../backend/surveys/surveys.query';
-import { IconInfoCircle } from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
+import React, { useEffect, useState } from "react";
+import {
+  Stack,
+  Paper,
+  Group,
+  Title,
+  Switch,
+  TextInput,
+  Flex,
+} from "@mantine/core";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { useUpdateSurveyPwdMutation } from "../../../backend/surveys/surveys.query";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 
 export const PasswordProtection = ({ surveyId, isProtected }) => {
   const [passwordProtect, setPasswordProtect] = useState(isProtected);
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState("");
 
   function updatePassword() {
-    updateSurveyPassword.mutate()
+    updateSurveyPassword.mutate();
   }
 
   function handleSwitch(event: any) {
-    setPasswordProtect(event.currentTarget.checked)
+    setPasswordProtect(event.currentTarget.checked);
     if (event.currentTarget.checked) {
       notifications.show({
-        id: 'load-data',
-        color: 'info',
-        title: 'Set Password',
-        message: 'Enter Password and Save to complete the process.',
+        id: "load-data",
+        color: "info",
+        title: "Set Password",
+        message: "Enter Password and Save to complete the process.",
         icon: <IconInfoCircle size="1rem" />,
         autoClose: 5000,
       });
     } else {
-      setPassword('')
-      updateSurveyPassword.mutate()
+      setPassword("");
+      updateSurveyPassword.mutate();
     }
   }
 
-  const updateSurveyPassword = useUpdateSurveyPwdMutation(surveyId, passwordProtect, password);
+  const updateSurveyPassword = useUpdateSurveyPwdMutation(
+    surveyId,
+    passwordProtect,
+    password,
+  );
 
   return (
-    <Paper p="xl" style={{ minHeight: '350px', minWidth: '600px', maxWidth: '600px' }}>
+    <Flex h={"100%"} p={2} gap={5}>
+      <Paper p="xl" w="100%" shadow="lg" radius="lg">
+        <Switch.Group
+          px={30}
+          py={20}
+          pt={30}
+          label="Password Protection"
+          description="Add password to the survey."
+          withAsterisk
+        >
+          <Group mt="xs"></Group>
+        </Switch.Group>
 
-      <Switch.Group
-        px={30}
-        py={20}
-        pt={30}
-        label="Password Protection"
-        description="Add password to the survey."
-        withAsterisk
-      >
-        <Group mt="xs">
-        </Group>
+        <Switch
+          px={30}
+          py={20}
+          checked={passwordProtect}
+          onChange={(event) => handleSwitch(event)}
+          label="Enable"
+        />
 
-      </Switch.Group>
+        {passwordProtect && (
+          <Stack px={30} py={20} style={{ maxWidth: "400px" }}>
+            <TextInput
+              label="Password"
+              type="text"
+              placeholder="Enter new password"
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="off"
+            />
 
-      <Switch
-        px={30}
-        py={20}
-        checked={passwordProtect}
-        onChange={(event) => handleSwitch(event)}
-        label="Enable"
-      />
-
-      {passwordProtect && (
-        <Stack px={30} py={20} style={{ maxWidth: '400px' }}>
-          <TextInput
-            label="Password"
-            type="text"
-            placeholder="Enter new password"
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="off"
-          />
-
-          <RateupButtonSecondary
-            title={"Save Password"}
-            size="md"
-            onClick={updatePassword}
-
-          />
-
-        </Stack>
-      )}
-
-    </Paper>
+            <RateupButtonSecondary
+              title={"Save Password"}
+              size="md"
+              onClick={updatePassword}
+            />
+          </Stack>
+        )}
+      </Paper>
+    </Flex>
   );
 };

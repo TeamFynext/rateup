@@ -1,8 +1,5 @@
-.root {
-  position: relative;
-}
 .input {
-  height: 70px;
+  height: 50px;
   border-radius: 12px;
   color: black;
 }
@@ -10,11 +7,8 @@
   border: 1px solid var(--tertiary-color);
 }
 .label {
-  position: absolute;
   pointer-events: none;
   font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-gray-5);
-  padding-left: var(--mantine-spacing-sm);
-  padding-top: calc(var(--mantine-spacing-sm) / 2);
+  color: var(--mantine-color-gray-7);
   z-index: 1;
 }

@@ -136,9 +136,7 @@ function WelcomePageView({
   return (
     <Flex
       w={"100%"}
-      bg="red"
       align={"center"}
-      p={30}
       h="100%"
       style={
         currentStyles.bgType == "bgcolor" ? currentStyles?.bgStyles : bgTemp
@@ -159,7 +157,6 @@ function WelcomePageView({
             direction={"column"}
           >
             <Flex
-              // bg={"gray"}
               onClick={(e) => {
                 e.stopPropagation(), handleFocus("logo");
               }}
@@ -169,7 +166,8 @@ function WelcomePageView({
                 <Image
                   fit="contain"
                   src={getLogoUrl()}
-                  alt=" Logo "
+                  alt="Logo"
+                  fallbackSrc="https://www.freeiconspng.com/uploads/no-image-icon-4.png"
                   style={currentStyles?.logoStyles}
                 />
               </Tooltip>

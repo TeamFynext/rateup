@@ -48,7 +48,7 @@
 }
 
 .navbar {
-  z-index: 9999;
+  z-index: 1;
   transition: width 0.3s ease-in-out;
   box-shadow:
     rgba(0, 0, 0, 0.12) 0px 1px 3px,

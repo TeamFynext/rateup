@@ -13,18 +13,15 @@ const SurveySettings = ({ surveyId, survey }) => {
         <Tabs.Tab value="general">Password Protection</Tabs.Tab>
         <Tabs.Tab value="other">Other Settings</Tabs.Tab>
       </Tabs.List>
-
       <Tabs.Panel value="settings">
         <GeneralSettings survey={survey} />
       </Tabs.Panel>
-
       <Tabs.Panel value="general">
         <PasswordProtection
           surveyId={surveyId}
           isProtected={survey?.isProtected}
         />
       </Tabs.Panel>
-
       <Tabs.Panel value="other">
         <OtherSettings />
       </Tabs.Panel>

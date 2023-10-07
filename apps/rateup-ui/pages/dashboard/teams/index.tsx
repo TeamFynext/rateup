@@ -38,6 +38,7 @@ import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api"
 import { checkTokenExpiry } from "../../../utils/supertoken";
 import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 
 export default function Teams({ teamData: initialTeamData }) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -117,13 +118,14 @@ export default function Teams({ teamData: initialTeamData }) {
         onSubmit={createTeamForm.onSubmit(onSubmit)}
       >
         <Box>
-          <TextInput
+          <ContainedTextField
             withAsterisk
             label="Team Name"
             placeholder="Enter team name"
             {...createTeamForm.getInputProps("name")}
           />
-          <TextInput
+          <Space h="lg" />
+          <ContainedTextField
             withAsterisk
             label="Team Code"
             placeholder="Enter team code"

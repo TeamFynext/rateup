@@ -19,7 +19,6 @@ export interface IEditTeam {
   name: string;
   googleLink: string;
   code: string;
-  whatsappAccessToken: string;
 }
 
 export const createTeam = (data: ICreateTeam) =>

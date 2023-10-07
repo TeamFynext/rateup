@@ -163,28 +163,29 @@ function SurveyTheme({ survey }) {
     editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
   };
   return (
-    <Flex gap={20} bg={"red"} h="100%">
-      <Paper style={{ flex: 0.7 }} shadow="xl" h={"100%"}>
-        <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
-        <Flex mb={10} p={10}>
-          {" "}
-          <Switch
-            label="Enable Welcome page"
-            checked={survey?.welcomePageEnabled}
-            color="dark"
-            ml={"md"}
-            mt={"md"}
-            onChange={handleSwitchChange}
-          />{" "}
-        </Flex>
+    <Flex w={"100%"} h={"100%"} p={2} gap={5}>
+      <Paper style={{ flex: 0.7 }} shadow="lg" radius={"lg"}>
+        <Stack h="100%">
+          <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
+          <Flex p={10}>
+            <Switch
+              label="Enable Welcome page"
+              checked={survey?.welcomePageEnabled}
+              color="dark"
+              ml={"md"}
+              mt={"md"}
+              onChange={handleSwitchChange}
+            />
+          </Flex>
 
-        <WelcomePageView
-          setSelectedType={setSelectedType}
-          selectedType={selectedType}
-          currentStyles={currentStyles}
-          setCurrentstyles={setCurrentstyles}
-          bgImage={bgImage}
-        />
+          <WelcomePageView
+            setSelectedType={setSelectedType}
+            selectedType={selectedType}
+            currentStyles={currentStyles}
+            setCurrentstyles={setCurrentstyles}
+            bgImage={bgImage}
+          />
+        </Stack>
       </Paper>
 
       <Paper p={"xl"} style={{ flex: 0.3 }} shadow="lg" radius="lg">

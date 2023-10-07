@@ -14,15 +14,15 @@ import {
   Grid,
   Text,
 } from "@mantine/core";
-import { RateupButtonSecondary } from "../../../../components/Button/RateupButtons";
-import { useUpdateOrgLogoMutation } from "../../../../backend/org/org.query";
-import { uploadFile } from "../../../../utils/file-upload/upload";
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import { useUpdateOrgLogoMutation } from "../../../backend/org/org.query";
+import { uploadFile } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
-import { useUser } from "../../../../context/UserContext";
+import { useUser } from "../../../context/UserContext";
 import {
   ContainedPasswordInput,
   ContainedTextField,
-} from "../../../../components/input/ContainedInput/ContainedInput";
+} from "../../../components/input/ContainedInput/ContainedInput";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -69,12 +69,7 @@ const OrgSettings = () => {
   return (
     <Flex direction={"column"} h={"100%"}>
       <Title order={2}>Organization Settings</Title>
-      <Flex
-        direction={"row"}
-        style={{ height: "100%", overflow: "scroll" }}
-        wrap="wrap"
-        justify="space-around"
-      >
+      <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
           direction={"column"}
           align="center"
@@ -98,12 +93,14 @@ const OrgSettings = () => {
               size="sm"
               variant="outline"
               onClick={removePhoto}
+              color="var(--tertiary-color)"
             />
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
               {(props) => (
                 <RateupButtonSecondary
                   title="Change Image"
                   size="sm"
+                  color="var(--tertiary-color)"
                   onClick={removePhoto}
                   {...props}
                 />

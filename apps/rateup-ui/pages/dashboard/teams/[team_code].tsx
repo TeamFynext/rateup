@@ -2,23 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
   Tabs,
-  Paper,
   Loader,
   Stack,
   Title,
-  Modal,
   SimpleGrid,
   Box,
-  TextInput,
   Space,
   Text,
-  Center,
-  Flex,
   Group,
 } from "@mantine/core";
 import {
   RateupButtonOutline,
-  RateupButtonPrimary,
+  RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
 import { IconCheck, IconReload } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
@@ -49,6 +44,8 @@ import {
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import TeamSettings from "./TeamSettings";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 
 const TeamDetails = () => {
   // TODO fix id fail case on page reload
@@ -175,9 +172,16 @@ const TeamDetails = () => {
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Add Team Member" centered>
+      <FormModalLayout
+        centered
+        opened={opened}
+        onClose={close}
+        title="Add Member"
+        buttonTitle="Add member"
+        onSubmit={handleSubmit}
+      >
         <Box>
-          <TextInput
+          <ContainedTextField
             required
             label="Name"
             placeholder="Enter name"
@@ -186,7 +190,7 @@ const TeamDetails = () => {
           />
           {errors.name && <Text color="red">*{errors.name}</Text>}
           <Space h="lg" />
-          <TextInput
+          <ContainedTextField
             required
             label="Email"
             placeholder="Enter email id"
@@ -195,67 +199,39 @@ const TeamDetails = () => {
           />
           {errors.email && <Text color="red">*{errors.email}</Text>}
         </Box>
-        <Box pt={20}>
-          <RateupButtonPrimary
-            onClick={handleSubmit}
-            title={"Send Invite"}
-            // disabled={!isNameValid}
-          />
-        </Box>
-      </Modal>
-
+      </FormModalLayout>
       <StyledTabs
         value={activeTab}
         onChange={(tab) => setActiveTab(tab as TabEnum)}
       >
-        <Flex
-          direction={{ base: "column", sm: "column" }}
-          gap={{ base: "lg", sm: "lg" }}
-          justify={{ sm: "center" }}
-        >
-          <Title order={1} mb="sm">
-            {teamsMembersData?.data?.team?.name || "Team"}
-          </Title>
+        <Stack gap={10}>
+          <Tabs.List>
+            <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+          </Tabs.List>
           <Group>
-            <Tabs.List
-              style={{
-                position: "absolute",
-                width: "fit-content",
-                left: 0,
-                right: 0,
-                marginLeft: "auto",
-                marginRight: "auto",
-              }}
-            >
-              <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
-            </Tabs.List>
+            <Title order={1} mb="sm">
+              {teamsMembersData?.data?.team?.name || "Team"}
+            </Title>
+            <Tabs.Panel value={TabEnum.Members} mt={30}>
+              <RateupButtonSecondary
+                title="Add Member"
+                rightIcon={<IconPlus />}
+                color="var(--tertiary-color)"
+                radius="xl"
+                size="lg"
+                onClick={open}
+              />
+            </Tabs.Panel>
           </Group>
-        </Flex>
-
-        <Tabs.Panel value={TabEnum.Members} mt={60}>
-          {/** TODO: Remove fixed height and make this responsive */}
-
+        </Stack>
+        <Tabs.Panel value={TabEnum.Members} mt={30}>
           <SimpleGrid
+            p={1}
             spacing={"lg"}
             cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
+            style={{ overflow: "auto" }}
           >
-            <Paper
-              p="md"
-              shadow="lg"
-              radius="lg"
-              style={{ cursor: "pointer" }}
-              onClick={open}
-            >
-              <Center h="100%">
-                <Stack align="center">
-                  <IconPlus size={36} />
-                  <Text size="xl" fw={700}>
-                    Invite member
-                  </Text>
-                </Stack>
-              </Center>
-            </Paper>
             {teamsMembersData?.data?.members?.length > 0 ? (
               Array.isArray(teamsMembersData.data.members) ? (
                 (sort
@@ -290,7 +266,6 @@ const TeamDetails = () => {
             )}
           </SimpleGrid>
         </Tabs.Panel>
-
         <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <TeamSettings
             id={team_id?.toString()}
@@ -298,8 +273,6 @@ const TeamDetails = () => {
           />
         </Tabs.Panel>
       </StyledTabs>
-
-      <Space h="xl" />
     </>
   );
 };

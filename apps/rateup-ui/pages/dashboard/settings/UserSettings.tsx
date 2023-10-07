@@ -11,23 +11,23 @@ import {
   Flex,
   Paper,
 } from "@mantine/core";
-import { RateupButtonSecondary } from "../../../../components/Button/RateupButtons";
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import {
   useChangePasswordMutation,
   useGetUserProfile,
   useUpdateProfileMutation,
   useUpdateProfilePhotoMutation,
-} from "../../../../backend/user/user.query";
+} from "../../../backend/user/user.query";
 import { useForm } from "@mantine/form";
-import { uploadFile } from "../../../../utils/file-upload/upload";
+import { uploadFile } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
 import {
   ContainedPasswordInput,
   ContainedSelection,
   ContainedTextField,
-} from "../../../../components/input/ContainedInput/ContainedInput";
-import { mergeNames, retrieveRole } from "../../../../utils/essential";
-import { passwordValidation } from "../../../../utils/validation";
+} from "../../../components/input/ContainedInput/ContainedInput";
+import { mergeNames, retrieveRole } from "../../../utils/essential";
+import { passwordValidation } from "../../../utils/validation";
 
 const ProfileSettings = () => {
   const {
@@ -184,12 +184,7 @@ const ProfileSettings = () => {
   return (
     <Flex direction={"column"} h={"100%"}>
       <Title order={2}>User Settings</Title>
-      <Flex
-        direction={"row"}
-        style={{ height: "100%", overflow: "scroll" }}
-        wrap="wrap"
-        justify="space-around"
-      >
+      <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
           direction={"column"}
           align="center"
@@ -212,6 +207,7 @@ const ProfileSettings = () => {
               title="Remove Image"
               size="sm"
               variant="outline"
+              color="var(--tertiary-color)"
               onClick={removePhoto}
             />
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
@@ -219,6 +215,7 @@ const ProfileSettings = () => {
                 <RateupButtonSecondary
                   title="Change Image"
                   size="sm"
+                  color="var(--tertiary-color)"
                   onClick={removePhoto}
                   {...props}
                 />
@@ -305,31 +302,26 @@ const ProfileSettings = () => {
                   Enter your current password to change yout new password.
                 </Text>
               </Stack>
-              <Flex gap={"md"} wrap="wrap">
-                <Flex style={{ flex: 1 }} miw={300}>
-                  <ContainedPasswordInput
-                    required={isAnyPasswordFieldDirty()}
-                    w={"100%"}
-                    label="Existing Password"
-                    placeholder="Enter existing password"
-                    {...profileForm.getInputProps("existingPassword")}
-                  />
-                </Flex>
-                <Flex direction={"column"} style={{ flex: 1 }} miw={300}>
-                  <ContainedPasswordInput
-                    required={isAnyPasswordFieldDirty()}
-                    label="New Password"
-                    placeholder="Enter new password"
-                    {...profileForm.getInputProps("newPassword")}
-                  />
-                  <ContainedPasswordInput
-                    required={isAnyPasswordFieldDirty()}
-                    label="Confirm Password"
-                    placeholder="Enter new password again"
-                    mt="md"
-                    {...profileForm.getInputProps("confirmPassword")}
-                  />
-                </Flex>
+              <Flex gap={"md"} wrap="wrap" direction={"column"}>
+                <ContainedPasswordInput
+                  required={isAnyPasswordFieldDirty()}
+                  w={"100%"}
+                  label="Existing Password"
+                  placeholder="Enter existing password"
+                  {...profileForm.getInputProps("existingPassword")}
+                />
+                <ContainedPasswordInput
+                  required={isAnyPasswordFieldDirty()}
+                  label="New Password"
+                  placeholder="Enter new password"
+                  {...profileForm.getInputProps("newPassword")}
+                />
+                <ContainedPasswordInput
+                  required={isAnyPasswordFieldDirty()}
+                  label="Confirm Password"
+                  placeholder="Enter new password again"
+                  {...profileForm.getInputProps("confirmPassword")}
+                />
               </Flex>
             </Flex>
             <Flex justify="center">

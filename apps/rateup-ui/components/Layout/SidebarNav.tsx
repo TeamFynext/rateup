@@ -74,7 +74,7 @@ const data = [
     icon: <IconSettings size={16} />,
     color: "violet",
     label: "Settings",
-    link: "/dashboard/settings/user",
+    link: "/dashboard/settings",
   },
   {
     icon: <IconLogout size={16} />,

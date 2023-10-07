@@ -46,7 +46,7 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"}>
+    <Flex w={"100%"} h={"100%"} p={2} gap={5}>
       <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg">
         <QuestionsSideBar
           questions={questions}

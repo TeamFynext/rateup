@@ -98,7 +98,7 @@ export default function App({
       {/* <SuperTokensWrapper> */}
       {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
       <main className={GilroyRegular.className}>
-        <MantineProvider>
+        <MantineProvider theme={{ fontFamily: GilroyRegular.style.fontFamily }}>
           <Notifications />
           <QueryClientProvider client={queryClient}>
             <Hydrate state={pageProps.dehydratedState}>

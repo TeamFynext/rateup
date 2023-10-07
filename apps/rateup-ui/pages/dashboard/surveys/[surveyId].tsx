@@ -102,12 +102,21 @@ export default ({
 
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
-      <Stack>
-        <StyledTabs
-          value={activeTab}
-          onChange={(tab) => setActiveTab(tab as TabEnum)}
-        >
-          <Group justify="space-between">
+      <StyledTabs
+        value={activeTab}
+        onChange={(tab) => setActiveTab(tab as TabEnum)}
+      >
+        <Stack>
+          <Tabs.List>
+            <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
+            {survey.type != "whatsapp" && (
+              <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
+            )}
+            <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
+          </Tabs.List>
+          <Group justify={"space-between"}>
             <Title
               order={1}
               mb="sm"
@@ -120,112 +129,70 @@ export default ({
               }}
               title={survey.title}
             >
-              {" "}
               {survey.title}
             </Title>
-            <Tabs.List
-              style={{
-                position: "absolute",
-                width: "fit-content",
-                left: 0,
-                right: 0,
-                marginLeft: "auto",
-                marginRight: "auto",
-              }}
-            >
-              <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-              {survey.type != "whatsapp" && (
-                <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
-              )}
-              <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
-            </Tabs.List>
 
-            <Tabs.Panel value={TabEnum.Edit}>
+            {activeTab === TabEnum.Edit && (
               <Group>
-                <Badge color={survey?.type == "web" ? "blue" : "green"}>
+                <Badge
+                  color={
+                    survey?.type == "web" ? "var(--tertiary-color)" : "green"
+                  }
+                  p="sm"
+                >
                   {survey.type}
                 </Badge>
-
                 <Select
                   data={survey.languages}
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}
                 />
-
-                {/* <RateupButtonPrimary onClick={() => { setaddQnTrigger(addQnTrigger + 1) }} title={"Add Question"}
-                  rightIcon={<IconPlus
-                    size="1rem" />}
-                  size="md"
-                /> */}
               </Group>
-            </Tabs.Panel>
-
-            <Tabs.Panel value={TabEnum.Settings}>
-              <div></div>
-            </Tabs.Panel>
-
-            <Tabs.Panel value={TabEnum.Share}>
-              <div></div>
-            </Tabs.Panel>
-
-            <Tabs.Panel value={TabEnum.Result}>
-              <RateupButtonBlackOutline
-                title={"All"}
-                radius={"lg"}
-                size="md"
-                rightIcon={<IconChevronDown size="1rem" />}
-              />
-              <RateupButtonPrimary
-                title={"Filter"}
-                variant="subtle"
-                rightIcon={<IconChevronDown size="1rem" />}
-              />
-            </Tabs.Panel>
-            <Tabs.Panel value={TabEnum.Theme}>
-              <div></div>
-            </Tabs.Panel>
+            )}
+            {activeTab === TabEnum.Result && (
+              <Group>
+                <RateupButtonBlackOutline
+                  title={"All"}
+                  radius={"lg"}
+                  size="md"
+                  rightIcon={<IconChevronDown size="1rem" />}
+                />
+                <RateupButtonPrimary
+                  title={"Filter"}
+                  variant="subtle"
+                  rightIcon={<IconChevronDown size="1rem" />}
+                />
+              </Group>
+            )}
           </Group>
-
-          <Space h="xl" />
-
-          <Tabs.Panel
-            value={TabEnum.Edit}
-            style={{ background: "white", width: "100%" }}
-          >
-            {/** TODO: Remove fixed height and make this responsive */}
-            {/* <Box style={{ display: "flex", gap: 30, height: "70vh" }}> */}
-            <EditSurvey
-              questions={questions}
-              addQnTrigger={addQnTrigger}
-              surveyType={survey.type}
-              surveyLanguages={survey.languages}
-              setSelectedLanguage={setSelectedLanguage}
-            />
-            {/* </Box> */}
-          </Tabs.Panel>
-
-          <Tabs.Panel value={TabEnum.Settings}>
-            <SurveySettings surveyId={surveyId} survey={survey} />
-          </Tabs.Panel>
-
-          <Tabs.Panel value={TabEnum.Result}>
-            <Result survey={survey} />
-          </Tabs.Panel>
-
-          <Tabs.Panel value={TabEnum.Share}>
-            <ShareSurvey survey={survey} />
-          </Tabs.Panel>
-
-          <Tabs.Panel value={TabEnum.Theme}>
-            <SurveyTheme survey={survey} />
-          </Tabs.Panel>
-
-          {/* TODO  fix mantine issue and Enable - TODO VERIFY MANTINE*/}
-        </StyledTabs>
-      </Stack>
-      {/* <Title>hello google</Title> */}
+        </Stack>
+        <Space h="lg" />
+        <Tabs.Panel
+          value={TabEnum.Edit}
+          style={{ background: "white", width: "100%" }}
+        >
+          <EditSurvey
+            questions={questions}
+            addQnTrigger={addQnTrigger}
+            surveyType={survey.type}
+            surveyLanguages={survey.languages}
+            setSelectedLanguage={setSelectedLanguage}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Settings}>
+          <SurveySettings surveyId={surveyId} survey={survey} />
+        </Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Result}>
+          <Result survey={survey} />
+        </Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Share}>
+          <ShareSurvey survey={survey} />
+        </Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Theme}>
+          <SurveyTheme survey={survey} />
+        </Tabs.Panel>
+        {/* TODO  fix mantine issue and Enable - TODO VERIFY MANTINE*/}
+      </StyledTabs>
     </SelectedLanguageContext.Provider>
   );
 };

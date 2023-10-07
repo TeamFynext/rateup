@@ -5,6 +5,8 @@ import {
   TextInputProps,
   PasswordInput,
   PasswordInputProps,
+  FileInputProps,
+  FileInput,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
 
@@ -24,4 +26,8 @@ export function ContainedSelection(props: SelectProps) {
 
 export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
+}
+
+export function ContainedFileInput(props: FileInputProps) {
+  return <FileInput classNames={classes} {...props} />;
 }

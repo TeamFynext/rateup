@@ -7,6 +7,7 @@ import {
   TextInput,
   Group,
   Switch,
+  Flex,
 } from "@mantine/core";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
@@ -34,7 +35,6 @@ const GeneralSettings = ({ survey }) => {
         values.length ? null : "Must contain atleast one language",
     },
   });
-
   useEffect(() => {
     surveyForm.setValues({
       title: survey?.title || "",
@@ -50,7 +50,6 @@ const GeneralSettings = ({ survey }) => {
   }, [languages]);
 
   const [isLoading, setIsLoading] = useState(false);
-
   const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
   const onSubmit = (values) => {
     setIsLoading(true);
@@ -62,72 +61,71 @@ const GeneralSettings = ({ survey }) => {
     editSurvey.mutate(data);
   };
   return (
-    <Paper
-      p="xl"
-      style={{ minHeight: "350px", minWidth: "600px", maxWidth: "600px" }}
-    >
-      <form onSubmit={surveyForm.onSubmit(onSubmit)}>
-        <Grid align="center">
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Survey Name: </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <TextInput
-              withAsterisk
-              placeholder="Enter Survey name"
-              required
-              mt="md"
-              {...surveyForm.getInputProps("title")}
-            />
-          </Grid.Col>
-        </Grid>
-        <Divider my="xl" />
-        <Grid align="center">
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Languages: </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <MultiSelectCreatable
-              value={languages}
-              setValue={setLanguages}
-              errors={surveyForm.errors.languages}
-            />
-          </Grid.Col>
-        </Grid>
+    <Flex h={"100%"} p={2}>
+      <Paper w={"100%"} p={"xl"} shadow="lg" radius="lg">
+        <form onSubmit={surveyForm.onSubmit(onSubmit)}>
+          <Grid align="center">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Survey Name: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <TextInput
+                withAsterisk
+                placeholder="Enter Survey name"
+                required
+                mt="md"
+                {...surveyForm.getInputProps("title")}
+              />
+            </Grid.Col>
+          </Grid>
+          <Divider my="xl" />
+          <Grid align="center">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Languages: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <MultiSelectCreatable
+                value={languages}
+                setValue={setLanguages}
+                errors={surveyForm.errors.languages}
+              />
+            </Grid.Col>
+          </Grid>
 
-        <Divider my="xl" />
-        <Grid align="center">
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Kiosk Mode:</Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Switch
-              size="xl"
-              onLabel="ON"
-              offLabel="OFF"
-              checked={kioskMode}
-              onChange={(event) => {
-                setKioskMode(event.target.checked);
-              }}
-            />
-          </Grid.Col>
-        </Grid>
+          <Divider my="xl" />
+          <Grid align="center">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Kiosk Mode:</Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Switch
+                size="xl"
+                onLabel="ON"
+                offLabel="OFF"
+                checked={kioskMode}
+                onChange={(event) => {
+                  setKioskMode(event.target.checked);
+                }}
+              />
+            </Grid.Col>
+          </Grid>
 
-        <Divider my="xl" />
+          <Divider my="xl" />
 
-        <Grid justify="flex-end">
-          <Grid.Col span={2}>
-            <RateupButtonSecondary
-              type="submit"
-              loading={isLoading}
-              size="md"
-              title="Save Changes"
-            />
-          </Grid.Col>
-          <Grid.Col span={5}></Grid.Col>
-        </Grid>
-      </form>
-    </Paper>
+          <Grid justify="flex-end">
+            <Grid.Col span={2}>
+              <RateupButtonSecondary
+                type="submit"
+                loading={isLoading}
+                size="md"
+                title="Save Changes"
+              />
+            </Grid.Col>
+            <Grid.Col span={5}></Grid.Col>
+          </Grid>
+        </form>
+      </Paper>
+    </Flex>
   );
 };
 

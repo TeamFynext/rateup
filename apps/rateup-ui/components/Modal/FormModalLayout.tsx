@@ -1,4 +1,4 @@
-import { Modal, Space, Stack, Title } from "@mantine/core";
+import { Group, Modal, Space, Stack, Title } from "@mantine/core";
 import { FormEventHandler } from "react";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 interface FormModalLayoutProps {
@@ -11,6 +11,8 @@ interface FormModalLayoutProps {
   isLoading?: boolean;
   buttonTitle?: string;
   noCustomHeader?: boolean;
+  includeCancelButton?: boolean;
+  cancelOnClick?: () => void;
 }
 export default function FormModalLayout({
   centered,
@@ -22,6 +24,8 @@ export default function FormModalLayout({
   isLoading,
   buttonTitle,
   noCustomHeader,
+  cancelOnClick,
+  includeCancelButton = false,
 }: FormModalLayoutProps) {
   return (
     <Modal
@@ -31,6 +35,7 @@ export default function FormModalLayout({
       onClose={onClose}
       radius="lg"
       bg={"red"}
+      style={{ zIndex: 9999999 }}
     >
       {!noCustomHeader && (
         <Stack align={"center"}>
@@ -40,12 +45,24 @@ export default function FormModalLayout({
       <form onSubmit={onSubmit} style={{ padding: 20 }}>
         {children}
         <Space h={"md"} />
-        <RateupButtonSecondary
-          color="var(--tertiary-color)"
-          loading={isLoading}
-          type="submit"
-          title={buttonTitle}
-        />
+        <Group justify={includeCancelButton ? "flex-end" : "center"}>
+          {includeCancelButton && (
+            <RateupButtonSecondary
+              color="var(--tertiary-color)"
+              loading={isLoading}
+              type="reset"
+              variant="subtle"
+              onClick={cancelOnClick ? cancelOnClick : onClose}
+              title={"Cancel"}
+            />
+          )}
+          <RateupButtonSecondary
+            color="var(--tertiary-color)"
+            loading={isLoading}
+            type="submit"
+            title={buttonTitle}
+          />
+        </Group>
       </form>
     </Modal>
   );

@@ -1,18 +1,30 @@
-import { useCreateMenuMutation, useUpdateMenuMutation } from "../../backend/menu/menu.query";
+import {
+  useCreateMenuMutation,
+  useUpdateMenuMutation,
+} from "../../backend/menu/menu.query";
 import { useContext, useEffect, useState } from "react";
-import { Button, Center, FileInput, Group, Modal, SimpleGrid, Stack, TextInput } from "@mantine/core";
+import { Center, Group, SimpleGrid, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import SelectedTeamContext from "../../context/SelectedTeam";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
-import classes from './CreateMenu.module.css'
+import classes from "./CreateMenu.module.css";
+import FormModalLayout from "../Modal/FormModalLayout";
+import {
+  ContainedFileInput,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
 
 export function CreateMenuModal({ opened, close, editingItem }) {
-  const { selectedTeamId } = useContext(SelectedTeamContext)
+  const { selectedTeamId } = useContext(SelectedTeamContext);
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const createMenuMutation = useCreateMenuMutation(selectedTeamId, close, setIsCreating)
+  const createMenuMutation = useCreateMenuMutation(
+    selectedTeamId,
+    close,
+    setIsCreating,
+  );
   const updateMenuMutation = useUpdateMenuMutation(
     selectedTeamId,
     () => {
@@ -21,42 +33,42 @@ export function CreateMenuModal({ opened, close, editingItem }) {
     },
     () => {
       setIsCreating(false);
-    }
-  )
+    },
+  );
   const [logo, setLogo] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
 
   useEffect(() => {
     if (!logo) return;
 
-    setIsUploading(true)
+    setIsUploading(true);
     uploadFile(logo)
       .then((key) => {
         form.setFieldValue("logo", key);
-        setIsUploading(false)
+        setIsUploading(false);
       })
       .catch((err) => {
         showErrorToast("Error uploading logo. Please try again.");
         console.error(err);
-        setIsUploading(false)
+        setIsUploading(false);
       });
-  }, [logo])
+  }, [logo]);
 
   useEffect(() => {
     if (!backgroundImage) return;
 
-    setIsUploading(true)
+    setIsUploading(true);
     uploadFile(backgroundImage)
       .then((key) => {
         form.setFieldValue("backgroundImage", key);
-        setIsUploading(false)
+        setIsUploading(false);
       })
       .catch((err) => {
         showErrorToast("Error uploading background image. Please try again.");
         console.error(err);
-        setIsUploading(false)
+        setIsUploading(false);
       });
-  }, [backgroundImage])
+  }, [backgroundImage]);
 
   const form = useForm({
     initialValues: editingItem || {
@@ -78,11 +90,11 @@ export function CreateMenuModal({ opened, close, editingItem }) {
 
   useEffect(() => {
     if (editingItem) {
-      form.setValues(editingItem)
+      form.setValues(editingItem);
     } else {
-      form.reset()
+      form.reset();
     }
-  }, [editingItem])
+  }, [editingItem]);
 
   const onSubmit = (values) => {
     const validationRes = form.validate();
@@ -90,150 +102,144 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       console.error(validationRes.errors);
       return;
     }
-    setIsCreating(true)
+    setIsCreating(true);
 
     if (editingItem) {
-      updateMenuMutation.mutate({ menuId: editingItem.id, updatedData: values })
+      updateMenuMutation.mutate({
+        menuId: editingItem.id,
+        updatedData: values,
+      });
     } else {
-      createMenuMutation.mutate(values)
+      createMenuMutation.mutate(values);
     }
   };
 
   if (!selectedTeamId) {
-    return null
+    return null;
   }
 
   return (
-    <Modal
+    <FormModalLayout
       opened={opened}
       onClose={() => {
-        close()
+        close();
       }}
       title={editingItem ? "Edit Menu" : "Create Menu"}
       centered
-      size="auto"
+      onSubmit={form.onSubmit(onSubmit)}
+      buttonTitle={editingItem ? "Edit Menu" : "Create Menu"}
+      includeCancelButton
     >
-      <form onSubmit={form.onSubmit(onSubmit)}>
-        <Stack>
-          <TextInput
-            label="Menu Name"
-            placeholder="Only displayed in dashboard"
-            withAsterisk
-            {...form.getInputProps("name")}
+      <Stack>
+        <ContainedTextField
+          label="Menu Name"
+          placeholder="Only displayed in dashboard"
+          withAsterisk
+          {...form.getInputProps("name")}
+        />
+        <ContainedTextField
+          label="Display Name"
+          placeholder="Paragon Restaurant"
+          withAsterisk
+          {...form.getInputProps("displayName")}
+        />
+        <Group
+          wrap="nowrap"
+          // style={{
+          //   "& > *": {
+          //     flex: "1 1 50%",
+          //   }
+          // }}
+          className={classes.groupChildElements}
+        >
+          <ContainedTextField
+            label="Location Label"
+            placeholder="Kannur Rd, near CH Over bridge"
+            {...form.getInputProps("locationText")}
           />
-          <TextInput
-            label="Display Name"
-            placeholder="Paragon Restaurant"
-            withAsterisk
-            {...form.getInputProps("displayName")}
+          <ContainedTextField
+            label="Location URL"
+            placeholder="https://goo.gl/maps/xyz1234"
+            {...form.getInputProps("locationUrl")}
           />
-          <Group
-             wrap="nowrap"
-            // style={{
-            //   "& > *": {
-            //     flex: "1 1 50%",
-            //   }
-            // }}
-            className= {classes.groupChildElements}
-
-          >
-            <TextInput
-              label="Location Label"
-              placeholder="Kannur Rd, near CH Over bridge"
-              {...form.getInputProps("locationText")}
+        </Group>
+        <Group
+          wrap="nowrap"
+          // style={{
+          //   "& > *": {
+          //     flex: "1 1 50%",
+          //   }
+          // }}
+          className={classes.groupChildElements}
+        >
+          <ContainedTextField
+            label="Website Label"
+            placeholder="paragonHotels.in"
+            {...form.getInputProps("websiteText")}
+          />
+          <ContainedTextField
+            label="Website URL"
+            placeholder="https://paragonHotels.in"
+            {...form.getInputProps("websiteUrl")}
+          />
+        </Group>
+        <SimpleGrid
+          cols={2}
+          spacing="md"
+          className={classes.simpleGridImg}
+          //TODO VERIFY MANTINE
+          // style={{
+          //   "& img": {
+          //     borderRadius: "4px"
+          //   }
+          // }}
+        >
+          <ContainedFileInput
+            label="Upload Logo"
+            placeholder="Click here to upload logo"
+            accept="image/*"
+            multiple={false}
+            error={form.errors.logo && form.errors.logo}
+            onChange={setLogo}
+          />
+          <ContainedFileInput
+            label="Upload background image"
+            placeholder="Click here to upload background image"
+            accept="image/*"
+            multiple={false}
+            error={form.errors.backgroundImage && form.errors.backgroundImage}
+            onChange={setBackgroundImage}
+          />
+          <Center>
+            <img
+              style={{
+                maxHeight: "200px",
+                maxWidth: "70%",
+              }}
+              src={
+                form.values.logo
+                  ? getFileUrlFromKey(form.values.logo)
+                  : editingItem?.logo
+                  ? getFileUrlFromKey(editingItem.logo)
+                  : ""
+              }
             />
-            <TextInput
-              label="Location URL"
-              placeholder="https://goo.gl/maps/xyz1234"
-              {...form.getInputProps("locationUrl")}
+          </Center>
+          <Center>
+            <img
+              width="75%"
+              height="auto"
+              src={
+                form.values.backgroundImage
+                  ? getFileUrlFromKey(form.values.backgroundImage)
+                  : editingItem?.backgroundImage
+                  ? getFileUrlFromKey(editingItem.backgroundImage)
+                  : ""
+              }
             />
-          </Group>
-          <Group
-             wrap="nowrap"
-            // style={{
-            //   "& > *": {
-            //     flex: "1 1 50%",
-            //   }
-            // }}
-            className= {classes.groupChildElements}
-
-          >
-            <TextInput
-              label="Website Label"
-              placeholder="paragonHotels.in"
-              {...form.getInputProps("websiteText")}
-            />
-            <TextInput
-              label="Website URL"
-              placeholder="https://paragonHotels.in"
-              {...form.getInputProps("websiteUrl")}
-            />
-          </Group>
-          <SimpleGrid
-            cols={2}
-            spacing="md"
-            className={classes.simpleGridImg}
-            //TODO VERIFY MANTINE
-            // style={{
-            //   "& img": {
-            //     borderRadius: "4px"
-            //   }
-            // }}
-          >
-            <FileInput
-              label="Upload Logo"
-              placeholder="Click here to upload logo"
-              accept="image/*"
-              multiple={false}
-              error={form.errors.logo && form.errors.logo}
-              onChange={setLogo}
-            />
-            <FileInput
-              label="Upload background image"
-              placeholder="Click here to upload background image"
-              accept="image/*"
-              multiple={false}
-              error={form.errors.backgroundImage && form.errors.backgroundImage}
-              onChange={setBackgroundImage}
-            />
-            <Center>
-              <img
-                style={{
-                  maxHeight: "200px",
-                  maxWidth: "70%"
-                }}
-                src={
-                  form.values.logo ?
-                    getFileUrlFromKey(form.values.logo)
-                    : editingItem?.logo ?
-                      getFileUrlFromKey(editingItem.logo)
-                      : ""
-                }
-              />
-            </Center>
-            <Center>
-              <img
-                width="75%"
-                height="auto"
-                src={
-                  form.values.backgroundImage ?
-                    getFileUrlFromKey(form.values.backgroundImage)
-                    : editingItem?.backgroundImage ?
-                      getFileUrlFromKey(editingItem.backgroundImage) : ""
-                }
-              />
-            </Center>
-          </SimpleGrid>
-          <Group justify="flex-end" pt="xl" mt="lg">
-            <Button variant="subtle" onClick={close}>
-              Cancel
-            </Button>
-            <Button variant="filled" type="submit" loading={isCreating || isUploading}>
-              Submit
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
-  )
+          </Center>
+        </SimpleGrid>
+      </Stack>
+    </FormModalLayout>
+  );
 }

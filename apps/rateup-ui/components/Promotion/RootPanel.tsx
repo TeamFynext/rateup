@@ -32,7 +32,7 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
   return (
     <Flex
       style={{
-        height: "--webkit-fill-available",
+        height: "100%",
       }}
       gap={"md"}
     >
