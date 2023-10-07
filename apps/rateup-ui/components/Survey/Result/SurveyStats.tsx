@@ -9,7 +9,7 @@ enum LocationType {
   Country = "country"
 }
 const SurveyStats = ({ survey }) => {
-  const { data: responses, isLoading: isResponsesLoading, error: responsesError } = useResponses(survey.id);
+  const { data: responses, isLoading: isResponsesLoading, error: responsesError } = useResponses(survey?.id);
   const [zoom, setZoom] = useState(7)
   const [locationType, setLocationType] = useState(LocationType.City)
   if (isResponsesLoading || !responses) {

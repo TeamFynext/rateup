@@ -8,11 +8,7 @@ import {
   useMantineTheme,
   Text,
   Group,
-  Flex,
-  Menu,
-  Center,
-  Paper,
-  Avatar,
+  Flex, Menu, Center, Paper, Avatar
 } from "@mantine/core";
 import {
   IconSettings,
@@ -33,6 +29,7 @@ import { useUser } from "../../../context/UserContext";
 import classes from "./Navbar.module.css";
 import { IconChevronUp } from "@tabler/icons-react";
 import cx from "clsx";
+import Link from "next/link";
 
 // TODO: format
 interface NavbarLinkProps {
@@ -229,32 +226,22 @@ const LeftNavbar = ({ opened, setOpened }: iProps) => {
   const theme = useMantineTheme();
   const isLargerThanSm = useMediaQuery("(min-width: 768px)");
   const { user, setUser } = useUser();
-  const [userProfileAvatar, setUserProfileAvatar] = useState(
-    `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`,
-  );
+  const [userProfileAvatar, setUserProfileAvatar] = useState(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`)
 
   useEffect(() => {
-    if (user?.profilePhoto && user?.profilePhoto !== "REMOVED_PHOTO") {
-      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user?.profilePhoto}`;
-      setUserProfileAvatar(imgUrl);
+    if (user?.profilePhoto && user?.profilePhoto !== 'REMOVED_PHOTO') {
+      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user?.profilePhoto}`
+      setUserProfileAvatar(imgUrl)
     } else {
-      setUserProfileAvatar(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`,
-      );
+      setUserProfileAvatar(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`)
     }
-  }, [user]);
+  }, [user])
 
   const userInfo = {
-    name: user?.userName,
-    email: user?.email,
-    role: !user?.role
-      ? "...error..."
-      : user?.role === "SUPER_ADMIN"
-      ? "Super Admin"
-      : user?.role === "ADMIN"
-      ? "Admin"
-      : "Team Member",
-    image: userProfileAvatar,
+    "name": user?.userName,
+    "email": user?.email,
+    "role": !user?.role ? "...error..."  : (user?.role === 'SUPER_ADMIN' ? "Super Admin" : (user?.role === 'ADMIN' ? "Admin" : "Team Member")),
+    "image": userProfileAvatar
   };
 
   const links = mockdata.map((link) => {
@@ -297,74 +284,85 @@ const LeftNavbar = ({ opened, setOpened }: iProps) => {
   };
 
   return (
-    <Flex className={classes.navbar} direction={"column"} p="md">
-      <Stack justify={opened ? "space-between" : "center"} mt={25}>
-        <Center>
+    <Flex className={classes.navbar} direction={"column"} p="md" pt="30">
+      <Group justify={opened ? "space-between" : "center"} >
+        {
+          opened && 
+            <Link href="/dashboard">
+              <Image
+                h={user?.orgLogo ? 80 : 80}
+                w={user?.orgLogo ? 120 : 120}
+                src={
+                  user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
+                    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
+                    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
+                }
+              />
+            </Link>
+          }
+        <Group mt={opened ? 0 : 20}>
           <Burger
             opened={opened}
             onClick={() => {
-              setOpened((o) => !o);
+              setOpened((o) => !o)
             }}
             size="sm"
             color={theme.colors.gray[6]}
+          />  
+        </Group>
+
+    </Group>
+
+       <Stack justify={opened ? "space-between" : "center"} >
+          {
+     opened ? 
+           <Menu
+          width={260}
+          position="bottom-end"
+          transitionProps={{ transition: 'pop-top-right' }}
+          withinPortal
+        >
+          <Menu.Target>
+            <Paper shadow="sm" radius="lg" py="sm" px="sm" style={{ maxWidth: '220px'}}
+              className={cx(classes.user)}
+            >
+
+              <Group style={{minWidth: '150px'}} mt="50">
+                    <Avatar 
+                      onClick={() => {
+                        setOpened((o) => !o)
+                      }}  
+                      src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} 
+                    />
+
+                <div style={{ flex: 1 }}>
+                  <Text size="sm" fw={500} style={{ lineHeight: 1 }} mr={6}>
+                    {userInfo.name ?userInfo.name : userInfo.email}
+                  </Text>
+
+                  <Text c="dimmed" size="xs">
+                    {userInfo.role}
+                  </Text>
+
+                </div>
+            </Group>
+            </Paper>
+          </Menu.Target>
+        </Menu>
+
+        :
+        <Center mt="80px">
+           <Avatar 
+            onClick={() => {
+              setOpened((o) => !o)
+            }} 
+            style={{ cursor: 'pointer'}}
+            src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} mt="sm" 
           />
         </Center>
-        {opened ? (
-          <Menu
-            width={260}
-            position="bottom-end"
-            transitionProps={{ transition: "pop-top-right" }}
-            withinPortal
-          >
-            <Menu.Target>
-              <Paper
-                shadow="sm"
-                radius="lg"
-                py="sm"
-                px="sm"
-                style={{ maxWidth: "220px" }}
-                className={cx(classes.user)}
-              >
-                <Group style={{ minWidth: "150px" }}>
-                  <Avatar
-                    onClick={() => {
-                      setOpened((o) => !o);
-                    }}
-                    src={userInfo?.image}
-                    alt={userInfo.name}
-                    radius="xl"
-                    size={30}
-                  />
+  }    
 
-                  <div style={{ flex: 1 }}>
-                    <Text size="sm" fw={500} style={{ lineHeight: 1 }} mr={6}>
-                      {userInfo.name ? userInfo.name : userInfo.email}
-                    </Text>
-
-                    <Text c="dimmed" size="xs">
-                      {userInfo.role}
-                    </Text>
-                  </div>
-                </Group>
-              </Paper>
-            </Menu.Target>
-          </Menu>
-        ) : (
-          <Center>
-            <Avatar
-              onClick={() => {
-                setOpened((o) => !o);
-              }}
-              style={{ cursor: "pointer" }}
-              src={userInfo?.image}
-              alt={userInfo.name}
-              radius="xl"
-              size={30}
-              mt="sm"
-            />
-          </Center>
-        )}
-      </Stack>
+          </Stack>
       {isLargerThanSm && (
         <Stack justify="space-between" style={{ height: "100%" }}>
           <Stack mt={50} justify="center" gap={0}>

@@ -90,6 +90,13 @@ declare global {
     };
   }
 
+  interface SurveySummaryData {
+    totalTeamsCount: number;
+    totalSurveysCount: number;
+    activeSurveysCount: number;
+    surveys: SurveySummary[];
+  }
+
   type SurveyLanding = {
     id: string;
     title: string;

@@ -54,10 +54,16 @@ export enum PromotionTab {
 }
 export enum MenuItemPriceType {
   FIXED = "FIXED",
-  VARIANT = "VARIANT"
+  VARIANT = "VARIANT",
 }
 export enum WaTemplateStatus {
   APPROVED = "APPROVED",
   PENDING = "PENDING",
   REJECTED = "REJECTED",
+}
+
+export enum SurveyTypeFilters {
+  All = "All",
+  Web = "Web",
+  WhatsApp = "WhatsApp",
 }

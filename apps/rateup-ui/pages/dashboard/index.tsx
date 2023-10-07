@@ -1,4 +1,7 @@
-﻿import { RateupButtonBlue } from "../../components/Button/RateupButtons";
+﻿import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+} from "../../components/Button/RateupButtons";
 import {
   Group,
   Title,
@@ -14,10 +17,8 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
-import { useQueryClient } from "@tanstack/react-query";
 import Loading from "../../components/Page/Loading";
 import { useUser } from "../../context/UserContext";
 import {
@@ -25,22 +26,18 @@ import {
   IconCheckupList,
   IconPageBreak,
   IconPlus,
+  IconSelector,
   IconSocial,
 } from "@tabler/icons-react";
-import {
-  useSurveys,
-  useSurveysSummary,
-} from "../../backend/surveys/surveys.query";
+import { useSurveysSummary } from "../../backend/surveys/surveys.query";
 import { IconSpeakerphone } from "@tabler/icons-react";
 import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
-import { useTeamsByUser } from "../../backend/team/team.query";
 import {
   AreaChart,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Area,
 } from "recharts";
@@ -48,32 +45,19 @@ import dayjs from "dayjs";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../config/backendConfig";
-import { fetchTeamsByUserWithCustomToken } from "../../backend/team/team.api";
 import { getActiveSurveysSummaryWithCustomToken } from "../../backend/surveys/survey.api";
 import { checkTokenExpiry } from "../../utils/supertoken";
+import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
+import { SurveyTypeFilters } from "../../types/enums";
 
-export default function DashboardHome({
-  teamData: initialTeamData,
-  summaryData: initialSummaryData,
-}) {
+export default function DashboardHome({ summaryData: initialSummaryData }) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { user } = useUser();
-
+  const [sort, setSort] = useState(true);
+  const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
   const [opened, { open, close }] = useDisclosure(false);
   const [timePeriod, setTimePeriod] = useState("weekly");
   const theme = useMantineTheme();
-
-  const { isLoading, error, data: surveys } = useSurveys(false);
-
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser(queryClient, initialTeamData);
-
-  //TODO avoid above two api calls, merge required datas into surveysSummary
 
   const {
     isLoading: isLoadingSummary,
@@ -82,18 +66,12 @@ export default function DashboardHome({
   } = useSurveysSummary(initialSummaryData) as {
     isLoading: boolean;
     error: any;
-    data: SurveySummary[];
+    data: SurveySummaryData;
   };
 
-  useEffect(() => {
-    if (!user?.role) {
-      queryClient.invalidateQueries(["userInfoQuery"]);
-    }
-  }, []);
-
-  function prepareData(surveysSummary: SurveySummary[]) {
+  function prepareData(surveysSummary: SurveySummaryData) {
     let dateResponseCount = {};
-    surveysSummary?.forEach((survey) => {
+    surveysSummary?.surveys?.forEach((survey) => {
       survey?.responses?.forEach((response) => {
         let date = new Date(response?.createdAt).toISOString().split("T")[0];
         if (dateResponseCount[date]) {
@@ -216,8 +194,8 @@ export default function DashboardHome({
                     order={2}
                     size="36px"
                   >
-                    {Array.isArray(surveys) && surveys.length
-                      ? surveys.filter((s) => s.active === true).length
+                    {surveysSummary?.activeSurveysCount
+                      ? surveysSummary?.activeSurveysCount
                       : 0}
                   </Title>
                   <Text
@@ -245,8 +223,8 @@ export default function DashboardHome({
                     order={2}
                     size="36px"
                   >
-                    {Array.isArray(surveys) && surveys.length
-                      ? surveys.length
+                    {surveysSummary?.totalSurveysCount
+                      ? surveysSummary?.totalSurveysCount
                       : 0}
                   </Title>
                   <Text
@@ -274,8 +252,9 @@ export default function DashboardHome({
                     order={2}
                     size="36px"
                   >
-                    {initialTeamData?.length ||
-                      teamsDataUser?.data?.data?.length}
+                    {surveysSummary?.totalTeamsCount
+                      ? surveysSummary?.totalTeamsCount
+                      : 0}
                   </Title>
                   <Text
                     style={{ textAlign: "center" }}
@@ -467,7 +446,7 @@ export default function DashboardHome({
                         style={{ textAlign: "center" }}
                         size="20px"
                         fw={700}
-                        color="#595959"
+                        c="#595959"
                       >
                         Team
                       </Text>
@@ -494,7 +473,7 @@ export default function DashboardHome({
                         style={{ textAlign: "center" }}
                         size="20px"
                         fw={700}
-                        color="#595959"
+                        c="#595959"
                       >
                         WhatsApp Survey
                       </Text>
@@ -550,7 +529,7 @@ export default function DashboardHome({
                         style={{ textAlign: "center" }}
                         size="20px"
                         fw={700}
-                        color="#595959"
+                        c="#595959"
                       >
                         Promotion
                       </Text>
@@ -561,7 +540,28 @@ export default function DashboardHome({
             </Modal>
 
             <Paper radius="md" px="xl" py="lg" my="xl" pt="xl" shadow="lg">
-              <Title order={2}>Active Surveys</Title>
+              <Group justify="space-between">
+                <Group align="center">
+                  <Title order={2}>Active Surveys</Title>
+                  <Text fz="17px" mt="5px" c="gray">
+                    ( {filterParam} )
+                  </Text>
+                </Group>
+
+                <Group>
+                  <SurveyTypeFilter
+                    filterParam={filterParam}
+                    setFilterParam={setFilterParam}
+                  />
+
+                  <RateupButtonPrimary
+                    onClick={() => setSort(!sort)}
+                    title={"Sort"}
+                    variant="subtle"
+                    rightIcon={<IconSelector size="1rem" />}
+                  />
+                </Group>
+              </Group>
             </Paper>
 
             <SimpleGrid
@@ -577,10 +577,26 @@ export default function DashboardHome({
               //   { maxWidth: "md", cols: 1 },
               // ]}
             >
-              {Array.isArray(surveysSummary) &&
-                (surveysSummary.length > 0
-                  ? surveysSummary
-                      .filter((s) => s.active === true)
+              {Array.isArray(surveysSummary?.surveys) &&
+                (surveysSummary?.surveys?.length > 0
+                  ? surveysSummary?.surveys
+                      ?.filter((s) => s.active === true)
+                      .sort((a, b) =>
+                        sort
+                          ? new Date(b.createdAt).getTime() -
+                            new Date(a.createdAt).getTime()
+                          : new Date(a.createdAt).getTime() -
+                            new Date(b.createdAt).getTime(),
+                      )
+                      .filter((s) => {
+                        if (filterParam === SurveyTypeFilters.Web) {
+                          return s.type === "web";
+                        } else if (filterParam === SurveyTypeFilters.WhatsApp) {
+                          return s.type === "whatsapp";
+                        } else {
+                          return true;
+                        }
+                      })
                       .map((s) => <ActiveSurveyCard key={s.id} survey={s} />)
                   : " No active surveys.")}
             </SimpleGrid>
@@ -617,30 +633,27 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       context.req.cookies["st-access-token"] ||
       context.req.cookies["sAccessToken"];
     if (!accessToken) {
-      return { props: { teamData: [], summaryData: [] } };
+      return { props: { summaryData: {} } };
     }
 
-    const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
     const summaryData =
       await getActiveSurveysSummaryWithCustomToken(accessToken);
 
-    const tokenExpiryCheck = checkTokenExpiry([teamData, summaryData]);
+    const tokenExpiryCheck = checkTokenExpiry([summaryData]);
     if (tokenExpiryCheck) {
       return tokenExpiryCheck;
     }
 
     return {
       props: {
-        teamData: teamData?.data || null,
-        summaryData: summaryData || [],
+        summaryData: summaryData || {},
       },
     };
   } catch (err) {
     console.log(err);
     return {
       props: {
-        teamData: [],
-        summaryData: [],
+        summaryData: {},
       },
     };
   }

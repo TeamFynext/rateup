@@ -72,9 +72,7 @@ export const getSurveysWithCustomToken = async (token: string) => {
 
 export async function getActiveSurveysSummary() {
   try {
-    let surveysSummary: Array<SurveySummary> = (
-      await axiosClient.get(`${SURVEYURL}/summary/active`)
-    ).data;
+    let surveysSummary: SurveySummaryData = (await axiosClient.get(`${SURVEYURL}/summary/active`)).data;
     return surveysSummary;
   } catch (e) {
     console.error(e);
@@ -84,12 +82,12 @@ export async function getActiveSurveysSummary() {
 
 export const getActiveSurveysSummaryWithCustomToken = async (token: string) => {
   try {
-    const response = await axiosClient.get(`${SURVEYURL}/summary/active`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data as Array<SurveySummary>;
+      const response = await axiosClient.get(`${SURVEYURL}/summary/active`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data as SurveySummaryData
   } catch (error) {
     console.log(error);
     if (error.response.data.message) {

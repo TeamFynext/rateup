@@ -36,7 +36,7 @@ export const Navbar = () => {
           >
             <Text
               c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
-              fw="500"
+              fw="600"
             >
               {part.charAt(0).toUpperCase() + part.slice(1)}
             </Text>
