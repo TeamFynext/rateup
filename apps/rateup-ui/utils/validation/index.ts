@@ -5,9 +5,21 @@ export function validateLength(input, min, max) {
   return true;
 }
 
+export function passwordValidation(value) {
+  if (!value) {
+    return "Password is required";
+  }
+  if (value.length < 5) {
+    return "Password should be at least 5 characters long";
+  }
+  if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
+    return "Password should contain at least one letter and one number";
+  }
+  return null; // Validation passed
+}
 
 export function validateWordCount(input, min, max) {
-  var words = input.split(' ');
+  var words = input.split(" ");
   if (words.length < min || words.length > max) {
     return false;
   }
@@ -15,10 +27,10 @@ export function validateWordCount(input, min, max) {
 }
 
 export function validateTextType(input, type) {
-  if (type === 'Letters') {
+  if (type === "Letters") {
     var regex = /^[a-zA-Z\s]+$/;
     return regex.test(input);
-  } else if (type === 'Letters_&_Numbers') {
+  } else if (type === "Letters_&_Numbers") {
     var regex = /^[a-zA-Z0-9\s]+$/;
     return regex.test(input);
   }
@@ -28,12 +40,24 @@ export function validateTextType(input, type) {
 export function validateQuestion(question, input) {
   if (question?.validationRules) {
     if (question?.validationRules?.length) {
-          if (!validateLength(input, question?.validationRules?.length?.min, question?.validationRules?.length?.max)) {
+      if (
+        !validateLength(
+          input,
+          question?.validationRules?.length?.min,
+          question?.validationRules?.length?.max,
+        )
+      ) {
         return question?.validationRules?.length?.errorMessage;
       }
     }
     if (question.validationRules.wordCount) {
-      if (!validateWordCount(input, question?.validationRules?.wordCount?.min, question?.validationRules?.wordCount?.max)) {
+      if (
+        !validateWordCount(
+          input,
+          question?.validationRules?.wordCount?.min,
+          question?.validationRules?.wordCount?.max,
+        )
+      ) {
         return question?.validationRules?.wordCount?.errorMessage;
       }
     }

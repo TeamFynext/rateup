@@ -22,6 +22,7 @@ import WithLoader from "../components/Layout/Loader/WithLoader";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "../styles/global.css";
+import { GilroyRegular } from "../public/fonts";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -34,7 +35,6 @@ export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
-
 export default function App({
   Component,
   pageProps,
@@ -97,23 +97,27 @@ export default function App({
       </Head>
       {/* <SuperTokensWrapper> */}
       {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
-
-      <MantineProvider>
-        <Notifications />
-        <QueryClientProvider client={queryClient}>
-          <Hydrate state={pageProps.dehydratedState}>
-            <UserProvider>
-              <LayoutComponent>
-                <WithLoader>
-                  <Component {...pageProps} />
-                </WithLoader>
-              </LayoutComponent>
-            </UserProvider>
-            <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
-          </Hydrate>
-        </QueryClientProvider>
-        <Notifications />
-      </MantineProvider>
+      <main className={GilroyRegular.className}>
+        <MantineProvider>
+          <Notifications />
+          <QueryClientProvider client={queryClient}>
+            <Hydrate state={pageProps.dehydratedState}>
+              <UserProvider>
+                <LayoutComponent>
+                  <WithLoader>
+                    <Component {...pageProps} />
+                  </WithLoader>
+                </LayoutComponent>
+              </UserProvider>
+              <ReactQueryDevtools
+                initialIsOpen={false}
+                position="bottom-right"
+              />
+            </Hydrate>
+          </QueryClientProvider>
+          <Notifications />
+        </MantineProvider>
+      </main>
       {/* </SuperTokensWrapper> */}
     </>
   );

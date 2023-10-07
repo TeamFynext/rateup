@@ -1,6 +1,7 @@
 ﻿import {
   RateupButtonOutline,
   RateupButtonPrimary,
+  RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
 import {
   Flex,
@@ -13,6 +14,7 @@ import {
   Stack,
   Center,
   SimpleGrid,
+  Group,
 } from "@mantine/core";
 import { Box, Modal, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -34,6 +36,8 @@ import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api";
 import { checkTokenExpiry } from "../../../utils/supertoken";
+import { retrieveRole } from "../../../utils/essential";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
 
 export default function Teams({ teamData: initialTeamData }) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -42,12 +46,6 @@ export default function Teams({ teamData: initialTeamData }) {
   const { user, setUser } = useUser();
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
-
-  useEffect(() => {
-    if (action === "create") {
-      open();
-    }
-  }, [action]);
 
   const createTeamForm = useForm({
     initialValues: {
@@ -102,35 +100,37 @@ export default function Teams({ teamData: initialTeamData }) {
     });
     createTeamMutation.mutate(values);
   };
-
+  useEffect(() => {
+    if (action === "create") {
+      open();
+    }
+  }, [action]);
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Create Team" centered>
-        <form onSubmit={createTeamForm.onSubmit(onSubmit)}>
-          <Box>
-            <TextInput
-              withAsterisk
-              label="Name"
-              placeholder="Enter team name"
-              {...createTeamForm.getInputProps("name")}
-            />
-            <TextInput
-              withAsterisk
-              label="Code"
-              placeholder="Enter team code"
-              {...createTeamForm.getInputProps("code")}
-            />
-          </Box>
-          <Box pt={20}>
-            <RateupButtonPrimary
-              loading={isCreating}
-              type="submit"
-              title={"Create"}
-            />
-          </Box>
-        </form>
-      </Modal>
-
+      <FormModalLayout
+        centered
+        onClose={close}
+        opened={opened}
+        title="Add Team"
+        buttonTitle="Add Team"
+        isLoading={isCreating}
+        onSubmit={createTeamForm.onSubmit(onSubmit)}
+      >
+        <Box>
+          <TextInput
+            withAsterisk
+            label="Team Name"
+            placeholder="Enter team name"
+            {...createTeamForm.getInputProps("name")}
+          />
+          <TextInput
+            withAsterisk
+            label="Team Code"
+            placeholder="Enter team code"
+            {...createTeamForm.getInputProps("code")}
+          />
+        </Box>
+      </FormModalLayout>
       <Flex
         mih={50}
         gap="md"
@@ -139,40 +139,25 @@ export default function Teams({ teamData: initialTeamData }) {
         direction="row"
         wrap="wrap"
       >
-        <Flex
-          mih={50}
-          gap="md"
-          justify="flex-start"
-          align="flex-start"
-          direction="row"
-          wrap="wrap"
-        >
+        <Group gap={"md"}>
           <Title order={1}>Teams</Title>
-          {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
-            <p>You can view all your teams.</p>
-          ) : (
-            <p>
-              You can view all the teams under your organization. Also create
-              new teams from here.
-            </p>
+          {retrieveRole(user?.role) === "Super Admin" && (
+            <RateupButtonSecondary
+              title="Add Team"
+              rightIcon={<IconPlus />}
+              color="var(--tertiary-color)"
+              radius="xl"
+              size="lg"
+              onClick={open}
+            />
           )}
-        </Flex>
-
-        <Flex
-          mih={50}
-          gap="md"
-          justify="flex-start"
-          align="flex-start"
-          direction="row"
-          wrap="wrap"
-        >
-          <RateupButtonPrimary
-            onClick={() => setSort(!sort)}
-            title={"Sort"}
-            variant="subtle"
-            rightIcon={<IconSelector size="1rem" />}
-          />
-        </Flex>
+        </Group>
+        <RateupButtonPrimary
+          onClick={() => setSort(!sort)}
+          title={"Sort"}
+          variant="subtle"
+          rightIcon={<IconSelector size="1rem" />}
+        />
       </Flex>
 
       <Space h="xl" />
@@ -196,30 +181,7 @@ export default function Teams({ teamData: initialTeamData }) {
             <Loader />
           ) : (
             <>
-              <Grid>
-                <Grid.Col span="content">
-                  <Paper
-                    p="md"
-                    shadow="lg"
-                    radius="lg"
-                    style={{
-                      cursor: "pointer",
-                      width: "250px",
-                      height: "140px",
-                    }}
-                    onClick={open}
-                  >
-                    <Center h="100%">
-                      <Stack align="center">
-                        <IconPlus size={36} />
-                        <Text size="xl" fw={700}>
-                          Add Team
-                        </Text>
-                      </Stack>
-                    </Center>
-                  </Paper>
-                </Grid.Col>
-
+              <Grid columns={9} p={10} h="100%" style={{ overflow: "auto" }}>
                 {teamsData?.data?.length > 0 ? (
                   (sort
                     ? [...teamsData?.data]
@@ -227,23 +189,17 @@ export default function Teams({ teamData: initialTeamData }) {
                         .reverse()
                     : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
                   ).map((team, key) => (
-                    <Grid.Col span="content" key={key}>
-                      <TeamCard
-                        key={team.teamId}
-                        team={team}
-                        reftchTeams={reftchTeams}
-                      />{" "}
+                    <Grid.Col span={{ xs: 9, md: 4.5, lg: 3 }} key={key}>
+                      <TeamCard key={team.teamId} team={team} />
                     </Grid.Col>
                   ))
                 ) : (
                   <Center>
-                    {" "}
                     {teamsData?.message ? (
                       teamsData?.message
                     ) : (
                       <>
-                        {" "}
-                        Error... Try Refreshing...{" "}
+                        Error... Try Refreshing...
                         <RateupButtonOutline
                           onClick={reftchTeams}
                           rightIcon={<IconReload size="1rem" />}
@@ -262,7 +218,6 @@ export default function Teams({ teamData: initialTeamData }) {
     </>
   );
 }
-
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   try {
     supertokensNode.init(backendConfig());

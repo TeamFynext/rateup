@@ -24,7 +24,7 @@ import supertokensNode from "supertokens-node";
 import { notifications } from "@mantine/notifications";
 import { getSurveyWithCustomToken } from "../../../backend/org/org.api";
 import { GetServerSidePropsContext } from "next";
-import { checkTokenExpiry } from '../../../utils/supertoken';
+import { checkTokenExpiry } from "../../../utils/supertoken";
 
 const Members = ({ membersData: membersInitialData }) => {
   const router = useRouter();

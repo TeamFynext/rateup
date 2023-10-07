@@ -212,7 +212,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       return { props: { categories: [] } };
     }
 
-    const categories = await getMenuCategoriesByMenuIdWithCustomToken(accessToken, { menuId })
+    const categories = await getMenuCategoriesByMenuIdWithCustomToken(
+      accessToken,
+      { menuId },
+    );
 
     const tokenExpiryCheck = checkTokenExpiry([categories]);
     if (tokenExpiryCheck) {
