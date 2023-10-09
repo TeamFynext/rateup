@@ -298,33 +298,41 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
     }
   });
 
-  const surveys = await prisma.survey.findMany({
+  const activeSurveys = await prisma.survey.findMany({
     where: {
       teamId: {
         in: teamIds,
       },
       active: true,
     },
-    include: {
-      responses: true,
-      surveyStats: true,
+    select: {
+      id: true,
+      title: true,
+      active: true,
+      createdAt: true,
+      type: true,
       team: {
         select: {
           name: true,
         },
       },
+      responses: {
+        select: {
+          id: true,
+          createdAt: true,
+        },
+      },
+      surveyStats: true,
     },
+    
   });
 
-  const surveysWithoutQuestions = surveys.map((s) =>
-    excludeFields(s, ["questions", "password"])
-  );
 
   let summaryData = {
     totalTeamsCount : teamData?.length,
     totalSurveysCount: allSurveys?.length,
-    activeSurveysCount: surveys?.length,
-    surveys: surveysWithoutQuestions
+    activeSurveysCount: activeSurveys?.length,
+    surveys: activeSurveys
   }
 
   return summaryData;
