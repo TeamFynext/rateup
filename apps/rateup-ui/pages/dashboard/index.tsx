@@ -154,7 +154,7 @@ export default function DashboardHome({ summaryData: initialSummaryData }) {
   return (
     <>
       {user && !isLoadingSummary ? (
-        <Container fluid>
+        <Container fluid w="100%">
           <Stack>
             <Group>
               <Stack style={{ width: "28%" }}>

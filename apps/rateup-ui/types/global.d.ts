@@ -21,10 +21,10 @@ type ValidationRules = {
   textType?: {
     type: string;
     errorMessage: string;
-  } | null
+  } | null;
 };
 
-export { };
+export {};
 declare global {
   type Question = {
     title: Zod.RecordType<string, string>;
@@ -33,9 +33,9 @@ declare global {
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<string>>;
     id: string;
-    googleReview?: GoogleReview
-    logic?: Array<LogicJump>
-    validationRules?: ValidationRules
+    googleReview?: GoogleReview;
+    logic?: Array<LogicJump>;
+    validationRules?: ValidationRules;
   };
 
   type Survey = {
@@ -55,28 +55,15 @@ declare global {
     welcomePageEnabled: boolean;
   };
 
-
   interface SurveySummary {
     id: string;
-    createdAt: string;
-    updatedAt: string;
     title: string;
-    description: string;
-    languages: string[];
-    createdBy: string;
-    teamId: string;
     active: boolean;
-    isProtected: boolean;
-    kioskMode: boolean;
+    createdAt: string;
     type: string;
     responses: {
       id: string;
       createdAt: string;
-      surveyId: string;
-      responses: Record<string, any>[];
-      language: string;
-      platform: string;
-      waCustomerId: string | null;
     }[];
     surveyStats: {
       id: string;
@@ -118,11 +105,11 @@ declare global {
       coordinates?: {
         latitude: number;
         longitude: number;
-      },
+      };
       city?: string;
       state?: string;
       country?: string;
-    }
+    };
   };
 
   type QuestionResponse = {
@@ -154,87 +141,85 @@ declare global {
   };
 
   type UserData = {
-    email: string,
-    userId: string,
+    email: string;
+    userId: string;
     userName: string;
-    role: string
-    orgId: string
-    orgLogo: string
-    profilePhoto: string
-  }
+    role: string;
+    orgId: string;
+    orgLogo: string;
+    profilePhoto: string;
+  };
 
   interface UserInfoQueryData {
     data: {
-      data: UserData
+      data: UserData;
     };
-
   }
 
   type LogicJump = {
     condition: LogicCondition;
-    response: any // Contains the response to match against
+    response: any; // Contains the response to match against
     action: LogicAction;
-  }
+  };
 
   type Menu = {
-    id: string
-    createdAt: string
-    name: string
-    displayName: string
-    locationUrl?: string
-    locationText?: string
-    websiteUrl?: string
-    websiteText?: string
-    teamId: string
-    logo?: string
-  }
+    id: string;
+    createdAt: string;
+    name: string;
+    displayName: string;
+    locationUrl?: string;
+    locationText?: string;
+    websiteUrl?: string;
+    websiteText?: string;
+    teamId: string;
+    logo?: string;
+  };
 
   type MenuCategory = {
-    id: string
-    createdAt: string
-    name: string
-    menuId: string
-    image: string
-  }
+    id: string;
+    createdAt: string;
+    name: string;
+    menuId: string;
+    image: string;
+  };
 
   type MenuItem = {
-    id: string
-    createdAt: string
-    name: string
-    description: string
-    images: string[]
-    videoUrl: string | null
+    id: string;
+    createdAt: string;
+    name: string;
+    description: string;
+    images: string[];
+    videoUrl: string | null;
     price: {
-      type: MenuItemPriceType,
-      price?: number,
+      type: MenuItemPriceType;
+      price?: number;
       variants?: Array<{
-        price: number,
-        name: string,
-      }>
-    }
-    categoryId: string
-  }
+        price: number;
+        name: string;
+      }>;
+    };
+    categoryId: string;
+  };
   interface FullCategory extends MenuCategory {
-    items: MenuItem[]
+    items: MenuItem[];
   }
   interface FullMenu extends Menu {
-    categories: FullCategory[]
+    categories: FullCategory[];
   }
 
   type WaCustomer = {
-    id: string
-    createdAt: Date
-    name: string | null
-    phone: string
-    email: string | null
-    teamId: string | null
-  }
+    id: string;
+    createdAt: Date;
+    name: string | null;
+    phone: string;
+    email: string | null;
+    teamId: string | null;
+  };
 
   type WaCustomerGroup = {
-    id: string
-    createdAt: Date
-    name: string
-    teamId: string
-  }
-
+    id: string;
+    createdAt: Date;
+    name: string;
+    teamId: string;
+  };
 }

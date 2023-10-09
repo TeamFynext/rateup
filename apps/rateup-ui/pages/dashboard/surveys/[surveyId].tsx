@@ -106,23 +106,14 @@ export default ({
         value={activeTab}
         onChange={(tab) => setActiveTab(tab as TabEnum)}
       >
-        <Stack>
-          <Tabs.List>
-            <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-            {survey.type != "whatsapp" && (
-              <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
-            )}
-            <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
-            <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
-            <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
-          </Tabs.List>
-          <Group justify={"space-between"}>
+        <Group justify={"space-between"}>
+          <Group justify={"space-between"} style={{ minWidth: "70%" }}>
             <Title
               order={1}
               mb="sm"
               pr="xl"
               style={{
-                maxWidth: "350px",
+                maxWidth: "50%",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -132,40 +123,50 @@ export default ({
               {survey.title}
             </Title>
 
-            {activeTab === TabEnum.Edit && (
-              <Group>
-                <Badge
-                  color={
-                    survey?.type == "web" ? "var(--tertiary-color)" : "green"
-                  }
-                  p="sm"
-                >
-                  {survey.type}
-                </Badge>
-                <Select
-                  data={survey.languages}
-                  value={selectedLanguage}
-                  onChange={setSelectedLanguage}
-                />
-              </Group>
-            )}
-            {activeTab === TabEnum.Result && (
-              <Group>
-                <RateupButtonBlackOutline
-                  title={"All"}
-                  radius={"lg"}
-                  size="md"
-                  rightIcon={<IconChevronDown size="1rem" />}
-                />
-                <RateupButtonPrimary
-                  title={"Filter"}
-                  variant="subtle"
-                  rightIcon={<IconChevronDown size="1rem" />}
-                />
-              </Group>
-            )}
+            <Tabs.List>
+              <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
+              {survey.type != "whatsapp" && (
+                <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
+              )}
+              <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
+            </Tabs.List>
           </Group>
-        </Stack>
+
+          {activeTab === TabEnum.Edit && (
+            <Group>
+              <Badge
+                color={
+                  survey?.type == "web" ? "var(--tertiary-color)" : "green"
+                }
+                p="sm"
+              >
+                {survey.type}
+              </Badge>
+              <Select
+                data={survey.languages}
+                value={selectedLanguage}
+                onChange={setSelectedLanguage}
+              />
+            </Group>
+          )}
+          {activeTab === TabEnum.Result && (
+            <Group>
+              <RateupButtonBlackOutline
+                title={"All"}
+                radius={"lg"}
+                size="md"
+                rightIcon={<IconChevronDown size="1rem" />}
+              />
+              <RateupButtonPrimary
+                title={"Filter"}
+                variant="subtle"
+                rightIcon={<IconChevronDown size="1rem" />}
+              />
+            </Group>
+          )}
+        </Group>
         <Space h="lg" />
         <Tabs.Panel
           value={TabEnum.Edit}

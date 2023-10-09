@@ -1,6 +1,5 @@
 import {
-  Center,
-  Container,
+  ScrollArea,
   Paper,
   Title,
   Text,
@@ -67,6 +66,7 @@ import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../config/backendConfig";
 import { checkTokenExpiry } from "../../../utils/supertoken";
+import { UserRole } from "../../../utils/enums";
 
 export default function Surveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -82,7 +82,6 @@ export default function Surveys({ surveys: initialSurveys }) {
     {
       value: "all",
       label: "All Teams",
-      //group: "Organization",
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
@@ -134,7 +133,6 @@ export default function Surveys({ surveys: initialSurveys }) {
       const newOptions = teamsData?.map((team) => ({
         value: team?.teamId,
         label: team?.teamName,
-        // group: "Team",
       }));
 
       setOptions((prev) => {
@@ -210,6 +208,17 @@ export default function Surveys({ surveys: initialSurveys }) {
             value={selectedTeamId}
             onChange={(value) => setSelectedTeamId(value)}
           />
+
+          {user?.role !== UserRole.MEMBER && (
+            <RateupButtonSecondary
+              title="Add Survey"
+              rightIcon={<IconPlus />}
+              color="var(--tertiary-color)"
+              radius="xl"
+              size="md"
+              onClick={open}
+            />
+          )}
         </Flex>
 
         <Flex
@@ -245,70 +254,47 @@ export default function Surveys({ surveys: initialSurveys }) {
 
       <Space h="xl" />
 
-      <SimpleGrid
-        spacing={"lg"}
-        cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
-
-        // breakpoints={[
-        //   { minWidth: "xl", cols: 3 },
-        //   { minWidth: "lg", cols: 2 },
-        //   { minWidth: "md", cols: 2 },
-        //   { maxWidth: "md", cols: 1 },
-        // ]}   //VERIFYCSS //TODO
-      >
-        {user?.role !== "MEMBER" && (
-          <Paper
-            p="md"
-            shadow="lg"
-            radius="lg"
-            style={{ cursor: "pointer", color: "#000", background: "#EDEDED" }}
-            onClick={open}
-          >
-            <Center h="100%">
-              <Stack align="center">
-                <IconPlus size={36} />
-                <Text size="xl" fw={700}>
-                  Add Survey
-                </Text>
-              </Stack>
-            </Center>
-          </Paper>
-        )}
-
-        {(specificTeamIsSelected
-          ? surveysByTeam?.data?.length > 0
-            ? [...surveysByTeam?.data]
-            : []
-          : [...surveys]
-        )
-          .slice()
-          .sort((a, b) =>
-            sort
-              ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-              : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime(),
+      <ScrollArea h="70vh">
+        <SimpleGrid
+          spacing={"lg"}
+          cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
+          my="lg"
+        >
+          {(specificTeamIsSelected
+            ? surveysByTeam?.data?.length > 0
+              ? [...surveysByTeam?.data]
+              : []
+            : [...surveys]
           )
-          .filter((s) => {
-            if (filterParam === "active") {
-              return s.active === true;
-            } else if (filterParam === "paused") {
-              return s.active === false;
-            } else {
-              return true;
-            }
-          })
-          .map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              teamsData={teamsData}
-              setSelectedTeamId={setSelectedTeamId}
-              handleCheckBox={handleCheckBox}
-              isChecked={isChecked}
-            />
-          ))}
-      </SimpleGrid>
+            .slice()
+            .sort((a, b) =>
+              sort
+                ? new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+                : new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime(),
+            )
+            .filter((s) => {
+              if (filterParam === "active") {
+                return s.active === true;
+              } else if (filterParam === "paused") {
+                return s.active === false;
+              } else {
+                return true;
+              }
+            })
+            .map((s) => (
+              <SurveyCard
+                key={s.id}
+                survey={s}
+                teamsData={teamsData}
+                setSelectedTeamId={setSelectedTeamId}
+                handleCheckBox={handleCheckBox}
+                isChecked={isChecked}
+              />
+            ))}
+        </SimpleGrid>
+      </ScrollArea>
       <CreateSurveyModal
         open={createSurveyOpened}
         close={close}
@@ -363,7 +349,7 @@ export function SurveyCard({
       style={{ cursor: "pointer" }}
       onClick={(e) => {
         e.stopPropagation(),
-          user?.role === "MEMBER"
+          user?.role === UserRole.MEMBER
             ? router.push(
                 `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
               )

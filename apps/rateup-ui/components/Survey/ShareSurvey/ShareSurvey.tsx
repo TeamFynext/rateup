@@ -14,18 +14,45 @@ import {
   IconBrandWhatsapp,
   IconCopy,
   IconMail,
-  IconMessage,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ShareQR from "./ShareQR";
+
+let whatsAppEncoded;
 
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
+  const [shareUrl, setShareUrl] = useState("");
 
-  const getSurveyUrl = (surveyId) => {
-    return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`
+  useEffect(() => {
+    setShareUrl(
+      `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`,
+    );
+  }, [surveyId]);
 
+  useEffect(() => {
+    var myMessage = `Take minute to complete survey:  ${survey?.title} - ${shareUrl}`;
+    var messageToWhatsApp = encodeURIComponent(myMessage);
+    whatsAppEncoded = "https://wa.me/?text=" + messageToWhatsApp;
+  }, [survey, shareUrl]);
+
+  function shareButtonAction(btn) {
+    switch (btn) {
+      case "fb":
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
+        break;
+      case "mail":
+        window.open(
+          `mailto:?subject=Survey&body=Take minute to complete the survey: \n ${survey?.title} \n${shareUrl} \n\n`,
+        );
+        break;
+      case "whatsapp":
+        window.open(whatsAppEncoded);
+        break;
+      default:
+        break;
+    }
   }
 
   return (
@@ -37,9 +64,7 @@ const ShareSurvey = ({ survey }) => {
             <Stack style={{ maxWidth: "450px" }} p="md">
               <Title order={4}>Share Survey</Title>
 
-              <CopyLinkComponent
-                value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`}
-              />
+              <CopyLinkComponent value={shareUrl} />
             </Stack>
           ) : (
             //-----whatsapp survey share url copy section ----------
@@ -54,28 +79,37 @@ const ShareSurvey = ({ survey }) => {
           )}
 
           <Stack style={{ maxWidth: "400px" }} p="md">
-            <Title order={4} style={{ textAlign:'center' }}>
+            <Title order={4} style={{ textAlign: "center" }}>
               How would you like to survey people?
             </Title>
             <Group justify="center">
-              <ActionIcon size="xl" variant="light">
+              <ActionIcon
+                size="xl"
+                variant="light"
+                onClick={() => shareButtonAction("mail")}
+              >
                 <IconMail size="2rem" />
               </ActionIcon>
-              <ActionIcon size="xl" variant="light">
+              <ActionIcon
+                size="xl"
+                variant="light"
+                onClick={() => shareButtonAction("whatsapp")}
+              >
                 <IconBrandWhatsapp size="2rem" />
               </ActionIcon>
-              <ActionIcon size="xl" variant="light">
+              <ActionIcon
+                size="xl"
+                variant="light"
+                onClick={() => shareButtonAction("fb")}
+              >
                 <IconBrandFacebook size="2rem" />
-              </ActionIcon>
-              <ActionIcon size="xl" variant="light">
-                <IconMessage size="2rem" />
               </ActionIcon>
             </Group>
           </Stack>
         </SimpleGrid>
       </Paper>
 
-      <ShareQR url={getSurveyUrl(surveyId)} sx={{ borderRadius: "0.5rem" }} />
+      <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
     </Stack>
   );
 };
@@ -85,7 +119,11 @@ interface CopyLinkComponentProps {
   disabled?: boolean;
   label?: string;
 }
-export const CopyLinkComponent = ({ value, disabled = false, label = "" }: CopyLinkComponentProps) => {
+export const CopyLinkComponent = ({
+  value,
+  disabled = false,
+  label = "",
+}: CopyLinkComponentProps) => {
   return (
     <Group gap={"0px"} align="end">
       <TextInput
@@ -96,7 +134,7 @@ export const CopyLinkComponent = ({ value, disabled = false, label = "" }: CopyL
         disabled={disabled}
         style={{
           maxWidth: "600px",
-          flexGrow: 1
+          flexGrow: 1,
         }}
       />
       <CopyButton value={value}>

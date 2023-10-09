@@ -11,6 +11,7 @@ export const UserMode = {
 export const UserRole = {
   SUPADM: "SUPER_ADMIN",
   ADM: "ADMIN",
+  MEMBER: "MEMBER",
 };
 
 export const ResetSteps = {
