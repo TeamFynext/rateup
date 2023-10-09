@@ -15,7 +15,10 @@ import {
   Text,
 } from "@mantine/core";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
-import { useUpdateOrgLogoMutation } from "../../../backend/org/org.query";
+import {
+  useUpdateOrgDetailsMutation,
+  useUpdateOrgLogoMutation,
+} from "../../../backend/org/org.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
 import { useUser } from "../../../context/UserContext";
@@ -23,13 +26,52 @@ import {
   ContainedPasswordInput,
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
+import { useForm } from "@mantine/form";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
-
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
+  const orgForm = useForm({
+    initialValues: {
+      name: "",
+      phone: "",
+      address: "",
+    },
+    validate: {
+      name: (value) => {
+        if (value.length < 4) {
+          return "Name should be at least 4 characters long";
+        }
+        return null; // Validation passed
+      },
+      phone: (value) => {
+        const regex = /^[0-9]+$/;
+        if (!regex.test(value)) {
+          return "Only numbers allowed";
+        }
+        if (value.length < 10) {
+          return "Min 10 digits long";
+        }
+        if (value.length > 10) {
+          return "Invalid phone (10 digits only allowed)";
+        }
+        return null;
+      },
+    },
+  });
+  const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
+  const onSubmit = (values) => {
+    setIsLoading(true);
+    const data = {
+      name: values.name,
+      phone: values?.phone ?? "",
+      address: values?.address ?? "",
+    };
+    orgDetailsUpdate.mutate(data);
+  };
   useEffect(() => {
     const uploadAndUpdate = async () => {
       if (file) {
@@ -63,6 +105,13 @@ const OrgSettings = () => {
     if (user.orgLogo && user.orgLogo !== "REMOVED_PHOTO") {
       const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`;
       setAvatarSrc(imgUrl);
+    }
+    if (user) {
+      orgForm.setValues({
+        name: user?.orgName ?? "",
+        phone: user?.orgPhone ?? "",
+        address: user?.orgAddress ?? "",
+      });
     }
   }, [user.orgLogo]);
 
@@ -109,24 +158,10 @@ const OrgSettings = () => {
           </Group>
           <Stack align={"center"}>
             <Text size={"28px"} fw={500}>
-              {
-                // profileData?.data?.data?.name ||
-                "Organization"
-              }
+              {user?.orgName ?? "Organization"}
             </Text>
-            <Text>
-              {" "}
-              {
-                // retrieveRole(profileData?.data?.data?.role)
-                9876545678
-              }
-            </Text>
-            <Text size="sm">
-              {
-                // profileData?.data?.data?.email
-                "Address"
-              }
-            </Text>
+            <Text> {user?.orgPhone ?? "Phone"}</Text>
+            <Text size="sm">{user?.orgAddress ?? "Adress"}</Text>
           </Stack>
         </Flex>
         <Divider orientation={"vertical"} />
@@ -141,7 +176,7 @@ const OrgSettings = () => {
             Edit Info
           </Text>
           <form
-            // onSubmit={profileForm.onSubmit(onSubmit)}
+            onSubmit={orgForm.onSubmit(onSubmit)}
             style={{ display: "flex", flexDirection: "column", gap: 30 }}
           >
             <Grid columns={10} grow>
@@ -150,7 +185,7 @@ const OrgSettings = () => {
                   w={"100%"}
                   label="Organization Name"
                   placeholder="Enter your organization name"
-                  // {...profileForm.getInputProps("orname")}
+                  {...orgForm.getInputProps("name")}
                   withAsterisk
                 />
               </Grid.Col>
@@ -159,23 +194,22 @@ const OrgSettings = () => {
                   withAsterisk
                   label="Phone"
                   placeholder="Enter your organization phone number"
-                  // {...profileForm?.getInputProps("phone")}
+                  {...orgForm?.getInputProps("phone")}
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 6 }}>
                 <ContainedTextField
-                  disabled
-                  label="Address"
-                  placeholder="Enter your address"
-                  // value={profileData?.data?.data?.email}
                   withAsterisk
+                  label="Address"
+                  placeholder="eg. Kerala, Ernakulam, Kochi"
+                  {...orgForm?.getInputProps("address")}
                 />
               </Grid.Col>
             </Grid>
             <Flex justify="center">
               <RateupButtonSecondary
                 type="submit"
-                // loading={isLoading}
+                loading={isLoading}
                 size="sm"
                 title="Save Changes"
                 color="var(--tertiary-color)"

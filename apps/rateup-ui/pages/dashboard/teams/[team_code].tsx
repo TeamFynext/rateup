@@ -71,7 +71,6 @@ const TeamDetails = () => {
   let teamCode: string = team_code?.toString();
 
   let team_id = getTeamIdByCode(teamsData, teamCode);
-
   enum TabEnum {
     Members = "Members",
     Survey = "Survey",
@@ -118,9 +117,10 @@ const TeamDetails = () => {
     },
   });
 
-  const fetchTeamMembers = async () => {
-    let teamId: string = team_id.toString();
-    return getTeamMembersFromInvitation(teamId);
+  const fetchTeamMembers = () => {
+    // let teamId: string = team_id.toString();
+    console.log(team_id);
+    return getTeamMembersFromInvitation(team_id);
   };
 
   const {
@@ -293,6 +293,7 @@ export async function getServerSideProps(context) {
   const { team_code } = context.query;
   let teamCode: string = team_code?.toString();
   const queryClient = new QueryClient();
+  console.log("hello");
 
   supertokensNode.init(backendConfig());
   const session = await getSessionWithRefreshHandling(context);
@@ -300,8 +301,8 @@ export async function getServerSideProps(context) {
   const teamsData = await queryClient.prefetchQuery(["teamDataPrefetch"], () =>
     fetchTeamsByUser(session),
   );
-
   let teamId = getTeamIdByCode(teamsData, teamCode);
+  console.log(teamId);
 
   if (teamId) {
     const teamInitialData = await queryClient.prefetchQuery(

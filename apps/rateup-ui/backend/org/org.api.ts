@@ -45,3 +45,11 @@ export const updateOrgLogo = (data: IUpdateLogo) =>
     method: "PUT",
     data: data,
   });
+
+export interface IUpdateOrgDetails {
+  name: string;
+  phone: string;
+  address: string;
+}
+export const updateOrgDetails = (data: IUpdateOrgDetails) =>
+  axiosClient.put("/org/update-details", data);

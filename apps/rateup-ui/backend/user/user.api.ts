@@ -1,74 +1,82 @@
-import { axiosClient } from '../apiClient'
+import { axiosClient } from "../apiClient";
 
 export interface ICreateGoogleUser {
-    name: string; 
-    orgName: string;
-    inviteCode: string;
+  name: string;
+  orgName: string;
+  inviteCode: string;
 }
 
 export interface IChangePassword {
-    existingPassword: string; 
-    newPassword: string;
+  existingPassword: string;
+  newPassword: string;
 }
 
-export interface IUpdateProfile{
-    title: string; 
-    name: string;
-    phone: string;
+export interface IUpdateProfile {
+  title: string;
+  name: string;
+  phone: string;
 }
 
-export interface IUpdateProfilePhoto{
-    profilePhoto: string; 
+export interface IUpdateProfilePhoto {
+  profilePhoto: string;
 }
 
 export interface IUserData {
-    userId: string;
-    userName: string;
-    role: string;
-    email: string;
-    orgId: string;
-    orgLogo: string
-    profilePhoto: string;
-  }
-  
-export interface IUserInfoApiResponse {
-    message: string;
-    data: UserData;
+  orgId: string;
+  role: string;
+  userId: string;
+  userName: string;
+  email: string;
+  profilePhoto: string;
+  orgName: string;
+  orgLogo: string;
+  orgPhone: string;
+  orgAddress: string;
 }
-  
+
+export interface IUserInfoApiResponse {
+  message: string;
+  data: UserData;
+}
+
 export const fetchUserInfo = async (): Promise<IUserInfoApiResponse> => {
-const response = await axiosClient({
-    url: '/user/info',
-    method: 'GET',
-});
-return response.data as IUserInfoApiResponse;
+  const response = await axiosClient({
+    url: "/user/info",
+    method: "GET",
+  });
+  return response.data as IUserInfoApiResponse;
 };
 
-export const fetchUserProfile = () => axiosClient({
+export const fetchUserProfile = () =>
+  axiosClient({
     url: `/user/profile`,
-    method: 'GET',
-})
+    method: "GET",
+  });
 
-export const updateUserProfile = (data: IUpdateProfile) => axiosClient({
+export const updateUserProfile = (data: IUpdateProfile) =>
+  axiosClient({
     url: `/user/update-profile`,
-    method: 'PUT',
-    data: data
-})
+    method: "PUT",
+    data: data,
+  });
 
-export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) => axiosClient({
+export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) =>
+  axiosClient({
     url: `/user/update-profile-photo`,
-    method: 'PUT',
-    data: data
-})
+    method: "PUT",
+    data: data,
+  });
 
-export const createGoogleUser = (data: ICreateGoogleUser) => axiosClient({
+export const createGoogleUser = (data: ICreateGoogleUser) =>
+  axiosClient({
     url: `/user/complete-google-signup`,
-    method: 'POST',
-    data: data
-})
+    method: "POST",
+    data: data,
+  });
 
-export const changeUserPassword = (data: IChangePassword) => axiosClient({
+export const changeUserPassword = (data: IChangePassword) =>
+  axiosClient({
     url: `/user/change-password`,
-    method: 'POST',
-    data: data
-})
+    method: "POST",
+    data: data,
+  });

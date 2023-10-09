@@ -223,9 +223,10 @@ const mockdata = [
 interface iProps {
   opened: boolean;
   setOpened: React.Dispatch<React.SetStateAction<boolean>>;
+  style?: any;
 }
 
-const LeftNavbar = ({ opened, setOpened }: iProps) => {
+const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   const theme = useMantineTheme();
   const isLargerThanSm = useMediaQuery("(min-width: 768px)");
   const { user, setUser } = useUser();
@@ -297,7 +298,13 @@ const LeftNavbar = ({ opened, setOpened }: iProps) => {
   };
 
   return (
-    <Flex className={classes.navbar} direction={"column"} p="md" pt="30">
+    <Flex
+      className={classes.navbar}
+      direction={"column"}
+      p="md"
+      pt="30"
+      style={style}
+    >
       <Group justify={opened ? "space-between" : "center"}>
         {opened && (
           <Link href="/dashboard">

@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
-import { Flex } from "@mantine/core";
+import { Flex, Transition } from "@mantine/core";
 import { HeaderTabs } from "./Header/Header";
 import {
   IUserInfoApiResponse,
@@ -12,12 +12,13 @@ import SessionAuth from "../SuperToken/SessionAuth";
 import { useRouter } from "next/router";
 import useLocalStorage from "../../hooks/localStorage";
 import LeftNavbar from "./Navbar/LeftNavbar";
-
+import FocusMode from "../Switch/Focusmode";
+import styles from "./Layout.module.css";
 // @ts-ignore
 export default ({ children }) => {
   const router = useRouter();
   const [opened, setOpened] = useState(false);
-
+  const [focus, toggleFocus] = useState(false);
   const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
     "userInfo",
     null,
@@ -62,20 +63,32 @@ export default ({ children }) => {
     <SessionAuth>
       <RouteParamsProvider>
         <Flex direction={"row"} h={"100vh"}>
-          <LeftNavbar opened={opened} setOpened={setOpened} />
-          <Flex direction={"column"} w={"100%"}>
-            <HeaderTabs opened={opened} />
+          <Transition mounted={!focus} transition="slide-right">
+            {(transitionStyle) => (
+              <LeftNavbar
+                opened={opened}
+                setOpened={setOpened}
+                style={transitionStyle}
+              />
+            )}
+          </Transition>
+          <Flex direction={"column"} w={"100%"} gap="15px">
+            <Transition mounted={!focus} transition="slide-down">
+              {(transitionStyle) => (
+                <HeaderTabs opened={opened} style={transitionStyle} />
+              )}
+            </Transition>
             <Flex
-              h="100%"
-              style={{ overflowY: "auto" }}
+              className={`${styles.notinfocus} ${focus && styles.focus}`}
+              style={{ overflow: "scroll" }}
               p="xl"
               direction="column"
               m="auto"
-              w="100%"
             >
               {children}
             </Flex>
           </Flex>
+          <FocusMode focus={focus} toggleFocus={toggleFocus} />
         </Flex>
       </RouteParamsProvider>
     </SessionAuth>

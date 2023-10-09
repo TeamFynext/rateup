@@ -1,37 +1,40 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 
 interface User {
-    role: string;
-    userId: string;
-    userName: string;
-    email: string;
-    orgLogo: string;
-    profilePhoto: string
+  role: string;
+  userId: string;
+  userName: string;
+  email: string;
+  profilePhoto: string;
+  orgName: string;
+  orgLogo: string;
+  orgPhone: string;
+  orgAddress: string;
 }
 
 interface UserContextProps {
-    user: User | null;
-    setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 const UserProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-    return (
-        <UserContext.Provider value={{ user, setUser }}>
-            {children}
-        </UserContext.Provider>
-    );
+  return (
+    <UserContext.Provider value={{ user, setUser }}>
+      {children}
+    </UserContext.Provider>
+  );
 };
 
 const useUser = () => {
-    const context = useContext(UserContext);
-    if (context === undefined) {
-        throw new Error("useUser must be used within a UserProvider");
-    }
-    return context;
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  return context;
 };
 
 export { UserProvider, useUser };

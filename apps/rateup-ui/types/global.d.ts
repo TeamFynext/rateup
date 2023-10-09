@@ -141,13 +141,16 @@ declare global {
   };
 
   type UserData = {
-    email: string;
+    orgId: string;
+    role: string;
     userId: string;
     userName: string;
-    role: string;
-    orgId: string;
-    orgLogo: string;
+    email: string;
     profilePhoto: string;
+    orgName: string;
+    orgLogo: string;
+    orgPhone: string;
+    orgAddress: string;
   };
 
   interface UserInfoQueryData {
