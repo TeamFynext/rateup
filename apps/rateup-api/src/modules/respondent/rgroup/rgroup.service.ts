@@ -77,11 +77,12 @@ export async function getRGroupSurveyHistory(rgroupId: string) {
     })
 }
 
-export async function createRGroupSurveySendRecord(rgroupId: string, surveyId: string) {
+export async function createRGroupSurveySendRecord(rgroupId: string, surveyId: string, templateId: string) {
     return await prisma.rGroupSurveySendHistory.create({
         data: {
             rgroupId,
-            surveyId
+            surveyId,
+            templateId
         }
     })
 }

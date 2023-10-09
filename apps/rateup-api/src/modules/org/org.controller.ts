@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createOrg, getTeamsMembers, updateOrgUserRole } from "./org.services";
-import { CreateOrgInput, IdParamInput, UpdateRoleInput } from "./org.schema";
+import { createOrg, getTeamsMembers, updateOrgLogo, updateOrgUserRole } from "./org.services";
+import { CreateOrgInput, IdParamInput, UpdateLogoInput, UpdateRoleInput } from "./org.schema";
 import Session from "supertokens-node/recipe/session";
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -75,4 +75,25 @@ export async function updateRoleController(
   }
 
   reply.code(201).send({ success: true, data: roleUpdate});
+}
+
+
+export async function updateLogoHandler(
+  request: FastifyRequest<{
+    Body: UpdateLogoInput;
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
+  let user;
+
+  try {
+    user = await updateOrgLogo(body, request, reply); 
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+  
+  reply.code(201).send({ success: true, data: "Logo Updated..!"});
 }

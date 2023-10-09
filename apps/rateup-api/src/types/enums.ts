@@ -51,3 +51,28 @@ export enum MenuItemPriceType {
   FIXED = "FIXED",
   VARIANT = "VARIANT"
 }
+export enum WaButtonType {
+  QUICK_REPLY = "quick_reply",
+}
+export enum WaTemplateComponentType {
+  BODY = "body",
+  BUTTONS = "buttons",
+  HEADER = "header",
+  FOOTER = "footer",
+}
+export enum WaTemplateCategory {
+  MARKETING = "MARKETING",
+}
+export enum WaTemplateSupportedFormats {
+  TEXT = "TEXT",
+}
+export enum WaTemplateStatus {
+  APPROVED = "APPROVED",
+  PENDING = "PENDING",
+  REJECTED = "REJECTED",
+}
+// changes.field
+export enum WaEvent {
+  TemplateStatusChange = 'message_template_status_update',
+  Message = 'messages'
+}

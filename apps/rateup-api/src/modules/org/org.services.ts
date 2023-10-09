@@ -1,5 +1,5 @@
 import prisma from "../../utils/prisma";
-import { CreateOrgInput, IdParamInput } from "./org.schema";
+import { CreateOrgInput, IdParamInput, UpdateLogoInput } from "./org.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 
@@ -89,4 +89,24 @@ export async function updateOrgUserRole({ role }: { role: string }, params: IdPa
   });
 
   return member;
+}
+
+export async function updateOrgLogo(
+  { logo }: UpdateLogoInput,
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  let session = await Session.getSession(request, reply);
+  const accessTokenPayload = session.getAccessTokenPayload();
+
+  let orgId = accessTokenPayload.orgId;
+
+  const user = await prisma.org.update({
+    where: { id: orgId },
+    data: {
+      logo,
+    },
+  });
+
+  return user;
 }

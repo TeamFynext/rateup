@@ -1,3 +1,4 @@
+import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 
 // TODO: auth
@@ -123,13 +124,15 @@ export async function getRespondentSurveyHistoryByPhone(phone: string, teamIds: 
 
     return surveyHistory;
 }
-export async function createRespondentSurveySendRecord(respondentId: string, surveyId: string) {
+export async function createRespondentSurveySendRecord(respondentId: string, surveyId: string, templateId: string) {
     const record = await prisma.respondentSurveySendHistory.create({
         data: {
             respondentId,
-            surveyId
+            surveyId,
+            templateId
         }
     });
+    log.trace(`Created respondent survey send record %o`, record)
 
     return record;
 }
