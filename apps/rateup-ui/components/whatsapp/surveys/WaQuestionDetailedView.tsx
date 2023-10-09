@@ -1,0 +1,345 @@
+
+
+// TODO: use a routing method instead of passing the question as a prop?
+
+import { Stack, ScrollArea, TextInput, Center, Divider, Group, Checkbox, ActionIcon } from "@mantine/core";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import { useHover } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconX, IconDeviceSdCard, IconEdit, IconStar, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useState, useContext, useEffect, useCallback } from "react";
+import { useQuestionCreateMutation, useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { QuestionType } from "../../../types/enums";
+import { logicSupportedTypes, googleReviewSupportedTypes, validationSupportedTypes } from "../../../utils/data";
+import { RateupButtonSecondary, RateupButtonOutline, RateupButtonPrimary } from "../../Button/RateupButtons";
+import { QuestionTabsEnum } from "./EditWhatsappSurvey";
+
+// or use react-query?
+interface QuestionDetailedViewProps {
+  question: Question;
+  setSelectedQ: (Q: Question) => void;
+  setActiveTab: (tab: QuestionTabsEnum) => void;
+  surveyLanguages: string[],
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>,
+  setQuestionState: React.Dispatch<React.SetStateAction<Question>>
+}
+export function WaQuestionDetailedView({
+  question,
+  setSelectedQ,
+  setActiveTab,
+  surveyLanguages,
+  setSelectedLanguage,
+  setQuestionState
+}: QuestionDetailedViewProps) {
+  const router = useRouter();
+  const { surveyId } = router.query as { surveyId: string };
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const questionCreateMutation = useQuestionCreateMutation({ surveyId, setIsSaving });
+  const questionUpdateMutation = useQuestionUpdateMutation({ surveyId, setIsSaving });
+
+
+  const form = useForm({
+    initialValues: {
+      title: question?.title[selectedLanguage] || "",
+      description: question?.description[selectedLanguage] || "",
+      required: question?.required,
+      type: question?.type,
+      choices: question?.choices,
+    },
+    validate: {
+      description: (value) => {
+        //-----------whatsapp text message support only 4096 charecters only----------
+        if (value.trim().length > 4096) {
+          return "Charecter length exceed (Max 4096 charecters allowed)";
+        } else if (value.trim().length == 0) {
+          return "message is required";
+        }
+      },
+    },
+  });
+
+  useEffect(() => {
+    setQuestionState((prevQ) => {
+      let updatedQ = { ...prevQ }
+      updatedQ.title[selectedLanguage] = form.values.title
+      updatedQ.description[selectedLanguage] = form.values.description
+      if (form.values.choices) {
+        updatedQ.choices = form.values.choices
+      }
+      return updatedQ;
+    })
+  }, [form.values.title, form.values.description, form.values.choices])
+
+  const handleSave = () => {
+    setIsSaving(true);
+    const validationRes = form.validate();
+    if (validationRes.hasErrors) {
+      console.error(validationRes.errors);
+      setIsSaving(false);
+      return 'error';
+    } else {
+
+      // converting to expected format
+      const { title, description, ...restOfTheData } = form.values;
+      const formattedTitle = { ...question.title, [selectedLanguage]: title };
+      const formattedDescription = {
+        ...question.description,
+        [selectedLanguage]: description,
+      };
+
+      // TODO: only send modified fields
+      const data = {
+        title: formattedTitle,
+        description: formattedDescription,
+        ...restOfTheData,
+      };
+      // Checking if its a new question
+      if (!question.id) {
+        // Creating new question
+        questionCreateMutation.mutateAsync(data).then((r) => {
+          const newQ: Question = r.data;
+          setSelectedQ(newQ);
+        });
+      } else {
+        // Updating existing question
+        questionUpdateMutation.mutate({ qId: question.id, data: data });
+      }
+
+      let langList: string[] = surveyLanguages;
+      const missingLangs = []
+
+      langList.forEach((language: string) => {
+        if (language == selectedLanguage) {
+          return;
+        }
+        if (!question.title[language] || question.title[language] == '') {
+          missingLangs.push(language);
+        }
+      });
+
+      if (missingLangs.length > 0) {
+        setIsSaving(false);
+        setSelectedLanguage(missingLangs[0])
+        form.setFieldValue(title, '')
+        form.validate()
+        notifications.show({
+          id: 'errorn',
+          color: 'red',
+          title: `"${missingLangs[0]}" Question is missing`,
+          message: `Add question in ${missingLangs[0]} language  also`,
+          icon: <IconX size="1rem" />,
+          //autoClose: 5000,
+          // position: "bottom-center"
+        });
+        return 'error'
+      }
+    }
+
+    //setIsSaving(false);  
+    return 'saved';
+  };
+
+  // TODO: show question type somewhere
+  return (
+    <Stack justify="space-between" style={{ height: "100%" }}>
+      <ScrollArea style={{ height: "80%" }}>
+        <Stack>
+          <Stack justify="space-between" style={{ height: "100%" }}>
+            <TextInput
+              fw={800}
+              fz="xl"
+              size="xl"
+              variant="unstyled"
+              placeholder="Enter message body here *"
+              {...form.getInputProps("description")}
+            />
+            <TextInput
+              variant="unstyled"
+              fz="lg"
+              size="lg"
+              placeholder="Enter message header here (optional)"
+              {...form.getInputProps("title")}
+            //TODO : add error free autosave solution
+            />
+            <ExtraProps form={form} question={question} />
+          </Stack>
+        </Stack>
+      </ScrollArea>
+
+      <Divider />
+
+      <Stack pt="sm" style={{ height: "20%", position: "sticky", bottom: "0" }}>
+        <Group justify="space-between" gap="sm">
+          <Checkbox
+            label="Required"
+            color="dark"
+            fw={600}
+            {...form.getInputProps("required", { type: "checkbox" })}
+          />
+          <Group>
+            <RateupButtonSecondary
+              title={"Save"}
+              size="md"
+              onClick={handleSave}
+              leftIcon={<IconDeviceSdCard />}
+              loading={isSaving}
+            />
+          </Group>
+        </Group>
+
+        <Group justify="flex-start" gap="md">
+          {logicSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Logic Jump"}
+              leftIcon={<IconEdit />}
+              size="sm"
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.LogicEditor)
+              }}
+            />
+          )}
+          {googleReviewSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Google Review"}
+              leftIcon={<IconStar />}
+              size="sm"
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.GoogleReviewEditor)
+              }
+              }
+            />
+          )}
+          {validationSupportedTypes.includes(question?.type) && (
+            <RateupButtonOutline
+              title={"Custom Validation"}
+              leftIcon={<IconEdit />}
+              size="sm"
+              onClick={() => {
+                let save = handleSave()
+                save === 'saved' && setActiveTab(QuestionTabsEnum.ValidationRulesEditor)
+              }}
+            />
+          )}
+
+        </Group>
+      </Stack>
+    </Stack>
+  );
+}
+
+// TODO: move to new file
+// TODO: better name? :)
+interface ChoicesCreatorProps {
+  form: UseFormReturnType<any>;
+  qId: string;
+}
+function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
+  const [newChoice, setNewChoice] = useState<string>("");
+  const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
+
+  const choices = form.values.choices?.[selectedLanguage] || [];
+
+  useEffect(() => { }, [choices]);
+
+  const handleAddChoice = () => {
+    if (newChoice.trim().length === 0) return;
+    if (choices.includes(newChoice)) return;
+
+    form.setFieldValue("choices", {
+      ...form.values.choices,
+      [selectedLanguage]: [...choices, newChoice],
+    });
+    setNewChoice("");
+  };
+
+  const handleRemoveChoice = (choice) => {
+    form.setFieldValue("choices", {
+      ...form.values.choices,
+      [selectedLanguage]: choices.filter((c) => c !== choice),
+    });
+  };
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter") {
+        handleAddChoice();
+      }
+    },
+    [handleAddChoice]
+  );
+
+  return (
+    <>
+      <Stack py="xs" gap={"xs"}>
+        {choices.map((choice, i) => (
+          <Choice
+            key={choice}
+            choice={choice}
+            onDelete={() => handleRemoveChoice(choice)}
+          />
+        ))}
+      </Stack>
+
+      <Group>
+        <TextInput
+          placeholder="Enter choice here"
+          value={newChoice}
+          onChange={(e) => setNewChoice(e.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+        />
+        <RateupButtonPrimary
+          title={"Add choice"}
+          size="sm"
+          leftIcon={<IconPlus size="1rem" />}
+          onClick={handleAddChoice}
+        />
+      </Group>
+    </>
+  );
+}
+
+interface ChoiceProps {
+  choice: string;
+  onDelete: () => void;
+}
+function Choice({ choice, onDelete }: ChoiceProps) {
+  const { hovered, ref } = useHover<HTMLInputElement>();
+
+  return (
+    <Group ref={ref} style={{ height: "30px" }}>
+      <Checkbox label={choice} checked={false} readOnly />
+      {hovered && (
+        <ActionIcon
+          variant="transparent"
+          color="red"
+          onClick={onDelete}
+          size={"sm"}
+        >
+          <IconTrash />
+        </ActionIcon>
+      )}
+    </Group>
+  );
+}
+
+interface ExtraPropsProps {
+  form: UseFormReturnType<any>;
+  question: Question;
+}
+function ExtraProps({ form, question }: ExtraPropsProps) {
+  switch (question.type) {
+    case QuestionType.MCQ:
+    case QuestionType.MSQ:
+    case QuestionType.DDSS:
+    case QuestionType.DDMS:
+      return <ChoicesCreator qId={question.id} form={form} />;
+    default:
+      return null;
+  }
+}

@@ -1,17 +1,20 @@
-import { Flex, Loader, Select, Tabs, Text } from "@mantine/core";
+import { Flex, Loader, MantineProvider, Select, Tabs, Text } from "@mantine/core";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { useEffect, useState } from "react";
 import SelectedTeamContext from "../../../../context/SelectedTeam";
 import { PromotionTab } from "../../../../types/enums";
 import PromotionRootPanel from "../../../../components/Promotion/RootPanel";
+import { whatsappTheme } from "../../../../components/Promotion/promotion.config";
 
 export default function Promotion() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [activeTab, setActiveTab] = useState(PromotionTab.Groups);
 
   return (
-    <>
-      {/* TODO: Style tabs */}
+
+    <MantineProvider
+      theme={whatsappTheme}
+    >
       <Flex
         justify={"end"}
         direction={"column"}
@@ -37,7 +40,7 @@ export default function Promotion() {
           </SelectedTeamContext.Provider>
         </Tabs>
       </Flex>
-    </>
+    </MantineProvider>
   );
 }
 

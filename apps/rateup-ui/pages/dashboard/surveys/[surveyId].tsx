@@ -175,7 +175,6 @@ export default ({
           <EditSurvey
             questions={questions}
             addQnTrigger={addQnTrigger}
-            surveyType={survey.type}
             surveyLanguages={survey.languages}
             setSelectedLanguage={setSelectedLanguage}
           />

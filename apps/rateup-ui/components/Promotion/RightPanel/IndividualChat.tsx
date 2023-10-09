@@ -7,7 +7,7 @@ import { IconPencil, IconTrash, IconX } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import RightPanelRoot from "."
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
-import classes from './IndividualChat.module.css'
+import classes from './style.module.css'
 import { updateWaCustomer } from "../../../backend/whatsapp/customer/waCustomer/waCustomer.api"
 import { useDeleteWaCustomerFromWaCustomerGroupMutation } from "../../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query"
 import { AddWaCustomersPanel } from "./AddWaCustomersModal"
@@ -17,10 +17,6 @@ import { useWaCustomerSurveySendHistory, useWaCustomerResponseHistory, useSendSu
 export function IndividualMainWindow({ waCustomer, openImport }) {
   const { colors } = useMantineTheme();
   const [showDetails, { open, close }] = useDisclosure(false)
-
-  useEffect(() => {
-    close()
-  }, [waCustomer])
 
   if (!waCustomer) return <AddWaCustomersPanel onClick={openImport} placeholder={"Add WaCustomer"} />
 
@@ -75,7 +71,9 @@ function ChatWindow({ waCustomer, openDetails }) {
   return (
     <Flex direction={"column"} style={{ height: "100%" }}>
       <MainWindowHeader title={waCustomer.name ? waCustomer.name : waCustomer.phone} onClick={openDetails} />
-      <Box style={{
+      <Box 
+      className={classes.chatBg}
+      style={{
         flex: "1 1 0",
         backgroundColor: "white",
         overflowY: "scroll",
@@ -103,35 +101,35 @@ function DetailsWindow({ waCustomer, onClose }) {
   const deleteWaCustomerMutation = useDeleteWaCustomerMutation()
 
   if (isLoading) {
-    return <RightPanelRoot>
-      <CenteredSpinner />
-    </RightPanelRoot>
+    return <CenteredSpinner />
+
   }
   if (isError) return <div>Error</div>
 
   return (
-    <Flex direction={"column"} style={{
-      height: "100%", flex: 3, backgroundColor: "#f0f0f0",
-    }}>
-      <DetailsHeader title={waCustomer.phone} onClose={onClose} />
-      <Box style={{
-        flex: "1 1 0",
-        overflowY: "scroll",
-      }}
+    <>
+      <DetailsHeader title={waCustomer.name || waCustomer.phone} onClose={onClose} />
+      <Box
+        style={{
+          flex: "1 1 0",
+          overflowY: "scroll",
+          backgroundColor: "whitesmoke",
+        }}
       >
         <Stack
           gap={"sm"}
           py="sm"
           px="xs"
-          // style={{
-          //   '> *': {
-          //     borderRadius: "8px"
-          //   }
-          // }} 
           className={classes.stackChildren}
+          style={{
+            // TODO: fix this. Styles are not being applied to children
+            '& > *': {
+              borderRadius: "8px",
+            },
+          }}
         >
           <Center style={{ display: "flex", flexDirection: "column", backgroundColor: "white" }} p="sm">
-            <Avatar size={"xl"} radius="xl" />
+            <Avatar size={"xl"} radius="xl" mb="sm" />
             <NameEditor name={waCustomer.name} onEdit={(name: string) => updateWaCustomer(waCustomer.id, { name })} />
           </Center>
           <Flex direction={"column"} style={{ backgroundColor: "white" }} p="xs">
@@ -166,7 +164,7 @@ function DetailsWindow({ waCustomer, onClose }) {
           </Button>
         </Stack>
       </Box>
-    </Flex>
+    </>
   );
 }
 
@@ -194,9 +192,18 @@ export function NameEditor({ name, onEdit }) {
   }
 
   return (
-    <Group>
-      <Text>{nameValue ? nameValue : "Name_Not_Set"}</Text>
-      <ActionIcon onClick={open}>
+    <Group
+      style={{
+        position: 'relative'
+      }}
+    >
+      <Text px="lg">{nameValue ? nameValue : "Name_Not_Set"}</Text>
+      <ActionIcon
+        style={{
+          position: 'absolute',
+          right: -30,
+        }}
+        onClick={open} variant="transparent" color="dark">
         <IconPencil />
       </ActionIcon>
     </Group>
@@ -206,24 +213,15 @@ export function NameEditor({ name, onEdit }) {
 export function DetailsHeader({ title, onClose }) {
   return (
     <Group
-      style={{
-        background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%)",
-        color: "white",
-        cursor: "pointer",
-        borderRadius: "8px",
-      }}
+      className={classes.chatHeader}
       p={"lg"}
       mih={"75px"}
     >
       <ActionIcon
-        // style={{
-        //   '&:hover': {
-        //     color: "black"
-        //   }
-        // }}
         className={classes.actionBtn}
         c="white"
         onClick={onClose}
+        variant="subtle"
       >
         <IconX />
       </ActionIcon>

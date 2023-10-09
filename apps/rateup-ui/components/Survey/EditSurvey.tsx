@@ -7,6 +7,7 @@ import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import classes from "./EditSurvey.module.css";
+import { QuestionType } from "../../types/enums";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -19,14 +20,12 @@ export enum QuestionTabsEnum {
 interface EditSurveyProps {
   questions: Array<Question>;
   addQnTrigger?: number;
-  surveyType?: string;
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
 }
 export function EditSurvey({
   questions,
   addQnTrigger,
-  surveyType,
   surveyLanguages,
   setSelectedLanguage,
 }: EditSurveyProps) {
@@ -41,6 +40,8 @@ export function EditSurvey({
       const Q = questions.find((q) => q.id === selectedQ.id);
       if (Q) {
         setSelectedQ(Q);
+      } else {
+        setSelectedQ(null);
       }
     }
   }, [questions]);
@@ -73,9 +74,9 @@ export function EditSurvey({
                 question={selectedQ}
                 setSelectedQ={setSelectedQ}
                 setActiveTab={setActiveTab}
-                surveyType={surveyType}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
+                key={selectedQ.id}
               />
             )}
           </Tabs.Panel>
@@ -83,7 +84,7 @@ export function EditSurvey({
             <QuestionTypeSelection
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
-              surveyType={surveyType}
+              types={WEB_QUESTION_TYPES}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
@@ -113,3 +114,7 @@ export function EditSurvey({
     </Flex>
   );
 }
+
+const WEB_QUESTION_TYPES = Object.values(QuestionType).filter(
+  (type) => !type.toLocaleLowerCase().startsWith("wa_"),
+);

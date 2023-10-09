@@ -28,12 +28,12 @@ import { QuestionTabsEnum } from "../EditSurvey";
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  surveyType
+  types: QuestionType[];
 }
 export function QuestionTypeSelection({
   setSelectedQ,
   setActiveTab,
-  surveyType
+  types
 }: QuestionTypeSelectionProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const handleTypeSelection = (type: QuestionType) => {
@@ -45,26 +45,20 @@ export function QuestionTypeSelection({
   return (
     <Center style={{ height: "100%" }}>
       <SimpleGrid cols={3}>
-        {surveyType==="web"? Object.entries(questionIcons).map(([type, Icon]) => (
-          <Button
-            key={type}
-            leftSection={<Icon />}
-            variant="default"
-            styles={{ inner: { justifyContent: 'flex-start' } }}
-            onClick={() => handleTypeSelection(type as QuestionType)}
-          >
-            <Text>{type}</Text>
-          </Button>
-        )):Object.entries(whatsappQuestionIcons).map(([type, Icon]) => (
-          <Button
-            key={type}
-            leftSection={<Icon />}
-            variant="default"
-            onClick={() => handleTypeSelection(type as QuestionType)}
-          >
-            <Text>{type}</Text>
-          </Button>
-        ))}
+        {types.map((type) => {
+          const Icon = questionIcons[type];
+          return (
+            <Button
+              key={type}
+              leftSection={<Icon />}
+              variant="default"
+              styles={{ inner: { justifyContent: 'flex-start' } }}
+              onClick={() => handleTypeSelection(type as QuestionType)}
+            >
+              <Text>{type}</Text>
+            </Button>
+          )
+        })}
       </SimpleGrid>
     </Center>
   );
@@ -90,27 +84,4 @@ const questionIcons = {
   [QuestionType.Testimonial]: IconUser,
   [QuestionType.DDSS]: IconSelect,
   [QuestionType.DDMS]: IconSelector,
-
 };
-const whatsappQuestionIcons = {
-  [QuestionType.Text]: IconLetterCase,
-  [QuestionType.TextArea]: IconAlignBoxLeftTop, //TODO update icon
-  [QuestionType.Number]: Icon123,
-  [QuestionType.Email]: IconMail,
-  [QuestionType.Phone]: IconPhone,
-  [QuestionType.Photo]: IconCamera,
-  // [QuestionType.Rating]: IconStar,
-  [QuestionType.MCQ]: IconCheckupList,
-  // [QuestionType.MSQ]: IconStar,
-  // [QuestionType.Smiley]: IconMoodSmile,
-  // [QuestionType.Opinion]: IconStar,
-  // [QuestionType.DateTime]: IconCalendar,
-  [QuestionType.LD]: IconThumbUp,
-  [QuestionType.YN]: IconHandClick,
-  // [QuestionType.Testimonial]: IconUser,
-};
-
-console.assert(
-  Object.values(QuestionType).every((key) => questionIcons[key] !== undefined),
-  "Not all QuestionType enums are mapped to an icon"
-);

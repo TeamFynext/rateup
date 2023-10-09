@@ -40,7 +40,7 @@ export const useSurvey = (surveyId: string, initialData = null) => {
 }
 
 
-  //------------get landing page -----------
+//------------get landing page -----------
 export const useLandingPage = (LandingpageId: string) =>
   useQuery({
     enabled: !!LandingpageId,
@@ -58,7 +58,7 @@ export const useSurveysBylandingId = (landingId: string) =>
 //------------whatsapp survey --------------
 //----@author:harshad-----------
 
-export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null ) => {
+export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null) => {
   return useQuery({
     enabled: !teamIsSelected || surveyInitial === null,
     queryKey: ["whatsappsurveys"],
@@ -67,7 +67,7 @@ export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null ) => {
   });
 }
 
-export const usePublicSurvey = (surveyId: string, surveyInitial = null ) => {
+export const usePublicSurvey = (surveyId: string, surveyInitial = null) => {
   return useQuery({
     enabled: !!surveyId || surveyInitial === null,
     queryKey: ["public-survey", surveyId],
@@ -107,12 +107,12 @@ export const useSurveysLanding = (teamIsSelected) =>
 // }
 export const useSurveys = (specificTeamIsSelected: boolean, initialSurveys = null) => {
   return useQuery({
-      enabled: !specificTeamIsSelected || initialSurveys === null,
-      queryKey: ['surveys'],
-      initialData: initialSurveys,
-      queryFn: getSurveys
-    }) 
-  }
+    enabled: !specificTeamIsSelected || initialSurveys === null,
+    queryKey: ['surveys'],
+    initialData: initialSurveys,
+    queryFn: getSurveys
+  })
+}
 
 export const useSurveysSummary = (initialSummaryData = null) => {
   return useQuery({
@@ -123,10 +123,10 @@ export const useSurveysSummary = (initialSummaryData = null) => {
   })
 }
 
-export const useSurveysByTeam = (teamId: string, specificTeamIsSelected) => useQuery({
+export const useSurveysByTeam = (teamId: string, specificTeamIsSelected: boolean) => useQuery({
   enabled: specificTeamIsSelected,
   queryKey: ["surveysByTeam", teamId],
-  queryFn: () => getTeamSurveys(teamId),
+  queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
 });
 
 type MyProps = {
@@ -161,10 +161,10 @@ export const useCreateSurveyMutation = ({
       close();
       setIsCreating(false);
       resetForm();
-      let res : CreateSurveyResponse | { error: string; } =   data;
+      let res: CreateSurveyResponse | { error: string; } = data;
       if (isSurveyResponse(res)) {
-         router.push(`/dashboard/surveys/${res?.id}`)
-      }     
+        router.push(`/dashboard/surveys/${res?.id}`)
+      }
       queryClient.invalidateQueries(["whatsappsurveys"]);
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);

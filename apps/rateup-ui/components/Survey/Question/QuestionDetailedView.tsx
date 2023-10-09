@@ -35,7 +35,6 @@ interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  surveyType?: string;
   surveyLanguages: string[],
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>
 }
@@ -43,7 +42,6 @@ export function QuestionDetailedView({
   question,
   setSelectedQ,
   setActiveTab,
-  surveyType,
   surveyLanguages, setSelectedLanguage
 }: QuestionDetailedViewProps) {
   const router = useRouter();
@@ -56,7 +54,6 @@ export function QuestionDetailedView({
 
 
   const form = useForm({
-    // Any modifications to initialValues must be applied in the useEffect below
     initialValues: {
       title: question?.title[selectedLanguage] || "",
       description: question?.description[selectedLanguage] || "",
@@ -66,33 +63,8 @@ export function QuestionDetailedView({
     },
     validate: {
       title: (value) => (value.trim().length > 0 ? null : "Title is required"),
-      description: (value) => {
-        if (surveyType == "web") {
-          value.trim().length > 0 ? null : "Title is required";
-        } else {
-          //-----------whatsapp text message support only 4096 charecters only----------
-          if (value.trim().length > 4096) {
-            return "Charecter length exceed (Max 4096 charecters allowed)";
-          } else if (value.trim().length == 0) {
-            return "message is required";
-          }
-        }
-      },
     },
   });
-
-  // reset values when switching questions
-  useEffect(() => {
-    // TODO: avoid duplication?
-    form.setValues({
-      // TODO: can we check if the value is undefined and not set it in form validation or something?
-      title: question.title[selectedLanguage] || "",
-      description: question.description[selectedLanguage] || "",
-      required: question.required,
-      type: question.type,
-      choices: question.choices,
-    });
-  }, [question]);
 
   //autosave add choices
 

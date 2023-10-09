@@ -20,13 +20,12 @@ interface QuestionsSideBarProps {
   setActiveTab: (tab: QuestionTabsEnum) => void;
   addQnTrigger?: number
 }
-//TODO: update order on change
 export function QuestionsSideBar({
   questions,
   setActiveTab,
   selectedQ,
   setSelectedQ,
-  addQnTrigger  
+  addQnTrigger
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -39,7 +38,7 @@ export function QuestionsSideBar({
   useEffect(() => {
     addQnTrigger > 0 && handleAddQn()
   }, [addQnTrigger])
-  
+
 
   const handleOpenQuestion = (Q: Question) => {
     setSelectedQ(Q);
@@ -51,6 +50,13 @@ export function QuestionsSideBar({
     setSelectedQ(null);
   }
 
+  // Clearing selected-question-state if it is the one being deleted
+  const onDelete = (questionId: string) => {
+    if (questionId === selectedQ?.id) {
+      setSelectedQ(null)
+    }
+  }
+
   const items = questionsState.map((question, index) => (
     <DraggableQuestionCard
       key={question.id}
@@ -58,6 +64,7 @@ export function QuestionsSideBar({
       selected={question.id === selectedQ?.id}
       index={index}
       handleOpenQuestion={handleOpenQuestion}
+      onDelete={onDelete}
     />
   ));
 
@@ -102,17 +109,17 @@ export function QuestionsSideBar({
           }}
         >
 
-      { !questionsState.length &&
-              <Paper  style={{ cursor: "pointer", marginTop:"200px" }} onClick={handleAddQn} >
-                <Center h="100%">
-                  <Stack align="center">
-                    <IconPlus size={36}/>
-                    <Text size="xl" fw={700}>Add Question</Text>
-                  </Stack>
-                </Center>
-              </Paper>
+          {!questionsState.length &&
+            <Paper style={{ cursor: "pointer", marginTop: "200px" }} onClick={handleAddQn} >
+              <Center h="100%">
+                <Stack align="center">
+                  <IconPlus size={36} />
+                  <Text size="xl" fw={700}>Add Question</Text>
+                </Stack>
+              </Center>
+            </Paper>
 
-        }
+          }
 
           <Droppable droppableId="dnd-list" direction="vertical">
             {(provided) => (

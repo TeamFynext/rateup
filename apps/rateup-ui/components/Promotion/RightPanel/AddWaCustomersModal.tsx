@@ -5,6 +5,8 @@ import SelectedTeamContext from "../../../context/SelectedTeam";
 import { IconUserPlus } from "@tabler/icons-react";
 import { useWaCustomers } from "../../../backend/whatsapp/customer/waCustomer/waCustomer.query";
 import { useWaCustomersByWaCustomerGroup, useAddWaCustomersMutation } from "../../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query";
+import classes from "./style.module.css";
+import RightPanelRoot from ".";
 
 export function AddWaCustomers({ rgroupId }) {
   const [showModal, { open, close }] = useDisclosure(false)

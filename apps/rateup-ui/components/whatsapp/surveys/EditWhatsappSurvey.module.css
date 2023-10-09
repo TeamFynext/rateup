@@ -1,0 +1,7 @@
+.panel {
+  height: 100%;
+}
+
+.root > * {
+  border: 1px solid gray;
+}

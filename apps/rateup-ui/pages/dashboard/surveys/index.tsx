@@ -261,8 +261,8 @@ export default function Surveys({ surveys: initialSurveys }) {
           my="lg"
         >
           {(specificTeamIsSelected
-            ? surveysByTeam?.data?.length > 0
-              ? [...surveysByTeam?.data]
+            ? surveysByTeam?.length > 0
+              ? [...surveysByTeam]
               : []
             : [...surveys]
           )

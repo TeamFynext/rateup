@@ -209,11 +209,9 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
                 </ResponseMessageContainer>
                 <QuickReplyButton
                   text={form.values.declineButton}
-                  sx={{}}
                 />
                 <QuickReplyButton
                   text={form.values.acceptButton}
-                  sx={{}}
                 />
               </Stack>
 

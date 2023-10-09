@@ -1,4 +1,4 @@
-import { useMantineTheme, Flex, Box, Container, Text, Autocomplete, Button, Group, Select } from "@mantine/core";
+import { useMantineTheme, Flex, Box, Container, Text, Autocomplete, Button, Group, Select, createTheme, MantineProvider } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconSend } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -94,15 +94,12 @@ interface SendSurveyComponentProps {
 export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
   const { colors } = useMantineTheme();
   const { selectedTeamId } = useContext(SelectedTeamContext)
-  const { isLoading, error, data: res } = useSurveysByTeam(selectedTeamId, !!selectedTeamId)
+  const { isLoading, error, data: surveys } = useSurveysByTeam(selectedTeamId, !!selectedTeamId)
   const { data: templates, isLoading: isTemplatesLoading } = useWaTemplates()
   const [selectedSurvey, setSelectedSurvey] = useState("")
   const [selectedTemplate, setSelectedTemplate] = useState("")
-  const surveys = res?.data
-
   if (isLoading || isTemplatesLoading) return <div>Loading...</div>
   if (error || !Array.isArray(surveys)) {
-    console.error(error)
     return <div>Error</div>
   }
 
@@ -130,7 +127,12 @@ export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
     }
   }
   return (
-    <Flex gap={"4px"} p="xs" style={{ width: "100%" }} align={"center"}>
+    <Flex gap={"4px"} p="xs"
+      style={{
+        width: "100%",
+        backgroundColor: "#f0f2f5",
+      }}
+      align={"center"}>
       <Select
         radius={"sm"}
         placeholder="Select Template"
@@ -148,17 +150,17 @@ export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
         size="md"
         onChange={setSelectedSurvey}
       />
-      <Button
-        radius={"sm"}
-        rightSection={<IconSend size="1.1rem" />}
-        onClick={handleSend}
-        h="40px"
-        style={{
-          flexGrow: 0
-        }}
-      >
-        Send
-      </Button>
+        <Button
+          radius={"sm"}
+          rightSection={<IconSend size="1.1rem" />}
+          onClick={handleSend}
+          h="40px"
+          style={{
+            flexGrow: 0
+          }}
+        >
+          Send
+        </Button>
     </Flex >
   )
 }

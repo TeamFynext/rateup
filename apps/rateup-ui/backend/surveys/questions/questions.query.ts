@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createQuestion, getQuestions, updateQuestion } from "./questions.api";
+import { createQuestion, deleteQuestion, getQuestions, updateQuestion } from "./questions.api";
 import { notifications } from "@mantine/notifications";
+import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
 
 export const useQuestions = (surveyId: string, initialData = null) => {
@@ -21,7 +22,7 @@ interface iProps {
   surveyId: string
   setIsSaving?: React.Dispatch<React.SetStateAction<boolean>>
 }
-export const useQuestionCreateMutation = ({surveyId, setIsSaving}:iProps) => {
+export const useQuestionCreateMutation = ({ surveyId, setIsSaving }: iProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: (data: any) => createQuestion(surveyId, data),
@@ -43,7 +44,7 @@ export const useQuestionCreateMutation = ({surveyId, setIsSaving}:iProps) => {
   });
   return createMutation
 };
-export const useQuestionUpdateMutation = ({surveyId, setIsSaving} : iProps) => {
+export const useQuestionUpdateMutation = ({ surveyId, setIsSaving }: iProps) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ qId, data }: QuestionUpdateMutationArgs) => {
@@ -54,7 +55,7 @@ export const useQuestionUpdateMutation = ({surveyId, setIsSaving} : iProps) => {
     onSuccess: () => {
       notifications.clean()
       notifications.show({
-        id:'qns',
+        id: 'qns',
         message: "Saved Changes..",
         autoClose: 1000,
         // icon: <IconCheck />,
@@ -74,3 +75,23 @@ export const useQuestionUpdateMutation = ({surveyId, setIsSaving} : iProps) => {
 
   return updateMutation;
 };
+
+
+export const useQuestionDeleteMutation = (surveyId: string, onSuccess: (questionId: string) => void = () => { }) => {
+  const queryClient = useQueryClient();
+
+  const questionDeleteMutation = useMutation({
+    mutationFn: (qId: string) => deleteQuestion(surveyId, qId),
+    onSuccess: (_data, variables) => {
+      onSuccess(variables);
+      queryClient.invalidateQueries(["questions", surveyId]);
+      showSuccessToast('Question deleted');
+    },
+    onError: (e) => {
+      console.error(e)
+      showErrorToast('Could not delete question')
+    }
+  })
+
+  return questionDeleteMutation;
+}

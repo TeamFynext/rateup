@@ -35,7 +35,6 @@ import { IconChevronUp } from "@tabler/icons-react";
 import cx from "clsx";
 import Link from "next/link";
 
-// TODO: format
 interface NavbarLinkProps {
   icon: React.FC<any>;
   label: string;
@@ -112,12 +111,12 @@ function NavbarLink({
           {Array.isArray(submenus) &&
             submenuOpen &&
             submenus.map((submenu) => (
-              <Group className={cx(classes.submenuLink)}>
+              <Group className={cx(classes.submenuLink)} key={submenu.label}>
                 <NavbarLink
                   opened={opened}
                   {...submenu}
                   key={submenu.label}
-                  //onClick={() => setSubmenuOpen(false)}
+                //onClick={() => setSubmenuOpen(false)}
                 />
               </Group>
             ))}
@@ -251,10 +250,10 @@ const LeftNavbar = ({ opened, setOpened }: iProps) => {
     role: !user?.role
       ? "...error..."
       : user?.role === "SUPER_ADMIN"
-      ? "Super Admin"
-      : user?.role === "ADMIN"
-      ? "Admin"
-      : "Team Member",
+        ? "Super Admin"
+        : user?.role === "ADMIN"
+          ? "Admin"
+          : "Team Member",
     image: userProfileAvatar,
   };
 

@@ -1,6 +1,5 @@
 import {
   Center,
-  Container,
   Paper,
   Title,
   Text,
@@ -15,15 +14,12 @@ import {
   Group,
   Loader,
   Space,
-  Select,
   Modal,
 } from "@mantine/core";
 import {
   IconChartBar,
   IconCopy,
   IconDots,
-  IconEdit,
-  IconMessage,
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
@@ -48,45 +44,22 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteSurvey,
-  getWhatsappSurveysWithCustomToken,
   updateSurvey,
 } from "../../../../backend/surveys/survey.api";
 import {
   useCloneSurveyMutation,
-  useSurveys,
-  useWhatsappSurveys,
   useSurveysByTeam,
 } from "../../../../backend/surveys/surveys.query";
-
-import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { useUser } from "../../../../context/UserContext";
-import { GetServerSidePropsContext } from "next";
-import supertokensNode from "supertokens-node";
-import { backendConfig } from "../../../../config/backendConfig";
-import { checkTokenExpiry } from "../../../../utils/supertoken";
+import { TeamSelector } from "../promotion";
 
+// TODO: implement ssr
 export default function WhatsappSurveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(true);
   const { user, setUser } = useUser();
-  const [options, setOptions] = useState([
-    {
-      value: "all",
-      label: "All Teams",
-      // group: "Organization",
-    },
-  ]);
-  const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
   const { action } = useRouter().query;
-
-  const teamIsSelected = selectedTeamId !== "all";
-
-  const {
-    isLoading,
-    error,
-    data: surveys,
-  } = useWhatsappSurveys(teamIsSelected, initialSurveys);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (action === "create") {
@@ -94,52 +67,13 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
     }
   }, [action]);
 
-  useEffect(() => {
-    if (selectedTeamId !== null) {
-      queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
-    }
-  }, [selectedTeamId, queryClient]);
-
   const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
+    isLoading: isLoading,
+    error: error,
+    data: surveys,
+  } = useSurveysByTeam(selectedTeamId, !!selectedTeamId);
 
-  let teamsData = teamsDataUser?.data?.data;
-
-  const {
-    isLoading: isLoadingSurveys,
-    error: errSurveysByTeams,
-    data: surveysByTeam,
-  } = useSurveysByTeam(selectedTeamId, teamIsSelected);
-
-  useEffect(() => {
-    //console.log("test.........."+JSON.stringify(teamsData))
-    if (teamsData?.length) {
-      const newOptions = teamsData?.map((team) => ({
-        value: team?.teamId,
-        label: team?.teamName,
-        //group: "Team",
-      }));
-
-      setOptions((prev) => {
-        const uniqueValues = new Set(prev.map((option) => option.value));
-        const nonDuplicateOptions = newOptions.filter(
-          (option) => !uniqueValues.has(option.value),
-        );
-        return [...prev, ...nonDuplicateOptions];
-      });
-    }
-  }, [teamsData]);
-
-  useEffect(() => {
-    queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
-  }, [selectedTeamId]);
-
-  if (isLoading) return <Loader />;
-  if (error || !Array.isArray(surveys)) {
+  if (error) {
     console.error(surveys, error);
     return "An error has occurred";
   }
@@ -163,13 +97,9 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
           mb="md"
         >
           <Title order={1}>Whatsapp Surveys : </Title>
-
-          <Select
-            mt="xs"
-            data={options}
-            defaultValue={options[0].value}
-            value={selectedTeamId}
-            onChange={setSelectedTeamId}
+          <TeamSelector
+            selectedTeamId={selectedTeamId}
+            setSelectedTeamId={setSelectedTeamId}
           />
         </Flex>
 
@@ -228,28 +158,23 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
           </Paper>
         )}
 
-        {(teamIsSelected
-          ? surveysByTeam?.data?.length > 0
-            ? [...surveysByTeam?.data]
-            : []
-          : [...surveys]
-        )
-          .slice()
-          .sort((a, b) =>
-            sort
-              ? new Date(b.createdAt).getTime() -
+        {!isLoading &&
+          surveys
+            .slice()
+            .sort((a, b) =>
+              sort
+                ? new Date(b.createdAt).getTime() -
                 new Date(a.createdAt).getTime()
-              : new Date(a.createdAt).getTime() -
+                : new Date(a.createdAt).getTime() -
                 new Date(b.createdAt).getTime(),
-          )
-          .map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              teamsData={teamsData}
-              setSelectedTeamId={setSelectedTeamId}
-            />
-          ))}
+            )
+            .map((s) => (
+              <SurveyCard
+                key={s.id}
+                survey={s}
+                setSelectedTeamId={setSelectedTeamId}
+              />
+            ))}
       </SimpleGrid>
       <CreateSurveyModal
         open={createSurveyOpened}
@@ -266,9 +191,8 @@ interface SurveyCardProps {
 }
 export function SurveyCard({
   survey,
-  teamsData,
   setSelectedTeamId,
-}: SurveyCardProps & { teamsData: any }): JSX.Element {
+}: SurveyCardProps): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
@@ -293,11 +217,11 @@ export function SurveyCard({
       onClick={() => {
         user?.role === "MEMBER"
           ? router.push(
-              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
-            )
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/responses/${survey?.id}`,
+          )
           : router.push(
-              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
-            );
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/${survey?.id}`,
+          );
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
@@ -311,7 +235,6 @@ export function SurveyCard({
           <IconPencil />
           <SurveyMenu
             survey={survey}
-            teamsData={teamsData}
             setSelectedTeamId={setSelectedTeamId}
           />
         </Group>
@@ -329,7 +252,7 @@ export function SurveyCard({
         <StatusBadge active={survey.active} />
         <Text>Total Responses : 0</Text>
         <Link
-          href={`/dashboard/surveys/${survey.id}?tab=Responses`}
+          href={`/dashboard/whatsapp/surveys/${survey.id}?tab=Responses`}
           style={{ color: theme.colors.blue[9] }}
           onClick={(e) => {
             e.stopPropagation();
@@ -345,11 +268,10 @@ export function SurveyCard({
   );
 }
 
-function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
+function SurveyMenu({ survey, setSelectedTeamId }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const [cloneSurveyId, setCloneSurveyId] = useState("");
   const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const cloneSurvey = useCloneSurveyMutation({
@@ -357,17 +279,6 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
     selectedTeamID,
     setSelectedTeamId,
   });
-
-  const [options, setOptions] = useState([]);
-
-  useEffect(() => {
-    const newOptions = teamsData?.map((team) => ({
-      value: team?.teamId,
-      label: team?.teamName,
-    }));
-
-    setOptions(newOptions);
-  }, [teamsData]);
 
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
@@ -405,21 +316,13 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         }}
       >
         <Stack>
-          <Text pr="xl" color="dark.2">
+          <Text pr="xl" c="dark.2">
             Select the team in which the copy to be created.
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>
-            <Select
-              label="Select Team"
-              maxDropdownHeight={150}
-              mt="xs"
-              placeholder="Pick one"
-              data={options}
-              value={selectedTeamID}
-              onChange={(value) => setSelectedTeamID(value)}
-              onClick={(event) => {
-                event.stopPropagation();
-              }}
+            <TeamSelector
+              selectedTeamId={selectedTeamID}
+              setSelectedTeamId={setSelectedTeamID}
             />
           </Group>
           <Group mt="xl">
@@ -501,37 +404,4 @@ function StatusBadge({ active }) {
       {active ? "Active" : "Paused"}
     </Badge>
   );
-}
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { surveys: [] } };
-    }
-
-    const surveys = await getWhatsappSurveysWithCustomToken(accessToken);
-
-    const tokenExpiryCheck = checkTokenExpiry([surveys]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        surveys: surveys || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        surveys: [],
-      },
-    };
-  }
 }

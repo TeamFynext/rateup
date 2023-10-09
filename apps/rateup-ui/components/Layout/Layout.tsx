@@ -70,7 +70,6 @@ export default ({ children }) => {
               style={{ overflowY: "auto" }}
               p="xl"
               direction="column"
-              maw={"1500px"}
               m="auto"
               w="100%"
             >

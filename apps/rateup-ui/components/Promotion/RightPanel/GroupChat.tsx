@@ -7,7 +7,7 @@ import { DetailsHeader, NameEditor } from "./IndividualChat"
 import { useDisclosure } from "@mantine/hooks"
 import CenteredSpinner from "../../Loaders/CenteredSpinner"
 import RightPanelRoot from "."
-import classes from './GroupChat.module.css'
+import classes from './style.module.css'
 import { useWaCustomerGroupSurveySendHistory, useSendSurveyToWaCustomerGroupMutation, useWaCustomersByWaCustomerGroup, useDeleteWaCustomerFromWaCustomerGroupMutation, useDeleteWaCustomerGroupMutation, useUpdateWaCustomerGroupMutation } from "../../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query"
 import { AddWaCustomers, AddWaCustomersPanel } from "./AddWaCustomersModal"
 
@@ -50,11 +50,8 @@ function ChatWindow({ rgroup, openDetails }) {
   return (
     <Flex direction={"column"} style={{ height: "100%" }}>
       <MainWindowHeader title={rgroup.name} onClick={openDetails} />
-      <Box style={{
-        flex: "1 1 0",
-        backgroundColor: "white",
-        overflowY: "scroll",
-      }}
+      <Box
+        className={classes.chatBg}
       >
         {
           rGroupSurveySendHistory.map(({ survey, id, createdAt }) => {
@@ -97,11 +94,12 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
           py="sm"
           px="xs"
           gap={"xs"}
-          // style={{
-          //   '> *': {
-          //     borderRadius: "8px"
-          //   }
-          // }}
+          // TOOD: BUG: below style is not being applied to children
+          style={{
+            '& > *': {
+              borderRadius: "8px !important"
+            },
+          }}
           className={classes.stackChildren}
 
         >
@@ -115,7 +113,7 @@ function DetailsWindow({ rgroup, onClose }: DetailsWindowProps) {
               {
                 waCustomers.length === 0 ? <Text p="lg">No Members</Text> : (
                   waCustomers.map((r) => (
-                    <Group justify="space-between">
+                    <Group justify="space-between" key={r.id}>
                       <Group>
                         <Avatar size={"md"} radius="lg " />
                         <Text>{r.name ? r.name : r.phone}</Text>

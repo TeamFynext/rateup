@@ -194,7 +194,7 @@ export default function SurveyLandingList() {
        
         {
           (specificTeamIsSelected
-            ? (surveysByTeam?.data?.length > 0 ? [...surveysByTeam?.data] : [])
+            ? (surveysByTeam?.length > 0 ? [...surveysByTeam] : [])
             : [...surveys]
           )
             .slice()

@@ -1,20 +1,18 @@
 import { useMantineTheme, Group, Text } from "@mantine/core";
+import classes from './style.module.css'
+import { IconChevronRight } from "@tabler/icons-react";
 
 export function MainWindowHeader({ title, onClick }) {
-  const { colors } = useMantineTheme();
   return (
     <Group
+      className={classes.chatHeader}
       onClick={onClick}
-      style={{
-        background: "linear-gradient(270deg, #3F5BA9 -18.1%, #49C8E9 416.79%)",
-        color: "white",
-        cursor: "pointer",
-        borderRadius: "8px",
-      }}
       p={"lg"}
       mih={"75px"}
+      justify="space-between"
     >
       <Text>{title}</Text>
+      <IconChevronRight />
     </Group>
   )
 }

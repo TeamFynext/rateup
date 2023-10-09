@@ -8,6 +8,7 @@ import { IndividualMainWindow } from "./RightPanel/IndividualChat";
 import { GroupMainWindow } from "./RightPanel/GroupChat";
 import { useWaCustomers } from "../../backend/whatsapp/customer/waCustomer/waCustomer.query";
 import { useWaCustomerGroups } from "../../backend/whatsapp/customer/waCustomerGroup/waCustomerGroup.query";
+import RightPanelRoot from "./RightPanel";
 
 export default function PromotionRootPanel({ activeTab, setActiveTab }) {
   const [importModalIsOpen, { open, close }] = useDisclosure(false);
@@ -62,33 +63,28 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
 }
 
 function RightPanel({ activeTab, selected, items, openImport }) {
+  const selectedItem = items?.find(({ id }) => id === selected)
   return (
-    <Paper
-      style={{
-        flex: 7,
-        boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
-        borderRadius: "8px",
-        overflow: "clip",
-      }}
-    >
+    <RightPanelRoot>
       <Tabs.Panel
         value={PromotionTab.Groups}
-        style={{ flexGrow: 1, height: "100%" }}
+        style={{ flexGrow: 1, height: "100%", display: "flex", flexDirection: "column" }}
       >
         <GroupMainWindow
           openCreateGroup={openImport}
-          rgroup={items?.find(({ id }) => id === selected)}
+          rgroup={selectedItem}
         />
       </Tabs.Panel>
       <Tabs.Panel
         value={PromotionTab.Individuals}
-        style={{ flexGrow: 1, height: "100%" }}
+        style={{ flexGrow: 1, height: "100%", display: "flex", flexDirection: "column" }}
       >
         <IndividualMainWindow
           openImport={openImport}
-          waCustomer={items?.find(({ id }) => id === selected)}
+          waCustomer={selectedItem}
+          key={selected}
         />
       </Tabs.Panel>
-    </Paper>
+    </RightPanelRoot>
   );
 }

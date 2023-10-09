@@ -1,0 +1,41 @@
+.stackChildren > * {
+  border-radius: "8px"
+}
+
+.stackBtn>button {
+  border-radius: "100px"
+}
+
+.actionBtn :hover {
+  color: "black"
+}
+
+.chatBg {
+  position: relative;
+  flex: 1 1 0;
+  overflow: 'scroll';
+  flex-grow: 1;
+}
+
+.chatBg::before {
+  content: ' ';
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+  background-color: #efeae2;
+  background-image: url('/images/whatsapp/whatsapp_chat_bg.png');
+}
+
+.chatHeader {
+  border-radius: 10px;
+  border: 0.5px solid rgba(0, 0, 0, 0.25);
+  background: var(--Whatsapp-Promotions, linear-gradient(271deg, #128C7E -6.39%, #128C7E 204.31%));
+  box-shadow: 2px 4px 7px 0px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  color: white;
+}
+

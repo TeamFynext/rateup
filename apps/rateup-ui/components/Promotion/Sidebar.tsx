@@ -14,6 +14,7 @@ import { IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import { PromotionTab } from "../../types/enums";
 import classes from "./Sidebar.module.css";
+import promotionClasses from './promotion.module.css'
 import ImportWaCustomers, { ImportWaCustomersModal } from "./ImportWaCustomers";
 
 // Individual list item of chat (group or individual)
@@ -51,8 +52,8 @@ export function LeftPanel({
     searchTerm === ""
       ? items
       : items?.filter(({ name }) =>
-          name.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
+        name.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
 
   return (
     <Paper
@@ -65,6 +66,7 @@ export function LeftPanel({
         flexDirection: "column",
         ...props.sx,
       }}
+      className={promotionClasses.panel}
     >
       <PromotionHeader activeTab={activeTab} setActiveTab={setActiveTab} />
       <SearchBar
@@ -100,11 +102,7 @@ function PromotionHeader({ activeTab, setActiveTab }) {
 
   return (
     <Box
-      style={{
-        borderRadius: "8px",
-        background: "linear-gradient(271deg, #3F5BA9 -6.39%, #49C8E9 204.31%)",
-        boxShadow: "2px 4px 7px 0px rgba(0, 0, 0, 0.06)",
-      }}
+      className={classes.promotionHeader}
       p="lg"
     >
       <Group justify="space-between">
@@ -116,7 +114,7 @@ function PromotionHeader({ activeTab, setActiveTab }) {
         >
           Promotion
         </Title>
-        <Group justify="center">
+        <Group justify="center" className={classes.tabGroup} gap={0}>
           <TabSwitchButton
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -138,20 +136,13 @@ function TabSwitchButton({ activeTab, setActiveTab, tabName }) {
   return (
     <UnstyledButton
       py="xs"
-      px="xl"
+      px="sm"
       onClick={() => setActiveTab(tabName)}
       style={{
-        borderRadius: "100px",
-        border: "2px solid white",
-        borderColor: "white",
         backgroundColor: selected ? "white" : "transparent",
         color: selected ? "#3F5BA9" : "white",
-        // '&:hover': {
-        //   backgroundColor: "white !important",
-        //   color: "#3F5BA9 !important",
-        // }
       }}
-      className={classes.unstyledBtn}
+      className={classes.tabButton}
     >
       {tabName}
     </UnstyledButton>
