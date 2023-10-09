@@ -1,5 +1,11 @@
 import { FastifyInstance } from "fastify";
-import { createOrgHandler, getAllTeamsAndMembers, updateLogoHandler, updateRoleController } from "./org.controller";
+import {
+  createOrgHandler,
+  getAllTeamsAndMembers,
+  updateLogoHandler,
+  updateOrgDetailsHandler,
+  updateRoleController,
+} from "./org.controller";
 import { $Sref } from "./org.schema";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -38,6 +44,16 @@ export async function orgRoutes(server: FastifyInstance) {
     },
     updateLogoHandler
   );
+  server.put(
+    "/update-details",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        body: $Sref("updateOrgDetailsSchema"),
+      },
+    },
+    updateOrgDetailsHandler
+  );
 
   server.put(
     "/members/change-role/:id",
@@ -45,10 +61,9 @@ export async function orgRoutes(server: FastifyInstance) {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Sref("idParamRequestSchema"),
-        body: $Sref("updateRoleSchema")
+        body: $Sref("updateRoleSchema"),
       },
     },
     updateRoleController
   );
-
 }

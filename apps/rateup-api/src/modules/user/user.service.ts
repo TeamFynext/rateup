@@ -118,10 +118,24 @@ export async function getLoggedUserInfo(
     where: { id: orgId },
     select: {
       logo: true,
+      name: true,
+      address: true,
+      phone: true,
     },
   });
 
-  return { userId, userName: profile?.name, role, email, orgId, orgLogo: orgData?.logo, profilePhoto: profile?.profilePhoto };
+  return {
+    userId,
+    userName: profile?.name,
+    role,
+    email,
+    profilePhoto: profile?.profilePhoto,
+    orgId,
+    orgName: orgData?.name,
+    orgLogo: orgData?.logo,
+    orgPhone: orgData?.phone,
+    orgAddress: orgData?.address,
+  };
 }
 
 export async function getLoggedUserProfile(

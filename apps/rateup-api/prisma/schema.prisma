@@ -66,6 +66,8 @@ model Org {
   owner            User              @relation(fields: [ownerId], references: [id])
   ownerId          String            @db.Uuid
   logo             String?
+  phone            String?
+  address          String?
   members          OrgMember[]
   teams            Team[]
   invitations      Invitation[]

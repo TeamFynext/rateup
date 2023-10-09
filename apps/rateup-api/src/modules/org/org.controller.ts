@@ -1,6 +1,18 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createOrg, getTeamsMembers, updateOrgLogo, updateOrgUserRole } from "./org.services";
-import { CreateOrgInput, IdParamInput, UpdateLogoInput, UpdateRoleInput } from "./org.schema";
+import {
+  createOrg,
+  getTeamsMembers,
+  updateOrgDetails,
+  updateOrgLogo,
+  updateOrgUserRole,
+} from "./org.services";
+import {
+  CreateOrgInput,
+  IdParamInput,
+  UpdateLogoInput,
+  UpdateOrgDetailsInput,
+  UpdateRoleInput,
+} from "./org.schema";
 import Session from "supertokens-node/recipe/session";
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -38,15 +50,15 @@ export async function getAllTeamsAndMembers(
       reply.send({ message: `Success`, data: teamsMembers });
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
     reply.code(500).send();
   }
 }
 
 export async function updateRoleController(
   request: FastifyRequest<{
-    Body: UpdateRoleInput,
-    Params: IdParamInput
+    Body: UpdateRoleInput;
+    Params: IdParamInput;
   }>,
   reply: FastifyReply
 ) {
@@ -55,28 +67,31 @@ export async function updateRoleController(
   let roleUpdate;
 
   if (!body.role) {
-    reply.code(400).send({ success: false, message: 'Role is required' });
+    reply.code(400).send({ success: false, message: "Role is required" });
     return;
   }
 
   try {
-    roleUpdate = await updateOrgUserRole(body as { role: string }, id, request, reply);
-  
+    roleUpdate = await updateOrgUserRole(
+      body as { role: string },
+      id,
+      request,
+      reply
+    );
+
     // Check if the roleUpdate is an error message
-    if (typeof roleUpdate === 'string') {
+    if (typeof roleUpdate === "string") {
       reply.code(400).send({ success: false, message: roleUpdate });
       return;
     }
-
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
     return;
   }
 
-  reply.code(201).send({ success: true, data: roleUpdate});
+  reply.code(201).send({ success: true, data: roleUpdate });
 }
-
 
 export async function updateLogoHandler(
   request: FastifyRequest<{
@@ -88,12 +103,31 @@ export async function updateLogoHandler(
   let user;
 
   try {
-    user = await updateOrgLogo(body, request, reply); 
+    user = await updateOrgLogo(body, request, reply);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
     return;
   }
-  
-  reply.code(201).send({ success: true, data: "Logo Updated..!"});
+
+  reply.code(201).send({ success: true, data: "Logo Updated..!" });
+}
+
+export async function updateOrgDetailsHandler(
+  request: FastifyRequest<{
+    Body: UpdateOrgDetailsInput;
+  }>,
+  reply: FastifyReply
+) {
+  const body = request.body;
+  try {
+    let user = await updateOrgDetails(body, request, reply);
+    console.log(user);
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+
+  reply.code(201).send({ success: true, data: "Logo Updated..!" });
 }
