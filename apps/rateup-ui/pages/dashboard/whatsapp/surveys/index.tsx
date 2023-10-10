@@ -164,9 +164,9 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
             .sort((a, b) =>
               sort
                 ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
+                  new Date(a.createdAt).getTime()
                 : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime(),
+                  new Date(b.createdAt).getTime(),
             )
             .map((s) => (
               <SurveyCard
@@ -217,11 +217,11 @@ export function SurveyCard({
       onClick={() => {
         user?.role === "MEMBER"
           ? router.push(
-            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/responses/${survey?.id}`,
-          )
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/responses/${survey?.id}`,
+            )
           : router.push(
-            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/${survey?.id}`,
-          );
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/${survey?.id}`,
+            );
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
@@ -233,10 +233,7 @@ export function SurveyCard({
         </Badge>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
-          <SurveyMenu
-            survey={survey}
-            setSelectedTeamId={setSelectedTeamId}
-          />
+          <SurveyMenu survey={survey} setSelectedTeamId={setSelectedTeamId} />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" gap="xs">

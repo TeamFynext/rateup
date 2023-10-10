@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createQuestion, deleteQuestion, getQuestions, updateQuestion } from "./questions.api";
+import {
+  createQuestion,
+  deleteQuestion,
+  getQuestions,
+  updateQuestion,
+} from "./questions.api";
 import { notifications } from "@mantine/notifications";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
-
 
 export const useQuestions = (surveyId: string, initialData = null) => {
   return useQuery({
@@ -10,8 +14,8 @@ export const useQuestions = (surveyId: string, initialData = null) => {
     enabled: !!surveyId || initialData === null,
     initialData: initialData,
     queryFn: () => getQuestions(surveyId),
-  })
-}
+  });
+};
 
 interface QuestionUpdateMutationArgs {
   qId: string;
@@ -19,10 +23,13 @@ interface QuestionUpdateMutationArgs {
 }
 
 interface iProps {
-  surveyId: string
-  setIsSaving?: React.Dispatch<React.SetStateAction<boolean>>
+  surveyId: string;
+  setIsSaving?: React.Dispatch<React.SetStateAction<boolean>>;
 }
-export const useQuestionCreateMutation = ({ surveyId, setIsSaving }: iProps) => {
+export const useQuestionCreateMutation = ({
+  surveyId,
+  setIsSaving,
+}: iProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: (data: any) => createQuestion(surveyId, data),
@@ -31,7 +38,7 @@ export const useQuestionCreateMutation = ({ surveyId, setIsSaving }: iProps) => 
         message: "Question created",
       });
       queryClient.invalidateQueries(["questions"]);
-      setIsSaving(false)
+      setIsSaving(false);
     },
     onError: (e) => {
       console.error(e);
@@ -39,12 +46,15 @@ export const useQuestionCreateMutation = ({ surveyId, setIsSaving }: iProps) => 
         message: "An error has occurred",
         color: "red",
       });
-      setIsSaving(false)
+      setIsSaving(false);
     },
   });
-  return createMutation
+  return createMutation;
 };
-export const useQuestionUpdateMutation = ({ surveyId, setIsSaving }: iProps) => {
+export const useQuestionUpdateMutation = ({
+  surveyId,
+  setIsSaving,
+}: iProps) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ qId, data }: QuestionUpdateMutationArgs) => {
@@ -53,15 +63,15 @@ export const useQuestionUpdateMutation = ({ surveyId, setIsSaving }: iProps) => 
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
-      notifications.clean()
+      notifications.clean();
       notifications.show({
-        id: 'qns',
+        id: "qns",
         message: "Saved Changes..",
         autoClose: 1000,
         // icon: <IconCheck />,
       });
       queryClient.invalidateQueries(["questions"]);
-      setIsSaving(false)
+      setIsSaving(false);
     },
     onError: (err) => {
       console.error(err);
@@ -69,15 +79,17 @@ export const useQuestionUpdateMutation = ({ surveyId, setIsSaving }: iProps) => 
         message: "Error updating question",
         color: "red",
       });
-      setIsSaving(false)
+      setIsSaving(false);
     },
   });
 
   return updateMutation;
 };
 
-
-export const useQuestionDeleteMutation = (surveyId: string, onSuccess: (questionId: string) => void = () => { }) => {
+export const useQuestionDeleteMutation = (
+  surveyId: string,
+  onSuccess: (questionId: string) => void = () => {},
+) => {
   const queryClient = useQueryClient();
 
   const questionDeleteMutation = useMutation({
@@ -85,13 +97,13 @@ export const useQuestionDeleteMutation = (surveyId: string, onSuccess: (question
     onSuccess: (_data, variables) => {
       onSuccess(variables);
       queryClient.invalidateQueries(["questions", surveyId]);
-      showSuccessToast('Question deleted');
+      showSuccessToast("Question deleted");
     },
     onError: (e) => {
-      console.error(e)
-      showErrorToast('Could not delete question')
-    }
-  })
+      console.error(e);
+      showErrorToast("Could not delete question");
+    },
+  });
 
   return questionDeleteMutation;
-}
+};

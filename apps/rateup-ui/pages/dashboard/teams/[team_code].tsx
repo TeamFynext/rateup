@@ -47,6 +47,39 @@ import { useTeamsByUser } from "../../../backend/team/team.query";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 
+export async function getServerSideProps(context) {
+  const { team_code } = context.query;
+  let teamCode: string = team_code?.toString();
+  const queryClient = new QueryClient();
+  console.log("hello");
+
+  supertokensNode.init(backendConfig());
+  const session = await getSessionWithRefreshHandling(context);
+
+  const teamsData = await queryClient.prefetchQuery(["teamDataPrefetch"], () =>
+    fetchTeamsByUser(session),
+  );
+  let teamId = getTeamIdByCode(teamsData, teamCode);
+  console.log(teamId);
+
+  if (teamId) {
+    const teamInitialData = await queryClient.prefetchQuery(
+      ["teamDetailsPrefetch"],
+      () => getTeamMembersFromInvite(teamId, session),
+    );
+
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}
+
 const TeamDetails = () => {
   // TODO fix id fail case on page reload
   const router = useRouter();
@@ -287,39 +320,4 @@ export function getTeamIdByCode(teamsData, code) {
     }
   });
   return teamId;
-}
-
-export async function getServerSideProps(context) {
-  const { team_code } = context.query;
-  let teamCode: string = team_code?.toString();
-  const queryClient = new QueryClient();
-  console.log("hello");
-
-  supertokensNode.init(backendConfig());
-  const session = await getSessionWithRefreshHandling(context);
-
-  const teamsData = await queryClient.prefetchQuery(["teamDataPrefetch"], () =>
-    fetchTeamsByUser(session),
-  );
-  let teamId = getTeamIdByCode(teamsData, teamCode);
-  console.log(teamId);
-
-  if (teamId) {
-    const teamInitialData = await queryClient.prefetchQuery(
-      ["teamDetailsPrefetch"],
-      () => getTeamMembersFromInvite(teamId, session),
-    );
-
-    //console.log("Prefetched  Team data: ", JSON.stringify(teamInitialData));
-
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  }
-
-  return {
-    props: {},
-  };
 }

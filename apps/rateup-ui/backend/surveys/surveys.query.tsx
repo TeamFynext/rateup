@@ -27,8 +27,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
 import { useRouter } from "next/router";
-import { rem } from '@mantine/core';
-
+import { rem } from "@mantine/core";
 
 export const useSurvey = (surveyId: string, initialData = null) => {
   return useQuery({
@@ -36,9 +35,8 @@ export const useSurvey = (surveyId: string, initialData = null) => {
     enabled: !!surveyId || initialData === null,
     initialData: initialData,
     queryFn: () => getSurvey(surveyId),
-  })
-}
-
+  });
+};
 
 //------------get landing page -----------
 export const useLandingPage = (LandingpageId: string) =>
@@ -65,7 +63,7 @@ export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null) => {
     queryFn: getWhatsappSurveys,
     initialData: surveyInitial,
   });
-}
+};
 
 export const usePublicSurvey = (surveyId: string, surveyInitial = null) => {
   return useQuery({
@@ -74,7 +72,7 @@ export const usePublicSurvey = (surveyId: string, surveyInitial = null) => {
     queryFn: () => getPublicSurvey(surveyId),
     initialData: surveyInitial,
   });
-}
+};
 
 export const usePublicSurveyGoogleLink = (surveyId: string) =>
   useQuery({
@@ -105,29 +103,36 @@ export const useSurveysLanding = (teamIsSelected) =>
 //     onSuccess: (data) => {},
 //   });
 // }
-export const useSurveys = (specificTeamIsSelected: boolean, initialSurveys = null) => {
+export const useSurveys = (
+  specificTeamIsSelected: boolean,
+  initialSurveys = null,
+) => {
   return useQuery({
     enabled: !specificTeamIsSelected || initialSurveys === null,
-    queryKey: ['surveys'],
+    queryKey: ["surveys"],
     initialData: initialSurveys,
-    queryFn: getSurveys
-  })
-}
+    queryFn: getSurveys,
+  });
+};
 
 export const useSurveysSummary = (initialSummaryData = null) => {
   return useQuery({
-    queryKey: ['surveysSummary'],
+    queryKey: ["surveysSummary"],
     enabled: initialSummaryData === null,
     initialData: initialSummaryData,
     queryFn: getActiveSurveysSummary,
-  })
-}
+  });
+};
 
-export const useSurveysByTeam = (teamId: string, specificTeamIsSelected: boolean) => useQuery({
-  enabled: specificTeamIsSelected,
-  queryKey: ["surveysByTeam", teamId],
-  queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
-});
+export const useSurveysByTeam = (
+  teamId: string,
+  specificTeamIsSelected: boolean,
+) =>
+  useQuery({
+    enabled: specificTeamIsSelected,
+    queryKey: ["surveysByTeam", teamId],
+    queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
+  });
 
 type MyProps = {
   close: () => void;
@@ -135,7 +140,9 @@ type MyProps = {
   setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
 };
 
-function isSurveyResponse(obj: CreateSurveyResponse | { error: string; }): obj is CreateSurveyResponse {
+function isSurveyResponse(
+  obj: CreateSurveyResponse | { error: string },
+): obj is CreateSurveyResponse {
   return (obj as CreateSurveyResponse).id !== undefined;
 }
 
@@ -161,9 +168,9 @@ export const useCreateSurveyMutation = ({
       close();
       setIsCreating(false);
       resetForm();
-      let res: CreateSurveyResponse | { error: string; } = data;
+      let res: CreateSurveyResponse | { error: string } = data;
       if (isSurveyResponse(res)) {
-        router.push(`/dashboard/surveys/${res?.id}`)
+        router.push(`/dashboard/surveys/${res?.id}`);
       }
       queryClient.invalidateQueries(["whatsappsurveys"]);
       queryClient.invalidateQueries(["surveys"]);
@@ -316,7 +323,7 @@ export function useCloneSurveyMutation({
           autoClose: 3000,
         });
       },
-    }
+    },
   );
 }
 
@@ -361,7 +368,7 @@ async function handleSurveyPwd(id, passwordProtect, password) {
 export function useVerifySurveyPwdMutation(
   surveyId: string,
   password: string,
-  onStart
+  onStart,
 ) {
   return useMutation(() => handleSurveyVerifyPwd(surveyId, password), {
     onSuccess: (response) => {
@@ -424,15 +431,15 @@ export function useEditSurveyMutation(id, setIsLoading) {
 
 export const useUpdateSurveyGoogleLinkMutation = (
   surveyId: string,
-  setLinkUpdateStatus: (value: boolean) => void
+  setLinkUpdateStatus: (value: boolean) => void,
 ) => {
   const updateMutation = useMutation({
     mutationFn: ({ data }: any) => {
       return updateSurveyGoogleLink(surveyId, data);
     },
     onSuccess: (data) => {
-      notifications.clean()
-      setLinkUpdateStatus(true)
+      notifications.clean();
+      setLinkUpdateStatus(true);
     },
     onError: (err) => {
       console.error(err);

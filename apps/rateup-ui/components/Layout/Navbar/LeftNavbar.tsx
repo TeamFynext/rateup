@@ -116,7 +116,7 @@ function NavbarLink({
                   opened={opened}
                   {...submenu}
                   key={submenu.label}
-                //onClick={() => setSubmenuOpen(false)}
+                  //onClick={() => setSubmenuOpen(false)}
                 />
               </Group>
             ))}
@@ -251,10 +251,10 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
     role: !user?.role
       ? "...error..."
       : user?.role === "SUPER_ADMIN"
-        ? "Super Admin"
-        : user?.role === "ADMIN"
-          ? "Admin"
-          : "Team Member",
+      ? "Super Admin"
+      : user?.role === "ADMIN"
+      ? "Admin"
+      : "Team Member",
     image: userProfileAvatar,
   };
 

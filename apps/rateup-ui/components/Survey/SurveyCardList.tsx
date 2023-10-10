@@ -18,9 +18,7 @@ import {
   Checkbox,
   Button,
 } from "@mantine/core";
-import {
-  IconChartBar,
-} from "@tabler/icons-react";
+import { IconChartBar } from "@tabler/icons-react";
 
 import Link from "next/link";
 import { useDisclosure } from "@mantine/hooks";
@@ -44,7 +42,6 @@ import { CreateSurveyModal } from "./CreateSurveyModal";
 import CreateSurveyLandingModal from "../../pages/dashboard/LandingPages/CreateSurveyLandingModal";
 import { getTimeSince } from "../../utils";
 import { deleteSurvey, updateSurvey } from "../../backend/surveys/survey.api";
-
 
 export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const [surveyidArray, setSurveyIdArray] = useState([]);
@@ -81,11 +78,11 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     e.stopPropagation();
     if (surveyidArray.length >= 4 && e.target.checked) {
       notifications.show({
-        id: 'survey-merge-max',
-        
-        title:"Limit exceed",
-        message: 'Max 4 surveys can be merged.',
-       
+        id: "survey-merge-max",
+
+        title: "Limit exceed",
+        message: "Max 4 surveys can be merged.",
+
         autoClose: 2000,
       });
       return;
@@ -112,7 +109,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     <>
       <Flex style={{ flexDirection: "column", width: "100%" }}>
         <SimpleGrid
-          cols={{ base: 2, sm: 1, md: 2, lg: 5 , xl: 2}}
+          cols={{ base: 2, sm: 1, md: 2, lg: 5, xl: 2 }}
           spacing={"lg"}
         >
           {surveys.map((s) => {
@@ -121,7 +118,6 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
                 <SurveyCard
                   key={s.id}
                   survey={s}
-                  
                   handleCheckBox={handleCheckBox}
                   isChecked={isChecked}
                 />
@@ -150,7 +146,7 @@ function SurveyCard({
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(survey.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -165,7 +161,6 @@ function SurveyCard({
         withBorder
         radius="lg"
         style={{ cursor: "pointer" }}
-        
       >
         <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="xl" fw={700}>
@@ -194,10 +189,10 @@ function SurveyCard({
 
         <Flex justify={"space-between"} mt="xl" align={"center"}>
           <StatusBadge active={survey.active} />
-          
+
           <Link
             href={`/dashboard/surveys/${survey.id}?tab=Responses`}
-            style={{ color: theme.colors.blue[9] }}
+            style={{ color: "var(--tertiary-color)" }}
             onClick={(e) => {
               e.stopPropagation();
             }}

@@ -33,7 +33,7 @@ interface QuestionTypeSelectionProps {
 export function QuestionTypeSelection({
   setSelectedQ,
   setActiveTab,
-  types
+  types,
 }: QuestionTypeSelectionProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const handleTypeSelection = (type: QuestionType) => {
@@ -52,18 +52,17 @@ export function QuestionTypeSelection({
               key={type}
               leftSection={<Icon />}
               variant="default"
-              styles={{ inner: { justifyContent: 'flex-start' } }}
+              styles={{ inner: { justifyContent: "flex-start" } }}
               onClick={() => handleTypeSelection(type as QuestionType)}
             >
               <Text>{type}</Text>
             </Button>
-          )
+          );
         })}
       </SimpleGrid>
     </Center>
   );
 }
-
 
 // TODO: add proper icons
 const questionIcons = {

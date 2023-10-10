@@ -14,7 +14,7 @@ import { IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import { PromotionTab } from "../../types/enums";
 import classes from "./Sidebar.module.css";
-import promotionClasses from './promotion.module.css'
+import promotionClasses from "./promotion.module.css";
 import ImportWaCustomers, { ImportWaCustomersModal } from "./ImportWaCustomers";
 
 // Individual list item of chat (group or individual)
@@ -52,8 +52,8 @@ export function LeftPanel({
     searchTerm === ""
       ? items
       : items?.filter(({ name }) =>
-        name.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
+          name.toLowerCase().includes(searchTerm.toLowerCase()),
+        );
 
   return (
     <Paper
@@ -101,10 +101,7 @@ function PromotionHeader({ activeTab, setActiveTab }) {
   const theme = useMantineTheme();
 
   return (
-    <Box
-      className={classes.promotionHeader}
-      p="lg"
-    >
+    <Box className={classes.promotionHeader} p="lg">
       <Group justify="space-between">
         <Title
           style={{

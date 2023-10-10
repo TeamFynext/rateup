@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState, forwardRef} from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
@@ -13,7 +13,14 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
-import { IconDeviceSdCard, IconEdit, IconPlus, IconStar, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconDeviceSdCard,
+  IconEdit,
+  IconPlus,
+  IconStar,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -21,12 +28,15 @@ import {
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
 import {
-  RateupButtonOutline,
-  RateupButtonPrimary,
+  RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
-import { googleReviewSupportedTypes, logicSupportedTypes, validationSupportedTypes } from "../../../utils/data";
+import {
+  googleReviewSupportedTypes,
+  logicSupportedTypes,
+  validationSupportedTypes,
+} from "../../../utils/data";
 import { notifications } from "@mantine/notifications";
 
 // TODO: use a routing method instead of passing the question as a prop?
@@ -35,23 +45,29 @@ interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  surveyLanguages: string[],
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>
+  surveyLanguages: string[];
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
 }
 export function QuestionDetailedView({
   question,
   setSelectedQ,
   setActiveTab,
-  surveyLanguages, setSelectedLanguage
+  surveyLanguages,
+  setSelectedLanguage,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const [isSaving, setIsSaving] = useState(false);
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const questionCreateMutation = useQuestionCreateMutation({surveyId, setIsSaving});
-  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
-
+  const questionCreateMutation = useQuestionCreateMutation({
+    surveyId,
+    setIsSaving,
+  });
+  const questionUpdateMutation = useQuestionUpdateMutation({
+    surveyId,
+    setIsSaving,
+  });
 
   const form = useForm({
     initialValues: {
@@ -84,67 +100,66 @@ export function QuestionDetailedView({
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       setIsSaving(false);
-      return 'error';
-    }else{
-
-          // converting to expected format
-    const { title, description, ...restOfTheData } = form.values;
-    const formattedTitle = { ...question.title, [selectedLanguage]: title };
-    const formattedDescription = {
-      ...question.description,
-      [selectedLanguage]: description,
-    };
-
-    // TODO: only send modified fields
-    const data = {
-      title: formattedTitle,
-      description: formattedDescription,
-      ...restOfTheData,
-    };
-    // Checking if its a new question
-    if (!question.id) {
-      // Creating new question
-      questionCreateMutation.mutateAsync(data).then((r) => {
-        const newQ: Question = r.data;
-        setSelectedQ(newQ);
-      });
+      return "error";
     } else {
-      // Updating existing question
-      questionUpdateMutation.mutate({ qId: question.id, data: data });
-    }
+      // converting to expected format
+      const { title, description, ...restOfTheData } = form.values;
+      const formattedTitle = { ...question.title, [selectedLanguage]: title };
+      const formattedDescription = {
+        ...question.description,
+        [selectedLanguage]: description,
+      };
 
-      let langList : string[] = surveyLanguages;
-      const missingLangs = []
+      // TODO: only send modified fields
+      const data = {
+        title: formattedTitle,
+        description: formattedDescription,
+        ...restOfTheData,
+      };
+      // Checking if its a new question
+      if (!question.id) {
+        // Creating new question
+        questionCreateMutation.mutateAsync(data).then((r) => {
+          const newQ: Question = r.data;
+          setSelectedQ(newQ);
+        });
+      } else {
+        // Updating existing question
+        questionUpdateMutation.mutate({ qId: question.id, data: data });
+      }
 
-      langList.forEach((language : string) => {
+      let langList: string[] = surveyLanguages;
+      const missingLangs = [];
+
+      langList.forEach((language: string) => {
         if (language == selectedLanguage) {
           return;
         }
-        if (!question.title[language] || question.title[language] == '') {
-            missingLangs.push(language);
-          }
-        });
-
-        if(missingLangs.length > 0) {
-          setIsSaving(false);
-          setSelectedLanguage(missingLangs[0])
-          form.setFieldValue(title, '')
-          form.validate()
-          notifications.show({
-            id: 'errorn',
-            color: 'red',
-            title: `"${missingLangs[0]}" Question is missing`,
-            message: `Add question in ${missingLangs[0]} language  also`,
-            icon: <IconX size="1rem" />,
-            //autoClose: 5000,
-           // position: "bottom-center"
-          });
-          return 'error'
+        if (!question.title[language] || question.title[language] == "") {
+          missingLangs.push(language);
         }
-      }  
+      });
 
-    //setIsSaving(false);  
-    return 'saved';
+      if (missingLangs.length > 0) {
+        setIsSaving(false);
+        setSelectedLanguage(missingLangs[0]);
+        form.setFieldValue(title, "");
+        form.validate();
+        notifications.show({
+          id: "errorn",
+          color: "red",
+          title: `"${missingLangs[0]}" Question is missing`,
+          message: `Add question in ${missingLangs[0]} language  also`,
+          icon: <IconX size="1rem" />,
+          //autoClose: 5000,
+          // position: "bottom-center"
+        });
+        return "error";
+      }
+    }
+
+    //setIsSaving(false);
+    return "saved";
   };
 
   // TODO: show question type somewhere
@@ -198,18 +213,64 @@ export function QuestionDetailedView({
         </Stack>
       </ScrollArea>
 
-      <Divider />
+      <Stack style={{ height: "10%", position: "sticky", bottom: "0" }}>
+        <Divider />
 
-      <Stack pt="sm" style={{ height: "20%", position: "sticky", bottom: "0" }}>
-        <Group justify="space-between" gap="sm">
-          <Checkbox
-            label="Required"
-            color="dark"
-            fw={600}
-            {...form.getInputProps("required", { type: "checkbox" })}
-          />
+        <Group mt="sm" justify="space-between" gap="sm">
+          <Group justify="flex-start" gap="md">
+            <Checkbox
+              label="Required"
+              color="var(--tertiary-color)"
+              fw={600}
+              mr="100px"
+              {...form.getInputProps("required", { type: "checkbox" })}
+            />
+            {logicSupportedTypes.includes(question?.type) && (
+              <RateupButtonSecondary
+                title={"Logic Jump"}
+                leftIcon={<IconEdit />}
+                size="sm"
+                variant="outline"
+                color="var(--tertiary-color)"
+                onClick={() => {
+                  let save = handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.LogicEditor);
+                }}
+              />
+            )}
+            {googleReviewSupportedTypes.includes(question?.type) && (
+              <RateupButtonSecondary
+                title={"Google Review"}
+                leftIcon={<IconStar />}
+                size="sm"
+                variant="outline"
+                color="var(--tertiary-color)"
+                onClick={() => {
+                  let save = handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                }}
+              />
+            )}
+            {validationSupportedTypes.includes(question?.type) && (
+              <RateupButtonSecondary
+                title={"Custom Validation"}
+                leftIcon={<IconEdit />}
+                variant="outline"
+                color="var(--tertiary-color)"
+                size="sm"
+                onClick={() => {
+                  let save = handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                }}
+              />
+            )}
+          </Group>
+
           <Group>
-            <RateupButtonSecondary
+            <RateupButtonBlue
               title={"Save"}
               size="md"
               onClick={handleSave}
@@ -223,42 +284,6 @@ export function QuestionDetailedView({
                     onClick={() => setActiveTab(QuestionTabsEnum.TypeSelection)}
                   /> */}
           </Group>
-        </Group>
-
-        <Group justify="flex-start"  gap="md">
-          {logicSupportedTypes.includes(question?.type) && (
-              <RateupButtonOutline
-              title={"Logic Jump"}
-              leftIcon={<IconEdit />}
-              size="sm"
-              onClick={() => {
-                let save = handleSave()
-                save === 'saved' && setActiveTab(QuestionTabsEnum.LogicEditor)}}
-            />
-          )}
-          {googleReviewSupportedTypes.includes(question?.type) && (
-            <RateupButtonOutline
-              title={"Google Review"}
-              leftIcon={<IconStar />}
-              size="sm"
-              onClick={() => {
-                let save = handleSave()
-                save === 'saved' && setActiveTab(QuestionTabsEnum.GoogleReviewEditor)}
-              }
-            />
-          )}
-          {validationSupportedTypes.includes(question?.type) && (
-            <RateupButtonOutline
-              title={"Custom Validation"}
-              leftIcon={<IconEdit />}
-              size="sm"
-              onClick={() => {
-                let save = handleSave()
-                save === 'saved' && setActiveTab(QuestionTabsEnum.ValidationRulesEditor)
-              }  }
-            />
-          )}
-
         </Group>
       </Stack>
     </Stack>
@@ -303,7 +328,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
         handleAddChoice();
       }
     },
-    [handleAddChoice]
+    [handleAddChoice],
   );
 
   return (
@@ -325,9 +350,11 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
           onChange={(e) => setNewChoice(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
         />
-        <RateupButtonPrimary
+        <RateupButtonSecondary
           title={"Add choice"}
           size="sm"
+          variant="outline"
+          color="var(--tertiary-color)"
           leftIcon={<IconPlus size="1rem" />}
           onClick={handleAddChoice}
         />

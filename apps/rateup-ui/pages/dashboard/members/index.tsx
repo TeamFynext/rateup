@@ -26,6 +26,39 @@ import { getSurveyWithCustomToken } from "../../../backend/org/org.api";
 import { GetServerSidePropsContext } from "next";
 import { checkTokenExpiry } from "../../../utils/supertoken";
 
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig());
+
+    let accessToken =
+      context.req.cookies["st-access-token"] ||
+      context.req.cookies["sAccessToken"];
+    if (!accessToken) {
+      return { props: { membersData: [] } };
+    }
+
+    const membersData = await getSurveyWithCustomToken(accessToken);
+
+    const tokenExpiryCheck = checkTokenExpiry([membersData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
+    return {
+      props: {
+        membersData: membersData || null,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      props: {
+        membersData: [],
+      },
+    };
+  }
+}
+
 const Members = ({ membersData: membersInitialData }) => {
   const router = useRouter();
   const { user, setUser } = useUser();
@@ -66,7 +99,7 @@ const Members = ({ membersData: membersInitialData }) => {
         <Stack align="center">
           <Title order={3}>{team?.team_name}</Title>
 
-          <Badge color={theme.colors.blue[9]} variant="outline">
+          <Badge color="var(--tertiary-color)" variant="outline">
             {team?.team_code}{" "}
           </Badge>
         </Stack>
@@ -154,36 +187,3 @@ const Members = ({ membersData: membersInitialData }) => {
 };
 
 export default Members;
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { membersData: [] } };
-    }
-
-    const membersData = await getSurveyWithCustomToken(accessToken);
-
-    const tokenExpiryCheck = checkTokenExpiry([membersData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        membersData: membersData || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        membersData: [],
-      },
-    };
-  }
-}

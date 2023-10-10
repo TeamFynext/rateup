@@ -1,19 +1,44 @@
-
-
 // TODO: use a routing method instead of passing the question as a prop?
 
-import { Stack, ScrollArea, TextInput, Center, Divider, Group, Checkbox, ActionIcon } from "@mantine/core";
+import {
+  Stack,
+  ScrollArea,
+  TextInput,
+  Center,
+  Divider,
+  Group,
+  Checkbox,
+  ActionIcon,
+} from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { useHover } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconX, IconDeviceSdCard, IconEdit, IconStar, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconX,
+  IconDeviceSdCard,
+  IconEdit,
+  IconStar,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect, useCallback } from "react";
-import { useQuestionCreateMutation, useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
+import {
+  useQuestionCreateMutation,
+  useQuestionUpdateMutation,
+} from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType } from "../../../types/enums";
-import { logicSupportedTypes, googleReviewSupportedTypes, validationSupportedTypes } from "../../../utils/data";
-import { RateupButtonSecondary, RateupButtonOutline, RateupButtonPrimary } from "../../Button/RateupButtons";
+import {
+  logicSupportedTypes,
+  googleReviewSupportedTypes,
+  validationSupportedTypes,
+} from "../../../utils/data";
+import {
+  RateupButtonSecondary,
+  RateupButtonOutline,
+  RateupButtonPrimary,
+} from "../../Button/RateupButtons";
 import { QuestionTabsEnum } from "./EditWhatsappSurvey";
 
 // or use react-query?
@@ -21,9 +46,9 @@ interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  surveyLanguages: string[],
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>,
-  setQuestionState: React.Dispatch<React.SetStateAction<Question>>
+  surveyLanguages: string[];
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
+  setQuestionState: React.Dispatch<React.SetStateAction<Question>>;
 }
 export function WaQuestionDetailedView({
   question,
@@ -31,16 +56,21 @@ export function WaQuestionDetailedView({
   setActiveTab,
   surveyLanguages,
   setSelectedLanguage,
-  setQuestionState
+  setQuestionState,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const [isSaving, setIsSaving] = useState(false);
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const questionCreateMutation = useQuestionCreateMutation({ surveyId, setIsSaving });
-  const questionUpdateMutation = useQuestionUpdateMutation({ surveyId, setIsSaving });
-
+  const questionCreateMutation = useQuestionCreateMutation({
+    surveyId,
+    setIsSaving,
+  });
+  const questionUpdateMutation = useQuestionUpdateMutation({
+    surveyId,
+    setIsSaving,
+  });
 
   const form = useForm({
     initialValues: {
@@ -64,15 +94,15 @@ export function WaQuestionDetailedView({
 
   useEffect(() => {
     setQuestionState((prevQ) => {
-      let updatedQ = { ...prevQ }
-      updatedQ.title[selectedLanguage] = form.values.title
-      updatedQ.description[selectedLanguage] = form.values.description
+      let updatedQ = { ...prevQ };
+      updatedQ.title[selectedLanguage] = form.values.title;
+      updatedQ.description[selectedLanguage] = form.values.description;
       if (form.values.choices) {
-        updatedQ.choices = form.values.choices
+        updatedQ.choices = form.values.choices;
       }
       return updatedQ;
-    })
-  }, [form.values.title, form.values.description, form.values.choices])
+    });
+  }, [form.values.title, form.values.description, form.values.choices]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -80,9 +110,8 @@ export function WaQuestionDetailedView({
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       setIsSaving(false);
-      return 'error';
+      return "error";
     } else {
-
       // converting to expected format
       const { title, description, ...restOfTheData } = form.values;
       const formattedTitle = { ...question.title, [selectedLanguage]: title };
@@ -110,37 +139,37 @@ export function WaQuestionDetailedView({
       }
 
       let langList: string[] = surveyLanguages;
-      const missingLangs = []
+      const missingLangs = [];
 
       langList.forEach((language: string) => {
         if (language == selectedLanguage) {
           return;
         }
-        if (!question.title[language] || question.title[language] == '') {
+        if (!question.title[language] || question.title[language] == "") {
           missingLangs.push(language);
         }
       });
 
       if (missingLangs.length > 0) {
         setIsSaving(false);
-        setSelectedLanguage(missingLangs[0])
-        form.setFieldValue(title, '')
-        form.validate()
+        setSelectedLanguage(missingLangs[0]);
+        form.setFieldValue(title, "");
+        form.validate();
         notifications.show({
-          id: 'errorn',
-          color: 'red',
+          id: "errorn",
+          color: "red",
           title: `"${missingLangs[0]}" Question is missing`,
           message: `Add question in ${missingLangs[0]} language  also`,
           icon: <IconX size="1rem" />,
           //autoClose: 5000,
           // position: "bottom-center"
         });
-        return 'error'
+        return "error";
       }
     }
 
-    //setIsSaving(false);  
-    return 'saved';
+    //setIsSaving(false);
+    return "saved";
   };
 
   // TODO: show question type somewhere
@@ -163,7 +192,7 @@ export function WaQuestionDetailedView({
               size="lg"
               placeholder="Enter message header here (optional)"
               {...form.getInputProps("title")}
-            //TODO : add error free autosave solution
+              //TODO : add error free autosave solution
             />
             <ExtraProps form={form} question={question} />
           </Stack>
@@ -198,8 +227,8 @@ export function WaQuestionDetailedView({
               leftIcon={<IconEdit />}
               size="sm"
               onClick={() => {
-                let save = handleSave()
-                save === 'saved' && setActiveTab(QuestionTabsEnum.LogicEditor)
+                let save = handleSave();
+                save === "saved" && setActiveTab(QuestionTabsEnum.LogicEditor);
               }}
             />
           )}
@@ -209,10 +238,10 @@ export function WaQuestionDetailedView({
               leftIcon={<IconStar />}
               size="sm"
               onClick={() => {
-                let save = handleSave()
-                save === 'saved' && setActiveTab(QuestionTabsEnum.GoogleReviewEditor)
-              }
-              }
+                let save = handleSave();
+                save === "saved" &&
+                  setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+              }}
             />
           )}
           {validationSupportedTypes.includes(question?.type) && (
@@ -221,12 +250,12 @@ export function WaQuestionDetailedView({
               leftIcon={<IconEdit />}
               size="sm"
               onClick={() => {
-                let save = handleSave()
-                save === 'saved' && setActiveTab(QuestionTabsEnum.ValidationRulesEditor)
+                let save = handleSave();
+                save === "saved" &&
+                  setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
               }}
             />
           )}
-
         </Group>
       </Stack>
     </Stack>
@@ -245,7 +274,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
 
   const choices = form.values.choices?.[selectedLanguage] || [];
 
-  useEffect(() => { }, [choices]);
+  useEffect(() => {}, [choices]);
 
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
@@ -271,7 +300,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
         handleAddChoice();
       }
     },
-    [handleAddChoice]
+    [handleAddChoice],
   );
 
   return (

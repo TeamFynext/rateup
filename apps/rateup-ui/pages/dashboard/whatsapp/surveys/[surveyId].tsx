@@ -39,6 +39,46 @@ enum TabEnum {
   Result = "Result",
   Settings = "Settings",
 }
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig());
+    const { surveyId } = context.params as { surveyId: string };
+
+    let accessToken = getAccessTokenFromContext(context);
+    if (!accessToken) {
+      return { props: { surveyData: [], questionsData: [] } };
+    }
+
+    const surveyData = await getSurveyWithCustomToken(accessToken, {
+      surveyId,
+    });
+    const questionsData = await getQuestionsWithCustomToken(accessToken, {
+      surveyId,
+    });
+
+    const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
+    return {
+      props: {
+        surveyData: surveyData || null,
+        questionsData: questionsData || null,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      props: {
+        surveyData: [],
+        questionsData: [],
+      },
+    };
+  }
+}
+
 export default ({
   surveyData: surveyInitial,
   questionsData: questionsinitial,
@@ -189,42 +229,3 @@ export default ({
     </MantineProvider>
   );
 };
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-    const { surveyId } = context.params as { surveyId: string };
-
-    let accessToken = getAccessTokenFromContext(context);
-    if (!accessToken) {
-      return { props: { surveyData: [], questionsData: [] } };
-    }
-
-    const surveyData = await getSurveyWithCustomToken(accessToken, {
-      surveyId,
-    });
-    const questionsData = await getQuestionsWithCustomToken(accessToken, {
-      surveyId,
-    });
-
-    const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        surveyData: surveyData || null,
-        questionsData: questionsData || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        surveyData: [],
-        questionsData: [],
-      },
-    };
-  }
-}

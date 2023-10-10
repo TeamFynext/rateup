@@ -397,14 +397,17 @@ export function SurveyCard({
       <Space h="lg" />
 
       <Flex justify={"space-between"} mt="xl" align={"center"}>
-        <Badge mt="md" color={survey?.type == "web" ? "blue" : "green"}>
+        <Badge
+          mt="md"
+          color={survey?.type == "web" ? "var(--tertiary-color)" : "green"}
+        >
           {survey.type}
         </Badge>
         {/* <Text>Total Responses : #</Text> */}
         {/* //TODO */}
         <Link
           href={`/dashboard/surveys/${survey.id}?tab=Responses`}
-          style={{ color: theme.colors.blue[9] }}
+          style={{ color: "var(--tertiary-color)" }}
           onClick={(e) => {
             e.stopPropagation();
           }}

@@ -34,7 +34,10 @@ import {
   IconPencil,
   IconSettings,
 } from "@tabler/icons-react";
-import { RateupButtonPrimary, RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import Link from "next/link";
 import { getTimeSince } from "../../../utils";
 import { useDisclosure } from "@mantine/hooks";
@@ -68,10 +71,14 @@ export default function SurveyLandingList() {
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
 
-  const specificTeamIsSelected = selectedTeamId !== 'all';
+  const specificTeamIsSelected = selectedTeamId !== "all";
 
-  const { isLoading, error, data: surveys } = useSurveys(specificTeamIsSelected);
-  const queryClient = useQueryClient()
+  const {
+    isLoading,
+    error,
+    data: surveys,
+  } = useSurveys(specificTeamIsSelected);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (selectedTeamId !== null) {
@@ -88,9 +95,11 @@ export default function SurveyLandingList() {
 
   let teamsData = teamsDataUser?.data?.data;
 
-
-  const { isLoading: isLoadingSurveys, error: errSurveysByTeams, data: surveysByTeam }
-    = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
+  const {
+    isLoading: isLoadingSurveys,
+    error: errSurveysByTeams,
+    data: surveysByTeam,
+  } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
 
   useEffect(() => {
     //console.log("test.........."+JSON.stringify(teamsData))
@@ -104,7 +113,7 @@ export default function SurveyLandingList() {
       setOptions((prev) => {
         const uniqueValues = new Set(prev.map((option) => option.value));
         const nonDuplicateOptions = newOptions.filter(
-          (option) => !uniqueValues.has(option.value)
+          (option) => !uniqueValues.has(option.value),
         );
         return [...prev, ...nonDuplicateOptions];
       });
@@ -140,7 +149,7 @@ export default function SurveyLandingList() {
           wrap="wrap"
           mb="md"
         >
-          <Title order={1}>Landing survey list  </Title>
+          <Title order={1}>Landing survey list </Title>
 
           <Select
             mt="xs"
@@ -148,7 +157,6 @@ export default function SurveyLandingList() {
             defaultValue={options[0].value}
             value={selectedTeamId}
             onChange={(value) => setSelectedTeamId(value)}
-
           />
         </Flex>
 
@@ -187,31 +195,35 @@ export default function SurveyLandingList() {
 
       <Space h="xl" />
 
-      <SimpleGrid
-        spacing={"lg"}
-        cols={{ base: 4, sm: 1, md: 2, lg: 2 , xl: 3}}
-      >
-       
-        {
-          (specificTeamIsSelected
-            ? (surveysByTeam?.length > 0 ? [...surveysByTeam] : [])
-            : [...surveys]
-          )
-            .slice()
-            .sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
+      <SimpleGrid spacing={"lg"} cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}>
+        {(specificTeamIsSelected
+          ? surveysByTeam?.length > 0
+            ? [...surveysByTeam]
+            : []
+          : [...surveys]
+        )
+          .slice()
+          .sort((a, b) =>
+            sort
+              ? new Date(b.createdAt).getTime() -
                 new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime()
-            )
-            .map((s) => (
-              <SurveyCard key={s.id} survey={s} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
-            ))
-        }
-
+              : new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime(),
+          )
+          .map((s) => (
+            <SurveyCard
+              key={s.id}
+              survey={s}
+              teamsData={teamsData}
+              setSelectedTeamId={setSelectedTeamId}
+            />
+          ))}
       </SimpleGrid>
-      <CreateSurveyModal open={createSurveyOpened} close={close} surveyType={"web"} />
+      <CreateSurveyModal
+        open={createSurveyOpened}
+        close={close}
+        surveyType={"web"}
+      />
     </Container>
   );
 }
@@ -220,7 +232,11 @@ interface SurveyCardProps {
   survey: Survey;
   setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
-export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardProps & { teamsData: any }): JSX.Element {
+export function SurveyCard({
+  survey,
+  teamsData,
+  setSelectedTeamId,
+}: SurveyCardProps & { teamsData: any }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
@@ -229,7 +245,7 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(survey.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -243,26 +259,29 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
       radius="lg"
       style={{ cursor: "pointer" }}
       onClick={() => {
-
-        user?.role === 'MEMBER'
-
+        user?.role === "MEMBER"
           ? router.push(
-            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`
-          )
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
+            )
           : router.push(
-            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`
-          )
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
+            );
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
         <Text mr={"sm"} truncate size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
+        <Badge color={survey?.type == "web" ? "blue" : "green"}>
+          {survey.type}
+        </Badge>
         <Group align={"center"} mt="sm" gap="xs">
-
-          <IconPencil  />
-          <SurveyMenu survey={survey} teamsData={teamsData} setSelectedTeamId={setSelectedTeamId} />
+          <IconPencil />
+          <SurveyMenu
+            survey={survey}
+            teamsData={teamsData}
+            setSelectedTeamId={setSelectedTeamId}
+          />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" gap="xs">
@@ -280,7 +299,7 @@ export function SurveyCard({ survey, teamsData, setSelectedTeamId }: SurveyCardP
         {/* //TODO */}
         <Link
           href={`/dashboard/surveys/${survey.id}?tab=Responses`}
-          style={{ color: theme.colors.blue[9] }}
+          style={{ color: "var(--tertiary-color)" }}
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -300,8 +319,12 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
   const router = useRouter();
 
   const [opened, { close, open }] = useDisclosure(false);
-  const [selectedTeamID, setSelectedTeamID] = useState('')
-  const cloneSurvey = useCloneSurveyMutation({ close, selectedTeamID, setSelectedTeamId });
+  const [selectedTeamID, setSelectedTeamID] = useState("");
+  const cloneSurvey = useCloneSurveyMutation({
+    close,
+    selectedTeamID,
+    setSelectedTeamId,
+  });
 
   const [options, setOptions] = useState([]);
 
@@ -311,9 +334,8 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
       label: team?.teamName,
     }));
 
-    setOptions(newOptions)
-  }, [teamsData])
-
+    setOptions(newOptions);
+  }, [teamsData]);
 
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
@@ -341,21 +363,21 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
 
   return (
     <Menu width={200}>
-
-      <Modal size="sm" centered opened={opened} onClose={close}
-        title={
-          <h2 >
-            Clone Survey
-          </h2>
-        }
+      <Modal
+        size="sm"
+        centered
+        opened={opened}
+        onClose={close}
+        title={<h2>Clone Survey</h2>}
         onClick={(event) => {
           event.stopPropagation();
         }}
       >
-        <Stack >
-          <Text pr="xl" c="dark.2">Select the team in which the copy to be created.</Text>
-          <Group mt="md" style={{ minHeight: "200px" }}
-          >
+        <Stack>
+          <Text pr="xl" c="dark.2">
+            Select the team in which the copy to be created.
+          </Text>
+          <Group mt="md" style={{ minHeight: "200px" }}>
             <Select
               label="Select Team"
               maxDropdownHeight={150}
@@ -371,11 +393,13 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
           </Group>
           <Group mt="xl">
             <RateupButtonSecondary title="Cancel" onClick={close} />
-            <RateupButtonPrimary title="Submit" onClick={() => {
-              cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
-            }} />
+            <RateupButtonPrimary
+              title="Submit"
+              onClick={() => {
+                cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
+              }}
+            />
           </Group>
-
         </Stack>
       </Modal>
 
@@ -413,7 +437,7 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
         <Menu.Item
           leftSection={<IconCopy />}
           onClick={() => {
-            open()
+            open();
           }}
         >
           Clone

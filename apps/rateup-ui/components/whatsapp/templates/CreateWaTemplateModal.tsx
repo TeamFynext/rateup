@@ -1,25 +1,42 @@
-import { Grid, TextInput, Textarea, Container, Stack, Group, Button, Text, Modal } from "@mantine/core";
+import {
+  Grid,
+  TextInput,
+  Textarea,
+  Container,
+  Stack,
+  Group,
+  Button,
+  Text,
+  Modal,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { ResponseMessageContainer, QuickReplyButton } from "../MessageComponents";
-import { useCreateTemplateMutation, useUpdateTemplateMutation } from "../../../backend/whatsapp/whatsapp.query";
+import {
+  ResponseMessageContainer,
+  QuickReplyButton,
+} from "../MessageComponents";
+import {
+  useCreateTemplateMutation,
+  useUpdateTemplateMutation,
+} from "../../../backend/whatsapp/whatsapp.query";
 import { useEffect, useState } from "react";
 import { parseTemplate } from "../../../utils/whatsapp/templates";
 import { WaTemplateStatus } from "../../../types/enums";
 import { showWarnToast } from "../../../utils/notifications";
 
 export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const parsedTemplate = editingItem ? parseTemplate(editingItem) : null;
   const form = useForm({
-    initialValues: parsedTemplate ? parsedTemplate : {
-      name: "",
-      header: "",
-      body: "Would you like to start survey?",
-      footer: "",
-      declineButton: "No",
-      acceptButton: "Yes",
-    },
+    initialValues: parsedTemplate
+      ? parsedTemplate
+      : {
+          name: "",
+          header: "",
+          body: "Would you like to start survey?",
+          footer: "",
+          declineButton: "No",
+          acceptButton: "Yes",
+        },
     validate: {
       name: (value) => {
         if (value.trim().length === 0 || value.trim().length > 512) {
@@ -33,16 +50,18 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
       header: (value) => value.trim().length > 60,
       body: (value) => value.trim().length > 1024 && !(value.trim().length > 0),
       footer: (value) => value.trim().length > 60,
-      declineButton: (value) => value.trim().length > 25 && !(value.trim().length > 0),
-      acceptButton: (value) => value.trim().length < 25 && !(value.trim().length > 0),
-    }
-  })
+      declineButton: (value) =>
+        value.trim().length > 25 && !(value.trim().length > 0),
+      acceptButton: (value) =>
+        value.trim().length < 25 && !(value.trim().length > 0),
+    },
+  });
 
   useEffect(() => {
     if (parsedTemplate) {
-      form.setValues(parsedTemplate)
+      form.setValues(parsedTemplate);
     }
-  }, [editingItem])
+  }, [editingItem]);
 
   const createTemplateMutation = useCreateTemplateMutation(
     () => {
@@ -52,8 +71,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     },
     () => {
       setIsSubmitting(false);
-    }
-  )
+    },
+  );
 
   const updateTemplateMutation = useUpdateTemplateMutation(
     () => {
@@ -63,18 +82,21 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     },
     () => {
       setIsSubmitting(false);
-    }
-  )
+    },
+  );
 
   function handleSubmit(values) {
     setIsSubmitting(true);
     if (editingItem) {
-      if(editingItem.data.status === WaTemplateStatus.PENDING) {
-        showWarnToast("Cannot edit pending template. Please wait for approval")
+      if (editingItem.data.status === WaTemplateStatus.PENDING) {
+        showWarnToast("Cannot edit pending template. Please wait for approval");
         setIsSubmitting(false);
         return;
       }
-      updateTemplateMutation.mutate({ templateId: editingItem.id, templateData: values })
+      updateTemplateMutation.mutate({
+        templateId: editingItem.id,
+        templateData: values,
+      });
     } else {
       createTemplateMutation.mutate(values);
     }
@@ -92,14 +114,12 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
       padding={"sm"}
     >
       <Modal.Header>
-        <Text fz="xl">
-          {editingItem ? 'Edit Template' : 'Create Template'}
-        </Text>
+        <Text fz="xl">{editingItem ? "Edit Template" : "Create Template"}</Text>
       </Modal.Header>
       <form onSubmit={form.onSubmit(handleSubmit)}>
-
         <Grid align="stretch">
-          <Grid.Col span={6}
+          <Grid.Col
+            span={6}
             // style={{
             //   '& .mantine-Input-rightSection': {
             //     minWidth: "70px"
@@ -123,7 +143,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               label="Header"
               placeholder="Header"
               {...form.getInputProps("header")}
-
               rightSection={
                 <LengthTracker form={form} fieldName="header" maxValue={60} />
               }
@@ -133,7 +152,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               placeholder="Body"
               withAsterisk
               {...form.getInputProps("body")}
-
               rightSection={
                 <LengthTracker form={form} fieldName="body" maxValue={1024} />
               }
@@ -142,7 +160,6 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               label="Footer"
               placeholder="Footer"
               {...form.getInputProps("footer")}
-
               rightSection={
                 <LengthTracker form={form} fieldName="footer" maxValue={60} />
               }
@@ -150,17 +167,25 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
             <TextInput
               label="Decline Button (Does nothing)"
               withAsterisk
-              {...form.getInputProps('declineButton')}
+              {...form.getInputProps("declineButton")}
               rightSection={
-                <LengthTracker form={form} fieldName={`declineButton`} maxValue={25} />
+                <LengthTracker
+                  form={form}
+                  fieldName={`declineButton`}
+                  maxValue={25}
+                />
               }
             />
             <TextInput
               label="Accept Button (Starts survey on clicking)"
               withAsterisk
-              {...form.getInputProps('acceptButton')}
+              {...form.getInputProps("acceptButton")}
               rightSection={
-                <LengthTracker form={form} fieldName={`acceptButton`} maxValue={25} />
+                <LengthTracker
+                  form={form}
+                  fieldName={`acceptButton`}
+                  maxValue={25}
+                />
               }
             />
           </Grid.Col>
@@ -170,11 +195,9 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
             style={{
               flexDirection: "column",
               alignItems: "center",
-
-            }}>
-            <Text
-              fz="lg"
-            >Preview</Text>
+            }}
+          >
+            <Text fz="lg">Preview</Text>
             <Container
               style={{
                 backgroundColor: "#efeae2",
@@ -183,78 +206,58 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               }}
               p="xl"
             >
-              <Stack
-                w="300px"
-                gap={3}
-              >
+              <Stack w="300px" gap={3}>
                 <ResponseMessageContainer
                   style={{
                     width: "100%",
                   }}
                 >
-                  <Text fw="bold"
+                  <Text
+                    fw="bold"
                     style={{
-                      color: "#444"
-                    }}>
+                      color: "#444",
+                    }}
+                  >
                     {form.values.header}
                   </Text>
-                  <Text
-                    fz={"0.95rem"}
-                  >
-                    {form.values.body}
-                  </Text>
+                  <Text fz={"0.95rem"}>{form.values.body}</Text>
                   <Text c="dimmed" fz={"0.9rem"}>
                     {form.values.footer}
                   </Text>
                 </ResponseMessageContainer>
-                <QuickReplyButton
-                  text={form.values.declineButton}
-                />
-                <QuickReplyButton
-                  text={form.values.acceptButton}
-                />
+                <QuickReplyButton text={form.values.declineButton} />
+                <QuickReplyButton text={form.values.acceptButton} />
               </Stack>
-
-            </Container >
+            </Container>
           </Grid.Col>
         </Grid>
         <Group justify="flex-end" mt="sm">
-          <Button
-            variant="subtle"
-            onClick={handleClose}
-          >
+          <Button variant="subtle" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            loading={isSubmitting}
-          >
-            {editingItem ? 'Save' : 'Create'}
+          <Button type="submit" loading={isSubmitting}>
+            {editingItem ? "Save" : "Create"}
           </Button>
-
         </Group>
       </form>
     </Modal>
-
-  )
+  );
 }
 
 function LengthTracker({ form, fieldName, maxValue }) {
   const length = form.getInputProps(fieldName).value.trim().length;
   return (
-    <Group  justify="flex-end">
-    <Text c="dimmed" fz={".8rem"} pr="sm">
-      <span
-        style={{
-          color: length > maxValue ? "red" : "inherit"
-        }}
-      >
-        {length}
-      </span>
-      <span>
-        {` / ${maxValue}`}
-      </span>
-    </Text>
+    <Group justify="flex-end">
+      <Text c="dimmed" fz={".8rem"} pr="sm">
+        <span
+          style={{
+            color: length > maxValue ? "red" : "inherit",
+          }}
+        >
+          {length}
+        </span>
+        <span>{` / ${maxValue}`}</span>
+      </Text>
     </Group>
-  )
+  );
 }

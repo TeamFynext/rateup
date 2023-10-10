@@ -1,5 +1,5 @@
 import { useMantineTheme, Group, Text } from "@mantine/core";
-import classes from './style.module.css'
+import classes from "./style.module.css";
 import { IconChevronRight } from "@tabler/icons-react";
 
 export function MainWindowHeader({ title, onClick }) {
@@ -14,5 +14,5 @@ export function MainWindowHeader({ title, onClick }) {
       <Text>{title}</Text>
       <IconChevronRight />
     </Group>
-  )
+  );
 }

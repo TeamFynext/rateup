@@ -63,21 +63,28 @@ export default function PromotionRootPanel({ activeTab, setActiveTab }) {
 }
 
 function RightPanel({ activeTab, selected, items, openImport }) {
-  const selectedItem = items?.find(({ id }) => id === selected)
+  const selectedItem = items?.find(({ id }) => id === selected);
   return (
     <RightPanelRoot>
       <Tabs.Panel
         value={PromotionTab.Groups}
-        style={{ flexGrow: 1, height: "100%", display: "flex", flexDirection: "column" }}
+        style={{
+          flexGrow: 1,
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        <GroupMainWindow
-          openCreateGroup={openImport}
-          rgroup={selectedItem}
-        />
+        <GroupMainWindow openCreateGroup={openImport} rgroup={selectedItem} />
       </Tabs.Panel>
       <Tabs.Panel
         value={PromotionTab.Individuals}
-        style={{ flexGrow: 1, height: "100%", display: "flex", flexDirection: "column" }}
+        style={{
+          flexGrow: 1,
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         <IndividualMainWindow
           openImport={openImport}

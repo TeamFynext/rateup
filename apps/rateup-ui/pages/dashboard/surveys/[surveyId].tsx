@@ -1,9 +1,7 @@
 import {
-  Box,
   Group,
   Loader,
   Select,
-  Stack,
   Tabs,
   Title,
   Space,
@@ -41,6 +39,48 @@ enum TabEnum {
   Settings = "Settings",
   Theme = "Theme",
 }
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig());
+    const { surveyId } = context.params as { surveyId: string };
+
+    let accessToken =
+      context.req.cookies["st-access-token"] ||
+      context.req.cookies["sAccessToken"];
+    if (!accessToken) {
+      return { props: { surveyData: [], questionsData: [] } };
+    }
+
+    const surveyData = await getSurveyWithCustomToken(accessToken, {
+      surveyId,
+    });
+    const questionsData = await getQuestionsWithCustomToken(accessToken, {
+      surveyId,
+    });
+
+    const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
+    return {
+      props: {
+        surveyData: surveyData || null,
+        questionsData: questionsData || null,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      props: {
+        surveyData: [],
+        questionsData: [],
+      },
+    };
+  }
+}
+
 export default ({
   surveyData: surveyInitial,
   questionsData: questionsinitial,
@@ -145,6 +185,7 @@ export default ({
                 {survey.type}
               </Badge>
               <Select
+                style={{ maxWidth: "150px" }}
                 data={survey.languages}
                 value={selectedLanguage}
                 onChange={setSelectedLanguage}
@@ -191,49 +232,7 @@ export default ({
         <Tabs.Panel value={TabEnum.Theme}>
           <SurveyTheme survey={survey} />
         </Tabs.Panel>
-        {/* TODO  fix mantine issue and Enable - TODO VERIFY MANTINE*/}
       </StyledTabs>
     </SelectedLanguageContext.Provider>
   );
 };
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-    const { surveyId } = context.params as { surveyId: string };
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { surveyData: [], questionsData: [] } };
-    }
-
-    const surveyData = await getSurveyWithCustomToken(accessToken, {
-      surveyId,
-    });
-    const questionsData = await getQuestionsWithCustomToken(accessToken, {
-      surveyId,
-    });
-
-    const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        surveyData: surveyData || null,
-        questionsData: questionsData || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        surveyData: [],
-        questionsData: [],
-      },
-    };
-  }
-}

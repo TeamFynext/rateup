@@ -1,13 +1,22 @@
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
-
 import { useContext, useEffect, useState } from "react";
 import {
   useQuestionUpdateMutation,
   useQuestions,
 } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
-import { Center, Group, Select, Stack, Table, Button, Text, MultiSelect, useMantineTheme, ActionIcon } from "@mantine/core";
+import {
+  Center,
+  Group,
+  Select,
+  Stack,
+  Button,
+  Text,
+  MultiSelect,
+  useMantineTheme,
+  ActionIcon,
+} from "@mantine/core";
 import {
   LDResponse,
   LogicAction,
@@ -20,7 +29,10 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionTabsEnum } from "../EditSurvey";
 import { SmileyResponse } from "../../../types/enums";
 import { logicSupportedTypes } from "../../../utils/data";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useListState } from "@mantine/hooks";
 
@@ -28,23 +40,23 @@ interface LogicEditorProps {
   selectedQ: Question;
   setActiveTab: (tab: QuestionTabsEnum) => void;
 }
-const LogicEditor = ({
-  selectedQ,
-  setActiveTab,
-}: LogicEditorProps) => {
+const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: questions } = useQuestions(surveyId);
-  const questionUpdateMutation = useQuestionUpdateMutation({surveyId, setIsSaving});
+  const questionUpdateMutation = useQuestionUpdateMutation({
+    surveyId,
+    setIsSaving,
+  });
   const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
 
   useEffect(() => {
     if (selectedQ && selectedQ.logic) {
-      handlers.setState(selectedQ.logic)
+      handlers.setState(selectedQ.logic);
     } else {
-      handlers.setState([])
+      handlers.setState([]);
     }
-  }, [selectedQ])
+  }, [selectedQ]);
 
   if (!selectedQ || isLoading || isError) return <></>;
 
@@ -52,9 +64,9 @@ const LogicEditor = ({
     handlers.append({
       condition: LogicCondition.Submitted,
       action: LogicAction.NextQ,
-      response: null
-    })
-  }
+      response: null,
+    });
+  };
 
   const handleSave = () => {
     setIsSaving(true);
@@ -78,39 +90,38 @@ const LogicEditor = ({
             size="sm"
             onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
           />
-
         </Stack>
       </Center>
     );
   }
 
   const stickyHeaderStyles: React.CSSProperties = {
-    position: 'sticky',
+    position: "sticky",
     top: 0,
     zIndex: 100,
-    backgroundColor: 'white',
-    marginBottom: '50px'
+    backgroundColor: "white",
+    marginBottom: "50px",
   };
   return (
-
-    <Stack justify="space-between" style={{ height: '100%' }}>
+    <Stack justify="space-between" style={{ height: "100%" }}>
       <Stack gap={"xs"} style={{ overflowY: "auto", height: "100%" }}>
-        {
-          currentLogicJumps.map((currentLogic, index) => (
-            <ConditionBlock
-              key={index}
-              selectedQ={selectedQ}
-              questions={questions}
-              currentLogicJump={currentLogic}
-              setCurrentLogicJump={(newLogicJump) => handlers.setItem(index, newLogicJump)}
-              handleDelete={() => handlers.remove(index)}
-            />
-          ))
-        }
+        {currentLogicJumps.map((currentLogic, index) => (
+          <ConditionBlock
+            key={index}
+            selectedQ={selectedQ}
+            questions={questions}
+            currentLogicJump={currentLogic}
+            setCurrentLogicJump={(newLogicJump) =>
+              handlers.setItem(index, newLogicJump)
+            }
+            handleDelete={() => handlers.remove(index)}
+          />
+        ))}
         <Button
           variant="outline"
           leftSection={<IconPlus />}
           maw={200}
+          color="var(--tertiary-color)"
           onClick={handleAddNewJump}
         >
           Add Logic Jump
@@ -121,9 +132,11 @@ const LogicEditor = ({
         <RateupButtonSecondary
           title={"Cancel"}
           size="md"
+          variant="outline"
+          color="var(--tertiary-color)"
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
-        <RateupButtonSecondary
+        <RateupButtonBlue
           title={"Save"}
           size="md"
           onClick={handleSave}
@@ -133,7 +146,6 @@ const LogicEditor = ({
     </Stack>
   );
 };
-
 
 function getResponses(question: Question, selectedLanguage): Array<any> {
   switch (question.type) {
@@ -160,23 +172,43 @@ function getResponses(question: Question, selectedLanguage): Array<any> {
 function getConditions(qType: QuestionType): Array<any> {
   switch (qType) {
     case Q.LD:
-      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
     case Q.MCQ:
     case Q.DDSS:
       return [
         LogicCondition.Equals,
         LogicCondition.NotEquals,
         LogicCondition.IncludesNoneOf,
-        LogicCondition.Submitted
+        LogicCondition.Submitted,
       ];
     case Q.YN:
-      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
     case Q.Opinion:
-      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
     case Q.Rating:
-      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
     case Q.Smiley:
-      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
     case Q.MSQ:
     case Q.DDMS:
       return [
@@ -185,8 +217,8 @@ function getConditions(qType: QuestionType): Array<any> {
         LogicCondition.IncludesNoneOf,
         LogicCondition.IncludesAnyOf,
         LogicCondition.IncludesAllOf,
-        LogicCondition.Submitted
-      ]
+        LogicCondition.Submitted,
+      ];
     default:
       throw new Error("Logic not implemented for this question type");
   }
@@ -200,11 +232,17 @@ interface ConditionBlockProps {
   setCurrentLogicJump: (newLogicJump: LogicJump) => void;
   handleDelete: () => void;
 }
-function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogicJump, handleDelete }: ConditionBlockProps) {
+function ConditionBlock({
+  selectedQ,
+  questions,
+  currentLogicJump,
+  setCurrentLogicJump,
+  handleDelete,
+}: ConditionBlockProps) {
   // Renders a single logic condition block of the form below
   // If answer {CONDITION SELECTOR} {DATA SELECTTOR} then {ACTION SELECTOR}
 
-  const { colors } = useMantineTheme()
+  const { colors } = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   const currentIndex = questions.findIndex((q) => q.id === selectedQ.id);
@@ -214,12 +252,14 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
     { label: "Next Question", value: LogicAction.NextQ },
     { label: "End Survey", value: LogicAction.EndSurvey },
     ...possibleQuestions.map((q) => ({
-      label: 'JUMP TO => ' + q.title[selectedLanguage],
+      label: "JUMP TO => " + q.title[selectedLanguage],
       value: q.id,
     })),
   ];
 
-  const [selectedCondition, setSelectedCondition] = useState(currentLogicJump.condition);
+  const [selectedCondition, setSelectedCondition] = useState(
+    currentLogicJump.condition,
+  );
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
 
@@ -227,14 +267,20 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
     setCurrentLogicJump({
       condition: selectedCondition,
       action: selectedAction,
-      response: matchData
-    })
-  }, [selectedCondition, selectedAction, matchData])
+      response: matchData,
+    });
+  }, [selectedCondition, selectedAction, matchData]);
   return (
-    <Group gap="xs" style={{ backgroundColor: colors.blue[0], borderRadius: "12px", position: "relative" }} p={"xs"} >
-      <Text>
-        If answer
-      </Text>
+    <Group
+      gap="xs"
+      style={{
+        backgroundColor: colors.blue[0],
+        borderRadius: "12px",
+        position: "relative",
+      }}
+      p={"xs"}
+    >
+      <Text>If answer</Text>
       {/* Condition Selector */}
       <Select
         data={getConditions(selectedQ.type)}
@@ -245,34 +291,33 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
       />
 
       {/* Match Data */}
-      {
-        selectedCondition === LogicCondition.Submitted ? (<></>) : (
-          [LogicCondition.IncludesAllOf, LogicCondition.IncludesAnyOf, LogicCondition.IncludesNoneOf].includes(selectedCondition)
-          ||
-          ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS)  && selectedCondition === LogicCondition.Equals)
-           ? (
-            // Array Selector
-            <MultiSelect
-              label={"Match Data"}
-              data={getResponses(selectedQ, selectedLanguage)}
-              value={Array.isArray(matchData) ? matchData : []}
-              onChange={setMatchData}
-              placeholder="Select Responses"
-              searchable
-            />
-          ) : (
-            <Select
-              label="Match Data"
-              value={Array.isArray(matchData) ? "" : matchData}
-              data={getResponses(selectedQ, selectedLanguage)}
-              onChange={setMatchData}
-            />
-          )
-        )
-      }
-      <Text>
-        then
-      </Text>
+      {selectedCondition === LogicCondition.Submitted ? (
+        <></>
+      ) : [
+          LogicCondition.IncludesAllOf,
+          LogicCondition.IncludesAnyOf,
+          LogicCondition.IncludesNoneOf,
+        ].includes(selectedCondition) ||
+        ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
+          selectedCondition === LogicCondition.Equals) ? (
+        // Array Selector
+        <MultiSelect
+          label={"Match Data"}
+          data={getResponses(selectedQ, selectedLanguage)}
+          value={Array.isArray(matchData) ? matchData : []}
+          onChange={setMatchData}
+          placeholder="Select Responses"
+          searchable
+        />
+      ) : (
+        <Select
+          label="Match Data"
+          value={Array.isArray(matchData) ? "" : matchData}
+          data={getResponses(selectedQ, selectedLanguage)}
+          onChange={setMatchData}
+        />
+      )}
+      <Text>then</Text>
 
       {/* Action Selector */}
       <Select
@@ -284,8 +329,10 @@ function ConditionBlock({ selectedQ, questions, currentLogicJump, setCurrentLogi
       <ActionIcon
         style={{ position: "absolute", right: "12px" }}
         onClick={handleDelete}
+        variant="outline"
+        color="red"
       >
-        <IconTrash color={colors.red[5]} />
+        <IconTrash />
       </ActionIcon>
     </Group>
   );

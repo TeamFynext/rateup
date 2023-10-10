@@ -156,7 +156,11 @@ export default ({ categories: initialCategories }) => {
 
 function ShareMenu({ teamId, menuId }) {
   const [selectedSurveyId, setSelectedSurveyId] = useState("");
-  const { data: surveys, isLoading, isError } = useSurveysByTeam(teamId, !!teamId);
+  const {
+    data: surveys,
+    isLoading,
+    isError,
+  } = useSurveysByTeam(teamId, !!teamId);
 
   if (isLoading || isError || !surveys) {
     return null;

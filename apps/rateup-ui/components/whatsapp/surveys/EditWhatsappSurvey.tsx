@@ -1,4 +1,13 @@
-import { Flex, Paper, Tabs, Center, Text, Title, Stack, useMantineTheme } from "@mantine/core";
+import {
+  Flex,
+  Paper,
+  Tabs,
+  Center,
+  Text,
+  Title,
+  Stack,
+  useMantineTheme,
+} from "@mantine/core";
 import { useState, useEffect } from "react";
 import GoogleReviewEditor from "../../Survey/Question/GoogleReviewEditor";
 import LogicEditor from "../../Survey/Question/LogicEditor";
@@ -6,13 +15,12 @@ import { QuestionTypeSelection } from "../../Survey/Question/QuestionTypeSelecti
 import ValidationRulesEditor from "../../Survey/Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "../../Survey/QuestionsSideBar";
 import classes from "./EditWhatsappSurvey.module.css";
-import whatsappStyles from '../../Promotion/RightPanel/style.module.css'
+import whatsappStyles from "../../Promotion/RightPanel/style.module.css";
 import { SendMessageMock } from "../MessageComponents";
 import { useDisclosure } from "@mantine/hooks";
 import { WaQuestionPreview } from "./WaQuestionPreview";
 import { WaQuestionDetailedView } from "./WaQuestionDetailedView";
 import { QuestionType as Q } from "../../../types/enums";
-
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -38,7 +46,8 @@ export function EditWhatsappSurvey({
     QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
-  const [previewOpened, { open: openPreview, close: closePreview }] = useDisclosure(false)
+  const [previewOpened, { open: openPreview, close: closePreview }] =
+    useDisclosure(false);
 
   useEffect(() => {
     if (!selectedQ) return;
@@ -51,9 +60,7 @@ export function EditWhatsappSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={5}
-      className={classes.root}
-    >
+    <Flex w={"100%"} h={"100%"} p={2} gap={5} className={classes.root}>
       <Paper p={"md"} style={{ flex: 2 }} shadow="lg" radius="lg">
         <QuestionsSideBar
           questions={questions}
@@ -63,12 +70,7 @@ export function EditWhatsappSurvey({
           addQnTrigger={addQnTrigger}
         />
       </Paper>
-      <Paper
-        p={"md"}
-        style={{ flex: 3 }}
-        shadow="lg"
-        radius="lg"
-      >
+      <Paper p={"md"} style={{ flex: 3 }} shadow="lg" radius="lg">
         <Tabs
           px={"md"}
           pb="md"
@@ -126,17 +128,15 @@ export function EditWhatsappSurvey({
       <Paper
         style={{
           flex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}
-        shadow="lg" radius="lg"
+        shadow="lg"
+        radius="lg"
       >
         <WhatsappChatPreviewFrame>
-          {selectedQ && (
-            <WaQuestionPreview question={selectedQ} />
-          )
-          }
+          {selectedQ && <WaQuestionPreview question={selectedQ} />}
         </WhatsappChatPreviewFrame>
       </Paper>
     </Flex>
@@ -150,26 +150,21 @@ const WhatsappChatPreviewFrame = ({ children }) => {
       <Title
         p="sm"
         style={{
-          backgroundColor: theme.colors['whatsapp-green'][9],
-          textAlign: 'center',
+          backgroundColor: theme.colors["whatsapp-green"][9],
+          textAlign: "center",
         }}
         order={3}
         c={"white"}
       >
         Preview
       </Title>
-      <Stack
-        className={whatsappStyles.chatBg}
-        px="xs"
-        py="sm"
-        justify="end"
-      >
+      <Stack className={whatsappStyles.chatBg} px="xs" py="sm" justify="end">
         {children}
       </Stack>
       <SendMessageMock />
     </>
-  )
-}
+  );
+};
 const WA_QUESTION_TYPES = [
   Q.Text,
   Q.Email,
@@ -179,4 +174,4 @@ const WA_QUESTION_TYPES = [
   Q.Number,
   Q.Phone,
   Q.DateTime,
-]
+];

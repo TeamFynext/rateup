@@ -20,8 +20,8 @@ export enum QuestionType {
   DateTime = "DateTime",
 
   // WhatsApp exclusive
-  WaList= 'Wa_List', // Interactive > List
-  WaButtons = 'Wa_Buttons', // Interactive > Quick Reply Buttons
+  WaList = "Wa_List", // Interactive > List
+  WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
 }
 
 export enum LDResponse {

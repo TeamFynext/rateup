@@ -1,4 +1,11 @@
-import { Flex, Loader, MantineProvider, Select, Tabs, Text } from "@mantine/core";
+import {
+  Flex,
+  Loader,
+  MantineProvider,
+  Select,
+  Tabs,
+  Text,
+} from "@mantine/core";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { useEffect, useState } from "react";
 import SelectedTeamContext from "../../../../context/SelectedTeam";
@@ -11,10 +18,7 @@ export default function Promotion() {
   const [activeTab, setActiveTab] = useState(PromotionTab.Groups);
 
   return (
-
-    <MantineProvider
-      theme={whatsappTheme}
-    >
+    <MantineProvider theme={whatsappTheme}>
       <Flex
         justify={"end"}
         direction={"column"}

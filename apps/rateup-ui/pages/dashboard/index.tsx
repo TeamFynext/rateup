@@ -50,6 +50,40 @@ import { checkTokenExpiry } from "../../utils/supertoken";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
 
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  try {
+    supertokensNode.init(backendConfig());
+
+    let accessToken =
+      context.req.cookies["st-access-token"] ||
+      context.req.cookies["sAccessToken"];
+    if (!accessToken) {
+      return { props: { summaryData: {} } };
+    }
+
+    const summaryData =
+      await getActiveSurveysSummaryWithCustomToken(accessToken);
+
+    const tokenExpiryCheck = checkTokenExpiry([summaryData]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
+    return {
+      props: {
+        summaryData: summaryData || {},
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      props: {
+        summaryData: {},
+      },
+    };
+  }
+}
+
 export default function DashboardHome({ summaryData: initialSummaryData }) {
   const router = useRouter();
   const { user } = useUser();
@@ -623,38 +657,4 @@ function CardActionButton({ children, ...props }) {
       {children}
     </Paper>
   );
-}
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { summaryData: {} } };
-    }
-
-    const summaryData =
-      await getActiveSurveysSummaryWithCustomToken(accessToken);
-
-    const tokenExpiryCheck = checkTokenExpiry([summaryData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        summaryData: summaryData || {},
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        summaryData: {},
-      },
-    };
-  }
 }
