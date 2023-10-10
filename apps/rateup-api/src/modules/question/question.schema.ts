@@ -34,6 +34,17 @@ const questionCore = {
   required: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
   choices: z.record(z.string(), z.array(z.string())).optional(),
+  sections: z.record(z.string(), z.array(
+    z.object({
+      title: z.string(),
+      rows: z.array(
+        z.object({
+          title: z.string(),
+          description: z.string().optional(),
+        })
+      )
+    })
+  )).optional(),
   googleReview: z.union([z.null(), z.object({
     minRating: z.number().optional(),
     minOpinion: z.number().optional(),
@@ -69,7 +80,6 @@ const questionRouteParamsSchema = z.object({
   id: z.string(),
 });
 
-// making everything optional
 const updateQuestionRequestSchema = z.object({
   ...questionCore,
   title: z.record(z.string(), z.string()).optional(),

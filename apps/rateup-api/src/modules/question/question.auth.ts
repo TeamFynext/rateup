@@ -3,6 +3,7 @@ import { hasAccessToSurvey } from "../../utils/auth";
 import { QuestionsRouteParams } from "./question.schema";
 import Session from "supertokens-node/recipe/session";
 
+// TODO: fix this
 export async function verifySurveyAccess(
   request: FastifyRequest<{
     Params: QuestionsRouteParams;
