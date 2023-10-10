@@ -12,7 +12,6 @@ import {
   ActionIcon,
   useMantineTheme,
   Group,
-  Loader,
   Space,
   Modal,
 } from "@mantine/core";
@@ -52,7 +51,7 @@ import {
 } from "../../../../backend/surveys/surveys.query";
 import { useUser } from "../../../../context/UserContext";
 import { TeamSelector } from "../promotion";
-
+import classes from "./styles.module.css";
 // TODO: implement ssr
 export default function WhatsappSurveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -70,8 +69,10 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
   const {
     isLoading: isLoading,
     error: error,
-    data: surveys,
+    data: allSurveys,
   } = useSurveysByTeam(selectedTeamId, !!selectedTeamId);
+  // TODO: create whatsapp surveys query
+  const surveys = allSurveys?.filter((s) => s.type === "whatsapp");
 
   if (error) {
     console.error(surveys, error);
@@ -119,12 +120,6 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
                 rightIcon={<IconChevronDown size="1rem" />}
               />
             </Menu.Target>
-            {/* 
-              <Menu.Dropdown >
-                <Menu.Item color="teal" icon={<IconCheck size={14} />}>Active</Menu.Item>
-                <Menu.Item color="red" icon={<IconX size={14} />}>Inactive</Menu.Item>
-              </Menu.Dropdown>
-               */}
           </Menu>
 
           <RateupButtonPrimary

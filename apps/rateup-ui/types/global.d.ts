@@ -32,11 +32,16 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<string>>;
+    sections?: Zod.RecordType<string, WaSectionsType>;
     id: string;
     googleReview?: GoogleReview;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
   };
+  type WaSectionsType = Array<{
+    title?: string;
+    rows: Array<{ title: string; description: string }>;
+  }>;
 
   type Survey = {
     id: string;

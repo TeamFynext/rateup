@@ -84,7 +84,6 @@ export const RateupButtonBlue = ({
       rightSection={rightIcon}
       onClick={onClick}
       variant="filled"
-      color="#1C518E"
       size={size}
       style={sx}
       loading={loading}

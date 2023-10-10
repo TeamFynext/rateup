@@ -4,16 +4,16 @@ export const whatsappTheme = createTheme({
   primaryColor: "whatsapp-green",
   colors: {
     "whatsapp-green": [
-      "#edfdfb",
-      "#dcf8f4",
-      "#b3f2ea",
-      "#88ebdf",
-      "#68e6d5",
-      "#57e3d0",
-      "#4ce1cd",
-      "#3ec7b5",
-      "#30b2a1",
-      "#149a8a",
+      "#96d2cb",
+      "#7cc6be",
+      "#62bbb1",
+      "#48b0a4",
+      "#2ea597",
+      "#149a8a", // Primary color (6 is the default shade in mantine)
+      "#11887a",
+      "#0f776b",
+      "#0d665c",
+      "#0b554c",
     ],
   },
 });

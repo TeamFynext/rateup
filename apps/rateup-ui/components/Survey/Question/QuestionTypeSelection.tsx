@@ -18,6 +18,8 @@ import {
   IconSortAscendingNumbers,
   IconSelect,
   IconSelector,
+  IconList,
+  IconCircuitPushbutton,
 } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
 import { useContext } from "react";
@@ -67,7 +69,7 @@ export function QuestionTypeSelection({
 // TODO: add proper icons
 const questionIcons = {
   [QuestionType.Text]: IconLetterCase,
-  [QuestionType.TextArea]: IconAlignBoxLeftTop, //TODO update icon
+  [QuestionType.TextArea]: IconAlignBoxLeftTop,
   [QuestionType.Number]: Icon123,
   [QuestionType.Email]: IconMail,
   [QuestionType.Phone]: IconPhone,
@@ -83,4 +85,6 @@ const questionIcons = {
   [QuestionType.Testimonial]: IconUser,
   [QuestionType.DDSS]: IconSelect,
   [QuestionType.DDMS]: IconSelector,
+  [QuestionType.WaList]: IconList,
+  [QuestionType.WaButtons]: IconCircuitPushbutton,
 };

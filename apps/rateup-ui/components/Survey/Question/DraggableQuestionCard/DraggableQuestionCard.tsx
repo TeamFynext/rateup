@@ -42,15 +42,11 @@ export function DraggableQuestionCard({
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const queryClient = useQueryClient();
-  const theme = useMantineTheme();
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const questionDeleteMutation = useQuestionDeleteMutation(surveyId, (qId) => {
-    if (qId === question.id) {
-      onDelete(qId);
-    }
+    onDelete(qId);
   });
 
   const handleDelete = (e, qId) => {
@@ -111,7 +107,6 @@ export function DraggableQuestionCard({
               </div>
               <Badge
                 style={{ minWidth: "30px" }}
-                bg={"var(--tertiary-color)"}
                 c={"white"}
                 variant={selected ? "filled" : "filled"}
               >

@@ -23,10 +23,12 @@ import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "../styles/global.css";
 import { GilroyRegular } from "../public/fonts";
+import { theme } from "../config/mantineTheme";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
 
+// TODO: docs warns to not create this at file root level
 const queryClient = new QueryClient();
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
@@ -98,7 +100,7 @@ export default function App({
       {/* <SuperTokensWrapper> */}
       {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
       <main className={GilroyRegular.className}>
-        <MantineProvider theme={{ fontFamily: GilroyRegular.style.fontFamily }}>
+        <MantineProvider theme={theme}>
           <Notifications />
           <QueryClientProvider client={queryClient}>
             <Hydrate state={pageProps.dehydratedState}>

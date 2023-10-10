@@ -1,39 +1,42 @@
-import {
-  ActionIcon,
-  Box,
-  Container,
-  Group,
-  MantineStyleProp,
-  Stack,
-  Text,
-  TextInput,
-  useMantineTheme,
-} from "@mantine/core";
-import classes from "./Message.module.css";
-import { IconMoodHappy, IconSend } from "@tabler/icons-react";
-
-interface ResponseMessageContainerProps {
+import { ActionIcon, Box, Center, Container, Group, MantineStyleProp, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
+import classes from './Message.module.css'
+import { IconList, IconMoodHappy, IconSend } from "@tabler/icons-react";
+export interface ResponseMessageContainerProps {
   children: React.ReactNode;
   style?: MantineStyleProp;
+  backgroundColor?: string;
 }
-export function ResponseMessageContainer({
-  children,
-  style,
-}: ResponseMessageContainerProps) {
+export function ResponseMessageContainer({ children, style, backgroundColor = "#fff" }: ResponseMessageContainerProps) {
   return (
-    <Container px="10px" py="6px" className={classes.container1} style={style}>
+    <Container
+      px="10px"
+      py="6px"
+      className={`${classes.common} ${classes.response}`}
+      style={{
+        '--color': backgroundColor,
+        ...style
+      }}
+    >
       {children}
     </Container>
   );
 }
 
-interface SentMessageContainer {
+export interface SentMessageContainerProps {
   children: React.ReactNode;
   style?: MantineStyleProp;
+  backgroundColor?: string;
 }
-export function SentMessageContainer({ children, style = {} }) {
+export function SentMessageContainer({ children, style, backgroundColor }: SentMessageContainerProps) {
   return (
-    <Container px="10px" py="6px" className={classes.container} style={style}>
+    <Container
+      p="4px"
+      className={`${classes.common} ${classes.sent}`}
+      style={{
+        '--color': backgroundColor,
+        ...style
+      }}
+    >
       {children}
     </Container>
   );
@@ -50,6 +53,7 @@ export function QuickReplyButton({ text, style = {} }: QuickReplyButtonProps) {
       style={{
         backgroundColor: "white",
         borderRadius: "8px",
+        cursor: "pointer",
         ...style,
       }}
       p="6px"
@@ -58,6 +62,40 @@ export function QuickReplyButton({ text, style = {} }: QuickReplyButtonProps) {
         {text}
       </Text>
     </Box>
+  );
+}
+
+interface WaListButonProps {
+  text?: string;
+  style?: MantineStyleProp;
+  onClick?: any;
+}
+export function WaListButton({
+  text = "View Options",
+  style = {},
+  ...props
+}: WaListButonProps) {
+  const theme = useMantineTheme();
+  return (
+    <Group
+      gap={"xs"}
+      justify="center"
+      style={{
+        backgroundColor: "white",
+        borderRadius: "8px",
+        cursor: "pointer",
+        ...style,
+      }}
+      p="6px"
+      pr="24px"
+      {...props}
+    >
+      <ActionIcon variant="transparent" c={theme.colors.blue[5]}>
+        <IconList />
+      </ActionIcon>
+
+      <Text c={theme.colors.blue[5]}>{text}</Text>
+    </Group>
   );
 }
 
@@ -128,6 +166,45 @@ export function WaResponseMessage({
       {quickReplyButtons.map((text, i) => (
         <QuickReplyButton key={i} text={text} />
       ))}
+    </Stack>
+  );
+}
+
+interface WaListMessageProps {
+  header?: string;
+  body: string;
+  footer?: string;
+  openList: any;
+}
+export function WaListMessage({
+  body,
+  header = "",
+  footer = "",
+  openList,
+}: WaListMessageProps) {
+  return (
+    <Stack
+      style={{
+        // TODO: find out why zIndex is needed
+        zIndex: 1,
+        width: "250px",
+      }}
+      gap={3}
+      p={0}
+    >
+      <ResponseMessageContainer>
+        <Stack gap={4}>
+          {header && <WaMessageHeader>{header}</WaMessageHeader>}
+          {body && <WaMessageBody>{body}</WaMessageBody>}
+          {footer && <WaMessageFooter>{footer}</WaMessageFooter>}
+        </Stack>
+      </ResponseMessageContainer>
+      <WaListButton
+        onClick={() => {
+          console.log("clicked");
+          openList();
+        }}
+      />
     </Stack>
   );
 }

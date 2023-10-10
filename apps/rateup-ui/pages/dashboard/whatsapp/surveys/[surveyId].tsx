@@ -30,7 +30,7 @@ import { useUser } from "../../../../context/UserContext";
 import { checkTokenExpiry } from "../../../../utils/supertoken";
 import { getSurveyWithCustomToken } from "../../../../backend/surveys/survey.api";
 import { getAccessTokenFromContext } from "../../../../utils/auth/token";
-import { EditWhatsappSurvey } from "../../../../components/whatsapp/surveys/EditWhatsappSurvey";
+import { EditWhatsappSurvey } from "../../../../components/whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../../../components/Promotion/promotion.config";
 
 enum TabEnum {

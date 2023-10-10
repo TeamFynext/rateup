@@ -1,6 +1,7 @@
 import { QuestionType as Q } from "../../../types/enums";
 import {
   ResponseMessageContainer,
+  WaListMessage,
   WaMessageBody,
   WaMessageFooter,
   WaMessageHeader,
@@ -13,8 +14,12 @@ import { Stack } from "@mantine/core";
 
 interface WaQuestionPreviewProps {
   question: Question;
+  openList: any;
 }
-export function WaQuestionPreview({ question }: WaQuestionPreviewProps) {
+export function WaQuestionPreview({
+  question,
+  openList,
+}: WaQuestionPreviewProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const title = question.title[selectedLanguage];
   const description = question.description[selectedLanguage];
@@ -68,35 +73,46 @@ export function WaQuestionPreview({ question }: WaQuestionPreviewProps) {
     }
     case Q.MCQ: {
       const choices = question.choices?.[selectedLanguage] || [];
-      if (choices.length <= 3) {
-        return (
-          <>
-            <ResponseMessageContainer>
-              <Stack gap={4}>
-                {title && <WaMessageHeader>{title}</WaMessageHeader>}
-                <WaMessageBody>
-                  {description}
-                  {choices.map((choice, i) => (
-                    <>
-                      <br />
-                      &nbsp;
-                      {`${i + 1}) ${choice}`}
-                    </>
-                  ))}
-                </WaMessageBody>
-                {
-                  <WaMessageFooter>
-                    {"Enter index of your choice"}
-                  </WaMessageFooter>
-                }
-              </Stack>
-            </ResponseMessageContainer>
-            <WaSentMessage body="1" />
-          </>
-        );
-      } else {
-        return <></>;
-      }
+      return (
+        <>
+          <ResponseMessageContainer>
+            <Stack gap={4}>
+              {title && <WaMessageHeader>{title}</WaMessageHeader>}
+              <WaMessageBody>
+                {description}
+                {choices.map((choice, i) => (
+                  <>
+                    <br />
+                    &nbsp;
+                    {`${i + 1}) ${choice}`}
+                  </>
+                ))}
+              </WaMessageBody>
+              {
+                <WaMessageFooter>
+                  {"Enter index of your choice"}
+                </WaMessageFooter>
+              }
+            </Stack>
+          </ResponseMessageContainer>
+          <WaSentMessage body="1" />
+        </>
+      );
+    }
+    case Q.WaButtons: {
+      const choices = question.choices?.[selectedLanguage] || [];
+      return (
+        <WaResponseMessage
+          header={title}
+          body={description}
+          quickReplyButtons={choices}
+        />
+      );
+    }
+    case Q.WaList: {
+      return (
+        <WaListMessage header={title} body={description} openList={openList} />
+      );
     }
   }
 }

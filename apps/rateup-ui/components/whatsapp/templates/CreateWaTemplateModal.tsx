@@ -1,7 +1,5 @@
 import {
   Grid,
-  TextInput,
-  Textarea,
   Container,
   Stack,
   Group,
@@ -22,6 +20,12 @@ import { useEffect, useState } from "react";
 import { parseTemplate } from "../../../utils/whatsapp/templates";
 import { WaTemplateStatus } from "../../../types/enums";
 import { showWarnToast } from "../../../utils/notifications";
+import {
+  ContainedTextArea,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
+import inputStyles from "../../../components/input/InputStyles.module.css";
+import { LengthTracker } from "../../input/LengthTracker";
 
 export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,72 +122,62 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
       </Modal.Header>
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Grid align="stretch">
-          <Grid.Col
-            span={6}
-            // style={{
-            //   '& .mantine-Input-rightSection': {
-            //     minWidth: "70px"
-            //   },
-            //   '& .mantine-Input-input': {
-            //     paddingRight: "70px"
-            //   }
-
-            // }}  //TODO VERIFY MANTINE
-          >
-            <TextInput
+          <Grid.Col span={6} className={inputStyles.lengthTrackerParent}>
+            <ContainedTextField
               label="Name"
               placeholder="Name"
               {...form.getInputProps("name")}
               rightSection={
-                <LengthTracker form={form} fieldName="name" maxValue={512} />
+                <LengthTracker string={form.values.name} maxValue={512} />
               }
               disabled={!!editingItem}
             />
-            <TextInput
+            <ContainedTextField
               label="Header"
               placeholder="Header"
               {...form.getInputProps("header")}
               rightSection={
-                <LengthTracker form={form} fieldName="header" maxValue={60} />
+                <LengthTracker string={form.values.header} maxValue={60} />
               }
             />
-            <Textarea
+            <ContainedTextArea
               label="Body"
               placeholder="Body"
               withAsterisk
+              autosize
+              minRows={2}
+              maxRows={4}
               {...form.getInputProps("body")}
               rightSection={
-                <LengthTracker form={form} fieldName="body" maxValue={1024} />
+                <LengthTracker string={form.values.body} maxValue={1024} />
               }
             />
-            <TextInput
+            <ContainedTextField
               label="Footer"
               placeholder="Footer"
               {...form.getInputProps("footer")}
               rightSection={
-                <LengthTracker form={form} fieldName="footer" maxValue={60} />
+                <LengthTracker string={form.values.footer} maxValue={60} />
               }
             />
-            <TextInput
+            <ContainedTextField
               label="Decline Button (Does nothing)"
               withAsterisk
               {...form.getInputProps("declineButton")}
               rightSection={
                 <LengthTracker
-                  form={form}
-                  fieldName={`declineButton`}
+                  string={form.values.declineButton}
                   maxValue={25}
                 />
               }
             />
-            <TextInput
+            <ContainedTextField
               label="Accept Button (Starts survey on clicking)"
               withAsterisk
               {...form.getInputProps("acceptButton")}
               rightSection={
                 <LengthTracker
-                  form={form}
-                  fieldName={`acceptButton`}
+                  string={form.values.acceptButton}
                   maxValue={25}
                 />
               }
@@ -241,23 +235,5 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
         </Group>
       </form>
     </Modal>
-  );
-}
-
-function LengthTracker({ form, fieldName, maxValue }) {
-  const length = form.getInputProps(fieldName).value.trim().length;
-  return (
-    <Group justify="flex-end">
-      <Text c="dimmed" fz={".8rem"} pr="sm">
-        <span
-          style={{
-            color: length > maxValue ? "red" : "inherit",
-          }}
-        >
-          {length}
-        </span>
-        <span>{` / ${maxValue}`}</span>
-      </Text>
-    </Group>
   );
 }
