@@ -1,13 +1,17 @@
-import { Divider, Paper, Stack, Text, Title } from "@mantine/core";
+import { Divider, Stack, Text, Title } from "@mantine/core";
 import React from "react";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
+import Heading from "../styled/Heading/Heading";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export default function DangerZone({ title, message, buttonText, onClick }) {
   return (
     <>
-      <Title order={3}>Danger zone</Title>
-      <Text>Irreversible and destructive actions</Text>
-      <Paper shadow={"sm"} p="lg">
+      <Heading
+        subtitle="Danger zone"
+        label="Irreversible and destructive actions"
+      />
+      <PaperLayout>
         <Stack align={"flex-start"} gap={"sm"}>
           <Title order={4}>{title}</Title>
           <Divider w="100%" />
@@ -19,7 +23,7 @@ export default function DangerZone({ title, message, buttonText, onClick }) {
             onClick={onClick}
           />
         </Stack>
-      </Paper>
+      </PaperLayout>
     </>
   );
 }

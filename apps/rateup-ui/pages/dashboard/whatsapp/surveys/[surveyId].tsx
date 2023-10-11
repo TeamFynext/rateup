@@ -22,7 +22,7 @@ import {
 } from "../../../../components/Button/RateupButtons";
 import Result from "../../../../components/Survey/Result/Result";
 import ShareSurvey from "../../../../components/Survey/ShareSurvey/ShareSurvey";
-import StyledTabs from "../../../../components/styled/StyledTabs";
+import StyledTabs from "../../../../components/styled/StyledTabs/StyledTabs";
 import { backendConfig } from "../../../../config/backendConfig";
 import { useRouteParams } from "../../../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";

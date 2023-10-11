@@ -1,4 +1,4 @@
-import { Paper, Center, Text, Tabs, Flex } from "@mantine/core";
+import { Center, Text, Tabs, Flex } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
@@ -8,6 +8,7 @@ import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import classes from "./EditSurvey.module.css";
 import { QuestionType } from "../../types/enums";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -47,8 +48,8 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={5}>
-      <Paper p={"xl"} style={{ flex: 2 }} shadow="lg" radius="lg">
+    <Flex w={"100%"} h={"100%"} p={2} gap={10}>
+      <PaperLayout style={{ flex: 2 }}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -56,8 +57,8 @@ export function EditSurvey({
           setActiveTab={setActiveTab}
           addQnTrigger={addQnTrigger}
         />
-      </Paper>
-      <Paper p={"md"} style={{ flex: 5 }} shadow="lg" radius="lg">
+      </PaperLayout>
+      <PaperLayout style={{ flex: 5 }}>
         <Tabs
           px={"md"}
           pb="md"
@@ -110,7 +111,7 @@ export function EditSurvey({
             </Center>
           </Tabs.Panel>
         </Tabs>
-      </Paper>
+      </PaperLayout>
     </Flex>
   );
 }

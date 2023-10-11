@@ -1,27 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
-  Paper,
-  Group,
-  Text,
-  Title,
-  Grid,
-  Divider,
-  Modal,
-  TextInput,
-  Stack,
-  Flex,
-} from "@mantine/core";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+import { Text, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
 import { useRouter } from "next/router";
 import { useUser } from "../../../context/UserContext";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
+import DangerZone from "../../DangerZone/DangerZone";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -65,56 +52,36 @@ const OtherSettings = () => {
   };
 
   return (
-    <Flex h={"100%"} p={2} gap={5}>
-      <Paper p="xl" w="100%" shadow="lg" radius="lg">
-        <Grid align="center">
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Reset Data : </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <RateupButtonPrimary
-              onClick={open}
-              title="Reset Responses & Stats"
-            />
-          </Grid.Col>
-        </Grid>
-        <Modal opened={opened} onClose={close} centered>
-          <Modal.Header>
-            <Title order={2}>Reset Reponses & Stats</Title>
-          </Modal.Header>
-          <Divider />
-          <Stack pt="2rem">
-            <Text> Clear all the responses and stats for this survey.</Text>
-            <Text color="red">Once reset, all response data will be lost.</Text>
-
-            <Stack pt="xl">
-              <Text>
-                To proceed further, type in your email id and click confirm
-                reset.
-              </Text>
-              <TextInput
-                style={{ maxWidth: "300px" }}
-                withAsterisk
-                label="Verify email"
-                placeholder="Enter your login email"
-                required
-                mt="md"
-                value={verifyEmail}
-                onChange={(e) => setVerifyEmail(e.target.value)}
-              />
-            </Stack>
-            <Group mt="xl" pt="xl">
-              <RateupButtonSecondary onClick={close} title="Close" />
-              <RateupButtonBlue
-                onClick={confirmReset}
-                title="Confirm"
-                loading={isLoading}
-              />
-            </Group>
-          </Stack>
-        </Modal>
-      </Paper>
-    </Flex>
+    <>
+      <DangerZone
+        buttonText={"Reset Responses & Stats"}
+        message="Are you sure you want to reset your data"
+        onClick={open}
+        title="Reset Data"
+      />
+      <FormModalLayout
+        opened={opened}
+        onClose={close}
+        centered
+        title="Reset Reponses & Stats"
+        buttonTitle="Confirm"
+        includeCancelButton
+        isLoading={isLoading}
+        onSubmit={confirmReset}
+      >
+        <Stack>
+          <ContainedTextField
+            withAsterisk
+            label="Verify email"
+            placeholder="Enter your login email"
+            required
+            value={verifyEmail}
+            onChange={(e) => setVerifyEmail(e.target.value)}
+          />
+          <Text color="red">Once reset, all response data will be lost.</Text>
+        </Stack>
+      </FormModalLayout>
+    </>
   );
 };
 

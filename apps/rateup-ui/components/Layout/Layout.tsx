@@ -81,7 +81,8 @@ export default ({ children }) => {
             <Flex
               className={`${styles.notinfocus} ${focus && styles.focus}`}
               style={{ overflow: "scroll" }}
-              p="xl"
+              px="lg"
+              py="sm"
               direction="column"
               m="auto"
             >

@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from "react";
 import {
-  Paper,
-  Divider,
   Text,
   Grid,
-  TextInput,
   Group,
   Switch,
-  Flex,
-} from "@mantine/core";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import { useForm } from "@mantine/form";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
-import {
   PillsInput,
   Pill,
   Combobox,
   CheckIcon,
   useCombobox,
 } from "@mantine/core";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { useForm } from "@mantine/form";
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey }) => {
@@ -61,71 +57,63 @@ const GeneralSettings = ({ survey }) => {
     editSurvey.mutate(data);
   };
   return (
-    <Flex h={"100%"} p={2}>
-      <Paper w={"100%"} p={"xl"} shadow="lg" radius="lg">
-        <form onSubmit={surveyForm.onSubmit(onSubmit)}>
-          <Grid align="center">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Survey Name: </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <TextInput
-                withAsterisk
-                placeholder="Enter Survey name"
-                required
-                mt="md"
-                {...surveyForm.getInputProps("title")}
-              />
-            </Grid.Col>
-          </Grid>
-          <Divider my="xl" />
-          <Grid align="center">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Languages: </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <MultiSelectCreatable
-                value={languages}
-                setValue={setLanguages}
-                errors={surveyForm.errors.languages}
-              />
-            </Grid.Col>
-          </Grid>
-
-          <Divider my="xl" />
-          <Grid align="center">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Kiosk Mode:</Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Switch
-                size="xl"
-                onLabel="ON"
-                offLabel="OFF"
-                checked={kioskMode}
-                onChange={(event) => {
-                  setKioskMode(event.target.checked);
-                }}
-              />
-            </Grid.Col>
-          </Grid>
-
-          <Divider my="xl" />
-
-          <Grid justify="flex-end">
-            <Grid.Col span={2}>
-              <RateupButtonSecondary
-                type="submit"
-                loading={isLoading}
-                size="md"
-                title="Save Changes"
-              />
-            </Grid.Col>
-            <Grid.Col span={5}></Grid.Col>
-          </Grid>
-        </form>
-      </Paper>
-    </Flex>
+    <PaperLayout>
+      <form onSubmit={surveyForm.onSubmit(onSubmit)} style={{ gap: "20px" }}>
+        <Grid align="center">
+          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+            <Text size={"md"}>Survey Name: </Text>
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+            <ContainedTextField
+              withAsterisk
+              placeholder="Enter Survey name"
+              required
+              mt="md"
+              {...surveyForm.getInputProps("title")}
+            />
+          </Grid.Col>
+        </Grid>
+        <Grid align="center" mt={"md"}>
+          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+            <Text size={"md"}>Languages: </Text>
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+            <MultiSelectCreatable
+              value={languages}
+              setValue={setLanguages}
+              errors={surveyForm.errors.languages}
+            />
+          </Grid.Col>
+        </Grid>
+        <Grid align="center" mt="md">
+          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+            <Text size={"md"}>Kiosk Mode:</Text>
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+            <Switch
+              size={"md"}
+              onLabel="ON"
+              offLabel="OFF"
+              checked={kioskMode}
+              onChange={(event) => {
+                setKioskMode(event.target.checked);
+              }}
+            />
+          </Grid.Col>
+        </Grid>
+        <Grid justify="flex-end" mt={"md"}>
+          <Grid.Col span={2}>
+            <RateupButtonSecondary
+              type="submit"
+              color="var(--tertiary-color)"
+              loading={isLoading}
+              title="Save Changes"
+            />
+          </Grid.Col>
+          <Grid.Col span={5}></Grid.Col>
+        </Grid>
+      </form>
+    </PaperLayout>
   );
 };
 
@@ -201,9 +189,9 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
       <Combobox.DropdownTarget>
         <PillsInput
           error={errors ? errors : false}
-          label="Languages"
           withAsterisk
           onClick={() => combobox.openDropdown()}
+          radius={"12px"}
         >
           <Pill.Group>
             {values}

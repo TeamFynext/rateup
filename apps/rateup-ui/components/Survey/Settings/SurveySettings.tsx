@@ -1,31 +1,25 @@
 import React from "react";
-import { Tabs } from "@mantine/core";
-import StyledTabs from "../../styled/StyledTabs";
+import { Stack } from "@mantine/core";
 import GeneralSettings from "./GeneralSettings";
 import { PasswordProtection } from "./PasswordSettings";
 import OtherSettings from "./OtherSettings";
+import Heading from "../../styled/Heading/Heading";
 
 const SurveySettings = ({ surveyId, survey }) => {
   return (
-    <StyledTabs defaultValue="settings">
-      <Tabs.List mb="md" pb="md">
-        <Tabs.Tab value="settings">General Settings</Tabs.Tab>
-        <Tabs.Tab value="general">Password Protection</Tabs.Tab>
-        <Tabs.Tab value="other">Other Settings</Tabs.Tab>
-      </Tabs.List>
-      <Tabs.Panel value="settings">
-        <GeneralSettings survey={survey} />
-      </Tabs.Panel>
-      <Tabs.Panel value="general">
-        <PasswordProtection
-          surveyId={surveyId}
-          isProtected={survey?.isProtected}
-        />
-      </Tabs.Panel>
-      <Tabs.Panel value="other">
-        <OtherSettings />
-      </Tabs.Panel>
-    </StyledTabs>
+    <Stack p={"sm"}>
+      <Heading subtitle="General settings" label="Edit your survey info" />
+      <GeneralSettings survey={survey} />
+      <Heading
+        subtitle="Password protection"
+        label="Add password to the survey."
+      />
+      <PasswordProtection
+        surveyId={surveyId}
+        isProtected={survey?.isProtected}
+      />
+      <OtherSettings />
+    </Stack>
   );
 };
 

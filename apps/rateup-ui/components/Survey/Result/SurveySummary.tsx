@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useQuestions } from '../../../backend/surveys/questions/questions.query';
-import { Paper, Rating, Text, Group, Select , Chip, ScrollArea, Button} from '@mantine/core';
-import { IconThumbDownFilled, IconThumbUpFilled } from '@tabler/icons-react';
-import { useResponses } from '../../../backend/surveys/response/response.query';
+import { useQuestions } from "../../../backend/surveys/questions/questions.query";
+import { Rating, Text, Group, Chip, Button, Stack, Space } from "@mantine/core";
+import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
+import { useResponses } from "../../../backend/surveys/response/response.query";
+import Heading from "../../styled/Heading/Heading";
+import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 type ResponseCounts = Record<string, Record<string, number>>;
 
@@ -12,7 +15,14 @@ const countResponses = (surveyResponses: any) => {
   const counts = {};
   const responseTypeMap = {};
 
-  const validResponseTypes = ['Rating', 'Multiple Choice', 'Opinion Scale', 'Like or Dislike', 'Yes or No', 'Multiple Select'];
+  const validResponseTypes = [
+    "Rating",
+    "Multiple Choice",
+    "Opinion Scale",
+    "Like or Dislike",
+    "Yes or No",
+    "Multiple Select",
+  ];
 
   for (const response of surveyResponses) {
     for (const question of response.responses) {
@@ -26,31 +36,34 @@ const countResponses = (surveyResponses: any) => {
         counts[questionId] = {};
       }
 
-      if (responseType === 'Multiple Select') {
-        if (typeof responseValue === 'string') {
-          responseValue = responseValue.split(',');
+      if (responseType === "Multiple Select") {
+        if (typeof responseValue === "string") {
+          responseValue = responseValue.split(",");
         } else if (Array.isArray(responseValue)) {
           // do nothing, it's already in the correct format
         } else {
-          console.error(`Invalid format for 'Multiple Select' responseValue: ${responseValue}`);
+          console.error(
+            `Invalid format for 'Multiple Select' responseValue: ${responseValue}`,
+          );
           continue;
         }
 
         for (const option of responseValue) {
           const trimmedOption = option.trim();
-          counts[questionId][trimmedOption] = (counts[questionId][trimmedOption] || 0) + 1;
+          counts[questionId][trimmedOption] =
+            (counts[questionId][trimmedOption] || 0) + 1;
         }
       } else {
-        counts[questionId][responseValue] = (counts[questionId][responseValue] || 0) + 1;
+        counts[questionId][responseValue] =
+          (counts[questionId][responseValue] || 0) + 1;
       }
 
       responseTypeMap[questionId] = responseType;
     }
   }
 
-  return {counts, responseTypeMap};
-}
-
+  return { counts, responseTypeMap };
+};
 
 const SurveySummary = () => {
   const router = useRouter();
@@ -68,139 +81,161 @@ const SurveySummary = () => {
   } = useQuestions(surveyId);
 
   const [responseCounts, setResponseCounts] = useState<ResponseCounts>({});
-  const [responseTypeMap, setResponseTypeMap] = useState<Record<string, string>>({});
-  const [questionTitleMap, setQuestionTitleMap] = useState<Record<string, any>>({});
-  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [responseTypeMap, setResponseTypeMap] = useState<
+    Record<string, string>
+  >({});
+  const [questionTitleMap, setQuestionTitleMap] = useState<Record<string, any>>(
+    {},
+  );
+  const [selectedLanguage, setSelectedLanguage] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
 
   useEffect(() => {
-    if(responseData){
-      const {counts, responseTypeMap} = countResponses(responseData);
+    if (responseData) {
+      const { counts, responseTypeMap } = countResponses(responseData);
       setResponseCounts(counts);
       setResponseTypeMap(responseTypeMap);
     }
 
-    if(questions){
+    if (questions) {
       const titleMap: Record<string, any> = {};
       const languageSet = new Set<string>();
-      for(const question of questions){
+      for (const question of questions) {
         titleMap[question.id] = question.title;
-        Object.keys(question.title).forEach(lang => languageSet.add(lang));
+        Object.keys(question.title).forEach((lang) => languageSet.add(lang));
       }
       setQuestionTitleMap(titleMap);
       setLanguages(Array.from(languageSet));
       setSelectedLanguage(Array.from(languageSet)[0]);
     }
-  }, [responseData, questions])
+  }, [responseData, questions]);
 
-  if (isLoading || isQLoading) return <div>Loading...</div>
-  if (error || QError) return <div>Error occurred</div>
+  if (isLoading || isQLoading) return <div>Loading...</div>;
+  if (error || QError) return <div>Error occurred</div>;
 
   return (
-    <div>
-      <Select 
-        data={languages} 
-        value={selectedLanguage} 
-        onChange={(value) => setSelectedLanguage(value)} 
-        label="Select Language" 
-        mb="lg"
-        style={{maxWidth: "200px"}}
-      />
-
-    <Group justify='center' p="xl">
-
-      {Object.entries(responseCounts).length === 0 && "No Quantitative question responses!"}
-
-    </Group>
-
-    <ScrollArea h={'50vh'}>
-
+    <Stack>
+      <Space />
+      <Group justify={"space-between"}>
+        <Heading subtitle="Survey Summary" />
+        <ContainedSelection
+          data={languages}
+          value={selectedLanguage}
+          onChange={(value) => setSelectedLanguage(value)}
+          label="Select Language"
+          mb="lg"
+          style={{ maxWidth: "200px" }}
+        />
+      </Group>
+      {Object.entries(responseCounts).length === 0 && (
+        <Text>"No Quantitative question responses!"</Text>
+      )}
+      <Stack>
         {Object.entries(responseCounts).map(([questionId, responseCounts]) => {
-          const totalResponses = Object.values(responseCounts).reduce((a, b) => a + b, 0);
+          const totalResponses = Object.values(responseCounts).reduce(
+            (a, b) => a + b,
+            0,
+          );
           return (
-            <Paper key={questionId} p="lg" style={{ marginBottom: '20px' }}>
-              <Text fw={400} mb="sm">{selectedLanguage && questionTitleMap[questionId][selectedLanguage]}</Text>
+            <PaperLayout
+              key={questionId}
+              style={{ marginBottom: "20px", marginLeft: 2, marginRight: 2 }}
+            >
+              <Text fw={700} mb="sm" size={"20px"}>
+                {selectedLanguage &&
+                  questionTitleMap[questionId][selectedLanguage]}
+              </Text>
               {Object.entries(responseCounts).map(([response, count]) => {
                 const percentage = ((count / totalResponses) * 100).toFixed(2);
-                const voteText = count > 1 ? 'votes' : 'vote';
+                const voteText = count > 1 ? "votes" : "vote";
 
-                switch(responseTypeMap[questionId]) {
-                  case 'Opinion Scale':
+                switch (responseTypeMap[questionId]) {
+                  case "Opinion Scale":
                     return (
-                        <Group key={response} pb="sm">
-                        <Chip color="indigo" variant="light" style={{minWidth: "60px"}}>
+                      <Group key={response} pb="sm">
+                        <Chip
+                          color="indigo"
+                          variant="light"
+                          style={{ minWidth: "60px" }}
+                        >
                           <b>{response} </b>
                         </Chip>
                         :
-
-                        <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
-                        
+                        <Text pl="sm">
+                          {" "}
+                          {count} {voteText} ( {percentage}% )
+                        </Text>
                       </Group>
                     );
-                  case 'Multiple Choice':
+                  case "Multiple Choice":
                     return (
                       <Group key={response} pb="sm">
-                        <Chip color="indigo" variant="light" style={{minWidth: "120px"}}>
-                          {response} 
+                        <Chip
+                          color="indigo"
+                          variant="light"
+                          style={{ minWidth: "120px" }}
+                        >
+                          {response}
                         </Chip>
                         :
-
-                        <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
-                        
+                        <Text pl="sm">
+                          {" "}
+                          {count} {voteText} ( {percentage}% )
+                        </Text>
                       </Group>
                     );
-                  case 'Rating':
+                  case "Rating":
                     return (
                       <Group key={response}>
                         <Rating value={parseInt(response)} readOnly />
-                        <Text>({count} {voteText})</Text>
+                        <Text>
+                          ({count} {voteText})
+                        </Text>
                       </Group>
                     );
 
-                  case 'Like or Dislike':
+                  case "Like or Dislike":
                     return (
                       <Group key={response}>
-                        {
-                          response === 'Like' 
-                          ? <Group align='center' mb="sm">  <Button
-                          color={"teal"}
-                          size="sm"
-                          px="md"
-                          radius="md"
-                          leftSection={<IconThumbUpFilled /> }
-                          disabled
-                        >
-                        Like ({count})
-                      </Button> 
-                      
-                      {percentage}% 
-                      
-                      </Group>
-                          
-                          : <Group align='center'>                       <Button
-                          color={"red"}
-                          size="sm"
-                          px="md"
-                          radius="md"
-                          leftSection={<IconThumbDownFilled /> }
-                          disabled
-                        >
-                        Dislike ({count})
-                      </Button>  {percentage}% </Group>
-
-                        }
-                          
+                        {response === "Like" ? (
+                          <Group align="center" mb="sm">
+                            {" "}
+                            <Button
+                              color={"teal"}
+                              size="sm"
+                              px="md"
+                              radius="md"
+                              leftSection={<IconThumbUpFilled />}
+                              disabled
+                            >
+                              Like ({count})
+                            </Button>
+                            {percentage}%
+                          </Group>
+                        ) : (
+                          <Group align="center">
+                            {" "}
+                            <Button
+                              color={"red"}
+                              size="sm"
+                              px="md"
+                              radius="md"
+                              leftSection={<IconThumbDownFilled />}
+                              disabled
+                            >
+                              Dislike ({count})
+                            </Button>{" "}
+                            {percentage}%{" "}
+                          </Group>
+                        )}
                       </Group>
                     );
 
-                  case 'Yes or No':
+                  case "Yes or No":
                     return (
                       <Group key={response}>
-                        {
-                          response === 'Yes' 
-                          ?
-                        <Group align='center'  mb="md"
-                        >
+                        {response === "Yes" ? (
+                          <Group align="center" mb="md">
                             <Button
                               color={"red"}
                               size="sm"
@@ -208,58 +243,63 @@ const SurveySummary = () => {
                               radius="md"
                               disabled
                             >
-                            Yes ({count})
-                          </Button>
-
-                          {percentage}% </Group>
-                          :
-
-                          <Group align='center'>
-                          <Button
-                            color={"red"}
-                            size="sm"
-                            px="md"
-                            radius="md"
-                            disabled
-                          >
-                          No ({count})
-                        </Button>
-
-                        {percentage}% </Group>
-                        }
-                          
+                              Yes ({count})
+                            </Button>
+                            {percentage}%{" "}
+                          </Group>
+                        ) : (
+                          <Group align="center">
+                            <Button
+                              color={"red"}
+                              size="sm"
+                              px="md"
+                              radius="md"
+                              disabled
+                            >
+                              No ({count})
+                            </Button>
+                            {percentage}%{" "}
+                          </Group>
+                        )}
                       </Group>
                     );
 
-                    case 'Multiple Select':
-                      return (
-                        <span key={response}>
-                          <Group pb="sm">
-                            <Chip color="indigo" variant="light" style={{minWidth: "120px"}}>
-                              {response} 
-                            </Chip>
-                            :
-                            <Text pl="sm">  {count} {voteText} ( {percentage}% )</Text>
-                          </Group>
-                        </span>
-                      );
-                    
+                  case "Multiple Select":
+                    return (
+                      <span key={response}>
+                        <Group pb="sm">
+                          <Chip
+                            color="indigo"
+                            variant="light"
+                            style={{ minWidth: "120px" }}
+                          >
+                            {response}
+                          </Chip>
+                          :
+                          <Text pl="sm">
+                            {" "}
+                            {count} {voteText} ( {percentage}% )
+                          </Text>
+                        </Group>
+                      </span>
+                    );
+
                   default:
                     return (
                       <div key={response}>
-                        <Text>{response} : {count} {voteText}</Text>
+                        <Text>
+                          {response} : {count} {voteText}
+                        </Text>
                       </div>
                     );
                 }
               })}
-
-            </Paper>
+            </PaperLayout>
           );
         })}
-
-    </ScrollArea>
-    </div>
-  )
-}
+      </Stack>
+    </Stack>
+  );
+};
 
 export default SurveySummary;

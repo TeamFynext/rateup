@@ -1,12 +1,4 @@
-import {
-  Group,
-  Loader,
-  Select,
-  Tabs,
-  Title,
-  Space,
-  Badge,
-} from "@mantine/core";
+import { Group, Loader, Select, Tabs, Space, Badge, Grid } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useRouter } from "next/router";
@@ -14,7 +6,7 @@ import { EditSurvey } from "../../../components/Survey/EditSurvey";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
-import StyledTabs from "../../../components/styled/StyledTabs";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import {
   RateupButtonBlackOutline,
   RateupButtonPrimary,
@@ -31,6 +23,8 @@ import { backendConfig } from "../../../config/backendConfig";
 import { getSurveyWithCustomToken } from "../../../backend/surveys/survey.api";
 import { getQuestionsWithCustomToken } from "../../../backend/surveys/questions/questions.api";
 import { checkTokenExpiry } from "../../../utils/supertoken";
+import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
+import Heading from "../../../components/styled/Heading/Heading";
 
 enum TabEnum {
   Edit = "Edit",
@@ -146,23 +140,11 @@ export default ({
         value={activeTab}
         onChange={(tab) => setActiveTab(tab as TabEnum)}
       >
-        <Group justify={"space-between"}>
-          <Group justify={"space-between"} style={{ minWidth: "70%" }}>
-            <Title
-              order={1}
-              mb="sm"
-              pr="xl"
-              style={{
-                maxWidth: "50%",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={survey.title}
-            >
-              {survey.title}
-            </Title>
-
+        <Grid columns={10}>
+          <Grid.Col span={2}>
+            <Heading title={survey?.title} />
+          </Grid.Col>
+          <Grid.Col span={6}>
             <Tabs.List>
               <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
               {survey.type != "whatsapp" && (
@@ -172,43 +154,35 @@ export default ({
               <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
             </Tabs.List>
-          </Group>
-
-          {activeTab === TabEnum.Edit && (
-            <Group>
-              <Badge
-                color={
-                  survey?.type == "web" ? "var(--tertiary-color)" : "green"
-                }
-                p="sm"
-              >
-                {survey.type}
-              </Badge>
-              <Select
-                style={{ maxWidth: "150px" }}
+          </Grid.Col>
+          <Grid.Col span={2}>
+            {activeTab === TabEnum.Edit ? (
+              <ContainedSelection
+                ml="auto"
+                maw={150}
                 data={survey.languages}
                 value={selectedLanguage}
                 onChange={setSelectedLanguage}
               />
-            </Group>
-          )}
-          {activeTab === TabEnum.Result && (
-            <Group>
-              <RateupButtonBlackOutline
-                title={"All"}
-                radius={"lg"}
-                size="md"
-                rightIcon={<IconChevronDown size="1rem" />}
-              />
-              <RateupButtonPrimary
-                title={"Filter"}
-                variant="subtle"
-                rightIcon={<IconChevronDown size="1rem" />}
-              />
-            </Group>
-          )}
-        </Group>
-        <Space h="lg" />
+            ) : activeTab === TabEnum.Result ? (
+              <Group ml="auto" gap={0} w="fit-content">
+                <ContainedSelection
+                  disabled
+                  maw={100}
+                  data={survey.languages}
+                  value={selectedLanguage}
+                  onChange={setSelectedLanguage}
+                />
+                <RateupButtonPrimary
+                  title={"Filter"}
+                  variant="subtle"
+                  rightIcon={<IconChevronDown size="1rem" />}
+                />
+              </Group>
+            ) : null}
+          </Grid.Col>
+        </Grid>
+        <Space h="md" />
         <Tabs.Panel
           value={TabEnum.Edit}
           style={{ background: "white", width: "100%" }}

@@ -1,6 +1,6 @@
 import React from "react";
 import { Tabs } from "@mantine/core";
-import StyledTabs from "../../../components/styled/StyledTabs";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import ProfileSettings from "./UserSettings";
 import OrgSettings from "./OrgSettings";
 import { useUser } from "../../../context/UserContext";

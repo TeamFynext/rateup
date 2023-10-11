@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Title,
-  Dialog,
-  Stack,
-  Text,
-  Grid,
-  Group,
-  TextInput,
-  Paper,
-  Space,
-  Flex,
-} from "@mantine/core";
+import { Dialog, Stack, Text, Grid, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   RateupButtonPrimary,
@@ -24,6 +13,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { deleteTeamById } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import DangerZone from "../../../components/DangerZone/DangerZone";
+import Heading from "../../../components/styled/Heading/Heading";
+import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
 export interface ITeamData {
   name: string;
@@ -118,16 +110,18 @@ const TeamSettings = ({
   return (
     <>
       <Stack p={10}>
-        <Title order={3}>Team information</Title>
-        <Text>Update your team information</Text>
-        <Paper radius="md" p="md" shadow="sm">
+        <Heading
+          subtitle="Team information"
+          label="Update your team information"
+        />
+        <PaperLayout>
           <form onSubmit={teamForm.onSubmit(onSubmit)}>
             <Grid align="center">
               <Grid.Col span={{ md: 6, lg: 4 }}>
                 <Text size={"md"}>Team Name: </Text>
               </Grid.Col>
               <Grid.Col span={{ md: 6, lg: 4 }}>
-                <TextInput
+                <ContainedTextField
                   placeholder="Enter team name"
                   required
                   mt="md"
@@ -140,7 +134,7 @@ const TeamSettings = ({
                 <Text size={"md"}>Team Code: </Text>
               </Grid.Col>
               <Grid.Col span={{ md: 6, lg: 4 }}>
-                <TextInput
+                <ContainedTextField
                   placeholder="Enter team code"
                   required
                   mt="md"
@@ -153,7 +147,7 @@ const TeamSettings = ({
                 <Text size={"md"}>Google Reviews Link: </Text>
               </Grid.Col>
               <Grid.Col span={{ md: 6, lg: 4 }}>
-                <TextInput
+                <ContainedTextField
                   placeholder="Enter google url"
                   required
                   mt="md"
@@ -173,7 +167,7 @@ const TeamSettings = ({
               <Grid.Col span={5}></Grid.Col>
             </Grid>
           </form>
-        </Paper>
+        </PaperLayout>
         <DangerZone
           title={"Delete Team"}
           message="Are you sure to delete this team?"

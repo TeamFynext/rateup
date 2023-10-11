@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  Stack,
-  Paper,
-  Group,
-  Title,
-  Switch,
-  TextInput,
-  Flex,
-} from "@mantine/core";
+import { Stack, Switch } from "@mantine/core";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { useUpdateSurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 
 export const PasswordProtection = ({ surveyId, isProtected }) => {
   const [passwordProtect, setPasswordProtect] = useState(isProtected);
@@ -45,45 +39,28 @@ export const PasswordProtection = ({ surveyId, isProtected }) => {
   );
 
   return (
-    <Flex h={"100%"} p={2} gap={5}>
-      <Paper p="xl" w="100%" shadow="lg" radius="lg">
-        <Switch.Group
-          px={30}
-          py={20}
-          pt={30}
-          label="Password Protection"
-          description="Add password to the survey."
-          withAsterisk
-        >
-          <Group mt="xs"></Group>
-        </Switch.Group>
-
-        <Switch
-          px={30}
-          py={20}
-          checked={passwordProtect}
-          onChange={(event) => handleSwitch(event)}
-          label="Enable"
-        />
-
-        {passwordProtect && (
-          <Stack px={30} py={20} style={{ maxWidth: "400px" }}>
-            <TextInput
-              label="Password"
-              type="text"
-              placeholder="Enter new password"
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="off"
-            />
-
-            <RateupButtonSecondary
-              title={"Save Password"}
-              size="md"
-              onClick={updatePassword}
-            />
-          </Stack>
-        )}
-      </Paper>
-    </Flex>
+    <PaperLayout>
+      <Switch
+        checked={passwordProtect}
+        onChange={(event) => handleSwitch(event)}
+        label="Enable"
+      />
+      {passwordProtect && (
+        <Stack px={30} py={20} style={{ maxWidth: "400px" }}>
+          <ContainedTextField
+            label="Password"
+            type="text"
+            placeholder="Enter new password"
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="off"
+          />
+          <RateupButtonSecondary
+            title={"Save Password"}
+            color="var(--tertiary-color)"
+            onClick={updatePassword}
+          />
+        </Stack>
+      )}
+    </PaperLayout>
   );
 };

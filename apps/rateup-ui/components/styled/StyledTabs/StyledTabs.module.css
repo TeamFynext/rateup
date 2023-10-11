@@ -9,21 +9,23 @@
   border-radius: 10px;
   padding-bottom: 0 !important;
   overflow: hidden;
-  margin: auto;
   background-color: #fff;
+  width: fit-content;
+  border: 1px solid var(--tertiary-color);
 }
 .tab {
-  padding: 10px 20px;
+  padding: 9px 10px;
   cursor: pointer;
   border: none;
-  min-width: 150px;
+  min-width: 100px;
+  background-color: white;
 }
 .tab[data-active] {
   background-color: var(--tertiary-color);
   color: var(--mantine-color-white);
   border-radius: 5px;
 }
-.tab[data-active]:hover {
+.tab[data-inactive]:hover {
   background-color: var(--mantine-color-blue-filled-hover);
 }
 .panel {

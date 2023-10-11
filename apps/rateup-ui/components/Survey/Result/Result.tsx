@@ -1,5 +1,5 @@
 import React from "react";
-import StyledTabs from "../../styled/StyledTabs";
+import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import { Tabs } from "@mantine/core";
 import Responses from "../Response/Responses";
 import SurveyStats from "./SurveyStats";
@@ -8,25 +8,45 @@ import ResultsOverview from "./ResultsOverview";
 
 const Result = ({ survey }) => {
   return (
-    <StyledTabs defaultValue="stats">
-      <Tabs.List mb="md" pb="md">
-        <Tabs.Tab value="stats">Stats</Tabs.Tab>
-        <Tabs.Tab value="summary">Summary</Tabs.Tab>
-        <Tabs.Tab value="result">Result</Tabs.Tab>
-
+    <StyledTabs
+      defaultValue="overview"
+      placement="left"
+      orientation="vertical"
+      styles={{
+        root: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+        },
+        list: {
+          position: "sticky",
+          display: "flex",
+          flexDirection: "column",
+          borderBottomLeftRadius: 10,
+          borderBottomRightRadius: 10,
+          height: "fit-content",
+          minWidth: 200,
+          border: "1px solid var(--mantine-color-gray-3)",
+        },
+        panel: {
+          minWidth: "300px",
+          padding: "10px",
+          height: "100%",
+          overflow: "scroll",
+        },
+      }}
+    >
+      <Tabs.List>
+        <Tabs.Tab value="overview">Overview</Tabs.Tab>
+        <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
         <Tabs.Tab value="responses">Responses</Tabs.Tab>
       </Tabs.List>
-
-      <Tabs.Panel value="summary">
+      <Tabs.Panel value="overview">
+        <SurveyStats survey={survey} />
         <SurveySummary />
       </Tabs.Panel>
-      <Tabs.Panel value="result">
+      <Tabs.Panel value="analytics">
         <ResultsOverview />
       </Tabs.Panel>
-      <Tabs.Panel value="stats">
-        <SurveyStats survey={survey} />
-      </Tabs.Panel>
-
       <Tabs.Panel value="responses">
         <Responses survey={survey} />
       </Tabs.Panel>

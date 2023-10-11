@@ -3,7 +3,8 @@ import { Breadcrumbs, Image, Text } from "@mantine/core";
 import Link from "next/link";
 import classes from "./Navbar.module.css";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-
+import { IconChevronRight, IconHome } from "@tabler/icons";
+import { GilroyBlack, GilroyMedium } from "../../../public/fonts";
 export const Navbar = () => {
   const router = useRouter();
   const { pathname, query } = router;
@@ -13,17 +14,11 @@ export const Navbar = () => {
   return (
     <Breadcrumbs
       separator={
-        <Image
-          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/right-arrow.svg`}
-          alt="right-arrow"
-        />
+        <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
       }
     >
       <Link href="/" className={classes.link}>
-        <Image
-          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/home.svg`}
-          alt="Home"
-        />
+        <IconHome size={23} color="var(--mantine-color-gray-6)" />
       </Link>
       {pathParts.map((part, index) => {
         part = replaceRouteParameter(part, query, routeParams);
@@ -36,7 +31,8 @@ export const Navbar = () => {
           >
             <Text
               c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
-              fw="600"
+              ff={GilroyMedium.style.fontFamily}
+              size={"14px"}
             >
               {part.charAt(0).toUpperCase() + part.slice(1)}
             </Text>

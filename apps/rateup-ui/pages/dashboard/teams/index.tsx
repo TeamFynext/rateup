@@ -8,15 +8,12 @@ import {
   Title,
   Loader,
   Space,
-  Paper,
   Grid,
-  Text,
-  Stack,
   Center,
   SimpleGrid,
   Group,
 } from "@mantine/core";
-import { Box, Modal, TextInput } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";

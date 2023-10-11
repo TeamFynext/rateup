@@ -1,26 +1,12 @@
 import React from "react";
-import {
-  Box,
-  Group,
-  Loader,
-  Select,
-  Stack,
-  Tabs,
-  Title,
-  Space,
-  Badge,
-  Flex,
-  TabsProps,
-  rem,
-  Text,
-} from "@mantine/core";
+import { Group, Stack, Tabs, Space, Flex } from "@mantine/core";
 import { useEffect, useState } from "react";
 import LandingWelcomeTheme from "../../../components/LandingPage/LandingWelcomeTheme/LandingWelcomeTheme";
 import LandingSurveysList from "./LandingSurveysList";
 import { useRouter } from "next/router";
 import ShareLandingPage from "../../../components/LandingPage/ShareLandingPage/ShareLandinPage";
 import { useLandingPage } from "../../../backend/surveys/surveys.query";
-import StyledTabs from "../../../components/styled/StyledTabs";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 
 enum TabEnum {
   Surveys = "Surveys",

@@ -20,7 +20,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
 import { CategoryCard } from "../../../components/menu/category/CategoryCard";
-import StyledTabs from "../../../components/styled/StyledTabs";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import ShareQR from "../../../components/Survey/ShareSurvey/ShareQR";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import { useMenu } from "../../../backend/menu/menu.query";

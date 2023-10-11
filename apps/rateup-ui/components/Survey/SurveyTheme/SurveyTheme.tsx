@@ -1,26 +1,6 @@
-import {
-  Box,
-  Group,
-  Loader,
-  Select,
-  Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
-  Flex,
-  Text,
-  TextInput,
-  Card,
-  BackgroundImage,
-  Notification,
-  Image,
-  Switch,
-  LoadingOverlay,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { Stack, Flex, Switch, LoadingOverlay } from "@mantine/core";
 import React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import StylesComponent from "./StylesComponent";
 import {
   useCreateWelcomeThemeMutation,
@@ -34,7 +14,7 @@ import defaultStyles from "./fontStyleComponents/DefaultTheme";
 import WelcomePageView from "./WelcomePageView";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
-import { Welcome } from "../../Welcome/Welcome";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 let isFirst = true;
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -164,7 +144,7 @@ function SurveyTheme({ survey }) {
   };
   return (
     <Flex w={"100%"} h={"100%"} p={2} gap={5}>
-      <Paper style={{ flex: 0.7 }} shadow="lg" radius={"lg"}>
+      <PaperLayout style={{ flex: 0.7 }}>
         <Stack h="100%">
           <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
           <Flex p={10}>
@@ -186,9 +166,8 @@ function SurveyTheme({ survey }) {
             bgImage={bgImage}
           />
         </Stack>
-      </Paper>
-
-      <Paper p={"xl"} style={{ flex: 0.3 }} shadow="lg" radius="lg">
+      </PaperLayout>
+      <PaperLayout style={{ flex: 0.3 }}>
         <StylesComponent
           selectedType={selectedType ? selectedType : "header"}
           saveStyles={saveStyles}
@@ -198,7 +177,7 @@ function SurveyTheme({ survey }) {
           saveLoading={saveLoading}
           setbgImage={setbgImage}
         />
-      </Paper>
+      </PaperLayout>
     </Flex>
   );
 }

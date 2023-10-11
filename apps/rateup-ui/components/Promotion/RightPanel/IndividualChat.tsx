@@ -181,12 +181,14 @@ function DetailsWindow({ waCustomer, onClose }) {
           py="sm"
           px="xs"
           className={classes.stackChildren}
-          style={{
-            // TODO: fix this. Styles are not being applied to children
-            "& > *": {
-              borderRadius: "8px",
-            },
-          }}
+          style={
+            {
+              // TODO: fix this. Styles are not being applied to children
+              // "& > *": {
+              //   borderRadius: "8px",
+              // },
+            }
+          }
         >
           <Center
             style={{

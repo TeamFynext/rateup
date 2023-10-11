@@ -4,7 +4,6 @@ import {
   Tabs,
   Loader,
   Stack,
-  Title,
   SimpleGrid,
   Box,
   Space,
@@ -31,7 +30,7 @@ import {
   getTeamMembersFromInvitation,
   inviteTeamMember,
 } from "../../../backend/team/team.api";
-import StyledTabs from "../../../components/styled/StyledTabs";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import TeamMemberCard from "./TeamMemberCard";
 import { IconPlus } from "@tabler/icons-react";
 import { backendConfig } from "../../../config/backendConfig";
@@ -46,6 +45,7 @@ import TeamSettings from "./TeamSettings";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
+import Heading from "../../../components/styled/Heading/Heading";
 
 export async function getServerSideProps(context) {
   const { team_code } = context.query;
@@ -243,9 +243,7 @@ const TeamDetails = () => {
             <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
           </Tabs.List>
           <Group>
-            <Title order={1} mb="sm">
-              {teamsMembersData?.data?.team?.name || "Team"}
-            </Title>
+            <Heading title={teamsMembersData?.data?.team?.name || "Team"} />
             <Tabs.Panel value={TabEnum.Members} mt={30}>
               <RateupButtonSecondary
                 title="Add Member"

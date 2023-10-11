@@ -113,7 +113,7 @@ export default function App({
               </UserProvider>
               <ReactQueryDevtools
                 initialIsOpen={false}
-                position="bottom-right"
+                position="bottom-left"
               />
             </Hydrate>
           </QueryClientProvider>

@@ -6,7 +6,6 @@ import {
   Button,
   Group,
   TextInput,
-  Radio,
   FileButton,
   Title,
   Tabs,
@@ -24,13 +23,13 @@ import {
 import React, { useState, useEffect } from "react";
 import Preview from "./Preview";
 import { notifications } from "@mantine/notifications";
-import { uploadFile } from "../../../utils/file-upload/upload";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import StyleTab from "./QRtabs/StyleTab";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 interface ShareQRProps {
   url: string;
-  sx?: any
+  sx?: any;
 }
 const ShareQR = ({ url, sx }: ShareQRProps) => {
   const [title, setTitle] = useState("QR Code");
@@ -59,8 +58,6 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
 
   const [logoSrc, setLogoSrc] = useState("");
-
- 
 
   useEffect(() => {
     //For server upload - template setup
@@ -96,8 +93,8 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
   }
 
   return (
-    <Paper shadow="sm" my="xl" p="xl" style = {{...sx}}> 
-     {/* //VERIFY mantine sx */}
+    <PaperLayout shadow="sm" my="xl" p="xl" style={{ ...sx }}>
+      {/* //VERIFY mantine sx */}
       <Title order={4} mb="xl" pb="md">
         Generate & Share QR Code
       </Title>
@@ -124,7 +121,9 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                         <ActionIcon size="xl">
                           <IconLetterCase size="2rem" />
                         </ActionIcon>
-                        <Text style={{ textAlign:'center' }} c="#000">Text</Text>
+                        <Text style={{ textAlign: "center" }} c="#000">
+                          Text
+                        </Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -145,7 +144,9 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                         <ActionIcon size="xl">
                           <IconPhotoEdit size="2rem" />
                         </ActionIcon>
-                        <Text style={{ textAlign:'center' }} c="#000">Style</Text>
+                        <Text style={{ textAlign: "center" }} c="#000">
+                          Style
+                        </Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -166,7 +167,9 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                         <ActionIcon size="xl">
                           <IconBrandSketch size="2rem" />
                         </ActionIcon>
-                        <Text style={{ textAlign:'center' }} c="#000">Logo</Text>
+                        <Text style={{ textAlign: "center" }} c="#000">
+                          Logo
+                        </Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -188,7 +191,9 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                         <ActionIcon size="xl">
                           <IconTemplate size="2rem" />
                         </ActionIcon>
-                        <Text style={{ textAlign:'center' }} c="#000">Template</Text>
+                        <Text style={{ textAlign: "center" }} c="#000">
+                          Template
+                        </Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -347,7 +352,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
           )}
         </Group>
       </Tabs>
-    </Paper>
+    </PaperLayout>
   );
 };
 

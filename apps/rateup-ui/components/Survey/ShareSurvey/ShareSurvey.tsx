@@ -1,10 +1,8 @@
 import {
-  Paper,
   Stack,
   Button,
   CopyButton,
   Group,
-  TextInput,
   SimpleGrid,
   Title,
   ActionIcon,
@@ -17,6 +15,8 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
 
 let whatsAppEncoded;
@@ -56,8 +56,8 @@ const ShareSurvey = ({ survey }) => {
   }
 
   return (
-    <Stack>
-      <Paper p="md" radius="md" shadow="lg">
+    <Stack p={2}>
+      <PaperLayout p="md" radius="md" shadow="lg">
         <SimpleGrid cols={2} spacing="xl">
           {/* //-----------------web survey share url ----------------- */}
           {survey.type == "web" ? (
@@ -107,7 +107,7 @@ const ShareSurvey = ({ survey }) => {
             </Group>
           </Stack>
         </SimpleGrid>
-      </Paper>
+      </PaperLayout>
 
       <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
     </Stack>
@@ -125,8 +125,8 @@ export const CopyLinkComponent = ({
   label = "",
 }: CopyLinkComponentProps) => {
   return (
-    <Group gap={"0px"} align="end">
-      <TextInput
+    <Group gap={"0px"} align="center">
+      <ContainedTextField
         readOnly
         value={value}
         label={label}
