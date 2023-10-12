@@ -19,23 +19,25 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
 
-let whatsAppEncoded;
-
 const ShareSurvey = ({ survey }) => {
   const { surveyId } = useRouter().query;
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    setShareUrl(
-      `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`,
-    );
+    if (!surveyId) return;
+    if (survey.type === "whatsapp") {
+      // TODO: get phone number from phone id (add phone number field)
+      setShareUrl(
+        `https://wa.me/7907137774?text=${encodeURIComponent(
+          "/start " + survey.id,
+        )}`,
+      );
+    } else {
+      setShareUrl(
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`,
+      );
+    }
   }, [surveyId]);
-
-  useEffect(() => {
-    var myMessage = `Take minute to complete survey:  ${survey?.title} - ${shareUrl}`;
-    var messageToWhatsApp = encodeURIComponent(myMessage);
-    whatsAppEncoded = "https://wa.me/?text=" + messageToWhatsApp;
-  }, [survey, shareUrl]);
 
   function shareButtonAction(btn) {
     switch (btn) {
@@ -48,7 +50,7 @@ const ShareSurvey = ({ survey }) => {
         );
         break;
       case "whatsapp":
-        window.open(whatsAppEncoded);
+        // TODO: add whatsapp share
         break;
       default:
         break;
@@ -59,24 +61,10 @@ const ShareSurvey = ({ survey }) => {
     <Stack p={2}>
       <PaperLayout p="md" radius="md" shadow="lg">
         <SimpleGrid cols={2} spacing="xl">
-          {/* //-----------------web survey share url ----------------- */}
-          {survey.type == "web" ? (
-            <Stack style={{ maxWidth: "450px" }} p="md">
-              <Title order={4}>Share Survey</Title>
-
-              <CopyLinkComponent value={shareUrl} />
-            </Stack>
-          ) : (
-            //-----whatsapp survey share url copy section ----------
-            <Stack style={{ maxWidth: "450px" }} p="md">
-              <Title order={6}>Share via whatsapp</Title>
-
-              <CopyLinkComponent
-                // TODO: move phone number to env
-                value={"https://wa.me/9744520889?text=" + survey.id}
-              />
-            </Stack>
-          )}
+          <Stack style={{ maxWidth: "450px" }} p="md">
+            <Title order={4}>Share Survey</Title>
+            <CopyLinkComponent value={shareUrl} />
+          </Stack>
 
           <Stack style={{ maxWidth: "400px" }} p="md">
             <Title order={4} style={{ textAlign: "center" }}>

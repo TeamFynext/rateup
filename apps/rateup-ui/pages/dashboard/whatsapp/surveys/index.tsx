@@ -50,7 +50,7 @@ import {
   useSurveysByTeam,
 } from "../../../../backend/surveys/surveys.query";
 import { useUser } from "../../../../context/UserContext";
-import { TeamSelector } from "../promotion";
+import { TeamSelector } from "../../../../components/input/TeamSelector";
 import classes from "./styles.module.css";
 // TODO: implement ssr
 export default function WhatsappSurveys({ surveys: initialSurveys }) {
@@ -98,10 +98,7 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
           mb="md"
         >
           <Title order={1}>Whatsapp Surveys : </Title>
-          <TeamSelector
-            selectedTeamId={selectedTeamId}
-            setSelectedTeamId={setSelectedTeamId}
-          />
+          <TeamSelector value={selectedTeamId} onChange={setSelectedTeamId} />
         </Flex>
 
         <Flex
@@ -180,6 +177,7 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
   );
 }
 
+// TODO: make reusable survey card
 interface SurveyCardProps {
   survey: Survey;
   setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
@@ -312,10 +310,7 @@ function SurveyMenu({ survey, setSelectedTeamId }) {
             Select the team in which the copy to be created.
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>
-            <TeamSelector
-              selectedTeamId={selectedTeamID}
-              setSelectedTeamId={setSelectedTeamID}
-            />
+            <TeamSelector value={selectedTeamID} onChange={setSelectedTeamID} />
           </Group>
           <Group mt="xl">
             <RateupButtonSecondary title="Cancel" onClick={close} />

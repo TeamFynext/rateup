@@ -47,7 +47,7 @@ const SurveyStats = ({ survey }) => {
       <Stack mih="400px" gap={10}>
         <Group justify="space-between">
           {surveyStatsCountArray.map(({ count, label }) => (
-            <PaperLayout style={{ flex: 1 }}>
+            <PaperLayout style={{ flex: 1 }} key={label}>
               <Stack align={"center"}>
                 <Text fs={"20px"} fw="900" size={"30px"}>
                   {count}

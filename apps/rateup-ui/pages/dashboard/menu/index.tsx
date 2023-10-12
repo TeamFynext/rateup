@@ -8,7 +8,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useContext, useState } from "react";
-import { TeamSelector } from "../whatsapp/promotion";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus } from "@tabler/icons-react";
 import { useMenusByTeamId } from "../../../backend/menu/menu.query";
 import { MenuCard } from "../../../components/menu/MenuCard";
@@ -37,10 +37,7 @@ export default function MenuPage() {
   return (
     <>
       <Flex justify={"end"} mb="xs">
-        <TeamSelector
-          selectedTeamId={selectedTeamId}
-          setSelectedTeamId={setSelectedTeamId}
-        />
+        <TeamSelector value={selectedTeamId} onChange={setSelectedTeamId} />
       </Flex>
       <SimpleGrid
         spacing={"lg"}

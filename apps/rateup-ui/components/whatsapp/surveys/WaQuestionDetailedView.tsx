@@ -5,10 +5,26 @@ import {
   Group,
   Checkbox,
   Textarea,
+  Popover,
+  ActionIcon,
+  Text,
+  Box,
+  Center,
+  Overlay,
+  Title,
+  Transition,
+  useMantineTheme,
+  Paper,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconX, IconDeviceSdCard, IconEdit } from "@tabler/icons-react";
+import {
+  IconX,
+  IconDeviceSdCard,
+  IconEdit,
+  IconEye,
+  IconChevronLeft,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -27,6 +43,10 @@ import { LengthTracker } from "../../input/LengthTracker";
 import { WA_BODY_CHAR_LIMIT, WA_HEADER_CHAR_LIMIT } from "../whatsappConfig";
 import { WaListMessageItemsCreator } from "./WaListMessageItemsCreator";
 import { ChoicesCreator } from "../../Survey/Question/ChoicesCreator";
+import { useDisclosure } from "@mantine/hooks";
+import { SendMessageMock } from "../MessageComponents";
+import { WaQuestionPreview } from "./WaQuestionPreview";
+import whatsappStyles from "../../Promotion/RightPanel/style.module.css";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -45,10 +65,12 @@ export function WaQuestionDetailedView({
   setQuestionState,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
+  const theme = useMantineTheme();
   const { surveyId } = router.query as { surveyId: string };
   const [isSaving, setIsSaving] = useState(false);
-
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const [previewOpened, setPreviewOpened] = useState(false);
+
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
     setIsSaving,
@@ -173,6 +195,7 @@ export function WaQuestionDetailedView({
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
       gap={"xs"}
     >
@@ -262,7 +285,194 @@ export function WaQuestionDetailedView({
 
         <Group justify="flex-start" gap="md"></Group>
       </Stack>
+
+      <Popover
+        position="left"
+        opened={previewOpened}
+        onChange={setPreviewOpened}
+        offset={{ crossAxis: 160, mainAxis: 8 }}
+      >
+        <Popover.Target>
+          <ActionIcon
+            style={{
+              position: "absolute",
+              right: "-16px",
+              top: "20%",
+              borderRadius: "100px",
+              borderTopRightRadius: "0px",
+              borderBottomRightRadius: "0px",
+              height: "50px",
+              width: "50px",
+            }}
+            onClick={() => setPreviewOpened((prev) => !prev)}
+          >
+            {previewOpened ? (
+              <IconX />
+            ) : (
+              <IconEye style={{ width: "70%", height: "70%" }} stroke={2} />
+            )}
+          </ActionIcon>
+        </Popover.Target>
+        <Popover.Dropdown
+          p="0"
+          style={{
+            borderRadius: "16px",
+          }}
+        >
+          <Box
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              position: "relative",
+              height: "600px",
+              borderRadius: "16px",
+              border: "2px solid",
+              borderColor: theme.colors["whatsapp-green"][6],
+            }}
+          >
+            <WhatsappChatPreview selectedQ={question} />
+          </Box>
+        </Popover.Dropdown>
+      </Popover>
     </Stack>
+  );
+}
+
+const WhatsappChatPreview = ({ selectedQ }) => {
+  const [listOpened, { open, close }] = useDisclosure(false);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const theme = useMantineTheme();
+  const sections = selectedQ?.sections?.[selectedLanguage];
+  return (
+    <>
+      <Title
+        p="sm"
+        style={{
+          backgroundColor: theme.colors["whatsapp-green"][7],
+          textAlign: "center",
+        }}
+        order={3}
+        c={"white"}
+      >
+        Preview
+      </Title>
+      <Stack className={whatsappStyles.chatBg} px="xs" py="sm" justify="end">
+        {selectedQ && (
+          <WaQuestionPreview question={selectedQ} openList={open} />
+        )}
+      </Stack>
+      <SendMessageMock />
+      <Transition mounted={listOpened}>
+        {(ts) => (
+          <Overlay
+            style={{
+              ...ts,
+            }}
+          />
+        )}
+      </Transition>
+      <Transition mounted={listOpened} transition={"slide-up"}>
+        {(transitionStyle1) => (
+          <Overlay
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "end",
+            }}
+          >
+            <Stack
+              style={{
+                backgroundColor: "white",
+                ...transitionStyle1,
+              }}
+              pt="4px"
+              p={0}
+              mah={"70%"}
+            >
+              <Center>
+                <Box
+                  h="5px"
+                  w="25px"
+                  style={{
+                    backgroundColor: "gray",
+                    borderRadius: "1000px",
+                  }}
+                />
+              </Center>
+              <Group
+                p="0"
+                style={{
+                  position: "relative",
+                }}
+                justify="center"
+              >
+                <ActionIcon
+                  variant="transparent"
+                  c="dark"
+                  size={"sm"}
+                  style={{
+                    position: "absolute",
+                    left: "4px",
+                  }}
+                  onClick={close}
+                >
+                  <IconX />
+                </ActionIcon>
+                <Text
+                  style={{
+                    justifySelf: "center",
+                  }}
+                >
+                  View Options
+                </Text>
+              </Group>
+              <Stack
+                px={"xs"}
+                style={{
+                  overflow: "auto",
+                }}
+              >
+                {sections?.map((section) => {
+                  return <WaSectionDisplay section={section} />;
+                })}
+              </Stack>
+              <Center>
+                <Text c="dimmed" fz="xs" p="sm">
+                  Tap to select an item
+                </Text>
+              </Center>
+            </Stack>
+          </Overlay>
+        )}
+      </Transition>
+    </>
+  );
+};
+function WaSectionDisplay({ section }) {
+  const theme = useMantineTheme();
+  return (
+    <>
+      <Text c={theme.colors.blue[9]}>{section.title}</Text>
+      <Stack>
+        {section.rows.map((item) => (
+          <Group justify="space-between">
+            <Box>
+              <Text>{item.title}</Text>
+              <Text c="dimmed">{item.description}</Text>
+            </Box>
+            <Box
+              h="15px"
+              w="15px"
+              style={{
+                border: "2px solid gray",
+                borderRadius: "100px",
+              }}
+            />
+          </Group>
+        ))}
+      </Stack>
+    </>
   );
 }
 interface ExtraPropsProps {

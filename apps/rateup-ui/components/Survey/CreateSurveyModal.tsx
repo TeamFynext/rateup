@@ -3,7 +3,6 @@ import {
   Button,
   Group,
   Modal,
-  Select,
   Stack,
   Switch,
   Text,
@@ -17,13 +16,15 @@ import {
   useCombobox,
 } from "@mantine/core";
 
-import { createFormContext } from "@mantine/form";
+import { createFormContext, useForm } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
 import { getTeamsByUser } from "../../backend/team/team.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
+import { TeamSelector } from "../input/TeamSelector";
+import { SurveyTypeFilters } from "../../types/enums";
 
 interface FormValues {
   title: string;
@@ -32,29 +33,20 @@ interface FormValues {
   type: string;
   getLocation: boolean;
 }
-const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 
-export function CreateSurveyModal({ open, close, surveyType }) {
-  const {
-    isError,
-    isLoading,
-    data: teams,
-    error,
-  } = useQuery(["teamsByUser"], getTeamsByUser);
-
-  let teamSelectData = teams?.data?.data?.map((team) => ({
-    value: team.teamId,
-    label: team.teamName,
-  }));
-
-  //------------type select data -----------
-  const typesArray = ["web", "whatsapp"];
-  let typeSelectData = typesArray.map((type) => ({
-    value: type,
-    label: type,
-  }));
-
+interface CreateSurveyModalProps {
+  open: boolean;
+  close: () => void;
+  surveyType?: "web" | "whatsapp";
+  onCreate?: (survey: Survey) => void;
+}
+export function CreateSurveyModal({
+  open,
+  close,
+  surveyType,
+  onCreate = (_) => {},
+}: CreateSurveyModalProps) {
   const [languages, setLanguages] = useState<string[]>([]);
 
   const form = useForm({
@@ -89,15 +81,14 @@ export function CreateSurveyModal({ open, close, surveyType }) {
   }, [open]);
 
   const [isCreating, setIsCreating] = useState(false);
-
-  const createSurveyMutation = useCreateSurveyMutation({
-    close,
-    resetForm,
-    setIsCreating,
+  const createSurveyMutation = useCreateSurveyMutation((data) => {
+    close();
+    setIsCreating(false);
+    resetForm();
+    onCreate(data);
   });
 
-  const onSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (values) => {
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
@@ -114,20 +105,7 @@ export function CreateSurveyModal({ open, close, surveyType }) {
     });
     createSurveyMutation.mutate(form.values);
   };
-  if (isLoading) {
-    return null;
-  }
-  if (isError || !teams?.data?.data) {
-    console.error(error);
-    notifications.show({
-      id: "load-data",
-      color: "red",
-      title: "Error",
-      message: "Failed Loading teams!",
-      icon: <IconX size="1rem" />,
-      autoClose: 3000,
-    });
-  }
+
   return (
     <Modal
       opened={open}
@@ -145,62 +123,49 @@ export function CreateSurveyModal({ open, close, surveyType }) {
         },
       }}
     >
-      <FormProvider form={form}>
-        <form onSubmit={onSubmit}>
-          <Stack style={{ minHeight: "300px" }} mt="xl">
-            <TextInput
-              placeholder="Enter title"
-              label="Title"
-              withAsterisk
-              {...form.getInputProps("title")}
-            />
+      <form onSubmit={form.onSubmit(onSubmit)}>
+        <Stack style={{ minHeight: "300px" }} mt="xl">
+          <TextInput
+            placeholder="Enter title"
+            label="Title"
+            withAsterisk
+            {...form.getInputProps("title")}
+          />
 
-            {/* // TODO: Add a user-level language list */}
-
-            <MultiSelectCreatable
-              value={languages}
-              setValue={setLanguages}
-              errors={form.errors.languages}
-            />
-
-            <Select
-              label="Team"
-              placeholder="Select team"
-              data={teamSelectData}
-              withAsterisk
-              maxDropdownHeight={110}
-              {...form.getInputProps("teamId")}
-            />
-            {/* //-----------------survey type ----------- */}
-            {!surveyType && (
-              <Select
-                label="Type"
-                placeholder="Select survey type"
-                data={typeSelectData}
-                withAsterisk
-                {...form.getInputProps("type")}
-              />
-            )}
+          {/* // TODO: Add a user-level language list */}
+          <MultiSelectCreatable
+            value={languages}
+            setValue={setLanguages}
+            errors={form.errors.languages}
+          />
+          <TeamSelector
+            label="Team"
+            placeholder="Select team"
+            withAsterisk
+            value={form.values.teamId}
+            onChange={(value) => form.setFieldValue("teamId", value)}
+          />
+          {form.values.type !== "whatsapp" && (
             <Box>
               <Switch
                 label="Save Respondent's location"
                 {...form.getInputProps("getLocation")}
               />
               <Text c="dimmed" fz="xs">
-                {`(Automatically fetched from the browser if the waCustomer allows it.)`}
+                {`(Automatically fetched from the browser if the respondent allows it.)`}
               </Text>
             </Box>
-            <Group justify="flex-end" pt="xl" mt="lg">
-              <Button variant="subtle" onClick={close}>
-                Cancel
-              </Button>
-              <Button variant="filled" type="submit" loading={isCreating}>
-                Submit
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </FormProvider>
+          )}
+          <Group justify="flex-end" pt="xl" mt="lg">
+            <Button variant="subtle" onClick={close}>
+              Cancel
+            </Button>
+            <Button variant="filled" type="submit" loading={isCreating}>
+              Submit
+            </Button>
+          </Group>
+        </Stack>
+      </form>
     </Modal>
   );
 }

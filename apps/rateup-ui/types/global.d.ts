@@ -142,6 +142,7 @@ declare global {
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
+      [QuestionType.WaList]?: { title: string; description?: string };
     };
   };
 

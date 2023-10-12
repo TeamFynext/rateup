@@ -21,12 +21,10 @@ import {
   verifySurveyPassword,
   updateSurveyLandingPage,
   getActiveSurveysSummary,
-  CreateSurveyResponse,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
-import { useRouter } from "next/router";
 import { rem } from "@mantine/core";
 
 export const useSurvey = (surveyId: string, initialData = null) => {
@@ -134,25 +132,11 @@ export const useSurveysByTeam = (
     queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
   });
 
-type MyProps = {
-  close: () => void;
-  resetForm: () => void;
-  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
-};
-
-function isSurveyResponse(
-  obj: CreateSurveyResponse | { error: string },
-): obj is CreateSurveyResponse {
-  return (obj as CreateSurveyResponse).id !== undefined;
-}
-
-export const useCreateSurveyMutation = ({
-  close,
-  resetForm,
-  setIsCreating,
-}: MyProps) => {
+export const useCreateSurveyMutation = (
+  onSuccess = (data) => {},
+  onError = () => {},
+) => {
   const queryClient = useQueryClient();
-  const router = useRouter();
   const createMutation = useMutation({
     mutationFn: createSurvey,
     onSuccess: (data) => {
@@ -165,16 +149,10 @@ export const useCreateSurveyMutation = ({
         icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
       });
-      close();
-      setIsCreating(false);
-      resetForm();
-      let res: CreateSurveyResponse | { error: string } = data;
-      if (isSurveyResponse(res)) {
-        router.push(`/dashboard/surveys/${res?.id}`);
-      }
       queryClient.invalidateQueries(["whatsappsurveys"]);
       queryClient.invalidateQueries(["surveys"]);
       queryClient.invalidateQueries(["surveysByTeam"]);
+      onSuccess(data);
     },
     onError: (error: any) => {
       notifications.show({
@@ -185,6 +163,7 @@ export const useCreateSurveyMutation = ({
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      onError();
     },
   });
 

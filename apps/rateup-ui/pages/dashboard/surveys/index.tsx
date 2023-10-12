@@ -94,6 +94,7 @@ export default function Surveys({ surveys: initialSurveys }) {
     data: surveys,
   } = useSurveys(specificTeamIsSelected, initialSurveys);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   useEffect(() => {
     if (selectedTeamId !== null) {
@@ -299,6 +300,9 @@ export default function Surveys({ surveys: initialSurveys }) {
         open={createSurveyOpened}
         close={close}
         surveyType={"web"}
+        onCreate={(s) => {
+          router.push(`/dashboard/surveys/${s.id}`);
+        }}
       />
       {/* //---------create landing page modal ------------ */}
       <CreateSurveyLandingModal
