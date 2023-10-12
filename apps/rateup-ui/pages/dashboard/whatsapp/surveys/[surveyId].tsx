@@ -1,14 +1,4 @@
-import {
-  Loader,
-  Tabs,
-  Group,
-  Title,
-  Badge,
-  Select,
-  Space,
-  MantineProvider,
-} from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
+import { Loader, Tabs, Space, MantineProvider, Grid } from "@mantine/core";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -16,10 +6,6 @@ import supertokensNode from "supertokens-node";
 import { getQuestionsWithCustomToken } from "../../../../backend/surveys/questions/questions.api";
 import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../../../backend/surveys/surveys.query";
-import {
-  RateupButtonBlackOutline,
-  RateupButtonPrimary,
-} from "../../../../components/Button/RateupButtons";
 import Result from "../../../../components/Survey/Result/Result";
 import ShareSurvey from "../../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "../../../../components/styled/StyledTabs/StyledTabs";
@@ -32,6 +18,9 @@ import { getSurveyWithCustomToken } from "../../../../backend/surveys/survey.api
 import { getAccessTokenFromContext } from "../../../../utils/auth/token";
 import { EditWhatsappSurvey } from "../../../../components/whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../../../components/Promotion/promotion.config";
+import SurveySettings from "../../../../components/Survey/Settings/SurveySettings";
+import { ContainedSelection } from "../../../../components/input/ContainedInput/ContainedInput";
+import Heading from "../../../../components/styled/Heading/Heading";
 
 enum TabEnum {
   Edit = "Edit",
@@ -139,6 +128,7 @@ export default ({
     return "An error has occurred";
   }
 
+  // TODO: create reusable survey header (title + tabs + language selector)
   return (
     <MantineProvider theme={whatsappTheme}>
       <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
@@ -146,62 +136,31 @@ export default ({
           value={activeTab}
           onChange={(tab) => setActiveTab(tab as TabEnum)}
         >
-          <Group justify={"space-between"}>
-            <Group justify={"space-between"} style={{ minWidth: "70%" }}>
-              <Title
-                order={1}
-                mb="sm"
-                pr="xl"
-                style={{
-                  maxWidth: "350px",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-                title={survey.title}
-              >
-                {survey.title}
-              </Title>
+          {" "}
+          <Grid columns={10}>
+            <Grid.Col span={2}>
+              <Heading title={survey?.title} />
+            </Grid.Col>
+            <Grid.Col span={6}>
               <Tabs.List>
                 <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
                 <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
                 <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
                 <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
               </Tabs.List>
-            </Group>
-            {activeTab === TabEnum.Edit && (
-              <Group>
-                <Badge
-                  color={
-                    survey?.type == "web" ? "var(--tertiary-color)" : "green"
-                  }
-                  p="sm"
-                >
-                  {survey.type}
-                </Badge>
-                <Select
+            </Grid.Col>
+            <Grid.Col span={2}>
+              {activeTab === TabEnum.Edit ? (
+                <ContainedSelection
+                  ml="auto"
+                  maw={150}
                   data={survey.languages}
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}
                 />
-              </Group>
-            )}
-            {activeTab === TabEnum.Result && (
-              <Group>
-                <RateupButtonBlackOutline
-                  title={"All"}
-                  radius={"lg"}
-                  size="md"
-                  rightIcon={<IconChevronDown size="1rem" />}
-                />
-                <RateupButtonPrimary
-                  title={"Filter"}
-                  variant="subtle"
-                  rightIcon={<IconChevronDown size="1rem" />}
-                />
-              </Group>
-            )}
-          </Group>
+              ) : null}
+            </Grid.Col>
+          </Grid>
           <Space h="lg" />
           <Tabs.Panel
             value={TabEnum.Edit}
@@ -215,7 +174,11 @@ export default ({
             />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Settings}>
-            <h2>whatsapp surveyy settings</h2>
+            <SurveySettings
+              survey={survey}
+              surveyId={survey.id}
+              enabledModules={["name", "language"]}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Result}>
             <Result survey={survey} />

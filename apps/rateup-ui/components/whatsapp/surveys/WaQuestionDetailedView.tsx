@@ -37,6 +37,7 @@ import { logicSupportedTypes } from "../../../utils/data";
 import {
   RateupButtonSecondary,
   RateupButtonOutline,
+  RateupButtonPrimary,
 } from "../../Button/RateupButtons";
 import { QuestionTabsEnum } from "./WaEditSurvey";
 import { LengthTracker } from "../../input/LengthTracker";
@@ -70,7 +71,9 @@ export function WaQuestionDetailedView({
   const [isSaving, setIsSaving] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [previewOpened, setPreviewOpened] = useState(false);
-  const [enableTitle, setEnableTitle] = useState(false);
+  const [enableTitle, setEnableTitle] = useState(
+    !!question?.title?.[selectedLanguage],
+  );
 
   useEffect(() => {
     if (!enableTitle) {
@@ -288,7 +291,6 @@ export function WaQuestionDetailedView({
           <Group>
             <Checkbox
               label="Required"
-              color="dark"
               fw={600}
               {...form.getInputProps("required", { type: "checkbox" })}
             />
@@ -306,15 +308,13 @@ export function WaQuestionDetailedView({
             )}
             {/* TODO: Implement Google review & Custom Validation*/}
           </Group>
-          <RateupButtonSecondary
+          <RateupButtonPrimary
             title={"Save"}
             size="md"
             onClick={handleSave}
-            leftIcon={<IconDeviceSdCard />}
             loading={isSaving}
           />
         </Group>
-
         <Group justify="flex-start" gap="md"></Group>
       </Stack>
 

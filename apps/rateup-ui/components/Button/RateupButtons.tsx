@@ -41,13 +41,10 @@ export const RateupButtonPrimary = ({
   return (
     <Button
       radius={radius || "lg"}
-      px="xl"
       style={{
-        color: "black",
         ...sx,
       }}
       disabled={disabled}
-      color="yellow"
       leftSection={leftIcon}
       rightSection={rightIcon}
       onClick={onClick}

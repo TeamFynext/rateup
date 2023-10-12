@@ -1,20 +1,34 @@
-import { ActionIcon, Box, Center, Container, Group, MantineStyleProp, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
-import classes from './Message.module.css'
+import {
+  ActionIcon,
+  Box,
+  Container,
+  Group,
+  MantineStyleProp,
+  Stack,
+  Text,
+  TextInput,
+  useMantineTheme,
+} from "@mantine/core";
+import classes from "./Message.module.css";
 import { IconList, IconMoodHappy, IconSend } from "@tabler/icons-react";
 export interface ResponseMessageContainerProps {
   children: React.ReactNode;
   style?: MantineStyleProp;
   backgroundColor?: string;
 }
-export function ResponseMessageContainer({ children, style, backgroundColor = "#fff" }: ResponseMessageContainerProps) {
+export function ResponseMessageContainer({
+  children,
+  style,
+  backgroundColor = "#fff",
+}: ResponseMessageContainerProps) {
   return (
     <Container
       px="10px"
       py="6px"
       className={`${classes.common} ${classes.response}`}
       style={{
-        '--color': backgroundColor,
-        ...style
+        "--color": backgroundColor,
+        ...style,
       }}
     >
       {children}
@@ -27,14 +41,18 @@ export interface SentMessageContainerProps {
   style?: MantineStyleProp;
   backgroundColor?: string;
 }
-export function SentMessageContainer({ children, style, backgroundColor }: SentMessageContainerProps) {
+export function SentMessageContainer({
+  children,
+  style,
+  backgroundColor = "#d9fdd3",
+}: SentMessageContainerProps) {
   return (
     <Container
       p="4px"
       className={`${classes.common} ${classes.sent}`}
       style={{
-        '--color': backgroundColor,
-        ...style
+        "--color": backgroundColor,
+        ...style,
       }}
     >
       {children}
@@ -54,6 +72,7 @@ export function QuickReplyButton({ text, style = {} }: QuickReplyButtonProps) {
         backgroundColor: "white",
         borderRadius: "8px",
         cursor: "pointer",
+        width: "80%",
         ...style,
       }}
       p="6px"
@@ -84,6 +103,7 @@ export function WaListButton({
         backgroundColor: "white",
         borderRadius: "8px",
         cursor: "pointer",
+        width: "80%",
         ...style,
       }}
       p="6px"
@@ -151,7 +171,6 @@ export function WaResponseMessage({
       style={{
         // TODO: find out why zIndex is needed
         zIndex: 1,
-        width: "250px",
       }}
       gap={3}
       p={0}
@@ -187,7 +206,6 @@ export function WaListMessage({
       style={{
         // TODO: find out why zIndex is needed
         zIndex: 1,
-        width: "250px",
       }}
       gap={3}
       p={0}
@@ -215,7 +233,9 @@ interface WaSendMessageProps {
 export function WaSentMessage({ body }: WaSendMessageProps) {
   return (
     <SentMessageContainer>
-      <WaMessageBody>{body}</WaMessageBody>
+      <WaMessageBody p="2px" pl="8px">
+        {body}
+      </WaMessageBody>
     </SentMessageContainer>
   );
 }

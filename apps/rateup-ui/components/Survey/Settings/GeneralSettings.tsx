@@ -10,14 +10,21 @@ import {
   CheckIcon,
   useCombobox,
 } from "@mantine/core";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-const GeneralSettings = ({ survey }) => {
+const defaultEnabledModules = ["name", "language", "kiosk"];
+const GeneralSettings = ({
+  survey,
+  enabledModules = defaultEnabledModules,
+}) => {
   const [kioskMode, setKioskMode] = useState(false);
   const [languages, setLanguages] = useState<string[]>([]);
   const surveyForm = useForm({
@@ -59,53 +66,58 @@ const GeneralSettings = ({ survey }) => {
   return (
     <PaperLayout>
       <form onSubmit={surveyForm.onSubmit(onSubmit)} style={{ gap: "20px" }}>
-        <Grid align="center">
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Survey Name: </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <ContainedTextField
-              withAsterisk
-              placeholder="Enter Survey name"
-              required
-              mt="md"
-              {...surveyForm.getInputProps("title")}
-            />
-          </Grid.Col>
-        </Grid>
-        <Grid align="center" mt={"md"}>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Languages: </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <MultiSelectCreatable
-              value={languages}
-              setValue={setLanguages}
-              errors={surveyForm.errors.languages}
-            />
-          </Grid.Col>
-        </Grid>
-        <Grid align="center" mt="md">
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Text size={"md"}>Kiosk Mode:</Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-            <Switch
-              size={"md"}
-              onLabel="ON"
-              offLabel="OFF"
-              checked={kioskMode}
-              onChange={(event) => {
-                setKioskMode(event.target.checked);
-              }}
-            />
-          </Grid.Col>
-        </Grid>
+        {enabledModules.includes("name") && (
+          <Grid align="center">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Survey Name: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <ContainedTextField
+                withAsterisk
+                placeholder="Enter Survey name"
+                required
+                mt="md"
+                {...surveyForm.getInputProps("title")}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+        {enabledModules.includes("language") && (
+          <Grid align="center" mt={"md"}>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Languages: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <MultiSelectCreatable
+                value={languages}
+                setValue={setLanguages}
+                errors={surveyForm.errors.languages}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+        {enabledModules.includes("kiosk") && (
+          <Grid align="center" mt="md">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Kiosk Mode:</Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Switch
+                size={"md"}
+                onLabel="ON"
+                offLabel="OFF"
+                checked={kioskMode}
+                onChange={(event) => {
+                  setKioskMode(event.target.checked);
+                }}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
         <Grid justify="flex-end" mt={"md"}>
           <Grid.Col span={2}>
-            <RateupButtonSecondary
+            <RateupButtonPrimary
               type="submit"
-              color="var(--tertiary-color)"
               loading={isLoading}
               title="Save Changes"
             />

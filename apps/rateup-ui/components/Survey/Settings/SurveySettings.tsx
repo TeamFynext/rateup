@@ -5,19 +5,28 @@ import { PasswordProtection } from "./PasswordSettings";
 import OtherSettings from "./OtherSettings";
 import Heading from "../../styled/Heading/Heading";
 
-const SurveySettings = ({ surveyId, survey }) => {
+const defaultEnabledModules = ["name", "password", "language", "kiosk"];
+const SurveySettings = ({
+  surveyId,
+  survey,
+  enabledModules = defaultEnabledModules,
+}) => {
   return (
     <Stack p={"sm"}>
       <Heading subtitle="General settings" label="Edit your survey info" />
-      <GeneralSettings survey={survey} />
-      <Heading
-        subtitle="Password protection"
-        label="Add password to the survey."
-      />
-      <PasswordProtection
-        surveyId={surveyId}
-        isProtected={survey?.isProtected}
-      />
+      <GeneralSettings enabledModules={enabledModules} survey={survey} />
+      {enabledModules.includes("password") && (
+        <>
+          <Heading
+            subtitle="Password protection"
+            label="Add password to the survey."
+          />
+          <PasswordProtection
+            surveyId={surveyId}
+            isProtected={survey?.isProtected}
+          />
+        </>
+      )}
       <OtherSettings />
     </Stack>
   );
