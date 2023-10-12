@@ -2,13 +2,14 @@ import { Center, Text, Tabs, Flex } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import classes from "./EditSurvey.module.css";
 import { QuestionType } from "../../types/enums";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import SelectedLanguageContext from "../../context/SelectedLanguage";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -34,6 +35,8 @@ export function EditSurvey({
     QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
+
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   useEffect(() => {
     if (!selectedQ) return;
@@ -77,7 +80,7 @@ export function EditSurvey({
                 setActiveTab={setActiveTab}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
-                key={selectedQ.id}
+                key={selectedQ.id + selectedLanguage}
               />
             )}
           </Tabs.Panel>

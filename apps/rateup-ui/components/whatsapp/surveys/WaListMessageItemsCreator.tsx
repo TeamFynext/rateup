@@ -11,6 +11,7 @@ import {
   Group,
   Paper,
   Stack,
+  Tooltip,
 } from "@mantine/core";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
@@ -68,15 +69,17 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
                 }}
               />
               <Group>
-                <ActionIcon
-                  onClick={() => {
-                    setSections((draft) => {
-                      draft.splice(sIndex, 1);
-                    });
-                  }}
-                >
-                  <IconTrash />
-                </ActionIcon>
+                <Tooltip label="Delete section">
+                  <ActionIcon
+                    onClick={() => {
+                      setSections((draft) => {
+                        draft.splice(sIndex, 1);
+                      });
+                    }}
+                  >
+                    <IconTrash />
+                  </ActionIcon>
+                </Tooltip>
                 <ActionIcon
                   variant="subtle"
                   onClick={() => {
@@ -126,6 +129,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
       })}
       <Button
         onClick={() => {
+          setExpanded(sections.length); // expand the new section
           setSections((draft) => {
             draft.push({
               title: "",
@@ -198,16 +202,18 @@ function WaListItem({
           setEditingItem={setEditingItem}
         />
       </Box>
-      <ActionIcon
-        variant="subtle"
-        onClick={handleDeleteItem}
-        color="red"
-        style={{
-          visibility: hovered ? "visible" : "hidden",
-        }}
-      >
-        <IconTrash />
-      </ActionIcon>
+      <Tooltip label="Delete item">
+        <ActionIcon
+          variant="subtle"
+          onClick={handleDeleteItem}
+          color="red"
+          style={{
+            visibility: hovered ? "visible" : "hidden",
+          }}
+        >
+          <IconTrash />
+        </ActionIcon>
+      </Tooltip>
     </Group>
   );
 }

@@ -6,11 +6,13 @@ interface TeamSelectorProps extends SelectProps {
   value: string;
   onChange: (teamId: string) => void;
   label?: string;
+  enableAll?: boolean;
 }
 export function TeamSelector({
   value,
   onChange,
   label = "",
+  enableAll = false,
   ...props
 }: TeamSelectorProps) {
   // TODO: add allowAll boolean prop to allow selecting all teams
@@ -44,6 +46,7 @@ export function TeamSelector({
     value: team.teamId,
     label: team.teamName,
   }));
+  if (enableAll) teamOptions.unshift({ value: "all", label: "All Teams" });
 
   return (
     <Select

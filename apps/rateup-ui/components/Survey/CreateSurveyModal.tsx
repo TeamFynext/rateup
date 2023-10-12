@@ -24,8 +24,6 @@ import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
 import { TeamSelector } from "../input/TeamSelector";
-import { SurveyTypeFilters } from "../../types/enums";
-
 interface FormValues {
   title: string;
   languages: Array<string>;

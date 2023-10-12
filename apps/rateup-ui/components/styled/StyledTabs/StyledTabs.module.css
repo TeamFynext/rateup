@@ -4,6 +4,7 @@
   flex-direction: column;
   gap: 10px;
 }
+
 .list {
   position: sticky;
   border-radius: 10px;
@@ -13,21 +14,25 @@
   width: fit-content;
   border: 1px solid var(--tertiary-color);
 }
+
 .tab {
   padding: 9px 10px;
   cursor: pointer;
   border: none;
   min-width: 100px;
   background-color: white;
-}
-.tab[data-active] {
-  background-color: var(--tertiary-color);
-  color: var(--mantine-color-white);
   border-radius: 5px;
 }
-.tab[data-inactive]:hover {
-  background-color: var(--mantine-color-blue-filled-hover);
+
+.tab[data-active] {
+  background-color: var(--mantine-primary-color-filled);
+  color: var(--mantine-color-white);
 }
+
+.tab:hover:not([data-active]) {
+  background-color: var(--mantine-primary-color-light);
+}
+
 .panel {
   flex: 1 0;
   overflow: scroll;

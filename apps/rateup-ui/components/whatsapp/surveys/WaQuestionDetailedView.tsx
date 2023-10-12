@@ -14,7 +14,7 @@ import {
   Title,
   Transition,
   useMantineTheme,
-  Paper,
+  Switch,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
@@ -70,6 +70,13 @@ export function WaQuestionDetailedView({
   const [isSaving, setIsSaving] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [previewOpened, setPreviewOpened] = useState(false);
+  const [enableTitle, setEnableTitle] = useState(false);
+
+  useEffect(() => {
+    if (!enableTitle) {
+      form.setFieldValue("title", "");
+    }
+  }, [enableTitle]);
 
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
@@ -96,6 +103,15 @@ export function WaQuestionDetailedView({
           return "Charecter length exceed (Max 4096 charecters allowed)";
         } else if (value.trim().length == 0) {
           return "message is required";
+        }
+      },
+      title: (value) => {
+        if (enableTitle) {
+          if (value.trim().length === 0) {
+            return "Enter a title or disable it";
+          } else if (value.trim().length > 60) {
+            return "Max 60 charecters allowed";
+          }
         }
       },
     },
@@ -161,7 +177,10 @@ export function WaQuestionDetailedView({
         if (language == selectedLanguage) {
           return;
         }
-        if (!question.title[language] || question.title[language] == "") {
+        if (
+          !question.description[language] ||
+          question.description[language] == ""
+        ) {
           missingLangs.push(language);
         }
       });
@@ -207,8 +226,38 @@ export function WaQuestionDetailedView({
         }}
         gap={0}
       >
+        <Switch
+          label="Enable Header"
+          checked={enableTitle}
+          onChange={(e) => setEnableTitle(e.currentTarget.checked)}
+          mb="sm"
+          ml="sm"
+          styles={{
+            track: {
+              cursor: "pointer",
+            },
+          }}
+        />
+        {enableTitle && (
+          <TextInput
+            fw={800}
+            maw={"95%"}
+            variant="unstyled"
+            mx="sm"
+            style={{
+              fontSize: "28px",
+            }}
+            placeholder="Enter message header here"
+            rightSection={
+              <LengthTracker
+                string={form.values.title}
+                maxValue={WA_HEADER_CHAR_LIMIT}
+              />
+            }
+            {...form.getInputProps("title")}
+          />
+        )}
         <Textarea
-          fw={800}
           mx="sm"
           maw={"95%"}
           autosize
@@ -216,7 +265,7 @@ export function WaQuestionDetailedView({
           variant="unstyled"
           placeholder="Enter message body here *"
           style={{
-            fontSize: "28px",
+            fontSize: "22px",
           }}
           rightSection={
             <LengthTracker
@@ -225,23 +274,6 @@ export function WaQuestionDetailedView({
             />
           }
           {...form.getInputProps("description")}
-        />
-        <TextInput
-          maw={"95%"}
-          variant="unstyled"
-          mx="sm"
-          style={{
-            fontSize: "22px",
-          }}
-          placeholder="Enter message header here (optional)"
-          rightSection={
-            <LengthTracker
-              string={form.values.title}
-              maxValue={WA_HEADER_CHAR_LIMIT}
-            />
-          }
-          {...form.getInputProps("title")}
-          //TODO : add error free autosave solution
         />
         <ExtraProps form={form} question={question} />
       </Stack>
@@ -291,6 +323,7 @@ export function WaQuestionDetailedView({
         opened={previewOpened}
         onChange={setPreviewOpened}
         offset={{ crossAxis: 160, mainAxis: 8 }}
+        closeOnClickOutside={false}
       >
         <Popover.Target>
           <ActionIcon
@@ -303,6 +336,7 @@ export function WaQuestionDetailedView({
               borderBottomRightRadius: "0px",
               height: "50px",
               width: "50px",
+              zIndex: 2,
             }}
             onClick={() => setPreviewOpened((prev) => !prev)}
           >

@@ -1,14 +1,14 @@
 import { Flex, Paper, Tabs, Center, Text } from "@mantine/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import GoogleReviewEditor from "../../Survey/Question/GoogleReviewEditor";
 import LogicEditor from "../../Survey/Question/LogicEditor";
 import { QuestionTypeSelection } from "../../Survey/Question/QuestionTypeSelection";
 import ValidationRulesEditor from "../../Survey/Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "../../Survey/QuestionsSideBar";
 import classes from "./WaEditSurvey.module.css";
-import { useDisclosure } from "@mantine/hooks";
 import { WaQuestionDetailedView } from "./WaQuestionDetailedView";
 import { QuestionType as Q } from "../../../types/enums";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -34,6 +34,7 @@ export function EditWhatsappSurvey({
     QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   useEffect(() => {
     if (!selectedQ) return;
@@ -74,7 +75,7 @@ export function EditWhatsappSurvey({
                 setActiveTab={setActiveTab}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
-                key={selectedQ.id}
+                key={selectedQ.id + selectedLanguage}
                 setQuestionState={setSelectedQ}
               />
             )}

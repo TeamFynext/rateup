@@ -14,7 +14,6 @@ import {
   Group,
   Loader,
   Space,
-  Select,
   Modal,
   Checkbox,
   Button,
@@ -55,9 +54,7 @@ import {
 import {
   useCloneSurveyMutation,
   useSurveys,
-  useSurveysByTeam,
 } from "../../../backend/surveys/surveys.query";
-import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
@@ -67,6 +64,7 @@ import supertokensNode from "supertokens-node";
 import { backendConfig } from "../../../config/backendConfig";
 import { checkTokenExpiry } from "../../../utils/supertoken";
 import { UserRole } from "../../../utils/enums";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 
 export default function Surveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -78,29 +76,15 @@ export default function Surveys({ surveys: initialSurveys }) {
   const { user, setUser } = useUser();
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
-  const [options, setOptions] = useState([
-    {
-      value: "all",
-      label: "All Teams",
-    },
-  ]);
-  const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
   const { action } = useRouter().query;
-  const specificTeamIsSelected = selectedTeamId !== "all";
-
   const {
     isLoading,
     error,
-    data: surveys,
-  } = useSurveys(specificTeamIsSelected, initialSurveys);
-  const queryClient = useQueryClient();
-  const router = useRouter();
+    data: allSurveys,
+  } = useSurveys(true, initialSurveys);
 
-  useEffect(() => {
-    if (selectedTeamId !== null) {
-      queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
-    }
-  }, [selectedTeamId, queryClient]);
+  const router = useRouter();
 
   useEffect(() => {
     if (action === "create") {
@@ -108,57 +92,23 @@ export default function Surveys({ surveys: initialSurveys }) {
     }
   }, [action]);
 
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
-
-  let teamsData = teamsDataUser?.data?.data;
-
-  const {
-    isLoading: isLoadingSurveys,
-    error: errSurveysByTeams,
-    data: surveysByTeam,
-  } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
-
   //----------close merge survey modal ---------
   const closeMergeSurvey = () => {
     setSurveyIdArray([]);
     closeMergeSurveyModal();
   };
 
-  useEffect(() => {
-    if (teamsData?.length) {
-      const newOptions = teamsData?.map((team) => ({
-        value: team?.teamId,
-        label: team?.teamName,
-      }));
-
-      setOptions((prev) => {
-        const uniqueValues = new Set(prev.map((option) => option.value));
-        const nonDuplicateOptions = newOptions.filter(
-          (option) => !uniqueValues.has(option.value),
-        );
-        return [...prev, ...nonDuplicateOptions];
-      });
-    }
-  }, [teamsData]);
-
-  useEffect(() => {
-    queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
-  }, [selectedTeamId]);
-  useEffect(() => {
-    queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
-  }, [surveyidArray.length]);
-
   if (isLoading) return <Loader />;
-  if (error || !Array.isArray(surveys)) {
-    console.error(surveys, error);
+  if (error || !Array.isArray(allSurveys)) {
+    console.error(allSurveys, error);
     return "An error has occurred";
   }
-
+  const surveys =
+    selectedTeamId === "all" || !selectedTeamId
+      ? allSurveys.filter((s: Survey) => s.type !== "whatsapp")
+      : allSurveys.filter(
+          (s: Survey) => s.teamId === selectedTeamId && s.type !== "whatsapp",
+        );
   //--------handle check box click ----------
 
   const handleCheckBox = (e, surveyid, checked) => {
@@ -202,14 +152,11 @@ export default function Surveys({ surveys: initialSurveys }) {
         >
           <Title order={1}>Surveys : </Title>
 
-          <Select
-            mt="xs"
-            data={options}
-            defaultValue={options[0].value}
+          <TeamSelector
             value={selectedTeamId}
-            onChange={(value) => setSelectedTeamId(value)}
+            onChange={(teamId) => setSelectedTeamId(teamId)}
+            enableAll={true}
           />
-
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonSecondary
               title="Add Survey"
@@ -261,13 +208,7 @@ export default function Surveys({ surveys: initialSurveys }) {
           cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
           my="lg"
         >
-          {(specificTeamIsSelected
-            ? surveysByTeam?.length > 0
-              ? [...surveysByTeam]
-              : []
-            : [...surveys]
-          )
-            .slice()
+          {surveys
             .sort((a, b) =>
               sort
                 ? new Date(b.createdAt).getTime() -
@@ -288,7 +229,6 @@ export default function Surveys({ surveys: initialSurveys }) {
               <SurveyCard
                 key={s.id}
                 survey={s}
-                teamsData={teamsData}
                 setSelectedTeamId={setSelectedTeamId}
                 handleCheckBox={handleCheckBox}
                 isChecked={isChecked}
@@ -325,11 +265,10 @@ interface SurveyCardProps {
 }
 export function SurveyCard({
   survey,
-  teamsData,
   setSelectedTeamId,
   handleCheckBox,
   isChecked,
-}: SurveyCardProps & { teamsData: any }): JSX.Element {
+}: SurveyCardProps): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
@@ -374,11 +313,7 @@ export function SurveyCard({
         </Text>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
-          <SurveyMenu
-            survey={survey}
-            teamsData={teamsData}
-            setSelectedTeamId={setSelectedTeamId}
-          />
+          <SurveyMenu survey={survey} setSelectedTeamId={setSelectedTeamId} />
 
           <Checkbox
             onClick={(e) => {
@@ -426,7 +361,7 @@ export function SurveyCard({
   );
 }
 
-function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
+function SurveyMenu({ survey, setSelectedTeamId }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -440,17 +375,6 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
     selectedTeamID,
     setSelectedTeamId,
   });
-
-  const [options, setOptions] = useState([]);
-
-  useEffect(() => {
-    const newOptions = teamsData?.map((team) => ({
-      value: team?.teamId,
-      label: team?.teamName,
-    }));
-
-    setOptions(newOptions);
-  }, [teamsData]);
 
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
@@ -514,17 +438,10 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
             Select the team in which the copy to be created.
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>
-            <Select
+            <TeamSelector
               label="Select Team"
-              maxDropdownHeight={150}
-              mt="xs"
-              placeholder="Pick one"
-              data={options}
               value={selectedTeamID}
-              onChange={(value) => setSelectedTeamID(value)}
-              onClick={(event) => {
-                event.stopPropagation();
-              }}
+              onChange={setSelectedTeamID}
             />
           </Group>
           <Group mt="xl">

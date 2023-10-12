@@ -221,9 +221,6 @@ export function SurveyCard({
         <Text mr={"sm"} truncate size="xl" fw={700}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type == "web" ? "blue" : "green"}>
-          {survey.type}
-        </Badge>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
           <SurveyMenu survey={survey} setSelectedTeamId={setSelectedTeamId} />
