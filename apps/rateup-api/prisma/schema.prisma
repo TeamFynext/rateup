@@ -217,8 +217,8 @@ model WaSession {
   phone             String
   survey            Survey     @relation(fields: [surveyId], references: [id])
   surveyId          String     @db.Uuid
-  template          WaTemplate @relation(fields: [templateId], references: [id])
-  templateId        String     @db.Uuid
+  template          WaTemplate? @relation(fields: [templateId], references: [id])
+  templateId        String?     @db.Uuid
   currentQuestionId String?
   responses         Json[]
   language          String     @default("")

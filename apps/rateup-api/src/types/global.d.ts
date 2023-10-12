@@ -36,7 +36,12 @@ declare global {
     googleReview?: GoogleReview
     logic?: Array<LogicJump>
     validationRules?: ValidationRules
+    sections?: Zod.RecordType<string, WaSectionsType>; // for Wa_List
   };
+  type WaSectionsType = Array<{
+    title?: string;
+    rows: Array<{ title: string; description: string }>;
+  }>;
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.
   type QuestionResponse = {
@@ -64,6 +69,7 @@ declare global {
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
+      [QuestionType.WaList]?: {title: string, description?: string};
     };
   };
   type LogicJump = {

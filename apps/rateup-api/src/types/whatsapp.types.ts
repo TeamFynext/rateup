@@ -43,7 +43,7 @@ export type WaMessageBody = {
                   id: string;
                   mime_type: string;
                   sha256: string;
-                  link: string;
+                  link?: string;
                 };
                 type: "text" | "image" | "interactive"|"button";
                 button?: any;

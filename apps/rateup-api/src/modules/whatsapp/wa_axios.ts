@@ -1,21 +1,22 @@
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { log } from "../../utils/logger";
 
 const WA_API_VERSION = "v18.0";
-
 export async function callWhatsappApi(
     url: string,
     method: AxiosRequestConfig['method'],
     accessToken?: string,
     data?: AxiosRequestConfig['data'],
-): Promise<any> {
+    otherConfig: AxiosRequestConfig = {}
+): Promise<AxiosResponse<any, any>> {
     const config: AxiosRequestConfig = {
-        url: `https://graph.facebook.com/${WA_API_VERSION}/${url}`,
+        url: `https://graph.facebook.com/${WA_API_VERSION}${url}`,
         method,
         data,
         headers: {
             Authorization: `Bearer ${accessToken}`,
         },
+        ...otherConfig,
     };
     log.trace("Calling WhatsApp API with config: %o", config)
     return await axios(config);

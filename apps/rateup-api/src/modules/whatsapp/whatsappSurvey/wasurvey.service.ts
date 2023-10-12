@@ -72,8 +72,8 @@ export async function getFirstQuestionId(surveyId: string) {
 export async function createSession(
   phone: string,
   surveyId: string,
-  templateId: string,
   orgId: string,
+  templateId?: string,
   language: string = "",
   currentQuestionId?: string
 ) {
@@ -138,6 +138,7 @@ export async function sendNextQuestion(session: WaSession, response: any) {
     );
     await saveResponses(session);
     await sendMessage(session.orgId, ThankYouMessage);
+    await deleteSession(session.orgId, session.phone);
   } else {
     // 'next' is a question id
     const nextQuestion = await getQuestionById(surveyId, next);
@@ -218,7 +219,7 @@ export async function sendTextMessage(
 export async function sendSurveyToWaCustomer(phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
   log.trace("Sending survey to waCustomer %s", phone);
   // TODO: implement language selection
-  const session = await createSession(phone, survey.id, dbTemplate.id, dbTemplate.orgId, survey.languages[0])
+  const session = await createSession(phone, survey.id, dbTemplate.orgId, dbTemplate.id, survey.languages[0])
   log.trace("Session created %o", session)
   const { name, language } = dbTemplate.data;
   const templateQuery = {

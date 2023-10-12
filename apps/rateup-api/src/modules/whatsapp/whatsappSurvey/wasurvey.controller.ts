@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   createListMessage,
   getEventType,
+  getMessageObject,
   isValidResponse,
   parseMessage,
   parseResponse,
@@ -76,14 +77,14 @@ export async function whatsappEventHandler(
 ) {
   const body = request.body as WaMessageBody;
   const { orgId } = request.params;
-  log.trace('WaEvent => %o', body);
+  // log.trace('WaEvent => %o', body); // Log all events
   const eventType = getEventType(body);
   if (!eventType) {
     // Ignoring...
     reply.code(200).send();
     return;
   } else if (eventType === WaEvent.Message) {
-    log.trace("message => %o", parseMessage(body));
+    log.trace("messageObject => %o", getMessageObject(body));
     await whatsappMessageHandler(orgId, body);
   } else if (eventType === WaEvent.TemplateStatusChange) {
     log.trace("template status change => %o", body);
@@ -120,13 +121,16 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
 async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
   // check for '/start' command
   const { message, from } = parseMessage(waMessage);
+  log.trace('message => %s', message)
   if (message.startsWith("/start")) {
     await handleStartMessage(orgId, waMessage);
   } else {
     let session = await getSession(orgId, from);
-    log.trace(message)
     if (!session.currentQuestionId) {
       // If no current question, then we assume this is the consent message (template)
+      if (!session.templateId) {
+        throw new Error("TemplateId not found in session");
+      }
       const dbTemplate = await getTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
@@ -153,18 +157,16 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   // delete any existing session if any
   await deleteSession(orgId, from);
   // create new session
-  const ids = message.split(" ")[1]; // format: /start <surveyId>/<templateId>
-  const [surveyId, templateId] = ids.split("/");
+  const surveyId = message.split(" ")[1]; // format: /start <surveyId>
   const survey = await getSurveyById(surveyId);
-  const dbTemplate = await getTemplate(templateId) as WaTemplateWithTypes;
   const firstQId = await getFirstQuestionId(survey.id);
 
   if (survey.languages.length > 1) {
-    const session = await createSession(from, survey.id, dbTemplate.data.id, dbTemplate.orgId, firstQId);
+    const session = await createSession(from, survey.id, orgId, undefined, firstQId);
     await handleLanguageSelection(session, survey);
     return;
   }
-  const session = await createSession(from, survey.id, dbTemplate.orgId, dbTemplate.orgId, survey.languages[0], firstQId);
+  const session = await createSession(from, survey.id, orgId, undefined, survey.languages[0], firstQId);
   console.log(session)
   await sendFirstQuestion(session);
 }
@@ -200,7 +202,8 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
     throw new Error("Question not found");
   }
 
-  const response = parseResponse(message, question, session);
+  const response = await parseResponse(waMessage, question, session);
+  log.trace('parsedResponse => %o', response)
   if (!isValidResponse(response, question, session.language)) {
     await sendTextMessage(session, "Invalid response. Please try again.", "");
     await sendQuestion(question, session);
@@ -224,6 +227,9 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
 }
 
 async function handleLanguageSelection(session: WaSession, survey: Survey) {
+  if (survey.languages.length > 10) {
+    throw new Error('Too many languages')
+  }
   const message = createListMessage(
     session.phone,
     "Please select your preferred language",

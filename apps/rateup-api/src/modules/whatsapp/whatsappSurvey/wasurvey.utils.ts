@@ -3,6 +3,9 @@ import { WaEvent, YNResponse, LDResponse, SmileyResponse } from "../../../types/
 import { WaMessageBody, WaSendMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import { QuestionType as Q } from "../../../types/enums";
+import { callWhatsappApi } from "../wa_axios";
+import { getWaSettings } from "../settings/wa_settings.service";
+import { uploadFile } from "../../../utils/upload/s3Upload";
 
 
 export function getEventType(data: WaMessageBody) {
@@ -145,6 +148,46 @@ export function createListMessage(
   };
 }
 
+export function createNativeListMessage(
+  to: string,
+  header: string,
+  body: string,
+  sections: WaSectionsType,
+  buttonTitle: string = 'View Options',
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: header ? (
+        {
+          type: "text",
+          text: header,
+        }
+      ) : (
+        undefined
+      ),
+      body: {
+        text: body,
+      },
+      action: {
+        button: buttonTitle,
+        // adding id to each row
+        sections: sections.map(section => ({
+          title: section.title,
+          rows: section.rows.map((row, index) => ({
+            ...row,
+            id: index.toString()
+          }))
+        }))
+      },
+    },
+  };
+}
+
 export async function generateMessageDataFromQuestion(
   session: WaSession,
   question: Question
@@ -159,7 +202,7 @@ export async function generateMessageDataFromQuestion(
   const title = question.title[lang];
   let description = question.description[lang];
 
-  const buttonTitle = "View choices";
+  const buttonTitle = "View Options";
 
   // interactive choices
   let choices: Array<string> = [];
@@ -179,13 +222,22 @@ export async function generateMessageDataFromQuestion(
     case Q.Opinion:
       choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => i.toString());
       break;
-    // TODO: Interactive list questions only support upto 10 options
-    case Q.MCQ:
+    case Q.WaButtons:
       choices = question.choices![lang];
       break;
     case Q.DateTime:
       description += "\n\nPlease enter date in DD/MM/YYYY format";
+      break;
+    case Q.WaList:
+      const sections = question.sections?.[lang] || [];
+      return createNativeListMessage(
+        to,
+        title,
+        description,
+        sections
+      )
   }
+
   if (choices.length > 0) {
     //interactive question
     if (choices.length <= 3) {
@@ -210,9 +262,8 @@ export async function generateMessageDataFromQuestion(
       )
     ) {
       return createTextMessage(to, title, description);
-    } else if (question.type === Q.MSQ || question.type === Q.DDMS) {
+    } else if ([Q.MSQ, Q.MCQ]) {
       let bodyText = description;
-
       // Displaying choices in `index) choice` format
       const options = question
         .choices![lang].map((choice, index) => `\n${index + 1}) ${choice}`)
@@ -220,8 +271,12 @@ export async function generateMessageDataFromQuestion(
 
       bodyText =
         bodyText +
-        options +
-        `\n\nPlease enter your option numbers separated by a space`;
+        options;
+      if (question.type === Q.MCQ) {
+        bodyText = bodyText + "\n\nPlease enter your choice index"
+      } else if (question.type === Q.MSQ) {
+        bodyText = bodyText + "\n\nPlease enter your choice indices separated by space"
+      }
       return createTextMessage(to, title, bodyText);
     } else if (question.type === Q.Phone) {
       // TODO: Allow user to enter phone number
@@ -233,21 +288,28 @@ export async function generateMessageDataFromQuestion(
   log.error("Invalid question type");
   throw new Error("Invalid question type");
 }
-export async function isValidResponse(
+export function isValidResponse(
   response: any,
   question: Question,
   lang: string
-) {
+): boolean {
+  if (!response) return false;
   switch (question.type) {
     case Q.LD:
       return Object.values(LDResponse).includes(response);
     case Q.MCQ:
+    case Q.WaButtons:
       // TODO lang
       if (!question.choices) {
         log.fatal("No choices found for question", question);
         throw new Error("No choices found for question");
       }
       return question.choices[lang]?.includes(response);
+    case Q.MSQ:
+      if (!Array.isArray(response)) return false;
+      for (const choice of response) {
+        if (!question.choices[lang]?.includes(choice)) return false;
+      }
     case Q.YN:
       return Object.values(YNResponse).includes(response);
     case Q.Rating:
@@ -256,67 +318,109 @@ export async function isValidResponse(
       return response >= 1 && response <= 10;
     case Q.Phone:
       return /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(response);
+    case Q.WaList:
+      // Must be an object with title & optional description
+      return !!response.title
+    case Q.Photo:
+      return typeof response === 'string' && response.length > 0; // Key of the uploaded file
     default:
       return true;
   }
 }
 
-
-export function parseResponse(
-  message: string,
+export async function parseResponse(
+  waMessage: WaMessageBody,
   question: Question,
   session: WaSession
 ) {
-  let response: any;
-  switch (question.type) {
-    case Q.YN:
-    case Q.LD:
-    case Q.Text:
-    case Q.TextArea:
-    case Q.Number:
-    case Q.Email:
-    case Q.Opinion:
-    case Q.MCQ:
-    case Q.DDSS:
-    // TODO: smiley, testimonial
-    case Q.Smiley:
-      response = message;
-      break;
-    case Q.Testimonial:
-      response = {
-        testimonial: message,
-      };
-      break;
-    case Q.Rating:
-      response = Number(message);
-      break;
-    case Q.DateTime:
-      response = new Date(message);
-      break;
-    case Q.MSQ:
-      const selectedChoices = message.split(" ").map((i) => Number(i));
-      response = selectedChoices.map(
-        (index) => question.choices![session.language][index - 1]
-      );
-      break;
-    case Q.DDMS:
-      const selectedItems = message.split(" ").map((i) => Number(i));
-      response = selectedItems.map(
-        (index) => question.choices![session.language][index - 1]
-      );
-      break;
-    case Q.Phone:
-      if (message === "Use this number") {
-        response = session.phone;
-      } else {
-        response = message;
+  let message = parseMessage(waMessage).message;
+  try {
+    switch (question.type) {
+      case Q.YN:
+      case Q.LD:
+      case Q.Text:
+      case Q.TextArea:
+      case Q.Number:
+      case Q.Email:
+      case Q.Opinion:
+      case Q.WaButtons:
+      // TODO: smiley, testimonial
+      case Q.Smiley:
+        return message;
+      case Q.Testimonial:
+        return {
+          testimonial: message,
+        };
+      case Q.Rating:
+        return Number(message);
+      case Q.DateTime:
+        return new Date(message);
+      case Q.MSQ:
+        const selectedChoices = message.split(" ").map((i) => Number(i));
+        return selectedChoices.map(
+          (index) => question.choices![session.language][index - 1]
+        );
+        break;
+      case Q.MCQ:
+        const index = Number(message);
+        return question.choices![session.language][index - 1];
+      case Q.Phone:
+        if (message === "Use this number") {
+          return session.phone;
+        } else {
+          return message;
+        }
+      case Q.WaList: {
+        try {
+          const message = getMessageObject(waMessage);
+          const { id, ...response } = message.interactive['list_reply']
+          return response;
+        } catch (error) {
+          log.error(error);
+          return undefined;
+        }
       }
-      break;
-    default:
-      log.fatal(`Not Implemented: question type => ${question.type}`);
-      throw new Error(`Not Implemented: question type => ${question.type}`);
+      case Q.Photo: {
+        const message = getMessageObject(waMessage);
+        const uniqueFilename = await downloadAndUpload(session, message.image.id);
+        if (!(message.type === 'image')) {
+          return undefined;
+        }
+        return uniqueFilename; // Key of the uploaded file
+      }
+      default:
+        log.fatal(`Not Implemented: question type => ${question.type}`);
+        throw new Error(`Not Implemented: question type => ${question.type}`);
+    }
+  } catch (error) {
+    log.error(error);
+    log.info("Invalid response");
+    return undefined;
   }
-  return response;
+}
+
+/* Downloads image from whatsapp & uploads it to s3 */
+async function downloadAndUpload(session: WaSession, imageId: string) {
+  const waSettings = await getWaSettings(session.orgId);
+  const res = await callWhatsappApi(`/${imageId}`, 'GET', waSettings.accessToken);
+  log.trace(`got image link => %o`, res.data);
+  const { url: imageUrl, mime_type } = res.data;
+  // Need auth token to download image
+  const imageResponse = await callWhatsappApi('', 'GET', waSettings.accessToken, undefined, { responseType: 'arraybuffer', url: imageUrl });
+  log.trace(`downloaded image from whatsapp`)
+  const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+  const extension = mime_type.split('/')[1];
+  const uniqueFilename = `${Date.now()}-${imageId}.${extension}`;
+  const s3Params = {
+    Bucket: process?.env?.AWS_S3_BUCKET || 'rateup-survey-uploads',
+    Key: uniqueFilename,
+    ContentType: mime_type,
+    Body: imageBuffer,
+  };
+  await uploadFile(s3Params);
+  log.trace('uploaded image to s3 key => %s', uniqueFilename)
+
+  return uniqueFilename;
 }
 
 
