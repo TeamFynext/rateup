@@ -96,10 +96,11 @@ export function DraggableQuestionCard({
                 [classes.itemDragging]: snapshot.isDragging,
               })}
               ref={provided.innerRef}
-              {...provided.draggableProps}
               onClick={() => handleOpenQuestion(question)}
+              {...provided.draggableProps}
               style={{
                 backgroundColor: selected ? "var(--light-grey-color)" : "white",
+                ...provided.draggableProps.style,
               }}
             >
               <div {...provided.dragHandleProps} className={classes.dragHandle}>
