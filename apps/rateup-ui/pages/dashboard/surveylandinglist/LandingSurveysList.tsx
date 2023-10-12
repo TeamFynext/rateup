@@ -217,12 +217,7 @@ export default function LandingSurveysList() {
                 new Date(b.createdAt).getTime(),
           )
           .map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              teamsData={teamsData}
-              setSelectedTeamId={setSelectedTeamId}
-            />
+            <SurveyCard key={s.id} survey={s} teamsData={teamsData} />
           ))}
       </SimpleGrid>
       <CreateSurveyModal
@@ -237,12 +232,10 @@ export default function LandingSurveysList() {
 //---------------survey card section starts --------------
 interface SurveyCardProps {
   survey: Survey;
-  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
 export function SurveyCard({
   survey,
   teamsData,
-  setSelectedTeamId,
 }: SurveyCardProps & { teamsData: any }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
@@ -284,11 +277,7 @@ export function SurveyCard({
         </Badge>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
-          <SurveyMenu
-            survey={survey}
-            teamsData={teamsData}
-            setSelectedTeamId={setSelectedTeamId}
-          />
+          <SurveyMenu survey={survey} teamsData={teamsData} />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" gap="xs">
@@ -321,7 +310,7 @@ export function SurveyCard({
   );
 }
 
-function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
+function SurveyMenu({ survey, teamsData }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -330,7 +319,6 @@ function SurveyMenu({ survey, teamsData, setSelectedTeamId }) {
   const cloneSurvey = useCloneSurveyMutation({
     close,
     selectedTeamID,
-    setSelectedTeamId,
   });
 
   const [options, setOptions] = useState([]);

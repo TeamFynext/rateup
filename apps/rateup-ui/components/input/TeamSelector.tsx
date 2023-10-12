@@ -26,7 +26,10 @@ export function TeamSelector({
 
   useEffect(() => {
     // Setting the default teamId to the first team in the list
-    if (teamRes?.data?.length > 0 && !value) {
+    if (value) return;
+    if (enableAll) {
+      onChange("all");
+    } else if (teamRes?.data?.length > 0) {
       onChange(teamRes?.data[0]?.teamId);
     }
   }, [teamRes, value]);

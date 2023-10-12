@@ -160,13 +160,7 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
                 : new Date(a.createdAt).getTime() -
                   new Date(b.createdAt).getTime(),
             )
-            .map((s) => (
-              <SurveyCard
-                key={s.id}
-                survey={s}
-                setSelectedTeamId={setSelectedTeamId}
-              />
-            ))}
+            .map((s) => <SurveyCard key={s.id} survey={s} />)}
       </SimpleGrid>
       <CreateSurveyModal
         open={createSurveyOpened}
@@ -180,12 +174,8 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
 // TODO: make reusable survey card
 interface SurveyCardProps {
   survey: Survey;
-  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 }
-export function SurveyCard({
-  survey,
-  setSelectedTeamId,
-}: SurveyCardProps): JSX.Element {
+export function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
@@ -223,7 +213,7 @@ export function SurveyCard({
         </Text>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
-          <SurveyMenu survey={survey} setSelectedTeamId={setSelectedTeamId} />
+          <SurveyMenu survey={survey} />
         </Group>
       </Flex>
       <Group align={"center"} mt="sm" gap="xs">
@@ -255,7 +245,7 @@ export function SurveyCard({
   );
 }
 
-function SurveyMenu({ survey, setSelectedTeamId }) {
+function SurveyMenu({ survey }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -264,7 +254,6 @@ function SurveyMenu({ survey, setSelectedTeamId }) {
   const cloneSurvey = useCloneSurveyMutation({
     close,
     selectedTeamID,
-    setSelectedTeamId,
   });
 
   const surveyDeleteMutation = useMutation({

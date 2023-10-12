@@ -257,14 +257,9 @@ export const useUpdateSurveyLandingPageMutation = ({
 type CloneProps = {
   close: () => void;
   selectedTeamID: String;
-  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
 };
 
-export function useCloneSurveyMutation({
-  close,
-  selectedTeamID,
-  setSelectedTeamId,
-}: CloneProps) {
+export function useCloneSurveyMutation({ close, selectedTeamID }: CloneProps) {
   const queryClient = useQueryClient();
   return useMutation(
     ({ id, teamId }: { id: string; teamId: string }) => cloneSurvey(id, teamId),
@@ -280,7 +275,6 @@ export function useCloneSurveyMutation({
         });
         queryClient.invalidateQueries(["surveys"]);
         queryClient.invalidateQueries(["surveysByTeam", selectedTeamID]);
-        setSelectedTeamId(variables?.teamId);
         close();
       },
       onError: (error: any) => {

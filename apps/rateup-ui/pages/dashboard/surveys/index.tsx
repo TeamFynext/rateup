@@ -116,11 +116,7 @@ export default function Surveys() {
   const [filterParam, setFilterParam] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const { action } = useRouter().query;
-  const {
-    isLoading,
-    error,
-    data: allSurveys,
-  } = useSurveys(true);
+  const { isLoading, error, data: allSurveys } = useSurveys(true);
 
   const router = useRouter();
 
@@ -266,7 +262,6 @@ export default function Surveys() {
               <SurveyCard
                 key={s.id}
                 survey={s}
-                setSelectedTeamId={setSelectedTeamId}
                 handleCheckBox={handleCheckBox}
                 isChecked={isChecked}
               />
@@ -296,13 +291,11 @@ export default function Surveys() {
 
 interface SurveyCardProps {
   survey: Survey;
-  setSelectedTeamId: React.Dispatch<React.SetStateAction<string>>;
   handleCheckBox: any;
   isChecked: any;
 }
 export function SurveyCard({
   survey,
-  setSelectedTeamId,
   handleCheckBox,
   isChecked,
 }: SurveyCardProps): JSX.Element {
@@ -350,7 +343,7 @@ export function SurveyCard({
         </Text>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
-          <SurveyMenu survey={survey} setSelectedTeamId={setSelectedTeamId} />
+          <SurveyMenu survey={survey} />
 
           <Checkbox
             onClick={(e) => {
@@ -398,7 +391,7 @@ export function SurveyCard({
   );
 }
 
-function SurveyMenu({ survey, setSelectedTeamId }) {
+function SurveyMenu({ survey }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -410,7 +403,6 @@ function SurveyMenu({ survey, setSelectedTeamId }) {
   const cloneSurvey = useCloneSurveyMutation({
     close,
     selectedTeamID,
-    setSelectedTeamId,
   });
 
   const surveyDeleteMutation = useMutation({
