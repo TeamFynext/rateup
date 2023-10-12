@@ -56,7 +56,7 @@ export function QuestionsSideBar({
     }
   };
 
-  const items = questionsState.map((question, index) => (
+  const items = questionsState?.map((question, index) => (
     <DraggableQuestionCard
       key={question.id}
       question={question}
@@ -106,7 +106,7 @@ export function QuestionsSideBar({
             questionsReorderMutation.mutate(reorderedQuestions);
           }}
         >
-          {!questionsState.length && (
+          {!questionsState?.length && (
             <Paper
               style={{ cursor: "pointer", marginTop: "200px" }}
               onClick={handleAddQn}

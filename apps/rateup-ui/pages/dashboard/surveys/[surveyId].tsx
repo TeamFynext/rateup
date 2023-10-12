@@ -1,4 +1,4 @@
-import { Group, Loader, Select, Tabs, Space, Badge, Grid } from "@mantine/core";
+import { Group, Loader, Tabs, Space, Grid } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useRouter } from "next/router";
@@ -7,10 +7,7 @@ import { useSurvey } from "../../../backend/surveys/surveys.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import {
-  RateupButtonBlackOutline,
-  RateupButtonPrimary,
-} from "../../../components/Button/RateupButtons";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
@@ -18,13 +15,13 @@ import Result from "../../../components/Survey/Result/Result";
 import { useUser } from "../../../context/UserContext";
 import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
 import { GetServerSidePropsContext } from "next";
-import supertokensNode from "supertokens-node";
-import { backendConfig } from "../../../config/backendConfig";
 import { getSurveyWithCustomToken } from "../../../backend/surveys/survey.api";
 import { getQuestionsWithCustomToken } from "../../../backend/surveys/questions/questions.api";
 import { checkTokenExpiry } from "../../../utils/supertoken";
 import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
+import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
+import { QueryClient, dehydrate } from "@tanstack/react-query";
 
 enum TabEnum {
   Edit = "Edit",
@@ -35,23 +32,30 @@ enum TabEnum {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const queryClient = new QueryClient();
+
   try {
-    supertokensNode.init(backendConfig());
+    const accessToken = await getSessionWithRefreshHandling(context);
     const { surveyId } = context.params as { surveyId: string };
 
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { surveyData: [], questionsData: [] } };
-    }
+    await queryClient.prefetchQuery({
+      queryKey: ["survey", surveyId],
+      queryFn: () =>
+        getSurveyWithCustomToken(accessToken, {
+          surveyId,
+        }),
+    });
 
-    const surveyData = await getSurveyWithCustomToken(accessToken, {
-      surveyId,
+    await queryClient.prefetchQuery({
+      queryKey: ["questions", surveyId],
+      queryFn: () =>
+        getQuestionsWithCustomToken(accessToken, {
+          surveyId,
+        }),
     });
-    const questionsData = await getQuestionsWithCustomToken(accessToken, {
-      surveyId,
-    });
+
+    const surveyData = queryClient.getQueryData(["survey", surveyId]);
+    const questionsData = queryClient.getQueryData(["questions", surveyId]); // TODO: verify
 
     const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
     if (tokenExpiryCheck) {
@@ -60,25 +64,20 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     return {
       props: {
-        surveyData: surveyData || null,
-        questionsData: questionsData || null,
+        dehydratedState: dehydrate(queryClient),
       },
     };
   } catch (err) {
     console.log(err);
     return {
       props: {
-        surveyData: [],
-        questionsData: [],
+        dehydratedState: dehydrate(queryClient),
       },
     };
   }
 }
 
-export default ({
-  surveyData: surveyInitial,
-  questionsData: questionsinitial,
-}) => {
+export default () => {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
@@ -92,13 +91,9 @@ export default ({
     isLoading: isSurveyLoading,
     error: surveyError,
     data: survey,
-  } = useSurvey(surveyId, surveyInitial);
+  } = useSurvey(surveyId);
 
-  const {
-    isLoading,
-    error,
-    data: questions,
-  } = useQuestions(surveyId, questionsinitial);
+  const { isLoading, error, data: questions } = useQuestions(surveyId);
 
   const { update } = useRouteParams();
   useEffect(() => {
@@ -147,7 +142,7 @@ export default ({
           <Grid.Col span={6}>
             <Tabs.List>
               <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-              {survey.type != "whatsapp" && (
+              {survey?.type != "whatsapp" && (
                 <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
               )}
               <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
@@ -160,7 +155,7 @@ export default ({
               <ContainedSelection
                 ml="auto"
                 maw={150}
-                data={survey.languages}
+                data={survey?.languages}
                 value={selectedLanguage}
                 onChange={setSelectedLanguage}
               />
@@ -169,7 +164,7 @@ export default ({
                 <ContainedSelection
                   disabled
                   maw={100}
-                  data={survey.languages}
+                  data={survey?.languages}
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}
                 />
@@ -190,7 +185,7 @@ export default ({
           <EditSurvey
             questions={questions}
             addQnTrigger={addQnTrigger}
-            surveyLanguages={survey.languages}
+            surveyLanguages={survey?.languages}
             setSelectedLanguage={setSelectedLanguage}
           />
         </Tabs.Panel>

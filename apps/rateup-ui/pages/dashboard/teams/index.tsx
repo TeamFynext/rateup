@@ -1,7 +1,7 @@
 ﻿import {
+  RateupButtonBlue,
   RateupButtonOutline,
   RateupButtonPrimary,
-  RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
 import {
   Flex,
@@ -27,7 +27,7 @@ import {
   useTeamsByUser,
 } from "../../../backend/team/team.query";
 import TeamCard from "./TeamCard";
-import { useQueryClient } from "@tanstack/react-query";
+import { QueryClient, dehydrate, useQueryClient } from "@tanstack/react-query";
 import { backendConfig } from "../../../config/backendConfig";
 import { GetServerSidePropsContext } from "next";
 import supertokensNode from "supertokens-node";
@@ -36,8 +36,37 @@ import { checkTokenExpiry } from "../../../utils/supertoken";
 import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
+import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
 
-export default function Teams({ teamData: initialTeamData }) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const queryClient = new QueryClient();
+
+  try {
+    supertokensNode.init(backendConfig());
+
+    const accessToken = await getSessionWithRefreshHandling(context);
+
+    await queryClient.prefetchQuery({
+      queryKey: ["teamsDataUserQuery"],
+      queryFn: () => fetchTeamsByUserWithCustomToken(accessToken),
+    });
+
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  }
+}
+
+export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const { action } = useRouter().query;
@@ -69,12 +98,15 @@ export default function Teams({ teamData: initialTeamData }) {
 
   const {
     isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
+    data: teamsData,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsByUser(queryClient, initialTeamData);
-
-  let teamsData = initialTeamData || teamsDataUser?.data;
+  } = useTeamsByUser() as {
+    isLoading: boolean;
+    error: any;
+    data: TeamsResponse;
+    refetch: any;
+  };
 
   const onSubmit = (values) => {
     handleSubmit(values);
@@ -141,10 +173,9 @@ export default function Teams({ teamData: initialTeamData }) {
         <Group gap={"md"}>
           <Title order={1}>Teams</Title>
           {retrieveRole(user?.role) === "Super Admin" && (
-            <RateupButtonSecondary
+            <RateupButtonBlue
               title="Add Team"
               rightIcon={<IconPlus />}
-              color="var(--tertiary-color)"
               radius="xl"
               size="lg"
               onClick={open}
@@ -166,8 +197,8 @@ export default function Teams({ teamData: initialTeamData }) {
           spacing={"lg"}
           cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
         >
-          {teamsDataUser?.data?.data
-            ? teamsDataUser?.data?.data?.map((team, i: number) => (
+          {teamsData?.data
+            ? teamsData?.data?.map((team, i: number) => (
                 <CardButton key={i} title={team?.teamName}></CardButton>
               ))
             : "No teams found."}
@@ -183,10 +214,12 @@ export default function Teams({ teamData: initialTeamData }) {
               <Grid columns={9} p={10} h="100%" style={{ overflow: "auto" }}>
                 {teamsData?.data?.length > 0 ? (
                   (sort
-                    ? [...teamsData?.data]
-                        ?.sort((a, b) => a.id - b.id)
-                        .reverse()
-                    : [...teamsData?.data]?.sort((a, b) => a.id - b.id)
+                    ? [...teamsData?.data]?.sort((a, b) =>
+                        b.teamName.localeCompare(a.teamName),
+                      )
+                    : [...teamsData?.data]?.sort((a, b) =>
+                        a.teamName.localeCompare(b.teamName),
+                      )
                   ).map((team, key) => (
                     <Grid.Col span={{ xs: 9, md: 4.5, lg: 3 }} key={key}>
                       <TeamCard key={team.teamId} team={team} />
@@ -216,36 +249,4 @@ export default function Teams({ teamData: initialTeamData }) {
       )}
     </>
   );
-}
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { teamData: [] } };
-    }
-
-    const teamData = await fetchTeamsByUserWithCustomToken(accessToken);
-
-    const tokenExpiryCheck = checkTokenExpiry([teamData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        teamData: teamData || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        teamData: [],
-      },
-    };
-  }
 }

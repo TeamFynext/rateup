@@ -128,7 +128,7 @@ export const CopyLinkComponent = ({
       <CopyButton value={value}>
         {({ copied, copy }) => (
           <Button
-            color={copied ? "dark" : "yellow.6"}
+            variant={copied ? "outline" : "filled"}
             onClick={copy}
             rightSection={<IconCopy />}
             disabled={disabled}

@@ -10,11 +10,9 @@ import {
   IUpdateOrgDetails,
 } from "./org.api";
 
-export const useTeamsMembersOfOrg = (initialData = null) => {
+export const useTeamsMembersOfOrg = () => {
   return useQuery({
     queryKey: ["orgTeamsDataQuery"],
-    enabled: initialData === null,
-    initialData: initialData,
     queryFn: () => getTeamsMembersOfOrg,
   });
 };

@@ -97,9 +97,9 @@ export default function LandingSurveysList() {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
+  } = useTeamsByUser() as UseTeamsByUserResult;
 
-  let teamsData = teamsDataUser?.data?.data;
+  let teamsData = teamsDataUser?.data;
 
   const {
     isLoading: isLoadingSurveys,

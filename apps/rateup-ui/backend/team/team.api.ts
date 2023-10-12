@@ -41,11 +41,10 @@ export const getTeamsByOrg = (orgId: String) =>
     method: "GET",
   });
 
-export const getTeamsByUser = () =>
-  axiosClient({
-    url: `/team/user`,
-    method: "GET",
-  });
+export async function getTeamsByUser() {
+  let teams: TeamsResponse = (await axiosClient.get("/team/user")).data;
+  return teams;
+}
 
 export const fetchTeamsByUserWithCustomToken = async (token: string) => {
   try {
@@ -96,11 +95,24 @@ export const getTeamMembers = (teamId: String) =>
     method: "GET",
   });
 
-export const getTeamMembersFromInvitation = (teamId: String) =>
-  axiosClient({
-    url: `/team/invitation/${teamId}`,
-    method: "GET",
+export async function getTeamMembersFromInvitation(teamId: String) {
+  let teamData: ITeamResponseData = (
+    await axiosClient.get(`/team/invitation/${teamId}`)
+  ).data;
+  return teamData;
+}
+
+export const getTeamMembersFromInvitationWithCustomToken = async (
+  token: string,
+  teamId: String,
+) => {
+  const response = await axiosClient.get(`/team/invitation/${teamId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
+  return response.data;
+};
 
 export const getTeamSurveys = (teamId: String) =>
   axiosClient({

@@ -13,31 +13,30 @@ import {
   Text,
   Paper,
   Divider,
-  useMantineTheme,
 } from "@mantine/core";
 import {
   useTeamsMembersOfOrg,
   useUpdateRoleMutation,
 } from "../../../backend/org/org.query";
-import { backendConfig } from "../../../config/backendConfig";
-import supertokensNode from "supertokens-node";
 import { notifications } from "@mantine/notifications";
 import { getSurveyWithCustomToken } from "../../../backend/org/org.api";
 import { GetServerSidePropsContext } from "next";
 import { checkTokenExpiry } from "../../../utils/supertoken";
+import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
+import { QueryClient, dehydrate } from "@tanstack/react-query";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const queryClient = new QueryClient();
+
   try {
-    supertokensNode.init(backendConfig());
+    const accessToken = await getSessionWithRefreshHandling(context);
 
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { membersData: [] } };
-    }
+    await queryClient.prefetchQuery({
+      queryKey: ["orgTeamsDataQuery"],
+      queryFn: () => getSurveyWithCustomToken(accessToken),
+    });
 
-    const membersData = await getSurveyWithCustomToken(accessToken);
+    const membersData = queryClient.getQueryData(["orgTeamsDataQuery"]);
 
     const tokenExpiryCheck = checkTokenExpiry([membersData]);
     if (tokenExpiryCheck) {
@@ -46,23 +45,22 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     return {
       props: {
-        membersData: membersData || null,
+        dehydratedState: dehydrate(queryClient),
       },
     };
   } catch (err) {
     console.log(err);
     return {
       props: {
-        membersData: [],
+        dehydratedState: dehydrate(queryClient),
       },
     };
   }
 }
 
-const Members = ({ membersData: membersInitialData }) => {
+const Members = () => {
   const router = useRouter();
-  const { user, setUser } = useUser();
-  const theme = useMantineTheme();
+  const { user } = useUser();
 
   if (user?.role === "ADMIN" || user?.role === "MEMBER") {
     router.push("/dashboard");
@@ -70,10 +68,10 @@ const Members = ({ membersData: membersInitialData }) => {
 
   const {
     isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
+    data: membersData,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsMembersOfOrg(membersInitialData);
+  } = useTeamsMembersOfOrg() as UseMembersResult;
 
   const updateRole = useUpdateRoleMutation();
 
@@ -90,8 +88,6 @@ const Members = ({ membersData: membersInitialData }) => {
       withCloseButton: false,
     });
   }
-
-  let membersData = membersInitialData || teamsDataUser?.data;
 
   const rows = membersData?.data?.map((team, i) => (
     <tr key={i}>

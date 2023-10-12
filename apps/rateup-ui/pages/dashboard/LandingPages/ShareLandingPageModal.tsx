@@ -1,28 +1,17 @@
 import {
   Paper,
-  Text,
   Stack,
   Button,
   CopyButton,
-  Group,
   TextInput,
   SimpleGrid,
   Title,
-  ActionIcon,
   Modal,
   Flex,
 } from "@mantine/core";
-import {
-  IconBrandFacebook,
-  IconBrandWhatsapp,
-  IconCopy,
-  IconMail,
-  IconMessage,
-} from "@tabler/icons-react";
+import { IconCopy } from "@tabler/icons-react";
 import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
-// import { getTeamsByUser } from "../../backend/team/team.api";
-// import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
@@ -30,11 +19,8 @@ import { getSurveys } from "../../../backend/surveys/survey.api";
 import {
   useCreateSurveyLandingPageMutation,
   useLandingPage,
-  useSurveys,
-  useUpdateCompletedMutation,
   useUpdateSurveyLandingPageMutation,
 } from "../../../backend/surveys/surveys.query";
-import { getTeamsByUser } from "../../../backend/team/team.api";
 
 interface FormValues {
   title: string;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Stack, Switch } from "@mantine/core";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { useUpdateSurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -54,11 +54,7 @@ export const PasswordProtection = ({ surveyId, isProtected }) => {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="off"
           />
-          <RateupButtonSecondary
-            title={"Save Password"}
-            color="var(--tertiary-color)"
-            onClick={updatePassword}
-          />
+          <RateupButtonBlue title={"Save Password"} onClick={updatePassword} />
         </Stack>
       )}
     </PaperLayout>

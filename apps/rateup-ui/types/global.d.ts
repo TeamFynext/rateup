@@ -165,6 +165,102 @@ declare global {
     };
   }
 
+  //for org members
+
+  export interface MembersResponse {
+    message: string;
+    data: TeamMembersData[];
+  }
+
+  export interface TeamMembersData {
+    team_id: string;
+    team_name: string;
+    team_code: string;
+    members: Member[];
+  }
+
+  export interface Member {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  }
+
+  type UseMembersResult = {
+    isLoading: boolean;
+    data: MembersResponse;
+    refetch: () => void;
+    error: any;
+  };
+
+  //for individual teams
+
+  type TeamData = {
+    teamId: string;
+    teamName: string;
+    code: string;
+    memberCount: number;
+  };
+
+  type TeamsResponse = {
+    message: string;
+    data: TeamData[];
+  };
+
+  type UseTeamsByUserResult = {
+    isLoading: boolean;
+    error: any;
+    data: TeamsResponse;
+    refetch: () => void;
+    isError?: any;
+  };
+
+  //for individual team
+
+  interface ITeamResponseData {
+    team: {
+      id: string;
+      name: string;
+      googleLink: null | string;
+      code: string;
+    };
+    members: Array<{
+      id: string;
+      name: string;
+      email: string;
+      status: string;
+    }>;
+  }
+
+  type UseTeamResult = {
+    isLoading: boolean;
+    data: ITeamResponseData;
+    refetch: () => void;
+  };
+
+  //for individual team
+
+  interface ITeamResponseData {
+    team: {
+      id: string;
+      name: string;
+      googleLink: null | string;
+      code: string;
+    };
+    members: Array<{
+      id: string;
+      name: string;
+      email: string;
+      status: string;
+    }>;
+  }
+
+  type UseTeamResult = {
+    isLoading: boolean;
+    data: ITeamResponseData;
+    refetch: () => void;
+  };
+
   type LogicJump = {
     condition: LogicCondition;
     response: any; // Contains the response to match against

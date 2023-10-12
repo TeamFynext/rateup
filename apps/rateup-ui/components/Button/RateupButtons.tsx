@@ -116,14 +116,14 @@ export const RateupButtonSecondary = ({
       leftSection={leftIcon}
       rightSection={rightIcon}
       onClick={onClick}
-      color={color ?? "dark"}
+      color={color ?? "var(--tertiary-color)"}
       size={size}
       style={sx}
       loading={loading}
       type={type}
       fullWidth={fullWidth}
       mt={mt}
-      variant={variant || "filled"}
+      variant={variant || "outline"}
       {...other}
     >
       {title}

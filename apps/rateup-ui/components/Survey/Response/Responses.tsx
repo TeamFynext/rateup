@@ -14,7 +14,7 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
-import { IconChevronDown, IconTrashXFilled, IconX } from "@tabler/icons-react";
+import { IconFileDownload, IconTrashXFilled, IconX } from "@tabler/icons-react";
 import { useContext } from "react";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
@@ -117,13 +117,13 @@ const Responses = ({ survey }) => {
       <PaperLayout style={{ cursor: "pointer" }} mb={30}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
-          <RateupButtonSecondary
+          <RateupButtonBlue
             onClick={onDownload}
             title={"Download"}
             size="md"
             radius={"lg"}
             disabled={responseCount > 0 ? false : true}
-            rightIcon={<IconChevronDown size="1rem" />}
+            rightIcon={<IconFileDownload size="1rem" />}
           />
         </Group>
       </PaperLayout>
@@ -155,7 +155,7 @@ const Responses = ({ survey }) => {
                         {dayjs(response.createdAt).format("DD-MM-YYYY")}{" "}
                       </Text>
                     </Table.Td>
-                    {questions.map((q) => (
+                    {questions?.map((q) => (
                       <Table.Td
                         key={q.id}
                         style={cellGap}
@@ -254,10 +254,10 @@ function TableHead({ questions }: TableHeadProps) {
             Date
           </Text>
         </Table.Th>
-        {questions.map((q) => (
+        {questions?.map((q) => (
           <Table.Th
-            key={q.id}
-            title={q.title[selectedLanguage] || q.title["English"]}
+            key={q?.id}
+            title={q?.title[selectedLanguage] || q?.title["English"]}
           >
             <Text
               c="dark.9"
@@ -266,7 +266,7 @@ function TableHead({ questions }: TableHeadProps) {
               truncate="end"
               style={{ maxWidth: "150px" }}
             >
-              {q.title[selectedLanguage] || q.title["English"]}
+              {q?.title[selectedLanguage] || q?.title["English"]}
             </Text>
           </Table.Th>
         ))}

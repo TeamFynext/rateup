@@ -10,7 +10,6 @@ import {
   getSurveyByLandingId,
   getSurveyLandings,
   getSurveys,
-  getSurveysLandingPage,
   getWhatsappSurveys,
   updateSurvey,
   updateSurveyCompleted,
@@ -27,11 +26,10 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
 import { rem } from "@mantine/core";
 
-export const useSurvey = (surveyId: string, initialData = null) => {
+export const useSurvey = (surveyId: string) => {
   return useQuery({
     queryKey: ["survey", surveyId],
-    enabled: !!surveyId || initialData === null,
-    initialData: initialData,
+    enabled: !!surveyId,
     queryFn: () => getSurvey(surveyId),
   });
 };
@@ -101,23 +99,17 @@ export const useSurveysLanding = (teamIsSelected) =>
 //     onSuccess: (data) => {},
 //   });
 // }
-export const useSurveys = (
-  specificTeamIsSelected: boolean,
-  initialSurveys = null,
-) => {
+export const useSurveys = (specificTeamIsSelected: boolean) => {
   return useQuery({
-    enabled: !specificTeamIsSelected || initialSurveys === null,
+    enabled: !specificTeamIsSelected,
     queryKey: ["surveys"],
-    initialData: initialSurveys,
     queryFn: getSurveys,
   });
 };
 
-export const useSurveysSummary = (initialSummaryData = null) => {
+export const useSurveysSummary = () => {
   return useQuery({
     queryKey: ["surveysSummary"],
-    enabled: initialSummaryData === null,
-    initialData: initialSummaryData,
     queryFn: getActiveSurveysSummary,
   });
 };

@@ -22,12 +22,12 @@ export function TeamSelector({
     isLoading: teamsLoading,
     isError,
     error,
-  } = useTeamsByUser(undefined, null);
+  } = useTeamsByUser();
 
   useEffect(() => {
     // Setting the default teamId to the first team in the list
-    if (teamRes?.data?.data?.length > 0 && !value) {
-      onChange(teamRes?.data?.data[0]?.teamId);
+    if (teamRes?.data?.length > 0 && !value) {
+      onChange(teamRes?.data[0]?.teamId);
     }
   }, [teamRes, value]);
   if (isError) {
@@ -38,7 +38,7 @@ export function TeamSelector({
     console.log("teamRes", teamRes);
     return <Loader />;
   }
-  const teams = teamRes?.data?.data;
+  const teams = teamRes?.data;
   if (!teams) {
     return <Text>No teams found!</Text>;
   }

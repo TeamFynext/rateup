@@ -9,18 +9,18 @@ import { useSurvey } from "../../../../backend/surveys/surveys.query";
 import Result from "../../../../components/Survey/Result/Result";
 import ShareSurvey from "../../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "../../../../components/styled/StyledTabs/StyledTabs";
-import { backendConfig } from "../../../../config/backendConfig";
 import { useRouteParams } from "../../../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { useUser } from "../../../../context/UserContext";
 import { checkTokenExpiry } from "../../../../utils/supertoken";
 import { getSurveyWithCustomToken } from "../../../../backend/surveys/survey.api";
-import { getAccessTokenFromContext } from "../../../../utils/auth/token";
 import { EditWhatsappSurvey } from "../../../../components/whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../../../components/Promotion/promotion.config";
 import SurveySettings from "../../../../components/Survey/Settings/SurveySettings";
 import { ContainedSelection } from "../../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../../components/styled/Heading/Heading";
+import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { getSessionWithRefreshHandling } from "../../../../utils/auth/getSessionWithRefreshHandling";
 
 enum TabEnum {
   Edit = "Edit",
@@ -30,21 +30,30 @@ enum TabEnum {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const queryClient = new QueryClient();
+
   try {
-    supertokensNode.init(backendConfig());
+    const accessToken = await getSessionWithRefreshHandling(context);
     const { surveyId } = context.params as { surveyId: string };
 
-    let accessToken = getAccessTokenFromContext(context);
-    if (!accessToken) {
-      return { props: { surveyData: [], questionsData: [] } };
-    }
+    await queryClient.prefetchQuery({
+      queryKey: ["survey", surveyId],
+      queryFn: () =>
+        getSurveyWithCustomToken(accessToken, {
+          surveyId,
+        }),
+    });
 
-    const surveyData = await getSurveyWithCustomToken(accessToken, {
-      surveyId,
+    await queryClient.prefetchQuery({
+      queryKey: ["questions", surveyId],
+      queryFn: () =>
+        getQuestionsWithCustomToken(accessToken, {
+          surveyId,
+        }),
     });
-    const questionsData = await getQuestionsWithCustomToken(accessToken, {
-      surveyId,
-    });
+
+    const surveyData = queryClient.getQueryData(["survey", surveyId]);
+    const questionsData = queryClient.getQueryData(["questions", surveyId]);
 
     const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
     if (tokenExpiryCheck) {
@@ -53,25 +62,20 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     return {
       props: {
-        surveyData: surveyData || null,
-        questionsData: questionsData || null,
+        dehydratedState: dehydrate(queryClient),
       },
     };
   } catch (err) {
     console.log(err);
     return {
       props: {
-        surveyData: [],
-        questionsData: [],
+        dehydratedState: dehydrate(queryClient),
       },
     };
   }
 }
 
-export default ({
-  surveyData: surveyInitial,
-  questionsData: questionsinitial,
-}) => {
+export default () => {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
@@ -85,13 +89,9 @@ export default ({
     isLoading: isSurveyLoading,
     error: surveyError,
     data: survey,
-  } = useSurvey(surveyId, surveyInitial);
+  } = useSurvey(surveyId);
 
-  const {
-    isLoading,
-    error,
-    data: questions,
-  } = useQuestions(surveyId, questionsinitial);
+  const { isLoading, error, data: questions } = useQuestions(surveyId);
 
   const { update } = useRouteParams();
   useEffect(() => {

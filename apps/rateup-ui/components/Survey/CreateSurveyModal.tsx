@@ -15,15 +15,11 @@ import {
   CheckIcon,
   useCombobox,
 } from "@mantine/core";
-
-import { createFormContext, useForm } from "@mantine/form";
-import { useQuery } from "@tanstack/react-query";
-import { getTeamsByUser } from "../../backend/team/team.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
-import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
 import { TeamSelector } from "../input/TeamSelector";
+import { useForm } from "@mantine/form";
 interface FormValues {
   title: string;
   languages: Array<string>;
@@ -103,7 +99,6 @@ export function CreateSurveyModal({
     });
     createSurveyMutation.mutate(form.values);
   };
-
   return (
     <Modal
       opened={open}

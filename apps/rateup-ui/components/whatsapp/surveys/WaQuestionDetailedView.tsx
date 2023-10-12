@@ -176,7 +176,7 @@ export function WaQuestionDetailedView({
       let langList: string[] = surveyLanguages;
       const missingLangs = [];
 
-      langList.forEach((language: string) => {
+      langList?.forEach((language: string) => {
         if (language == selectedLanguage) {
           return;
         }

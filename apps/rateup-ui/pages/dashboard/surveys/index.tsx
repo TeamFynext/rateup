@@ -35,6 +35,7 @@ import {
   IconCheck,
 } from "@tabler/icons-react";
 import {
+  RateupButtonBlue,
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
@@ -45,7 +46,12 @@ import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal"
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  dehydrate,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   deleteSurvey,
   getSurveysWithCustomToken,
@@ -60,20 +66,52 @@ import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
 import classes from "./Survey.module.css";
 import { GetServerSidePropsContext } from "next";
-import supertokensNode from "supertokens-node";
-import { backendConfig } from "../../../config/backendConfig";
 import { checkTokenExpiry } from "../../../utils/supertoken";
 import { UserRole } from "../../../utils/enums";
 import { TeamSelector } from "../../../components/input/TeamSelector";
+import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
 
-export default function Surveys({ surveys: initialSurveys }) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const queryClient = new QueryClient();
+
+  try {
+    const accessToken = await getSessionWithRefreshHandling(context);
+
+    await queryClient.prefetchQuery({
+      queryKey: ["surveys"],
+      queryFn: () => getSurveysWithCustomToken(accessToken),
+    });
+
+    let surveys = queryClient.getQueryData(["surveys"]);
+
+    const tokenExpiryCheck = checkTokenExpiry([surveys]);
+    if (tokenExpiryCheck) {
+      return tokenExpiryCheck;
+    }
+
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      props: {
+        dehydratedState: dehydrate(queryClient),
+      },
+    };
+  }
+}
+
+export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [
     mergeSurveyOpened,
     { open: openMergeSurvey, close: closeMergeSurveyModal },
   ] = useDisclosure(false);
   const [sort, setSort] = useState(true);
-  const { user, setUser } = useUser();
+  const { user } = useUser();
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState(null);
@@ -82,7 +120,7 @@ export default function Surveys({ surveys: initialSurveys }) {
     isLoading,
     error,
     data: allSurveys,
-  } = useSurveys(true, initialSurveys);
+  } = useSurveys(true);
 
   const router = useRouter();
 
@@ -158,10 +196,9 @@ export default function Surveys({ surveys: initialSurveys }) {
             enableAll={true}
           />
           {user?.role !== UserRole.MEMBER && (
-            <RateupButtonSecondary
+            <RateupButtonBlue
               title="Add Survey"
               rightIcon={<IconPlus />}
-              color="var(--tertiary-color)"
               radius="xl"
               size="md"
               onClick={open}
@@ -274,9 +311,9 @@ export function SurveyCard({
   const { user, setUser } = useUser();
 
   useEffect(() => {
-    setTimeSince(getTimeSince(survey.createdAt));
+    setTimeSince(getTimeSince(survey?.createdAt));
     const timeoutID = setInterval(
-      () => setTimeSince(getTimeSince(survey.createdAt)),
+      () => setTimeSince(getTimeSince(survey?.createdAt)),
       5000,
     );
     return () => clearInterval(timeoutID);
@@ -309,7 +346,7 @@ export function SurveyCard({
           size="xl"
           fw={700}
         >
-          {survey.title}
+          {survey?.title}
         </Text>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
@@ -329,7 +366,7 @@ export function SurveyCard({
             Created {timeSince}
           </Text>
         </Group>
-        <StatusBadge active={survey.active} />
+        <StatusBadge active={survey?.active} />
       </Group>
 
       <Space h="xl" />
@@ -340,12 +377,12 @@ export function SurveyCard({
           mt="md"
           color={survey?.type == "web" ? "var(--tertiary-color)" : "green"}
         >
-          {survey.type}
+          {survey?.type}
         </Badge>
         {/* <Text>Total Responses : #</Text> */}
         {/* //TODO */}
         <Link
-          href={`/dashboard/surveys/${survey.id}?tab=Responses`}
+          href={`/dashboard/surveys/${survey?.id}?tab=Responses`}
           style={{ color: "var(--tertiary-color)" }}
           onClick={(e) => {
             e.stopPropagation();
@@ -512,12 +549,14 @@ function SurveyMenu({ survey, setSelectedTeamId }) {
         }}
       >
         <Menu.Item
-          leftSection={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+          leftSection={
+            survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />
+          }
           onClick={() =>
-            surveyUpdateMutation.mutate({ active: !survey.active })
+            surveyUpdateMutation.mutate({ active: !survey?.active })
           }
         >
-          {survey.active ? "Pause Survey" : "Resume Survey"}
+          {survey?.active ? "Pause Survey" : "Resume Survey"}
         </Menu.Item>
 
         <Menu.Item
@@ -559,37 +598,4 @@ function StatusBadge({ active }) {
       {active ? "Active" : "Paused"}
     </Badge>
   );
-}
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { surveys: [] } };
-    }
-
-    const surveys = await getSurveysWithCustomToken(accessToken);
-
-    const tokenExpiryCheck = checkTokenExpiry([surveys]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        surveys: surveys || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        surveys: [],
-      },
-    };
-  }
 }

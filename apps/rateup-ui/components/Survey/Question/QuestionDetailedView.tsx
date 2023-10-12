@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
@@ -10,12 +10,14 @@ import {
   Center,
   ScrollArea,
   Divider,
+  Box,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
 import {
   IconDeviceSdCard,
   IconEdit,
+  IconEye,
   IconPlus,
   IconStar,
   IconTrash,
@@ -58,6 +60,8 @@ export function QuestionDetailedView({
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const [isSaving, setIsSaving] = useState(false);
+  const [titleFontSize, setTitleFontSize] = useState("2rem");
+  const textInputRef = useRef(null);
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({
@@ -81,6 +85,22 @@ export function QuestionDetailedView({
       title: (value) => (value.trim().length > 0 ? null : "Title is required"),
     },
   });
+
+  //font resize on lengthy title
+  useEffect(() => {
+    const textLength = textInputRef?.current?.value?.length;
+    resizeFont(textLength);
+  }, [textInputRef?.current?.value, question?.title[selectedLanguage]]);
+
+  function resizeFont(textLength) {
+    if (textLength > 50) {
+      setTitleFontSize("1rem");
+    } else if (textLength > 25) {
+      setTitleFontSize("1.5rem");
+    } else {
+      setTitleFontSize("2rem");
+    }
+  }
 
   //autosave add choices
 
@@ -131,7 +151,7 @@ export function QuestionDetailedView({
       let langList: string[] = surveyLanguages;
       const missingLangs = [];
 
-      langList.forEach((language: string) => {
+      langList?.forEach((language: string) => {
         if (language == selectedLanguage) {
           return;
         }
@@ -167,13 +187,14 @@ export function QuestionDetailedView({
     <Stack justify="space-between" style={{ height: "100%" }}>
       <ScrollArea style={{ height: "80%" }}>
         <Stack>
-          <Stack justify="space-between" style={{ height: "100%" }}>
+          <Stack style={{ minHeight: "150px", height: "100%" }}>
             <TextInput
               fw={800}
               fz="lg"
+              ref={textInputRef}
               styles={{
                 input: {
-                  fontSize: "2rem",
+                  fontSize: titleFontSize,
                   fontWeight: 700, // set custom font size for this TextInput
                 },
               }}
@@ -207,6 +228,17 @@ export function QuestionDetailedView({
             />
             <ExtraProps form={form} question={question} />
           </Stack>
+          <Divider
+            my="xs"
+            variant="dashed"
+            labelPosition="center"
+            label={
+              <>
+                <IconEye size={12} />
+                <Box ml={5}>Preview</Box>
+              </>
+            }
+          />
           <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
             <QuestionTypePreview type={question?.type} />
           </Center>
@@ -230,8 +262,6 @@ export function QuestionDetailedView({
                 title={"Logic Jump"}
                 leftIcon={<IconEdit />}
                 size="sm"
-                variant="outline"
-                color="var(--tertiary-color)"
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&
@@ -244,8 +274,6 @@ export function QuestionDetailedView({
                 title={"Google Review"}
                 leftIcon={<IconStar />}
                 size="sm"
-                variant="outline"
-                color="var(--tertiary-color)"
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&
@@ -257,8 +285,6 @@ export function QuestionDetailedView({
               <RateupButtonSecondary
                 title={"Custom Validation"}
                 leftIcon={<IconEdit />}
-                variant="outline"
-                color="var(--tertiary-color)"
                 size="sm"
                 onClick={() => {
                   let save = handleSave();

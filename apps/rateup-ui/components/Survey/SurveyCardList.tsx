@@ -1,47 +1,27 @@
 import {
   Paper,
-  Title,
   Text,
-  Stack,
   SimpleGrid,
   Flex,
-  Menu,
   Avatar,
   Badge,
-  ActionIcon,
   useMantineTheme,
   Group,
   Loader,
   Space,
-  Select,
-  Modal,
   Checkbox,
-  Button,
 } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
 
 import Link from "next/link";
-import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
 import { useUser } from "../../context/UserContext";
-import {
-  useCloneSurveyMutation,
-  useSurveys,
-  useSurveysByTeam,
-} from "../../backend/surveys/surveys.query";
-import { useTeamsByUser } from "../../backend/team/team.query";
-import { CreateSurveyModal } from "./CreateSurveyModal";
-import CreateSurveyLandingModal from "../../pages/dashboard/LandingPages/CreateSurveyLandingModal";
+import { useSurveys } from "../../backend/surveys/surveys.query";
 import { getTimeSince } from "../../utils";
-import { deleteSurvey, updateSurvey } from "../../backend/surveys/survey.api";
 
 export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const [surveyidArray, setSurveyIdArray] = useState([]);
@@ -143,9 +123,9 @@ function SurveyCard({
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
   useEffect(() => {
-    setTimeSince(getTimeSince(survey.createdAt));
+    setTimeSince(getTimeSince(survey?.createdAt));
     const timeoutID = setInterval(
-      () => setTimeSince(getTimeSince(survey.createdAt)),
+      () => setTimeSince(getTimeSince(survey?.createdAt)),
       5000,
     );
     return () => clearInterval(timeoutID);
@@ -164,10 +144,10 @@ function SurveyCard({
       >
         <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="xl" fw={700}>
-            {survey.title}
+            {survey?.title}
           </Text>
           <Badge color={survey?.type == "web" ? "blue" : "green"}>
-            {survey.type}
+            {survey?.type}
           </Badge>
           <Group align={"center"} mt="sm" gap="xs">
             <Checkbox
@@ -188,10 +168,10 @@ function SurveyCard({
         <Space h="lg" />
 
         <Flex justify={"space-between"} mt="xl" align={"center"}>
-          <StatusBadge active={survey.active} />
+          <StatusBadge active={survey?.active} />
 
           <Link
-            href={`/dashboard/surveys/${survey.id}?tab=Responses`}
+            href={`/dashboard/surveys/${survey?.id}?tab=Responses`}
             style={{ color: "var(--tertiary-color)" }}
             onClick={(e) => {
               e.stopPropagation();

@@ -290,14 +290,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                       accept="image/png,image/jpeg"
                     >
                       {(props) => (
-                        <Button
-                          fullWidth
-                          size="lg"
-                          radius="lg"
-                          variant="gradient"
-                          gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
-                          {...props}
-                        >
+                        <Button fullWidth size="lg" radius="lg" {...props}>
                           Upload Logo
                         </Button>
                       )}

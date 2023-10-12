@@ -1,5 +1,4 @@
 import {
-  Center,
   Container,
   Paper,
   Title,
@@ -22,11 +21,8 @@ import {
   IconChartBar,
   IconCopy,
   IconDots,
-  IconEdit,
-  IconMessage,
   IconPlayerPause,
   IconPlayerPlay,
-  IconPlus,
   IconShare,
   IconTrash,
   IconSelector,
@@ -61,7 +57,6 @@ import { useUser } from "../../../context/UserContext";
 export default function SurveyLandingList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
-  const { user, setUser } = useUser();
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -91,9 +86,9 @@ export default function SurveyLandingList() {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
+  } = useTeamsByUser() as UseTeamsByUserResult;
 
-  let teamsData = teamsDataUser?.data?.data;
+  let teamsData = teamsDataUser?.data;
 
   const {
     isLoading: isLoadingSurveys,
@@ -102,7 +97,6 @@ export default function SurveyLandingList() {
   } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
 
   useEffect(() => {
-    //console.log("test.........."+JSON.stringify(teamsData))
     if (teamsData?.length) {
       const newOptions = teamsData?.map((team) => ({
         value: team?.teamId,
@@ -239,7 +233,7 @@ export function SurveyCard({
 }: SurveyCardProps & { teamsData: any }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
-  const { user, setUser } = useUser();
+  const { user } = useUser();
 
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));

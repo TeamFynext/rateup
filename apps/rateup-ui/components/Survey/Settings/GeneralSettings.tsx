@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import {
   RateupButtonPrimary,
-  RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";

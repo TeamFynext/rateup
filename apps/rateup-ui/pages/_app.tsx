@@ -29,7 +29,6 @@ if (typeof window !== "undefined") {
 }
 
 // TODO: docs warns to not create this at file root level
-const queryClient = new QueryClient();
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -56,6 +55,19 @@ export default function App({
       LayoutComponent = React.Fragment;
     }
   }
+
+  const [queryClient] = React.useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // With SSR, we usually want to set some default staleTime
+            // above 0 to avoid refetching immediately on the client
+            staleTime: 60 * 1000,
+          },
+        },
+      }),
+  );
 
   useEffect(() => {
     async function doRefresh() {

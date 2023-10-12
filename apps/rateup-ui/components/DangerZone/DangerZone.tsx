@@ -19,6 +19,7 @@ export default function DangerZone({ title, message, buttonText, onClick }) {
           <RateupButtonSecondary
             title={buttonText}
             color="red"
+            variant="filled"
             fullWidth={false}
             onClick={onClick}
           />

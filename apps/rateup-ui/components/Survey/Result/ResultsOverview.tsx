@@ -43,7 +43,7 @@ const ResultsOverview = () => {
     return <div>Error </div>;
   }
   const prepareData = (questions: any[], responses: any[]) => {
-    return questions.map((question) => {
+    return questions?.map((question) => {
       const responsesForQuestion = responses?.flatMap(
         (response) =>
           response?.responses?.filter(
@@ -116,7 +116,7 @@ const ResultsOverview = () => {
       </Group>
       <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
         <Stack style={{ marginBottom: "20px" }}>
-          {chartData.some(
+          {chartData?.some(
             (item) =>
               item.type === QuestionType.Rating ||
               item.type === QuestionType.Smiley ||
@@ -126,7 +126,7 @@ const ResultsOverview = () => {
           ) && <Heading subtitle="NPS Overview" />}
           <PaperLayout style={{ marginBottom: "20px" }}>
             {chartData
-              .filter(
+              ?.filter(
                 (item) =>
                   item.type === QuestionType.Rating ||
                   item.type === QuestionType.Smiley ||
@@ -150,7 +150,7 @@ const ResultsOverview = () => {
           <Heading subtitle="Question Wise Overview" />
           <PaperLayout style={{ marginBottom: "20px" }}>
             {chartData
-              .filter(
+              ?.filter(
                 (item) =>
                   item.type === QuestionType.Rating ||
                   item.type === QuestionType.Smiley ||
@@ -166,13 +166,13 @@ const ResultsOverview = () => {
                 <React.Fragment key={index}>
                   <QuestionBarChart
                     key={index}
-                    question={item.question}
+                    question={item?.question}
                     no={index + 1}
-                    choices={item.choices}
-                    data={item.responses}
-                    questionType={item.type}
+                    choices={item?.choices}
+                    data={item?.responses}
+                    questionType={item?.type}
                   />
-                  {index < chartData.length - 1 && <Divider my="md" />}
+                  {index < chartData?.length - 1 && <Divider my="md" />}
                 </React.Fragment>
               ))}
           </PaperLayout>

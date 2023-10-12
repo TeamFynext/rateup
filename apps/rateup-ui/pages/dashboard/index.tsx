@@ -43,26 +43,25 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 import { GetServerSidePropsContext } from "next";
-import supertokensNode from "supertokens-node";
-import { backendConfig } from "../../config/backendConfig";
 import { getActiveSurveysSummaryWithCustomToken } from "../../backend/surveys/survey.api";
 import { checkTokenExpiry } from "../../utils/supertoken";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
+import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { getSessionWithRefreshHandling } from "../../utils/auth/getSessionWithRefreshHandling";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const queryClient = new QueryClient();
+
   try {
-    supertokensNode.init(backendConfig());
+    const accessToken = await getSessionWithRefreshHandling(context);
 
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { summaryData: {} } };
-    }
+    await queryClient.prefetchQuery({
+      queryKey: ["surveysSummary"],
+      queryFn: () => getActiveSurveysSummaryWithCustomToken(accessToken),
+    });
 
-    const summaryData =
-      await getActiveSurveysSummaryWithCustomToken(accessToken);
+    const summaryData = queryClient.getQueryData(["surveysSummary"]);
 
     const tokenExpiryCheck = checkTokenExpiry([summaryData]);
     if (tokenExpiryCheck) {
@@ -71,20 +70,18 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     return {
       props: {
-        summaryData: summaryData || {},
+        dehydratedState: dehydrate(queryClient),
       },
     };
   } catch (err) {
     console.log(err);
     return {
-      props: {
-        summaryData: {},
-      },
+      dehydratedState: dehydrate(queryClient),
     };
   }
 }
 
-export default function DashboardHome({ summaryData: initialSummaryData }) {
+export default function DashboardHome() {
   const router = useRouter();
   const { user } = useUser();
   const [sort, setSort] = useState(true);
@@ -97,7 +94,7 @@ export default function DashboardHome({ summaryData: initialSummaryData }) {
     isLoading: isLoadingSummary,
     error: isErrorSummary,
     data: surveysSummary,
-  } = useSurveysSummary(initialSummaryData) as {
+  } = useSurveysSummary() as {
     isLoading: boolean;
     error: any;
     data: SurveySummaryData;

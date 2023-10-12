@@ -22,7 +22,6 @@ export interface ITeamData {
   googleLink: string;
   code: string;
   id: string;
-  whatsappAccessToken: string;
 }
 
 const TeamSettings = ({

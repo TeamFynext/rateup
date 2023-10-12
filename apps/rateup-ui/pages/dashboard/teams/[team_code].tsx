@@ -9,10 +9,11 @@ import {
   Space,
   Text,
   Group,
+  Title,
 } from "@mantine/core";
 import {
+  RateupButtonBlue,
   RateupButtonOutline,
-  RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
 import { IconCheck, IconReload } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
@@ -27,7 +28,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getOrgIdRole, getUserID } from "../../../utils/userInfo";
 import {
+  fetchTeamsByUserWithCustomToken,
   getTeamMembersFromInvitation,
+  getTeamMembersFromInvitationWithCustomToken,
   inviteTeamMember,
 } from "../../../backend/team/team.api";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
@@ -36,10 +39,6 @@ import { IconPlus } from "@tabler/icons-react";
 import { backendConfig } from "../../../config/backendConfig";
 import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
 import supertokensNode from "supertokens-node";
-import {
-  fetchTeamsByUser,
-  getTeamMembersFromInvite,
-} from "../../../backend/ssr/team.api";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import TeamSettings from "./TeamSettings";
 import { useTeamsByUser } from "../../../backend/team/team.query";
@@ -51,37 +50,49 @@ export async function getServerSideProps(context) {
   const { team_code } = context.query;
   let teamCode: string = team_code?.toString();
   const queryClient = new QueryClient();
-  console.log("hello");
 
-  supertokensNode.init(backendConfig());
-  const session = await getSessionWithRefreshHandling(context);
+  try {
+    supertokensNode.init(backendConfig());
+    const accessToken = await getSessionWithRefreshHandling(context);
 
-  const teamsData = await queryClient.prefetchQuery(["teamDataPrefetch"], () =>
-    fetchTeamsByUser(session),
-  );
-  let teamId = getTeamIdByCode(teamsData, teamCode);
-  console.log(teamId);
+    await queryClient.prefetchQuery({
+      queryKey: ["teamsDataUserQuery"],
+      queryFn: () => fetchTeamsByUserWithCustomToken(accessToken),
+    });
 
-  if (teamId) {
-    const teamInitialData = await queryClient.prefetchQuery(
-      ["teamDetailsPrefetch"],
-      () => getTeamMembersFromInvite(teamId, session),
-    );
+    const teamData: TeamsResponse = queryClient.getQueryData([
+      "teamsDataUserQuery",
+    ]);
+    let teamId = getTeamIdByCode(teamData?.data, teamCode);
 
+    if (teamId) {
+      await queryClient.prefetchQuery({
+        queryKey: ["teamsDetailsQuery"],
+        queryFn: () =>
+          getTeamMembersFromInvitationWithCustomToken(accessToken, teamId),
+      });
+
+      const teamDetailsQuery: TeamsResponse = queryClient.getQueryData([
+        "teamsDetailsQuery",
+      ]);
+
+      return {
+        props: {
+          dehydratedState: dehydrate(queryClient),
+        },
+      };
+    }
+  } catch (err) {
+    console.log(err);
     return {
       props: {
         dehydratedState: dehydrate(queryClient),
       },
     };
   }
-
-  return {
-    props: {},
-  };
 }
 
 const TeamDetails = () => {
-  // TODO fix id fail case on page reload
   const router = useRouter();
   const { team_code } = router.query;
   const [opened, { open, close }] = useDisclosure(false);
@@ -89,6 +100,7 @@ const TeamDetails = () => {
   const [email, setEmail] = useState("");
   const [sort, setSort] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [teamID, setTeamID] = useState("");
 
   const queryClient = useQueryClient();
   const { state, update } = useRouteParams();
@@ -98,12 +110,16 @@ const TeamDetails = () => {
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
-  } = useTeamsByUser(queryClient);
+  } = useTeamsByUser() as UseTeamsByUserResult;
 
-  let teamsData = teamsDataUser?.data?.data;
+  let teamsData = teamsDataUser?.data;
   let teamCode: string = team_code?.toString();
 
-  let team_id = getTeamIdByCode(teamsData, teamCode);
+  useEffect(() => {
+    let id = getTeamIdByCode(teamsData, teamCode);
+    if (id) setTeamID(id);
+  }, [teamsData, teamCode]);
+
   enum TabEnum {
     Members = "Members",
     Survey = "Survey",
@@ -114,7 +130,7 @@ const TeamDetails = () => {
   const handleMemberInvite = async () => {
     const { orgId } = await getOrgIdRole();
     const { userId } = await getUserID();
-    let teamId: string = team_id?.toString();
+    let teamId: string = teamID?.toString();
     let type = "TEAM";
     const data = { name, email, orgId, type, teamId, invitedBy: userId };
     return inviteTeamMember(data);
@@ -150,30 +166,27 @@ const TeamDetails = () => {
     },
   });
 
-  const fetchTeamMembers = () => {
-    // let teamId: string = team_id.toString();
-    console.log(team_id);
-    return getTeamMembersFromInvitation(team_id);
+  const fetchTeamMembers = async () => {
+    if (teamID) {
+      return getTeamMembersFromInvitation(teamID);
+    } else {
+      return null;
+    }
   };
 
   const {
     isLoading: isLoadingMembers,
     data: teamsMembersData,
-    error: errorTeamsMembersData,
     refetch,
-  } = useQuery(["teamsDetailsQuery"], fetchTeamMembers, {
-    refetchOnWindowFocus: "always",
-    refetchOnMount: "always",
-    initialData: () => queryClient.getQueryData(["teamDetailsPrefetch"]),
-    onSuccess: (data) => {
-      // console.log("Initial Prefetch MData:", queryClient.getQueryData(["teamDetailsPrefetch"]));
-      //  console.log("New fetch MData:", data);
-    },
-  });
+  } = useQuery(["teamsDetailsQuery"], fetchTeamMembers, {}) as UseTeamResult;
 
   useEffect(() => {
-    update({ team_code: teamsMembersData?.data?.team?.name });
-  }, [teamsMembersData?.data]);
+    if (teamID && !teamsMembersData) refetch();
+  }, [teamID]);
+
+  useEffect(() => {
+    update({ team_code: teamsMembersData?.team?.name });
+  }, [teamsMembersData]);
 
   const handleSubmit = async () => {
     const validationErrors = validateNameAndEmail(name, email);
@@ -230,7 +243,7 @@ const TeamDetails = () => {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          {errors.email && <Text color="red">*{errors.email}</Text>}
+          {errors.email && <Text c="red">*{errors.email}</Text>}
         </Box>
       </FormModalLayout>
       <StyledTabs
@@ -243,12 +256,11 @@ const TeamDetails = () => {
             <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
           </Tabs.List>
           <Group>
-            <Heading title={teamsMembersData?.data?.team?.name || "Team"} />
+            <Heading title={teamsMembersData?.team?.name || "Team"} />
             <Tabs.Panel value={TabEnum.Members} mt={30}>
-              <RateupButtonSecondary
+              <RateupButtonBlue
                 title="Add Member"
                 rightIcon={<IconPlus />}
-                color="var(--tertiary-color)"
                 radius="xl"
                 size="lg"
                 onClick={open}
@@ -263,44 +275,33 @@ const TeamDetails = () => {
             cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
             style={{ overflow: "auto" }}
           >
-            {teamsMembersData?.data?.members?.length > 0 ? (
-              Array.isArray(teamsMembersData.data.members) ? (
+            {teamsMembersData?.members?.length > 0 ? (
+              Array.isArray(teamsMembersData?.members) ? (
                 (sort
-                  ? [...teamsMembersData?.data?.members].sort(
-                      (a, b) => b.id - a.id,
+                  ? [...teamsMembersData?.members].sort((a, b) =>
+                      b.name.localeCompare(a.name),
                     )
-                  : [...teamsMembersData?.data?.members].sort(
-                      (a, b) => a.id - b.id,
+                  : [...teamsMembersData?.members].sort((a, b) =>
+                      a.name.localeCompare(b.name),
                     )
                 ).map((member, i) => <TeamMemberCard key={i} member={member} />)
               ) : (
-                <Group p="xl"> {teamsMembersData?.data?.members}</Group>
+                <Group p="xl"> {teamsMembersData?.members}</Group>
               )
             ) : isLoadingMembers ? (
               <Loader />
             ) : (
+              // TODO: handle error
               <Group p="xl">
-                {teamsMembersData?.data?.message ? (
-                  "No other members in this team!"
-                ) : (
-                  <>
-                    Error... Try Refreshing...{" "}
-                    <RateupButtonOutline
-                      onClick={refetch}
-                      rightIcon={<IconReload size="1rem" />}
-                      title="Refresh"
-                      size="xs"
-                    />
-                  </>
-                )}
+                "No other members in this team!"
               </Group>
             )}
           </SimpleGrid>
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <TeamSettings
-            id={team_id?.toString()}
-            teamData={teamsMembersData?.data?.team}
+            id={teamID?.toString()}
+            teamData={teamsMembersData?.team}
           />
         </Tabs.Panel>
       </StyledTabs>

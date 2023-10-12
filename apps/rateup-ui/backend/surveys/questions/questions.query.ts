@@ -8,11 +8,10 @@ import {
 import { notifications } from "@mantine/notifications";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
-export const useQuestions = (surveyId: string, initialData = null) => {
+export const useQuestions = (surveyId: string) => {
   return useQuery({
     queryKey: ["questions", surveyId],
-    enabled: !!surveyId || initialData === null,
-    initialData: initialData,
+    enabled: !!surveyId,
     queryFn: () => getQuestions(surveyId),
   });
 };

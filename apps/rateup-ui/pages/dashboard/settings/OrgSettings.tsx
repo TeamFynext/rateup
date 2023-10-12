@@ -14,7 +14,10 @@ import {
   Grid,
   Text,
 } from "@mantine/core";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import {
   useUpdateOrgDetailsMutation,
   useUpdateOrgLogoMutation,
@@ -146,10 +149,9 @@ const OrgSettings = () => {
             />
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
               {(props) => (
-                <RateupButtonSecondary
+                <RateupButtonBlue
                   title="Change Image"
                   size="sm"
-                  color="var(--tertiary-color)"
                   onClick={removePhoto}
                   {...props}
                 />
@@ -207,12 +209,11 @@ const OrgSettings = () => {
               </Grid.Col>
             </Grid>
             <Flex justify="center">
-              <RateupButtonSecondary
+              <RateupButtonBlue
                 type="submit"
                 loading={isLoading}
                 size="sm"
                 title="Save Changes"
-                color="var(--tertiary-color)"
               />
             </Flex>
           </form>

@@ -5,57 +5,44 @@ import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/router";
 
-export function useTeamsByUser(queryClient, initialData = null) {
-
-  return useQuery(["teamsDataUserQuery"], getTeamsByUser, {
-      //staleTime: 1000 * 60 * 5, // 5 minutes,
-      //refetchOnWindowFocus: "always",
-      //refetchOnMount: "always",
-      enabled: initialData === null,
-      initialData: initialData,
-      onSuccess: (data) => {
-        //console.log("Initial Prefetch Team Data:", queryClient.getQueryData(["teamsByUser"]));
-      },
-      onError: (error) => {
-        console.error("Error fetching team data:", error);
-      }
-    });
+export function useTeamsByUser() {
+  return useQuery(["teamsDataUserQuery"], getTeamsByUser);
 }
 
 export function useCreateTeamMutation(
-  close : () => void, 
-  createTeamForm: any, 
-  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>
-  ) {
+  close: () => void,
+  createTeamForm: any,
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
+) {
   const queryClient = useQueryClient();
   return useMutation((values) => handleCreateTeam(values), {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),
-      notifications.update({
-        id: 'load-data',
-        color: 'teal',
-        title: 'Success',
-        loading: false,
-        message: 'Team created successfully.',
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-      setIsCreating(false)
-      close()
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
+        notifications.update({
+          id: "load-data",
+          color: "teal",
+          title: "Success",
+          loading: false,
+          message: "Team created successfully.",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+      setIsCreating(false);
+      close();
       createTeamForm.reset();
     },
     onError: (error: any) => {
       console.error("Error creating the post:", error.message);
       notifications.update({
-        id: 'load-data',
-        color: 'red',
-        title: 'Failed',
+        id: "load-data",
+        color: "red",
+        title: "Failed",
         loading: false,
         message: error?.response?.data?.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      setIsCreating(false)
+      setIsCreating(false);
     },
   });
 }
@@ -65,28 +52,28 @@ export function useEditTeamMutation(id, setIsLoading) {
   return useMutation((values: IEditTeam) => editTeam(id, values), {
     onSuccess: () => {
       notifications.show({
-        id: 'load-data',
-        color: 'teal',
-        title: 'Success',
-        message: 'Team Details Updated Successfully!',
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Team Details Updated Successfully!",
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      setIsLoading(false)
+      setIsLoading(false);
       queryClient.invalidateQueries(["teamsDetailsQuery"]);
     },
     onError: (error: any) => {
       console.error("Error Team Update:", error.message);
       notifications.show({
-        id: 'load-data',
-        color: 'red',
-        title: 'Failed',
+        id: "load-data",
+        color: "red",
+        title: "Failed",
         message: error?.response?.data?.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
 
-      setIsLoading(false)
+      setIsLoading(false);
     },
   });
 }
@@ -97,26 +84,25 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
 
   return useMutation(() => handleDeleteTeam(), {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teamsDataUserQuery'] }),
-      notifications.update({
-        id: 'load-data',
-        color: 'teal',
-        loading: false,
-        title: 'Delete Success',
-        message: 'Team deleted successfully.',
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-      router.push('/dashboard/teams');
-
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
+        notifications.update({
+          id: "load-data",
+          color: "teal",
+          loading: false,
+          title: "Delete Success",
+          message: "Team deleted successfully.",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+      router.push("/dashboard/teams");
     },
-    onError: (error : any) => {
+    onError: (error: any) => {
       console.error("Error :", error.message);
       notifications.update({
-        id: 'load-data',
-        color: 'red',
+        id: "load-data",
+        color: "red",
         loading: false,
-        title: 'Failed',
+        title: "Failed",
         message: error.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
@@ -125,11 +111,15 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
   });
 }
 
-
 async function handleCreateTeam(values) {
   const { orgId } = await getOrgIdRole();
   const { userId } = await getUserID();
-  const data = { name: values.name, code: values.code, orgId, userId,whatsappAccessToken: values.whatsappAccessToken };
+  const data = {
+    name: values.name,
+    code: values.code,
+    orgId,
+    userId,
+    whatsappAccessToken: values.whatsappAccessToken,
+  };
   return createTeam(data);
 }
-

@@ -1,10 +1,14 @@
 import { axiosClient } from "../apiClient";
 
-export const getTeamsMembersOfOrg = () =>
-  axiosClient({
-    url: `/org/members`,
-    method: "GET",
-  });
+export async function getTeamsMembersOfOrg() {
+  try {
+    let members: MembersResponse = (await axiosClient.get("/org/members")).data;
+    return members;
+  } catch (e) {
+    console.error(e);
+    //return { error: "Error Occured!" };
+  }
+}
 
 export const getSurveyWithCustomToken = async (token: string) => {
   try {

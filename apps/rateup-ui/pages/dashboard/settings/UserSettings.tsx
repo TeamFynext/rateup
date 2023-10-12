@@ -11,7 +11,10 @@ import {
   Flex,
   Paper,
 } from "@mantine/core";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import {
   useChangePasswordMutation,
   useGetUserProfile,
@@ -212,7 +215,7 @@ const ProfileSettings = () => {
             />
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
               {(props) => (
-                <RateupButtonSecondary
+                <RateupButtonBlue
                   title="Change Image"
                   size="sm"
                   color="var(--tertiary-color)"
@@ -324,13 +327,12 @@ const ProfileSettings = () => {
                 />
               </Flex>
             </Flex>
-            <Flex justify="center">
-              <RateupButtonSecondary
+            <Flex justify="center" mb="xl">
+              <RateupButtonBlue
                 type="submit"
                 loading={isLoading}
                 size="sm"
                 title="Save Changes"
-                color="var(--tertiary-color)"
               />
             </Flex>
           </form>

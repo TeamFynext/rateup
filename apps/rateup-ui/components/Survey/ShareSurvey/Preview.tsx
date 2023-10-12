@@ -1,46 +1,53 @@
-import React, { useRef, useState, useEffect } from 'react'
-import { useQRCode } from 'next-qrcode';
-import {
-  Paper,
-  Text,
-  Stack,
-  Title, Center
-} from "@mantine/core";
-import { RateupButtonSecondary } from '../../Button/RateupButtons';
-import { IconCheck, IconDownload } from '@tabler/icons-react';
+import React, { useRef, useState } from "react";
+import { useQRCode } from "next-qrcode";
+import { Paper, Text, Stack, Title, Center } from "@mantine/core";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { IconDownload } from "@tabler/icons-react";
 import html2canvas from "html2canvas";
-import { notifications } from '@mantine/notifications';
 
 interface iProps {
-  url : string,
-  title : string,
-  description : string,
-  textSize : number,
-  logoSize: number,
-  descriptionSize : number,
-  textColor : string,
-  descriptionColor : string,
-  backgroundColor : string,
-  qrColor : string,
-  qrBgColor : string,
-  logo : string,
-  gradient: { start: string; end: string; },
-  bgImage: string,
-  bgTransparency: number,
-  activeBgStyle: string
+  url: string;
+  title: string;
+  description: string;
+  textSize: number;
+  logoSize: number;
+  descriptionSize: number;
+  textColor: string;
+  descriptionColor: string;
+  backgroundColor: string;
+  qrColor: string;
+  qrBgColor: string;
+  logo: string;
+  gradient: { start: string; end: string };
+  bgImage: string;
+  bgTransparency: number;
+  activeBgStyle: string;
 }
-const Preview = ({ url, title, description, textSize, logoSize,
-   descriptionSize, textColor, descriptionColor , backgroundColor, qrColor, qrBgColor, logo, 
-   gradient, bgTransparency, bgImage, activeBgStyle
-  } : iProps) => {
-
+const Preview = ({
+  url,
+  title,
+  description,
+  textSize,
+  logoSize,
+  descriptionSize,
+  textColor,
+  descriptionColor,
+  backgroundColor,
+  qrColor,
+  qrBgColor,
+  logo,
+  gradient,
+  bgTransparency,
+  bgImage,
+  activeBgStyle,
+}: iProps) => {
   const { Canvas } = useQRCode();
   const printRef = useRef();
 
-  const [logoUrl, setLogoUrl] = useState('')
-  const [bgImgUrl, setBgImgUrl] = useState('')
+  const [logoUrl, setLogoUrl] = useState("");
+  const [bgImgUrl, setBgImgUrl] = useState("");
 
-    // FOR server upload - template setup
+  // FOR server upload - template setup
 
   // useEffect(() => {
   //   if(!logo || logo === ''){
@@ -73,7 +80,6 @@ const Preview = ({ url, title, description, textSize, logoSize,
   //   }
   // }, [bgImage])
 
-
   const downloadQrCode = async () => {
     const element = printRef.current;
     const canvas = await html2canvas(element, { backgroundColor: null });
@@ -93,57 +99,89 @@ const Preview = ({ url, title, description, textSize, logoSize,
   };
 
   return (
-    <Stack align="center" ml="lg" >
-        <Title order={3}> Preview </Title>
-        <div ref={printRef}>
-        <Paper shadow="xs" radius="lg"  p="md" 
-            style={{ width: "250px", height: "330px", alignContent: 'center', 
-            backgroundColor: activeBgStyle === 'Color' ? backgroundColor : 'transparent',
-            backgroundImage: activeBgStyle === 'Gradient' 
-              ? `linear-gradient(${gradient.start}, ${gradient.end})` 
-              : activeBgStyle === 'Image' ? `url(${bgImage})` : 'none',
-            opacity: activeBgStyle === 'Transparent' ? bgTransparency : 1
-            }}>
-
-            <Stack p="lg" style={{ opacity: 1}}>
-
-          <Title order={4} style={{fontSize: `${textSize}px`, color: `${textColor}`, textAlign:'center'}} > {title} </Title>
-          <Center>
-            <Canvas
-              text={url}
-              options={{
-                errorCorrectionLevel: 'M',
-                margin: 3,
-                scale: 4,
-                width: 150,
-                color: {
-                  dark: qrColor,
-                  light: qrBgColor,
-                },
+    <Stack align="center" ml="lg">
+      <Title order={3}> Preview </Title>
+      <div ref={printRef}>
+        <Paper
+          shadow="xs"
+          radius="lg"
+          p="md"
+          style={{
+            width: "250px",
+            height: "330px",
+            alignContent: "center",
+            backgroundColor:
+              activeBgStyle === "Color" ? backgroundColor : "transparent",
+            backgroundImage:
+              activeBgStyle === "Gradient"
+                ? `linear-gradient(${gradient.start}, ${gradient.end})`
+                : activeBgStyle === "Image"
+                ? `url(${bgImage})`
+                : "none",
+            opacity: activeBgStyle === "Transparent" ? bgTransparency : 1,
+          }}
+        >
+          <Stack p="lg" style={{ opacity: 1 }}>
+            <Title
+              order={4}
+              style={{
+                fontSize: `${textSize}px`,
+                color: `${textColor}`,
+                textAlign: "center",
               }}
-              logo={
-                logo ? {
-                  src: logo,
-                  options: {
-                    width: logoSize,
-                    x: undefined,
-                    y: undefined,
-                  }
-                } : undefined
-              }
-            />
-          </Center>
-          
-          <Text  style={{fontSize: `${descriptionSize}px`, color: `${descriptionColor}`, textAlign:'center'}} > { description }</Text>
+            >
+              {" "}
+              {title}{" "}
+            </Title>
+            <Center>
+              <Canvas
+                text={url}
+                options={{
+                  errorCorrectionLevel: "M",
+                  margin: 3,
+                  scale: 4,
+                  width: 150,
+                  color: {
+                    dark: qrColor,
+                    light: qrBgColor,
+                  },
+                }}
+                logo={
+                  logo
+                    ? {
+                        src: logo,
+                        options: {
+                          width: logoSize,
+                          x: undefined,
+                          y: undefined,
+                        },
+                      }
+                    : undefined
+                }
+              />
+            </Center>
+
+            <Text
+              style={{
+                fontSize: `${descriptionSize}px`,
+                color: `${descriptionColor}`,
+                textAlign: "center",
+              }}
+            >
+              {" "}
+              {description}
+            </Text>
           </Stack>
-
         </Paper>
-        </div>
+      </div>
 
-        <RateupButtonSecondary title="Download QR Code" onClick={downloadQrCode} rightIcon={<IconDownload />} />
-
+      <RateupButtonBlue
+        title="Download QR Code"
+        onClick={downloadQrCode}
+        rightIcon={<IconDownload />}
+      />
     </Stack>
-  )
-}
+  );
+};
 
-export default Preview
+export default Preview;
