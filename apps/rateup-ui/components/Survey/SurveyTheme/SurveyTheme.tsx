@@ -15,7 +15,7 @@ import WelcomePageView from "./WelcomePageView";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-let isFirst = true;
+
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
   const [IsLoading, setIsLoading] = useState(false);
@@ -151,7 +151,7 @@ function SurveyTheme({ survey }) {
             <Switch
               label="Enable Welcome page"
               checked={survey?.welcomePageEnabled}
-              color="dark"
+              color="var(--tertiary-color)"
               ml={"md"}
               mt={"md"}
               onChange={handleSwitchChange}

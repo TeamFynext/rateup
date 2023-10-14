@@ -130,52 +130,54 @@ const Responses = ({ survey }) => {
       {responseCount > 0 && (
         <PaperLayout style={{ flex: 1 }}>
           {/* TODO-FIX-SCROLL-BAR */}
-          <Stack h={"100%"}>
-            <Table
-              highlightOnHover
-              ref={tableRef}
-              withColumnBorders
-              withRowBorders
-              withTableBorder
-            >
-              <TableHead questions={questions} />
-              <Table.Tbody>
-                {responses?.map((response) => (
-                  <Table.Tr
-                    key={response.id}
-                    onClick={() => openActions(response.id)}
-                    style={{
-                      backgroundColor:
-                        selectedRowId === response.id ? "silver" : "",
-                    }}
-                  >
-                    <Table.Td style={cellGap}>
-                      {" "}
-                      <Text color="dark.3">
-                        {dayjs(response.createdAt).format("DD-MM-YYYY")}{" "}
-                      </Text>
-                    </Table.Td>
-                    {questions?.map((q) => (
-                      <Table.Td
-                        key={q.id}
-                        style={cellGap}
-                        title={getResponse(q.id, response)}
-                      >
-                        <Text
-                          color="dark.3"
-                          truncate="end"
-                          style={{ maxWidth: "150px" }}
-                        >
-                          {" "}
-                          {getResponse(q.id, response)}{" "}
+          <div style={{ overflowX: "auto", width: "100%", height: "100%" }}>
+            <Stack h={"100%"}>
+              <Table
+                highlightOnHover
+                ref={tableRef}
+                withColumnBorders
+                withRowBorders
+                withTableBorder
+              >
+                <TableHead questions={questions} />
+                <Table.Tbody>
+                  {responses?.map((response) => (
+                    <Table.Tr
+                      key={response.id}
+                      onClick={() => openActions(response.id)}
+                      style={{
+                        backgroundColor:
+                          selectedRowId === response.id ? "silver" : "",
+                      }}
+                    >
+                      <Table.Td style={cellGap}>
+                        {" "}
+                        <Text color="dark.3">
+                          {dayjs(response.createdAt).format("DD-MM-YYYY")}{" "}
                         </Text>
                       </Table.Td>
-                    ))}
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Stack>
+                      {questions?.map((q) => (
+                        <Table.Td
+                          key={q.id}
+                          style={cellGap}
+                          title={getResponse(q.id, response)}
+                        >
+                          <Text
+                            color="dark.3"
+                            truncate="end"
+                            style={{ maxWidth: "150px" }}
+                          >
+                            {" "}
+                            {getResponse(q.id, response)}{" "}
+                          </Text>
+                        </Table.Td>
+                      ))}
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Stack>
+          </div>
           <Modal
             opened={opened}
             onClose={close}

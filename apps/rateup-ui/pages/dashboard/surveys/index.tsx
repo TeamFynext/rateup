@@ -491,6 +491,10 @@ function SurveyMenu({ survey }) {
         onClose={closeDialog}
         size="lg"
         radius="md"
+        position={{ top: "0", left: "40vw" }}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
         <Text size="md" mb="xs" fw={500}>
           Are you sure to delete this Survey?
@@ -498,7 +502,10 @@ function SurveyMenu({ survey }) {
 
         <Group align="center" pt="lg">
           <RateupButtonSecondary
-            onClick={closeDialog}
+            onClick={(e) => {
+              e.stopPropagation();
+              closeDialog();
+            }}
             loading={isLoading}
             size="md"
             title="Cancel"

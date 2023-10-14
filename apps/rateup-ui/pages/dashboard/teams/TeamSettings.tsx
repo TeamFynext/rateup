@@ -179,6 +179,10 @@ const TeamSettings = ({
           onClose={close}
           size="lg"
           radius="md"
+          position={{ top: "0", left: "40vw" }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           <Text size="md" mb="xs" fw={500}>
             Are you sure to delete this team?

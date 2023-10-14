@@ -34,7 +34,10 @@ import { useForm } from "@mantine/form";
 import { GoogleButton } from "../Button/SocialButtons";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import { useCreateUserMutation } from "../../backend/user/user.query";
-import { RateupButtonSecondary } from "../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
 import classes from "./FormStyle.module.css";
 
 const AuthForm = ({
@@ -368,7 +371,7 @@ const AuthForm = ({
                 </>
               )}
 
-              <RateupButtonSecondary
+              <RateupButtonBlue
                 mt="xl"
                 size="md"
                 fullWidth={true}

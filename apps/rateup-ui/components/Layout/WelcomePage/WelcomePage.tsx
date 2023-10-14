@@ -14,14 +14,9 @@ import {
 } from "@mantine/core";
 import React, { useState, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  useVerifySurveyPwdMutation,
-} from "../../../backend/surveys/surveys.query";
+import { useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 import { usePublicWelcomeThemeBySurveyId } from "../../../backend/WelcomeTheme/welcometheme.query";
-import {
-  RateupButtonPrimary,
-} from "../../Button/RateupButtons";
-
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
 
 const buttonStyles = {
   backgroundColor: "black",
@@ -38,7 +33,7 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
   const updateSurveyPassword = useVerifySurveyPwdMutation(
     surveyId,
     passwordInput,
-    onStart
+    onStart,
   );
 
   //-----------get welcome page styles and content-------------
@@ -132,7 +127,7 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
             height: "75vh",
             borderRadius: 18,
             boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
-            ...surveyThemeData?.bgStyles
+            ...surveyThemeData?.bgStyles,
           }}
           bg={"white"}
         >
@@ -157,18 +152,19 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
               // bg={"red"}
             >
               {surveyThemeData?.logoUrl && (
-               
                 <Image
                   fit="contain"
                   src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.logoUrl}`}
                   alt=" Logoss "
                   style={surveyThemeData?.logoStyles}
                 />
-                
               )}
               <Title
                 order={1}
-                style={{ fontSize: largeScreen ? "4rem" : "3rem" , ...surveyThemeData?.headerStyles}}
+                style={{
+                  fontSize: largeScreen ? "4rem" : "3rem",
+                  ...surveyThemeData?.headerStyles,
+                }}
                 tt={"capitalize"}
                 mt={25}
               >
@@ -183,8 +179,8 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
               </Text>
               <Button
                 mt={20}
-                style={{...surveyThemeData?.buttonStyles, ...buttonStyles}} //VERIFY MANTINE
-               // className={classes.ButtonStyles}
+                style={{ ...surveyThemeData?.buttonStyles, ...buttonStyles }} //VERIFY MANTINE
+                // className={classes.ButtonStyles}
                 onClick={isProtected ? open : onStart}
                 // size="xl"
                 // w={150}
@@ -192,13 +188,6 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
               >
                 {surveyThemeData?.buttonText}
               </Button>
-              {/* <RateupButtonSecondary
-          radius={"xl"}
-          title={
-            surveyThemeData?.buttonText ? surveyThemeData?.buttonText : "Go to survey"
-          }
-          onClick={isProtected ? open : onStart}
-        /> */}
             </Flex>
           </BackgroundImage>
         </Stack>

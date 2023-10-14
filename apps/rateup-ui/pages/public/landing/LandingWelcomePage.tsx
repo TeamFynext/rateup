@@ -1,25 +1,13 @@
 import {
-  Box,
-  Grid,
   Title,
-  Paper,
-  TextInput,
-  Space,
   Text,
-  Center,
   Stack,
-  Container,
   Image,
-  RingProgress,
-  Modal,
-  Group,
   Button,
   Flex,
   BackgroundImage,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import React, { useEffect } from "react";
 import { usePublicWelcomeThemeByLandingId } from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
 import classes from "./Landing.module.css";
 
@@ -142,13 +130,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen, landingid }) {
               >
                 {LandingWelcomeData?.buttonText}
               </Button>
-              {/* <RateupButtonSecondary
-          radius={"xl"}
-          title={
-            LandingWelcomeData?.buttonText ? LandingWelcomeData?.buttonText : "Go to survey"
-          }
-          onClick={isProtected ? open : onStart}
-        /> */}
             </Flex>
           </BackgroundImage>
         </Stack>

@@ -9,24 +9,34 @@ import {
   Loader,
   Rating,
   Stack,
-  Text, Grid,
-  TextInput, Paper, Input,
+  Text,
+  Grid,
+  TextInput,
+  Paper,
+  Input,
   Textarea,
-  Box, Image,
-  Modal, useMantineTheme,
+  Box,
+  Image,
+  Modal,
+  useMantineTheme,
   Title,
   Divider,
   NumberInput,
   Avatar,
-  Select, MultiSelect, ScrollArea
+  Select,
+  MultiSelect,
+  ScrollArea,
 } from "@mantine/core";
-import { forwardRef } from 'react';
-import { useDisclosure } from '@mantine/hooks';
+import { forwardRef } from "react";
+import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
-import { usePublicSurvey, useUpdateCompletedMutation } from "../../../backend/surveys/surveys.query";
+import {
+  usePublicSurvey,
+  useUpdateCompletedMutation,
+} from "../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
 import { SelectedQContext } from "../../../context/SelectedQ";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import {
   LDResponse,
   LogicAction,
@@ -48,31 +58,36 @@ import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { createResponsePublic } from "../../../backend/surveys/response/response.api";
-import { RateupButtonBlackOutline, RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlackOutline,
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import classes from "./TakeSurvey.module.css";
 import { uploadFile } from "../../../utils/file-upload/upload";
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from "@mantine/hooks";
 import { parseLogicAction } from "../../../utils";
 import { validateQuestion } from "../../../utils/validation";
 
 function TakeSurvey() {
-  const largeScreen = useMediaQuery('(min-width: 60em)');
-  const [isSavingResponses, setIsSavingResponses] = useState(false)
+  const largeScreen = useMediaQuery("(min-width: 60em)");
+  const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
-  const [QnNo, setQnNo] = useState(1)
+  const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
   const theme = useMantineTheme();
-  const isMobile = useMediaQuery('(max-width: 480px)');
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
   }>(undefined);
 
-  const { setQuestionCount, setCurrentQuestionNo, questionCount } = useContext(QuestionCountContext);
+  const { setQuestionCount, setCurrentQuestionNo, questionCount } =
+    useContext(QuestionCountContext);
   const updateCompleted = useUpdateCompletedMutation();
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
@@ -87,14 +102,14 @@ function TakeSurvey() {
       setSelectedQ(survey.questions[0]);
       questionsHistoryHandlers.append(survey.questions[0].id);
     }
-    setQuestionCount(survey.questions.length)
+    setQuestionCount(survey.questions.length);
   }, [survey]);
 
   useEffect(() => {
     const index = survey.questions.indexOf(selectedQ);
-    setQnNo(index + 1)
-    setCurrentQuestionNo(index + 1)
-  }, [selectedQ])
+    setQnNo(index + 1);
+    setCurrentQuestionNo(index + 1);
+  }, [selectedQ]);
 
   // Getting location coordinates
   // TODO: fetching location is very slow. Plan what to do when user finishes survey before location is fetched
@@ -102,15 +117,17 @@ function TakeSurvey() {
     if (survey.getLocation) {
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
-          setCoordinates({ latitude: coords.latitude, longitude: coords.longitude });
+          setCoordinates({
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          });
         },
         (error) => {
           console.error(error);
-        }
+        },
       );
     }
-  }, [survey])
-
+  }, [survey]);
 
   if (isLoading) {
     return (
@@ -120,12 +137,13 @@ function TakeSurvey() {
     );
   }
   if (isError || !selectedQ) {
-    return <Center style={{ height: "100vh" }}>
-      <Text fw={500} >
-        {questionCount == 0 ? "No Questions found!" : "Something went wrong!"}
-
-      </Text>
-    </Center>;
+    return (
+      <Center style={{ height: "100vh" }}>
+        <Text fw={500}>
+          {questionCount == 0 ? "No Questions found!" : "Something went wrong!"}
+        </Text>
+      </Center>
+    );
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
@@ -149,14 +167,18 @@ function TakeSurvey() {
     if (index < survey.questions.length - 1) {
       // Not last question
       // Checking for logic jump
-      const action = parseLogicAction(selectedQ.type, selectedQ.logic, currentResponse)
+      const action = parseLogicAction(
+        selectedQ.type,
+        selectedQ.logic,
+        currentResponse,
+      );
       if (action) {
         // Performing logic jump
         if (action === LogicAction.NextQ) {
           // Do nothing since we are already going to next question
         } else if (action === LogicAction.EndSurvey) {
           // End survey and submit
-          open()
+          open();
           return;
         } else {
           // Action is a question id
@@ -164,7 +186,7 @@ function TakeSurvey() {
           if (!nextQ) {
             // quietly go to next question
             console.error(
-              "Question not found. Invalid logic jump. Going to next question"
+              "Question not found. Invalid logic jump. Going to next question",
             );
           } else {
             goTo(nextQ);
@@ -175,32 +197,44 @@ function TakeSurvey() {
       goTo(survey.questions[index + 1]);
     } else {
       // Survey completed
-      open()
+      open();
     }
   };
 
   const finishSurvey = () => {
-    setIsSavingResponses(true)
+    setIsSavingResponses(true);
     let shouldShowGoogleReview = false;
-    const { start } = router.query as { start: string };  //(TODO - Temp) change for survey merge 
+    const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
 
     for (let question of survey?.questions) {
       if (question?.googleReview) {
-        let userResponse = responses.find(r => r?.questionId === question?.id);
+        let userResponse = responses.find(
+          (r) => r?.questionId === question?.id,
+        );
         if (userResponse) {
           switch (question?.type) {
             case "Rating":
-              if (userResponse?.response?.Rating >= question?.googleReview?.minRating) {
+              if (
+                userResponse?.response?.Rating >=
+                question?.googleReview?.minRating
+              ) {
                 shouldShowGoogleReview = true;
               }
               break;
             case "Opinion Scale":
-              if (userResponse?.response["Opinion Scale"] >= question?.googleReview?.minOpinion) {
+              if (
+                userResponse?.response["Opinion Scale"] >=
+                question?.googleReview?.minOpinion
+              ) {
                 shouldShowGoogleReview = true;
               }
               break;
             case "Smiley":
-              if (question?.googleReview?.reqOptions.includes(userResponse?.response?.Smiley)) {
+              if (
+                question?.googleReview?.reqOptions.includes(
+                  userResponse?.response?.Smiley,
+                )
+              ) {
                 shouldShowGoogleReview = true;
               }
               break;
@@ -221,13 +255,21 @@ function TakeSurvey() {
     //     console.log("Don't show Google Review");
     // }
 
-    submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingResponses, coordinates }).then(() => {
-      updateCompleted.mutate(surveyId)
-      let kioskMode = survey?.kioskMode ? "y" : "n"
-      kioskMode = start === 'true' ? "cs" : kioskMode // temp for static cs demo (TODO)
-      shouldShowGoogleReview ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`) : router.push(`${surveyId}/end?k=${kioskMode}`)
+    submitSurvey({
+      surveyId,
+      responses,
+      selectedLanguage,
+      setIsSavingResponses,
+      coordinates,
+    }).then(() => {
+      updateCompleted.mutate(surveyId);
+      let kioskMode = survey?.kioskMode ? "y" : "n";
+      kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
+      shouldShowGoogleReview
+        ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`)
+        : router.push(`${surveyId}/end?k=${kioskMode}`);
     });
-  }
+  };
 
   const handlePrev = () => {
     goBack();
@@ -250,14 +292,14 @@ function TakeSurvey() {
     }
   };
 
-  const responseValues = responses.map(item => {
+  const responseValues = responses.map((item) => {
     const key = Object.keys(item.response)[0];
     const value = item.response[key];
     return value;
   });
 
   const filteredQuestions = survey?.questions?.filter(
-    question => question?.title[selectedLanguage]
+    (question) => question?.title[selectedLanguage],
   );
 
   return (
@@ -265,7 +307,11 @@ function TakeSurvey() {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container h={isMobile ? "53vh" : "60vh"} size={"md"} style={{ position: "relative" }}>
+        <Container
+          h={isMobile ? "53vh" : "60vh"}
+          size={"md"}
+          style={{ position: "relative" }}
+        >
           {/* TODO for mobile design 80vh */}
 
           <Modal
@@ -280,62 +326,89 @@ function TakeSurvey() {
             }}
             styles={{
               title: {
-              fontSize: '26px',
-              fontWeight: 700,
-              padding: "10px"
-            }}}
+                fontSize: "26px",
+                fontWeight: 700,
+                padding: "10px",
+              },
+            }}
           >
             <Stack pb="7rem">
               <Divider />
-              <Stack >
-                {filteredQuestions.map(question => {
+              <Stack>
+                {filteredQuestions.map((question) => {
                   const response = responses.find(
-                    response => response.questionId === question.id
+                    (response) => response.questionId === question.id,
                   );
                   return (
                     <Stack key={question.id}>
-                      <Title pt="sm" order={4}>{question.title[selectedLanguage]}</Title>
+                      <Title pt="sm" order={4}>
+                        {question.title[selectedLanguage]}
+                      </Title>
                       {response && (
-                        <Text pb="sm" >
-                          
+                        <Text pb="sm">
                           {(() => {
-                              switch (question.type) {
-                                case Q.Rating:
-                                  return <Rating value={Object.values(response?.response)[0]}  readOnly />
-                                case Q.Photo:
-                                  const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${Object.values(response?.response)[0]}`;
-                                  return (
-                                    <Image
-                                      radius="md"
-                                      maw={240} mx="0px"
-                                      src={imgUrl}
-                                    />
-                                  );
-                                case Q.MSQ:
-                                case Q.DDMS:
-                                  const responseData = Object.values(response?.response)[0];
-                                  if (Array.isArray(responseData)) {
-                                    return responseData.map((item, index) => {
-                                      return <li key={index}>{item}</li>;
-                                    });
-                                  }
-                                  return <li>{responseData}</li>;
-                                
-                                case Q.DateTime:
-                                  return dayjs(Object.values(response?.response)[0]).format('DD, MMM , YYYY');
+                            switch (question.type) {
+                              case Q.Rating:
+                                return (
+                                  <Rating
+                                    value={Object.values(response?.response)[0]}
+                                    readOnly
+                                  />
+                                );
+                              case Q.Photo:
+                                const imgUrl = `${
+                                  process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
+                                }${Object.values(response?.response)[0]}`;
+                                return (
+                                  <Image
+                                    radius="md"
+                                    maw={240}
+                                    mx="0px"
+                                    src={imgUrl}
+                                  />
+                                );
+                              case Q.MSQ:
+                              case Q.DDMS:
+                                const responseData = Object.values(
+                                  response?.response,
+                                )[0];
+                                if (Array.isArray(responseData)) {
+                                  return responseData.map((item, index) => {
+                                    return <li key={index}>{item}</li>;
+                                  });
+                                }
+                                return <li>{responseData}</li>;
 
-                                case Q.Testimonial:
-                                  const data = Object.values(response?.response)[0];
-                                  return <Stack> 
-                                    <Group > <Text fw="400">Name: </Text>  <Text fw="300">{data.name}</Text> </Group>
-                                    <Group mt="-10px"> <Text fw="400">Testimonial: </Text>  <Text fw="300">{data.testimonial}</Text> </Group>
+                              case Q.DateTime:
+                                return dayjs(
+                                  Object.values(response?.response)[0],
+                                ).format("DD, MMM , YYYY");
+
+                              case Q.Testimonial:
+                                const data = Object.values(
+                                  response?.response,
+                                )[0];
+                                return (
+                                  <Stack>
+                                    <Group>
+                                      {" "}
+                                      <Text fw="400">Name: </Text>{" "}
+                                      <Text fw="300">{data.name}</Text>{" "}
+                                    </Group>
+                                    <Group mt="-10px">
+                                      {" "}
+                                      <Text fw="400">Testimonial: </Text>{" "}
+                                      <Text fw="300">{data.testimonial}</Text>{" "}
+                                    </Group>
                                   </Stack>
+                                );
 
-                                default:
-                                  return JSON.stringify(Object.values(response?.response)[0]);
-                              }
-                            })()}
-
+                              default:
+                                return JSON.stringify(
+                                  Object.values(response?.response)[0],
+                                );
+                            }
+                          })()}
                         </Text>
                       )}
                       <Divider />
@@ -344,8 +417,15 @@ function TakeSurvey() {
                 })}
               </Stack>
 
-              <div style={{ position: "fixed", bottom: 0, left: 10, right: 10 }}>
-                <Group gap="apart" p="lg" pb={isMobile ?"50px" : "20px"} style={{ background: '#fff'}}>
+              <div
+                style={{ position: "fixed", bottom: 0, left: 10, right: 10 }}
+              >
+                <Group
+                  gap="apart"
+                  p="lg"
+                  pb={isMobile ? "50px" : "20px"}
+                  style={{ background: "#fff" }}
+                >
                   <RateupButtonBlackOutline
                     radius={"xl"}
                     title={"Back"}
@@ -367,7 +447,6 @@ function TakeSurvey() {
             </Stack>
           </Modal>
 
-
           <Stack mt="xl">
             {/* <QuestionNo num={QnNo} /> */}
 
@@ -383,7 +462,13 @@ function TakeSurvey() {
   );
 }
 
-function submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingResponses, coordinates }) {
+function submitSurvey({
+  surveyId,
+  responses,
+  selectedLanguage,
+  setIsSavingResponses,
+  coordinates,
+}) {
   return createResponsePublic({
     surveyId,
     responses,
@@ -395,7 +480,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingRespon
         message: "Survey completed!",
         color: "teal",
       });
-      setIsSavingResponses(false)
+      setIsSavingResponses(false);
     })
     .catch((e) => {
       console.error(e);
@@ -403,7 +488,7 @@ function submitSurvey({ surveyId, responses, selectedLanguage, setIsSavingRespon
         message: "Something went wrong",
         color: "red",
       });
-      setIsSavingResponses(false)
+      setIsSavingResponses(false);
     });
 }
 
@@ -414,13 +499,21 @@ function QuestionNo({ num }) {
 function QuestionTitle({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  return <Text fw={500} size={largeScreen ? "30px" : "16px"}>{selectedQ.title[selectedLanguage]}</Text>;
+  return (
+    <Text fw={500} size={largeScreen ? "30px" : "16px"}>
+      {selectedQ.title[selectedLanguage]}
+    </Text>
+  );
 }
 function QuestionDesc({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text size={largeScreen ? "15px" : "12px"} c="dimmed" pb={largeScreen ? 20 : 10}>
+    <Text
+      size={largeScreen ? "15px" : "12px"}
+      c="dimmed"
+      pb={largeScreen ? 20 : 10}
+    >
       {selectedQ.description[selectedLanguage]}
     </Text>
   );
@@ -429,10 +522,10 @@ function QuestionDesc({ largeScreen }) {
 function QuestionForm() {
   const { selectedQ } = useContext(SelectedQContext);
   const { type } = selectedQ;
-  const isMobile = useMediaQuery('(max-width: 480px)');
+  const isMobile = useMediaQuery("(max-width: 480px)");
 
-  return <Group>
-
+  return (
+    <Group>
       {(() => {
         switch (type) {
           case Q.DateTime:
@@ -441,8 +534,8 @@ function QuestionForm() {
             return getQuestionForm(type);
         }
       })()}
-
-    </Group> 
+    </Group>
+  );
 }
 
 function getQuestionForm(type) {
@@ -492,26 +585,32 @@ function NextPrev({ prev, next }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
 
-  const [isErrorInput, setIsErrorInput] = useState(false)
-  const [errorMsg, setErrorMsg] = useState(null)
-  const isMobile = useMediaQuery('(max-width: 480px)');
+  const [isErrorInput, setIsErrorInput] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const isMobile = useMediaQuery("(max-width: 480px)");
 
   useEffect(() => {
     // TODO: check if rebase was done correctly
-    if (selectedQ?.required && response && selectedQ?.type === 'Email') {
+    if (selectedQ?.required && response && selectedQ?.type === "Email") {
       setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
-      if (!(/^\S+@\S+$/.test(response))) {
-        setIsErrorInput(false)
+      if (!/^\S+@\S+$/.test(response)) {
+        setIsErrorInput(false);
       }
-    } else if (selectedQ?.required && response && selectedQ?.type === 'Phone') {
-      setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone")
+    } else if (selectedQ?.required && response && selectedQ?.type === "Phone") {
+      setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone");
       if (!/^\d{10}$/.test(response)) {
-        setIsErrorInput(false)
+        setIsErrorInput(false);
       }
-    } else if (selectedQ?.required && response && selectedQ?.type === 'Testimonial') {
+    } else if (
+      selectedQ?.required &&
+      response &&
+      selectedQ?.type === "Testimonial"
+    ) {
       const { name, testimonial } = response;
       if (name?.length < 3 || testimonial?.length < 5) {
-        setErrorMsg("Name - min 3 characters, and \n testimonial - min 5 characters");
+        setErrorMsg(
+          "Name - min 3 characters, and \n testimonial - min 5 characters",
+        );
         setIsErrorInput(true);
       } else {
         setErrorMsg("");
@@ -523,23 +622,30 @@ function NextPrev({ prev, next }) {
     }
 
     //custom validation rules
-    if (selectedQ?.validationRules && response &&
-      (selectedQ?.type === 'Number' || selectedQ?.type === 'Text' || selectedQ?.type === 'TextArea')
+    if (
+      selectedQ?.validationRules &&
+      response &&
+      (selectedQ?.type === "Number" ||
+        selectedQ?.type === "Text" ||
+        selectedQ?.type === "TextArea")
     ) {
-      let error = validateQuestion(selectedQ, response)
+      let error = validateQuestion(selectedQ, response);
       if (error?.length > 0) {
-        setIsErrorInput(true)
+        setIsErrorInput(true);
         setErrorMsg(error?.length ? error : null);
       }
       if (!error) {
-        setIsErrorInput(false)
+        setIsErrorInput(false);
       }
     }
-
-  }, [response])
+  }, [response]);
 
   function handleNextClick() {
-    if (selectedQ?.type === 'Email' || selectedQ?.type === 'Phone' || selectedQ?.type === 'Testimonial') {
+    if (
+      selectedQ?.type === "Email" ||
+      selectedQ?.type === "Phone" ||
+      selectedQ?.type === "Testimonial"
+    ) {
       if (!errorMsg) {
         next();
       } else {
@@ -555,49 +661,71 @@ function NextPrev({ prev, next }) {
   const isLastQuestion =
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
-
-    <Stack pb={40} style={{ position: "absolute", bottom: isMobile ? "1vh": "5vh", width: "100%" }}>
-      {selectedQ.required && !response &&
+    <Stack
+      pb={40}
+      style={{
+        position: "absolute",
+        bottom: isMobile ? "1vh" : "5vh",
+        width: "100%",
+      }}
+    >
+      {selectedQ.required && !response && (
         <Text color="gray">Note: * Must attend to continue with next.</Text>
-      }
-      {errorMsg && isErrorInput &&
-        <Text color="red">Note: * {errorMsg}</Text>
-      }
+      )}
+      {errorMsg && isErrorInput && <Text color="red">Note: * {errorMsg}</Text>}
       <Grid>
         <Grid.Col span={6}>
           {isFirstQuestion || (
-            <RateupButtonSecondary radius={"xl"} title="" leftIcon={<IconChevronLeft />}
-              sx={{ position: "absolute", }}
-              size={ isMobile ? "sm" : "lg"} onClick={prev} />
+            <RateupButtonSecondary
+              radius={"xl"}
+              title=""
+              leftIcon={<IconChevronLeft />}
+              sx={{ position: "absolute" }}
+              size={isMobile ? "sm" : "lg"}
+              onClick={prev}
+            />
           )}
         </Grid.Col>
         <Grid.Col span={6}>
-
-          {isLastQuestion ?
-
-            <RateupButtonBlue radius={"xl"} title={"Submit"}
-              disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
+          {isLastQuestion ? (
+            <RateupButtonBlue
+              radius={"xl"}
+              title={"Submit"}
+              disabled={
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              }
               sx={{ position: "absolute", right: "5vw" }}
-              size={ isMobile ? "sm" : "lg"} onClick={handleNextClick} />
-            :
-
-            <RateupButtonSecondary radius={"xl"} title={"Next"} disabled={((selectedQ?.required || selectedQ?.validationRules) && !response) || isErrorInput}
+              size={isMobile ? "sm" : "lg"}
+              onClick={handleNextClick}
+            />
+          ) : (
+            <RateupButtonSecondary
+              radius={"xl"}
+              title={"Next"}
+              disabled={
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              }
               sx={{ position: "absolute", right: "5vw" }}
-              size={ isMobile ? "sm" : "lg"} onClick={handleNextClick} rightIcon={<IconChevronRight />} />
-          }
+              size={isMobile ? "sm" : "lg"}
+              onClick={handleNextClick}
+              rightIcon={<IconChevronRight />}
+            />
+          )}
         </Grid.Col>
       </Grid>
     </Stack>
-  )
+  );
 }
 
 function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   return (
-    <Paper shadow="sm"
-      className={classes.inputBox}
-    >
+    <Paper shadow="sm" className={classes.inputBox}>
       <Input
         placeholder="Enter your answer"
         value={response || ""}
@@ -608,7 +736,6 @@ function TextForm() {
         size="sm"
       />
     </Paper>
-
   );
 }
 
@@ -616,15 +743,13 @@ function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   return (
-    <Paper shadow="sm"
-      className={classes.inputBox}
-    >
+    <Paper shadow="sm" className={classes.inputBox}>
       <Textarea
         placeholder="Enter your answer"
-        value={response ? response.replace(', ', '\n') : ""}
+        value={response ? response.replace(", ", "\n") : ""}
         onChange={(e) => {
-          const replacedValue = e.currentTarget.value.replace(/\n/g, ', ');
-          updateResponse(replacedValue)
+          const replacedValue = e.currentTarget.value.replace(/\n/g, ", ");
+          updateResponse(replacedValue);
         }}
         style={{ maxWidth: "400px" }}
         variant="unstyled"
@@ -632,7 +757,6 @@ function TextAreaForm() {
         size="sm"
       />
     </Paper>
-
   );
 }
 
@@ -640,9 +764,7 @@ function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   return (
-    <Paper shadow="sm"
-      className={classes.inputBox}
-    >
+    <Paper shadow="sm" className={classes.inputBox}>
       <NumberInput
         size="sm"
         //type="number" VERIFY MANTINE
@@ -651,10 +773,9 @@ function NumberForm() {
         onChange={(value) => updateResponse(value)}
         //onBlur={handleInputBlur}
         variant="unstyled"
-      //error={numberError && !isFocused  ? 'Invalid phone number' : null}
+        //error={numberError && !isFocused  ? 'Invalid phone number' : null}
       />
     </Paper>
-
   );
 }
 
@@ -666,14 +787,13 @@ function PhoneForm() {
   const data = [
     {
       image: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/flag_india.png`,
-      label: '+91',
-      value: '91',
-      description: 'India',
+      label: "+91",
+      value: "91",
+      description: "India",
     },
-
   ];
 
-  interface ItemProps extends React.ComponentPropsWithoutRef<'div'> {
+  interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {
     image: string;
     label: string;
     description: string;
@@ -682,7 +802,7 @@ function PhoneForm() {
   const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
     ({ image, label, description, ...others }: ItemProps, ref) => (
       <div ref={ref} {...others}>
-        <Group  wrap="nowrap">
+        <Group wrap="nowrap">
           <Avatar src={image} style={{ minWidth: "50px" }} />
           <div>
             <Text size="sm">{label}</Text>
@@ -692,7 +812,7 @@ function PhoneForm() {
           </div>
         </Group>
       </div>
-    )
+    ),
   );
 
   //TODO : save with 91 in db if required
@@ -700,30 +820,27 @@ function PhoneForm() {
   useEffect(() => {
     if (response)
       setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
-  }, [response])
+  }, [response]);
 
   const handleInputBlur = () => {
     if (phoneError) {
-
     }
-    setIsFocused(false)
+    setIsFocused(false);
   };
   const handleInputChange = (value: number) => {
-    setIsFocused(true)
+    setIsFocused(true);
     const phone = value;
     updateResponse(phone);
     setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
   };
 
   return (
-    <Paper shadow="sm"
-      className={classes.inputBox}
-    >
+    <Paper shadow="sm" className={classes.inputBox}>
       <Group>
         <Select
           style={{ maxWidth: "140px" }}
           placeholder="Select Country Code"
-         // itemComponent={SelectItem}
+          // itemComponent={SelectItem}
           data={data}
           searchable
           maxDropdownHeight={400}
@@ -737,20 +854,17 @@ function PhoneForm() {
         <NumberInput
           size="sm"
           max={9999999999}
-         // type="number"  VERIFY MANTINE
+          // type="number"  VERIFY MANTINE
           placeholder="Enter 10 digit phone number"
           hideControls
           value={response || ""}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           variant="unstyled"
-          error={phoneError && !isFocused ? 'Invalid phone number' : null}
+          error={phoneError && !isFocused ? "Invalid phone number" : null}
         />
       </Group>
-
-
     </Paper>
-
   );
 }
 
@@ -762,32 +876,30 @@ function EmailForm() {
   useEffect(() => {
     if (response)
       setEmailError(/^\S+@\S+$/.test(response) ? null : "Invalid email");
-  }, [response])
+  }, [response]);
 
   const handleInputBlur = () => {
     if (emailError) {
       // console.log("Invalid email");
     }
-    setIsFocused(false)
+    setIsFocused(false);
   };
   const handleInputChange = (e) => {
-    setIsFocused(true)
+    setIsFocused(true);
     const email = e.target.value;
     updateResponse(email);
     setEmailError(/^\S+@\S+$/.test(email) ? null : "Invalid email");
   };
 
   return (
-    <Paper shadow="sm"
-      className={classes.inputBox}
-    >
+    <Paper shadow="sm" className={classes.inputBox}>
       <TextInput
         placeholder="Enter email address"
         value={response || ""}
         onChange={handleInputChange}
         onBlur={handleInputBlur}
         style={{ maxWidth: "400px" }}
-        error={emailError && !isFocused ? 'Invalid email' : null}
+        error={emailError && !isFocused ? "Invalid email" : null}
         leftSection={<IconMail size="1.2rem" color="black" />}
         variant="unstyled"
       />
@@ -797,7 +909,11 @@ function EmailForm() {
 
 function RatingForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  return <Paper px={30} py={20} radius="lg"><Rating value={response} onChange={updateResponse} size="xl" /></Paper>;
+  return (
+    <Paper px={30} py={20} radius="lg">
+      <Rating value={response} onChange={updateResponse} size="xl" />
+    </Paper>
+  );
 }
 
 function LDForm() {
@@ -818,7 +934,6 @@ function LDForm() {
         </Button>
       </Box>
       <Box w={130}>
-
         <Button
           color={response === LDResponse.Dislike ? "yellow" : "dark.0"}
           size="lg"
@@ -845,16 +960,16 @@ function OpinionScaleForm() {
           key={i}
           radius="xl"
           onClick={() => updateResponse(i)}
-          color={response === i ? 'blue' : 'blue.9'}
-          variant={response === i ? 'gradient' : 'default'}
-          gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
+          color={response === i ? "blue" : "blue.9"}
+          variant={response === i ? "gradient" : "default"}
+          gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
         >
           {i}
-        </Button>
+        </Button>,
       );
     }
-    return buttons
-  }
+    return buttons;
+  };
 
   return (
     <Group justify="center" gap="xs">
@@ -880,7 +995,6 @@ function YNForm() {
         </Button>
       </Box>
       <Box w={100}>
-
         <Button
           color={response === YNResponse.Yes ? "yellow" : "dark.0"}
           size="lg"
@@ -903,31 +1017,34 @@ const SMILEY_OPTIONS = Object.entries(SmileyResponse).map(([type, value]) => ({
 }));
 function SmileyForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const isMobile = useMediaQuery('(max-width: 480px)');
+  const isMobile = useMediaQuery("(max-width: 480px)");
   return (
     <Group>
       {SMILEY_OPTIONS.map(({ value, label }) => (
         <Button
           key={value}
           variant={response === value ? "gradient" : "default"}
-          gradient={{ from: '#62CBE6', to: '#3F5BA9' }}
+          gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
           onClick={() => updateResponse(value)}
-          style={{ minHeight: '30px', maxWidth: '70px', maxHeight: '70px' }}
+          style={{ minHeight: "30px", maxWidth: "70px", maxHeight: "70px" }}
           styles={{
-            root: { 
-            padding: isMobile ? 5 : 10,
-            margin: 0,
-            height: isMobile ? '40px' : '60px'
-           },
-            inner: { padding:'0px' } }}
+            root: {
+              padding: isMobile ? 5 : 10,
+              margin: 0,
+              height: isMobile ? "40px" : "60px",
+            },
+            inner: { padding: "0px" },
+          }}
         >
           {/* <Stack> */}
-          <Image src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`} width={isMobile ? 25 : 40} 
-          height={isMobile ? 25 : 40} />
+          <Image
+            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`}
+            width={isMobile ? 25 : 40}
+            height={isMobile ? 25 : 40}
+          />
           {/* <Text> {label}</Text>
 
           </Stack> */}
-
         </Button>
       ))}
     </Group>
@@ -951,13 +1068,22 @@ function ImageForm() {
     <>
       <Box w={300}>
         <FileButton onChange={setFile} accept="image/png,image/jpeg">
-          {(props) => <Button fullWidth size="lg" radius="lg"
-            variant="gradient" gradient={{ from: '#62CBE6', to: '#3F5BA9' }}{...props}>Upload image</Button>}
+          {(props) => (
+            <Button
+              fullWidth
+              size="lg"
+              radius="lg"
+              variant="outline"
+              {...props}
+            >
+              Upload image
+            </Button>
+          )}
         </FileButton>
       </Box>
 
       {file && (
-        <Text size="sm"style={{ textAlign:'center' }} mt="sm">
+        <Text size="sm" style={{ textAlign: "center" }} mt="sm">
           Picked file: {file.name}
         </Text>
       )}
@@ -1049,9 +1175,7 @@ function DDMSForm() {
 function DateForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Paper shadow="sm"
-      className={classes.inputBox}
-    >
+    <Paper shadow="sm" className={classes.inputBox}>
       <DateInput
         value={response}
         onChange={updateResponse}
@@ -1060,7 +1184,6 @@ function DateForm() {
         mx="auto"
         variant="unstyled"
         leftSection={<IconCalendarEvent size="1.2rem" color="black" />}
-
       />
     </Paper>
   );
@@ -1075,7 +1198,7 @@ function TestimonialForm() {
     updateResponse({ ...response, name: e.currentTarget.value });
   };
   const handleTestimonialChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
     updateResponse({ ...response, testimonial: e.currentTarget.value });
   };
@@ -1084,9 +1207,7 @@ function TestimonialForm() {
 
   return (
     <>
-      <Paper shadow="sm"
-        className={classes.inputBox}
-      >
+      <Paper shadow="sm" className={classes.inputBox}>
         <TextInput
           placeholder="Enter your name"
           value={response?.name}
@@ -1095,9 +1216,7 @@ function TestimonialForm() {
           variant="unstyled"
         />
       </Paper>
-      <Paper shadow="sm"
-        className={classes.inputBox}
-      >
+      <Paper shadow="sm" className={classes.inputBox}>
         <Textarea
           placeholder="Enter your testimonial"
           value={response?.testimonial}

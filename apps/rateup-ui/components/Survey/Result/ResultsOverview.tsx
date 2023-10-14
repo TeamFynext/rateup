@@ -14,6 +14,8 @@ const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [languages, setLanguages] = useState<string[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
+  let chartData;
 
   const { isLoading, error, data: responses } = useResponses(surveyId);
   const {
@@ -34,6 +36,19 @@ const ResultsOverview = () => {
       setSelectedLanguage(Array.from(languageSet)[0]);
     }
   }, [responses, questions]);
+
+  useEffect(() => {
+    setIsAllowedQnsPresent(
+      chartData?.some(
+        (item) =>
+          item.type === QuestionType.Rating ||
+          item.type === QuestionType.Smiley ||
+          item.type === QuestionType.LD ||
+          item.type === QuestionType.YN ||
+          item.type === QuestionType.Opinion,
+      ),
+    );
+  }, [chartData]);
 
   if (isLoading || isQLoading) {
     return <div>Loading...</div>;
@@ -102,83 +117,85 @@ const ResultsOverview = () => {
       };
     });
   };
-  const chartData = prepareData(questions, responses);
+  chartData = prepareData(questions, responses);
   return (
-    <Stack h={"100%"}>
-      <Group justify={"flex-end"} p="0px">
-        <ContainedSelection
-          data={languages}
-          value={selectedLanguage}
-          onChange={(value) => setSelectedLanguage(value)}
-          label="Select Language"
-          style={{ maxWidth: "200px" }}
-        />
-      </Group>
-      <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
-        <Stack style={{ marginBottom: "20px" }}>
-          {chartData?.some(
-            (item) =>
-              item.type === QuestionType.Rating ||
-              item.type === QuestionType.Smiley ||
-              item.type === QuestionType.LD ||
-              item.type === QuestionType.YN ||
-              item.type === QuestionType.Opinion,
-          ) && <Heading subtitle="NPS Overview" />}
-          <PaperLayout style={{ marginBottom: "20px" }}>
-            {chartData
-              ?.filter(
-                (item) =>
-                  item.type === QuestionType.Rating ||
-                  item.type === QuestionType.Smiley ||
-                  item.type === QuestionType.LD ||
-                  item.type === QuestionType.YN ||
-                  item.type === QuestionType.Opinion,
-              )
-              .map((item, index, filteredArray) => (
-                <React.Fragment key={index}>
-                  <QuestionPieChart
-                    no={index + 1}
-                    type={item.type}
-                    responseCount={responses.length}
-                    question={item.question}
-                    data={item.nps}
-                  />
-                  {index < filteredArray.length - 1 && <Divider my="md" />}
-                </React.Fragment>
-              ))}
-          </PaperLayout>
-          <Heading subtitle="Question Wise Overview" />
-          <PaperLayout style={{ marginBottom: "20px" }}>
-            {chartData
-              ?.filter(
-                (item) =>
-                  item.type === QuestionType.Rating ||
-                  item.type === QuestionType.Smiley ||
-                  item.type === QuestionType.LD ||
-                  item.type === QuestionType.YN ||
-                  item.type === QuestionType.Opinion ||
-                  item.type === QuestionType.MCQ ||
-                  item.type === QuestionType.MSQ ||
-                  item.type === QuestionType.DDSS ||
-                  item.type === QuestionType.DDMS,
-              )
-              .map((item, index) => (
-                <React.Fragment key={index}>
-                  <QuestionBarChart
-                    key={index}
-                    question={item?.question}
-                    no={index + 1}
-                    choices={item?.choices}
-                    data={item?.responses}
-                    questionType={item?.type}
-                  />
-                  {index < chartData?.length - 1 && <Divider my="md" />}
-                </React.Fragment>
-              ))}
-          </PaperLayout>
+    <>
+      {isAllowedQnsPresent ? (
+        <Stack h={"100%"}>
+          <Group justify={"flex-end"} p="0px">
+            <ContainedSelection
+              data={languages}
+              value={selectedLanguage}
+              onChange={(value) => setSelectedLanguage(value)}
+              label="Select Language"
+              style={{ maxWidth: "200px" }}
+            />
+          </Group>
+          <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
+            <Stack style={{ marginBottom: "20px" }}>
+              {isAllowedQnsPresent && <Heading subtitle="NPS Overview" />}
+              <PaperLayout style={{ marginBottom: "20px" }}>
+                {chartData
+                  ?.filter(
+                    (item) =>
+                      item.type === QuestionType.Rating ||
+                      item.type === QuestionType.Smiley ||
+                      item.type === QuestionType.LD ||
+                      item.type === QuestionType.YN ||
+                      item.type === QuestionType.Opinion,
+                  )
+                  .map((item, index, filteredArray) => (
+                    <React.Fragment key={index}>
+                      <QuestionPieChart
+                        no={index + 1}
+                        type={item.type}
+                        responseCount={responses.length}
+                        question={item.question}
+                        data={item.nps}
+                      />
+                      {index < filteredArray.length - 1 && <Divider my="md" />}
+                    </React.Fragment>
+                  ))}
+              </PaperLayout>
+              <Heading subtitle="Question Wise Overview" />
+              <PaperLayout style={{ marginBottom: "20px" }}>
+                {chartData
+                  ?.filter(
+                    (item) =>
+                      item.type === QuestionType.Rating ||
+                      item.type === QuestionType.Smiley ||
+                      item.type === QuestionType.LD ||
+                      item.type === QuestionType.YN ||
+                      item.type === QuestionType.Opinion ||
+                      item.type === QuestionType.MCQ ||
+                      item.type === QuestionType.MSQ ||
+                      item.type === QuestionType.DDSS ||
+                      item.type === QuestionType.DDMS,
+                  )
+                  .map((item, index) => (
+                    <React.Fragment key={index}>
+                      <QuestionBarChart
+                        key={index}
+                        question={item?.question}
+                        no={index + 1}
+                        choices={item?.choices}
+                        data={item?.responses}
+                        questionType={item?.type}
+                      />
+                      {index < chartData?.length - 1 && <Divider my="md" />}
+                    </React.Fragment>
+                  ))}
+              </PaperLayout>
+            </Stack>
+          </Stack>
         </Stack>
-      </Stack>
-    </Stack>
+      ) : (
+        <Group m="50px" ml="150px">
+          {" "}
+          No quantitative questions data available!{" "}
+        </Group>
+      )}
+    </>
   );
 };
 

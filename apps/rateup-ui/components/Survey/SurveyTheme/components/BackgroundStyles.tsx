@@ -64,12 +64,12 @@ function BackgroundStyles({
     }
   };
 
-  const handleFileChange =  (value) => {
+  const handleFileChange = (value) => {
     setisFileLoading(true);
     setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: value });
     let url = URL.createObjectURL(value);
 
-    setbgImage(url)
+    setbgImage(url);
     setisFileLoading(false);
 
     // }
@@ -131,7 +131,7 @@ function BackgroundStyles({
               display={"none"}
               accept="image/*"
               placeholder="Choose background image"
-              leftSection={<IconUpload size={14} />}  //VERIFY MANTINE
+              leftSection={<IconUpload size={14} />} //VERIFY MANTINE
               onChange={handleFileChange}
             />
 
@@ -146,12 +146,7 @@ function BackgroundStyles({
                   size="lg"
                   radius="18px"
                   h={50}
-                  style={{ border: "1px solid #D3D3D3" }}
-                  variant="white"
-                  color="dark"
-                  // w={"lg"}
-                  // p={20}
-                  // gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
+                  variant="outline"
                   {...props}
                   loading={isFileLoading}
                 >
@@ -166,7 +161,6 @@ function BackgroundStyles({
 
         <Flex justify={"center"}>
           <Button
-            bg="black"
             radius={48}
             size={"sm"}
             pl={40}

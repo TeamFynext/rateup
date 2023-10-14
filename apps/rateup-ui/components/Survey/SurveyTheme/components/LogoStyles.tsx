@@ -14,7 +14,12 @@ interface FormValues {
     width: number;
   };
 }
-function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading }) {
+function LogoStyles({
+  saveStyles,
+  currentStyles,
+  setCurrentstyles,
+  saveLoading,
+}) {
   const form = useForm({
     initialValues: {
       name: "logo",
@@ -34,12 +39,11 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading })
     saveStyles(form.values);
   };
 
-  const handleFileChange =  (value) => {
+  const handleFileChange = (value) => {
     setisFileLoading(true);
 
     setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: value });
     setisFileLoading(false);
-
   };
   return (
     <Flex>
@@ -52,14 +56,12 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading })
             placeholder="height"
             label="Height (px)"
             name="height"
-           
             mt={"xs"}
             {...form.getInputProps("logoStyles.height")}
           />
           <NumberInput
             min={10}
             max={100}
-           
             mt={"xs"}
             // defaultValue={18}
             placeholder="Width"
@@ -71,16 +73,13 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading })
           <FileButton onChange={handleFileChange} accept="image/png,image/jpeg">
             {(props) => (
               <Button
-              leftSection={<IconUpload size={16} />}
+                leftSection={<IconUpload size={16} />}
                 fullWidth
-              
                 radius="18px"
                 h={50}
                 size="md"
                 mt={"xs"}
-                style={{ border: "1px solid #D3D3D3" }}
-                variant="white"
-                color="dark"
+                variant="outline"
                 {...props}
                 loading={isFileLoading}
               >
@@ -91,7 +90,6 @@ function LogoStyles({ saveStyles, currentStyles, setCurrentstyles,saveLoading })
 
           <Flex justify={"center"}>
             <Button
-              bg="black"
               radius={48}
               size={"sm"}
               pl={40}

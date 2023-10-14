@@ -1,6 +1,5 @@
-
 .buttonStyles {
-  background-color: black;
+  background-color: var(--tertiary-color);
   border-radius: 48px;
   padding: 10px;
   padding-left: 20px;

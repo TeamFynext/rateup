@@ -1,26 +1,13 @@
 import {
-  Box,
-  Group,
-  Loader,
-  Select,
-  Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
   Flex,
-  Text,
   TextInput,
-  Card,
   BackgroundImage,
-  Notification,
   Image,
   Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
-import { useEffect, useState, useRef } from "react";
-import StylesComponent from "./StylesComponent";
+import { useEffect, useState } from "react";
 
 function WelcomePageView({
   setSelectedType,
@@ -36,7 +23,6 @@ function WelcomePageView({
       buttonText: currentStyles.buttonText,
     },
   });
-  const [focusedInput, setFocusedInput] = useState(null);
 
   useEffect(() => {
     loadFont(currentStyles?.descStyles?.fontFamily);
@@ -221,7 +207,7 @@ function WelcomePageView({
               <TextInput
                 onChange={handleChange}
                 value={currentStyles.buttonText}
-                placeholder={"Go to survey"}
+                placeholder={"Go to Survey"}
                 variant="unstyled"
                 name="buttonText"
                 size="xs"

@@ -45,7 +45,11 @@ export default function Heading({
           {subtitle}
         </Title>
       )}
-      {label && <Text title={label}>{label}</Text>}
+      {label && (
+        <Text title={label} c="dark.0">
+          {label}
+        </Text>
+      )}
     </Stack>
   );
 }
