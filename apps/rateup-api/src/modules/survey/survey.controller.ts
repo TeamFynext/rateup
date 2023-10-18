@@ -27,7 +27,6 @@ import {
   CreateSurveyInput,
   CreateSurveyLandingInput,
   GetSurveyByIdParams,
-  GetSurveyLandingByIdParams,
   IdParamInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
@@ -45,13 +44,7 @@ export async function createSurveyHandler(
 ) {
   const data = request.body;
   try {
-    // TODO add types for session
-    //const userId = request.session.getUserId();
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-
-    // console.log(data, ">>>data survey controller---");
-    const survey = await createSurvey(data, userId);
+    const survey = await createSurvey(data, request.userId);
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);
@@ -70,13 +63,7 @@ export async function createSurveyLandingHandler(
 
   // console.log("caretesurvye--213", data);
   try {
-    // TODO add types for session
-    //const userId = request.session.getUserId();
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-
-    // console.log(data, ">>>data survey controller---");
-    const survey = await createSurveyLanding(data, userId);
+    const survey = await createSurveyLanding(data, request.userId);
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);
@@ -94,13 +81,8 @@ export async function updateSurveyLandingHandler(
   const data = request.body;
 
   try {
-    // TODO add types for session
-    //const userId = request.session.getUserId();
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
     let landingId = request.params.id
 
-    // console.log(data, ">>>data survey controller---");
     const survey = await updateSurveyLanding(landingId, data);
     reply.code(201).send(survey);
   } catch (e) {
@@ -155,7 +137,6 @@ export async function getSurveyBylandingIdhandler(
   reply: FastifyReply
 ) {
   try {
-    // console.log(request.params.id,'>>>>params lookups')
     const survey = await getSurveyBylandingId(request.params.id);
     if (!survey) {
       reply.code(404);
@@ -197,12 +178,10 @@ export async function cloneSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  let session = await Session.getSession(request, reply);
-  let userId = session.getUserId();
   let teamId = request?.body?.teamId;
   let survey;
   try {
-    survey = await cloneSurvey(request.params.id, userId, teamId);
+    survey = await cloneSurvey(request.params.id, request.userId, teamId);
 
     // Check if the survey is an error message
     if (typeof survey === "string") {
@@ -243,9 +222,7 @@ export async function getSurveysHandler(
   try {
     // console.log("gtsurvey");
     //const userId = request.session.getUserId();
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-    const surveys = await getSurveysByUserId(userId);
+    const surveys = await getSurveysByUserId(request.userId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -257,11 +234,7 @@ export async function getWebSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    // console.log("gtsurvey");
-    //const userId = request.session.getUserId();
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-    const surveys = await getWebSurveysByUserId(userId);
+    const surveys = await getWebSurveysByUserId(request.userId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -289,11 +262,8 @@ export async function getSurveysLandingHandler(
   reply: FastifyReply
 ) {
   try {
-    // console.log("gtsurvey");
-    //const userId = request.session.getUserId();
     let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-    const surveys = await getSurveyLandingByUserId(userId);
+    const surveys = await getSurveyLandingByUserId(request.userId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -308,12 +278,8 @@ export async function getWhatsappSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    // console.log("gtsurvey");
-    //const userId = request.session.getUserId();
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
     let type = "whatsapp";
-    const surveys = await getWhatsappSurveysByUserId(userId, type);
+    const surveys = await getWhatsappSurveysByUserId(request.userId, type);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
