@@ -53,7 +53,6 @@ import {
   IconThumbDownFilled,
   IconThumbUpFilled,
 } from "@tabler/icons-react";
-import { SmileyResponse } from "../../../types/enums";
 import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
@@ -69,6 +68,7 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
 import { parseLogicAction } from "../../../utils";
 import { validateQuestion } from "../../../utils/validation";
+import SmileyRating, { mapSmileyIcon } from "./RatingSmiley";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -354,6 +354,10 @@ function TakeSurvey() {
                                     value={Object.values(response?.response)[0]}
                                     readOnly
                                   />
+                                );
+                              case Q.Smiley:
+                                return mapSmileyIcon(
+                                  Object.values(response?.response)[0],
                                 );
                               case Q.Photo:
                                 const imgUrl = `${
@@ -1010,43 +1014,11 @@ function YNForm() {
   );
 }
 
-// TODO: improve smileys
-const SMILEY_OPTIONS = Object.entries(SmileyResponse).map(([type, value]) => ({
-  value: type,
-  label: value,
-}));
 function SmileyForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const isMobile = useMediaQuery("(max-width: 480px)");
   return (
     <Group>
-      {SMILEY_OPTIONS.map(({ value, label }) => (
-        <Button
-          key={value}
-          variant={response === value ? "gradient" : "default"}
-          gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
-          onClick={() => updateResponse(value)}
-          style={{ minHeight: "30px", maxWidth: "70px", maxHeight: "70px" }}
-          styles={{
-            root: {
-              padding: isMobile ? 5 : 10,
-              margin: 0,
-              height: isMobile ? "40px" : "60px",
-            },
-            inner: { padding: "0px" },
-          }}
-        >
-          {/* <Stack> */}
-          <Image
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`}
-            width={isMobile ? 25 : 40}
-            height={isMobile ? 25 : 40}
-          />
-          {/* <Text> {label}</Text>
-
-          </Stack> */}
-        </Button>
-      ))}
+      <SmileyRating updateResponse={updateResponse} />
     </Group>
   );
 }

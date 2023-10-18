@@ -23,7 +23,7 @@ import Heading from "../../../components/styled/Heading/Heading";
 import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
 import { QueryClient, dehydrate } from "@tanstack/react-query";
 
-enum TabEnum {
+export enum TabEnum {
   Edit = "Edit",
   Share = "Share",
   Result = "Result",
@@ -196,7 +196,7 @@ export default () => {
           <Result survey={survey} />
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Share}>
-          <ShareSurvey survey={survey} />
+          <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Theme}>
           <SurveyTheme survey={survey} />

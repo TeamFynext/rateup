@@ -6,22 +6,44 @@ import {
   SimpleGrid,
   Title,
   ActionIcon,
+  Switch,
+  Paper,
+  Box,
+  Text,
+  ScrollArea,
+  Center,
 } from "@mantine/core";
 import {
   IconBrandFacebook,
   IconBrandWhatsapp,
+  IconCheck,
+  IconChevronLeft,
   IconCopy,
   IconMail,
+  IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
+import { updateSurvey } from "../../../backend/surveys/survey.api";
+import { notifications } from "@mantine/notifications";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDisclosure } from "@mantine/hooks";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 
-const ShareSurvey = ({ survey }) => {
-  const { surveyId } = useRouter().query;
+const ShareSurvey = ({ survey, setActiveTab }) => {
+  const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
+  const [isPublished, setIsPublished] = useState(survey?.isPublished);
+  const queryClient = useQueryClient();
+  const [opened, { open, close }] = useDisclosure(false);
+  const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!surveyId) return;
@@ -38,6 +60,45 @@ const ShareSurvey = ({ survey }) => {
       );
     }
   }, [surveyId]);
+
+  const surveyUpdateMutation = useMutation({
+    mutationFn: (data: any) => updateSurvey(surveyId, data),
+    onSuccess: (data) => {
+      if (data?.data?.status === "failed") {
+        setIsPublished(false);
+
+        notifications.update({
+          id: "load-data",
+          color: "red",
+          title: "Failed..!",
+          loading: false,
+          message: data?.data?.error
+            ? data?.data?.error
+            : "Your survey is incomplete",
+          icon: <IconX size="1rem" />,
+          autoClose: 3000,
+        });
+        setErrors(data?.data?.data);
+        open();
+      } else {
+        if (typeof data?.data !== "object") setIsPublished(false);
+
+        notifications.update({
+          id: "load-data",
+          color: "teal",
+          title: "Success",
+          loading: false,
+          message:
+            data?.data?.action === "unpublish"
+              ? "Survey Un-Published."
+              : "Survey Published Successfully!",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+        queryClient.invalidateQueries(["surveys"]);
+      }
+    },
+  });
 
   function shareButtonAction(btn) {
     switch (btn) {
@@ -59,45 +120,135 @@ const ShareSurvey = ({ survey }) => {
 
   return (
     <Stack p={2}>
-      <PaperLayout p="md" radius="md" shadow="lg">
-        <SimpleGrid cols={2} spacing="xl">
-          <Stack style={{ maxWidth: "450px" }} p="md">
-            <Title order={4}>Share Survey</Title>
-            <CopyLinkComponent value={shareUrl} />
-          </Stack>
+      <Paper
+        radius="lg"
+        p="30px"
+        style={{
+          boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+          overflowX: "auto",
+          width: "250px",
+        }}
+      >
+        <Switch
+          size="lg"
+          checked={isPublished}
+          onChange={(event) => {
+            setIsPublished(event.currentTarget.checked);
+            notifications.show({
+              id: "load-data",
+              color: "teal",
+              title: "Publishing",
+              loading: true,
+              message: "Please hold on while publishing your survey",
+              autoClose: 3000,
+            });
+            surveyUpdateMutation.mutate({
+              isPublished: event.currentTarget.checked,
+            });
+          }}
+          label="Publish Survey"
+          style={{
+            root: {
+              fontSize: "30px",
+            },
+          }}
+        />
+      </Paper>
 
-          <Stack style={{ maxWidth: "400px" }} p="md">
-            <Title order={4} style={{ textAlign: "center" }}>
-              How would you like to survey people?
-            </Title>
-            <Group justify="center">
-              <ActionIcon
-                size="xl"
-                variant="light"
-                onClick={() => shareButtonAction("mail")}
-              >
-                <IconMail size="2rem" />
-              </ActionIcon>
-              <ActionIcon
-                size="xl"
-                variant="light"
-                onClick={() => shareButtonAction("whatsapp")}
-              >
-                <IconBrandWhatsapp size="2rem" />
-              </ActionIcon>
-              <ActionIcon
-                size="xl"
-                variant="light"
-                onClick={() => shareButtonAction("fb")}
-              >
-                <IconBrandFacebook size="2rem" />
-              </ActionIcon>
-            </Group>
-          </Stack>
-        </SimpleGrid>
-      </PaperLayout>
+      <FormModalLayout
+        centered
+        onClose={close}
+        opened={opened}
+        title="Survey contains errors"
+      >
+        <ScrollArea h={400} mb="xl">
+          <Box my="xl">
+            {Array.isArray(errors) ? (
+              errors?.map((item, index) => (
+                <Paper
+                  radius="lg"
+                  shadow="md"
+                  key={item.id}
+                  p="md"
+                  style={{ marginBottom: "10px" }}
+                >
+                  <Title order={4}>
+                    {Object.values(item.title)[0] as React.ReactNode}
+                  </Title>
+                  <ul>
+                    {item.errors.map((error, index) => (
+                      <li>
+                        {" "}
+                        <Text key={index} c="#fa5252">
+                          {error}
+                        </Text>{" "}
+                      </li>
+                    ))}
+                  </ul>
+                </Paper>
+              ))
+            ) : (
+              <Box>
+                <Text c="red">Error: {errors?.error}</Text>
+              </Box>
+            )}
+          </Box>
+        </ScrollArea>
 
-      <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
+        <Center>
+          <RateupButtonBlue
+            leftIcon={<IconChevronLeft />}
+            title="Back to Edit Questions"
+            onClick={() => {
+              close();
+              setActiveTab(TabEnum.Edit);
+            }}
+          />
+        </Center>
+      </FormModalLayout>
+      {isPublished && (
+        <Stack>
+          <PaperLayout p="md" radius="md" shadow="lg">
+            <SimpleGrid cols={2} spacing="xl">
+              <Stack style={{ maxWidth: "450px" }} p="md">
+                <Title order={4}>Share Survey</Title>
+                <CopyLinkComponent value={shareUrl} />
+              </Stack>
+
+              <Stack style={{ maxWidth: "400px" }} p="md">
+                <Title order={4} style={{ textAlign: "center" }}>
+                  How would you like to survey people?
+                </Title>
+                <Group justify="center">
+                  <ActionIcon
+                    size="xl"
+                    variant="light"
+                    onClick={() => shareButtonAction("mail")}
+                  >
+                    <IconMail size="2rem" />
+                  </ActionIcon>
+                  <ActionIcon
+                    size="xl"
+                    variant="light"
+                    onClick={() => shareButtonAction("whatsapp")}
+                  >
+                    <IconBrandWhatsapp size="2rem" />
+                  </ActionIcon>
+                  <ActionIcon
+                    size="xl"
+                    variant="light"
+                    onClick={() => shareButtonAction("fb")}
+                  >
+                    <IconBrandFacebook size="2rem" />
+                  </ActionIcon>
+                </Group>
+              </Stack>
+            </SimpleGrid>
+          </PaperLayout>
+
+          <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
+        </Stack>
+      )}
     </Stack>
   );
 };

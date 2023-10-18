@@ -184,7 +184,7 @@ export default () => {
             <Result survey={survey} />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Share}>
-            <ShareSurvey survey={survey} />
+            <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
           </Tabs.Panel>
           {/* TODO  fix mantine issue and Enable - TODO VERIFY MANTINE*/}
         </StyledTabs>

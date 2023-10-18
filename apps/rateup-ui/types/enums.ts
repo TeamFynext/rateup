@@ -34,12 +34,13 @@ export enum YNResponse {
 }
 // TODO: Use an index value & map to a customizable scale
 export enum SmileyResponse {
-  VeryHappy = "Very Happy",
+  VeryHappy = "VeryHappy",
   Happy = "Happy",
   Neutral = "Neutral",
   Sad = "Sad",
-  VerySad = "Very Sad",
+  VerySad = "VerySad",
 }
+
 export enum LogicAction {
   NextQ = "NextQ",
   EndSurvey = "EndSurvey",

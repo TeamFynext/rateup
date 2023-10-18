@@ -7,7 +7,7 @@ interface FormModalLayoutProps {
   title: string;
   centered?: boolean;
   children: React.ReactNode;
-  onSubmit?: FormEventHandler<HTMLFormElement>;
+  onSubmit?: FormEventHandler<HTMLFormElement> | any;
   isLoading?: boolean;
   buttonTitle?: string;
   noCustomHeader?: boolean;
@@ -56,12 +56,14 @@ export default function FormModalLayout({
               title={"Cancel"}
             />
           )}
-          <RateupButtonSecondary
-            color="var(--tertiary-color)"
-            loading={isLoading}
-            type="submit"
-            title={buttonTitle}
-          />
+          {buttonTitle && (
+            <RateupButtonSecondary
+              color="var(--tertiary-color)"
+              loading={isLoading}
+              type="submit"
+              title={buttonTitle}
+            />
+          )}
         </Group>
       </form>
     </Modal>

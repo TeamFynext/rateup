@@ -54,6 +54,7 @@ declare global {
     createdAt: string;
     teamId: string;
     isProtected: boolean;
+    isPublished: boolean;
     kioskMode: boolean;
     type: string;
     getLocation: boolean;

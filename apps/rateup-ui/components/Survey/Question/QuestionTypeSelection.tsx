@@ -52,6 +52,7 @@ export function QuestionTypeSelection({
           return (
             <Button
               key={type}
+              size="lg"
               leftSection={<Icon />}
               variant="default"
               styles={{

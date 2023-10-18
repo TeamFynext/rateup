@@ -4,7 +4,6 @@ import {
   Paper,
   TextInput,
   Rating,
-  Image,
   Group,
   Title,
   Stack,
@@ -26,7 +25,7 @@ import {
   usePublicSurveyGoogleLink,
   useUpdateSurveyGoogleLinkMutation,
 } from "../../../backend/surveys/surveys.query";
-
+import { mapSmileyIcon } from "../TakeSurvey/RatingSmiley";
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
@@ -261,17 +260,9 @@ const GoogleReviewEditor = ({
                               }
                               gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
                               onClick={() => updateSmileyResponse(value)}
-                              style={{ minHeight: "10px", maxWidth: "70px" }}
+                              style={{ minHeight: "20px", maxWidth: "70px" }}
                             >
-                              {/* <Stack> */}
-                              <Image
-                                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/smileys/${value}.png`}
-                                w={30}
-                                h={30}
-                              />
-                              {/* <Text> {label}</Text>
-
-                            </Stack> */}
+                              {mapSmileyIcon(value)}
                             </Button>
                           ))}
                         </Group>
