@@ -1,5 +1,4 @@
 import {
-  Container,
   Flex,
   Title,
   Menu,
@@ -12,10 +11,7 @@ import {
   Avatar,
   Group,
   Button,
-  Badge,
-  useMantineTheme,
   ActionIcon,
-  Modal,
 } from "@mantine/core";
 import {
   IconChevronDown,
@@ -25,7 +21,6 @@ import {
   IconDots,
   IconTrash,
   IconPencil,
-  IconRefresh,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import {
@@ -37,6 +32,7 @@ import { CreateWaTemplateModal } from "../../../../components/whatsapp/templates
 import { useDisclosure } from "@mantine/hooks";
 import { getTimeSince } from "../../../../utils";
 import { StopPropagation } from "../../../../components/containers/StopPropagation";
+import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/SyncTemplates";
 
 export default function () {
   const { data: templates, isLoading, error } = useWaTemplates();
@@ -88,6 +84,7 @@ export default function () {
           direction="row"
           wrap="wrap"
         >
+          <SyncTemplatesButton />
           <Menu shadow="md" width={200}>
             <Menu.Target>
               <Button

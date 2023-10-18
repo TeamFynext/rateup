@@ -73,6 +73,7 @@ export function QuickReplyButton({ text, style = {} }: QuickReplyButtonProps) {
         borderRadius: "8px",
         cursor: "pointer",
         width: "80%",
+        zIndex: 1,
         ...style,
       }}
       p="6px"

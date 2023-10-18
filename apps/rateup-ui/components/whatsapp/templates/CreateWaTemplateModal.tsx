@@ -201,11 +201,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               p="xl"
             >
               <Stack w="300px" gap={3}>
-                <ResponseMessageContainer
-                  style={{
-                    width: "100%",
-                  }}
-                >
+                <ResponseMessageContainer>
                   <Text
                     fw="bold"
                     style={{
