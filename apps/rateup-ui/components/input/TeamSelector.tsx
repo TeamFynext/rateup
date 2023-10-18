@@ -1,6 +1,7 @@
-import { SelectProps, Loader, Select, Text } from "@mantine/core";
+import { SelectProps, Loader, Text } from "@mantine/core";
 import { useEffect } from "react";
 import { useTeamsByUser } from "../../backend/team/team.query";
+import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface TeamSelectorProps extends SelectProps {
   value: string;
@@ -52,7 +53,7 @@ export function TeamSelector({
   if (enableAll) teamOptions.unshift({ value: "all", label: "All Teams" });
 
   return (
-    <Select
+    <ContainedSelection
       data={teamOptions}
       defaultValue={teamOptions[0].value}
       onChange={onChange}

@@ -1,18 +1,32 @@
-import { useMantineTheme, Paper, Flex, Group, Avatar, Space, Text, ActionIcon, Menu, Box } from "@mantine/core";
-import { IconDots, IconPencil, IconShare, IconTrash } from "@tabler/icons-react";
+import {
+  useMantineTheme,
+  Flex,
+  Group,
+  Text,
+  ActionIcon,
+  Menu,
+  Box,
+} from "@mantine/core";
+import {
+  IconDots,
+  IconPencil,
+  IconShare,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { getTimeSince } from "../../utils";
 
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 // TODO: Create a generic Card with menu
 export function MenuCard({
   menu,
   handleEditClick,
 }: {
-  menu: Menu,
-  handleEditClick: (menu: Menu) => void,
+  menu: Menu;
+  handleEditClick: (menu: Menu) => void;
 }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
@@ -22,28 +36,29 @@ export function MenuCard({
     setTimeSince(getTimeSince(menu.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(menu.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
 
   return (
-    <Paper
+    <PaperLayout
       p="md"
       shadow="lg"
       radius="lg"
       mih={"175px"}
       style={{ cursor: "pointer" }}
       onClick={() => {
-        router.push(
-          `/dashboard/menu/${menu.id}`
-        );
+        router.push(`/dashboard/menu/${menu.id}`);
       }}
     >
-      <Flex justify={"space-between"} direction={"column"} style={{ height: "100%" }}>
+      <Flex
+        justify={"space-between"}
+        direction={"column"}
+        style={{ height: "100%" }}
+      >
         <Box>
           <Flex justify={"space-between"} align={"center"}>
-
             <Text mr={"sm"} truncate size="xl" fw={700}>
               {menu.name}
             </Text>
@@ -51,25 +66,18 @@ export function MenuCard({
               <IconShare
                 onClick={(e) => {
                   e.stopPropagation(),
-                    router.push(
-                      `/dashboard/menu/${menu.id}?tab=Share`
-                    )
+                    router.push(`/dashboard/menu/${menu.id}?tab=Share`);
                 }}
               />
               <IconPencil
                 onClick={(e) => {
-                  e.stopPropagation(),
-                    handleEditClick(menu);
+                  e.stopPropagation(), handleEditClick(menu);
                 }}
               />
-              <MenuCardMenu
-                menuId={menu.id}
-                teamId={menu.teamId}
-                close
-              />
+              <MenuCardMenu menuId={menu.id} teamId={menu.teamId} close />
             </Group>
           </Flex>
-          <Text size="lg" color="#333" >
+          <Text size="lg" color="#333">
             {menu.displayName}
           </Text>
         </Box>
@@ -79,15 +87,15 @@ export function MenuCard({
           </Text>
         </Box>
       </Flex>
-    </Paper>
+    </PaperLayout>
   );
 }
 
 function MenuCardMenu({ menuId, teamId, close }) {
   const deleteMutation = useDeleteMenuMutation(
     teamId,
-    () => { },
-    () => { }
+    () => {},
+    () => {},
   );
 
   return (

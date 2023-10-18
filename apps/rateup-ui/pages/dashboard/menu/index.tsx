@@ -1,12 +1,4 @@
-import {
-  Center,
-  Container,
-  Flex,
-  Paper,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Group, Flex, SimpleGrid, Title } from "@mantine/core";
 import { useContext, useState } from "react";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus } from "@tabler/icons-react";
@@ -15,6 +7,7 @@ import { MenuCard } from "../../../components/menu/MenuCard";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuModal } from "../../../components/menu/CreateMenu";
 import SelectedTeamContext from "../../../context/SelectedTeam";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -36,31 +29,26 @@ export default function MenuPage() {
 
   return (
     <>
-      <Flex justify={"end"} mb="xs">
+      <Flex justify={"space-between"} align={"center"} mb={"lg"}>
+        <Group>
+          <Title>All Menus</Title>
+          <RateupButtonBlue
+            title="Add Menu"
+            rightIcon={<IconPlus />}
+            radius="xl"
+            size="lg"
+            onClick={handleCreateClick}
+          />
+        </Group>
         <TeamSelector value={selectedTeamId} onChange={setSelectedTeamId} />
       </Flex>
       <SimpleGrid
+        p={1}
+        h={"100%"}
+        style={{ overflow: "auto" }}
         spacing={"lg"}
-        cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
-
-        //VERIFY MANTNE
+        cols={{ base: 4, sm: 2, xl: 3 }}
       >
-        <Paper
-          p="xl"
-          shadow="lg"
-          radius="lg"
-          style={{ cursor: "pointer" }}
-          onClick={handleCreateClick}
-        >
-          <Center h="100%">
-            <Stack align="center">
-              <IconPlus size={36} />
-              <Text size="xl" fw={700}>
-                Add Menu
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
         <SelectedTeamContext.Provider value={{ selectedTeamId }}>
           {selectedTeamId && (
             <CreateMenuModal
