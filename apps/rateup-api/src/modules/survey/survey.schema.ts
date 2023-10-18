@@ -66,6 +66,7 @@ const getSurveyPublicResponseSchema = z.object({
   active: z.boolean(),
   questions: z.array(questionSchema),
   isProtected: z.boolean(),
+  isPublished: z.boolean(),
   type: z.string(),
   kioskMode: z.boolean(),
   getLocation: z.boolean(),
@@ -80,9 +81,10 @@ const updateSurveyRequestSchema = z.object({
     })
     .optional(),
   languages: z.array(z.string()).optional(),
-  active: z.boolean().default(true).optional(),
-  kioskMode: z.boolean().default(false).optional(),
-  welcomePageEnabled: z.boolean().default(false).optional(),
+  active: z.boolean().optional(),
+  kioskMode: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  welcomePageEnabled: z.boolean().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

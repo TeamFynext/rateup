@@ -9,6 +9,7 @@ import {
 } from "./survey.schema";
 import { getTeamsByUserId } from "../team/team.service";
 import defaultTheme from "../welcomeTheme/defaultTheme";
+import { QuestionType } from "../../types/enums";
 const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
 
@@ -398,14 +399,115 @@ export async function deleteSurveyById(id: string) {
 }
 
 export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
+
+  let action = 'edit'
+
+  if ('isPublished' in input) {
+    action = 'publish'
+    if(input?.isPublished === true){   //check for all language inputs
+        const fetchedSurvey = await prisma.survey.findUnique({
+          where: {
+            id,
+          },
+        });
+
+        if(fetchedSurvey?.questions.length < 1){
+          let data = {
+            status: "failed",
+            data: {
+              error: "No questions found."
+            }
+          }
+          return data
+        }
+
+        let result = validateSurvey(fetchedSurvey);
+        
+        if(result?.length){
+          let groupedSurveys = {};
+          // group the survey errors
+          result.forEach(survey => {
+            if (!groupedSurveys[survey.id]) {
+              groupedSurveys[survey.id] = {
+                id: survey.id,
+                title: survey.title,
+                errors: []
+              };
+            }
+            groupedSurveys[survey.id].errors.push(survey.error);
+          });
+
+          let combinedResult = Object.values(groupedSurveys);
+
+          let data = {
+            status: "failed",
+            data: combinedResult
+          }
+          return data
+        }
+    }else{
+      action = 'unpublish'
+    }
+  }
+
   const survey = await prisma.survey.update({
     where: {
       id,
     },
     data: input,
   });
-  return survey;
+
+  let data = {
+    status: "success",
+    action: action,
+    data: survey
+  }
+  return data
 }
+
+function validateSurvey(surveyData) {
+    let languages = surveyData?.languages ?? [];
+    let incompleteQuestions = [];
+
+    surveyData?.questions?.forEach(question => {
+        // Check if title contains all languages
+        let titleLanguages = question?.title ? Object.keys(question.title) : [];
+        let missingLangTitle = languages.filter(lang => !titleLanguages.includes(lang));
+        if(missingLangTitle.length > 0) {
+            incompleteQuestions.push({id: question?.id, title: question?.title, error: `Missing title for languages: ${missingLangTitle.join(', ')}`});
+        }
+
+        if([QuestionType.MCQ, QuestionType.MSQ, QuestionType.DDSS, QuestionType.DDMS].includes(question?.type)) {
+            if(question?.choices) {
+                let choiceLanguages = Object.keys(question.choices);
+                let missingLangChoices = languages.filter(lang => !choiceLanguages.includes(lang));
+                if(missingLangChoices.length > 0) {
+                    incompleteQuestions.push({id: question.id, title: question.title, error: `Missing choices for languages: ${missingLangChoices.join(', ')}`});
+                }
+
+                // Check if all languages have the maximum number of choices
+                let maxChoices = Math.max(...Object.values(question.choices).map((choiceArr: any[])=> choiceArr?.length));
+                let unequalChoices = Object.values(question.choices).some((choiceArr: any[]) => choiceArr?.length < maxChoices);
+                if(unequalChoices) {
+                    incompleteQuestions.push({id: question.id, title: question.title, error: `All languages must have ${maxChoices} choices.`});
+                }
+
+                // Check for minimum 2 choices
+                let insufficientChoices = Object.values(question.choices).some((choiceArr: any[]) => choiceArr.length < 2);
+                if(insufficientChoices) {
+                    incompleteQuestions.push({id: question.id, title: question.title, error: 'Minimum 2 choices required for all languages.'});
+                }
+            } else {
+                // If choices are not present but the question type requires choices
+                incompleteQuestions.push({id: question.id, title: question.title, error: 'Choices are required but missing for some languages.'});
+            }
+        }
+    });
+
+    return incompleteQuestions;
+}
+
+
 
 export async function updateGoogleLink(
   id: string,

@@ -328,8 +328,8 @@ export async function updateSurveyByIdHandler(
     if (!survey) {
       reply.code(404);
     } else {
-      await updateSurveyById(request.params.id, request.body);
-      reply.code(200);
+      let response = await updateSurveyById(request.params.id, request.body);
+      reply.code(200).send(response);
     }
   } catch (e) {
     console.log(e);
