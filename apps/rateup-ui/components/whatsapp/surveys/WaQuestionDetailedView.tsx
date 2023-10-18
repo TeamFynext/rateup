@@ -7,24 +7,12 @@ import {
   Textarea,
   Popover,
   ActionIcon,
-  Text,
   Box,
-  Center,
-  Overlay,
-  Title,
-  Transition,
   useMantineTheme,
   Switch,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
-import {
-  IconX,
-  IconDeviceSdCard,
-  IconEdit,
-  IconEye,
-  IconChevronLeft,
-} from "@tabler/icons-react";
+import { IconX, IconEdit, IconEye } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -35,7 +23,6 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType } from "../../../types/enums";
 import { logicSupportedTypes } from "../../../utils/data";
 import {
-  RateupButtonSecondary,
   RateupButtonOutline,
   RateupButtonPrimary,
 } from "../../Button/RateupButtons";
@@ -44,10 +31,12 @@ import { LengthTracker } from "../../input/LengthTracker";
 import { WA_BODY_CHAR_LIMIT, WA_HEADER_CHAR_LIMIT } from "../whatsappConfig";
 import { WaListMessageItemsCreator } from "./WaListMessageItemsCreator";
 import { ChoicesCreator } from "../../Survey/Question/ChoicesCreator";
-import { useDisclosure } from "@mantine/hooks";
-import { SendMessageMock } from "../MessageComponents";
-import { WaQuestionPreview } from "./WaQuestionPreview";
-import whatsappStyles from "../../Promotion/RightPanel/style.module.css";
+import { showErrorToast } from "../../../utils/notifications";
+import {
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+} from "../../../utils/questions";
+import { WhatsappChatPreview } from "./WaChatPreview";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -55,15 +44,12 @@ interface QuestionDetailedViewProps {
   setActiveTab: (tab: QuestionTabsEnum) => void;
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
-  setQuestionState: React.Dispatch<React.SetStateAction<Question>>;
 }
 export function WaQuestionDetailedView({
   question,
   setSelectedQ,
   setActiveTab,
   surveyLanguages,
-  setSelectedLanguage,
-  setQuestionState,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const theme = useMantineTheme();
@@ -77,7 +63,10 @@ export function WaQuestionDetailedView({
 
   useEffect(() => {
     if (!enableTitle) {
-      form.setFieldValue("title", "");
+      form.setFieldValue(
+        "title",
+        getInitialQuestionValues(question, surveyLanguages, "whatsapp").title,
+      );
     }
   }, [enableTitle]);
 
@@ -91,24 +80,22 @@ export function WaQuestionDetailedView({
   });
 
   const form = useForm({
-    initialValues: {
-      title: question?.title[selectedLanguage] || "",
-      description: question?.description[selectedLanguage] || "",
-      required: question?.required,
-      type: question?.type,
-      choices: question?.choices,
-      sections: question?.sections || {},
-    },
+    initialValues: getInitialQuestionValues(
+      question,
+      surveyLanguages,
+      "whatsapp",
+    ),
     validate: {
-      description: (value) => {
-        //-----------whatsapp text message support only 4096 charecters only----------
+      description: (desc) => {
+        const value = desc[selectedLanguage];
         if (value.trim().length > 4096) {
-          return "Charecter length exceed (Max 4096 charecters allowed)";
+          return "Character length exceed (Max 4096 charecters allowed)";
         } else if (value.trim().length == 0) {
           return "message is required";
         }
       },
-      title: (value) => {
+      title: (title) => {
+        const value = title[selectedLanguage];
         if (enableTitle) {
           if (value.trim().length === 0) {
             return "Enter a title or disable it";
@@ -120,93 +107,57 @@ export function WaQuestionDetailedView({
     },
   });
 
+  // For live preview.
+  // TODO: check if this operation is expensive
   useEffect(() => {
-    setQuestionState((prevQ) => {
-      let updatedQ = { ...prevQ };
-      updatedQ.title[selectedLanguage] = form.values.title;
-      updatedQ.description[selectedLanguage] = form.values.description;
-      if (form.values.choices) {
-        updatedQ.choices = form.values.choices;
-      } else if (form.values.sections) {
-        updatedQ.sections = form.values.sections as any;
-      }
-      return updatedQ;
-    });
-  }, [
-    form.values.title,
-    form.values.description,
-    form.values.choices,
-    form.values.sections,
-  ]);
+    setSelectedQ({ ...question, ...form.values });
+  }, [form.values]);
 
+  // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
     setIsSaving(true);
-    const validationRes = form.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
+    if (
+      !form.values.description[selectedLanguage] ||
+      form.values.description[selectedLanguage] == ""
+    ) {
+      console.log(selectedLanguage, form.values.description);
       setIsSaving(false);
+      showErrorToast("Question body is missing");
       return "error";
     } else {
-      // converting to expected format
-      const { title, description, ...restOfTheData } = form.values;
-      const formattedTitle = { ...question.title, [selectedLanguage]: title };
-      const formattedDescription = {
-        ...question.description,
-        [selectedLanguage]: description,
-      };
-
-      // TODO: only send modified fields
-      const data = {
-        title: formattedTitle,
-        description: formattedDescription,
-        ...restOfTheData,
-      };
-      // Checking if its a new question
-      if (!question.id) {
-        // Creating new question
-        questionCreateMutation.mutateAsync(data).then((r) => {
-          const newQ: Question = r.data;
-          setSelectedQ(newQ);
-        });
-      } else {
-        // Updating existing question
-        questionUpdateMutation.mutate({ qId: question.id, data: data });
-      }
-
-      let langList: string[] = surveyLanguages;
-      const missingLangs = [];
-
-      langList?.forEach((language: string) => {
-        if (language == selectedLanguage) {
-          return;
-        }
-        if (
-          !question.description[language] ||
-          question.description[language] == ""
-        ) {
-          missingLangs.push(language);
-        }
-      });
+      const missingLangs = validateAllLanguagesArePopulated(
+        surveyLanguages,
+        form.values.description,
+      );
 
       if (missingLangs.length > 0) {
         setIsSaving(false);
-        setSelectedLanguage(missingLangs[0]);
-        form.setFieldValue(title, "");
-        form.validate();
-        notifications.show({
-          id: "errorn",
-          color: "red",
-          title: `"${missingLangs[0]}" Question is missing`,
-          message: `Add question in ${missingLangs[0]} language  also`,
-          icon: <IconX size="1rem" />,
-          //autoClose: 5000,
-          // position: "bottom-center"
-        });
+        showErrorToast(`Question is missing in ${missingLangs[0]} language`);
         return "error";
+      }
+
+      // Checking if its a new question
+      if (!question.id) {
+        // Creating new question
+        questionCreateMutation
+          .mutateAsync(form.values)
+          .then((r) => {
+            const newQ: Question = r.data;
+            setSelectedQ(newQ);
+          })
+          .finally(() => {
+            setIsSaving(false);
+          });
+      } else {
+        // Updating existing question
+        questionUpdateMutation
+          .mutateAsync({ qId: question.id, data: form.values })
+          .finally(() => {
+            setIsSaving(false);
+          });
       }
     }
 
-    //setIsSaving(false);
     return "saved";
   };
 
@@ -257,7 +208,8 @@ export function WaQuestionDetailedView({
                 maxValue={WA_HEADER_CHAR_LIMIT}
               />
             }
-            {...form.getInputProps("title")}
+            {...form.getInputProps(`title.${selectedLanguage}`)}
+            value={form.values.title[selectedLanguage]}
           />
         )}
         <Textarea
@@ -276,7 +228,8 @@ export function WaQuestionDetailedView({
               maxValue={WA_BODY_CHAR_LIMIT}
             />
           }
-          {...form.getInputProps("description")}
+          {...form.getInputProps(`description.${selectedLanguage}`)}
+          value={form.values.description[selectedLanguage]}
         />
         <ExtraProps form={form} question={question} />
       </Stack>
@@ -373,142 +326,6 @@ export function WaQuestionDetailedView({
   );
 }
 
-const WhatsappChatPreview = ({ selectedQ }) => {
-  const [listOpened, { open, close }] = useDisclosure(false);
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const theme = useMantineTheme();
-  const sections = selectedQ?.sections?.[selectedLanguage];
-  return (
-    <>
-      <Title
-        p="sm"
-        style={{
-          backgroundColor: theme.colors["whatsapp-green"][7],
-          textAlign: "center",
-        }}
-        order={3}
-        c={"white"}
-      >
-        Preview
-      </Title>
-      <Stack className={whatsappStyles.chatBg} px="xs" py="sm" justify="end">
-        {selectedQ && (
-          <WaQuestionPreview question={selectedQ} openList={open} />
-        )}
-      </Stack>
-      <SendMessageMock />
-      <Transition mounted={listOpened}>
-        {(ts) => (
-          <Overlay
-            style={{
-              ...ts,
-            }}
-          />
-        )}
-      </Transition>
-      <Transition mounted={listOpened} transition={"slide-up"}>
-        {(transitionStyle1) => (
-          <Overlay
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "end",
-            }}
-          >
-            <Stack
-              style={{
-                backgroundColor: "white",
-                ...transitionStyle1,
-              }}
-              pt="4px"
-              p={0}
-              mah={"70%"}
-            >
-              <Center>
-                <Box
-                  h="5px"
-                  w="25px"
-                  style={{
-                    backgroundColor: "gray",
-                    borderRadius: "1000px",
-                  }}
-                />
-              </Center>
-              <Group
-                p="0"
-                style={{
-                  position: "relative",
-                }}
-                justify="center"
-              >
-                <ActionIcon
-                  variant="transparent"
-                  c="dark"
-                  size={"sm"}
-                  style={{
-                    position: "absolute",
-                    left: "4px",
-                  }}
-                  onClick={close}
-                >
-                  <IconX />
-                </ActionIcon>
-                <Text
-                  style={{
-                    justifySelf: "center",
-                  }}
-                >
-                  View Options
-                </Text>
-              </Group>
-              <Stack
-                px={"xs"}
-                style={{
-                  overflow: "auto",
-                }}
-              >
-                {sections?.map((section) => {
-                  return <WaSectionDisplay section={section} />;
-                })}
-              </Stack>
-              <Center>
-                <Text c="dimmed" fz="xs" p="sm">
-                  Tap to select an item
-                </Text>
-              </Center>
-            </Stack>
-          </Overlay>
-        )}
-      </Transition>
-    </>
-  );
-};
-function WaSectionDisplay({ section }) {
-  const theme = useMantineTheme();
-  return (
-    <>
-      <Text c={theme.colors.blue[9]}>{section.title}</Text>
-      <Stack>
-        {section.rows.map((item) => (
-          <Group justify="space-between">
-            <Box>
-              <Text>{item.title}</Text>
-              <Text c="dimmed">{item.description}</Text>
-            </Box>
-            <Box
-              h="15px"
-              w="15px"
-              style={{
-                border: "2px solid gray",
-                borderRadius: "100px",
-              }}
-            />
-          </Group>
-        ))}
-      </Stack>
-    </>
-  );
-}
 interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;

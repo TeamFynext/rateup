@@ -80,7 +80,7 @@ export function EditSurvey({
                 setActiveTab={setActiveTab}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
-                key={selectedQ.id + selectedLanguage}
+                key={selectedQ.id}
               />
             )}
           </Tabs.Panel>

@@ -39,7 +39,11 @@ import {
   logicSupportedTypes,
   validationSupportedTypes,
 } from "../../../utils/data";
-import { notifications } from "@mantine/notifications";
+import { showErrorToast } from "../../../utils/notifications";
+import {
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+} from "../../../utils/questions";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -74,16 +78,7 @@ export function QuestionDetailedView({
   });
 
   const form = useForm({
-    initialValues: {
-      title: question?.title[selectedLanguage] || "",
-      description: question?.description[selectedLanguage] || "",
-      required: question?.required,
-      type: question?.type,
-      choices: question?.choices,
-    },
-    validate: {
-      title: (value) => (value.trim().length > 0 ? null : "Title is required"),
-    },
+    initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
 
   //font resize on lengthy title
@@ -102,216 +97,172 @@ export function QuestionDetailedView({
     }
   }
 
-  //autosave add choices
-
-  // const handleChoicesAndRequiredChange = () => {
-  //   if (form.isDirty('choices') || form.isDirty('required')) {
-  //     handleSave();
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   handleChoicesAndRequiredChange();
-  // }, [form.values.choices, form.values.required]);
-
   const handleSave = () => {
     setIsSaving(true);
-    const validationRes = form.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
+    if (
+      !form.values.title[selectedLanguage] ||
+      form.values.title[selectedLanguage] == ""
+    ) {
       setIsSaving(false);
+      showErrorToast("Question title is missing");
       return "error";
     } else {
-      // converting to expected format
-      const { title, description, ...restOfTheData } = form.values;
-      const formattedTitle = { ...question.title, [selectedLanguage]: title };
-      const formattedDescription = {
-        ...question.description,
-        [selectedLanguage]: description,
-      };
-
-      // TODO: only send modified fields
-      const data = {
-        title: formattedTitle,
-        description: formattedDescription,
-        ...restOfTheData,
-      };
-      // Checking if its a new question
-      if (!question.id) {
-        // Creating new question
-        questionCreateMutation.mutateAsync(data).then((r) => {
-          const newQ: Question = r.data;
-          setSelectedQ(newQ);
-        });
-      } else {
-        // Updating existing question
-        questionUpdateMutation.mutate({ qId: question.id, data: data });
-      }
-
-      let langList: string[] = surveyLanguages;
-      const missingLangs = [];
-
-      langList?.forEach((language: string) => {
-        if (language == selectedLanguage) {
-          return;
-        }
-        if (!question.title[language] || question.title[language] == "") {
-          missingLangs.push(language);
-        }
-      });
+      const missingLangs = validateAllLanguagesArePopulated(
+        surveyLanguages,
+        form.values.title,
+      );
 
       if (missingLangs.length > 0) {
         setIsSaving(false);
         setSelectedLanguage(missingLangs[0]);
-        form.setFieldValue(title, "");
-        form.validate();
-        notifications.show({
-          id: "errorn",
-          color: "red",
-          title: `"${missingLangs[0]}" Question is missing`,
-          message: `Add question in ${missingLangs[0]} language  also`,
-          icon: <IconX size="1rem" />,
-          //autoClose: 5000,
-          // position: "bottom-center"
-        });
+        showErrorToast(`Question is missing in ${missingLangs[0]} language`);
         return "error";
+      }
+
+      // Checking if its a new question
+      if (!question.id) {
+        // Creating new question
+        questionCreateMutation
+          .mutateAsync(form.values)
+          .then((r) => {
+            const newQ: Question = r.data;
+            setSelectedQ(newQ);
+          })
+          .finally(() => {
+            setIsSaving(false);
+          });
+      } else {
+        // Updating existing question
+        questionUpdateMutation
+          .mutateAsync({ qId: question.id, data: form.values })
+          .finally(() => {
+            setIsSaving(false);
+          });
       }
     }
 
-    //setIsSaving(false);
     return "saved";
   };
 
   // TODO: show question type somewhere
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
-      <ScrollArea style={{ height: "80%" }}>
-        <Stack>
-          <Stack style={{ minHeight: "150px", height: "100%" }}>
-            <TextInput
-              fw={800}
-              fz="lg"
-              ref={textInputRef}
-              styles={{
-                input: {
-                  fontSize: titleFontSize,
-                  fontWeight: 700, // set custom font size for this TextInput
-                },
-              }}
-              style={{
-                marginBottom: "20px", // add 30px bottom margin
-              }}
-              variant="unstyled"
-              size="xl"
-              placeholder="Enter question title here *"
-              {...form.getInputProps("title")}
-              // onBlur={() => {
-              //   form.validateField('title');
-              //   handleSave();
-              // }}
-              //TODO : add error free autosave solution
+      <form onSubmit={form.onSubmit(handleSave)}>
+        <ScrollArea style={{ height: "80%" }}>
+          <Stack>
+            <Stack style={{ minHeight: "150px", height: "100%" }}>
+              <TextInput
+                fw={800}
+                fz="lg"
+                ref={textInputRef}
+                styles={{
+                  input: {
+                    fontSize: titleFontSize,
+                    fontWeight: 700, // set custom font size for this TextInput
+                  },
+                }}
+                style={{
+                  marginBottom: "20px", // add 30px bottom margin
+                }}
+                variant="unstyled"
+                size="xl"
+                placeholder="Enter question title here *"
+                {...form.getInputProps(`title.${selectedLanguage}`)}
+                value={form.values.title[selectedLanguage]}
+              />
+              <TextInput
+                variant="unstyled"
+                placeholder="Enter question description here"
+                {...form.getInputProps(`description.${selectedLanguage}`)}
+                value={form.values.description[selectedLanguage]}
+                styles={{
+                  input: {
+                    fontSize: "1.1rem",
+                    fontWeight: 400, // set custom font size for this TextInput
+                  },
+                }}
+              />
+              <ExtraProps form={form} question={question} />
+            </Stack>
+            <Divider
+              my="xs"
+              variant="dashed"
+              labelPosition="center"
+              label={
+                <>
+                  <IconEye size={12} />
+                  <Box ml={5}>Preview</Box>
+                </>
+              }
             />
-            <TextInput
-              variant="unstyled"
-              placeholder="Enter question description here"
-              {...form.getInputProps("description")}
-              styles={{
-                input: {
-                  fontSize: "1.1rem",
-                  fontWeight: 400, // set custom font size for this TextInput
-                },
-              }}
-              // onBlur={() => {
-              //   form.validateField('description');
-              //   handleSave();
-              // }}
-            />
-            <ExtraProps form={form} question={question} />
+            <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
+              <QuestionTypePreview type={question?.type} />
+            </Center>
           </Stack>
-          <Divider
-            my="xs"
-            variant="dashed"
-            labelPosition="center"
-            label={
-              <>
-                <IconEye size={12} />
-                <Box ml={5}>Preview</Box>
-              </>
-            }
-          />
-          <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
-            <QuestionTypePreview type={question?.type} />
-          </Center>
+        </ScrollArea>
+
+        <Stack style={{ height: "10%", position: "sticky", bottom: "0" }}>
+          <Divider />
+
+          <Group mt="sm" justify="space-between" gap="sm">
+            <Group justify="flex-start" gap="md">
+              <Checkbox
+                label="Required"
+                color="var(--tertiary-color)"
+                fw={600}
+                mr="100px"
+                {...form.getInputProps("required", { type: "checkbox" })}
+              />
+              {logicSupportedTypes.includes(question?.type) && (
+                <RateupButtonSecondary
+                  title={"Logic Jump"}
+                  leftIcon={<IconEdit />}
+                  size="sm"
+                  onClick={() => {
+                    let save = handleSave();
+                    save === "saved" &&
+                      setActiveTab(QuestionTabsEnum.LogicEditor);
+                  }}
+                />
+              )}
+              {googleReviewSupportedTypes.includes(question?.type) && (
+                <RateupButtonSecondary
+                  title={"Google Review"}
+                  leftIcon={<IconStar />}
+                  size="sm"
+                  onClick={() => {
+                    let save = handleSave();
+                    save === "saved" &&
+                      setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                  }}
+                />
+              )}
+              {validationSupportedTypes.includes(question?.type) && (
+                <RateupButtonSecondary
+                  title={"Custom Validation"}
+                  leftIcon={<IconEdit />}
+                  size="sm"
+                  onClick={() => {
+                    let save = handleSave();
+                    save === "saved" &&
+                      setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                  }}
+                />
+              )}
+            </Group>
+
+            <Group>
+              <RateupButtonBlue
+                title={"Save"}
+                size="md"
+                onClick={handleSave}
+                leftIcon={<IconDeviceSdCard />}
+                loading={isSaving}
+              />
+            </Group>
+          </Group>
         </Stack>
-      </ScrollArea>
-
-      <Stack style={{ height: "10%", position: "sticky", bottom: "0" }}>
-        <Divider />
-
-        <Group mt="sm" justify="space-between" gap="sm">
-          <Group justify="flex-start" gap="md">
-            <Checkbox
-              label="Required"
-              color="var(--tertiary-color)"
-              fw={600}
-              mr="100px"
-              {...form.getInputProps("required", { type: "checkbox" })}
-            />
-            {logicSupportedTypes.includes(question?.type) && (
-              <RateupButtonSecondary
-                title={"Logic Jump"}
-                leftIcon={<IconEdit />}
-                size="sm"
-                onClick={() => {
-                  let save = handleSave();
-                  save === "saved" &&
-                    setActiveTab(QuestionTabsEnum.LogicEditor);
-                }}
-              />
-            )}
-            {googleReviewSupportedTypes.includes(question?.type) && (
-              <RateupButtonSecondary
-                title={"Google Review"}
-                leftIcon={<IconStar />}
-                size="sm"
-                onClick={() => {
-                  let save = handleSave();
-                  save === "saved" &&
-                    setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
-                }}
-              />
-            )}
-            {validationSupportedTypes.includes(question?.type) && (
-              <RateupButtonSecondary
-                title={"Custom Validation"}
-                leftIcon={<IconEdit />}
-                size="sm"
-                onClick={() => {
-                  let save = handleSave();
-                  save === "saved" &&
-                    setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
-                }}
-              />
-            )}
-          </Group>
-
-          <Group>
-            <RateupButtonBlue
-              title={"Save"}
-              size="md"
-              onClick={handleSave}
-              leftIcon={<IconDeviceSdCard />}
-              loading={isSaving}
-            />
-            {/* <RateupButtonSecondary 
-                    title={"Add Next Question "}
-                    size="md"
-                    rightIcon={<IconChevronRight />}
-                    onClick={() => setActiveTab(QuestionTabsEnum.TypeSelection)}
-                  /> */}
-          </Group>
-        </Group>
-      </Stack>
+      </form>
     </Stack>
   );
 }

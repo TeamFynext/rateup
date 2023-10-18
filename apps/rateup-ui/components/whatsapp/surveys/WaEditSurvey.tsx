@@ -75,8 +75,7 @@ export function EditWhatsappSurvey({
                 setActiveTab={setActiveTab}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
-                key={selectedQ.id + selectedLanguage}
-                setQuestionState={setSelectedQ}
+                key={selectedQ.id}
               />
             )}
           </Tabs.Panel>
