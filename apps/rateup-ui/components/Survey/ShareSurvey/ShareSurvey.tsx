@@ -38,6 +38,7 @@ import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 const ShareSurvey = ({ survey, setActiveTab }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
+
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
@@ -81,7 +82,8 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
         setErrors(data?.data?.data);
         open();
       } else {
-        if (typeof data?.data !== "object") setIsPublished(false);
+        data?.data?.action === "unpublish" && setIsPublished(false);
+        data?.data?.action === "publish" && setIsPublished(true);
 
         notifications.update({
           id: "load-data",
@@ -133,7 +135,6 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           size="lg"
           checked={isPublished}
           onChange={(event) => {
-            setIsPublished(event.currentTarget.checked);
             notifications.show({
               id: "load-data",
               color: "teal",
@@ -206,49 +207,57 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           />
         </Center>
       </FormModalLayout>
-      {isPublished && (
-        <Stack>
-          <PaperLayout p="md" radius="md" shadow="lg">
-            <SimpleGrid cols={2} spacing="xl">
-              <Stack style={{ maxWidth: "450px" }} p="md">
-                <Title order={4}>Share Survey</Title>
-                <CopyLinkComponent value={shareUrl} />
-              </Stack>
+      <Stack
+        style={
+          !isPublished
+            ? {
+                cursor: "not-allowed !important",
+                pointerEvents: "none",
+                opacity: "0.2",
+              }
+            : {}
+        }
+      >
+        <PaperLayout p="md" radius="md" shadow="lg">
+          <SimpleGrid cols={2} spacing="xl">
+            <Stack style={{ maxWidth: "450px" }} p="md">
+              <Title order={4}>Share Survey</Title>
+              <CopyLinkComponent value={shareUrl} />
+            </Stack>
 
-              <Stack style={{ maxWidth: "400px" }} p="md">
-                <Title order={4} style={{ textAlign: "center" }}>
-                  How would you like to survey people?
-                </Title>
-                <Group justify="center">
-                  <ActionIcon
-                    size="xl"
-                    variant="light"
-                    onClick={() => shareButtonAction("mail")}
-                  >
-                    <IconMail size="2rem" />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="xl"
-                    variant="light"
-                    onClick={() => shareButtonAction("whatsapp")}
-                  >
-                    <IconBrandWhatsapp size="2rem" />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="xl"
-                    variant="light"
-                    onClick={() => shareButtonAction("fb")}
-                  >
-                    <IconBrandFacebook size="2rem" />
-                  </ActionIcon>
-                </Group>
-              </Stack>
-            </SimpleGrid>
-          </PaperLayout>
+            <Stack style={{ maxWidth: "400px" }} p="md">
+              <Title order={4} style={{ textAlign: "center" }}>
+                How would you like to survey people?
+              </Title>
+              <Group justify="center">
+                <ActionIcon
+                  size="xl"
+                  variant="light"
+                  onClick={() => shareButtonAction("mail")}
+                >
+                  <IconMail size="2rem" />
+                </ActionIcon>
+                <ActionIcon
+                  size="xl"
+                  variant="light"
+                  onClick={() => shareButtonAction("whatsapp")}
+                >
+                  <IconBrandWhatsapp size="2rem" />
+                </ActionIcon>
+                <ActionIcon
+                  size="xl"
+                  variant="light"
+                  onClick={() => shareButtonAction("fb")}
+                >
+                  <IconBrandFacebook size="2rem" />
+                </ActionIcon>
+              </Group>
+            </Stack>
+          </SimpleGrid>
+        </PaperLayout>
 
-          <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
-        </Stack>
-      )}
+        <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
+      </Stack>
     </Stack>
   );
 };
