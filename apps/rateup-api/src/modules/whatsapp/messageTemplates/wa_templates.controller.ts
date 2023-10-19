@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { createTemplate, deleteTemplate, deleteTemplateFromDb, getTemplate, getTemplatesByOrgId, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
-import { CreateWaTemplateInput, ByTemplateIdParamsSchema, WaTemplateFormatted } from "./wa_templates.schema";
+import { createTemplate, deleteTemplate, deleteTemplateFromDb, getTemplate, getTemplatesByOrgId, getUnregisteredTemplates, registerTemplatesInDb, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
+import { CreateWaTemplateInput, ByTemplateIdParamsSchema, WaTemplateFormatted, RegisterTemplatesInDbBodySchema } from "./wa_templates.schema";
 import { generateTemplate } from "./wa_templates.utils";
 import { log } from "../../../utils/logger";
 import Session from "supertokens-node/recipe/session";
@@ -112,6 +112,36 @@ export async function syncTemplatesHandler(
   if (synced) {
     reply.code(200);
   } else {
+    reply.code(500);
+  }
+}
+
+export async function getUnregisteredTemplatesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const unregisteredTemplates = await getUnregisteredTemplates(orgId);
+    reply.code(200).send(unregisteredTemplates);
+  } catch (e) {
+    log.error("Error getting unregistered templates \n%o", e)
+    reply.code(500);
+  }
+}
+
+export async function registerTemplatesInDbHandler(
+  request: FastifyRequest<{
+    Body: RegisterTemplatesInDbBodySchema
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    await registerTemplatesInDb(request.body, orgId)
+    reply.code(200);
+  } catch (e) {
+    log.error("Error registering templates \n%o", e)
     reply.code(500);
   }
 }

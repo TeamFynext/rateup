@@ -12,8 +12,10 @@ import { generateTemplate } from "./wa_templates.utils";
  */
 export async function fetchTemplates(orgId: string) {
     try {
-        log.trace("Fetching whatsappSettings from db")
         const waSettings = await getWaSettings(orgId);
+        if (!waSettings) {
+            throw new Error("No WhatsApp settings found for orgId " + orgId)
+        }
 
         log.trace("Fetching templates from whatsapp")
         const res = await callWhatsappApi(
@@ -21,7 +23,7 @@ export async function fetchTemplates(orgId: string) {
             "GET",
             waSettings.accessToken
         )
-        log.trace(" Templates fetched from whatsapp %o", res.data.data)
+        log.trace(" Templates fetched from whatsapp: %o", res.data.data.length)
         return res.data.data
     } catch (e: any) {
         log.error("Error getting templates \n%o", e.response)
@@ -91,21 +93,21 @@ export async function getTemplateWithHSMId(hsmId: string) {
  * @returns 
  */
 export async function createTemplate(orgId: string, template: CreateWaTemplateFormattedInput) {
-        const waSettings = await getWaSettings(orgId);
-        const res = await callWhatsappApi(
-            `/${waSettings.businessId}/message_templates`,
-            "POST",
-            waSettings.accessToken,
-            template
-        )
-        if (res.status === 200) {
-            log.trace("Template Created in whatsapp %o", res.data)
-        } else {
-            // TODO: Parse error and send status to client
-            log.error("Error creating template in whatsapp res => %o,\ntemplate => %o", res.data, template)
-            throw new Error("Error creating template in whatsapp")
-        }
-        return { ...template, ...res.data }
+    const waSettings = await getWaSettings(orgId);
+    const res = await callWhatsappApi(
+        `/${waSettings.businessId}/message_templates`,
+        "POST",
+        waSettings.accessToken,
+        template
+    )
+    if (res.status === 200) {
+        log.trace("Template Created in whatsapp %o", res.data)
+    } else {
+        // TODO: Parse error and send status to client
+        log.error("Error creating template in whatsapp res => %o,\ntemplate => %o", res.data, template)
+        throw new Error("Error creating template in whatsapp")
+    }
+    return { ...template, ...res.data }
 }
 
 /**
@@ -265,4 +267,29 @@ export async function syncTemplates(orgId: string) {
         log.error("Error syncing templates \n%o", e)
         return false
     }
+}
+
+export async function getUnregisteredTemplates(orgId: string) {
+    const waTemplates = await fetchTemplates(orgId);
+    const dbTemplates = await getTemplatesByOrgId(orgId)
+    const registeredTemplateIds = dbTemplates.map((dt: any) => dt.data.id);
+    const unregisteredTemplates = waTemplates.filter(
+        (wt: any) =>
+            !registeredTemplateIds.includes(wt.id) // Filtering out already registered templates
+            &&
+            wt.components.find(c => c.type.toLowerCase() === 'buttons')?.buttons.length === 2 // Selecting templates with only 2 buttons. Filtering out the rest since it cant be used as template message.
+    )
+    return unregisteredTemplates
+}
+
+export async function registerTemplatesInDb(dbTemplates: Array<any>, orgId: string) {
+    await prisma.waTemplate.createMany({
+        data: dbTemplates.map((dt: any) => {
+            return {
+                orgId: orgId,
+                acceptButton: dt.acceptButton,
+                data: dt.data
+            }
+        })
+    })
 }

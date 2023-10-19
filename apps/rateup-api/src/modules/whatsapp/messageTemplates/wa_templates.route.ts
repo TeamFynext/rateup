@@ -1,8 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { createTemplateHandler, deleteTemplateHandler, getTemplatesHandler, syncTemplatesHandler, updateTemplateHandler } from "./wa_templates.controller";
+import { createTemplateHandler, deleteTemplateHandler, getTemplatesHandler, getUnregisteredTemplatesHandler, registerTemplatesInDbHandler, syncTemplatesHandler, updateTemplateHandler } from "./wa_templates.controller";
 import { $WTref } from "./wa_templates.schema";
+import { checkSession } from "../../../utils/checkSession";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
+  server.addHook('preHandler', checkSession)
 
   server.get(
     "/",
@@ -43,5 +45,14 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.get(
     "/sync",
     syncTemplatesHandler
+  )
+
+  server.get(
+    '/unregistered',
+    getUnregisteredTemplatesHandler
+  )
+  server.post(
+    '/register',
+    registerTemplatesInDbHandler
   )
 }

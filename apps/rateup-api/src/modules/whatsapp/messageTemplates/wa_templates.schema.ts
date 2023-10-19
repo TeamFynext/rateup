@@ -67,10 +67,16 @@ const byTemplateIdParamsSchema = z.object({
     templateId: z.string(),
 })
 
+const registerTemplatesInDbBodySchema = z.array(z.object({
+    data: waTemplateSchema,
+    acceptButton: z.string().max(20),
+}))
+
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas({
     waTemplateInputSchema,
     waTemplateSchema,
     byTemplateIdParamsSchema,
+    registerTemplatesInDbBodySchema
 }, { $id: "waTemplates" })
 
 export type CreateWaTemplateInput = z.infer<typeof waTemplateInputSchema>
@@ -78,3 +84,4 @@ export type CreateWaTemplateFormattedInput = z.infer<typeof waTemplateFormattedI
 export type WaTemplate = z.infer<typeof waTemplateSchema>
 export type WaTemplateFormatted = z.infer<typeof waTemplateFormattedSchema>
 export type ByTemplateIdParamsSchema = z.infer<typeof byTemplateIdParamsSchema>
+export type RegisterTemplatesInDbBodySchema = z.infer<typeof registerTemplatesInDbBodySchema>
