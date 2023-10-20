@@ -188,7 +188,7 @@ function SurveyCard({
   );
 }
 
-function StatusBadge({ active }) {
+export function StatusBadge({ active }) {
   return (
     <>
       <Badge color={active ? "green" : "yellow"}>

@@ -20,6 +20,9 @@ import {
   IconChevronLeft,
   IconCopy,
   IconMail,
+  IconPhonePause,
+  IconPlayerPause,
+  IconPlayerPlay,
   IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -32,8 +35,12 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
+import { StatusBadge } from "../SurveyCardList";
 
 const ShareSurvey = ({ survey, setActiveTab }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -98,7 +105,21 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           autoClose: 3000,
         });
         queryClient.invalidateQueries(["surveys"]);
+        queryClient.invalidateQueries(["survey", survey.id]);
       }
+    },
+  });
+
+  const surveyStatusUpdateMutation = useMutation({
+    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    onSuccess: () => {
+      notifications.show({
+        id: "survey",
+        message: "Survey status Updated!",
+        autoClose: true,
+      });
+      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries(["survey", survey.id]);
     },
   });
 
@@ -128,32 +149,51 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
         style={{
           boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
           overflowX: "auto",
-          width: "250px",
         }}
       >
-        <Switch
-          size="lg"
-          checked={isPublished}
-          onChange={(event) => {
-            notifications.show({
-              id: "load-data",
-              color: "teal",
-              title: "Publishing",
-              loading: true,
-              message: "Please hold on while publishing your survey",
-              autoClose: 3000,
-            });
-            surveyUpdateMutation.mutate({
-              isPublished: event.currentTarget.checked,
-            });
-          }}
-          label="Publish Survey"
-          style={{
-            root: {
-              fontSize: "30px",
-            },
-          }}
-        />
+        <Group justify="space-between">
+          <Switch
+            size="lg"
+            checked={isPublished}
+            onChange={(event) => {
+              notifications.show({
+                id: "load-data",
+                color: "teal",
+                title: "Publishing",
+                loading: true,
+                message: "Please hold on while publishing your survey",
+                autoClose: 3000,
+              });
+              surveyUpdateMutation.mutate({
+                isPublished: event.currentTarget.checked,
+              });
+            }}
+            label="Publish Survey"
+            style={{
+              root: {
+                fontSize: "30px",
+                fontWeight: "bold", //TODO : weight not working
+              },
+              label: { fontSize: "20px", fontWeight: "bold" },
+            }}
+          />
+          <Group>
+            <Text>Current Status: </Text>
+            {isPublished ? (
+              <StatusBadge active={survey?.active} />
+            ) : (
+              <Text c="dark.1"> Not published! </Text>
+            )}
+          </Group>
+          <RateupButtonSecondary
+            disabled={!isPublished}
+            title={survey?.active ? "Pause" : "Resume"}
+            leftIcon={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+            onClick={() =>
+              surveyStatusUpdateMutation.mutate({ active: !survey?.active })
+            }
+          />
+        </Group>
       </Paper>
 
       <FormModalLayout
@@ -207,17 +247,7 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           />
         </Center>
       </FormModalLayout>
-      <Stack
-        style={
-          !isPublished
-            ? {
-                cursor: "not-allowed !important",
-                pointerEvents: "none",
-                opacity: "0.2",
-              }
-            : {}
-        }
-      >
+      <Stack>
         <PaperLayout p="md" radius="md" shadow="lg">
           <SimpleGrid cols={2} spacing="xl">
             <Stack style={{ maxWidth: "450px" }} p="md">
