@@ -30,8 +30,8 @@ export default function () {
       style={{
         // TODO: add blur to background image
         background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${
-          menu?.backgroundImage
-            ? `url(${getFileUrlFromKey(menu?.backgroundImage)})`
+          menu.backgroundImage
+            ? `url(${getFileUrlFromKey(menu.backgroundImage)})`
             : ""
         }`,
         backgroundColor: "#121212",

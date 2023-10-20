@@ -279,6 +279,7 @@ declare global {
     websiteText?: string;
     teamId: string;
     logo?: string;
+    backgroundImage?: string;
   };
 
   type MenuCategory = {
