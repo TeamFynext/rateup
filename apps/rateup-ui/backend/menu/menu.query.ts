@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createMenu, deleteMenu, getFullMenuById, getMenuById, getMenusByTeamId, updateMenu } from "./menu.api";
+import {
+  createMenu,
+  deleteMenu,
+  getFullMenuById,
+  getMenuById,
+  getMenuPublicById,
+  getMenusByTeamId,
+  updateMenu,
+} from "./menu.api";
 import { showSuccessToast, showErrorToast } from "../../utils/notifications";
 
 // TODO: update tanstack querykeys. (use teamId & create a proper hierarchy)
@@ -16,7 +24,15 @@ export const useFullMenu = (menuId: string) =>
     enabled: !!menuId,
     queryKey: ["menu", "full", menuId],
     queryFn: () => getFullMenuById(menuId),
-  })
+  });
+
+export const usePublicMenuById = (menuid: string) => {
+  return useQuery({
+    enabled: !!menuid,
+    queryKey: ["menu", "public", menuid],
+    queryFn: () => getMenuPublicById(menuid),
+  });
+};
 
 export const useMenusByTeamId = (teamId: string) =>
   useQuery({
@@ -33,16 +49,16 @@ export const useCreateMenuMutation = (teamId: string, close, setIsCreating) => {
       showSuccessToast("Menu created successfully");
       queryClient.invalidateQueries(["menus", teamId]);
       close();
-      setIsCreating(false)
+      setIsCreating(false);
     },
     onError: () => {
       showErrorToast("Error creating menu");
-      setIsCreating(false)
-    }
-  })
+      setIsCreating(false);
+    },
+  });
 
   return createMutation;
-}
+};
 
 export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
   const queryClient = useQueryClient();
@@ -58,11 +74,11 @@ export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
     onError: () => {
       showErrorToast("Error updating menu");
       onError();
-    }
-  })
+    },
+  });
 
   return updateMutation;
-}
+};
 
 export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   const queryClient = useQueryClient();
@@ -76,8 +92,8 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
     onError: () => {
       showErrorToast("Error deleting menu");
       onError();
-    }
-  })
+    },
+  });
 
   return deleteMutation;
-}
+};

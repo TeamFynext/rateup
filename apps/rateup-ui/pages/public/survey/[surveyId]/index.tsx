@@ -6,70 +6,12 @@ import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurvey";
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { useMediaQuery } from "@mantine/hooks";
-import { GetServerSidePropsContext } from "next";
-import supertokensNode from "supertokens-node";
-import { backendConfig } from "../../../../config/backendConfig";
-import {
-  getPublicSurveyWithCustomToken,
-  updateSurveyStartedWithCustomToken,
-  updateSurveyVisitedWithCustomToken,
-} from "../../../../backend/surveys/survey.api";
-import { checkTokenExpiry } from "../../../../utils/supertoken";
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  try {
-    supertokensNode.init(backendConfig());
-    const { surveyId } = context.params as { surveyId: string };
-
-    let accessToken =
-      context.req.cookies["st-access-token"] ||
-      context.req.cookies["sAccessToken"];
-    if (!accessToken) {
-      return { props: { surveyData: [] } };
-    }
-
-    const surveyData = await getPublicSurveyWithCustomToken(accessToken, {
-      surveyId,
-    });
-
-    const tokenExpiryCheck = checkTokenExpiry([surveyData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    if (surveyData?.welcomePageEnabled) {
-      await updateSurveyVisitedWithCustomToken(accessToken, surveyId);
-    } else {
-      //count visited and started for - no welcome page case
-      await updateSurveyVisitedWithCustomToken(accessToken, surveyId);
-      await updateSurveyStartedWithCustomToken(accessToken, surveyId);
-    }
-
-    return {
-      props: {
-        surveyData: surveyData || null,
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        surveyData: [],
-      },
-    };
-  }
-}
-
-export default function Page({ surveyData: surveyInitial }) {
+export default function Page() {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
-  const {
-    isError,
-    isLoading,
-    data: survey,
-  } = usePublicSurvey(surveyId, surveyInitial);
+  const { isError, isLoading, data: survey } = usePublicSurvey(surveyId);
 
   if (isError) return <div>Something went wrong</div>;
   if (isLoading) return <Loader />;

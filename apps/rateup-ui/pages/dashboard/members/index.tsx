@@ -19,44 +19,6 @@ import {
   useUpdateRoleMutation,
 } from "../../../backend/org/org.query";
 import { notifications } from "@mantine/notifications";
-import { getSurveyWithCustomToken } from "../../../backend/org/org.api";
-import { GetServerSidePropsContext } from "next";
-import { checkTokenExpiry } from "../../../utils/supertoken";
-import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
-import { QueryClient, dehydrate } from "@tanstack/react-query";
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const queryClient = new QueryClient();
-
-  try {
-    const accessToken = await getSessionWithRefreshHandling(context);
-
-    await queryClient.prefetchQuery({
-      queryKey: ["orgTeamsDataQuery"],
-      queryFn: () => getSurveyWithCustomToken(accessToken),
-    });
-
-    const membersData = queryClient.getQueryData(["orgTeamsDataQuery"]);
-
-    const tokenExpiryCheck = checkTokenExpiry([membersData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  }
-}
 
 const Members = () => {
   const router = useRouter();

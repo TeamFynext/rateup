@@ -1,6 +1,4 @@
 import {
-  ScrollArea,
-  Paper,
   Title,
   Text,
   Stack,
@@ -46,15 +44,9 @@ import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal"
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
-import {
-  QueryClient,
-  dehydrate,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteSurvey,
-  getSurveysWithCustomToken,
   updateSurvey,
 } from "../../../backend/surveys/survey.api";
 import {
@@ -65,44 +57,9 @@ import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
 import classes from "./Survey.module.css";
-import { GetServerSidePropsContext } from "next";
-import { checkTokenExpiry } from "../../../utils/supertoken";
 import { UserRole } from "../../../utils/enums";
 import { TeamSelector } from "../../../components/input/TeamSelector";
-import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const queryClient = new QueryClient();
-
-  try {
-    const accessToken = await getSessionWithRefreshHandling(context);
-
-    await queryClient.prefetchQuery({
-      queryKey: ["surveys"],
-      queryFn: () => getSurveysWithCustomToken(accessToken),
-    });
-
-    let surveys = queryClient.getQueryData(["surveys"]);
-
-    const tokenExpiryCheck = checkTokenExpiry([surveys]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  }
-}
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -116,10 +73,12 @@ export default function Surveys() {
   const [filterParam, setFilterParam] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const { action } = useRouter().query;
-  const { isLoading, error, data: allSurveys } = useSurveys(true);
-
+  const {
+    isLoading,
+    error,
+    data: allSurveys,
+  } = useSurveys(selectedTeamId ? true : false);
   const router = useRouter();
-
   useEffect(() => {
     if (action === "create") {
       open();
@@ -168,24 +127,9 @@ export default function Surveys() {
 
   return (
     <>
-      <Flex
-        mih={50}
-        gap="md"
-        justify="space-between"
-        direction="row"
-        wrap="wrap"
-      >
-        <Flex
-          mih={50}
-          gap="md"
-          justify="flex-start"
-          align="center"
-          direction="row"
-          wrap="wrap"
-          mb="md"
-        >
+      <Group gap="md" justify="space-between">
+        <Group gap="md" justify="flex-start">
           <Title order={1}>Surveys : </Title>
-
           <TeamSelector
             value={selectedTeamId}
             onChange={(teamId) => setSelectedTeamId(teamId)}
@@ -200,16 +144,9 @@ export default function Surveys() {
               onClick={open}
             />
           )}
-        </Flex>
+        </Group>
 
-        <Flex
-          mih={50}
-          gap="md"
-          justify="flex-start"
-          align="flex-start"
-          direction="row"
-          wrap="wrap"
-        >
+        <Group gap="md" justify="flex-start">
           {surveyidArray.length > 0 && (
             <Button
               className={classes.customButton}
@@ -230,44 +167,43 @@ export default function Surveys() {
             variant="subtle"
             rightIcon={<IconSelector size="1rem" />}
           />
-        </Flex>
-      </Flex>
+        </Group>
+      </Group>
 
-      <Space h="xl" />
+      <Space h="lg" />
 
-      <ScrollArea h="70vh">
-        <SimpleGrid
-          spacing={"lg"}
-          cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
-          my="lg"
-        >
-          {surveys
-            .sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime(),
-            )
-            .filter((s) => {
-              if (filterParam === "active") {
-                return s.active === true;
-              } else if (filterParam === "paused") {
-                return s.active === false;
-              } else {
-                return true;
-              }
-            })
-            .map((s) => (
-              <SurveyCard
-                key={s.id}
-                survey={s}
-                handleCheckBox={handleCheckBox}
-                isChecked={isChecked}
-              />
-            ))}
-        </SimpleGrid>
-      </ScrollArea>
+      <SimpleGrid
+        style={{ overflow: "auto" }}
+        spacing={"lg"}
+        cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
+        p={1}
+      >
+        {surveys
+          .sort((a, b) =>
+            sort
+              ? new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+              : new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime(),
+          )
+          .filter((s) => {
+            if (filterParam === "active") {
+              return s.active === true;
+            } else if (filterParam === "paused") {
+              return s.active === false;
+            } else {
+              return true;
+            }
+          })
+          .map((s) => (
+            <SurveyCard
+              key={s.id}
+              survey={s}
+              handleCheckBox={handleCheckBox}
+              isChecked={isChecked}
+            />
+          ))}
+      </SimpleGrid>
       <CreateSurveyModal
         open={createSurveyOpened}
         close={close}
@@ -315,7 +251,7 @@ export function SurveyCard({
   const router = useRouter();
 
   return (
-    <Paper
+    <PaperLayout
       p="md"
       shadow="lg"
       radius="lg"
@@ -387,7 +323,7 @@ export function SurveyCard({
           </Group>
         </Link>
       </Flex>
-    </Paper>
+    </PaperLayout>
   );
 }
 

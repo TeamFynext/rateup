@@ -46,24 +46,6 @@ export async function getTeamsByUser() {
   return teams;
 }
 
-export const fetchTeamsByUserWithCustomToken = async (token: string) => {
-  try {
-    const response = await axiosClient.get(`/team/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return [];
-    }
-  }
-};
-
 export const deleteTeamById = (id: String) =>
   axiosClient({
     url: `/team/${id}`,
@@ -101,18 +83,6 @@ export async function getTeamMembersFromInvitation(teamId: String) {
   ).data;
   return teamData;
 }
-
-export const getTeamMembersFromInvitationWithCustomToken = async (
-  token: string,
-  teamId: String,
-) => {
-  const response = await axiosClient.get(`/team/invitation/${teamId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
-};
 
 export const getTeamSurveys = (teamId: String) =>
   axiosClient({

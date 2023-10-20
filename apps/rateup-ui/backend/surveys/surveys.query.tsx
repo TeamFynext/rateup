@@ -61,12 +61,11 @@ export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null) => {
   });
 };
 
-export const usePublicSurvey = (surveyId: string, surveyInitial = null) => {
+export const usePublicSurvey = (surveyId: string) => {
   return useQuery({
-    enabled: !!surveyId || surveyInitial === null,
+    enabled: !!surveyId,
     queryKey: ["public-survey", surveyId],
     queryFn: () => getPublicSurvey(surveyId),
-    initialData: surveyInitial,
   });
 };
 

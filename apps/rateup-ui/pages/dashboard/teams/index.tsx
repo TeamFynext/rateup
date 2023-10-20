@@ -27,51 +27,15 @@ import {
   useTeamsByUser,
 } from "../../../backend/team/team.query";
 import TeamCard from "./TeamCard";
-import { QueryClient, dehydrate, useQueryClient } from "@tanstack/react-query";
-import { backendConfig } from "../../../config/backendConfig";
-import { GetServerSidePropsContext } from "next";
-import supertokensNode from "supertokens-node";
-import { fetchTeamsByUserWithCustomToken } from "../../../backend/team/team.api";
-import { checkTokenExpiry } from "../../../utils/supertoken";
 import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
-import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const queryClient = new QueryClient();
-
-  try {
-    supertokensNode.init(backendConfig());
-
-    const accessToken = await getSessionWithRefreshHandling(context);
-
-    await queryClient.prefetchQuery({
-      queryKey: ["teamsDataUserQuery"],
-      queryFn: () => fetchTeamsByUserWithCustomToken(accessToken),
-    });
-
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  }
-}
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const { action } = useRouter().query;
-  const { user, setUser } = useUser();
-  const queryClient = useQueryClient();
+  const { user } = useUser();
   const [isCreating, setIsCreating] = useState(false);
 
   const createTeamForm = useForm({
@@ -190,7 +154,7 @@ export default function Teams() {
         />
       </Flex>
 
-      <Space h="xl" />
+      <Space h="lg" />
 
       {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
         <SimpleGrid

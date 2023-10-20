@@ -5,6 +5,7 @@ import {
   Paper,
   Stack,
   Text,
+  Loader,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -14,34 +15,29 @@ import { CategoryChip } from "../../../../../components/menu/category/CategoryCh
 import { CategoryDisplay } from "../../../../../components/menu/category/CategoryDisplay";
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
-import { getFullMenuPublicById } from "../../../../../backend/menu/menu.api";
+import { useRouter } from "next/router";
+import {
+  useFullMenu,
+  usePublicMenuById,
+} from "../../../../../backend/menu/menu.query";
 
-export async function getServerSideProps({ params }) {
-  const { menuId } = params;
-  const fullMenu = await getFullMenuPublicById(menuId);
-  if (!fullMenu) {
-    return {
-      notFound: true,
-    };
-  } else {
-    return {
-      props: {
-        fullMenu,
-      },
-    };
-  }
-}
-
-export default function ({ fullMenu }) {
+export default function () {
+  const { menuId } = useRouter().query as { menuId: string };
+  const {
+    data: fullMenu,
+    isLoading: loading,
+    error: error,
+  } = useFullMenu(menuId);
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
+  console.log(fullMenu);
 
   useEffect(() => {
-    if (!fullMenu || selectedCategory || fullMenu.categories.length === 0)
+    if (!fullMenu || selectedCategory || fullMenu?.categories.length === 0)
       return;
-    setSelectedCategory(fullMenu.categories[0].id);
+    setSelectedCategory(fullMenu?.categories[0].id);
   }, [fullMenu]);
 
   function handleCategoryChipClick(categoryId: string) {
@@ -49,7 +45,7 @@ export default function ({ fullMenu }) {
   }
 
   const backgroundImageBorderRadius = largeScreen ? "32px" : "16px";
-
+  if (loading) return <Loader />;
   return (
     <Paper
       style={{
@@ -84,7 +80,7 @@ export default function ({ fullMenu }) {
           h="100%"
           mb="lg"
         >
-          {fullMenu.logo && (
+          {fullMenu?.logo && (
             <img
               width="100px"
               height={"100px"}
@@ -98,7 +94,7 @@ export default function ({ fullMenu }) {
             <Text style={{ textAlign: "center" }}>Welcome To</Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
             <Text fz={"max(3vw, 2rem)"} fw="bold">
-              {fullMenu.displayName}
+              {fullMenu?.displayName ?? "Name"}
             </Text>
           </div>
         </Stack>
@@ -113,7 +109,7 @@ export default function ({ fullMenu }) {
             overflowX: "scroll",
           }}
         >
-          {fullMenu.categories.map((c) => (
+          {fullMenu?.categories.map((c) => (
             <CategoryChip
               key={c.id}
               categoryId={c.id}

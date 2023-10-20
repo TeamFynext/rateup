@@ -9,25 +9,6 @@ export async function getTeamsMembersOfOrg() {
     //return { error: "Error Occured!" };
   }
 }
-
-export const getSurveyWithCustomToken = async (token: string) => {
-  try {
-    const response = await axiosClient.get(`/org/members`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return [];
-    }
-  }
-};
-
 export interface IUpdateRole {
   role: string;
 }

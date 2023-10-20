@@ -52,51 +52,17 @@ export async function getSurveys() {
   }
 }
 
-export const getSurveysWithCustomToken = async (token: string) => {
-  try {
-    const response = await axiosClient.get(`${SURVEYURL}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data as Array<Survey>;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return {};
-    }
-  }
-};
-
 export async function getActiveSurveysSummary() {
   try {
-    let surveysSummary: SurveySummaryData = (await axiosClient.get(`${SURVEYURL}/summary/active`)).data;
+    let surveysSummary: SurveySummaryData = (
+      await axiosClient.get(`${SURVEYURL}/summary/active`)
+    ).data;
     return surveysSummary;
   } catch (e) {
     console.error(e);
     return { error: "Error Occured!" };
   }
 }
-
-export const getActiveSurveysSummaryWithCustomToken = async (token: string) => {
-  try {
-      const response = await axiosClient.get(`${SURVEYURL}/summary/active`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data as SurveySummaryData
-  } catch (error) {
-    console.log(error);
-    if (error.response.data.message) {
-      return error.response.data.message;
-    } else {
-      return {};
-    }
-  }
-};
 
 export const getSurveysList = () =>
   axiosClient({
@@ -139,49 +105,11 @@ export async function getWhatsappSurveys() {
   }
 }
 
-export const getWhatsappSurveysWithCustomToken = async (token: string) => {
-  try {
-    const surveys: Array<Survey> = (
-      await axiosClient.get(`${SURVEYURL}/whatsappsurveys`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-    ).data;
-    return surveys;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return [];
-    }
-  }
-};
-
 export async function getSurvey(surveyId: string) {
   if (!surveyId) return undefined;
   const res = await axiosClient.get(`${SURVEYURL}/${surveyId}`);
   return res.data as Survey;
 }
-
-export const getSurveyWithCustomToken = async (token: string, { surveyId }) => {
-  try {
-    const response = await axiosClient.get(`${SURVEYURL}/${surveyId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data as Survey;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return [];
-    }
-  }
-};
 
 export async function getLandingpage(LandingId: string) {
   if (!LandingId) return undefined;
@@ -199,27 +127,6 @@ export async function getPublicSurvey(surveyId: string) {
   const res = await axiosClient.get(`${SURVEY_PUBLIC_URL}/${surveyId}`);
   return res.data as Survey;
 }
-
-export const getPublicSurveyWithCustomToken = async (
-  token: string,
-  { surveyId },
-) => {
-  try {
-    const response = await axiosClient.get(`${SURVEY_PUBLIC_URL}/${surveyId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return [];
-    }
-  }
-};
 
 export async function getPublicSurveyGoogleLink(surveyId: string) {
   const res = await axiosClient.get(
@@ -260,57 +167,9 @@ export async function updateSurveyVisited(surveyId: string) {
   return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/visited`);
 }
 
-export const updateSurveyVisitedWithCustomToken = async (
-  token: string,
-  surveyId: string,
-) => {
-  try {
-    const response = await axiosClient.post(
-      `${SURVEY_PUBLIC_URL}/${surveyId}/visited`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    return response;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return {};
-    }
-  }
-};
-
 export async function updateSurveyStarted(surveyId: string) {
   return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/started`);
 }
-
-export const updateSurveyStartedWithCustomToken = async (
-  token: string,
-  surveyId: string,
-) => {
-  try {
-    const response = await axiosClient.post(
-      `${SURVEY_PUBLIC_URL}/${surveyId}/started`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    return response;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return {};
-    }
-  }
-};
 
 export async function updateSurveyCompleted(surveyId: string) {
   return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/completed`);

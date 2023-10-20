@@ -13,27 +13,6 @@ export async function getQuestions(surveyId: string) {
   return res.data as Question[];
 }
 
-export const getQuestionsWithCustomToken = async (
-  token: string,
-  { surveyId },
-) => {
-  try {
-    const response = await axiosClient.get(`${QUESTION_URL}/${surveyId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data as Survey;
-  } catch (error) {
-    console.log(error);
-    if (error?.response?.data?.message) {
-      return error?.response?.data?.message;
-    } else {
-      return [];
-    }
-  }
-};
-
 export async function deleteQuestion(surveyId: string, questionId: string) {
   return axiosClient.delete(`${QUESTION_URL}/${surveyId}/${questionId}`);
 }
