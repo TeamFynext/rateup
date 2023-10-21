@@ -177,6 +177,36 @@ export async function getSurveyById(id: string) {
   return survey;
 }
 
+
+//-----------get public survey with org logo -------
+
+export async function getPublicSurveyById(id: string) {
+  const survey = await prisma.survey.findUnique({
+    where: {
+      id,
+    }
+  });
+
+  if (!survey) {
+    throw new Error(`Could not find survey with id ${id}`);
+  }
+
+  let org = await prisma.team.findUnique({
+    where: {
+      id : survey?.teamId,
+    },
+    include: {
+      org: true,
+    },
+  });
+
+  let orgLogo ={ orgLogo : org?.org?.logo}
+  let publicSurvey = { ...survey, ...orgLogo}
+
+  return publicSurvey;
+}
+
+
 //---------------get lnding page by landingId------------
 export async function getSurveyBylandingId(landingid: string) {
   const Landingpages = await prisma.surveyLanding.findUnique({

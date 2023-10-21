@@ -71,6 +71,7 @@ const getSurveyPublicResponseSchema = z.object({
   kioskMode: z.boolean(),
   getLocation: z.boolean(),
   welcomePageEnabled: z.boolean(),
+  orgLogo:z.string(),
 });
 
 const updateSurveyRequestSchema = z.object({

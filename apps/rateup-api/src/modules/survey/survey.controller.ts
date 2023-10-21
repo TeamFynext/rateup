@@ -6,6 +6,7 @@ import {
   deleteSurveyById,
   getActiveSurveysSummmaryByUserId,
   getGoogleUrlBySurveyId,
+  getPublicSurveyById,
   getSurveyById,
   getSurveyBylandingId,
   getSurveyLandingByUserId,
@@ -108,6 +109,25 @@ export async function getSurveyByIdHandler(
     reply.code(500);
   }
 }
+
+export async function getPublicSurveyByIdHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getPublicSurveyById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
+}
+
 //---------------get landing page by id ----------
 export async function getLandingPageByIdHandler(
   request: FastifyRequest<{
