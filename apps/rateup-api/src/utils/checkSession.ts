@@ -19,8 +19,7 @@ export const checkSession = async (
     }
     (request as any).userId! = userId;
   } catch (err) {
-    console.log(err)
-    return null
+    log.error('Error checking session\n%o', err)
+    reply.code(403).send({ message: 'Not authorized' })
   }
-
 };
