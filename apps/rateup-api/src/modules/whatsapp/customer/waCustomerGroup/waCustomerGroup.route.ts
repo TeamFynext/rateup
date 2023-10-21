@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { addWaCustomersToWaCustomerGroupHandler, createWaCustomerGroupFromPhoneNumbersHandler, deleteWaCustomerGroupByIdHandler, deleteWaCustomerFromWaCustomerGroupHandler, getAllWaCustomerGroupsHandler, getWaCustomerGroupsByTeamIdHandler, getWaCustomerGroupsSurveyHistoryByGroupIdHandler, getWaCustomersByWaCustomerGroupIdHandler, updateWaCustomerGroupHandler } from "./waCustomerGroup.controller";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $WaCGref } from "./waCustomerGroup.schema";
+import { checkSession } from "../../../../utils/checkSession";
 
 export async function waCustomerGroupRoutes(server: FastifyInstance) {
-    server.addHook("preHandler", verifySession())
+    server.addHook("preHandler", checkSession)
     // TODO: verify whether the requestor has access to the team
     // TODO: add missing schemas
     server.post(

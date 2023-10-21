@@ -240,8 +240,6 @@ export async function getSurveysHandler(
   reply: FastifyReply
 ) {
   try {
-    // console.log("gtsurvey");
-    //const userId = request.session.getUserId();
     const surveys = await getSurveysByUserId(request.userId);
     reply.send(surveys);
   } catch (e) {

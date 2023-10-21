@@ -4,8 +4,10 @@ import { createMenuHandler, deleteMenuHandler, getAllMenusHandler, getFullMenuBy
 import { $Tref } from "../team/team.schema";
 import { verifyTeamAccess} from "../team/team.auth";
 import { verifyMenuAccess } from "./menu.auth";
+import { checkSession } from "../../utils/checkSession";
 
 export async function menuRoutes(server: FastifyInstance) {
+    server.addHook('preHandler', checkSession)
     server.post(
         "/",
         {

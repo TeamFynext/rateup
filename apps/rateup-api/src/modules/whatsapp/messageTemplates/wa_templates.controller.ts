@@ -6,14 +6,12 @@ import { log } from "../../../utils/logger";
 import Session from "supertokens-node/recipe/session";
 import { getOrgIdAndRole } from "../../user/user.service";
 import { Role } from "@prisma/client";
-import { getUserIdFromRequest } from "../../../utils/auth";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const userId = await getUserIdFromRequest(request, reply);
-  const { orgId } = await getOrgIdAndRole({ id: userId });
+  const { orgId } = await getOrgIdAndRole({ id: request.userId });
   const templates = await getTemplatesByOrgId(orgId);
   reply.code(200).send(templates);
 }
@@ -25,8 +23,7 @@ export async function createTemplateHandler(
   reply: FastifyReply
 ) {
   try {
-    const userId = await getUserIdFromRequest(request, reply);
-    const { orgId } = await getOrgIdAndRole({ id: userId })
+    const { orgId } = await getOrgIdAndRole({ id: request.userId })
     // TODO: restrict access to super admin and admin?
 
     const formattedTemplate = generateTemplate(request.body)
@@ -46,8 +43,7 @@ export async function updateTemplateHandler(
   }>,
   reply: FastifyReply
 ) {
-  const userId = await getUserIdFromRequest(request, reply);
-  const { orgId } = await getOrgIdAndRole({ id: userId });
+  const { orgId } = await getOrgIdAndRole({ id: request.userId });
   const template = await getTemplate(request.params.templateId);
 
   if (!template) {
@@ -55,7 +51,7 @@ export async function updateTemplateHandler(
     log.trace("Template not found")
     return;
   } else if (template.orgId !== orgId) {
-    log.trace("User %s tried to update template %s from another org", userId, request.params.templateId)
+    log.trace("User %s tried to update template %s from another org", request.userId, request.params.templateId)
     reply.status(403);
     return;
   }
@@ -77,8 +73,7 @@ export async function deleteTemplateHandler(
   const { templateId } = request.params;
   try {
     const { data: template, orgId } = await getTemplate(templateId);
-    const userId = await getUserIdFromRequest(request, reply);
-    const { orgId: userOrg } = await getOrgIdAndRole({ id: userId });
+    const { orgId: userOrg } = await getOrgIdAndRole({ id: request.userId });
     if (userOrg !== orgId) {
       reply.code(403);
       return;
@@ -100,9 +95,7 @@ export async function syncTemplatesHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const session = await Session.getSession(request, reply);
-  const userId = session.getUserId();
-  const { orgId, role } = await getOrgIdAndRole({ id: userId });
+  const { orgId, role } = await getOrgIdAndRole({ id: request.userId });
 
   if (role !== Role.SUPER_ADMIN && role !== Role.ADMIN) {
     reply.code(403);

@@ -14,10 +14,7 @@ export async function getAllWaCustomersHandler(
     request: FastifyRequest,
     reply: FastifyReply
 ) {
-    // TODO: attatch userId to request while verifying session for easier access
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-    const teams = await getTeamsByUserId(userId);
+    const teams = await getTeamsByUserId(request.userId);
     const teamIds = teams.map(team => team.teamId);
 
     const waCustomers = await getWaCustomers(teamIds);

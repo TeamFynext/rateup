@@ -9,10 +9,7 @@ export async function createMenuItemHandler(
     request: FastifyRequest<{ Body: CreateMenuItemInput }>,
     reply: FastifyReply
 ) {
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-
-    if(!hasAccessToCategory(request.body.categoryId, userId)) {
+    if(!hasAccessToCategory(request.body.categoryId, request.userId)) {
         reply.code(403).send({ message: "You don't have access to this menu" });
     }
 

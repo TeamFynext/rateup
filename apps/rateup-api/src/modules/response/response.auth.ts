@@ -10,9 +10,7 @@ export async function verifyAccess(
   reply: FastifyReply
 ) {
   const surveyId = request.params.surveyId;
-  let session = await Session.getSession(request, reply);
-  let userId = session.getUserId();
-  const hasAccess = await hasAccessToSurvey(surveyId, userId);
+  const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this survey" });

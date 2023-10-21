@@ -12,10 +12,8 @@ export async function verifyMenuItemAccess(
     reply: FastifyReply
 ) {
     const menuItemId = request.params.menuItemId;
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
 
-    const hasAccess = await hasAccessToMenuItem(menuItemId, userId);
+    const hasAccess = await hasAccessToMenuItem(menuItemId, request.userId);
     if (!hasAccess) {
         reply.code(403).send({ message: "You don't have access to this menu item" });
     }

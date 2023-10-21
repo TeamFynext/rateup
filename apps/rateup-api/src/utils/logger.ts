@@ -12,7 +12,7 @@ const prettyLog = {
   },
   serializers: {
     req: function (req: FastifyRequest) {
-      return `${req.hostname}: ${req.method} ${req.url} FROM ${req.ip}` ;
+      return `${req.headers.origin}: ${req.method} ${req.url} FROM ${req.ip}` ;
     },
     res: function (res: FastifyReply) {
       return `${res.statusCode}`;

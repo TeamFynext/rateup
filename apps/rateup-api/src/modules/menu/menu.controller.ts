@@ -9,10 +9,7 @@ export async function createMenuHandler(
     request: FastifyRequest<{ Body: CreateMenuInput }>,
     reply: FastifyReply
 ) {
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-
-    if(!hasAccessToTeam(request.body.teamId, userId)) {
+    if(!hasAccessToTeam(request.body.teamId, request.userId)) {
         reply.code(403).send({ message: "You don't have access to this team" });
     }
 

@@ -1,11 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { createWaCustomersHandler, getAllWaCustomerGroupsByPhoneHandler, getWaCustomerByIdHandler, getAllWaCustomerResponseHistoryHandler, getAllWaCustomerSurveyHistoryHandler, getAllWaCustomersHandler, updateWaCustomerByIdHandler, getWaCustomersByTeamIdHandler, getRespSurveyHistoryByWaCustomerIdHandler, getRespResponseHistoryByWaCustomerIdHandler, getWaCustomerGroupsByWaCustomerIdHandler, deleteWaCustomerByIdHandler } from "./waCustomer.controller";
 import { $WaCustomerRef } from "./waCustomer.schema";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
+import { checkSession } from "../../../../utils/checkSession";
 
 // todo: verify team access
 export async function waCustomerRoutes(server: FastifyInstance) {
-    server.addHook("preHandler", verifySession())
+    server.addHook("preHandler", checkSession)
 
     server.get("/", getAllWaCustomersHandler);
     server.get(

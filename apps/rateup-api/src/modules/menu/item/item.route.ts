@@ -5,9 +5,10 @@ import { $MCref } from "../category/category.schema";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { verifyMenuItemAccess } from "./item.auth";
 import { verifyMenuCategoryAccess } from "../category/category.auth";
+import { checkSession } from "../../../utils/checkSession";
 
 export async function menuItemRoutes(server: FastifyInstance) {
-    server.addHook("preHandler", verifySession());
+    server.addHook("preHandler", checkSession);
 
     server.post(
         "/",

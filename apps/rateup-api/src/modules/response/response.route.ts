@@ -4,9 +4,10 @@ import { deleteResponseHandler, getResponsesHandler, resetResponsesHandler } fro
 import { verifyAccess } from "./response.auth";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
+import { checkSession } from "../../utils/checkSession";
 
 export async function responseRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", verifySession());
+  server.addHook("preHandler", checkSession);
   server.addHook("preHandler", verifyAccess);
   server.get(
     "/:surveyId",

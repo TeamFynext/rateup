@@ -18,7 +18,6 @@ import {
   getActiveSurveysSummaryHandler,
   getWebSurveysHandler,
 } from "./survey.controller";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { $Sref } from "./survey.schema";
 import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
 import { checkSession } from "../../utils/checkSession";
@@ -43,7 +42,6 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/createlanding",
     {
-      preHandler: [verifySession()],
       schema: {
         body: $Sref("createSurveyLandingRequestSchema"),
         response: {
@@ -57,7 +55,6 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/updatelanding/:id",
     {
-      preHandler: [verifySession()],
       schema: {
         body: $Sref("createSurveyLandingRequestSchema"),
         response: {
@@ -100,7 +97,6 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/landingpage/:id",
     {
       //----------to do ------verify access to landingpage session
-      preHandler: [verifySession()],
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
@@ -111,7 +107,6 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.get(
     "/landingsurveys/:id",
     {
-      preHandler: [verifySession()],
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
@@ -139,7 +134,6 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.get<{ Params: GetSurveyByTeamParams }>(
     "/team/:id",
     {
-      preHandler: [verifySession()],
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
       },

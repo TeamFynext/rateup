@@ -11,9 +11,7 @@ export async function verifySurveyAccess(
   reply: FastifyReply
 ) {
   const surveyId = request.params.id;
-  let session = await Session.getSession(request, reply);
-  let userId = session.getUserId();
-  const hasAccess = await hasAccessToSurvey(surveyId, userId);
+  const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this survey" });
@@ -26,11 +24,9 @@ export async function verifySurveyCreateAccess(
   }>,
   reply: FastifyReply
 ) {
-  let session = await Session.getSession(request, reply);
-  let userId = session.getUserId();
   const teamId = request.body.teamId;
 
-  if (!(await hasAccessToTeam(teamId, userId))) {
+  if (!(await hasAccessToTeam(teamId, request.userId))) {
     reply.code(403).send();
     return;
   }

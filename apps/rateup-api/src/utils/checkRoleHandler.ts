@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
+import { FastifyRequest, FastifyReply } from "fastify";
 import Session from "supertokens-node/recipe/session";
 
 export const checkRoleHandler =
@@ -6,9 +6,7 @@ export const checkRoleHandler =
 async (
   request: FastifyRequest,
   reply: FastifyReply,
-  done: HookHandlerDoneFunction
 ) => {
-
   let session = await Session.getSession(request, reply);
 
   const accessTokenPayload = session.getAccessTokenPayload();
@@ -22,6 +20,4 @@ async (
     });
     return;
   }
-
-  done();
 };

@@ -12,8 +12,7 @@ export async function verifyTeamAdminAccess(
     reply: FastifyReply
   ) {
     const teamId = request.params.id;
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
+    const userId = request.userId;
 
     if(!userId){
         reply.code(403).send({ message: "Unauthorised" });
@@ -38,10 +37,7 @@ export async function verifyTeamAccess(
     reply: FastifyReply
 ) {
     const teamId = request.params.teamId;
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-
-    const hasAccess = await hasAccessToTeam(teamId, userId);
+    const hasAccess = await hasAccessToTeam(teamId, request.userId);
     if (!hasAccess) {
         reply.code(403).send({ message: "You don't have access to this team" });
     }
