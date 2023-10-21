@@ -307,19 +307,12 @@ function TakeSurvey() {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container
-          h={isMobile ? "53vh" : "60vh"}
-          size={"md"}
-          style={{ position: "relative" }}
-        >
-          {/* TODO for mobile design 80vh */}
-
+        <Container size={"md"}>
           <Modal
             opened={opened}
             title="Confirm your responses"
             onClose={close}
             overlayProps={{
-              //color: theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
               color: theme.colors.gray[2],
               opacity: 0.55,
               blur: 3,
@@ -332,9 +325,9 @@ function TakeSurvey() {
               },
             }}
           >
-            <Stack pb="7rem">
+            <Stack pb="7rem" style={{ height: "100%", position: "relative" }}>
               <Divider />
-              <Stack>
+              <Stack pb="xl">
                 {filteredQuestions.map((question) => {
                   const response = responses.find(
                     (response) => response.questionId === question.id,
@@ -344,7 +337,7 @@ function TakeSurvey() {
                       <Title pt="sm" order={4}>
                         {question.title[selectedLanguage]}
                       </Title>
-                      {response && (
+                      {response ? (
                         <Text pb="sm">
                           {(() => {
                             switch (question.type) {
@@ -414,6 +407,10 @@ function TakeSurvey() {
                             }
                           })()}
                         </Text>
+                      ) : (
+                        <Text pb="sm" c="dark.0" fz="xs">
+                          ... not answered...{" "}
+                        </Text>
                       )}
                       <Divider />
                     </Stack>
@@ -422,18 +419,18 @@ function TakeSurvey() {
               </Stack>
 
               <div
-                style={{ position: "fixed", bottom: 0, left: 10, right: 10 }}
+                style={{ position: "absolute", bottom: 0, left: 10, right: 10 }}
               >
                 <Group
                   gap="apart"
-                  p="lg"
-                  pb={isMobile ? "50px" : "20px"}
+                  justify="space-between"
                   style={{ background: "#fff" }}
+                  pb="md"
                 >
                   <RateupButtonBlackOutline
                     radius={"xl"}
-                    title={"Back"}
-                    size={largeScreen ? "lg" : "sm"}
+                    title=""
+                    size={largeScreen ? "lg" : "xs"}
                     onClick={close}
                     leftIcon={<IconChevronLeft />}
                   />
@@ -442,7 +439,7 @@ function TakeSurvey() {
                     loading={isSavingResponses}
                     radius={"xl"}
                     title={"Confirm"}
-                    size={largeScreen ? "lg" : "sm"}
+                    size={largeScreen ? "lg" : "xs"}
                     leftIcon={<IconCheck />}
                     onClick={finishSurvey}
                   />
@@ -452,13 +449,18 @@ function TakeSurvey() {
           </Modal>
 
           <Stack mt="xl">
-            {/* <QuestionNo num={QnNo} /> */}
-
-            <QuestionTitle largeScreen={largeScreen} />
-            <QuestionDesc largeScreen={largeScreen} />
-            <QuestionForm />
-
-            <NextPrev next={handleNext} prev={handlePrev} />
+            <Stack style={{ minHeight: "45vh" }} justify="center">
+              <QuestionNo num={QnNo} />
+              <QuestionTitle largeScreen={largeScreen} />
+              <QuestionDesc largeScreen={largeScreen} />
+              <QuestionForm />
+            </Stack>
+            <NextPrev
+              next={handleNext}
+              prev={handlePrev}
+              num={QnNo}
+              total={questionCount}
+            />
           </Stack>
         </Container>
       </SelectedQContext.Provider>
@@ -497,7 +499,9 @@ function submitSurvey({
 }
 
 function QuestionNo({ num }) {
-  return <Text size={"15px"}>Question: {num}</Text>;
+  const isMobile = useMediaQuery("(max-width: 480px)");
+
+  return <Text size={isMobile ? "12px" : "15px"}>Question: {num} </Text>;
 }
 
 function QuestionTitle({ largeScreen }) {
@@ -583,7 +587,7 @@ function getQuestionForm(type) {
   }
 }
 
-function NextPrev({ prev, next }) {
+function NextPrev({ prev, next, num, total }) {
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
@@ -666,61 +670,61 @@ function NextPrev({ prev, next }) {
     survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
   return (
     <Stack
-      pb={40}
+      pt={40}
+      pb="md"
       style={{
-        position: "absolute",
-        bottom: isMobile ? "1vh" : "5vh",
         width: "100%",
+        minHeight: isMobile ? "143px" : "163px",
       }}
+      justify="flex-end"
     >
-      {selectedQ.required && !response && (
-        <Text color="gray">Note: * Must attend to continue with next.</Text>
+      {selectedQ?.required && !response && (
+        <Text c="gray" mb="md" size={isMobile && "sm"}>
+          Note: * Must attend to continue with next.
+        </Text>
       )}
-      {errorMsg && isErrorInput && <Text color="red">Note: * {errorMsg}</Text>}
-      <Grid>
-        <Grid.Col span={6}>
-          {isFirstQuestion || (
-            <RateupButtonSecondary
-              radius={"xl"}
-              title=""
-              leftIcon={<IconChevronLeft />}
-              sx={{ position: "absolute" }}
-              size={isMobile ? "sm" : "lg"}
-              onClick={prev}
-            />
-          )}
-        </Grid.Col>
-        <Grid.Col span={6}>
-          {isLastQuestion ? (
-            <RateupButtonBlue
-              radius={"xl"}
-              title={"Submit"}
-              disabled={
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-              }
-              sx={{ position: "absolute", right: "5vw" }}
-              size={isMobile ? "sm" : "lg"}
-              onClick={handleNextClick}
-            />
-          ) : (
-            <RateupButtonSecondary
-              radius={"xl"}
-              title={"Next"}
-              disabled={
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-              }
-              sx={{ position: "absolute", right: "5vw" }}
-              size={isMobile ? "sm" : "lg"}
-              onClick={handleNextClick}
-              rightIcon={<IconChevronRight />}
-            />
-          )}
-        </Grid.Col>
-      </Grid>
+      {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
+      <Group justify="space-between">
+        <RateupButtonSecondary
+          radius={"xl"}
+          title=""
+          disabled={isFirstQuestion}
+          leftIcon={<IconChevronLeft />}
+          size={isMobile ? "sm" : "lg"}
+          onClick={prev}
+        />
+        <Center>
+          <Text mt={!isMobile && "xs"} fz="sm" fw={600}>
+            {num} / {total}
+          </Text>
+        </Center>
+        {isLastQuestion ? (
+          <RateupButtonBlue
+            radius={"xl"}
+            title={"Submit"}
+            disabled={
+              ((selectedQ?.required || selectedQ?.validationRules) &&
+                !response) ||
+              isErrorInput
+            }
+            size={isMobile ? "sm" : "lg"}
+            onClick={handleNextClick}
+          />
+        ) : (
+          <RateupButtonSecondary
+            radius={"xl"}
+            title={"Next"}
+            disabled={
+              ((selectedQ?.required || selectedQ?.validationRules) &&
+                !response) ||
+              isErrorInput
+            }
+            size={isMobile ? "sm" : "lg"}
+            onClick={handleNextClick}
+            rightIcon={<IconChevronRight />}
+          />
+        )}
+      </Group>
     </Stack>
   );
 }
