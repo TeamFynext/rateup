@@ -59,6 +59,7 @@ declare global {
     type: string;
     getLocation: boolean;
     welcomePageEnabled: boolean;
+    orgLogo?: string;
   };
 
   interface SurveySummary {

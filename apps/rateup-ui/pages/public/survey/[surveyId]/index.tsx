@@ -6,6 +6,7 @@ import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurvey";
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { useMediaQuery } from "@mantine/hooks";
+
 export default function Page() {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };

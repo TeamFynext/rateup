@@ -1,21 +1,11 @@
 import {
-  Box,
-  Grid,
   Title,
   Paper,
-  TextInput,
-  Space,
   Text,
-  Center,
   Stack,
   Container,
   Image,
-  RingProgress,
-  Modal,
   Group,
-  Button,
-  Flex,
-  BackgroundImage,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
@@ -23,23 +13,15 @@ import {
   usePublicSurvey,
   useUpdateStartedMutation,
 } from "../../../backend/surveys/surveys.query";
-
 import QuestionCountContext from "../../../context/QuestionCountContext";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import Link from "next/link";
-import { usePublicWelcomeThemeBySurveyId } from "../../../backend/WelcomeTheme/welcometheme.query";
-import { chownSync } from "fs";
-import { webcrypto } from "crypto";
-import WebFont from "webfontloader";
-import ProgressBar from "../ProgressBar/ProgressBar";
+import { useMediaQuery } from "@mantine/hooks";
 import WelcomePage from "../WelcomePage/WelcomePage";
-
-
 
 export const TakeSurveyLayoutWeb = ({ children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const largeScreen = useMediaQuery("(min-width: 60em)");
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const { start } = useRouter().query as { start?: boolean };
   const [startClicked, setStartClicked] = useState<boolean>(start || false);
   const [questionCount, setQuestionCount] = useState(0);
@@ -50,9 +32,9 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
     if (start === true) setStartClicked(true);
   }, [start]);
   useEffect(() => {
-    if (survey?.welcomePageEnabled){
+    if (survey?.welcomePageEnabled) {
       setStartClicked(false);
-    }else{
+    } else {
       setStartClicked(true);
     }
   }, [survey?.welcomePageEnabled]);
@@ -73,122 +55,82 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
         setCurrentQuestionNo,
       }}
     >
-      <Container
-        fluid
-        px={largeScreen ? "10vw" : "5vw"}
+      <Stack
+        px={largeScreen ? "10vw" : "4vw"}
         py="3vh"
-       
-        style={{ background: "#F7F6FB", minHeight: "100vh", height: "100%" }}
+        style={{ width: "100%", minHeight: "100vh" }}
+        h={"100%"}
+        justify="space-between"
       >
-        <>
-          {!start ? (
+        {/* .........Survey Header Section.......... */}
+
+        <Group justify="flex-start">
+          <Stack
+            style={{ maxHeight: isMobile ? "65" : "200px", maxWidth: "30%" }}
+          >
             <Image
-              pb={30}
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-              alt="RateUp Logo"
-              w={140}
-              h={35}
+              src={
+                survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
+                  ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
+                  : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
+              }
+              alt="Logo"
+              w={isMobile ? 70 : 140}
+              h={isMobile ? 70 : 135}
             />
+          </Stack>
+          <Container fluid style={{ maxWidth: "70%" }}>
+            <Stack justify="flex-start">
+              <Title order={isMobile ? 4 : 2}>{survey?.title}</Title>
+            </Stack>
+          </Container>
+        </Group>
+
+        <Paper p="sm" radius="lg" style={{ minHeight: "75vh" }}>
+          {survey?.isPublished === true && survey?.active === true ? (
+            <Paper radius="lg" shadow="md" bg={"#fff"} pb="xl">
+              {!startClicked && (
+                <WelcomePage
+                  onStart={handleStartClick}
+                  surveyId={surveyId}
+                  isProtected={survey?.isProtected}
+                  largeScreen={largeScreen}
+                />
+              )}
+              {startClicked && children.children}
+            </Paper>
           ) : (
-            <Link
-              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
+            <Paper
+              radius="lg"
+              bg={"#fff"}
+              p="30px"
+              shadow="md"
+              style={{ minHeight: "70vh" }}
             >
-              <Image
-                pb={30}
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-                alt="RateUp Logo"
-              w={140}
-              h={35}
-              />
-            </Link>
+              <Stack align="center" h="50vh" justify="space-around">
+                <Text size="xl" c="red" fw="600">
+                  {survey?.isPublished !== true
+                    ? "Survey is not available..!"
+                    : "Survey is not available..!"}
+                </Text>
+              </Stack>
+            </Paper>
           )}
-        </>
-        <Paper
-          p="sm"
-          radius="lg"
-          // shadow="lg"
-          style={{ minHeight: "75vh", height: "100%" }}
-          bg={"#F7F6FB"}
-        >
-        <Paper radius="lg"   bg={"#fff"}>
-            {/* .........Survey Header Section.......... */}
+        </Paper>
 
-            {startClicked  ? (
-              currentQuestionNo > 0 && (
-                <Grid
-                  justify="center"
-                  align="center"
-                  pb={largeScreen ? 100 : 10}
-                  columns={24}
-                >
-                  <Grid.Col
-                    span={{ base: 4, xs:24, md: 4, lg: 4 }}
-                    // md={4}
-                    // lg={4}
-                    // xs={24}
-                    order={2}
-                    // orderSm={1}
-                    // orderXs={1}   //TODO VERIFY MANTINE
-                  >
-                    <Center>
-                      <Text>Question: {currentQuestionNo}</Text>
-                    </Center>
-                  </Grid.Col>
-                  <Grid.Col
-                    span={{ base: 16, xs:24, md: 16, lg: 16 }}
-                   // md={16}
-                   // lg={16}
-                   // xs={24}
-                    order={1}
-                    //orderSm={2}
-                    //orderXs={2} //TODO VERIFY MANTINE
-                  >
-                    <Center>
-                      <Title order={2}>{survey.title}</Title>
-                    </Center>
-                  </Grid.Col>
-                  <Grid.Col
-                   span={{ base: 4, xs:24, md: 4, lg: 4 }}
-                    // md={4}
-                    // lg={4}
-                    // xs={24}
-                    order={3}
-                    // orderSm={3}
-                    // orderXs={3} //TODO VERIFY MANTINE
-                  >
-                    <Center>
-                      <ProgressBar
-                        currentQuestionNo={currentQuestionNo}
-                        questionCount={questionCount}
-                      />
-                    </Center>
-                  </Grid.Col>
-                </Grid>
-              )
-            ) : (
-              <WelcomePage
-                onStart={handleStartClick}
-                surveyId={surveyId}
-                isProtected={survey?.isProtected}
-                largeScreen={largeScreen}
-              />
-            )}
-            {startClicked && children.children}
-          </Paper>
-
-          <Center mt={20}>
+        <Stack>
+          <Group justify="center">
             <Text fz="sm">Powered by </Text>
             <Image
               pl={10}
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
               alt="RateUp Logo"
-              w={80}
-              h={20}
+              w={50}
+              h={30}
             />
-          </Center>
-        </Paper>
-      </Container>
+          </Group>
+        </Stack>
+      </Stack>
     </QuestionCountContext.Provider>
   );
 };
-

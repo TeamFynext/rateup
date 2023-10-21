@@ -124,9 +124,9 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
           justify="center"
           gap="xl"
           style={{
-            height: "75vh",
+            height: "65vh",
             borderRadius: 18,
-            boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
+            // boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
             ...surveyThemeData?.bgStyles,
           }}
           bg={"white"}
