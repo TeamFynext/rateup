@@ -9,88 +9,28 @@ import {
   Space,
   Text,
   Group,
-  Title,
 } from "@mantine/core";
-import {
-  RateupButtonBlue,
-  RateupButtonOutline,
-} from "../../../components/Button/RateupButtons";
-import { IconCheck, IconReload } from "@tabler/icons-react";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import { IconCheck } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import validateNameAndEmail from "./validation";
-import {
-  QueryClient,
-  dehydrate,
-  useMutation,
-  useQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { getOrgIdRole, getUserID } from "../../../utils/userInfo";
 import {
-  fetchTeamsByUserWithCustomToken,
   getTeamMembersFromInvitation,
-  getTeamMembersFromInvitationWithCustomToken,
   inviteTeamMember,
 } from "../../../backend/team/team.api";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import TeamMemberCard from "./TeamMemberCard";
 import { IconPlus } from "@tabler/icons-react";
-import { backendConfig } from "../../../config/backendConfig";
-import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
-import supertokensNode from "supertokens-node";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import TeamSettings from "./TeamSettings";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
-
-export async function getServerSideProps(context) {
-  const { team_code } = context.query;
-  let teamCode: string = team_code?.toString();
-  const queryClient = new QueryClient();
-
-  try {
-    supertokensNode.init(backendConfig());
-    const accessToken = await getSessionWithRefreshHandling(context);
-
-    await queryClient.prefetchQuery({
-      queryKey: ["teamsDataUserQuery"],
-      queryFn: () => fetchTeamsByUserWithCustomToken(accessToken),
-    });
-
-    const teamData: TeamsResponse = queryClient.getQueryData([
-      "teamsDataUserQuery",
-    ]);
-    let teamId = getTeamIdByCode(teamData?.data, teamCode);
-
-    if (teamId) {
-      await queryClient.prefetchQuery({
-        queryKey: ["teamsDetailsQuery"],
-        queryFn: () =>
-          getTeamMembersFromInvitationWithCustomToken(accessToken, teamId),
-      });
-
-      const teamDetailsQuery: TeamsResponse = queryClient.getQueryData([
-        "teamsDetailsQuery",
-      ]);
-
-      return {
-        props: {
-          dehydratedState: dehydrate(queryClient),
-        },
-      };
-    }
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  }
-}
 
 const TeamDetails = () => {
   const router = useRouter();
@@ -103,7 +43,7 @@ const TeamDetails = () => {
   const [teamID, setTeamID] = useState("");
 
   const queryClient = useQueryClient();
-  const { state, update } = useRouteParams();
+  const { update } = useRouteParams();
 
   const {
     isLoading: isLoadingTeamsUser,
@@ -292,9 +232,7 @@ const TeamDetails = () => {
               <Loader />
             ) : (
               // TODO: handle error
-              <Group p="xl">
-                "No other members in this team!"
-              </Group>
+              <Group p="xl">"No other members in this team!"</Group>
             )}
           </SimpleGrid>
         </Tabs.Panel>

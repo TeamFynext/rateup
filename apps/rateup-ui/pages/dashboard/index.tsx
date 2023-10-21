@@ -42,44 +42,8 @@ import {
   Area,
 } from "recharts";
 import dayjs from "dayjs";
-import { GetServerSidePropsContext } from "next";
-import { getActiveSurveysSummaryWithCustomToken } from "../../backend/surveys/survey.api";
-import { checkTokenExpiry } from "../../utils/supertoken";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
-import { QueryClient, dehydrate } from "@tanstack/react-query";
-import { getSessionWithRefreshHandling } from "../../utils/auth/getSessionWithRefreshHandling";
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const queryClient = new QueryClient();
-
-  try {
-    const accessToken = await getSessionWithRefreshHandling(context);
-
-    await queryClient.prefetchQuery({
-      queryKey: ["surveysSummary"],
-      queryFn: () => getActiveSurveysSummaryWithCustomToken(accessToken),
-    });
-
-    const summaryData = queryClient.getQueryData(["surveysSummary"]);
-
-    const tokenExpiryCheck = checkTokenExpiry([summaryData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      dehydratedState: dehydrate(queryClient),
-    };
-  }
-}
 
 export default function DashboardHome() {
   const router = useRouter();

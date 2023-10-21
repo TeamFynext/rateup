@@ -14,14 +14,8 @@ import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
 import Result from "../../../components/Survey/Result/Result";
 import { useUser } from "../../../context/UserContext";
 import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
-import { GetServerSidePropsContext } from "next";
-import { getSurveyWithCustomToken } from "../../../backend/surveys/survey.api";
-import { getQuestionsWithCustomToken } from "../../../backend/surveys/questions/questions.api";
-import { checkTokenExpiry } from "../../../utils/supertoken";
 import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
-import { getSessionWithRefreshHandling } from "../../../utils/auth/getSessionWithRefreshHandling";
-import { QueryClient, dehydrate } from "@tanstack/react-query";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -29,52 +23,6 @@ export enum TabEnum {
   Result = "Result",
   Settings = "Settings",
   Theme = "Theme",
-}
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const queryClient = new QueryClient();
-
-  try {
-    const accessToken = await getSessionWithRefreshHandling(context);
-    const { surveyId } = context.params as { surveyId: string };
-
-    await queryClient.prefetchQuery({
-      queryKey: ["survey", surveyId],
-      queryFn: () =>
-        getSurveyWithCustomToken(accessToken, {
-          surveyId,
-        }),
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: ["questions", surveyId],
-      queryFn: () =>
-        getQuestionsWithCustomToken(accessToken, {
-          surveyId,
-        }),
-    });
-
-    const surveyData = queryClient.getQueryData(["survey", surveyId]);
-    const questionsData = queryClient.getQueryData(["questions", surveyId]); // TODO: verify
-
-    const tokenExpiryCheck = checkTokenExpiry([surveyData, questionsData]);
-    if (tokenExpiryCheck) {
-      return tokenExpiryCheck;
-    }
-
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      props: {
-        dehydratedState: dehydrate(queryClient),
-      },
-    };
-  }
 }
 
 export default () => {

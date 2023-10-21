@@ -1,16 +1,27 @@
-import { Center, Container, Grid, Group, Stack, Text } from "@mantine/core";
+import {
+  Center,
+  Container,
+  Grid,
+  Group,
+  Stack,
+  Text,
+  Loader,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { IconMapPin, IconWorld } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
-import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 import classes from "./Feedback.module.css";
+import { usePublicMenuById } from "../../../../../backend/menu/menu.query";
 
-export default function ({ menu }) {
+export default function () {
   const largeScreen = useMediaQuery("(min-width: 60em)");
-
+  const { menuId } = useRouter().query as { menuId: string };
+  const { data: menu, isLoading: loading, error } = usePublicMenuById(menuId);
   if (!menu) return null;
-
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <Container
       fluid
@@ -137,21 +148,4 @@ function MenuButton() {
       </Text>
     </Stack>
   );
-}
-
-// TODO: enable caching
-export async function getServerSideProps({ params }) {
-  const { menuId } = params;
-  const menu = await getMenuPublicById(menuId);
-  if (!menu) {
-    return {
-      notFound: true,
-    };
-  } else {
-    return {
-      props: {
-        menu,
-      },
-    };
-  }
 }
