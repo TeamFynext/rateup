@@ -9,7 +9,6 @@ import SuperTokensReact, {
   SuperTokensWrapper,
 } from "supertokens-auth-react";
 import { frontendConfig } from "../config/frontendConfig";
-//import Session from "supertokens-auth-react/recipe/session";
 import Session from "supertokens-web-js/recipe/session";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextPage } from "next";
@@ -20,6 +19,7 @@ import { Hydrate } from "@tanstack/react-query";
 import SuperTokens from "supertokens-web-js";
 import WithLoader from "../components/Layout/Loader/WithLoader";
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "../styles/global.css";
 import { GilroyRegular } from "../public/fonts";

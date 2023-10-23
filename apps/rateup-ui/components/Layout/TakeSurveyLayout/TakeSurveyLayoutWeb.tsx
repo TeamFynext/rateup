@@ -17,6 +17,7 @@ import {
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useMediaQuery } from "@mantine/hooks";
 import WelcomePage from "../WelcomePage/WelcomePage";
+import Link from "next/link";
 
 export const TakeSurveyLayoutWeb = ({ children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -94,7 +95,13 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
 
         <Paper p="sm" radius="lg" style={{ minHeight: "75vh" }}>
           {survey?.isPublished === true && survey?.active === true ? (
-            <Paper radius="lg" shadow="md" bg={"#fff"} pb="xl">
+            <Paper
+              radius="lg"
+              shadow="md"
+              bg={"#fff"}
+              pb="xl"
+              style={{ boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 6px 0px" }}
+            >
               {!startClicked && (
                 <WelcomePage
                   onStart={handleStartClick}
@@ -110,8 +117,10 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               radius="lg"
               bg={"#fff"}
               p="30px"
-              shadow="md"
-              style={{ minHeight: "70vh" }}
+              style={{
+                minHeight: "70vh",
+                boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+              }}
             >
               <Stack align="center" h="50vh" justify="space-around">
                 <Text size="xl" c="red" fw="600">
@@ -127,13 +136,15 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
         <Stack>
           <Group justify="center">
             <Text fz="sm">Powered by </Text>
-            <Image
-              pl={10}
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
-              alt="RateUp Logo"
-              w={50}
-              h={30}
-            />
+            <Link href="/">
+              <Image
+                pl={10}
+                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
+                alt="RateUp Logo"
+                w={50}
+                h={30}
+              />
+            </Link>
           </Group>
         </Stack>
       </Stack>

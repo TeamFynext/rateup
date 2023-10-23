@@ -1151,12 +1151,15 @@ function DDMSForm() {
 function DateForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Paper shadow="sm" className={classes.container}>
-      <input
-        type="date"
+    <Paper shadow="sm" className={classes.inputBox}>
+      <DateInput
         value={response}
-        onChange={(event) => updateResponse(event.target.value)}
-        className={classes.inputDate}
+        onChange={updateResponse}
+        placeholder="Select date"
+        maw={400}
+        mx="auto"
+        variant="unstyled"
+        leftSection={<IconCalendarEvent size="1.2rem" color="black" />}
       />
     </Paper>
   );
