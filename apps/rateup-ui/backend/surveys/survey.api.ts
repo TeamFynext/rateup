@@ -94,15 +94,10 @@ export async function getSurveysLandingPage() {
 }
 //----get whatsapp survey list ------------
 export async function getWhatsappSurveys() {
-  try {
-    let surveys: Array<Survey> = (
-      await axiosClient.get(`${SURVEYURL}/whatsappsurveys`)
-    ).data;
-    return surveys;
-  } catch (e) {
-    console.error(e);
-    return { error: "Error Occured!" };
-  }
+  let surveys: Array<Survey> = (
+    await axiosClient.get(`${SURVEYURL}/whatsappsurveys`)
+  ).data;
+  return surveys;
 }
 
 export async function getSurvey(surveyId: string) {

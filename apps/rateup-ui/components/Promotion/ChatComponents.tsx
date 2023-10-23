@@ -4,18 +4,15 @@ import {
   Box,
   Container,
   Text,
-  Autocomplete,
   Button,
   Group,
   Select,
-  createTheme,
-  MantineProvider,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconSend } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useContext, useState } from "react";
-import { useSurveysByTeam } from "../../backend/surveys/surveys.query";
+import { useWhatsappSurveys } from "../../backend/surveys/surveys.query";
 import SelectedTeamContext from "../../context/SelectedTeam";
 import { useWaTemplates } from "../../backend/whatsapp/whatsapp.query";
 import { WaTemplateStatus } from "../../types/enums";
@@ -118,13 +115,12 @@ interface SendSurveyComponentProps {
   sendHandler: (surveyId: string, templateId: string) => void;
 }
 export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
-  const { colors } = useMantineTheme();
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const {
     isLoading,
     error,
     data: surveys,
-  } = useSurveysByTeam(selectedTeamId, !!selectedTeamId);
+  } = useWhatsappSurveys(!!selectedTeamId);
   const { data: templates, isLoading: isTemplatesLoading } = useWaTemplates();
   const [selectedSurvey, setSelectedSurvey] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -179,6 +175,7 @@ export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
         }))}
         w="200px"
         size="md"
+        value={selectedTemplate}
         onChange={setSelectedTemplate}
       />
 
@@ -188,6 +185,7 @@ export function SendSurveyComponent({ sendHandler }: SendSurveyComponentProps) {
         data={surveys.map(({ title, id }) => ({ value: id, label: title }))}
         style={{ flexGrow: 1 }}
         size="md"
+        value={selectedSurvey}
         onChange={setSelectedSurvey}
       />
       <Button

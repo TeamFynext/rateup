@@ -54,12 +54,11 @@ export const useSurveysBylandingId = (landingId: string) =>
 //------------whatsapp survey --------------
 //----@author:harshad-----------
 
-export const useWhatsappSurveys = (teamIsSelected, surveyInitial = null) => {
+export const useWhatsappSurveys = (enabled) => {
   return useQuery({
-    enabled: !teamIsSelected || surveyInitial === null,
+    enabled: enabled,
     queryKey: ["whatsappsurveys"],
     queryFn: getWhatsappSurveys,
-    initialData: surveyInitial,
   });
 };
 
