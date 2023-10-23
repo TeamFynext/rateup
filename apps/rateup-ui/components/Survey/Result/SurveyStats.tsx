@@ -25,10 +25,6 @@ const SurveyStats = ({ survey }) => {
   const sortedCount = getSortedLocationCount(responses, locationType);
   const surveyStatsCountArray = [
     {
-      label: "Responses",
-      count: responses?.length ?? 0,
-    },
-    {
       label: "Visited",
       count: survey?.surveyStats?.visited ?? 0,
     },
@@ -45,20 +41,26 @@ const SurveyStats = ({ survey }) => {
     <Stack>
       <Heading subtitle="User Stats" />
       <Stack mih="400px" gap={10}>
-        <Group justify="space-between">
-          {surveyStatsCountArray.map(({ count, label }) => (
-            <PaperLayout style={{ flex: 1 }} key={label}>
-              <Stack align={"center"}>
-                <Text fs={"20px"} fw="900" size={"30px"}>
-                  {count}
-                </Text>
-                <Badge color="blue" variant="light">
-                  {label}
-                </Badge>
-              </Stack>
-            </PaperLayout>
-          ))}
-        </Group>
+        <Paper shadow="xl" radius="lg" px="lg" py="md">
+          <Group justify="space-between">
+            <Text c="var(--tertiary-color" size="28px" fw="700" px="xl">
+              {responses?.length ?? 0} &nbsp;{" "}
+              {responses?.length > 1 ? "Responses" : "Response"}
+            </Text>
+            {surveyStatsCountArray.map(({ count, label }) => (
+              <PaperLayout style={{ flex: 1 }} key={label}>
+                <Stack align={"center"}>
+                  <Text fs={"20px"} fw="900" size={"30px"}>
+                    {count}
+                  </Text>
+                  <Badge color="blue" variant="light">
+                    {label}
+                  </Badge>
+                </Stack>
+              </PaperLayout>
+            ))}
+          </Group>
+        </Paper>
         <Grid columns={10} p={2}>
           {/* Location-wise response frequency */}
           <Grid.Col span={{ xs: 10, md: 4 }}>

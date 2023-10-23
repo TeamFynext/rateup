@@ -6,13 +6,10 @@ import {
   Stack,
   TextInput,
   Text,
-  Flex,
   ScrollArea,
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
-// import { getTeamsByUser } from "../../backend/team/team.api";
-// import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
@@ -20,14 +17,10 @@ import { getSurveys } from "../../../backend/surveys/survey.api";
 import {
   useCreateSurveyLandingPageMutation,
   useLandingPage,
-  useSurveys,
-  useUpdateCompletedMutation,
   useUpdateSurveyLandingPageMutation,
 } from "../../../backend/surveys/surveys.query";
-import { getTeamsByUser } from "../../../backend/team/team.api";
 import SurveyCardList from "../../../components/Survey/SurveyCardList";
-import classes from './LandingPages.module.css';
-
+import classes from "./LandingPages.module.css";
 
 interface FormValues {
   title: string;
@@ -35,8 +28,6 @@ interface FormValues {
   surveys: Array<Object>;
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-
 
 export default function CreateSurveyLandingModal({
   open,
@@ -49,8 +40,7 @@ export default function CreateSurveyLandingModal({
   const {
     isError,
     isLoading,
-    data: surveys
-    ,
+    data: surveys,
   } = useQuery(["surveys"], getSurveys);
   //--------------get landing page details based on landing page id (prop)----------
   const {
@@ -213,17 +203,17 @@ export default function CreateSurveyLandingModal({
               style={{ padding: 5, borderRadius: 12 }}
               {...form.getInputProps("header")}
             />
-            
 
             {/* //---------------survey card list view ------------ */}
             {!mergeSurvey && (
               <>
-                <Text fw={500} >
-                  Select surveys
-                </Text>
+                <Text fw={500}>Select surveys</Text>
 
                 <ScrollArea w={"100%"} h={250} offsetScrollbars>
-                  <SurveyCardList getSelectedSurveys={getSelectedSurveys} LandingPage={LandingPage}/>
+                  <SurveyCardList
+                    getSelectedSurveys={getSelectedSurveys}
+                    LandingPage={LandingPage}
+                  />
                 </ScrollArea>
               </>
             )}

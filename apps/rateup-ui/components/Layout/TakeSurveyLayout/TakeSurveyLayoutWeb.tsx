@@ -12,6 +12,7 @@ import React, { useState, useEffect } from "react";
 import {
   usePublicSurvey,
   useUpdateStartedMutation,
+  useUpdateVisitedMutation,
 } from "../../../backend/surveys/surveys.query";
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useMediaQuery } from "@mantine/hooks";
@@ -27,15 +28,20 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
   const [questionCount, setQuestionCount] = useState(0);
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
 
+  const updateVisited = useUpdateVisitedMutation();
   const updateStarted = useUpdateStartedMutation();
+
   useEffect(() => {
     if (start === true) setStartClicked(true);
   }, [start]);
   useEffect(() => {
     if (survey?.welcomePageEnabled) {
       setStartClicked(false);
+      updateVisited.mutate(surveyId);
     } else {
       setStartClicked(true);
+      updateVisited.mutate(surveyId);
+      updateStarted.mutate(surveyId);
     }
   }, [survey?.welcomePageEnabled]);
 
