@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $Mref } from "./menu.schema";
-import { createMenuHandler, deleteMenuHandler, getAllMenusHandler, getFullMenuByIdHandler, getMenuByIdHandler, updateMenuHandler } from "./menu.controller";
+import { createMenuHandler, deleteMenuHandler, getAllMenusByTeamIdHandler, getAllMenusHandler, getFullMenuByIdHandler, getMenuByIdHandler, updateMenuHandler } from "./menu.controller";
 import { $Tref } from "../team/team.schema";
 import { verifyTeamAccess} from "../team/team.auth";
 import { verifyMenuAccess } from "./menu.auth";
@@ -19,6 +19,11 @@ export async function menuRoutes(server: FastifyInstance) {
     )
 
     server.get(
+        "/all",
+        getAllMenusHandler
+    )
+
+    server.get(
         "/all/:teamId",
         {
             schema: {
@@ -26,7 +31,7 @@ export async function menuRoutes(server: FastifyInstance) {
             },
             preHandler: verifyTeamAccess
         },
-        getAllMenusHandler
+        getAllMenusByTeamIdHandler
     )
 
     server.get(

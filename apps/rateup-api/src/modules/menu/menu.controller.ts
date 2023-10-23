@@ -1,9 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateMenuInput, ByMenuIdParams, UpdateMenuInput } from "./menu.schema";
-import { createMenu, deleteMenu, getFullMenu, getMenu, getMenus, updateMenu } from "./menu.service";
+import { createMenu, deleteMenu, getAllMenus, getFullMenu, getMenu, getMenus, updateMenu } from "./menu.service";
 import { ByTeamIdParams } from "../team/team.schema";
 import Session from "supertokens-node/recipe/session";
 import { hasAccessToTeam } from "../../utils/auth";
+import { getLoggedUserInfo } from "../user/user.service";
 
 export async function createMenuHandler(
     request: FastifyRequest<{ Body: CreateMenuInput }>,
@@ -19,13 +20,23 @@ export async function createMenuHandler(
 }
 
 export async function getAllMenusHandler(
+    request: FastifyRequest,
+    reply: FastifyReply
+) {
+    const userData =  await getLoggedUserInfo(request, reply);
+
+    
+    const menus = await getAllMenus(userData);
+    reply.send(menus);
+}
+
+export async function getAllMenusByTeamIdHandler(
     request: FastifyRequest<{ Params: ByTeamIdParams }>,
     reply: FastifyReply
 ) {
     const menus = await getMenus(request.params.teamId);
     reply.send(menus);
 }
-
 export async function getMenuByIdHandler(
     request: FastifyRequest<{ Params: ByMenuIdParams }>,
     reply: FastifyReply

@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth";
 import { ByTeamIdParams, EditTeamInput, IdParamInput } from "./team.schema";
 import Session from "supertokens-node/recipe/session";
+import { getLoggedUserInfo } from "../user/user.service";
 
 
 export async function verifyTeamAdminAccess(
@@ -37,6 +38,9 @@ export async function verifyTeamAccess(
     reply: FastifyReply
 ) {
     const teamId = request.params.teamId;
+    if (!teamId) {
+        reply.code(400).send({ message: "You need to Provide teamId in params" });
+    }
     const hasAccess = await hasAccessToTeam(teamId, request.userId);
     if (!hasAccess) {
         reply.code(403).send({ message: "You don't have access to this team" });

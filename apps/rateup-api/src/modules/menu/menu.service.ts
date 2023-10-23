@@ -44,6 +44,31 @@ export async function getFullMenu(menuId: string) {
     })
     return menu;
 }
+export async function getAllMenus({userId,role,orgId}) {
+    let condition={}
+    if(role==="SUPER_ADMIN"){
+        condition={
+            where:{
+                team: {
+                    orgId
+                  }
+            },
+        }
+    }else{  
+        const member=await prisma.teamMember.findFirst({
+            where:{
+                userId:userId
+            }
+        })
+        condition={
+            where:{
+                teamId:member?.teamId
+            },
+        }
+    }
+    const menus = await prisma.menu.findMany(condition)
+    return menus;
+}
 
 export async function getMenus(teamId: string) {
     const menus = await prisma.menu.findMany({
