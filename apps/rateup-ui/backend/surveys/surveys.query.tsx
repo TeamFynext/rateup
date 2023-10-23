@@ -20,11 +20,13 @@ import {
   verifySurveyPassword,
   updateSurveyLandingPage,
   getActiveSurveysSummary,
+  deleteSurvey,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
 import { rem } from "@mantine/core";
+import { showSuccessToast } from "../../utils/notifications";
 
 export const useSurvey = (surveyId: string) => {
   return useQuery({
@@ -119,7 +121,7 @@ export const useSurveysByTeam = (
 ) =>
   useQuery({
     enabled: specificTeamIsSelected,
-    queryKey: ["surveysByTeam", teamId],
+    queryKey: ["surveys", teamId],
     queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
   });
 
@@ -142,7 +144,6 @@ export const useCreateSurveyMutation = (
       });
       queryClient.invalidateQueries(["whatsappsurveys"]);
       queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
       onSuccess(data);
     },
     onError: (error: any) => {
@@ -187,7 +188,7 @@ export const useCreateSurveyLandingPageMutation = ({
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveysLanding"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
+      queryClient.invalidateQueries(["surveys"]);
       close();
       setIsCreating(false);
       resetForm();
@@ -233,7 +234,7 @@ export const useUpdateSurveyLandingPageMutation = ({
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveysLanding"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
+      queryClient.invalidateQueries(["surveys"]);
       close();
       setIsCreating(false);
       resetForm();
@@ -272,8 +273,7 @@ export function useCloneSurveyMutation({ close, selectedTeamID }: CloneProps) {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-        queryClient.invalidateQueries(["surveys"]);
-        queryClient.invalidateQueries(["surveysByTeam", selectedTeamID]);
+        queryClient.invalidateQueries(["surveys", selectedTeamID]);
         close();
       },
       onError: (error: any) => {
@@ -428,4 +428,29 @@ export function useUpdateStartedMutation() {
 
 export function useUpdateCompletedMutation() {
   return useMutation((id: string) => updateSurveyCompleted(id));
+}
+
+export function useDeleteSurveyMutation() {
+  const queryClient = useQueryClient();
+  const surveyDeleteMutation = useMutation({
+    mutationFn: deleteSurvey,
+    onSuccess: () => {
+      showSuccessToast("Survey Deleted Successfully!");
+      queryClient.invalidateQueries(["surveys"]);
+    },
+  });
+  return surveyDeleteMutation;
+}
+
+export function useUpdateSurveyMutation() {
+  const queryClient = useQueryClient();
+  const surveyUpdateMutation = useMutation({
+    mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) =>
+      updateSurvey(surveyId, data),
+    onSuccess: () => {
+      showSuccessToast("Survey Updated Successfully!");
+      queryClient.invalidateQueries(["surveys"]);
+    },
+  });
+  return surveyUpdateMutation;
 }

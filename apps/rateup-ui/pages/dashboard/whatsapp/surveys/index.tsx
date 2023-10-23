@@ -47,7 +47,9 @@ import {
 } from "../../../../backend/surveys/survey.api";
 import {
   useCloneSurveyMutation,
+  useDeleteSurveyMutation,
   useSurveysByTeam,
+  useUpdateSurveyMutation,
 } from "../../../../backend/surveys/surveys.query";
 import { useUser } from "../../../../context/UserContext";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
@@ -246,7 +248,6 @@ export function SurveyCard({ survey }: SurveyCardProps): JSX.Element {
 }
 
 function SurveyMenu({ survey }) {
-  const queryClient = useQueryClient();
   const router = useRouter();
 
   const [opened, { close, open }] = useDisclosure(false);
@@ -256,28 +257,8 @@ function SurveyMenu({ survey }) {
     selectedTeamID,
   });
 
-  const surveyDeleteMutation = useMutation({
-    mutationFn: deleteSurvey,
-    onSuccess: () => {
-      notifications.show({
-        message: "Deleted!",
-      });
-      queryClient.invalidateQueries(["surveys"]);
-    },
-  });
-
-  const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
-    onSuccess: () => {
-      notifications.show({
-        id: "survey",
-        message: "Survey status Updated!",
-        autoClose: true,
-      });
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
-    },
-  });
+  const surveyUpdateMutation = useUpdateSurveyMutation();
+  const surveyDeleteMutation = useDeleteSurveyMutation();
 
   return (
     <Menu width={200}>
@@ -327,7 +308,10 @@ function SurveyMenu({ survey }) {
         <Menu.Item
           leftSection={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
           onClick={() =>
-            surveyUpdateMutation.mutate({ active: !survey.active })
+            surveyUpdateMutation.mutate({
+              surveyId: survey.id,
+              data: { active: !survey.active },
+            })
           }
         >
           {survey.active ? "Pause Survey" : "Resume Survey"}

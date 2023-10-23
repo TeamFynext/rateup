@@ -357,7 +357,6 @@ function SurveyMenu({ survey }) {
         autoClose: 2000,
       });
       queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
     },
     onError: (error: any) => {
       console.error("Error deleting Survey:", error.message);
@@ -382,7 +381,6 @@ function SurveyMenu({ survey }) {
         autoClose: true,
       });
       queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
     },
   });
 
