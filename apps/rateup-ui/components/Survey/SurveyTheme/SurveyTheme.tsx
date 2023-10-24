@@ -1,4 +1,11 @@
-import { Stack, Flex, Switch, LoadingOverlay } from "@mantine/core";
+import {
+  Stack,
+  Flex,
+  Switch,
+  LoadingOverlay,
+  Group,
+  Tooltip,
+} from "@mantine/core";
 import React from "react";
 import { useEffect, useState } from "react";
 import StylesComponent from "./StylesComponent";
@@ -8,13 +15,12 @@ import {
   useWelcomeThemeBySurveyId,
 } from "../../../backend/WelcomeTheme/welcometheme.query";
 import { notifications } from "@mantine/notifications";
-import { useQueryClient } from "@tanstack/react-query";
-
 import defaultStyles from "./fontStyleComponents/DefaultTheme";
 import WelcomePageView from "./WelcomePageView";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { IconEdit, IconPhotoEdit, IconTextSize } from "@tabler/icons-react";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -37,13 +43,7 @@ function SurveyTheme({ survey }) {
     setSaveLoading,
   });
   //---------get saved styled by survey id -----------
-  const {
-    isLoading,
-    error,
-    data: welocmeTheme,
-  } = useWelcomeThemeBySurveyId(survey?.id);
-
-  const queryClient = useQueryClient();
+  const { data: welcomeTheme } = useWelcomeThemeBySurveyId(survey?.id);
 
   let WebFont = undefined;
   useEffect(() => {
@@ -73,17 +73,17 @@ function SurveyTheme({ survey }) {
   }
 
   useEffect(() => {
-    if (welocmeTheme) {
-      setCurrentstyles(welocmeTheme);
+    if (welcomeTheme) {
+      setCurrentstyles(welcomeTheme);
     }
-  }, [welocmeTheme]);
+  }, [welcomeTheme]);
   useEffect(() => {
-    if (welocmeTheme?.bgUrl) {
+    if (welcomeTheme?.bgUrl) {
       setbgImage(
-        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welocmeTheme?.bgUrl}`,
+        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welcomeTheme?.bgUrl}`,
       );
     }
-  }, [welocmeTheme?.bgUrl]);
+  }, [welcomeTheme?.bgUrl]);
 
   //----------------upload image file ------------
   const uploadImage = async (value) => {
@@ -132,8 +132,6 @@ function SurveyTheme({ survey }) {
       currentStyles.surveyId = survey?.id;
       createWelcomeThemeMutation.mutate(currentStyles);
     }
-
-    //
   };
 
   const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
@@ -147,7 +145,7 @@ function SurveyTheme({ survey }) {
       <PaperLayout style={{ flex: 0.7 }}>
         <Stack h="100%">
           <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
-          <Flex p={10}>
+          <Group justify="space-between" p={10}>
             <Switch
               label="Enable Welcome page"
               checked={survey?.welcomePageEnabled}
@@ -156,7 +154,56 @@ function SurveyTheme({ survey }) {
               mt={"md"}
               onChange={handleSwitchChange}
             />
-          </Flex>
+            <Group>
+              <Tooltip
+                arrowOffset={27}
+                arrowSize={5}
+                label={"Edit Visual"}
+                withArrow
+                position="top-start"
+              >
+                <IconPhotoEdit
+                  onClick={() => {
+                    selectedType === "background"
+                      ? setSelectedType("logo")
+                      : setSelectedType("background");
+                  }}
+                />
+              </Tooltip>
+
+              <Tooltip
+                arrowOffset={27}
+                arrowSize={5}
+                label={"Edit Text"}
+                withArrow
+                position="top-start"
+                ml="md"
+              >
+                <IconTextSize
+                  onClick={() => {
+                    selectedType === "header"
+                      ? setSelectedType("description")
+                      : setSelectedType("header");
+                  }}
+                />
+              </Tooltip>
+
+              <Tooltip
+                arrowOffset={27}
+                arrowSize={5}
+                label={"Edit Button"}
+                withArrow
+                position="top-start"
+                ml="md"
+              >
+                <IconEdit
+                  onClick={() => {
+                    setSelectedType("button");
+                  }}
+                />
+              </Tooltip>
+            </Group>
+          </Group>
 
           <WelcomePageView
             setSelectedType={setSelectedType}

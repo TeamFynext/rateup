@@ -1,24 +1,14 @@
 import {
-  Box,
-  Group,
-  Loader,
   Select,
   Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
   Flex,
   Text,
-  TextInput,
-  Card,
   ColorPicker,
-  Radio,
-  FileInput,
   NumberInput,
   Button,
+  ColorInput,
 } from "@mantine/core";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { fontList } from "../fontStyleComponents/FontList";
 
 function ButtonStyles({
@@ -50,7 +40,7 @@ function ButtonStyles({
         setCurrentstyles({
           ...currentStyles,
           buttonStyles: buttonStyle.buttonStyles,
-        })
+        }),
       );
     } else
       setCurrentstyles({
@@ -71,9 +61,8 @@ function ButtonStyles({
         <Select
           label="Font style"
           searchable
-          nothingFoundMessage="No options" //TODO VERIFY MANTINE 
+          nothingFoundMessage="No options" //TODO VERIFY MANTINE
           data={fontList}
-         
           mt={"xs"}
           value={buttonStyle?.buttonStyles?.fontFamily}
           onChange={(value) => handleChange("fontFamily", value)}
@@ -82,7 +71,6 @@ function ButtonStyles({
         <NumberInput
           min={0}
           max={50}
-         
           // mt={"xs"}
           defaultValue={18}
           placeholder="radius"
@@ -94,19 +82,24 @@ function ButtonStyles({
           Choose background color
         </Text>
         <ColorPicker
-        fullWidth
+          fullWidth
           format="rgba"
           onChange={(value) => handleChange("backgroundColor", value)}
           value={buttonStyle?.buttonStyles.backgroundColor}
         />
+        <ColorInput
+          mt="sm"
+          onChange={(value) => handleChange("backgroundColor", value)}
+          value={buttonStyle?.buttonStyles.backgroundColor}
+          placeholder="Select description color"
+        />
         <Flex justify={"center"}>
           <Button
-            bg="black"
             radius={48}
             size={"sm"}
             pl={40}
             pr={40}
-            mt={20}
+            mt={30}
             onClick={onSubmit}
             loading={saveLoading}
           >

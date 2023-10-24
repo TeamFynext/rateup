@@ -3,7 +3,7 @@ import BackgroundStyles from "./components/BackgroundStyles";
 import HeaderStyles from "./components/HeaderStyles";
 import DescStyles from "./components/DescStyles";
 import ButtonStyles from "./components/ButtonStyles";
-import { Divider, Text } from "@mantine/core";
+import { Title, Divider } from "@mantine/core";
 import LogoStyles from "./components/LogoStyles";
 
 function StylesComponent({
@@ -13,15 +13,14 @@ function StylesComponent({
   setCurrentstyles,
   loadFont,
   saveLoading,
-  setbgImage
+  setbgImage,
 }) {
   return (
     <div>
-      <Text size={"md"} fw={500} tt={"capitalize"} mb={20}>
-        {" "}
-        {selectedType}
-      </Text>
-
+      <Title order={4} style={{ textTransform: "uppercase" }}>
+        {selectedType === "header" ? "Heading" : selectedType}
+      </Title>
+      <Divider mt="sm" mb={15} />
       {selectedType == "logo" && (
         <div>
           <LogoStyles

@@ -1,30 +1,17 @@
 import {
-  Box,
-  Group,
-  Loader,
   Select,
   Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
   Flex,
   Text,
-  TextInput,
-  Card,
   ColorPicker,
-  Radio,
-  FileInput,
   NumberInput,
   Button,
+  ColorInput,
 } from "@mantine/core";
-import { useSetState } from "@mantine/hooks";
-import { IconUpload } from "@tabler/icons-react";
 import { createFormContext } from "@mantine/form";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { fontList } from "../fontStyleComponents/FontList";
-import { number } from "zod";
 import { FontWeights } from "../fontStyleComponents/FontWeights";
 
 interface FormValues {
@@ -46,7 +33,7 @@ function HeaderStyles({
   currentStyles,
   setCurrentstyles,
   loadFont,
-  saveLoading
+  saveLoading,
 }) {
   const form = useForm({
     initialValues: {
@@ -64,7 +51,7 @@ function HeaderStyles({
         setCurrentstyles({
           ...currentStyles,
           headerStyles: form.values.headerStyles,
-        })
+        }),
       );
     } else
       setCurrentstyles({
@@ -85,7 +72,6 @@ function HeaderStyles({
     <Flex>
       <Stack w={"100%"} justify={"center"}>
         <form style={{ width: "100%", justifyContent: "center" }}>
-
           <Select
             label="Font style"
             searchable
@@ -94,22 +80,18 @@ function HeaderStyles({
             name="fontFamily"
             {...form.getInputProps("headerStyles.fontFamily")}
           />
-          
-          {/* <Select
+
+          <Select
             label="Font weight"
-            // searchable
             name="fontWeight"
             {...form.getInputProps("headerStyles.fontWeight")}
             data={FontWeights}
-          /> */}
-
-          {/* TODO  VERIFY MANTINE  - FIX number value to string */}
-          
+          />
+          {/* TODO : all font weights not working */}
 
           <NumberInput
             min={10}
             max={100}
-            
             defaultValue={18}
             placeholder="size"
             label="Font Size"
@@ -120,22 +102,25 @@ function HeaderStyles({
             Choose text color
           </Text>
           <ColorPicker
-          //  size="xl"
-          fullWidth
+            fullWidth
             format="rgba"
             {...form.getInputProps("headerStyles.color")}
+          />
+          <ColorInput
+            mt="sm"
+            {...form.getInputProps("headerStyles.color")}
+            placeholder="Select heading color"
           />
 
           <Flex justify={"center"}>
             <Button
-              bg="black"
               radius={48}
               size={"sm"}
               pl={40}
               pr={40}
-              mt={20}
+              mt={30}
               onClick={onSubmit}
-               loading={saveLoading}
+              loading={saveLoading}
             >
               {" "}
               Save

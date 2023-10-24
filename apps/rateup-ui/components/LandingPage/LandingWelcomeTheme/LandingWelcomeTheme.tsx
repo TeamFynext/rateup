@@ -1,34 +1,7 @@
-import {
-  Box,
-  Group,
-  Loader,
-  Select,
-  Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
-  Flex,
-  Text,
-  TextInput,
-  Card,
-  BackgroundImage,
-  Notification,
-  Image,
-  Switch,
-  LoadingOverlay,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { Paper, Flex, Switch } from "@mantine/core";
 import React from "react";
-import { useEffect, useState, useRef } from "react";
-
-import {
-  useCreateWelcomeThemeMutation,
-  useUpdateWelcomeTheme,
-  useWelcomeThemeBySurveyId,
-} from "../../../backend/WelcomeTheme/welcometheme.query";
+import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
-import { useQueryClient } from "@tanstack/react-query";
 import defaultStyles from "../../Survey/SurveyTheme/fontStyleComponents/DefaultTheme";
 import WelcomePageView from "../../Survey/SurveyTheme/WelcomePageView";
 import StylesComponent from "../../Survey/SurveyTheme/StylesComponent";
@@ -37,7 +10,6 @@ import {
   useUpdateLandingWelcomeTheme,
   uselandingWelcomeThemeByLandingId,
 } from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
-import { useUpdateSurveyLandingPageMutation } from "../../../backend/surveys/surveys.query";
 import { useEditLandingPageMutation } from "../../../backend/LandingPage/landingpage.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 
@@ -61,13 +33,7 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
     setSaveLoading,
   });
   //---------get saved styled by survey id -----------
-  const {
-    isLoading,
-    error,
-    data: welocmeTheme,
-  } = uselandingWelcomeThemeByLandingId(LandingId);
-
-  const queryClient = useQueryClient();
+  const { data: welocmeTheme } = uselandingWelcomeThemeByLandingId(LandingId);
 
   let WebFont = undefined;
   useEffect(() => {

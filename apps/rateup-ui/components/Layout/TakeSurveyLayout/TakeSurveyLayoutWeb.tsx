@@ -38,16 +38,16 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
   useEffect(() => {
     if (survey?.welcomePageEnabled) {
       setStartClicked(false);
-      updateVisited.mutate(surveyId);
+      surveyId && updateVisited.mutate(surveyId);
     } else {
       setStartClicked(true);
-      updateVisited.mutate(surveyId);
-      updateStarted.mutate(surveyId);
+      surveyId && updateVisited.mutate(surveyId);
+      surveyId && updateStarted.mutate(surveyId);
     }
   }, [survey?.welcomePageEnabled]);
 
   const handleStartClick = () => {
-    updateStarted.mutate(surveyId);
+    surveyId && updateStarted.mutate(surveyId);
     setStartClicked(true);
   };
 
@@ -99,8 +99,8 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               radius="lg"
               shadow="md"
               bg={"#fff"}
-              pb="xl"
               style={{ boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 6px 0px" }}
+              pb={startClicked && "xl"}
             >
               {!startClicked && (
                 <WelcomePage
@@ -110,7 +110,7 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
                   largeScreen={largeScreen}
                 />
               )}
-              {startClicked && children.children}
+              {startClicked && <>{children.children}</>}
             </Paper>
           ) : (
             <Paper

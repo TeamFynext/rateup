@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Stack, Flex, NumberInput, Button, FileButton } from "@mantine/core";
+import {
+  Stack,
+  Flex,
+  NumberInput,
+  Button,
+  FileButton,
+  SimpleGrid,
+} from "@mantine/core";
 import { createFormContext } from "@mantine/form";
-import { IconUpload } from "@tabler/icons-react";
-import { uploadFile } from "../../../../utils/file-upload/upload";
+import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 interface FormValues {
@@ -24,14 +31,17 @@ function LogoStyles({
     initialValues: {
       name: "logo",
       logoUrl: currentStyles?.logoUrl,
-      logoStyles: currentStyles.logoStyles,
+      logoStyles: currentStyles?.logoStyles,
     },
   });
 
   const [isFileLoading, setisFileLoading] = useState(false);
 
   useEffect(() => {
-    setCurrentstyles({ ...currentStyles, logoStyles: form.values.logoStyles });
+    setCurrentstyles({
+      ...currentStyles,
+      logoStyles: form?.values?.logoStyles,
+    });
   }, [form.values]);
 
   const onSubmit = (e) => {
@@ -45,6 +55,14 @@ function LogoStyles({
     setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: value });
     setisFileLoading(false);
   };
+
+  const removeImage = () => {
+    setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: "", logoUrl: "" });
+    // form.setValues({ logoUrl: ""})
+
+    //TODO : removed logo not able re-upload as the next
+  };
+
   return (
     <Flex>
       <Stack w={"100%"} justify={"center"}>
@@ -52,7 +70,6 @@ function LogoStyles({
           <NumberInput
             min={10}
             max={100}
-            // defaultValue={18}
             placeholder="height"
             label="Height (px)"
             name="height"
@@ -63,32 +80,43 @@ function LogoStyles({
             min={10}
             max={100}
             mt={"xs"}
-            // defaultValue={18}
             placeholder="Width"
             label="Width (px)"
             name="Width"
             {...form.getInputProps("logoStyles.width")}
           />
 
-          <FileButton onChange={handleFileChange} accept="image/png,image/jpeg">
-            {(props) => (
-              <Button
-                leftSection={<IconUpload size={16} />}
-                fullWidth
-                radius="18px"
-                h={50}
-                size="md"
-                mt={"xs"}
-                variant="outline"
-                {...props}
-                loading={isFileLoading}
-              >
-                Upload image
-              </Button>
-            )}
-          </FileButton>
+          <SimpleGrid cols={2} mt="lg">
+            <RateupButtonSecondary
+              onClick={removeImage}
+              title="Remove Image"
+              size="md"
+              disabled={
+                form?.values?.logoUrl === "" ||
+                (!currentStyles?.logoUrlNotUploaded &&
+                  currentStyles?.logoUrl === "")
+              }
+              leftIcon={<IconTrash size={16} />}
+            />
+            <FileButton
+              onChange={handleFileChange}
+              accept="image/png,image/jpeg"
+            >
+              {(props) => (
+                <Button
+                  leftSection={<IconUpload size={16} />}
+                  radius="18px"
+                  size="md"
+                  {...props}
+                  loading={isFileLoading}
+                >
+                  Upload Image
+                </Button>
+              )}
+            </FileButton>
+          </SimpleGrid>
 
-          <Flex justify={"center"}>
+          <Flex justify={"center"} mt="xl">
             <Button
               radius={48}
               size={"sm"}

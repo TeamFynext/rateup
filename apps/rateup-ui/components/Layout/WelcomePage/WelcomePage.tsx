@@ -19,7 +19,7 @@ import { usePublicWelcomeThemeBySurveyId } from "../../../backend/WelcomeTheme/w
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 
 const buttonStyles = {
-  backgroundColor: "black",
+  backgroundColor: "var(--tertiary-color)",
   borderRadius: "48px",
   padding: "10px",
   paddingLeft: "20px",
@@ -43,7 +43,6 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
     data: surveyThemeData,
   } = usePublicWelcomeThemeBySurveyId(surveyId);
   // if (isLoading) return <div>Loading...</div>
-  // console.log(isLoading,"lood valooo")
 
   useEffect(() => {
     if (surveyThemeData?.descStyles?.fontFamily) {
@@ -124,12 +123,10 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
           justify="center"
           gap="xl"
           style={{
-            height: "65vh",
+            height: "75vh",
             borderRadius: 18,
-            // boxShadow: " rgba(0, 0, 0, 0.08) 0px 4px 12px",
             ...surveyThemeData?.bgStyles,
           }}
-          bg={"white"}
         >
           <BackgroundImage
             style={{

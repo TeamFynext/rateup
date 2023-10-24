@@ -1,25 +1,15 @@
 import {
-  Box,
-  Group,
-  Loader,
   Select,
   Stack,
-  Tabs,
-  Title,
-  Space,
-  Paper,
   Flex,
   Text,
-  TextInput,
-  Card,
   ColorPicker,
-  Radio,
-  FileInput,
   NumberInput,
   Button,
+  ColorInput,
 } from "@mantine/core";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { fontList } from "../fontStyleComponents/FontList";
 import { createFormContext } from "@mantine/form";
 import { FontWeights } from "../fontStyleComponents/FontWeights";
@@ -35,7 +25,13 @@ interface FormValues {
   };
 }
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont,saveLoading }) {
+function DescStyles({
+  saveStyles,
+  currentStyles,
+  setCurrentstyles,
+  loadFont,
+  saveLoading,
+}) {
   const form = useForm({
     initialValues: {
       name: "description",
@@ -53,7 +49,7 @@ function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont,save
         setCurrentstyles({
           ...currentStyles,
           descStyles: form.values.descStyles,
-        })
+        }),
       );
     } else
       setCurrentstyles({
@@ -100,18 +96,22 @@ function DescStyles({ saveStyles, currentStyles, setCurrentstyles, loadFont,save
             Choose text color
           </Text>
           <ColorPicker
-          fullWidth
+            fullWidth
             format="rgba"
             {...form.getInputProps("descStyles.color")}
           />
+          <ColorInput
+            mt="sm"
+            {...form.getInputProps("descStyles.color")}
+            placeholder="Select description color"
+          />
           <Flex justify={"center"}>
             <Button
-              bg="black"
               radius={48}
               size={"sm"}
               pl={40}
               pr={40}
-              mt={20}
+              mt={30}
               onClick={onSubmit}
               loading={saveLoading}
             >

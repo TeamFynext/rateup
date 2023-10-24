@@ -9,7 +9,7 @@ const defaultStyles = {
   headerStyles: {
     fontFamily: "Roboto",
     fontWeight: 600,
-    fontSize: "2rem",
+    fontSize: 30,
     textAlign: "center",
     color: "#000000",
   },
@@ -17,28 +17,31 @@ const defaultStyles = {
   descStyles: {
     fontFamily: "Roboto",
     fontWeight: 400,
-    fontSize: "1.1rem",
+    fontSize: 14,
     textAlign: "center",
     color: "#000000",
   },
+
   buttonStyles: {
     fontFamily: "Roboto",
     fontWeight: 600,
-    fontSize: "1rem",
+    fontSize: 15,
     textAlign: "center",
     color: "#fff",
     borderRadius: 48,
     backgroundColor: "var(--tertiary-color)",
   },
+
   bgStyles: {
     fontFamily: "Roboto",
     fontWeight: 600,
-    fontSize: "1rem",
+    fontSize: 15,
     textAlign: "center",
     color: "rgba(143, 70, 70, 1)",
     backgroundColor: "rgba(143, 70, 70, 1)",
     borderRadius: 18,
   },
+
   logoStyles: {
     height: 50,
     width: 50,

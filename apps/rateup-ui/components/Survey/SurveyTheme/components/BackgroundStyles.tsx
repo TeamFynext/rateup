@@ -1,31 +1,18 @@
 import {
-  Box,
-  Group,
-  Loader,
-  Select,
   Stack,
-  Title,
-  Space,
-  Paper,
   Flex,
-  Text,
-  TextInput,
-  Card,
   ColorPicker,
   Radio,
   FileInput,
   Button,
   FileButton,
   Tabs,
+  SimpleGrid,
+  ColorInput,
 } from "@mantine/core";
-import { IconColorPicker, IconUpload } from "@tabler/icons-react";
+import { IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, useEffect } from "react";
-import { uploadFile } from "../../../../utils/file-upload/upload";
-import {
-  IconPhoto,
-  IconMessageCircle,
-  IconSettings,
-} from "@tabler/icons-react";
+import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 function BackgroundStyles({
   saveStyles,
   currentStyles,
@@ -39,7 +26,7 @@ function BackgroundStyles({
     name: "background",
     bgType: "bgcolor",
     bgStyles: currentStyles.bgStyles,
-    bgUrl: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/sample.png`,
+    bgUrl: ``,
     borderRadius: 18,
   });
 
@@ -51,17 +38,7 @@ function BackgroundStyles({
   //----------onsubmit form -------------
   const onSubmit = (e) => {
     e.preventDefault();
-
     saveStyles(backgroundStyles);
-  };
-
-  const handleChange = (newValue) => {
-    setCurrentstyles({ ...currentStyles, bgType: newValue });
-  };
-  const handleOpenFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
   };
 
   const handleFileChange = (value) => {
@@ -71,12 +48,17 @@ function BackgroundStyles({
 
     setbgImage(url);
     setisFileLoading(false);
-
-    // }
   };
+
+  const removeBg = () => {
+    setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: "", bgUrl: "" });
+    setbgImage("");
+  };
+
   const handleTabChange = (newValue) => {
     setCurrentstyles({ ...currentStyles, bgType: newValue });
   };
+
   return (
     <Stack>
       <Stack mt={10}>
@@ -120,6 +102,20 @@ function BackgroundStyles({
               }
               mt={10}
             />
+            <ColorInput
+              mt="sm"
+              value={backgroundStyles?.bgStyles?.backgroundColor}
+              onChange={(value) =>
+                setbackgroundStyles({
+                  ...backgroundStyles,
+                  bgStyles: {
+                    ...backgroundStyles.bgStyles,
+                    backgroundColor: value,
+                  },
+                })
+              }
+              placeholder="Input placeholder"
+            />
             {/* <Text>{backgroundStyles?.bgStyles?.backgroundColor}</Text> */}
           </Tabs.Panel>
 
@@ -135,25 +131,35 @@ function BackgroundStyles({
               onChange={handleFileChange}
             />
 
-            <FileButton
-              onChange={handleFileChange}
-              accept="image/png,image/jpeg"
-            >
-              {(props) => (
-                <Button
-                  leftSection={<IconUpload size={16} />}
-                  fullWidth
-                  size="lg"
-                  radius="18px"
-                  h={50}
-                  variant="outline"
-                  {...props}
-                  loading={isFileLoading}
-                >
-                  Upload image
-                </Button>
-              )}
-            </FileButton>
+            <SimpleGrid cols={2} mt="lg">
+              <RateupButtonSecondary
+                onClick={removeBg}
+                title="Remove Image"
+                size="md"
+                disabled={
+                  currentStyles.bgUrlNotUploaded === "" ||
+                  (!currentStyles.bgUrlNotUploaded &&
+                    currentStyles.bgUrl === "")
+                }
+                leftIcon={<IconTrash size={16} />}
+              />
+              <FileButton
+                onChange={handleFileChange}
+                accept="image/png,image/jpeg"
+              >
+                {(props) => (
+                  <Button
+                    leftSection={<IconUpload size={16} />}
+                    size="md"
+                    radius="18px"
+                    {...props}
+                    loading={isFileLoading}
+                  >
+                    Upload Image
+                  </Button>
+                )}
+              </FileButton>
+            </SimpleGrid>
           </Tabs.Panel>
         </Tabs>
 
@@ -169,7 +175,6 @@ function BackgroundStyles({
             onClick={onSubmit}
             loading={saveLoading}
           >
-            {" "}
             Save
           </Button>
         </Flex>

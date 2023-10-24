@@ -148,7 +148,7 @@ function WelcomePageView({
               }}
               p={5}
             >
-              <Tooltip label="Logo">
+              <Tooltip label="Edit Logo">
                 <Image
                   fit="contain"
                   src={getLogoUrl()}
@@ -182,7 +182,7 @@ function WelcomePageView({
             <TextInput
               onChange={handleChange}
               value={currentStyles.descText}
-              placeholder={"Please fil the survey"}
+              placeholder={"Please fill the survey"}
               variant="unstyled"
               onClick={(e) => e.stopPropagation()}
               onFocus={(e) => {

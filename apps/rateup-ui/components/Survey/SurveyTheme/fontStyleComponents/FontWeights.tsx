@@ -1,40 +1,38 @@
-
-
 export const FontWeights = [
   {
     label: "Black",
-    value: 900 as any,
+    value: "900",
   },
   {
     label: "Extra Bold",
-    value: 800 as any,
+    value: "800",
   },
   {
     label: "Bold",
-    value: 700 as any,
+    value: "700",
   },
   {
     label: "Semi Bold",
-    value: 600 as any,
+    value: "600",
   },
   {
     label: "Medium",
-    value: 500 as any,
+    value: "500",
   },
   {
     label: "Regular",
-    value: 400 as any,
+    value: "400",
   },
   {
     label: "Light",
-    value: 300 as any,
+    value: "300",
   },
   {
     label: "Extra Light",
-    value: 200 as any,
+    value: "200",
   },
   {
     label: "Thin",
-    value: 100 as any,
+    value: "100",
   },
 ];
