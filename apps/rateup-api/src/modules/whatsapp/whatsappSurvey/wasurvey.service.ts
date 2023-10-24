@@ -45,7 +45,7 @@ export async function getSession(orgId: string, phone: string) {
   return session;
 }
 export async function deleteSession(orgId: string, phone: string) {
-  log.info("Deleting previous sessions if any for %o", { phone, orgId });
+  log.info("Deleting session for %o", { phone, orgId });
   try {
     await prisma.waSession.delete({
       where: {

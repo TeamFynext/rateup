@@ -12,11 +12,10 @@ export function getEventType(data: WaMessageBody) {
   if (data.object === 'whatsapp_business_account') {
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
-    } else if (data.entry[0].changes[0].field === WaEvent.Message) {
+    } else if (data.entry[0].changes[0].field === WaEvent.Message && data.entry[0].changes[0].value.messages?.length > 0) {
       return WaEvent.Message;
     }
   }
-  log.error('Invalid data object', data);
   return null;
 }
 export function getMessageObject(data: WaMessageBody) {
@@ -67,7 +66,7 @@ export function createReplyButtonsMessage(
         text: questionTitle,
       },
       body: {
-        text: "-> " + questionDescription,
+        text: questionDescription,
       },
       action: {
         buttons:
@@ -96,7 +95,7 @@ export function createTextMessage(
     type: "text",
     text: {
       preview_url: false,
-      body: `*${title}*\n\n${description}`,
+      body: title ? `*${title}*\n\n` : "" + description,
     },
   };
 }
@@ -133,7 +132,7 @@ export function createListMessage(
         text: questionTitle,
       },
       body: {
-        text: "-> " + questionDescription,
+        text: questionDescription,
       },
       action: {
         button: buttonTitle,
@@ -257,12 +256,12 @@ export async function generateMessageDataFromQuestion(
   } else {
     // text question
     if (
-      [Q.Text, Q.Email, Q.Testimonial, Q.Photo, Q.DateTime].includes(
+      [Q.Text, Q.Email, Q.Testimonial, Q.Photo, Q.DateTime, Q.Number].includes(
         question.type
       )
     ) {
       return createTextMessage(to, title, description);
-    } else if ([Q.MSQ, Q.MCQ]) {
+    } else if ([Q.MSQ, Q.MCQ].includes(question.type)) {
       let bodyText = description;
       // Displaying choices in `index) choice` format
       const options = question
@@ -316,6 +315,8 @@ export function isValidResponse(
       return response >= 1 && response <= 5;
     case Q.Opinion:
       return response >= 1 && response <= 10;
+    case Q.Number:
+      return !isNaN(response);
     case Q.Phone:
       return /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(response);
     case Q.WaList:
@@ -323,6 +324,8 @@ export function isValidResponse(
       return !!response.title
     case Q.Photo:
       return typeof response === 'string' && response.length > 0; // Key of the uploaded file
+    case Q.Email:
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(response);
     default:
       return true;
   }

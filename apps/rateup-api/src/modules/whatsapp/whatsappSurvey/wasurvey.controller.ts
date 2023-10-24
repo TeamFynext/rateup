@@ -75,23 +75,27 @@ export async function whatsappEventHandler(
   }>,
   reply: FastifyReply
 ) {
-  const body = request.body as WaMessageBody;
-  const { orgId } = request.params;
-  // log.trace('WaEvent => %o', body); // Log all events
-  const eventType = getEventType(body);
-  if (!eventType) {
-    // Ignoring...
+  try {
+    const body = request.body as WaMessageBody;
+    const { orgId } = request.params;
+    // log.trace('WaEvent => %o', body); // Log all events
+    const eventType = getEventType(body);
+    if (!eventType) {
+      // Probably a message delivery status. Ignoring...
+      reply.code(200).send();
+      return;
+    } else if (eventType === WaEvent.Message) {
+      log.trace("messageObject => %o", getMessageObject(body));
+      await whatsappMessageHandler(orgId, body);
+    } else if (eventType === WaEvent.TemplateStatusChange) {
+      log.trace("template status change => %o", body);
+      await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
+    }
+  } catch (e) {
+    log.error(e)
+  } finally {
     reply.code(200).send();
-    return;
-  } else if (eventType === WaEvent.Message) {
-    log.trace("messageObject => %o", getMessageObject(body));
-    await whatsappMessageHandler(orgId, body);
-  } else if (eventType === WaEvent.TemplateStatusChange) {
-    log.trace("template status change => %o", body);
-    await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
   }
-
-  reply.code(200).send();
 }
 interface changeValue {
   event: WaTemplateStatus;
