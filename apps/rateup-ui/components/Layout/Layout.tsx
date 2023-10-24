@@ -17,7 +17,7 @@ import styles from "./Layout.module.css";
 // @ts-ignore
 export default ({ children }) => {
   const router = useRouter();
-  const [opened, setOpened] = useState(false);
+  const [opened, setOpened] = useState(true);
   const [focus, toggleFocus] = useState(false);
   const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
     "userInfo",
