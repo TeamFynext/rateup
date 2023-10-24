@@ -1,12 +1,14 @@
 import {
   Button,
   Container,
+  Flex,
   Group,
   Paper,
   Select,
   SimpleGrid,
   Stack,
   Tabs,
+  Title,
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -25,13 +27,18 @@ import ShareQR from "../../../components/Survey/ShareSurvey/ShareQR";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import { useMenu } from "../../../backend/menu/menu.query";
 import { CopyLinkComponent } from "../../../components/Survey/ShareSurvey/ShareSurvey";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 
 enum TabEnum {
-  Edit = "Edit",
+  Menu = "Menu",
+  Settings = "Settings",
+  LandingPage = "LandingPage",
   Share = "Share",
 }
 
 export default ({ categories: initialCategories }) => {
+  const [selectedTeamId, setSelectedTeamId] = useState("");
   const router = useRouter();
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
@@ -40,15 +47,15 @@ export default ({ categories: initialCategories }) => {
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
-    () => {},
+    () => {}
   );
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null,
+    null
   );
 
   const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Edit,
+    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu
   );
 
   const {
@@ -56,11 +63,19 @@ export default ({ categories: initialCategories }) => {
     isError: isErrorMenu,
     data: menu,
   } = useMenu(menuId);
+
   const {
     isLoading,
     isError,
     data: categories,
   } = useCategories(menuId, initialCategories);
+  let filteredCategory = categories;
+
+  if (selectedTeamId !== "all") {
+    filteredCategory = filteredCategory?.filter(
+      (category) => category?.teamId === selectedTeamId
+    );
+  }
 
   useEffect(() => {
     if (
@@ -71,6 +86,8 @@ export default ({ categories: initialCategories }) => {
       setActiveTab(tab as TabEnum);
     }
   }, [tab]);
+
+  if (categories?.length === 0) return <>No Menu data Avaliable</>;
 
   if (!categories && (isLoading || isError)) {
     return <CenteredSpinner />;
@@ -92,45 +109,57 @@ export default ({ categories: initialCategories }) => {
   }
 
   return (
-    <Container fluid>
+    <Group grow mx={"md"}>
       <StyledTabs
         keepMounted={false}
         value={activeTab}
         onChange={setActiveTab as (tab: string) => void}
       >
         <Group justify="space-between" mb="md">
-          <Button
-            leftSection={<IconPlus />}
-            onClick={handleCreateCategory}
-            variant="gradient"
-            radius={"12px"}
-            gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
-            style={{
-              visibility: activeTab === TabEnum.Edit ? "visible" : "hidden",
-            }}
-          >
-            Add Category
-          </Button>
+          {activeTab === TabEnum.Menu && (
+            <Title order={3}>
+              {menu?.name?.charAt(0)?.toUpperCase() + menu?.name?.slice(1)}
+            </Title>
+          )}
           <Tabs.List>
-            <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Menu}>Menu</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.LandingPage}>Landing Page</Tabs.Tab>
             <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
           </Tabs.List>
-          <SearchBox
-            searchText={searchText}
-            setSearchText={setSearchText}
-            sx={{
-              visibility: activeTab === TabEnum.Edit ? "visible" : "hidden",
-            }}
-          />
         </Group>
-        <Tabs.Panel value={TabEnum.Edit}>
+        <Tabs.Panel value={TabEnum.Menu}>
+          <Flex justify={"space-between"} wrap={"wrap"}>
+            <RateupButtonBlue
+              title="Add Category"
+              rightIcon={<IconPlus />}
+              radius="xl"
+              size="md"
+              onClick={handleCreateCategory}
+            />
+            <SearchBox
+              searchText={searchText}
+              setSearchText={setSearchText}
+              sx={{
+                visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
+                // width: "50%",
+              }}
+            />
+            {/* must be replaced with menu selector */}
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(teamId) => setSelectedTeamId(teamId)}
+              enableAll={true}
+            />
+          </Flex>
           <Stack mt="sm">
-            {categories.map((category) => (
+            {filteredCategory.map((category) => (
               <CategoryCard
                 key={category.id}
                 category={category}
                 handleDelete={deleteMutation.mutate}
                 handleEdit={handleEditCategory}
+                searchText={searchText}
               />
             ))}
           </Stack>
@@ -141,11 +170,13 @@ export default ({ categories: initialCategories }) => {
             editingItem={editingCategory}
           />
         </Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Settings}>s</Tabs.Panel>
+        <Tabs.Panel value={TabEnum.LandingPage}>s</Tabs.Panel>
         <Tabs.Panel value={TabEnum.Share}>
           {menu && <ShareMenu teamId={menu.teamId} menuId={menu.id} />}
         </Tabs.Panel>
       </StyledTabs>
-    </Container>
+    </Group>
   );
 };
 
@@ -165,17 +196,7 @@ function ShareMenu({ teamId, menuId }) {
   return (
     <Stack>
       <Paper px="md" py="lg" radius="md" shadow="lg">
-        <SimpleGrid
-          cols={2}
-          spacing="xl"
-          // style={{
-          //   '& .mantine-InputWrapper-label': {
-          //     fontWeight: 600,
-          //     fontSize: "1.1rem",
-          //   }
-          // }}
-          //TODO VERIFY MANTINE
-        >
+        <SimpleGrid cols={2} spacing="xl">
           <Select
             label="Survey to share with"
             placeholder="Select survey"

@@ -1,13 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  createMenu,
-  deleteMenu,
-  getFullMenuById,
-  getMenuById,
-  getMenuPublicById,
-  getMenusByTeamId,
-  updateMenu,
-} from "./menu.api";
+import { createMenu, deleteMenu, getAllMenus, getFullMenuById, getMenuById, getMenuPublicById, getMenusByTeamId, updateMenu } from "./menu.api";
 import { showSuccessToast, showErrorToast } from "../../utils/notifications";
 
 // TODO: update tanstack querykeys. (use teamId & create a proper hierarchy)
@@ -41,13 +33,18 @@ export const useMenusByTeamId = (teamId: string) =>
     queryFn: () => getMenusByTeamId(teamId),
   });
 
+export const useAllMenus = () =>
+  useQuery({
+    queryKey: ["allMenus"],
+    queryFn: () => getAllMenus(),
+  });
 export const useCreateMenuMutation = (teamId: string, close, setIsCreating) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createMenu,
     onSuccess: () => {
       showSuccessToast("Menu created successfully");
-      queryClient.invalidateQueries(["menus", teamId]);
+      queryClient.invalidateQueries(["allMenus"]);
       close();
       setIsCreating(false);
     },
@@ -66,7 +63,7 @@ export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
     mutationFn: updateMenu,
     onSuccess: () => {
       showSuccessToast("Menu updated successfully");
-      queryClient.invalidateQueries(["menus", teamId]);
+      queryClient.invalidateQueries(["allMenus"]);
       queryClient.invalidateQueries(["menu", teamId]);
       queryClient.invalidateQueries(["menu", "full", teamId]);
       onSuccess();
@@ -86,7 +83,7 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
     mutationFn: deleteMenu,
     onSuccess: () => {
       showSuccessToast("Menu deleted successfully");
-      queryClient.invalidateQueries(["menus", teamId]);
+      queryClient.invalidateQueries(["allMenus"]);
       onSuccess();
     },
     onError: () => {

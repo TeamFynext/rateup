@@ -3,7 +3,6 @@
 
 import { TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
-import { useState } from "react";
 
 export default function SearchBox({
   searchText,

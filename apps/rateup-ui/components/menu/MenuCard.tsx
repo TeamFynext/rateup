@@ -9,8 +9,10 @@ import {
 } from "@mantine/core";
 import {
   IconDots,
+  IconMapPinFilled,
   IconPencil,
   IconShare,
+  IconStarFilled,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -19,7 +21,7 @@ import { getTimeSince } from "../../utils";
 
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-
+import style from "./MenuCard.module.css";
 // TODO: Create a generic Card with menu
 export function MenuCard({
   menu,
@@ -36,7 +38,7 @@ export function MenuCard({
     setTimeSince(getTimeSince(menu.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(menu.createdAt)),
-      5000,
+      5000
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -63,13 +65,8 @@ export function MenuCard({
               {menu.name}
             </Text>
             <Group align={"center"} mt="sm" gap="xs">
-              <IconShare
-                onClick={(e) => {
-                  e.stopPropagation(),
-                    router.push(`/dashboard/menu/${menu.id}?tab=Share`);
-                }}
-              />
               <IconPencil
+                size={20}
                 onClick={(e) => {
                   e.stopPropagation(), handleEditClick(menu);
                 }}
@@ -77,15 +74,19 @@ export function MenuCard({
               <MenuCardMenu menuId={menu.id} teamId={menu.teamId} close />
             </Group>
           </Flex>
-          <Text size="lg" color="#333">
-            {menu.displayName}
-          </Text>
+          <Text size="lg">{menu.displayName}</Text>
         </Box>
-        <Box>
+        <Flex align={"center"} justify={"space-between"}>
+          <Flex>
           <Text size="sm" c="dimmed">
             Created {timeSince}
           </Text>
-        </Box>
+          </Flex>
+          <Flex align={"center"}>
+            <IconMapPinFilled size={16} />
+            <Text ml={4}>{menu.locationText}</Text>
+          </Flex>
+        </Flex>
       </Flex>
     </PaperLayout>
   );
@@ -95,19 +96,20 @@ function MenuCardMenu({ menuId, teamId, close }) {
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
-    () => {},
+    () => {}
   );
-
+  const router = useRouter();
   return (
-    <Menu width={200}>
+    <Menu offset={0} withArrow>
       <Menu.Target>
-        <ActionIcon
+        <Group
           onClick={(e) => {
             e.stopPropagation();
           }}
+          align="center"
         >
-          <IconDots />
-        </ActionIcon>
+          <IconDots size={20} />
+        </Group>
       </Menu.Target>
       <Menu.Dropdown
         onClick={(e) => {
@@ -115,7 +117,15 @@ function MenuCardMenu({ menuId, teamId, close }) {
         }}
       >
         <Menu.Item
-          leftSection={<IconTrash />}
+          leftSection={<IconShare size={16} />}
+          onClick={() => {
+            router.push(`/dashboard/menu/${menuId}?tab=Share`);
+          }}
+        >
+          Share
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconTrash size={16} />}
           onClick={() => {
             deleteMutation.mutate(menuId);
           }}

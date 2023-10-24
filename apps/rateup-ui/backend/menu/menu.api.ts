@@ -3,6 +3,7 @@ const MENU_URL = "/menu";
 
 type CreateMenu = Omit<Menu, "id" | "createdAt">;
 export const createMenu = async (menu: CreateMenu) => await axiosClient.post(MENU_URL, menu);
+export const getAllMenus = async () => (await axiosClient.get(`${MENU_URL}/all`)).data as Menu[];
 export const getMenusByTeamId = async (teamId: string) => (await axiosClient.get(`${MENU_URL}/all/${teamId}`)).data as Menu[];
 export const getMenuById = async (id: string) => (await axiosClient.get(`${MENU_URL}/${id}`)).data as Menu;
 export const getFullMenuById = async (menuId: string) => (await axiosClient.get(`${MENU_URL}/full/${menuId}`)).data as FullMenu;

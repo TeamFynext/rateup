@@ -1,25 +1,53 @@
 import { useEffect, useState } from "react";
-import { ActionIcon, Box, Button, Center, FileButton, Flex, Group, Modal, Radio, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Center,
+  FileButton,
+  Flex,
+  Group,
+  Image,
+  Radio,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useCreateMenuItemMutation, useUpdateMenuItemMutation } from "../../backend/menu/item/mItem.query";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  useCreateMenuItemMutation,
+  useUpdateMenuItemMutation,
+} from "../../backend/menu/item/mItem.query";
+import { IconMinus, IconPlus, IconTrash } from "@tabler/icons-react";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import { showErrorToast } from "../../utils/notifications";
 import { MenuItemPriceType } from "../../types/enums";
+import FormModalLayout from "../Modal/FormModalLayout";
+import {
+  ContainedTextArea,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
 
 interface CreateMenuItemModalProps {
-  opened: boolean,
-  close: () => void,
-  menuId: string,
-  categoryId: string,
-  editingItem?: MenuItem
+  opened: boolean;
+  close: () => void;
+  menuId: string;
+  categoryId: string;
+  editingItem?: MenuItem;
 }
 
 // If editingItem is passed, then we are editing an existing item
-export function CreateMenuItemModal({ opened, close, menuId, categoryId, editingItem }: CreateMenuItemModalProps) {
+export function CreateMenuItemModal({
+  opened,
+  close,
+  menuId,
+  categoryId,
+  editingItem,
+}: CreateMenuItemModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-
+  const fallbackImage = "/images/no_image_template.jpeg";
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -29,42 +57,61 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       description: "",
       price: {
         price: "",
-        variants: [{
-          name: "",
-          price: ""
-        }],
-        type: MenuItemPriceType.FIXED
+        variants: [
+          {
+            name: "",
+            price: "",
+          },
+        ],
+        type: MenuItemPriceType.FIXED,
       },
     },
-    // TODO: display validation errors of price and image near the input.
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
       description: (value) => (value.length ? null : "Cannot be empty"),
-      price: (value) => {
-        if (value.type === MenuItemPriceType.FIXED) {
-          if (value.price < 0) {
-            showErrorToast("Price must not be negative");
-            return "Price must not be negative"
-          }
-        } else {
-          if (!value.variants.every(v => v.name && v.price && v.price >= 0)) {
-            showErrorToast("Please fill in all variant names and prices")
-            return "Please fill in all variant names and prices"
-          }
-        }
+      price: {
+        price: (value) => {
+          if (form.values.price.type !== MenuItemPriceType.FIXED) return null;
+          if (!value.length) return "Price can't be empty";
+          if (isNaN(value)) return "Price must be a number";
+          if (value <= 0) return "Price must not be negative";
+          return null;
+        },
+
+        variants: {
+          name: (value) => {
+            if (form.values.price.type !== MenuItemPriceType.VARIANT)
+              return null;
+            if (!value.length) {
+              showErrorToast("Name can't be empty");
+              return " ";
+            }
+            return null;
+          },
+          price: (value) => {
+            if (form.values.price.type !== MenuItemPriceType.VARIANT)
+              return null;
+            if (!value.length) return "Price can't be empty";
+            if (isNaN(value)) return "Price must be a number";
+            if (value <= 0) return "Price must not be negative";
+            return null;
+          },
+        },
       },
     },
   });
-  const [selectedImage, setSelectedImage] = useState(form.values.images[0] || "");
+  const [selectedImage, setSelectedImage] = useState(
+    form.values.images[0] || ""
+  );
 
   useEffect(() => {
     if (editingItem) {
-      form.setValues(editingItem)
+      form.setValues(editingItem);
     } else {
-      form.reset()
-      setImageToUpload(null)
+      form.reset();
+      setImageToUpload(null);
     }
-  }, [editingItem])
+  }, [editingItem]);
 
   const createMenuItemMutation = useCreateMenuItemMutation(
     categoryId,
@@ -73,12 +120,12 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       close();
       setIsCreating(false);
       form.reset();
-      setImageToUpload(null)
+      setImageToUpload(null);
     },
     () => {
       setIsCreating(false);
     }
-  )
+  );
 
   const updateMenuItemMutation = useUpdateMenuItemMutation(
     categoryId,
@@ -91,15 +138,15 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
     () => {
       setIsCreating(false);
     }
-  )
+  );
 
   useEffect(() => {
     const uploadAndUpdate = async () => {
       if (imageToUpload) {
         const fileKey = await uploadFile(imageToUpload);
         if (typeof fileKey === "string") {
-          form.insertListItem("images", fileKey)
-          setSelectedImage(fileKey)
+          form.insertListItem("images", fileKey);
+          setSelectedImage(fileKey);
         }
       }
     };
@@ -107,8 +154,8 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
   }, [imageToUpload]);
 
   useEffect(() => {
-    setSelectedImage(form.values.images[0] || "")
-  }, [form.values.images])
+    setSelectedImage(form.values.images[0] || "");
+  }, [form.values.images]);
 
   const onSubmit = (values) => {
     const validationRes = form.validate();
@@ -117,42 +164,48 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
       return;
     }
 
-    setIsCreating(true)
+    setIsCreating(true);
     if (values.price.type === MenuItemPriceType.FIXED) {
-      delete values.price.variants
+      delete values.price.variants;
     } else {
-      delete values.price.price
+      delete values.price.price;
     }
     if (editingItem) {
-      updateMenuItemMutation.mutate({ menuItemId: editingItem.id, menuItem: values })
+      updateMenuItemMutation.mutate({
+        menuItemId: editingItem.id,
+        menuItem: values,
+      });
     } else {
-      createMenuItemMutation.mutate(values)
+      createMenuItemMutation.mutate(values);
     }
   };
 
   if (!menuId) {
-    return null
+    return null;
   }
-
+  const imageProps = {
+    radius: "md",
+    h: 200,
+    w: 200,
+    fallbackSrc: fallbackImage,
+  };
   return (
-    <Modal
-      size={"xl"}
+    <FormModalLayout
       opened={opened}
-      onClose={() => {
-        close()
-      }}
+      onClose={close}
       title={editingItem ? "Edit Item" : "Create Item"}
       centered
+      onSubmit={form.onSubmit(onSubmit)}
+      buttonTitle={editingItem ? "Edit Item" : "Create Item"}
+      size={"lg"}
     >
-      <form onSubmit={form.onSubmit(onSubmit)}>
-        <Flex gap="lg" align={"stretch"}>
-          <Stack style={{ flex: 1 }}>
-            <Text>
-              Add Images (max 3)
-            </Text>
-            {form.values.images.length > 0 &&
-              <Box w="100%">
-                <img src={getFileUrlFromKey(selectedImage)} width={"100%"} style={{ borderRadius: "8px", aspectRatio: "1 / 1" }} />
+      <Flex>
+        <Stack style={{ flex: 1 }}>
+          <Group>
+            <Text>Add Images (max 3)</Text>
+            {form.values.images.length > 0 ? (
+              <Box>
+                <Image src={getFileUrlFromKey(selectedImage)} {...imageProps} />
                 <Center mt="xs">
                   <Button
                     radius={"xs"}
@@ -160,92 +213,92 @@ export function CreateMenuItemModal({ opened, close, menuId, categoryId, editing
                     color="red"
                     leftSection={<IconTrash />}
                     onClick={() => {
-                      // TODO: implement DELETE when s3 delete is implemented
-                      form.removeListItem("images", form.values.images.findIndex((image) => image === selectedImage))
-                      setSelectedImage(form.values.images[0] || "")
+                      form.removeListItem(
+                        "images",
+                        form.values.images.findIndex(
+                          (image) => image === selectedImage
+                        )
+                      );
+                      setSelectedImage(form.values.images[0] || "");
                     }}
-                  >Delete</Button>
+                  >
+                    Delete
+                  </Button>
                 </Center>
               </Box>
-            }
-            <Group>
-              {form.values.images.map((image, index) => (
-                <img onClick={() => setSelectedImage(image)} style={{ borderRadius: "8px", cursor: "pointer" }} key={index} src={getFileUrlFromKey(image)} width={75} height={75} />
-              ))}
-              {form.values.images.length < 3 &&
-                <FileButton onChange={setImageToUpload} accept="image/png,image/jpeg">
-                  {(props) => (
-
-                    <Button
-                      color="gray"
-                      h={75} w={75}
-                      {...props}
-                    >
-                      <IconPlus />
-                    </Button>
-                  )}
-                </FileButton>
-              }
-            </Group>
-          </Stack>
-          <Stack style={{ flex: 1 }}>
-            <TextInput
+            ) : (
+              <Image src={fallbackImage} {...imageProps} />
+            )}
+          </Group>
+          <Group>
+            {form.values.images.map((image) => (
+              <Image
+                onClick={() => setSelectedImage(image)}
+                style={{ borderRadius: "8px", cursor: "pointer" }}
+                key={image}
+                src={getFileUrlFromKey(image)}
+                width={50}
+                height={50}
+                fallbackSrc={fallbackImage}
+              />
+            ))}
+            {form.values.images.length < 3 && (
+              <FileButton
+                onChange={setImageToUpload}
+                accept="image/png,image/jpeg"
+              >
+                {(props) => (
+                  <Button color="gray" h={75} w={75} {...props}>
+                    <IconPlus />
+                  </Button>
+                )}
+              </FileButton>
+            )}
+          </Group>
+        </Stack>
+        <Stack style={{ flex: 1.5 }}>
+          <Flex columnGap={30}>
+            <ContainedTextField
               label="Name"
               placeholder="Name"
               withAsterisk
               {...form.getInputProps("name")}
             />
-            <Textarea
-              label="Description"
-              placeholder="Description"
-              withAsterisk
-              {...form.getInputProps("description")}
-            />
-            <TextInput
+            <ContainedTextField
               label="Video Url"
               placeholder="Video Url"
               {...form.getInputProps("videoUrl")}
             />
-            <PriceSection form={form} />
-            <Group justify="flex-end" pt="xl" mt="lg">
-              <Button variant="subtle" onClick={close}>
-                Cancel
-              </Button>
-              <Button variant="filled" type="submit" loading={isCreating}>
-                Submit
-              </Button>
-            </Group>
-          </Stack>
-        </Flex>
-      </form>
-    </Modal>
-  )
+          </Flex>
+          <ContainedTextArea
+            label="Description"
+            placeholder="Description"
+            withAsterisk
+            autosize
+            minRows={5}
+            {...form.getInputProps("description")}
+          />
+          <PriceSection form={form} />
+        </Stack>
+      </Flex>
+    </FormModalLayout>
+  );
 }
 
 function PriceSection({ form }: { form: any }) {
   return (
     <>
       <Group>
-        <Text>
-          Price
-        </Text>
-        <Radio.Group
-          {...form.getInputProps("price.type")}
-        >
+        <Text>Price</Text>
+        <Radio.Group {...form.getInputProps("price.type")}>
           <Group>
-            <Radio
-              label="Fixed"
-              value={MenuItemPriceType.FIXED}
-            />
-            <Radio
-              label="Variant"
-              value={MenuItemPriceType.VARIANT}
-            />
+            <Radio label="Fixed" value={MenuItemPriceType.FIXED} />
+            <Radio label="Variant" value={MenuItemPriceType.VARIANT} />
           </Group>
         </Radio.Group>
       </Group>
       {form.values.price.type === MenuItemPriceType.FIXED ? (
-        <TextInput
+        <ContainedTextField
           placeholder="399"
           {...form.getInputProps("price.price")}
         />
@@ -254,17 +307,17 @@ function PriceSection({ form }: { form: any }) {
           {form.values.price.variants.map((_variant, index) => {
             return (
               <Box
-                w="100px"
+                w="80px"
                 p={"xs"}
+                key={_variant}
                 style={{
                   border: "1px solid gray",
-                  borderRadius: "8px",
-                  aspectRatio: "1 / 1",
-                }}>
+                  borderRadius: "15px",
+                }}
+              >
                 <TextInput
                   placeholder="Small"
                   variant="unstyled"
-                  mb="xs"
                   sx={{
                     borderBottom: "1px solid gray",
                   }}
@@ -276,18 +329,33 @@ function PriceSection({ form }: { form: any }) {
                   {...form.getInputProps(`price.variants.${index}.price`)}
                 />
               </Box>
-            )
+            );
           })}
-          {
-            form.values.price.variants.length < 3 &&
-            (
-              <ActionIcon variant="filled" size={"xl"} onClick={() => form.insertListItem("price.variants", {})}>
-                <IconPlus />
+          <SimpleGrid>
+            {form.values.price.variants.length < 3 && (
+              <ActionIcon
+                variant="filled"
+                size={"lg"}
+                onClick={() => form.insertListItem("price.variants", {})}
+              >
+                <IconPlus size={16} />
               </ActionIcon>
             )}
+            {form.values.price.variants.length > 1 && (
+              <ActionIcon
+                variant="filled"
+                size={"lg"}
+                onClick={() => {
+                  const newVariants = form.values.price.variants.slice(0, -1);
+                  form.setFieldValue("price.variants", newVariants);
+                }}
+              >
+                <IconMinus size={16} />
+              </ActionIcon>
+            )}
+          </SimpleGrid>
         </Group>
       )}
-
     </>
-  )
+  );
 }

@@ -1,27 +1,41 @@
 import { useEffect, useState } from "react";
-import { Button, FileButton, Group, Modal, Stack, TextInput } from "@mantine/core";
+import { Button, FileButton, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useCreateMenuCategoryMutation, useUpdateMenuCategoryMutation } from "../../backend/menu/category/mCategory.query";
+import {
+  useCreateMenuCategoryMutation,
+  useUpdateMenuCategoryMutation,
+} from "../../backend/menu/category/mCategory.query";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import FormModalLayout from "../Modal/FormModalLayout";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import {
+  RateupButtonOutline,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
+import { Image } from "@mantine/core";
 
 interface CreateMenuCategoryModalProps {
-  opened: boolean,
-  close: () => void,
-  menuId: string,
-  editingItem?: MenuCategory
+  opened: boolean;
+  close: () => void;
+  menuId: string;
+  editingItem?: MenuCategory;
 }
-export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: CreateMenuCategoryModalProps) {
+export function CreateMenuCategoryModal({
+  opened,
+  close,
+  menuId,
+  editingItem,
+}: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const fallbackImage = "/images/no_image_template.jpeg";
 
   const form = useForm({
     initialValues: editingItem || {
       name: "",
       menuId: menuId,
-      image: ""
+      image: "",
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
@@ -31,22 +45,22 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
   // updates form values when editingItem changes
   useEffect(() => {
     if (editingItem) {
-      form.setValues(editingItem)
+      form.setValues(editingItem);
     } else {
-      form.reset()
+      form.reset();
     }
-  }, [editingItem])
+  }, [editingItem]);
 
   // upload image when imageToUpload changes
   useEffect(() => {
-    if (!imageToUpload) return
-    setIsUploading(true)
+    if (!imageToUpload) return;
+    setIsUploading(true);
     const uploadAndUpdate = async () => {
       if (imageToUpload) {
         const fileKey = await uploadFile(imageToUpload);
         if (typeof fileKey === "string") {
-          form.setFieldValue("image", fileKey)
-          setIsUploading(false)
+          form.setFieldValue("image", fileKey);
+          setIsUploading(false);
         }
       }
     };
@@ -63,7 +77,7 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
     () => {
       setIsCreating(false);
     }
-  )
+  );
 
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
     menuId,
@@ -75,8 +89,7 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
     () => {
       setIsCreating(false);
     }
-  )
-
+  );
 
   const onSubmit = (values) => {
     const validationRes = form.validate();
@@ -84,67 +97,68 @@ export function CreateMenuCategoryModal({ opened, close, menuId, editingItem }: 
       console.error(validationRes.errors);
       return;
     }
-    setIsCreating(true)
+    setIsCreating(true);
     if (editingItem) {
-      editMenuCategoryMutation.mutate({ categoryId: editingItem.id, menuCategory: values })
+      editMenuCategoryMutation.mutate({
+        categoryId: editingItem.id,
+        menuCategory: values,
+      });
     } else {
-      createMenuCategoryMutation.mutate(values)
+      createMenuCategoryMutation.mutate(values);
     }
   };
 
   if (!menuId) {
-    return null
+    return null;
   }
 
   return (
-    <Modal
+    <FormModalLayout
       opened={opened}
-      onClose={() => {
-        close()
-      }}
+      onClose={close}
       title={editingItem ? "Edit Category" : "Create Category"}
       centered
+      onSubmit={form.onSubmit(onSubmit)}
+      buttonTitle={editingItem ? "Edit Category" : "Create Category"}
     >
-      <form onSubmit={form.onSubmit(onSubmit)}>
-        <Stack>
-          <TextInput
-            label="Name"
-            placeholder="Name"
-            withAsterisk
-            {...form.getInputProps("name")}
-          />
-          <img
+      <Stack>
+        <ContainedTextField
+          label="Name"
+          placeholder="Name"
+          withAsterisk
+          {...form.getInputProps("name")}
+        />
+        {form.values.image && (
+          <Image
             width={"200px"}
+            height={100}
+            fallbackSrc={fallbackImage}
             src={form.values.image ? getFileUrlFromKey(form.values.image) : ""}
           />
-          <FileButton
-            onChange={setImageToUpload}
-            accept="image/png,image/jpeg"
-            disabled={isUploading}
-          >
-            {(props) => (
-
-              <Button
+        )}
+        <FileButton
+          onChange={setImageToUpload}
+          accept="image/png,image/jpeg"
+          disabled={isUploading}
+        >
+          {(props) => {
+            let buttonText = "";
+            if (form.values.image) {
+              buttonText = "Replace Image";
+            } else {
+              buttonText = "Add Image";
+            }
+            return (
+              <RateupButtonSecondary
+                title={buttonText}
                 {...props}
+                loading={isUploading}
                 disabled={isUploading}
-              >
-                {
-                  isUploading ? "Uploading..." : (
-                    form.values.image ? "Replace Image" : "Add Image"
-                  )}
-              </Button>
-            )}
-          </FileButton>
-          <Group justify="flex-end" pt="xl" mt="lg">
-            <Button variant="subtle" onClick={close}>
-              Cancel
-            </Button>
-            <Button variant="filled" type="submit" loading={isCreating} disabled={isUploading}>
-              Submit
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
-  )
+              />
+            );
+          }}
+        </FileButton>
+      </Stack>
+    </FormModalLayout>
+  );
 }

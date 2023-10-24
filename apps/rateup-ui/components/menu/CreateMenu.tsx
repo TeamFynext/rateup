@@ -3,7 +3,7 @@ import {
   useUpdateMenuMutation,
 } from "../../backend/menu/menu.query";
 import { useContext, useEffect, useState } from "react";
-import { Center, Group, SimpleGrid, Stack } from "@mantine/core";
+import { Center, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import SelectedTeamContext from "../../context/SelectedTeam";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
@@ -12,8 +12,12 @@ import classes from "./CreateMenu.module.css";
 import FormModalLayout from "../Modal/FormModalLayout";
 import {
   ContainedFileInput,
+  ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import { TeamSelector } from "../input/TeamSelector";
+import { Image } from "@mantine/core";
 
 export function CreateMenuModal({ opened, close, editingItem }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
@@ -23,7 +27,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
   const createMenuMutation = useCreateMenuMutation(
     selectedTeamId,
     close,
-    setIsCreating,
+    setIsCreating
   );
   const updateMenuMutation = useUpdateMenuMutation(
     selectedTeamId,
@@ -33,7 +37,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
   const [logo, setLogo] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
@@ -80,11 +84,14 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       websiteText: "",
       logo: "",
       backgroundImage: "",
-      teamId: selectedTeamId,
+      teamId: "",
     },
     validate: {
-      name: (value) => (value.length ? null : "Cannot be empty"),
-      displayName: (value) => (value.length ? null : "Cannot be empty"),
+      name: (value) => (value?.trim().length ? null : "Cannot be empty"),
+      displayName: (value) => (value?.trim().length ? null : "Cannot be empty"),
+      locationText: (value) =>
+        value?.trim().length ? null : "Cannot be empty",
+      teamId: (value) => (value?.trim().length ? null : "select a team"),
     },
   });
 
@@ -103,7 +110,6 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       return;
     }
     setIsCreating(true);
-
     if (editingItem) {
       updateMenuMutation.mutate({
         menuId: editingItem.id,
@@ -117,23 +123,26 @@ export function CreateMenuModal({ opened, close, editingItem }) {
   if (!selectedTeamId) {
     return null;
   }
-
   return (
     <FormModalLayout
       opened={opened}
-      onClose={() => {
-        close();
-      }}
+      onClose={close}
       title={editingItem ? "Edit Menu" : "Create Menu"}
       centered
       onSubmit={form.onSubmit(onSubmit)}
       buttonTitle={editingItem ? "Edit Menu" : "Create Menu"}
-      includeCancelButton
     >
+      <Title order={3}>General Info</Title>
       <Stack>
+        <TeamSelector
+          placeholder="Select Team"
+          label=""
+          allowDeselect={false}
+          {...form.getInputProps("teamId")}
+        />
         <ContainedTextField
           label="Menu Name"
-          placeholder="Only displayed in dashboard"
+          placeholder="Menu 1"
           withAsterisk
           {...form.getInputProps("name")}
         />
@@ -143,17 +152,10 @@ export function CreateMenuModal({ opened, close, editingItem }) {
           withAsterisk
           {...form.getInputProps("displayName")}
         />
-        <Group
-          wrap="nowrap"
-          // style={{
-          //   "& > *": {
-          //     flex: "1 1 50%",
-          //   }
-          // }}
-          className={classes.groupChildElements}
-        >
+        <Group wrap="nowrap" className={classes.groupChildElements}>
           <ContainedTextField
             label="Location Label"
+            withAsterisk
             placeholder="Kannur Rd, near CH Over bridge"
             {...form.getInputProps("locationText")}
           />
@@ -163,15 +165,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
             {...form.getInputProps("locationUrl")}
           />
         </Group>
-        <Group
-          wrap="nowrap"
-          // style={{
-          //   "& > *": {
-          //     flex: "1 1 50%",
-          //   }
-          // }}
-          className={classes.groupChildElements}
-        >
+        <Group wrap="nowrap" className={classes.groupChildElements}>
           <ContainedTextField
             label="Website Label"
             placeholder="paragonHotels.in"
@@ -183,20 +177,10 @@ export function CreateMenuModal({ opened, close, editingItem }) {
             {...form.getInputProps("websiteUrl")}
           />
         </Group>
-        <SimpleGrid
-          cols={2}
-          spacing="md"
-          className={classes.simpleGridImg}
-          //TODO VERIFY MANTINE
-          // style={{
-          //   "& img": {
-          //     borderRadius: "4px"
-          //   }
-          // }}
-        >
+        <SimpleGrid cols={2} spacing="md" className={classes.simpleGridImg}>
           <ContainedFileInput
             label="Upload Logo"
-            placeholder="Click here to upload logo"
+            placeholder="Click here to upload"
             accept="image/*"
             multiple={false}
             error={form.errors.logo && form.errors.logo}
@@ -204,14 +188,14 @@ export function CreateMenuModal({ opened, close, editingItem }) {
           />
           <ContainedFileInput
             label="Upload background image"
-            placeholder="Click here to upload background image"
+            placeholder="Click here to upload"
             accept="image/*"
             multiple={false}
             error={form.errors.backgroundImage && form.errors.backgroundImage}
             onChange={setBackgroundImage}
           />
           <Center>
-            <img
+            <Image
               style={{
                 maxHeight: "200px",
                 maxWidth: "70%",
@@ -226,7 +210,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
             />
           </Center>
           <Center>
-            <img
+            <Image
               width="75%"
               height="auto"
               src={
