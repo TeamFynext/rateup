@@ -1,7 +1,7 @@
 import React, { ReactElement, ReactNode, useEffect } from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
-import { MantineProvider, createTheme } from "@mantine/core";
+import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import SuperTokensReact, {
   redirectToAuth,
@@ -25,6 +25,7 @@ import { GilroyRegular } from "../public/fonts";
 import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/Layout/Layout";
+import axios from "axios";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -56,18 +57,34 @@ export default function App({
     }
   }
 
-  const [queryClient] = React.useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // With SSR, we usually want to set some default staleTime
-            // above 0 to avoid refetching immediately on the client
-            staleTime: 60 * 1000,
-          },
+  //React Queries global settings
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        keepPreviousData: true, // This will apply to all queries
+        staleTime: 60 * 1000,
+
+        onError: async (error) => {
+          // Check if error is an instance of an Axios error
+          if (axios.isAxiosError(error)) {
+            const serverError = (error as any)?.response?.data;
+            if (
+              error?.response?.status === 403 &&
+              serverError?.message === "Not authorized"
+            ) {
+              // Run supertoken auth refresh
+              if (await Session.attemptRefreshingSession()) {
+                location.reload();
+              } else {
+                // user has been logged out
+                redirectToAuth();
+              }
+            }
+          }
         },
-      }),
-  );
+      },
+    },
+  });
 
   useEffect(() => {
     async function doRefresh() {
