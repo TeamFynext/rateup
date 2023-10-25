@@ -3,7 +3,6 @@ import { AppProps } from "next/app";
 import Head from "next/head";
 import { MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import Layout from "../components/Layout/Layout";
 import SuperTokensReact, {
   redirectToAuth,
   SuperTokensWrapper,
@@ -24,6 +23,8 @@ import "@mantine/notifications/styles.css";
 import "../styles/global.css";
 import { GilroyRegular } from "../public/fonts";
 import { theme } from "../config/mantineTheme";
+import { motion, AnimatePresence } from "framer-motion";
+import Layout from "../components/Layout/Layout";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -43,7 +44,6 @@ export default function App({
 }: AppPropsWithLayout) {
   const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
   let LayoutComponent;
-
   // page has pre defined layout
   if (Component.getLayout !== undefined) {
     LayoutComponent = Component.getLayout;
@@ -86,19 +86,6 @@ export default function App({
   if (pageProps.fromSupertokens === "needs-refresh") {
     return null;
   }
-
-  // const styleOverride = {
-  //   fontSizes: {
-  //     xxl: '1.8rem',
-  //   }
-  // } VERIFY
-
-  // const styleOverride = createTheme({
-  //   fontSizes: {
-  //     xxl: '1.8rem',
-  //   }
-  // });
-
   return (
     <>
       <Head>
@@ -118,9 +105,19 @@ export default function App({
             <Hydrate state={pageProps.dehydratedState}>
               <UserProvider>
                 <LayoutComponent>
-                  <WithLoader>
-                    <Component {...pageProps} />
-                  </WithLoader>
+                  <AnimatePresence>
+                    <motion.div
+                      style={{ height: "100%" }}
+                      key={appProps.router.pathname}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <WithLoader>
+                        <Component {...pageProps} />
+                      </WithLoader>
+                    </motion.div>
+                  </AnimatePresence>
                 </LayoutComponent>
               </UserProvider>
               <ReactQueryDevtools
@@ -131,8 +128,8 @@ export default function App({
           </QueryClientProvider>
           <Notifications />
         </MantineProvider>
+        {/* </SuperTokensWrapper> */}
       </main>
-      {/* </SuperTokensWrapper> */}
     </>
   );
 }

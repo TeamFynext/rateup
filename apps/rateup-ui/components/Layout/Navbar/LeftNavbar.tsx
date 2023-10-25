@@ -55,7 +55,6 @@ function _NavbarLink({
               styles={{
                 children: { display: !opened && "none" },
                 root: {
-                  boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
                   borderRadius: 5,
                 },
               }}

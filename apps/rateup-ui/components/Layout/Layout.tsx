@@ -15,7 +15,7 @@ import LeftNavbar from "./Navbar/LeftNavbar";
 import FocusMode from "../Switch/Focusmode";
 import styles from "./Layout.module.css";
 // @ts-ignore
-export default ({ children }) => {
+export default function Layout({ children }) {
   const router = useRouter();
   const [opened, setOpened] = useState(true);
   const [focus, toggleFocus] = useState(false);
@@ -25,7 +25,6 @@ export default ({ children }) => {
   );
   const { setUser } = useUser();
   const queryClient = useQueryClient();
-
   const {
     isLoading: isLoadingUserInfo,
     data: userQueryData,
@@ -94,4 +93,4 @@ export default ({ children }) => {
       </RouteParamsProvider>
     </SessionAuth>
   );
-};
+}

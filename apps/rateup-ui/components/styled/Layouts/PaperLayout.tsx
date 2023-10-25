@@ -8,6 +8,7 @@ export default function PaperLayout(props) {
       style={{
         ...props?.style,
         boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+
         width: "100%",
         overflowX: "auto",
       }}

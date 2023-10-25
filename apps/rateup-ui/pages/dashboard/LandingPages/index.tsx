@@ -1,46 +1,30 @@
 import {
   Center,
-  Container,
   Paper,
-  Title,
   Text,
   Stack,
   SimpleGrid,
   Flex,
   Menu,
   Avatar,
-  Badge,
   ActionIcon,
   useMantineTheme,
   Group,
-  Loader,
   Space,
-  Select,
-  Modal,
 } from "@mantine/core";
 import {
-  IconChartBar,
-  IconCopy,
   IconDots,
-  IconEdit,
-  IconMessage,
-  IconPlayerPause,
-  IconPlayerPlay,
   IconPlus,
   IconShare,
   IconTrash,
-  IconSelector,
-  IconChevronDown,
   IconPencil,
-  IconSettings,
   IconCheck,
 } from "@tabler/icons-react";
-import Link from "next/link";
 import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
 
 import { useDisclosure } from "@mantine/hooks";
-import { QueryClient, dehydrate, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 
 import { useSurveysLanding } from "../../../backend/surveys/surveys.query";

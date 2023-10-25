@@ -38,6 +38,7 @@
     "cookies-next": "^2.1.1",
     "dayjs": "^1.11.6",
     "embla-carousel-react": "^7.0.3",
+    "framer-motion": "^10.16.4",
     "html2canvas": "^1.4.1",
     "immer": "^10.0.3",
     "next": "^13.5.4",

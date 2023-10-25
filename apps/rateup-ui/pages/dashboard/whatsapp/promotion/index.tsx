@@ -17,7 +17,7 @@ export default function Promotion() {
         direction={"column"}
         gap={10}
         wrap="wrap"
-        style={{ flexGrow: 1 }}
+        h={"100%"}
       >
         <TeamSelector
           value={selectedTeamId}
