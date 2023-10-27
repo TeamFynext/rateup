@@ -20,7 +20,6 @@ import {
   useUpdateSurveyLandingPageMutation,
 } from "../../../backend/surveys/surveys.query";
 import SurveyCardList from "../../../components/Survey/SurveyCardList";
-import classes from "./LandingPages.module.css";
 
 interface FormValues {
   title: string;
@@ -179,7 +178,7 @@ export default function CreateSurveyLandingModal({
           fontSize: 30,
         })}
       >
-        Merge Your Surveys
+        Group Your Surveys
       </Text>
 
       <FormProvider form={form}>
@@ -228,20 +227,11 @@ export default function CreateSurveyLandingModal({
               />
             )}
             <Group justify="flex-end" pt="xl" mt="lg">
-              <Button
-                className={classes.cancelButton}
-                variant="subtle"
-                onClick={close}
-              >
+              <Button variant="subtle" onClick={close}>
                 Cancel
               </Button>
-              <Button
-                className={classes.customButton}
-                variant="filled"
-                type="submit"
-                loading={isCreating}
-              >
-                Merge
+              <Button type="submit" loading={isCreating}>
+                Group
               </Button>
             </Group>
           </Stack>

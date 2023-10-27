@@ -1,8 +1,6 @@
 import {
-  Center,
   Paper,
   Text,
-  Stack,
   SimpleGrid,
   Flex,
   Menu,
@@ -11,6 +9,9 @@ import {
   useMantineTheme,
   Group,
   Space,
+  Title,
+  Loader,
+  Stack,
 } from "@mantine/core";
 import {
   IconDots,
@@ -22,7 +23,6 @@ import {
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
-
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
@@ -30,10 +30,13 @@ import { useRouter } from "next/router";
 import { useSurveysLanding } from "../../../backend/surveys/surveys.query";
 import { useEffect, useState } from "react";
 import { getTimeSince } from "../../../utils";
-import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
 import { deleteLandingPage } from "../../../backend/LandingPage/landingpage.api";
-import ShareLandingPageModal from "./ShareLandingPageModal";
 import { DeleteLandingPageConfirmation } from "../../../components/LandingPage/DeleteLandingConfirmation";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import { UserRole } from "../../../utils/enums";
+import { useUser } from "../../../context/UserContext";
+import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
+import ShareLandingPageModal from "./ShareLandingPageModal";
 export default function LandingPagesList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
@@ -45,6 +48,8 @@ export default function LandingPagesList() {
   const [ShowDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const { action } = useRouter().query;
+  const { user } = useUser();
+
   useEffect(() => {
     if (action === "create") {
       open();
@@ -60,11 +65,8 @@ export default function LandingPagesList() {
   const shareLandingpageid = (landingid) => {
     setshareLandindpageid(landingid);
   };
-  const {
-    isLoading,
-    error,
-    data: surveyLandingsDataUser,
-  } = useSurveysLanding(selectedTeamId);
+  const { isLoading, data: surveyLandingsDataUser } =
+    useSurveysLanding(selectedTeamId);
   const queryClient = useQueryClient();
 
   let surveyLandingData: SurveyLanding[] = [];
@@ -129,50 +131,53 @@ export default function LandingPagesList() {
 
   return (
     <>
-      <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} truncate size="xl" fw={700}>
-          Create your survey Landing Page
-        </Text>
-      </Flex>
+      <Group gap="md" justify="flex-start">
+        <Title order={1} mr="md">
+          All Grouped Surveys
+        </Title>
 
-      <SimpleGrid
-        cols={{ base: 2, sm: 1, md: 2, lg: 3, xl: 3 }}
-        mt={10}
-        spacing={"lg"}
-      >
-        <Paper
-          p="md"
-          shadow="lg"
-          radius="lg"
-          style={{ cursor: "pointer" }}
-          onClick={open}
-        >
-          <Center h="100%">
-            <Stack align="center">
-              <IconPlus size={36} />
-              <Text size="xl" fw={700}>
-                Add Landing Page
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
-
-        {surveyLandingData.map((s) => (
-          <SurveyCard
-            key={s.id}
-            survey={s}
-            open={open}
-            EditLandingPage={EditLandingPage}
-            openlandingshare={openlandingshare}
-            shareLandingpageid={shareLandingpageid}
-            deleteLanding={deleteLanding}
+        {user?.role !== UserRole.MEMBER && (
+          <RateupButtonBlue
+            title="Create"
+            rightIcon={<IconPlus />}
+            radius="xl"
+            size="md"
+            onClick={open}
           />
-        ))}
-      </SimpleGrid>
-      {surveyLandingData.length == 0 && (
-        <Text ta={"center"} fw={600}>
-          No Landing pages found
-        </Text>
+        )}
+      </Group>
+      {isLoading ? (
+        <Group m="100px">
+          <Loader color="blue" />
+        </Group>
+      ) : (
+        <SimpleGrid
+          cols={{ base: 2, sm: 1, md: 2, lg: 3, xl: 3 }}
+          mt={20}
+          spacing={"lg"}
+        >
+          {surveyLandingData
+            ?.slice()
+            ?.reverse()
+            ?.map((s) => (
+              <SurveyCard
+                key={s.id}
+                survey={s}
+                open={open}
+                EditLandingPage={EditLandingPage}
+                openlandingshare={openlandingshare}
+                shareLandingpageid={shareLandingpageid}
+                deleteLanding={deleteLanding}
+              />
+            ))}
+        </SimpleGrid>
+      )}
+      {!isLoading && surveyLandingData?.length == 0 && (
+        <Stack style={{ minHeight: "400px" }} justify="center">
+          <Text ta={"center"} fw={600}>
+            No Group Surveys found!
+          </Text>
+        </Stack>
       )}
       <CreateSurveyLandingModal
         open={createSurveyOpened}
@@ -252,7 +257,7 @@ export function SurveyCard({
       style={{ cursor: "pointer" }}
       onClick={() => {
         router.push(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveylandinglist/${survey?.id}`,
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/groupsurveys/${survey?.id}`,
         );
       }}
     >
@@ -337,6 +342,8 @@ function SurveyMenu({
     <Menu width={200}>
       <Menu.Target>
         <ActionIcon
+          variant="subtle"
+          color="gray"
           onClick={(e) => {
             e.stopPropagation();
           }}

@@ -1,9 +1,0 @@
-.customButton {
-  background-color: black;
-  border-radius: 18px;
-  color: #fff;
-}
-
-.customButton:hover {
-  background-color: grey !important;
-}

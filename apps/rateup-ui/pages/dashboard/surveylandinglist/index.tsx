@@ -61,7 +61,6 @@ export default function SurveyLandingList() {
     {
       value: "all",
       label: "All Teams",
-      group: "Organization",
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
@@ -101,7 +100,6 @@ export default function SurveyLandingList() {
       const newOptions = teamsData?.map((team) => ({
         value: team?.teamId,
         label: team?.teamName,
-        group: "Team",
       }));
 
       setOptions((prev) => {

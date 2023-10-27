@@ -478,7 +478,7 @@ export default function DashboardHome() {
 
                 <CardActionButton
                   onClick={() =>
-                    router.push("/dashboard/LandingPages?action=create")
+                    router.push("/dashboard/groupsurveys?action=create")
                   }
                   sx={{
                     width: "180px",
@@ -496,9 +496,9 @@ export default function DashboardHome() {
                         style={{ textAlign: "center" }}
                         size="20px"
                         fw={700}
-                        color="#595959"
+                        c="#595959"
                       >
-                        Merge Survey
+                        Group Survey
                       </Text>
                     </Stack>
                   </Center>

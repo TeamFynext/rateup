@@ -55,8 +55,8 @@ export const navTopData: Array<NavbarLinkProps> = [
       },
       {
         Icon: IconPageBreak,
-        label: "Merge Surveys",
-        href: "/dashboard/LandingPages",
+        label: "Group Surveys",
+        href: "/dashboard/groupsurveys",
       },
     ],
   },

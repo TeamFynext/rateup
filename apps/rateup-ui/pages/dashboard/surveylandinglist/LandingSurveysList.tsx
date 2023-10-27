@@ -1,5 +1,4 @@
 import {
-  Center,
   Container,
   Paper,
   Title,
@@ -22,15 +21,11 @@ import {
   IconChartBar,
   IconCopy,
   IconDots,
-  IconEdit,
-  IconMessage,
   IconPlayerPause,
   IconPlayerPlay,
-  IconPlus,
   IconShare,
   IconTrash,
   IconSelector,
-  IconChevronDown,
   IconPencil,
   IconSettings,
 } from "@tabler/icons-react";
@@ -72,7 +67,6 @@ export default function LandingSurveysList() {
     {
       value: "all",
       label: "All Teams",
-      group: "Organization",
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
@@ -108,12 +102,10 @@ export default function LandingSurveysList() {
   } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
 
   useEffect(() => {
-    //console.log("test.........."+JSON.stringify(teamsData))
     if (teamsData?.length) {
       const newOptions = teamsData?.map((team) => ({
         value: team?.teamId,
         label: team?.teamName,
-        group: "Team",
       }));
 
       setOptions((prev) => {

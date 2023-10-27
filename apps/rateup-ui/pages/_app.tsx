@@ -74,7 +74,8 @@ export default function App({
             ) {
               // Run supertoken auth refresh
               if (await Session.attemptRefreshingSession()) {
-                location.reload();
+                //location.reload();
+                console.log("Session Refreshed");
               } else {
                 // user has been logged out
                 redirectToAuth();

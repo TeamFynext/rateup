@@ -14,7 +14,6 @@ import {
   Space,
   Modal,
   Checkbox,
-  Button,
   Dialog,
   rem,
 } from "@mantine/core";
@@ -54,12 +53,11 @@ import {
   useSurveys,
 } from "../../../backend/surveys/surveys.query";
 import { useUser } from "../../../context/UserContext";
-import CreateSurveyLandingModal from "../LandingPages/CreateSurveyLandingModal";
 import { StatusFilterMenu } from "../../../components/Survey/SurveysHome/StatusFilterMenu";
-import classes from "./Survey.module.css";
 import { UserRole } from "../../../utils/enums";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import CreateSurveyLandingModal from "../groupsurveys/CreateSurveyLandingModal";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -77,6 +75,7 @@ export default function Surveys() {
     isLoading,
     error,
     data: allSurveys,
+    refetch,
   } = useSurveys(selectedTeamId ? true : false);
   const router = useRouter();
   useEffect(() => {
@@ -94,7 +93,12 @@ export default function Surveys() {
   if (isLoading) return <Loader />;
   if (error || !Array.isArray(allSurveys)) {
     console.error(allSurveys, error);
-    return "An error has occurred";
+    return (
+      <Stack>
+        <Text>An error occured!</Text>
+        <RateupButtonSecondary title="Try again" onClick={refetch} />
+      </Stack>
+    );
   }
   const surveys =
     selectedTeamId === "all" || !selectedTeamId
@@ -148,12 +152,10 @@ export default function Surveys() {
 
         <Group gap="md" justify="flex-start">
           {surveyidArray.length > 0 && (
-            <Button
-              className={classes.customButton}
+            <RateupButtonPrimary
+              title="Group survey"
               onClick={() => openMergeSurvey()}
-            >
-              merge survey
-            </Button>
+            />
           )}
 
           <StatusFilterMenu
