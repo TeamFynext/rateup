@@ -15,11 +15,11 @@ export const checkSession = async (
     const userId = await getUserIdFromRequest(request, reply);
     if (!userId) {
       log.error('No userId found in session\n%o', request.headers);
-      reply.code(403).send({ message: 'Not authorized' })
+      reply.code(401).send({ message: 'Not authorized' })
     }
     (request as any).userId! = userId;
   } catch (err) {
     log.error('Error checking session\n%o', err)
-    reply.code(403).send({ message: 'Not authorized' })
+    reply.code(401).send({ message: 'Not authorized' })
   }
 };
