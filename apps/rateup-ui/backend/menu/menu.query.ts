@@ -1,5 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createMenu, deleteMenu, getAllMenus, getFullMenuById, getMenuById, getMenuPublicById, getMenusByTeamId, updateMenu } from "./menu.api";
+import {
+  createMenu,
+  deleteMenu,
+  getAllMenus,
+  getFullMenuById,
+  getMenuById,
+  getMenuPublicById,
+  getMenusByTeamId,
+  updateMenu,
+} from "./menu.api";
 import { showSuccessToast, showErrorToast } from "../../utils/notifications";
 
 // TODO: update tanstack querykeys. (use teamId & create a proper hierarchy)
@@ -82,7 +91,7 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   const deleteMutation = useMutation({
     mutationFn: deleteMenu,
     onSuccess: () => {
-      showSuccessToast("Menu deleted successfully");
+      showSuccessToast("Menu deleted successfully", "menu-delete");
       queryClient.invalidateQueries(["allMenus"]);
       onSuccess();
     },

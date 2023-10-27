@@ -3,16 +3,15 @@ import {
   Flex,
   Group,
   Text,
-  ActionIcon,
   Menu,
   Box,
+  Dialog,
 } from "@mantine/core";
 import {
   IconDots,
   IconMapPinFilled,
   IconPencil,
   IconShare,
-  IconStarFilled,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -21,7 +20,12 @@ import { getTimeSince } from "../../utils";
 
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import style from "./MenuCard.module.css";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  RateupButtonSecondary,
+  RateupButtonPrimary,
+} from "../Button/RateupButtons";
+import { updateSuccessToast } from "../../utils/notifications";
 // TODO: Create a generic Card with menu
 export function MenuCard({
   menu,
@@ -78,9 +82,9 @@ export function MenuCard({
         </Box>
         <Flex align={"center"} justify={"space-between"}>
           <Flex>
-          <Text size="sm" c="dimmed">
-            Created {timeSince}
-          </Text>
+            <Text size="sm" c="dimmed">
+              Created {timeSince}
+            </Text>
           </Flex>
           <Flex align={"center"}>
             <IconMapPinFilled size={16} />
@@ -93,14 +97,56 @@ export function MenuCard({
 }
 
 function MenuCardMenu({ menuId, teamId, close }) {
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
     () => {}
   );
   const router = useRouter();
+
+  if (deleteMutation.isLoading)
+    updateSuccessToast("Hold on, Menu is getting deleted", "menu-delete");
   return (
     <Menu offset={0} withArrow>
+      <Dialog
+        opened={dialogOpened}
+        withCloseButton
+        onClose={closeDialog}
+        size="lg"
+        radius="md"
+        position={{ top: "0", left: "40vw" }}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <Text size="md" mb="xs" fw={500}>
+          Are you sure to delete this Menu?
+        </Text>
+
+        <Group align="center" pt="lg">
+          <RateupButtonSecondary
+            onClick={(e) => {
+              e.stopPropagation();
+              closeDialog();
+            }}
+            disabled={deleteMutation.isLoading}
+            size="md"
+            title="Cancel"
+          />
+
+          <RateupButtonPrimary
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteMutation.mutate(menuId);
+            }}
+            loading={deleteMutation.isLoading}
+            size="md"
+            title="Yes, Delete"
+          />
+        </Group>
+      </Dialog>
       <Menu.Target>
         <Group
           onClick={(e) => {
@@ -124,12 +170,7 @@ function MenuCardMenu({ menuId, teamId, close }) {
         >
           Share
         </Menu.Item>
-        <Menu.Item
-          leftSection={<IconTrash size={16} />}
-          onClick={() => {
-            deleteMutation.mutate(menuId);
-          }}
-        >
+        <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
           Delete
         </Menu.Item>
       </Menu.Dropdown>

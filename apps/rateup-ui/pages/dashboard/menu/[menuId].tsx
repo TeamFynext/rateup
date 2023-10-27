@@ -1,15 +1,4 @@
-import {
-  Button,
-  Container,
-  Flex,
-  Group,
-  Paper,
-  Select,
-  SimpleGrid,
-  Stack,
-  Tabs,
-  Title,
-} from "@mantine/core";
+import { Flex, Group, Stack, Tabs, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
@@ -23,12 +12,11 @@ import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
 import { CategoryCard } from "../../../components/menu/category/CategoryCard";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import ShareQR from "../../../components/Survey/ShareSurvey/ShareQR";
-import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import { useMenu } from "../../../backend/menu/menu.query";
-import { CopyLinkComponent } from "../../../components/Survey/ShareSurvey/ShareSurvey";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { TeamSelector } from "../../../components/input/TeamSelector";
+import MenuSettings from "../../../components/menu/Settings/MenuSettings";
+import ShareMenu from "../../../components/menu/Share/ShareMenu";
 
 enum TabEnum {
   Menu = "Menu",
@@ -76,6 +64,7 @@ export default ({ categories: initialCategories }) => {
       (category) => category?.teamId === selectedTeamId
     );
   }
+  const teamId = menu && menu.teamId;
 
   useEffect(() => {
     if (
@@ -86,8 +75,6 @@ export default ({ categories: initialCategories }) => {
       setActiveTab(tab as TabEnum);
     }
   }, [tab]);
-
-  if (categories?.length === 0) return <>No Menu data Avaliable</>;
 
   if (!categories && (isLoading || isError)) {
     return <CenteredSpinner />;
@@ -145,23 +132,27 @@ export default ({ categories: initialCategories }) => {
                 // width: "50%",
               }}
             />
-            {/* must be replaced with menu selector */}
             <TeamSelector
               value={selectedTeamId}
               onChange={(teamId) => setSelectedTeamId(teamId)}
               enableAll={true}
+              allowDeselect={false}
             />
           </Flex>
           <Stack mt="sm">
-            {filteredCategory.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                handleDelete={deleteMutation.mutate}
-                handleEdit={handleEditCategory}
-                searchText={searchText}
-              />
-            ))}
+            {filteredCategory?.length === 0 ? (
+              <>No Category data Avaliable</>
+            ) : (
+              filteredCategory?.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  handleDelete={deleteMutation.mutate}
+                  handleEdit={handleEditCategory}
+                  searchText={searchText}
+                />
+              ))
+            )}
           </Stack>
           <CreateMenuCategoryModal
             opened={openCreateModal}
@@ -170,51 +161,14 @@ export default ({ categories: initialCategories }) => {
             editingItem={editingCategory}
           />
         </Tabs.Panel>
-        <Tabs.Panel value={TabEnum.Settings}>s</Tabs.Panel>
+        <Tabs.Panel value={TabEnum.Settings}>
+          <MenuSettings menu={menu} />
+        </Tabs.Panel>
         <Tabs.Panel value={TabEnum.LandingPage}>s</Tabs.Panel>
         <Tabs.Panel value={TabEnum.Share}>
-          {menu && <ShareMenu teamId={menu.teamId} menuId={menu.id} />}
+          {menu && <ShareMenu menuId={menu.id} teamId={menu.teamId} />}
         </Tabs.Panel>
       </StyledTabs>
     </Group>
   );
 };
-
-function ShareMenu({ teamId, menuId }) {
-  const [selectedSurveyId, setSelectedSurveyId] = useState("");
-  const {
-    data: surveys,
-    isLoading,
-    isError,
-  } = useSurveysByTeam(teamId, !!teamId);
-
-  if (isLoading || isError || !surveys) {
-    return null;
-  }
-
-  const shareLink = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/menu/${menuId}/feedback/${selectedSurveyId}`;
-  return (
-    <Stack>
-      <Paper px="md" py="lg" radius="md" shadow="lg">
-        <SimpleGrid cols={2} spacing="xl">
-          <Select
-            label="Survey to share with"
-            placeholder="Select survey"
-            data={surveys.map((survey) => ({
-              value: survey.id,
-              label: survey.title,
-            }))}
-            value={selectedSurveyId}
-            onChange={setSelectedSurveyId}
-          />
-          <CopyLinkComponent
-            value={!selectedSurveyId ? `Select survey first` : shareLink}
-            disabled={!selectedSurveyId}
-            label="Share Link"
-          />
-        </SimpleGrid>
-      </Paper>
-      <ShareQR url={shareLink} />
-    </Stack>
-  );
-}

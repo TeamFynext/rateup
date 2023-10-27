@@ -9,9 +9,7 @@ import {
 import { useContext, useState } from "react";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
-import {
-  useAllMenus
-} from "../../../backend/menu/menu.query";
+import { useAllMenus } from "../../../backend/menu/menu.query";
 import { MenuCard } from "../../../components/menu/MenuCard";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuModal } from "../../../components/menu/CreateMenu";
@@ -63,6 +61,7 @@ export default function MenuPage() {
             value={selectedTeamId}
             onChange={(teamId) => setSelectedTeamId(teamId)}
             enableAll={true}
+            allowDeselect={false}
           />
           <RateupButtonPrimary
             onClick={() => setSort(!sort)}
@@ -105,16 +104,20 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
   if (isLoading || isError) {
     return null;
   }
-  if(menus?.length===0)return<>No Menu data Avaliable</>
   // Filter menus based on `selectedTeamId`
-  const filteredMenus = selectedTeamId === "all" ? menus : menus.filter((menu) => menu.teamId === selectedTeamId);
+  const filteredMenus =
+    selectedTeamId === "all"
+      ? menus
+      : menus.filter((menu) => menu.teamId === selectedTeamId);
 
   // Sort menus based on `sorthandle`
-  const sortedMenus = filteredMenus.slice().sort((a, b) => {
+  const sortedMenus = filteredMenus?.slice().sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
     return sorthandle ? dateA - dateB : dateB - dateA;
   });
+
+  if (sortedMenus?.length === 0) return <>No Menu data Avaliable</>;
 
   return (
     <>
@@ -124,4 +127,3 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
     </>
   );
 }
-

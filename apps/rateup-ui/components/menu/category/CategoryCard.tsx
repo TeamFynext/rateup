@@ -51,8 +51,8 @@ export function CategoryCard({
   );
   let itemsSearch = [];
   if (searchText !== "") {
-    itemsSearch = items?.filter((item) =>
-      item?.name?.toLowerCase().includes(searchText?.toLowerCase())
+    itemsSearch = items?.filter(
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())
     );
   } else {
     itemsSearch = items;
@@ -86,8 +86,8 @@ export function CategoryCard({
               : "/images/no_image_template.jpeg"
           }
           alt={item.name}
-          width={100}
-          height={100}
+          h={100}
+          w={100}
         />
       </Table.Td>
       <Table.Td>{item.name}</Table.Td>
@@ -172,14 +172,13 @@ export function CategoryCard({
             {itemsSearch.length !== 0 ? (
               rows
             ) : (
-              <Text
-                style={{
-                  textAlign: "center",
-                }}
-                p="md"
-              >
-                No items
-              </Text>
+              <Table.Tr>
+                <Table.Td colSpan={tableColumns?.length}>
+                  <Text fw={500} ta="center">
+                    No Items
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
             )}
           </Table.Tbody>
         </Table>
