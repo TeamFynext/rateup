@@ -1,0 +1,6 @@
+.tabLabel {
+  color: "var(--tertiary-color)";
+}
+.inactive {
+  color: "dimmed";
+}
