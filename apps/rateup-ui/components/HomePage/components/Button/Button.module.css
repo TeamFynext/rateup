@@ -1,0 +1,21 @@
+.button {
+  padding: 0.8125rem 1.5rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  height: auto;
+}
+
+.white-background-gradient-text-btn {
+  composes: button;
+  background-color: white;
+}
+
+.white-background-gradient-text-btn span {
+  display: block;
+}
+
+.gradient-background-white-text-btn {
+  composes: gradient-image-1 from "../../index/index.module.css";
+  color: white;
+}

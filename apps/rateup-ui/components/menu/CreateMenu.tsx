@@ -27,7 +27,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
   const createMenuMutation = useCreateMenuMutation(
     selectedTeamId,
     close,
-    setIsCreating
+    setIsCreating,
   );
   const updateMenuMutation = useUpdateMenuMutation(
     selectedTeamId,
@@ -37,7 +37,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
   const [logo, setLogo] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);

@@ -1,6 +1,9 @@
 import { Group, Modal, Space, Stack, Title } from "@mantine/core";
 import { FormEventHandler } from "react";
-import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
 interface FormModalLayoutProps {
   opened: boolean;
   onClose: () => void;
@@ -27,7 +30,7 @@ export default function FormModalLayout({
   noCustomHeader,
   cancelOnClick,
   includeCancelButton = false,
-  size="md"
+  size = "md",
 }: FormModalLayoutProps) {
   return (
     <Modal

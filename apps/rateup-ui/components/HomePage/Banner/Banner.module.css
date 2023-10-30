@@ -1,0 +1,18 @@
+.get-started-for-free-banner {
+  padding: 4rem 1rem;
+  color: white;
+  border-radius: 1rem;
+  background-image: url("/images/homepage/rateup-star-svg-path-for-banner.svg"),
+    linear-gradient(90deg, #2564ae, #00397b);
+  background-repeat: no-repeat, no-repeat;
+  background-position:
+    -20px center,
+    left;
+  margin-bottom: 5.5rem;
+}
+
+.banner-para {
+  font-weight: bold;
+  font-size: 1.5rem;
+  text-align: center;
+}

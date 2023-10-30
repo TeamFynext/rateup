@@ -1,0 +1,96 @@
+.testimonials-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 5.5rem;
+}
+
+.testimonials-section h1 {
+  font-weight: bold;
+  font-size: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.line {
+  display: block;
+  text-align: center;
+}
+
+.line:nth-child(1) {
+  font-weight: bold;
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.discs-container {
+  width: 500px;
+  height: 500px;
+  max-width: 100vw;
+  max-height: 100vw;
+  padding: 1rem;
+}
+
+.disc {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.outer-disc {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(37, 100, 174, 30%);
+  position: relative;
+}
+
+.person-avatar {
+  position: absolute;
+}
+
+.node-active {
+  border-radius: 50%;
+  padding: 10px;
+  background-color: rgba(166, 166, 167, 0.42);
+}
+
+.node-active .avatar-img-container {
+  padding: 5px;
+  background-color: rgba(166, 166, 167, 0.42);
+  border-radius: 50%;
+}
+
+.node-active img {
+  border: 4px solid #2564ae;
+}
+
+.person-avatar img {
+  display: block;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  box-sizing: content-box;
+}
+
+.inner-disc {
+  width: 70%;
+  height: 70%;
+  background-color: rgba(37, 100, 174, 40%);
+}
+
+.innerDisc-person-avatar img {
+  width: 40px;
+  height: 40px;
+}
+
+.centre-disc {
+  width: 57%;
+  height: 57%;
+  background-color: rgba(37, 100, 174, 40%);
+}
+
+.centreDisc-person-avatar img {
+  width: 30px;
+  height: 30px;
+}

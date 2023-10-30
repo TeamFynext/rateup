@@ -47,12 +47,12 @@ export function CategoryCard({
     category.id,
     category.menuId,
     () => {},
-    () => {}
+    () => {},
   );
   let itemsSearch = [];
   if (searchText !== "") {
     itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
     );
   } else {
     itemsSearch = items;

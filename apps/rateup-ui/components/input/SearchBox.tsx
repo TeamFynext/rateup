@@ -1,6 +1,5 @@
 // create a text input with a search icon using mantine ui
 
-
 import { TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 
@@ -10,17 +9,16 @@ export default function SearchBox({
   placeholder = "Search",
   sx = {},
 }) {
-
   return (
     <TextInput
       placeholder={placeholder}
       style={sx}
       value={searchText}
       onChange={(e) => setSearchText(e.currentTarget.value)}
-      leftSection={<IconSearch  stroke={1.5} />}
+      leftSection={<IconSearch stroke={1.5} />}
       radius="xl"
       size="md"
       rightSectionWidth={42}
     />
-  )
+  );
 }

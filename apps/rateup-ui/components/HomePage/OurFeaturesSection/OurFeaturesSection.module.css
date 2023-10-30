@@ -1,0 +1,85 @@
+.our-features-container {
+  padding-bottom: 18px;
+  margin-bottom: 4.375rem;
+}
+
+.our-features-container h1 {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.indicators {
+  bottom: -15px;
+}
+
+.indicator {
+  background-color: #9c9c9c;
+  width: 10px;
+  height: 10px;
+  transition: width 250ms ease;
+  opacity: 1;
+}
+
+.indicator[data-active] {
+  width: 40px;
+  background-color: #3f5ba9;
+  background-image: linear-gradient(45deg, #62afe6, #3f5ba9);
+}
+
+.list {
+  composes: gradient-image-1 from "../index/index.module.css";
+  width: max-content;
+  color: white;
+  font-weight: bold;
+  padding: 0.75rem;
+  border-radius: 1rem;
+}
+
+.tab {
+  font-size: 1.125rem;
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  background-color: initial;
+}
+
+.tab[data-active] {
+  border-bottom: 3px solid white;
+}
+
+/* combobox styles (used in mobile viewport) */
+
+.input {
+  composes: gradient-image-1 from "../index/index.module.css";
+  font-size: 1.125rem;
+  border: none;
+  color: white;
+  font-weight: bold;
+  padding: 0.625rem 1rem;
+  height: auto;
+  border-radius: 1rem;
+}
+
+.chevron {
+  width: 30px;
+  height: 30px;
+}
+
+.chevron path {
+  fill: white;
+}
+
+.option {
+  color: #00397b;
+  font-weight: 600;
+}
+
+.option[data-combobox-selected="true"] {
+  color: white;
+}
+
+.option[data-combobox-active="true"] {
+  background-color: #00397b;
+  color: white;
+}

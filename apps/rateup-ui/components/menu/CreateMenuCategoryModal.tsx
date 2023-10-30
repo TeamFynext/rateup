@@ -76,7 +76,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
 
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
@@ -88,7 +88,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
 
   const onSubmit = (values) => {

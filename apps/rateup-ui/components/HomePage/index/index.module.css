@@ -1,0 +1,28 @@
+.home-page-container {
+  background-image: url("/images/homepage/footer-background-shape.svg");
+  background-repeat: no-repeat;
+  background-position: left 100%;
+  background-size: 100% 700px;
+}
+
+.gradient-image-1 {
+  background-image: linear-gradient(90deg, #2564ae, #00397b);
+}
+
+.header-footer-link {
+  text-decoration: none;
+  font-weight: 600;
+  margin-right: 2.1875rem;
+  font-size: 1.125rem;
+  white-space: nowrap;
+}
+
+.header-footer-link:nth-last-child(1) {
+  margin-right: 0;
+}
+
+.gradient-text {
+  color: transparent;
+  background-clip: text;
+  composes: gradient-image-1;
+}

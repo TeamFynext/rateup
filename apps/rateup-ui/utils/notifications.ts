@@ -32,7 +32,7 @@ export function showLoadingToast(
   id = undefined,
   loading: boolean,
   title: string,
-  color: string = "teal"
+  color: string = "teal",
 ) {
   notifications.show({
     id: id,

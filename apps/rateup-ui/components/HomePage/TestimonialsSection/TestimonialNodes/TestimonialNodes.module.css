@@ -1,0 +1,31 @@
+.dropdown {
+  max-width: 100%;
+  border-radius: 1rem;
+  background-color: #ffffff;
+  box-shadow: 0 0 5px 5px rgba(128, 128, 128, 0.1);
+  padding: 1.5rem;
+}
+
+.dropdown > p {
+  font-weight: 600;
+}
+
+.name-role-and-companylogo-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.name-role {
+  font-weight: 600;
+}
+
+.compnaylogo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.compnaylogo img {
+  width: 100px;
+  height: 50px;
+}
