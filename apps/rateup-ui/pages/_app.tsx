@@ -9,7 +9,11 @@ import SuperTokensReact, {
 } from "supertokens-auth-react";
 import { frontendConfig } from "../config/frontendConfig";
 import Session from "supertokens-web-js/recipe/session";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { NextPage } from "next";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { UserProvider } from "../context/UserContext";
@@ -59,14 +63,38 @@ export default function App({
   }
 
   //React Queries global settings
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        placeholderData: keepPreviousData, // This will apply to all queries
-        staleTime: 60 * 1000,
-      },
-    },
-  });
+  const [queryClient] = React.useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            placeholderData: keepPreviousData, // This will apply to all queries
+            staleTime: 60 * 1000,
+          },
+        },
+        queryCache: new QueryCache({
+          onError: async (error) => {
+            // Check if error is an instance of an Axios error
+            if (axios.isAxiosError(error)) {
+              const serverError = (error as any)?.response?.data;
+              if (
+                error?.response?.status === 401 &&
+                serverError?.message === "Not authorized"
+              ) {
+                // Run supertoken auth refresh
+                if (await Session.attemptRefreshingSession()) {
+                  //location.reload();
+                  console.log("Session Refreshed");
+                } else {
+                  // user has been logged out
+                  redirectToAuth();
+                }
+              }
+            }
+          },
+        }),
+      }),
+  );
 
   useEffect(() => {
     async function doRefresh() {
