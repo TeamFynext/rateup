@@ -38,7 +38,10 @@ export default function ShareLandingPageModal({
     isError,
     isLoading,
     data: surveys,
-  } = useQuery(["surveys"], getSurveys);
+  } = useQuery({
+    queryKey: ["surveys"],
+    queryFn: getSurveys,
+  });
 
   //--------------get landing page details based on landing page id (prop)----------
   const {

@@ -85,7 +85,8 @@ function TeamMemberMenu({ status, inviteId }) {
     return deleteInviteById(deleteInviteId);
   };
 
-  const deleteInviteMutation = useMutation(() => handleDeleteInvite(), {
+  const deleteInviteMutation = useMutation({
+    mutationFn: () => handleDeleteInvite(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }), //update team list on delete
         notifications.update({

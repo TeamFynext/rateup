@@ -76,7 +76,8 @@ const TeamDetails = () => {
     return inviteTeamMember(data);
   };
 
-  const addResourceMutation = useMutation(() => handleMemberInvite(), {
+  const addResourceMutation = useMutation({
+    mutationFn: () => handleMemberInvite(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }), //update team list on add
         notifications.update({
@@ -118,7 +119,10 @@ const TeamDetails = () => {
     isLoading: isLoadingMembers,
     data: teamsMembersData,
     refetch,
-  } = useQuery(["teamsDetailsQuery"], fetchTeamMembers, {}) as UseTeamResult;
+  } = useQuery({
+    queryKey: ["teamsDetailsQuery"],
+    queryFn: fetchTeamMembers,
+  }) as UseTeamResult;
 
   useEffect(() => {
     if (teamID && !teamsMembersData) refetch();

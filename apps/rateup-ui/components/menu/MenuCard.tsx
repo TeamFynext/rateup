@@ -42,7 +42,7 @@ export function MenuCard({
     setTimeSince(getTimeSince(menu.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(menu.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, []);
@@ -102,11 +102,11 @@ function MenuCardMenu({ menuId, teamId, close }) {
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
-    () => {}
+    () => {},
   );
   const router = useRouter();
 
-  if (deleteMutation.isLoading)
+  if (deleteMutation.isPending)
     updateSuccessToast("Hold on, Menu is getting deleted", "menu-delete");
   return (
     <Menu offset={0} withArrow>
@@ -131,7 +131,7 @@ function MenuCardMenu({ menuId, teamId, close }) {
               e.stopPropagation();
               closeDialog();
             }}
-            disabled={deleteMutation.isLoading}
+            disabled={deleteMutation.isPending}
             size="md"
             title="Cancel"
           />
@@ -141,7 +141,7 @@ function MenuCardMenu({ menuId, teamId, close }) {
               e.stopPropagation();
               deleteMutation.mutate(menuId);
             }}
-            loading={deleteMutation.isLoading}
+            loading={deleteMutation.isPending}
             size="md"
             title="Yes, Delete"
           />

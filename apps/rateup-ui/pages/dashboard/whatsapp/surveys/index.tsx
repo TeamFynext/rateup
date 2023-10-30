@@ -39,12 +39,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { notifications } from "@mantine/notifications";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  deleteSurvey,
-  updateSurvey,
-} from "../../../../backend/surveys/survey.api";
 import {
   useCloneSurveyMutation,
   useDeleteSurveyMutation,
@@ -53,7 +47,6 @@ import {
 } from "../../../../backend/surveys/surveys.query";
 import { useUser } from "../../../../context/UserContext";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
-import classes from "./styles.module.css";
 // TODO: implement ssr
 export default function WhatsappSurveys({ surveys: initialSurveys }) {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);

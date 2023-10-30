@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createWelcomeTheme, getPublicwelcomeTheme, getWelcomeThemeBySurveyId, updateWelcomeTheme } from "./welcometheme.api";
+import {
+  createWelcomeTheme,
+  getPublicwelcomeTheme,
+  getWelcomeThemeBySurveyId,
+  updateWelcomeTheme,
+} from "./welcometheme.api";
 
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -10,7 +15,10 @@ type MyProps = {
 };
 
 //---------create welcome theme ------------
-export const useCreateWelcomeThemeMutation = ({ setIsLoading,setSaveLoading }: MyProps) => {
+export const useCreateWelcomeThemeMutation = ({
+  setIsLoading,
+  setSaveLoading,
+}: MyProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createWelcomeTheme,
@@ -24,7 +32,7 @@ export const useCreateWelcomeThemeMutation = ({ setIsLoading,setSaveLoading }: M
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["surveyWelcomeTheme"]);
+      queryClient.invalidateQueries({ queryKey: ["surveyWelcomeTheme"] });
       setSaveLoading(false);
 
       setIsLoading(false);
@@ -46,10 +54,14 @@ export const useCreateWelcomeThemeMutation = ({ setIsLoading,setSaveLoading }: M
 };
 
 //----------update welcome theme -------------
-export function useUpdateWelcomeTheme({ setIsLoading,setSaveLoading}:MyProps) {
+export function useUpdateWelcomeTheme({
+  setIsLoading,
+  setSaveLoading,
+}: MyProps) {
   const queryClient = useQueryClient();
 
-  return useMutation((data: any) => updateWelcomeTheme(data), {
+  return useMutation({
+    mutationFn: (data: any) => updateWelcomeTheme(data),
     onSuccess: () => {
       notifications.update({
         id: "load-data",
@@ -62,7 +74,7 @@ export function useUpdateWelcomeTheme({ setIsLoading,setSaveLoading}:MyProps) {
       });
       setSaveLoading(false);
       setIsLoading(false);
-      queryClient.invalidateQueries(["surveyWelcomeTheme"]);
+      queryClient.invalidateQueries({ queryKey: ["surveyWelcomeTheme"] });
     },
     onError: (error: any) => {
       console.error("Error Survey Update:", error.message);
@@ -86,12 +98,11 @@ export const useWelcomeThemeBySurveyId = (surveyId: string) =>
   useQuery({
     enabled: !!surveyId,
     queryKey: ["surveyWelcomeTheme", surveyId],
-    queryFn: () => getWelcomeThemeBySurveyId
-    (surveyId),
+    queryFn: () => getWelcomeThemeBySurveyId(surveyId),
   });
 
-  //--------public------------
-  export const usePublicWelcomeThemeBySurveyId = (welcomeThemeId: string) =>
+//--------public------------
+export const usePublicWelcomeThemeBySurveyId = (welcomeThemeId: string) =>
   useQuery({
     enabled: !!welcomeThemeId,
     queryKey: ["public-surveywelcometheme", welcomeThemeId],

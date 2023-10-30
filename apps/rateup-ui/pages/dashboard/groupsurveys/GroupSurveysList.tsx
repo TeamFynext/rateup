@@ -81,7 +81,9 @@ export default function GroupSurveysList() {
 
   useEffect(() => {
     if (selectedTeamId !== null) {
-      queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
+      queryClient.invalidateQueries({
+        queryKey: ["surveysByTeam", selectedTeamId],
+      });
     }
   }, [selectedTeamId, queryClient]);
 
@@ -118,7 +120,9 @@ export default function GroupSurveysList() {
   }, [teamsData]);
 
   useEffect(() => {
-    queryClient.invalidateQueries(["surveysByTeam", selectedTeamId]);
+    queryClient.invalidateQueries({
+      queryKey: ["surveysByTeam", selectedTeamId],
+    });
   }, [selectedTeamId]);
 
   if (isLoading) return <Loader />;
@@ -329,8 +333,8 @@ function SurveyMenu({ survey, teamsData }) {
       notifications.show({
         message: "Deleted!",
       });
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["surveysByTeam"] });
     },
   });
 
@@ -342,8 +346,8 @@ function SurveyMenu({ survey, teamsData }) {
         message: "Survey status Updated!",
         autoClose: true,
       });
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["surveysByTeam"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["surveysByTeam"] });
     },
   });
 

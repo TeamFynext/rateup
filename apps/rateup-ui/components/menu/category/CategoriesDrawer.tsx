@@ -7,8 +7,11 @@ interface CategoriesDrawerProps {
   close: () => void;
   categories: FullCategory[];
 }
-export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawerProps) {
-
+export function CategoriesDrawer({
+  opened,
+  close,
+  categories,
+}: CategoriesDrawerProps) {
   return (
     <Drawer
       opened={opened}
@@ -19,13 +22,9 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
         header: classes.header,
         title: classes.title,
       }}
-
     >
-      <Stack
-        align="center"
-      >
-
-        {categories.map(c => (
+      <Stack align="center">
+        {categories?.map((c) => (
           <Box
             key={c.id}
             mah="300px"
@@ -35,7 +34,7 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
               overflow: "clip",
               position: "relative",
               borderRadius: "16px",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
             onClick={() => {
               close();
@@ -44,11 +43,10 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
           >
             <img
               src={
-                c.image ? (
-                  getFileUrlFromKey(c.image)
-                ) : (
-                  "/images/no_image_template.jpeg"
-                )}
+                c.image
+                  ? getFileUrlFromKey(c.image)
+                  : "/images/no_image_template.jpeg"
+              }
               width={"100%"}
             />
             <Box
@@ -60,7 +58,7 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
                 position: "absolute",
                 bottom: "10px",
                 left: "50%",
-                transform: "translate(-50%, 0)"
+                transform: "translate(-50%, 0)",
               }}
             >
               <Text
@@ -68,14 +66,14 @@ export function CategoriesDrawer({ opened, close, categories }: CategoriesDrawer
                 w={"100%"}
                 fw={600}
                 style={{
-                  textAlign:'center'
-                }}  
-
-              >{c.name}</Text>
+                  textAlign: "center",
+                }}
+              >
+                {c.name}
+              </Text>
             </Box>
           </Box>
         ))}
-
       </Stack>
     </Drawer>
   );

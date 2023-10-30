@@ -40,7 +40,11 @@ export default function CreateSurveyLandingModal({
     isError,
     isLoading,
     data: surveys,
-  } = useQuery(["surveys"], getSurveys);
+  } = useQuery({
+    queryKey: ["surveys"],
+    queryFn: getSurveys,
+  });
+
   //--------------get landing page details based on landing page id (prop)----------
   const {
     isLoading: isLandingPageLoading,

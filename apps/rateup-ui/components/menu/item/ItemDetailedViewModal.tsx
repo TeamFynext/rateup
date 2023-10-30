@@ -10,27 +10,33 @@ interface ItemDetailedViewModalProps {
   item: MenuItem;
   onClose: () => void;
 }
-export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalProps) {
+export function ItemDetailedViewModal({
+  item,
+  onClose,
+}: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item.videoUrl ? item.videoUrl : item.images[0]
+    item?.videoUrl ? item?.videoUrl : item?.images[0],
   );
 
   useEffect(() => {
     if (item.videoUrl) {
-      if (!extractVideoId(item.videoUrl)) {
-        setSelectedMedia(item.images[0]);
+      if (!extractVideoId(item?.videoUrl)) {
+        setSelectedMedia(item?.images[0]);
       }
     }
   }, [item]);
 
   return (
-    <Modal centered opened={!!item} onClose={onClose} size={"auto"}
+    <Modal
+      centered
+      opened={!!item}
+      onClose={onClose}
+      size={"auto"}
       classNames={{
         content: classes.content,
         header: classes.header,
         title: classes.title,
       }}
-
     >
       <Stack align="center">
         <Box>
@@ -44,28 +50,32 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
             {
               // TODO: reduce number of extractVideoId calls
               //        maybe save videoId in db instead of full url?
-              selectedMedia === item.videoUrl && extractVideoId(item.videoUrl) ? (
+              selectedMedia === item?.videoUrl &&
+              extractVideoId(item?.videoUrl) ? (
                 <YoutubeEmbed
-                  embedId={extractVideoId(item.videoUrl)}
+                  embedId={extractVideoId(item?.videoUrl)}
                   sx={{
                     width: "400px",
                     aspectRatio: "4 / 3",
                     borderRadius: "12px",
-                    border: "unset"
-                  }} />
+                    border: "unset",
+                  }}
+                />
               ) : (
                 <img
                   style={{
                     width: "400px",
                     aspectRatio: "4 / 3",
-                    borderRadius: "16px"
+                    borderRadius: "16px",
                   }}
-                  src={getFileUrlFromKey(selectedMedia)} />
-              )}
+                  src={getFileUrlFromKey(selectedMedia)}
+                />
+              )
+            }
           </Box>
 
           <Group justify="center" mt="sm">
-            {item.images.map(imageKey => (
+            {item?.images?.map((imageKey) => (
               <img
                 key={imageKey}
                 width="75px"
@@ -75,22 +85,26 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
                   borderRadius: "8px",
                 }}
                 src={getFileUrlFromKey(imageKey)}
-                onClick={() => setSelectedMedia(imageKey)} />
+                onClick={() => setSelectedMedia(imageKey)}
+              />
             ))}
             <Box
               style={{
                 position: "relative",
               }}
-              onClick={() => setSelectedMedia(item.videoUrl)}
+              onClick={() => setSelectedMedia(item?.videoUrl)}
             >
-              {item.videoUrl && extractVideoId(item.videoUrl) && (
+              {item.videoUrl && extractVideoId(item?.videoUrl) && (
                 <img
                   width="75px"
                   style={{
                     cursor: "pointer",
                     aspectRatio: "4 / 3",
                   }}
-                  src={`http://img.youtube.com/vi/${extractVideoId(item.videoUrl)}/0.jpg`} />
+                  src={`http://img.youtube.com/vi/${extractVideoId(
+                    item?.videoUrl,
+                  )}/0.jpg`}
+                />
               )}
               <IconPlayerPlayFilled
                 color="white"
@@ -103,7 +117,8 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
                   borderRadius: 1000,
                   border: "2px solid white",
                   boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-                }} />
+                }}
+              />
             </Box>
           </Group>
         </Box>
@@ -113,55 +128,42 @@ export function ItemDetailedViewModal({ item, onClose }: ItemDetailedViewModalPr
             fz="1.5rem"
             fw={600}
             style={{
-              textAlign:'center'
+              textAlign: "center",
             }}
-          >{item.name}</Text>
+          >
+            {item.name}
+          </Text>
           <Text
             c="dimmed"
             w={"350px"}
             h="100px"
             style={{
               overflowY: "auto",
-              textAlign:'center'
+              textAlign: "center",
             }}
-          >{item.description}</Text>
+          >
+            {item.description}
+          </Text>
         </Box>
         <Group mt="sm">
-          {item.price.variants?.length > 0 ? (
-            item.price.variants.map((v, i) => (
-              <Stack
-                align="center"
-                gap={"0px"}
-                key={i}
-              >
-                <Text
-                  fz=".9rem"
-                  c="dimmed"
-
-                >
-                  {v.name}
+          {item?.price?.variants?.length > 0 ? (
+            item?.price?.variants?.map((v, i) => (
+              <Stack align="center" gap={"0px"} key={i}>
+                <Text fz=".9rem" c="dimmed">
+                  {v?.name}
                 </Text>
-                <Text
-                  color="#AF6B2E"
-                  fz="1.2rem"
-                >
-                  ₹{v.price}
+                <Text color="#AF6B2E" fz="1.2rem">
+                  ₹{v?.price}
                 </Text>
               </Stack>
-
             ))
           ) : (
-            <Text
-              color="#AF6B2E"
-              fz="1.2rem"
-            >
-              ₹{item.price.price}
+            <Text color="#AF6B2E" fz="1.2rem">
+              ₹{item?.price?.price}
             </Text>
-
           )}
         </Group>
       </Stack>
     </Modal>
   );
-
 }

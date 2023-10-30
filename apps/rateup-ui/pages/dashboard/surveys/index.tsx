@@ -358,7 +358,7 @@ function SurveyMenu({ survey }) {
         icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
     onError: (error: any) => {
       console.error("Error deleting Survey:", error.message);
@@ -382,7 +382,7 @@ function SurveyMenu({ survey }) {
         message: "Survey status Updated!",
         autoClose: true,
       });
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
   });
 

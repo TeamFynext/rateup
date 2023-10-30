@@ -75,7 +75,7 @@ export function QuestionsSideBar({
         reorderedQuestions.map((q) => q.id),
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries(["questions", surveyId]);
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
     },
   });
 

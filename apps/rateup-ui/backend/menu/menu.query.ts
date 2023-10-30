@@ -53,7 +53,7 @@ export const useCreateMenuMutation = (teamId: string, close, setIsCreating) => {
     mutationFn: createMenu,
     onSuccess: () => {
       showSuccessToast("Menu created successfully");
-      queryClient.invalidateQueries(["allMenus"]);
+      queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       close();
       setIsCreating(false);
     },
@@ -72,9 +72,9 @@ export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
     mutationFn: updateMenu,
     onSuccess: () => {
       showSuccessToast("Menu updated successfully");
-      queryClient.invalidateQueries(["allMenus"]);
-      queryClient.invalidateQueries(["menu", teamId]);
-      queryClient.invalidateQueries(["menu", "full", teamId]);
+      queryClient.invalidateQueries({ queryKey: ["allMenus"] });
+      queryClient.invalidateQueries({ queryKey: ["menu", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["menu", "full", teamId] });
       onSuccess();
     },
     onError: () => {
@@ -92,7 +92,7 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
     mutationFn: deleteMenu,
     onSuccess: () => {
       showSuccessToast("Menu deleted successfully", "menu-delete");
-      queryClient.invalidateQueries(["allMenus"]);
+      queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       onSuccess();
     },
     onError: () => {

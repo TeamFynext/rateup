@@ -13,7 +13,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextPage } from "next";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { UserProvider } from "../context/UserContext";
-import { Hydrate } from "@tanstack/react-query";
+import { HydrationBoundary, keepPreviousData } from "@tanstack/react-query";
 
 import SuperTokens from "supertokens-web-js";
 import WithLoader from "../components/Layout/Loader/WithLoader";
@@ -61,28 +61,8 @@ export default function App({
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        keepPreviousData: true, // This will apply to all queries
+        placeholderData: keepPreviousData, // This will apply to all queries
         staleTime: 60 * 1000,
-
-        onError: async (error) => {
-          // Check if error is an instance of an Axios error
-          if (axios.isAxiosError(error)) {
-            const serverError = (error as any)?.response?.data;
-            if (
-              error?.response?.status === 403 &&
-              serverError?.message === "Not authorized"
-            ) {
-              // Run supertoken auth refresh
-              if (await Session.attemptRefreshingSession()) {
-                //location.reload();
-                console.log("Session Refreshed");
-              } else {
-                // user has been logged out
-                redirectToAuth();
-              }
-            }
-          }
-        },
       },
     },
   });
@@ -120,7 +100,7 @@ export default function App({
         <MantineProvider theme={theme}>
           <Notifications />
           <QueryClientProvider client={queryClient}>
-            <Hydrate state={pageProps.dehydratedState}>
+            <HydrationBoundary state={pageProps.dehydratedState}>
               <UserProvider>
                 <LayoutComponent>
                   <AnimatePresence>
@@ -140,9 +120,9 @@ export default function App({
               </UserProvider>
               <ReactQueryDevtools
                 initialIsOpen={false}
-                position="bottom-right"
+                buttonPosition="top-right"
               />
-            </Hydrate>
+            </HydrationBoundary>
           </QueryClientProvider>
           <Notifications />
         </MantineProvider>

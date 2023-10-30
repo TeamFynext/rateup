@@ -36,7 +36,7 @@ export const useQuestionCreateMutation = ({
       notifications.show({
         message: "Question created",
       });
-      queryClient.invalidateQueries(["questions"]);
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
       setIsSaving(false);
     },
     onError: (e) => {
@@ -69,7 +69,7 @@ export const useQuestionUpdateMutation = ({
         autoClose: 1000,
         // icon: <IconCheck />,
       });
-      queryClient.invalidateQueries(["questions"]);
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
       setIsSaving(false);
     },
     onError: (err) => {
@@ -95,7 +95,7 @@ export const useQuestionDeleteMutation = (
     mutationFn: (qId: string) => deleteQuestion(surveyId, qId),
     onSuccess: (_data, variables) => {
       onSuccess(variables);
-      queryClient.invalidateQueries(["questions", surveyId]);
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       showSuccessToast("Question deleted");
     },
     onError: (e) => {

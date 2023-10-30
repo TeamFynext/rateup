@@ -22,7 +22,8 @@ export const useGetUserProfile = () =>
 
 export function useCreateUserMutation(setIsLoading) {
   const router = useRouter();
-  return useMutation((values: ICreateGoogleUser) => handleCreateUser(values), {
+  return useMutation({
+    mutationFn: (values: ICreateGoogleUser) => handleCreateUser(values),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -58,7 +59,8 @@ async function handleCreateUser(values) {
 
 export function useChangePasswordMutation(setIsLoading) {
   const router = useRouter();
-  return useMutation((values: IChangePassword) => changeUserPassword(values), {
+  return useMutation({
+    mutationFn: (values: IChangePassword) => changeUserPassword(values),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -88,7 +90,8 @@ export function useChangePasswordMutation(setIsLoading) {
 
 export function useUpdateProfileMutation(setIsLoading) {
   const queryClient = useQueryClient();
-  return useMutation((values: IUpdateProfile) => updateUserProfile(values), {
+  return useMutation({
+    mutationFn: (values: IUpdateProfile) => updateUserProfile(values),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -99,9 +102,9 @@ export function useUpdateProfileMutation(setIsLoading) {
         autoClose: 3000,
       });
       setIsLoading(false);
-      queryClient.invalidateQueries(["userInfoQuery"]);
-      queryClient.resetQueries(["userInfoQuery"]);
-      queryClient.invalidateQueries(["userProfile"]);
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error: any) => {
       console.error("Error Profile Update:", error.message);
@@ -121,38 +124,36 @@ export function useUpdateProfileMutation(setIsLoading) {
 
 export function useUpdateProfilePhotoMutation(setIsLoadingUpload) {
   const queryClient = useQueryClient();
-  return useMutation(
-    (values: IUpdateProfilePhoto) => updateUserProfilePhoto(values),
-    {
-      onSuccess: () => {
-        notifications.update({
-          id: "load-data",
-          color: "teal",
-          loading: false,
-          title: "Success",
-          message: "Profile Photo Updated Successfully!",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
-        setIsLoadingUpload(false);
-        queryClient.invalidateQueries(["userInfoQuery"]);
-        queryClient.resetQueries(["userInfoQuery"]);
-        queryClient.invalidateQueries(["userProfile"]);
-      },
-      onError: (error: any) => {
-        console.error("Error Profile photo Update:", error.message);
-        notifications.update({
-          id: "load-data",
-          color: "red",
-          loading: false,
-          title: "Failed",
-          message: error?.response?.data?.message,
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
-
-        setIsLoadingUpload(false);
-      },
+  return useMutation({
+    mutationFn: (values: IUpdateProfilePhoto) => updateUserProfilePhoto(values),
+    onSuccess: () => {
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        loading: false,
+        title: "Success",
+        message: "Profile Photo Updated Successfully!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      setIsLoadingUpload(false);
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
-  );
+    onError: (error: any) => {
+      console.error("Error Profile photo Update:", error.message);
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        loading: false,
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+
+      setIsLoadingUpload(false);
+    },
+  });
 }

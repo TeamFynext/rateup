@@ -16,10 +16,7 @@ import { CategoryDisplay } from "../../../../../components/menu/category/Categor
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { useRouter } from "next/router";
-import {
-  useFullMenu,
-  usePublicMenuById,
-} from "../../../../../backend/menu/menu.query";
+import { useFullMenu } from "../../../../../backend/menu/menu.query";
 
 export default function () {
   const { menuId } = useRouter().query as { menuId: string };
@@ -35,7 +32,7 @@ export default function () {
   console.log(fullMenu);
 
   useEffect(() => {
-    if (!fullMenu || selectedCategory || fullMenu?.categories.length === 0)
+    if (!fullMenu || selectedCategory || fullMenu?.categories?.length === 0)
       return;
     setSelectedCategory(fullMenu?.categories[0].id);
   }, [fullMenu]);
@@ -59,8 +56,8 @@ export default function () {
         style={{
           // TODO: add blur to background image
           background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${
-            fullMenu.backgroundImage
-              ? `url(${getFileUrlFromKey(fullMenu.backgroundImage)})`
+            fullMenu?.backgroundImage
+              ? `url(${getFileUrlFromKey(fullMenu?.backgroundImage)})`
               : ""
           }`,
           backgroundColor: "#121212",
@@ -87,7 +84,7 @@ export default function () {
               style={{
                 borderRadius: "4px",
               }}
-              src={getFileUrlFromKey(fullMenu.logo)}
+              src={getFileUrlFromKey(fullMenu?.logo)}
             />
           )}
           <div>
@@ -109,7 +106,7 @@ export default function () {
             overflowX: "scroll",
           }}
         >
-          {fullMenu?.categories.map((c) => (
+          {fullMenu?.categories?.map((c) => (
             <CategoryChip
               key={c.id}
               categoryId={c.id}
@@ -122,7 +119,7 @@ export default function () {
       </Group>
 
       <Stack px={largeScreen ? "10vw" : "2vw"}>
-        {fullMenu.categories.map((c) => (
+        {fullMenu?.categories?.map((c) => (
           <CategoryDisplay
             key={c.id}
             setSelectedItem={setSelectedItem}
@@ -133,7 +130,7 @@ export default function () {
       <CategoriesDrawer
         opened={drawerOpen}
         close={close}
-        categories={fullMenu.categories}
+        categories={fullMenu?.categories}
       />
       {selectedItem && (
         <ItemDetailedViewModal

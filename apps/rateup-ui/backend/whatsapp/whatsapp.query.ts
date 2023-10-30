@@ -22,7 +22,7 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
     mutationFn: (templateData: any) => createWaTemplate(templateData),
     onSuccess: () => {
       showSuccessToast("Template Created Successfully");
-      queryClient.invalidateQueries(["watemplates"]);
+      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess();
     },
     onError: () => {
@@ -41,7 +41,7 @@ export const useUpdateTemplateMutation = (onSuccess?, onError?) => {
       updateWaTemplate(templateId, templateData),
     onSuccess: () => {
       showSuccessToast("Template Updated Successfully");
-      queryClient.invalidateQueries(["watemplates"]);
+      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess?.();
     },
     onError: () => {
@@ -58,7 +58,7 @@ export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
     mutationFn: deleteWaTemplate,
     onSuccess: () => {
       showSuccessToast("Template Deleted Successfully");
-      queryClient.invalidateQueries(["watemplates"]);
+      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess?.();
     },
     onError: () => {
@@ -97,7 +97,7 @@ export const useRegisterTemplatesMutation = (onSuccess?, onError?) => {
     mutationFn: registerTemplates,
     onSuccess: () => {
       showSuccessToast("Templates synced successfully");
-      queryClient.invalidateQueries(["watemplates"]);
+      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess?.();
     },
     onError: () => {

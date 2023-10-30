@@ -38,7 +38,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     if (LandingPage?.surveys?.length) {
       setSurveyIdArray(LandingPage?.surveys);
     }
-    queryClient.invalidateQueries(["surveys"]);
+    queryClient.invalidateQueries({ queryKey: ["surveys"] });
   }, [LandingPage?.surveys?.length]);
 
   if (isLoading)

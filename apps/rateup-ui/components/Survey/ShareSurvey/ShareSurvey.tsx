@@ -104,8 +104,8 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-        queryClient.invalidateQueries(["surveys"]);
-        queryClient.invalidateQueries(["survey", survey.id]);
+        queryClient.invalidateQueries({ queryKey: ["surveys"] });
+        queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
       }
     },
   });
@@ -118,8 +118,8 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
         message: "Survey status Updated!",
         autoClose: true,
       });
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["survey", survey.id]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
     },
   });
 

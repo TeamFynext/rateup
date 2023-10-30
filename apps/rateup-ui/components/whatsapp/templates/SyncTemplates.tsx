@@ -100,7 +100,7 @@ export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
           templateIndex={currentTemplateIndex}
           totalTemplates={selectedTemplates.length}
           key={currentTemplateIndex}
-          isSubmitting={registerTemplateMutation.isLoading}
+          isSubmitting={registerTemplateMutation.isPending}
         />
       ) : null}
     </Modal>

@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createLandingWelcomeTheme, getLandingWelcomeThemeByLandingId, getPublicLandingWelcomeThemeByLandingId, updateLandingWelcomeTheme,  } from "./LandingWelcomeTheme.api";
+import {
+  createLandingWelcomeTheme,
+  getLandingWelcomeThemeByLandingId,
+  getPublicLandingWelcomeThemeByLandingId,
+  updateLandingWelcomeTheme,
+} from "./LandingWelcomeTheme.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
@@ -11,7 +16,10 @@ type MyProps = {
 };
 
 //---------create welcome theme ------------
-export const useCreateLandingWelcomeThemeMutation = ({ setIsLoading,setSaveLoading }: MyProps) => {
+export const useCreateLandingWelcomeThemeMutation = ({
+  setIsLoading,
+  setSaveLoading,
+}: MyProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createLandingWelcomeTheme,
@@ -23,9 +31,9 @@ export const useCreateLandingWelcomeThemeMutation = ({ setIsLoading,setSaveLoadi
         message: "theme Created...!",
         loading: false,
         // icon: <IconCheck size="1rem" />,
-        autoClose: 2000
+        autoClose: 2000,
       });
-      queryClient.invalidateQueries(["landingWelcomeTheme"]);
+      queryClient.invalidateQueries({ queryKey: ["landingWelcomeTheme"] });
       setSaveLoading(false);
 
       setIsLoading(false);
@@ -47,10 +55,14 @@ export const useCreateLandingWelcomeThemeMutation = ({ setIsLoading,setSaveLoadi
 };
 
 //----------update welcome theme -------------
-export function useUpdateLandingWelcomeTheme({ setIsLoading,setSaveLoading}:MyProps) {
+export function useUpdateLandingWelcomeTheme({
+  setIsLoading,
+  setSaveLoading,
+}: MyProps) {
   const queryClient = useQueryClient();
 
-  return useMutation((data: any) => updateLandingWelcomeTheme(data), {
+  return useMutation({
+    mutationFn: (data: any) => updateLandingWelcomeTheme(data),
     onSuccess: () => {
       notifications.update({
         id: "load-data",
@@ -63,7 +75,7 @@ export function useUpdateLandingWelcomeTheme({ setIsLoading,setSaveLoading}:MyPr
       });
       setSaveLoading(false);
       setIsLoading(false);
-      queryClient.invalidateQueries(["LandingWelcomeTheme"]);
+      queryClient.invalidateQueries({ queryKey: ["LandingWelcomeTheme"] });
     },
     onError: (error: any) => {
       console.error("Error landing theme Update:", error.message);
@@ -74,7 +86,7 @@ export function useUpdateLandingWelcomeTheme({ setIsLoading,setSaveLoading}:MyPr
         loading: false,
         message: error?.response?.data?.message,
         // icon: <IconCheck size="1rem" />,
-        autoClose: 3000
+        autoClose: 3000,
       });
 
       setSaveLoading(false);
@@ -87,12 +99,11 @@ export const uselandingWelcomeThemeByLandingId = (landingId: string) =>
   useQuery({
     enabled: !!landingId,
     queryKey: ["landingWelcomeTheme", landingId],
-    queryFn: () => getLandingWelcomeThemeByLandingId
-    (landingId),
+    queryFn: () => getLandingWelcomeThemeByLandingId(landingId),
   });
 
-  //--------public------------
-  export const usePublicWelcomeThemeByLandingId = (welcomeThemeId: string) =>
+//--------public------------
+export const usePublicWelcomeThemeByLandingId = (welcomeThemeId: string) =>
   useQuery({
     enabled: !!welcomeThemeId,
     queryKey: ["public-landing-welcometheme", welcomeThemeId],

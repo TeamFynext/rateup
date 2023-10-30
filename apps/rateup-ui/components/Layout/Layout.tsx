@@ -55,7 +55,8 @@ export default function Layout({ children }) {
   useEffect(() => {
     setUser(userInfo?.data);
 
-    if (userInfo === null) queryClient.invalidateQueries(["userInfoQuery"]);
+    if (userInfo === null)
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
   }, [userInfo]);
 
   return (

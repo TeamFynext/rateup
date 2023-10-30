@@ -11,18 +11,12 @@ import {
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import { useRouter } from "next/router";
-import {
-  useLandingPage,
-  useSurveysBylandingId,
-} from "../../../backend/surveys/surveys.query";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   usePublicLandingPage,
   usePublicLandingPageSurveys,
 } from "../../../backend/LandingPage/landingpage.query";
-import LandingWelcomepage from "./LandingWelcomePage";
 import LandingWelcomePage from "./LandingWelcomePage";
 
 export default () => {
@@ -49,7 +43,6 @@ export default () => {
     error: LandingPageError,
     data: LandingPage,
   } = usePublicLandingPage(landingid);
-
 
   useEffect(() => {
     if (LandingPage?.welcomePageEnabled) {
@@ -114,7 +107,7 @@ function StartPage({ largeScreen, Landingpagesurveys, LandingPage }) {
       justify="center"
       gap="xl"
       // radius="lg"
-      style={{ height: "70vh", borderRadius:18 }}
+      style={{ height: "70vh", borderRadius: 18 }}
       bg={"#fff"}
     >
       <Title

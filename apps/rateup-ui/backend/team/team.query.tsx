@@ -6,7 +6,10 @@ import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/router";
 
 export function useTeamsByUser() {
-  return useQuery(["teamsDataUserQuery"], getTeamsByUser);
+  return useQuery({
+    queryKey: ["teamsDataUserQuery"],
+    queryFn: () => getTeamsByUser(),
+  });
 }
 
 export function useCreateTeamMutation(
@@ -15,7 +18,8 @@ export function useCreateTeamMutation(
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   const queryClient = useQueryClient();
-  return useMutation((values) => handleCreateTeam(values), {
+  return useMutation({
+    mutationFn: (values) => handleCreateTeam(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
         notifications.update({
@@ -49,7 +53,8 @@ export function useCreateTeamMutation(
 
 export function useEditTeamMutation(id, setIsLoading) {
   const queryClient = useQueryClient();
-  return useMutation((values: IEditTeam) => editTeam(id, values), {
+  return useMutation({
+    mutationFn: (values: IEditTeam) => editTeam(id, values),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -60,7 +65,7 @@ export function useEditTeamMutation(id, setIsLoading) {
         autoClose: 3000,
       });
       setIsLoading(false);
-      queryClient.invalidateQueries(["teamsDetailsQuery"]);
+      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
     },
     onError: (error: any) => {
       console.error("Error Team Update:", error.message);
@@ -82,7 +87,8 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  return useMutation(() => handleDeleteTeam(), {
+  return useMutation({
+    mutationFn: () => handleDeleteTeam(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
         notifications.update({

@@ -30,7 +30,7 @@ const ShareMenu = ({ menuId, teamId }) => {
           "load-data-f",
           false,
           "Failed..!",
-          "red"
+          "red",
         );
       } else {
         notifications.hide("load-data");
@@ -40,16 +40,16 @@ const ShareMenu = ({ menuId, teamId }) => {
             : "Survey Published Successfully!",
           "load-data-s",
           false,
-          "Sucess"
+          "Sucess",
         );
-        queryClient.invalidateQueries(["surveys"]);
-        queryClient.invalidateQueries(["survey", selectedSurvey]);
+        queryClient.invalidateQueries({ queryKey: ["surveys"] });
+        queryClient.invalidateQueries({ queryKey: ["survey", selectedSurvey] });
       }
     },
   });
-  if (isLoading || surveyUpdateMutation.isLoading) return <CenteredSpinner />;
-  if (surveyUpdateMutation.isError) {
-    showErrorToast((surveyUpdateMutation.error as Error)?.message);
+  if (isLoading || surveyUpdateMutation?.isPending) return <CenteredSpinner />;
+  if (surveyUpdateMutation?.isError) {
+    showErrorToast((surveyUpdateMutation?.error as Error)?.message);
     return null;
   }
 
@@ -81,7 +81,7 @@ const ShareMenu = ({ menuId, teamId }) => {
                     "Please hold on while publishing your survey",
                     "load-data",
                     true,
-                    "Publishing"
+                    "Publishing",
                   );
                   surveyUpdateMutation.mutate({
                     isPublished: event.currentTarget.checked,

@@ -76,7 +76,9 @@ export default function LandingPagesList() {
   }
 
   useEffect(() => {
-    queryClient.invalidateQueries(["surveysLanding", selectedTeamId]);
+    queryClient.invalidateQueries({
+      queryKey: ["surveysLanding", selectedTeamId],
+    });
   }, [surveyLandingsDataUser, queryClient]);
 
   //------------delete landing page mutation ----------
@@ -93,7 +95,7 @@ export default function LandingPagesList() {
         autoClose: 2000,
       });
       setShowDeleteConfirmation(false);
-      queryClient.invalidateQueries(["surveysLanding"]);
+      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
     },
     onError: (error: any) => {
       console.error("Error deleting Survey:", error.message);
@@ -323,7 +325,7 @@ function SurveyMenu({
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["surveysLanding"]);
+      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
     },
     onError: (error: any) => {
       notifications.update({

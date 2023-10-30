@@ -40,12 +40,12 @@ const GeneralSettings = ({ editingItem }) => {
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form
+    form,
   );
-  const { isLoading, error, mutate } = useUpdateMenuMutation(
+  const { isPending, error, mutate } = useUpdateMenuMutation(
     editingItem?.id,
     () => {},
-    () => {}
+    () => {},
   );
   const onSubmit = (values: any) => {
     mutate({
@@ -64,7 +64,7 @@ const GeneralSettings = ({ editingItem }) => {
             withAsterisk
             defaultValue={editingItem?.teamId}
             allowDeselect={false}
-            disabled={isLoading}
+            disabled={isPending}
             {...form.getInputProps("teamId")}
           />
           <ContainedTextField
@@ -164,7 +164,7 @@ const GeneralSettings = ({ editingItem }) => {
           <Grid.Col span={2}>
             <RateupButtonPrimary
               type="submit"
-              loading={isLoading}
+              loading={isPending}
               title="Save Changes"
             />
           </Grid.Col>

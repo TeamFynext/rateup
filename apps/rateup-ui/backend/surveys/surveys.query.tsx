@@ -141,8 +141,8 @@ export const useCreateSurveyMutation = (
         icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["whatsappsurveys"]);
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
       onSuccess(data);
     },
     onError: (error: any) => {
@@ -186,8 +186,8 @@ export const useCreateSurveyLandingPageMutation = ({
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["surveysLanding"]);
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
       close();
       setIsCreating(false);
       resetForm();
@@ -232,8 +232,8 @@ export const useUpdateSurveyLandingPageMutation = ({
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
-      queryClient.invalidateQueries(["surveysLanding"]);
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
       close();
       setIsCreating(false);
       resetForm();
@@ -260,38 +260,38 @@ type CloneProps = {
 
 export function useCloneSurveyMutation({ close, selectedTeamID }: CloneProps) {
   const queryClient = useQueryClient();
-  return useMutation(
-    ({ id, teamId }: { id: string; teamId: string }) => cloneSurvey(id, teamId),
-    {
-      onSuccess: (data, variables) => {
-        notifications.show({
-          id: "load-data",
-          color: "teal",
-          title: "Success",
-          message: "Survey Copy created!",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
-        queryClient.invalidateQueries(["surveys", selectedTeamID]);
-        close();
-      },
-      onError: (error: any) => {
-        console.error("Error Survey Clone:", error.message);
-        notifications.show({
-          id: "load-data",
-          color: "red",
-          title: "Failed",
-          message: error?.response?.data?.message,
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
-      },
+  return useMutation({
+    mutationFn: ({ id, teamId }: { id: string; teamId: string }) =>
+      cloneSurvey(id, teamId),
+    onSuccess: (data, variables) => {
+      notifications.show({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Survey Copy created!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      queryClient.invalidateQueries({ queryKey: ["surveys", selectedTeamID] });
+      close();
     },
-  );
+    onError: (error: any) => {
+      console.error("Error Survey Clone:", error.message);
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+  });
 }
 
 export function useUpdateSurveyPwdMutation(id, passwordProtect, password) {
-  return useMutation(() => handleSurveyPwd(id, passwordProtect, password), {
+  return useMutation({
+    mutationFn: () => handleSurveyPwd(id, passwordProtect, password),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -333,7 +333,8 @@ export function useVerifySurveyPwdMutation(
   password: string,
   onStart,
 ) {
-  return useMutation(() => handleSurveyVerifyPwd(surveyId, password), {
+  return useMutation({
+    mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
     onSuccess: (response) => {
       let verified = false;
       if (response?.data?.data === "Access granted") {
@@ -362,7 +363,8 @@ async function handleSurveyVerifyPwd(surveyId: string, password: string) {
 
 export function useEditSurveyMutation(id, setIsLoading) {
   const queryClient = useQueryClient();
-  return useMutation((data: any) => updateSurvey(id, data), {
+  return useMutation({
+    mutationFn: (data: any) => updateSurvey(id, data),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -373,8 +375,8 @@ export function useEditSurveyMutation(id, setIsLoading) {
         autoClose: 3000,
       });
       setIsLoading(false);
-      queryClient.invalidateQueries(["surveys"]);
-      queryClient.invalidateQueries(["survey"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["survey"] });
     },
     onError: (error: any) => {
       console.error("Error Survey Update:", error.message);
@@ -418,15 +420,21 @@ export const useUpdateSurveyGoogleLinkMutation = (
 };
 
 export function useUpdateVisitedMutation() {
-  return useMutation((id: string) => updateSurveyVisited(id));
+  return useMutation({
+    mutationFn: (id: string) => updateSurveyVisited(id),
+  });
 }
 
 export function useUpdateStartedMutation() {
-  return useMutation((id: string) => updateSurveyStarted(id));
+  return useMutation({
+    mutationFn: (id: string) => updateSurveyStarted(id),
+  });
 }
 
 export function useUpdateCompletedMutation() {
-  return useMutation((id: string) => updateSurveyCompleted(id));
+  return useMutation({
+    mutationFn: (id: string) => updateSurveyCompleted(id),
+  });
 }
 
 export function useDeleteSurveyMutation() {
@@ -435,7 +443,7 @@ export function useDeleteSurveyMutation() {
     mutationFn: deleteSurvey,
     onSuccess: () => {
       showSuccessToast("Survey Deleted Successfully!");
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
   });
   return surveyDeleteMutation;
@@ -448,7 +456,7 @@ export function useUpdateSurveyMutation() {
       updateSurvey(surveyId, data),
     onSuccess: () => {
       showSuccessToast("Survey Updated Successfully!");
-      queryClient.invalidateQueries(["surveys"]);
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
   });
   return surveyUpdateMutation;
