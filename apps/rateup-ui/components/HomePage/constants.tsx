@@ -3,15 +3,15 @@ import { Menu } from "@mantine/core";
 
 const navLinks = [
   {
-    href: "#",
+    href: "/",
     linkText: "Home",
   },
   {
-    href: "#",
+    href: "#our-solutions",
     linkText: "Solutions",
   },
   {
-    href: "#",
+    href: "#our-features",
     linkText: "Features",
   },
   {

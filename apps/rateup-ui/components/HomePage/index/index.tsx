@@ -12,7 +12,10 @@ import styles from "./index.module.css";
 export function HomePage() {
   return (
     <div className={styles["home-page-container"]}>
-      <Container fluid mx={"7%"} p={0}>
+      <Container 
+        className={styles["home-page-mantine-container"]} 
+        size={"120rem"}
+      >
         <Header />
         <HeroSection />
         <OurSolutionsSection />

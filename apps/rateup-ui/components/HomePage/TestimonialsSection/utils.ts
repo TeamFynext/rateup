@@ -1,7 +1,7 @@
 import styles from "./TestimonialsSection.module.css";
 
-export const placeAvatarsOnCircle = (outerDiscRef) => {
-  const outerDiscElement = outerDiscRef.current;
+
+export const placeAvatarsOnCircle = (outerDiscElement) => {
 
   const personAvatarElements = outerDiscElement.querySelectorAll(
     `.${styles["person-avatar"]}`,
@@ -21,33 +21,23 @@ export const placeAvatarsOnCircle = (outerDiscRef) => {
   }
 };
 
+
 export let playTestimonialsInterval = null;
-export const playTestimonials = (outerDiscRef, setPopoverStates) => {
-  return (entries, observer) => {
-    let currentPersonAvatarIndex = 1;
-    let isTestimonialsSectionIntersecting = entries[0].isIntersecting;
 
-    const personAvatarElements = outerDiscRef.current.querySelectorAll(
-      `.${styles["person-avatar"]}`,
-    );
+export const playTestimonials = (outerDiscHtmlElement, setPopoverStates) => {
+  let currentPersonAvatarIndex = 1;
+  const personAvatarElements = outerDiscHtmlElement.querySelectorAll(
+    `.${styles["person-avatar"]}`,
+  );
+  playTestimonialsInterval = setInterval(() => {
+    
+    const { disc, id } = personAvatarElements[currentPersonAvatarIndex].dataset;
+    setPopoverStates({ [`${disc}_${id}`]: true });
 
-    if (isTestimonialsSectionIntersecting && !playTestimonialsInterval) {
-      playTestimonialsInterval = setInterval(() => {
-        const { disc, id } =
-          personAvatarElements[currentPersonAvatarIndex].dataset;
-        setPopoverStates({ [`${disc}_${id}`]: true });
-
-        currentPersonAvatarIndex += 1;
-
-        if (currentPersonAvatarIndex === personAvatarElements.length) {
-          currentPersonAvatarIndex = 0;
-        }
-      }, 5000);
-    } else {
-      clearInterval(playTestimonialsInterval);
-      currentPersonAvatarIndex = 1;
-      playTestimonialsInterval = null;
-      setPopoverStates({ outerDisc_id1: true });
+    currentPersonAvatarIndex += 1;
+    if(currentPersonAvatarIndex === personAvatarElements.length) {
+      currentPersonAvatarIndex = 0;
     }
-  };
-};
+  }, 5000);
+}
+

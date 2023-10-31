@@ -1,10 +1,10 @@
 import styles from "./InteractiveSolutionDescriptions.module.css";
 import { Carousel } from "@mantine/carousel";
 import Image from "next/image";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DescriptionsCarouselSlides from "../DescriptionsCarouselSlides";
 import { Flex } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 
 export type Solution = {
   heading: string;
@@ -25,38 +25,66 @@ function InteractiveSolutionDescriptions({
 
   const isViewPortLeq500px = useMediaQuery("(max-width: 500px)");
 
-  const stateCopyRef = useRef({
-    activeSlideIndex: null,
-    imageCarousalEmblaInstance: null,
+  const { ref:intersectionObserverRef, entry } = useIntersection({
+    threshold: 0,
   });
 
+  const variableValues= useRef({
+    activeSlideIndex: null,
+    imageCarousalEmblaInstance: null,
+    descriptionsCarousalEmblaInstance: null,
+    autoplayInterval: null
+  });
+
+  useEffect(() => {
+    if(entry?.isIntersecting) {
+      variableValues.current.autoplayInterval = setInterval(() => {
+        variableValues.current.descriptionsCarousalEmblaInstance?.scrollNext();
+      }, 4000);
+    } else {
+      clearInterval(variableValues.current.autoplayInterval);
+    }
+  }, [entry]);
+
   const setImageCarousalEmblaInstance = useCallback((emblaInstance) => {
-    stateCopyRef.current.imageCarousalEmblaInstance = emblaInstance;
+    variableValues.current.imageCarousalEmblaInstance = emblaInstance;
+  }, []);
+
+  const setDescriptionsCarouselEmblaInstance = useCallback((emblaInstance) => {
+    variableValues.current.descriptionsCarousalEmblaInstance = emblaInstance;
   }, []);
 
   const scrollToActiveIndexImageSlide = useCallback(() => {
-    const { imageCarousalEmblaInstance, activeSlideIndex } =
-      stateCopyRef.current;
+    const { imageCarousalEmblaInstance, activeSlideIndex } = variableValues.current;
     if (imageCarousalEmblaInstance) {
-      // console.log(activeSlideIndex);
       imageCarousalEmblaInstance.scrollTo(activeSlideIndex);
     }
   }, []);
 
   const handleDescriptonsCarouselSlideChange = useCallback((index) => {
-    if (index < slidesRef.current.size - 1) {
-      setActiveSlideIndex(index + 1);
-      stateCopyRef.current.activeSlideIndex = index + 1;
+
+    if(index < slidesRef.current.size - 1) {
+      setActiveSlideIndex(index+1);
+      variableValues.current.activeSlideIndex = index + 1;
     } else {
       setActiveSlideIndex(0);
-      stateCopyRef.current.activeSlideIndex = 0;
+      variableValues.current.activeSlideIndex = 0;
     }
     scrollToActiveIndexImageSlide();
   }, []);
 
+  useEffect(() => {
+    return () => clearInterval(variableValues.current.autoplayInterval);
+  }, []);
+
   return (
-    <Flex className={styles["solutions-container"]}>
-      <div className={styles["descriptions-container"]}>
+    <Flex 
+      className={styles["solutions-container"]}
+    >
+      <div 
+        ref={intersectionObserverRef} 
+        className={styles["descriptions-container"]}
+      >
         <Carousel
           // withIndicators
           className="descriptions-carousel"
@@ -67,9 +95,12 @@ function InteractiveSolutionDescriptions({
           loop
           align="start"
           slidesToScroll={1}
+          initialSlide={0}
           onSlideChange={handleDescriptonsCarouselSlideChange}
           draggable={false}
           classNames={styles}
+          getEmblaApi={setDescriptionsCarouselEmblaInstance}
+          withControls={false}
         >
           <DescriptionsCarouselSlides
             solutions={solutions}

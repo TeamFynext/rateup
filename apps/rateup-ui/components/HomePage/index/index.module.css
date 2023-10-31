@@ -1,8 +1,18 @@
-.home-page-container {
+
+.homepage-footer-curved-background-image-styles {
   background-image: url("/images/homepage/footer-background-shape.svg");
   background-repeat: no-repeat;
   background-position: left 100%;
   background-size: 100% 700px;
+}
+
+.home-page-container {
+  composes: homepage-footer-curved-background-image-styles;
+}
+
+.home-page-mantine-container {
+  margin: 0 7%;
+  padding: 0;
 }
 
 .gradient-image-1 {
@@ -25,4 +35,16 @@
   color: transparent;
   background-clip: text;
   composes: gradient-image-1;
+}
+
+@media screen and (min-width: 120rem) {
+  .home-page-container {
+    background-position: center bottom;
+    background-size: 2000px 700px;
+  }
+
+  .home-page-container {
+    display: flex;
+    justify-content: center;
+  }
 }

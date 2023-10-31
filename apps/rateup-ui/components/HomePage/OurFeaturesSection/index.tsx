@@ -16,7 +16,10 @@ function OurFeaturesSection() {
   }, [emblaInstance, activeTab]);
 
   return (
-    <Stack className={styles["our-features-container"]}>
+    <Stack 
+      id="our-features"
+      className={styles["our-features-container"]}
+    >
       <Title>Our Features</Title>
 
       <CarouselSlideSelector
