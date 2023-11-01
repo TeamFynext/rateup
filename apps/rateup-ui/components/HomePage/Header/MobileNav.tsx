@@ -28,6 +28,11 @@ function MobileNav() {
         offset={20}
         withArrow
         classNames={styles}
+        transitionProps={{
+          transition: "scale",
+          duration: 300,
+          timingFunction: "ease",
+        }}
       >
         <Menu.Target>
           <Burger

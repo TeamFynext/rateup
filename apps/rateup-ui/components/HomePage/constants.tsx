@@ -15,11 +15,11 @@ const navLinks = [
     linkText: "Features",
   },
   {
-    href: "#",
+    href: "/",
     linkText: "About Us",
   },
   {
-    href: "#",
+    href: "/",
     linkText: "Blog",
   },
 ];

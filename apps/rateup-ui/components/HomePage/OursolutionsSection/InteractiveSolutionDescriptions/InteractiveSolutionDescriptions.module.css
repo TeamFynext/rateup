@@ -20,16 +20,16 @@
   flex: 1.1 1 0;
 }
 
-.solution-card {
-  width: auto;
+.descriptions-container .controls {
+  width: 100%;
+  left: 0;
 }
 
-.solution-card:nth-child(1) {
-  cursor: pointer;
-}
-
-.solution-card:nth-last-child(1) {
-  cursor: pointer;
+.descriptions-container .control {
+  width: 100%;
+  height: 200px;
+  background: none;
+  opacity: 0;
 }
 
 .image-container {

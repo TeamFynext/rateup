@@ -1,10 +1,11 @@
-import styles from "./InteractiveSolutionDescriptions.module.css";
-import { Carousel } from "@mantine/carousel";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import DescriptionsCarouselSlides from "../DescriptionsCarouselSlides";
 import { Flex } from "@mantine/core";
+import { Carousel } from "@mantine/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import Image from "next/image";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import DescriptionsCarouselSlides from "../DescriptionsCarouselSlides";
+import styles from "./InteractiveSolutionDescriptions.module.css";
 
 export type Solution = {
   heading: string;
@@ -25,24 +26,25 @@ function InteractiveSolutionDescriptions({
 
   const isViewPortLeq500px = useMediaQuery("(max-width: 500px)");
 
-  const { ref:intersectionObserverRef, entry } = useIntersection({
+  const { ref: intersectionObserverRef, entry } = useIntersection({
     threshold: 0,
   });
 
-  const variableValues= useRef({
+  const autoplay = useRef(Autoplay({ delay: 4000 }));
+
+  const variableValues = useRef({
     activeSlideIndex: null,
     imageCarousalEmblaInstance: null,
     descriptionsCarousalEmblaInstance: null,
-    autoplayInterval: null
+    autoplayInterval: null,
   });
 
   useEffect(() => {
-    if(entry?.isIntersecting) {
-      variableValues.current.autoplayInterval = setInterval(() => {
-        variableValues.current.descriptionsCarousalEmblaInstance?.scrollNext();
-      }, 4000);
+    if (entry?.isIntersecting) {
+      autoplay.current?.play();
     } else {
       clearInterval(variableValues.current.autoplayInterval);
+      autoplay.current?.stop();
     }
   }, [entry]);
 
@@ -50,21 +52,17 @@ function InteractiveSolutionDescriptions({
     variableValues.current.imageCarousalEmblaInstance = emblaInstance;
   }, []);
 
-  const setDescriptionsCarouselEmblaInstance = useCallback((emblaInstance) => {
-    variableValues.current.descriptionsCarousalEmblaInstance = emblaInstance;
-  }, []);
-
   const scrollToActiveIndexImageSlide = useCallback(() => {
-    const { imageCarousalEmblaInstance, activeSlideIndex } = variableValues.current;
+    const { imageCarousalEmblaInstance, activeSlideIndex } =
+      variableValues.current;
     if (imageCarousalEmblaInstance) {
       imageCarousalEmblaInstance.scrollTo(activeSlideIndex);
     }
   }, []);
 
   const handleDescriptonsCarouselSlideChange = useCallback((index) => {
-
-    if(index < slidesRef.current.size - 1) {
-      setActiveSlideIndex(index+1);
+    if (index < slidesRef.current.size - 1) {
+      setActiveSlideIndex(index + 1);
       variableValues.current.activeSlideIndex = index + 1;
     } else {
       setActiveSlideIndex(0);
@@ -74,15 +72,13 @@ function InteractiveSolutionDescriptions({
   }, []);
 
   useEffect(() => {
-    return () => clearInterval(variableValues.current.autoplayInterval);
+    return () => autoplay.current?.destroy();
   }, []);
 
   return (
-    <Flex 
-      className={styles["solutions-container"]}
-    >
-      <div 
-        ref={intersectionObserverRef} 
+    <Flex className={styles["solutions-container"]}>
+      <div
+        ref={intersectionObserverRef}
         className={styles["descriptions-container"]}
       >
         <Carousel
@@ -99,8 +95,11 @@ function InteractiveSolutionDescriptions({
           onSlideChange={handleDescriptonsCarouselSlideChange}
           draggable={false}
           classNames={styles}
-          getEmblaApi={setDescriptionsCarouselEmblaInstance}
-          withControls={false}
+          plugins={[autoplay.current]}
+          onMouseEnter={autoplay.current.stop}
+          onMouseLeave={() => autoplay.current.play()}
+          speed={5}
+          // withControls={false}
         >
           <DescriptionsCarouselSlides
             solutions={solutions}
@@ -129,6 +128,7 @@ function InteractiveSolutionDescriptions({
           draggable={false}
           classNames={styles}
           slideGap={"sm"}
+          speed={5}
         >
           {
             // Doing concat for displaying copy slides(for displaying carousel in loop).

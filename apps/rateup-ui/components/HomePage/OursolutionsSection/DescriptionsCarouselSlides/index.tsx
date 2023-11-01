@@ -1,8 +1,9 @@
 import React, { MutableRefObject } from "react";
-import { Flex, Text, Title } from "@mantine/core";
+import { Text, Title } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { Solution } from "../InteractiveSolutionDescriptions";
 import styles from "./DescriptionsCarouselSlides.module.css";
+import { motion } from "framer-motion";
 
 type DescriptionsCarouselProps = {
   solutions: Solution[];
@@ -47,7 +48,14 @@ function DescriptionsCarouselSlides({
               activeSlideIndex === index ? styles["active-slide"] : ""
             }`}
           >
-            <Flex className={styles["solution-card"]} data-index={index}>
+            <motion.div
+              layout
+              className={styles["solution-card"]}
+              data-index={index}
+              transition={{
+                duration: 0.5,
+              }}
+            >
               <div className={styles["list-indicator-circle-container"]}>
                 <div className={styles["list-indicator-circle"]}></div>
               </div>
@@ -55,7 +63,7 @@ function DescriptionsCarouselSlides({
                 <Title order={2}>{solution.heading}</Title>
                 <Text>{solution.description}</Text>
               </div>
-            </Flex>
+            </motion.div>
           </Carousel.Slide>
         );
       })}

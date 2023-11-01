@@ -10,6 +10,12 @@
 .header-link {
   composes: header-footer-link from "../index/index.module.css";
   composes: gradient-text from "../index/index.module.css";
+  margin-right: 0;
+  padding: 1rem;
+}
+
+.header-link:active {
+  color: #00397b;
 }
 
 .login-signup-link {

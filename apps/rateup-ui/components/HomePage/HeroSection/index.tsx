@@ -1,7 +1,7 @@
 import { Flex, Title, Text, Image } from "@mantine/core";
-import styles from "./HeroSection.module.css";
 import Button from "../components/Button";
 import RocketIcon from "./RocketIcon";
+import styles from "./HeroSection.module.css";
 
 function HeroSection() {
   return (

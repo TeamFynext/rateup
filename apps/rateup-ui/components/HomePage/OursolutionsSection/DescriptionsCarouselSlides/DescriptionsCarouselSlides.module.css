@@ -6,9 +6,9 @@
   position: relative;
   align-items: baseline;
   gap: 1.25rem;
-  transition: width 0.5s linear;
   height: 12.5rem;
   overflow: auto;
+  display: flex;
 }
 
 .active-slide .solution-card {

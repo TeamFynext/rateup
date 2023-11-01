@@ -1,7 +1,8 @@
+import React from "react";
 import { Button as MantineButton, Text } from "@mantine/core";
+import MotionButtonGesture from "../MotionButtonGesture";
 import styles from "./Button.module.css";
 import commonStyles from "../../index/index.module.css";
-import React from "react";
 
 type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
@@ -11,24 +12,26 @@ type ButtonProps = {
 
 function Button({ whiteBackgroundGradientText, children, type }: ButtonProps) {
   return (
-    <MantineButton
-      className={`${styles["button"]} ${
-        whiteBackgroundGradientText
-          ? styles["white-background-gradient-text-btn"]
-          : styles["gradient-background-white-text-btn"]
-      }`}
-      type={type ? type : "button"}
-    >
-      <Text
-        inherit
-        span
-        className={`${
-          whiteBackgroundGradientText ? commonStyles["gradient-text"] : ""
+    <MotionButtonGesture>
+      <MantineButton
+        className={`${styles["button"]} ${
+          whiteBackgroundGradientText
+            ? styles["white-background-gradient-text-btn"]
+            : styles["gradient-background-white-text-btn"]
         }`}
+        type={type ? type : "button"}
       >
-        {children}
-      </Text>
-    </MantineButton>
+        <Text
+          inherit
+          span
+          className={`${
+            whiteBackgroundGradientText ? commonStyles["gradient-text"] : ""
+          }`}
+        >
+          {children}
+        </Text>
+      </MantineButton>
+    </MotionButtonGesture>
   );
 }
 
