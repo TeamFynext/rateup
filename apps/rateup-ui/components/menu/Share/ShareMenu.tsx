@@ -12,9 +12,14 @@ import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import { notifications } from "@mantine/notifications";
 import CenteredSpinner from "../../Loaders/CenteredSpinner";
 
-const ShareMenu = ({ menuId, teamId }) => {
+type ShareMenuProps = {
+  menuId: string;
+  teamId: string;
+};
+
+const ShareMenu = ({ menuId, teamId }:ShareMenuProps) => {
   const queryClient = useQueryClient();
-  const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [selectedSurvey, setSelectedSurvey] = useState<string | null>(null);
   const {
     data: surveys = [],
     isLoading,
@@ -22,7 +27,12 @@ const ShareMenu = ({ menuId, teamId }) => {
   } = useSurveysByTeam(teamId, !!teamId);
 
   const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(selectedSurvey, data),
+    mutationFn: (data: any) => {
+      if (selectedSurvey === null) {
+        throw new Error("selectedSurvey is null");
+      }
+      return updateSurvey(selectedSurvey, data);
+    },
     onSuccess: (data) => {
       if (data?.data?.status === "failed") {
         showLoadingToast(
@@ -74,7 +84,7 @@ const ShareMenu = ({ menuId, teamId }) => {
               />
               <Switch
                 size="lg"
-                checked={selectedSurvey}
+                checked={!!selectedSurvey}
                 disabled={selectedSurvey === null}
                 onChange={(event) => {
                   showLoadingToast(
@@ -111,6 +121,7 @@ const ShareMenu = ({ menuId, teamId }) => {
     </Stack>
   );
 };
+
 
 export default ShareMenu;
 function showErrorToast(message: any) {

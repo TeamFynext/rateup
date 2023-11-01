@@ -75,6 +75,7 @@ export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
       queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       queryClient.invalidateQueries({ queryKey: ["menu", teamId] });
       queryClient.invalidateQueries({ queryKey: ["menu", "full", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["menuLanding", teamId] });
       onSuccess();
     },
     onError: () => {

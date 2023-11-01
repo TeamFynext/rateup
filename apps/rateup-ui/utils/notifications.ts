@@ -29,7 +29,7 @@ export function showWarnToast(message: string, id = undefined) {
 
 export function showLoadingToast(
   message: string,
-  id = undefined,
+  id: string | undefined = undefined,
   loading: boolean,
   title: string,
   color: string = "teal",

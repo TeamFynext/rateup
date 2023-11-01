@@ -17,6 +17,9 @@ import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import MenuSettings from "../../../components/menu/Settings/MenuSettings";
 import ShareMenu from "../../../components/menu/Share/ShareMenu";
+import LandingPage from "../../../components/menu/landingPage/LandingPage";
+import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
+import { transformData } from "../../../components/menu/util/transformData";
 
 enum TabEnum {
   Menu = "Menu",
@@ -35,15 +38,15 @@ export default ({ categories: initialCategories }) => {
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
-    () => {},
+    () => {}
   );
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null,
+    null
   );
 
   const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu,
+    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu
   );
 
   const {
@@ -57,11 +60,13 @@ export default ({ categories: initialCategories }) => {
     isError,
     data: categories,
   } = useCategories(menuId, initialCategories);
+  const { isLoading: isMenuLandingLoading, data: menuLandingData } =
+    useMenuLandingById(menuId);
   let filteredCategory = categories;
 
   if (selectedTeamId !== "all") {
     filteredCategory = filteredCategory?.filter(
-      (category) => category?.teamId === selectedTeamId,
+      (category) => category?.teamId === selectedTeamId
     );
   }
   const teamId = menu && menu.teamId;
@@ -76,10 +81,10 @@ export default ({ categories: initialCategories }) => {
     }
   }, [tab]);
 
-  if (!categories && (isLoading || isError)) {
+  if ((!categories && (isLoading || isError)) || isMenuLandingLoading) {
     return <CenteredSpinner />;
   }
-
+  const transformedData = transformData(menuLandingData?.data);
   function handleCreateCategory() {
     setEditingCategory(null);
     open();
@@ -105,7 +110,8 @@ export default ({ categories: initialCategories }) => {
         <Group justify="space-between" mb="md">
           {activeTab === TabEnum.Menu && (
             <Title order={3}>
-              {menu?.name?.charAt(0)?.toUpperCase() + menu?.name?.slice(1)}
+              {menu &&
+                menu?.name?.charAt(0)?.toUpperCase() + menu?.name?.slice(1)}
             </Title>
           )}
           <Tabs.List>
@@ -164,7 +170,9 @@ export default ({ categories: initialCategories }) => {
         <Tabs.Panel value={TabEnum.Settings}>
           <MenuSettings menu={menu} />
         </Tabs.Panel>
-        <Tabs.Panel value={TabEnum.LandingPage}>s</Tabs.Panel>
+        <Tabs.Panel value={TabEnum.LandingPage}>
+          <LandingPage editingItem={transformedData} />
+        </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Share}>
           {menu && <ShareMenu menuId={menu.id} teamId={menu.teamId} />}
         </Tabs.Panel>

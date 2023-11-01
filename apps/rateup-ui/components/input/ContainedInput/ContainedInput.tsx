@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Select,
   TextInput,
@@ -9,6 +10,10 @@ import {
   FileInput,
   Textarea,
   TextareaProps,
+  NumberInputProps,
+  NumberInput,
+  ColorInput,
+  ColorInputProps,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
 
@@ -33,6 +38,16 @@ export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
-export function ContainedFileInput(props: FileInputProps) {
-  return <FileInput classNames={classes} {...props} />;
+export const ContainedFileInput = React.forwardRef(
+  (props: FileInputProps, ref: React.Ref<HTMLButtonElement>) => {
+    return <FileInput ref={ref} classNames={classes} {...props} />;
+  }
+);
+
+export function ContainedNumberInput(props: NumberInputProps) {
+  return <NumberInput classNames={classes} {...props} />;
+}
+
+export function ContainedColorInput(props: ColorInputProps) {
+  return <ColorInput disallowInput classNames={classes} {...props} />;
 }

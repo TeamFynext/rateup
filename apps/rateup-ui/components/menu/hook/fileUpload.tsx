@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { showErrorToast } from "../../../utils/notifications";
 
-export const useFileUpload = (file: File | null, field: string, form) => {
+export const useFileUpload = (file: File | null, field: string, form: any) => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {

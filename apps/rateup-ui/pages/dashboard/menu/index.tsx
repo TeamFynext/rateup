@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Group,
   Flex,
@@ -108,7 +109,7 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
   const filteredMenus =
     selectedTeamId === "all"
       ? menus
-      : menus.filter((menu) => menu.teamId === selectedTeamId);
+      : menus?.filter((menu) => menu.teamId === selectedTeamId);
 
   // Sort menus based on `sorthandle`
   const sortedMenus = filteredMenus?.slice()?.sort((a, b) => {
