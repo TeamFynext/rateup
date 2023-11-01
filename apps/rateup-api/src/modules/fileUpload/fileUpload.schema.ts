@@ -2,15 +2,14 @@ import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
 
 const allowedMimeTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "video/mp4",
-    "video/webm",
-    "video/ogg"
-  ];
-  
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+];
 
 //   export const uploadFileSchema = z.object({
 //     file: z.string().nullable().refine(value => allowedMimeTypes.includes(value?.mimetype), {
@@ -18,19 +17,26 @@ const allowedMimeTypes = [
 //       path: ["file"]
 //     }),
 //   });
-  
+
 export const uploadFileSchema = z.object({
-  file: z.any().refine(value => allowedMimeTypes.includes(value), {
+  file: z.any().refine((value) => allowedMimeTypes.includes(value), {
     message: "Invalid file format",
-    path: ["file"]
+    path: ["file"],
   }),
 });
-  
 
-export const { schemas: uploadSchemas, $ref: $Rref } = buildJsonSchemas({
-    uploadFileSchema
-},
-{ $id: "uploadSchema" }
+const fileDeleteInputSchema = z.object({
+  fileKey: z.string().trim().min(1),
+});
+
+export const { schemas: uploadSchemas, $ref: $Rref } = buildJsonSchemas(
+  {
+    uploadFileSchema,
+    fileDeleteInputSchema,
+  },
+  { $id: "uploadSchema" }
 );
 
 export type UploadFileInput = z.infer<typeof uploadFileSchema>;
+
+export type fileDeleteInput = z.infer<typeof fileDeleteInputSchema>;
