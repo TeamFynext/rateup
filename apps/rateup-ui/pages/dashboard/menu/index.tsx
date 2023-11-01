@@ -111,7 +111,7 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
       : menus.filter((menu) => menu.teamId === selectedTeamId);
 
   // Sort menus based on `sorthandle`
-  const sortedMenus = filteredMenus?.slice().sort((a, b) => {
+  const sortedMenus = filteredMenus?.slice()?.sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
     return sorthandle ? dateA - dateB : dateB - dateA;

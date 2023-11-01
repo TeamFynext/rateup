@@ -14,3 +14,15 @@
 .inputBox:focus-within {
   border-color: var(--input-focus-color, var(--tertiary-color));
 }
+
+.rating svg {
+  height: 50px;
+  width: 50px;
+}
+
+@media (max-width: 480px) {
+  .rating svg {
+    height: 50px;
+    width: 50px;
+  }
+}

@@ -147,15 +147,15 @@ export default function WhatsappSurveys({ surveys: initialSurveys }) {
 
         {!isLoading &&
           surveys
-            .slice()
-            .sort((a, b) =>
+            ?.slice()
+            ?.sort((a, b) =>
               sort
                 ? new Date(b.createdAt).getTime() -
                   new Date(a.createdAt).getTime()
                 : new Date(a.createdAt).getTime() -
                   new Date(b.createdAt).getTime(),
             )
-            .map((s) => <SurveyCard key={s.id} survey={s} />)}
+            ?.map((s) => <SurveyCard key={s.id} survey={s} />)}
       </SimpleGrid>
       <CreateSurveyModal
         open={createSurveyOpened}

@@ -10,7 +10,6 @@ import {
   Rating,
   Stack,
   Text,
-  Grid,
   TextInput,
   Paper,
   Input,
@@ -22,12 +21,12 @@ import {
   Title,
   Divider,
   NumberInput,
-  Avatar,
   Select,
   MultiSelect,
-  ScrollArea,
+  Combobox,
+  InputBase,
+  useCombobox,
 } from "@mantine/core";
-import { forwardRef } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import {
@@ -69,6 +68,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import { parseLogicAction } from "../../../utils";
 import { validateQuestion } from "../../../utils/validation";
 import SmileyRating, { mapSmileyIcon } from "./RatingSmiley";
+import { GilroySemibold } from "../../../public/fonts";
+import Flag from "react-world-flags";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -80,7 +81,6 @@ function TakeSurvey() {
   const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
   const theme = useMantineTheme();
-  const isMobile = useMediaQuery("(max-width: 480px)");
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
@@ -448,7 +448,7 @@ function TakeSurvey() {
             </Stack>
           </Modal>
 
-          <Stack mt="xl">
+          <Stack>
             <Stack style={{ minHeight: "45vh" }} justify="center">
               <QuestionNo num={QnNo} />
               <QuestionTitle largeScreen={largeScreen} />
@@ -508,7 +508,10 @@ function QuestionTitle({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text fw={500} size={largeScreen ? "30px" : "16px"}>
+    <Text
+      ff={GilroySemibold.style.fontFamily}
+      size={largeScreen ? "30px" : "18px"}
+    >
       {selectedQ.title[selectedLanguage]}
     </Text>
   );
@@ -692,6 +695,7 @@ function NextPrev({ prev, next, num, total }) {
           leftIcon={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
           onClick={prev}
+          color="dark"
         />
         <Center>
           <Text mt={!isMobile && "xs"} fz="sm" fw={600}>
@@ -699,9 +703,8 @@ function NextPrev({ prev, next, num, total }) {
           </Text>
         </Center>
         {isLastQuestion ? (
-          <RateupButtonBlue
+          <Button
             radius={"xl"}
-            title={"Submit"}
             disabled={
               ((selectedQ?.required || selectedQ?.validationRules) &&
                 !response) ||
@@ -709,11 +712,14 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-          />
+            color="dark"
+            rightSection={<IconChevronRight />}
+          >
+            Submit
+          </Button>
         ) : (
-          <RateupButtonSecondary
+          <Button
             radius={"xl"}
-            title={"Next"}
             disabled={
               ((selectedQ?.required || selectedQ?.validationRules) &&
                 !response) ||
@@ -721,8 +727,11 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            rightIcon={<IconChevronRight />}
-          />
+            color="dark"
+            rightSection={<IconChevronRight />}
+          >
+            Next
+          </Button>
         )}
       </Group>
     </Stack>
@@ -761,7 +770,6 @@ function TextAreaForm() {
         }}
         style={{ maxWidth: "400px" }}
         variant="unstyled"
-        radius="xl"
         size="sm"
       />
     </Paper>
@@ -775,13 +783,10 @@ function NumberForm() {
     <Paper shadow="sm" className={classes.inputBox}>
       <NumberInput
         size="sm"
-        //type="number" VERIFY MANTINE
         placeholder="Enter number input"
         value={response || undefined}
         onChange={(value) => updateResponse(value)}
-        //onBlur={handleInputBlur}
         variant="unstyled"
-        //error={numberError && !isFocused  ? 'Invalid phone number' : null}
       />
     </Paper>
   );
@@ -792,36 +797,44 @@ function PhoneForm() {
   const [phoneError, setPhoneError] = useState(null);
   const [isFocused, setIsFocused] = useState(false);
 
-  const data = [
+  const countries = [
     {
-      image: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/flag_india.png`,
-      label: "+91",
-      value: "91",
-      description: "India",
+      name: "India",
+      code: "+91",
+      flag: "IN",
     },
+    // {
+    //   name: 'USA',
+    //   code: '+1',
+    //   flag: 'US',
+    // },
+    // {
+    //   name: 'UAE',
+    //   code: '+971',
+    //   flag: 'AE',
+    // },
+    // Add more countries...
   ];
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+  });
 
-  interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {
-    image: string;
-    label: string;
-    description: string;
-  }
+  const [value, setValue] = useState<string | null>(countries[0].code);
 
-  const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
-    ({ image, label, description, ...others }: ItemProps, ref) => (
-      <div ref={ref} {...others}>
-        <Group wrap="nowrap">
-          <Avatar src={image} style={{ minWidth: "50px" }} />
-          <div>
-            <Text size="sm">{label}</Text>
-            <Text size="xs" opacity={0.65}>
-              {description}
-            </Text>
-          </div>
+  const options = countries?.map((country) => {
+    return (
+      <Combobox.Option
+        style={{ minWidth: "150px" }}
+        value={country?.code}
+        key={country?.code}
+      >
+        <Group>
+          <Flag code={country?.flag} height="16" />
+          {/* <Text>{`${country.name} `}</Text> */}
         </Group>
-      </div>
-    ),
-  );
+      </Combobox.Option>
+    );
+  });
 
   //TODO : save with 91 in db if required
 
@@ -843,36 +856,68 @@ function PhoneForm() {
   };
 
   return (
-    <Paper shadow="sm" className={classes.inputBox}>
-      <Group>
-        <Select
-          style={{ maxWidth: "140px" }}
-          placeholder="Select Country Code"
-          // itemComponent={SelectItem}
-          data={data}
-          searchable
-          maxDropdownHeight={400}
-          defaultValue={data[0].value}
-          nothingFoundMessage="No results"
-          // filter={(value, item) =>
-          //   item.label.toLowerCase().includes(value.toLowerCase().trim()) ||
-          //   item.description.toLowerCase().includes(value.toLowerCase().trim())
-          // }
-        />
-        <NumberInput
-          size="sm"
-          max={9999999999}
-          // type="number"  VERIFY MANTINE
-          placeholder="Enter 10 digit phone number"
-          hideControls
-          value={response || ""}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          variant="unstyled"
-          error={phoneError && !isFocused ? "Invalid phone number" : null}
-        />
-      </Group>
-    </Paper>
+    <Stack style={{ width: "90vw" }}>
+      <Paper
+        shadow="sm"
+        className={classes.inputBox}
+        style={{ maxWidth: "300px" }}
+      >
+        <Group align="flex-start">
+          <Combobox
+            store={combobox}
+            withinPortal={false}
+            onOptionSubmit={(val) => {
+              setValue(val);
+              combobox.closeDropdown();
+            }}
+          >
+            <Combobox.Target>
+              <InputBase
+                component="button"
+                type="button"
+                pointer
+                rightSection={<Combobox.Chevron />}
+                onClick={() => combobox.toggleDropdown()}
+                rightSectionPointerEvents="none"
+                variant="unstyled"
+              >
+                {(
+                  <Stack>
+                    <Flag
+                      code={
+                        countries?.find((country) => country?.code === value)
+                          ?.flag
+                      }
+                      height="15"
+                    />
+                  </Stack>
+                ) || <Input.Placeholder>Select a country</Input.Placeholder>}
+              </InputBase>
+            </Combobox.Target>
+
+            <Combobox.Dropdown>
+              <Combobox.Options>{options}</Combobox.Options>
+            </Combobox.Dropdown>
+          </Combobox>
+          <NumberInput
+            size="sm"
+            max={9999999999}
+            placeholder="Enter 10 digit phone number"
+            hideControls
+            value={response || ""}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            variant="unstyled"
+            style={{ minWidth: "185px" }}
+          />
+        </Group>
+      </Paper>
+
+      <Text c="red" fz="xs" ml="sm">
+        {" "}
+        {phoneError && !isFocused ? "* Invalid phone number" : null}
+      </Text>
+    </Stack>
   );
 }
 
@@ -916,43 +961,54 @@ function EmailForm() {
 }
 
 function RatingForm() {
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+
   return (
-    <Paper px={30} py={20} radius="lg">
-      <Rating value={response} onChange={updateResponse} size="xl" />
-    </Paper>
+    <Stack align="center">
+      <Rating
+        value={response}
+        onChange={updateResponse}
+        color="var(--tertiary-color)"
+        size="xl"
+        className={classes.rating}
+        styles={{
+          label: {
+            paddingLeft: isMobile ? "3px" : "8px",
+            paddingRight: isMobile ? "3px" : "8px",
+          },
+        }}
+      />
+    </Stack>
   );
 }
 
 function LDForm() {
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
     <Group>
-      <Box w={120}>
-        <Button
-          color={response === LDResponse.Like ? "yellow" : "dark.0"}
-          size="lg"
-          px="md"
+      <Box w={150}>
+        <RateupButtonBlue
+          size="md"
+          variant={response === LDResponse.Dislike ? "filled" : "outline"}
+          radius="xl"
+          title="Dislike"
+          leftIcon={<IconThumbDownFilled />}
           fullWidth
-          radius="md"
-          leftSection={<IconThumbUpFilled />}
-          onClick={() => updateResponse(LDResponse.Like)}
-        >
-          Like
-        </Button>
-      </Box>
-      <Box w={130}>
-        <Button
-          color={response === LDResponse.Dislike ? "yellow" : "dark.0"}
-          size="lg"
-          px="md"
-          radius="md"
-          fullWidth
-          leftSection={<IconThumbDownFilled />}
           onClick={() => updateResponse(LDResponse.Dislike)}
-        >
-          Dislike
-        </Button>
+        />
+      </Box>
+      <Box w={150} ml={!isMobile && "sm"}>
+        <RateupButtonBlue
+          size="md"
+          variant={response === LDResponse.Like ? "filled" : "outline"}
+          radius="xl"
+          title="Like"
+          fullWidth
+          leftIcon={<IconThumbUpFilled />}
+          onClick={() => updateResponse(LDResponse.Like)}
+        />
       </Box>
     </Group>
   );
@@ -966,11 +1022,13 @@ function OpinionScaleForm() {
       buttons.push(
         <Button
           key={i}
-          radius="xl"
+          radius="md"
           onClick={() => updateResponse(i)}
-          color={response === i ? "blue" : "blue.9"}
-          variant={response === i ? "gradient" : "default"}
-          gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
+          color={"var(--tertiary-color)"}
+          variant={response === i ? "filled" : "outline"}
+          styles={{
+            root: { backgroundColor: response !== i && "#EBEFF7" },
+          }}
         >
           {i}
         </Button>,
@@ -991,28 +1049,24 @@ function YNForm() {
   return (
     <Group>
       <Box w={100}>
-        <Button
-          color={response === YNResponse.No ? "yellow" : "dark.0"}
-          size="lg"
-          px="xl"
+        <RateupButtonBlue
+          size="md"
+          variant={response === YNResponse.No ? "filled" : "outline"}
+          radius="xl"
+          title="No"
           fullWidth
-          radius="md"
           onClick={() => updateResponse(YNResponse.No)}
-        >
-          No
-        </Button>
+        />
       </Box>
       <Box w={100}>
-        <Button
-          color={response === YNResponse.Yes ? "yellow" : "dark.0"}
-          size="lg"
-          px="xl"
-          radius="md"
+        <RateupButtonBlue
+          size="md"
+          variant={response === YNResponse.Yes ? "filled" : "outline"}
+          radius="xl"
+          title="Yes"
           fullWidth
           onClick={() => updateResponse(YNResponse.Yes)}
-        >
-          Yes
-        </Button>
+        />
       </Box>
     </Group>
   );
@@ -1029,6 +1083,7 @@ function SmileyForm() {
 
 function ImageForm() {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   useEffect(() => {
     const uploadAndUpdate = async () => {
@@ -1040,8 +1095,20 @@ function ImageForm() {
     };
     uploadAndUpdate();
   }, [file]);
+
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [file]);
+
   return (
-    <>
+    <Stack>
       <Box w={300}>
         <FileButton onChange={setFile} accept="image/png,image/jpeg">
           {(props) => (
@@ -1058,12 +1125,24 @@ function ImageForm() {
         </FileButton>
       </Box>
 
-      {file && (
-        <Text size="sm" style={{ textAlign: "center" }} mt="sm">
-          Picked file: {file.name}
-        </Text>
-      )}
-    </>
+      <Stack mt="lg">
+        <Center>
+          {previewUrl && (
+            <Image
+              src={previewUrl}
+              alt="Preview"
+              style={{ maxWidth: "100px", height: "auto", maxHeight: "100px" }}
+            />
+          )}
+        </Center>
+
+        {file && (
+          <Text size="sm" style={{ textAlign: "center" }} mt="sm">
+            Picked file: {file.name}
+          </Text>
+        )}
+      </Stack>
+    </Stack>
   );
 }
 

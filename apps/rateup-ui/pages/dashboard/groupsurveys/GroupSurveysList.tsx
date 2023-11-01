@@ -203,15 +203,15 @@ export default function GroupSurveysList() {
             : []
           : [...surveys]
         )
-          .slice()
-          .sort((a, b) =>
+          ?.slice()
+          ?.sort((a, b) =>
             sort
               ? new Date(b.createdAt).getTime() -
                 new Date(a.createdAt).getTime()
               : new Date(a.createdAt).getTime() -
                 new Date(b.createdAt).getTime(),
           )
-          .map((s) => (
+          ?.map((s) => (
             <SurveyCard key={s.id} survey={s} teamsData={teamsData} />
           ))}
       </SimpleGrid>

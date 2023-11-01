@@ -101,7 +101,7 @@ export default () => {
                 <ContainedSelection
                   ml="auto"
                   maw={150}
-                  data={survey.languages}
+                  data={survey?.languages}
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}
                 />
@@ -116,14 +116,14 @@ export default () => {
             <EditWhatsappSurvey
               questions={questions}
               addQnTrigger={addQnTrigger}
-              surveyLanguages={survey.languages}
+              surveyLanguages={survey?.languages}
               setSelectedLanguage={setSelectedLanguage}
             />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Settings}>
             <SurveySettings
               survey={survey}
-              surveyId={survey.id}
+              surveyId={survey?.id}
               enabledModules={["name", "language"]}
             />
           </Tabs.Panel>

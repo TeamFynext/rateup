@@ -68,8 +68,9 @@ export default function App({
       new QueryClient({
         defaultOptions: {
           queries: {
-            placeholderData: keepPreviousData, // This will apply to all queries
+            placeholderData: (previousData, previousQuery) => previousData, // This will apply to all queries
             staleTime: 60 * 1000,
+            gcTime: 600 * 1000,
           },
         },
         queryCache: new QueryCache({

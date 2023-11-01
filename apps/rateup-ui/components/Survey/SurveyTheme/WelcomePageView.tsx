@@ -207,7 +207,7 @@ function WelcomePageView({
               <TextInput
                 onChange={handleChange}
                 value={currentStyles.buttonText}
-                placeholder={"Go to Survey"}
+                placeholder={"Start Survey"}
                 variant="unstyled"
                 name="buttonText"
                 size="xs"

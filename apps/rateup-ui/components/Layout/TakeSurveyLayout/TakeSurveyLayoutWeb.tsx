@@ -71,9 +71,9 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
       >
         {/* .........Survey Header Section.......... */}
 
-        <Group justify="flex-start">
+        <Group justify="center">
           <Stack
-            style={{ maxHeight: isMobile ? "65" : "200px", maxWidth: "30%" }}
+            style={{ maxHeight: isMobile ? "65" : "100px", maxWidth: "30%" }}
           >
             <Image
               src={
@@ -82,26 +82,19 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
                   : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
               }
               alt="Logo"
-              w={isMobile ? 70 : 140}
-              h={isMobile ? 70 : 135}
+              w={isMobile ? 70 : 80}
+              h={isMobile ? 70 : 80}
             />
           </Stack>
-          <Container fluid style={{ maxWidth: "70%" }}>
-            <Stack justify="flex-start">
-              <Title order={isMobile ? 4 : 2}>{survey?.title}</Title>
-            </Stack>
-          </Container>
         </Group>
 
-        <Paper p="sm" radius="lg" style={{ minHeight: "75vh" }}>
+        <Paper
+          pt="-50px"
+          radius="lg"
+          style={{ padding: 0, margin: 0, minHeight: "75vh" }}
+        >
           {survey?.isPublished === true && survey?.active === true ? (
-            <Paper
-              radius="lg"
-              shadow="md"
-              bg={"#fff"}
-              style={{ boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 6px 0px" }}
-              pb={startClicked && "xl"}
-            >
+            <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
               {!startClicked && (
                 <WelcomePage
                   onStart={handleStartClick}
@@ -119,7 +112,6 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
               p="30px"
               style={{
                 minHeight: "70vh",
-                boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
               }}
             >
               <Stack align="center" h="50vh" justify="space-around">
