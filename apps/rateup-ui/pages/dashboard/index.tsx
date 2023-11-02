@@ -1,6 +1,7 @@
 ﻿import {
   RateupButtonBlue,
   RateupButtonPrimary,
+  RateupButtonSecondary,
 } from "../../components/Button/RateupButtons";
 import {
   Group,
@@ -16,8 +17,9 @@ import {
   Center,
   useMantineTheme,
 } from "@mantine/core";
-import { useDisclosure, useHover } from "@mantine/hooks";
-import { useState } from "react";
+import { Tooltip as MantineTooltip } from "@mantine/core";
+import { useDisclosure, useHover, useMediaQuery } from "@mantine/hooks";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Loading from "../../components/Page/Loading";
 import { useUser } from "../../context/UserContext";
@@ -28,6 +30,7 @@ import {
   IconPlus,
   IconSelector,
   IconSocial,
+  IconReload,
 } from "@tabler/icons-react";
 import { useSurveysSummary } from "../../backend/surveys/surveys.query";
 import { IconSpeakerphone } from "@tabler/icons-react";
@@ -44,6 +47,9 @@ import {
 import dayjs from "dayjs";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
+import { IconRefresh } from "@tabler/icons-react";
+import classes from "./dashboard.module.css";
+import { notifications } from "@mantine/notifications";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -53,16 +59,45 @@ export default function DashboardHome() {
   const [opened, { open, close }] = useDisclosure(false);
   const [timePeriod, setTimePeriod] = useState("weekly");
   const theme = useMantineTheme();
+  const isLargerScreen = useMediaQuery("(min-width: 1100px)");
 
   const {
     isLoading: isLoadingSummary,
     error: isErrorSummary,
     data: surveysSummary,
+    refetch,
+    fetchStatus,
+    isError,
+    isRefetching,
+    isInitialLoading,
+    isRefetchError,
   } = useSurveysSummary() as {
     isLoading: boolean;
     error: any;
-    data: SurveySummaryData;
+    data: SurveySummaryData | any;
+    refetch: any;
+    fetchStatus: any;
+    isError: boolean;
+    isRefetching: boolean;
+    isInitialLoading: boolean;
+    isRefetchError: boolean;
   };
+
+  useEffect(() => {
+    if (!isInitialLoading)
+      notifications.show({
+        id: "refetch-data",
+        loading: true,
+        title: "Refreshing data",
+        message: "Hold on, your data is getting updated..",
+        autoClose: 2000,
+        withCloseButton: true,
+      });
+  }, [isRefetching]);
+
+  useEffect(() => {
+    fetchStatus === "idle" && notifications.clean();
+  }, [fetchStatus]);
 
   function prepareData(surveysSummary: SurveySummaryData) {
     let dateResponseCount = {};
@@ -148,11 +183,11 @@ export default function DashboardHome() {
 
   return (
     <>
-      {user && !isLoadingSummary ? (
+      {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
         <Container fluid w="100%">
           <Stack>
             <Group>
-              <Stack style={{ width: "28%" }}>
+              <Stack style={{ width: isLargerScreen && "28%" }}>
                 <RateupButtonBlue
                   onClick={open}
                   title={"Create"}
@@ -269,9 +304,9 @@ export default function DashboardHome() {
                 px="xl"
                 py="lg"
                 my="xl"
-                pt="xl"
                 shadow="lg"
                 style={{
+                  minWidth: "400px",
                   width: "70%",
                   height: "500px",
                   alignContent: "center",
@@ -279,9 +314,28 @@ export default function DashboardHome() {
               >
                 <Stack>
                   <Group justify="space-between">
-                    <Title order={3} c="gray">
-                      Overall Responses
-                    </Title>
+                    <Group>
+                      <Title order={3} c="gray">
+                        Overall Responses
+                      </Title>
+                      <MantineTooltip label="Refresh data">
+                        <ActionIcon
+                          variant="light"
+                          aria-label="Settings"
+                          onClick={refetch}
+                        >
+                          <IconRefresh
+                            className={
+                              fetchStatus === "!fetching" &&
+                              classes.rotateInfinitely
+                            }
+                            style={{ width: "90%", height: "90%" }}
+                            stroke={1.5}
+                          />
+                        </ActionIcon>
+                      </MantineTooltip>
+                    </Group>
+
                     <Group justify="flex-end">
                       <Button
                         variant={timePeriod === "daily" ? "filled" : "subtle"}
@@ -541,6 +595,22 @@ export default function DashboardHome() {
                   <Text fz="17px" mt="5px" c="gray">
                     ( {filterParam} )
                   </Text>
+                  <MantineTooltip label="Refresh data">
+                    <ActionIcon
+                      variant="light"
+                      aria-label="Settings"
+                      onClick={refetch}
+                    >
+                      <IconRefresh
+                        className={
+                          fetchStatus === "!fetching" &&
+                          classes.rotateInfinitely
+                        }
+                        style={{ width: "90%", height: "90%" }}
+                        stroke={1.5}
+                      />
+                    </ActionIcon>
+                  </MantineTooltip>
                 </Group>
 
                 <Group>
@@ -560,17 +630,11 @@ export default function DashboardHome() {
             </Paper>
 
             <SimpleGrid
-              spacing={"lg"}
+              spacing="lg"
               mb="xl"
               pb="xl"
               mx="sm"
-              cols={{ base: 4, sm: 2, md: 2, lg: 4 }}
-              // breakpoints={[  //TODO VERIFY MANTINE
-              //   { minWidth: "xl", cols: 4 },
-              //   { minWidth: "lg", cols: 4 },
-              //   { minWidth: "md", cols: 2 },
-              //   { maxWidth: "md", cols: 1 },
-              // ]}
+              cols={{ xs: 1, sm: 1, md: 2, lg: 3, xl: 4 }}
             >
               {Array.isArray(surveysSummary?.surveys) &&
                 (surveysSummary?.surveys?.length > 0
@@ -597,8 +661,18 @@ export default function DashboardHome() {
             </SimpleGrid>
           </Stack>
         </Container>
-      ) : (
+      ) : !surveysSummary?.error ? (
         <Loading h={300} />
+      ) : (
+        <Stack p="xl">
+          <Text mb="lg"> An error occured..!</Text>
+          <RateupButtonSecondary
+            size="md"
+            leftIcon={<IconReload />}
+            title="Try again"
+            onClick={refetch}
+          />
+        </Stack>
       )}
     </>
   );

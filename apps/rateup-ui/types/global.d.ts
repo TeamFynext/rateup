@@ -84,6 +84,9 @@ declare global {
     };
   }
 
+  type dataError = {
+    error: string;
+  };
   interface SurveySummaryData {
     totalTeamsCount: number;
     totalSurveysCount: number;

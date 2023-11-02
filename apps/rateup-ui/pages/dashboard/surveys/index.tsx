@@ -30,6 +30,7 @@ import {
   IconPencil,
   IconSettings,
   IconCheck,
+  IconReload,
 } from "@tabler/icons-react";
 import {
   RateupButtonBlue,
@@ -96,7 +97,12 @@ export default function Surveys() {
     return (
       <Stack>
         <Text>An error occured!</Text>
-        <RateupButtonSecondary title="Try again" onClick={refetch} />
+        <RateupButtonSecondary
+          size="md"
+          leftIcon={<IconReload />}
+          title="Try again"
+          onClick={refetch}
+        />
       </Stack>
     );
   }

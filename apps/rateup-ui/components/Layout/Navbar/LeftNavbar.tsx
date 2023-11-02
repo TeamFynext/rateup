@@ -134,6 +134,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   const router = useRouter();
   const [active, setActive] = useState(0);
   const isLargerThanSm = useMediaQuery("(min-width: 768px)");
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const { user } = useUser();
   const [userProfileAvatar, setUserProfileAvatar] = useState(
     `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`,
@@ -179,10 +180,21 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       style={style}
       w={"100%"}
       h={"100%"}
-      maw={opened ? 250 : 70}
+      maw={opened ? (isMobile ? 360 : 250) : 70}
     >
       {opened ? (
         <Stack align="center" gap={0}>
+          {isMobile && (
+            <Burger
+              opened={opened}
+              onClick={() => {
+                setOpened((o) => !o);
+              }}
+              size="sm"
+              mb="sm"
+              color={theme.colors.gray[6]}
+            />
+          )}
           <PaperLayout w="fit-content" p={5}>
             <Image
               radius={10}
@@ -215,14 +227,16 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   {userInfo.role}
                 </Text>
               </Stack>
-              <Burger
-                opened={opened}
-                onClick={() => {
-                  setOpened((o) => !o);
-                }}
-                size="xs"
-                color={theme.colors.gray[6]}
-              />
+              {!isMobile && (
+                <Burger
+                  opened={opened}
+                  onClick={() => {
+                    setOpened((o) => !o);
+                  }}
+                  size="xs"
+                  color={theme.colors.gray[6]}
+                />
+              )}
             </Group>
           </PaperLayout>
         </Stack>
@@ -249,44 +263,43 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
           />
         </>
       )}
-      {isLargerThanSm && (
-        <Stack
-          mt={40}
-          w={"100%"}
-          justify="space-between"
-          style={{ flex: 1, overflow: "auto" }}
-        >
-          <Stack p={1} h={"100%"} style={{ overflow: "auto" }}>
-            <_NavbarLink
-              data={navTopData}
-              opened={opened}
-              currentRole={userInfo.role}
-              setOpened={setOpened}
-              active={active}
-              setActive={setActive}
-            />
-          </Stack>
-          <Stack gap={10}>
-            <_NavbarLink
-              data={navBottomData}
-              opened={opened}
-              currentRole={userInfo.role}
-              setOpened={setOpened}
-              active={active}
-              setActive={setActive}
-            />
-            <img
-              src={
-                opened
-                  ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
-                  : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/rateup_new_logo.svg`
-              }
-              alt=""
-              height={opened ? 40 : 20}
-            />
-          </Stack>
+
+      <Stack
+        mt={40}
+        w={"100%"}
+        justify="space-between"
+        style={{ flex: 1, overflow: "auto" }}
+      >
+        <Stack p={1} h={"100%"} style={{ overflow: "auto" }}>
+          <_NavbarLink
+            data={navTopData}
+            opened={opened}
+            currentRole={userInfo.role}
+            setOpened={setOpened}
+            active={active}
+            setActive={setActive}
+          />
         </Stack>
-      )}
+        <Stack gap={10}>
+          <_NavbarLink
+            data={navBottomData}
+            opened={opened}
+            currentRole={userInfo.role}
+            setOpened={setOpened}
+            active={active}
+            setActive={setActive}
+          />
+          <img
+            src={
+              opened
+                ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
+                : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/rateup_new_logo.svg`
+            }
+            alt=""
+            height={opened ? 40 : 20}
+          />
+        </Stack>
+      </Stack>
     </Stack>
   );
 };
