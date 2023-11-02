@@ -38,15 +38,15 @@ export default ({ categories: initialCategories }) => {
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
-    () => {}
+    () => {},
   );
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null
+    null,
   );
 
   const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu
+    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu,
   );
 
   const {
@@ -66,7 +66,7 @@ export default ({ categories: initialCategories }) => {
 
   if (selectedTeamId !== "all") {
     filteredCategory = filteredCategory?.filter(
-      (category) => category?.teamId === selectedTeamId
+      (category) => category?.teamId === selectedTeamId,
     );
   }
   const teamId = menu && menu.teamId;

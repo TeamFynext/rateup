@@ -33,7 +33,10 @@ import {
   useMenuLandingMutationById,
   useUpdateMenuLandingPageOptionById,
 } from "../../../backend/menu/LandingPage/landingpage.query";
-import { RateupButtonPrimary, RateupButtonBlue } from "../../Button/RateupButtons";
+import {
+  RateupButtonPrimary,
+  RateupButtonBlue,
+} from "../../Button/RateupButtons";
 import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
@@ -71,16 +74,16 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [fontListArray, setFontListArray] = useState<string[]>(fontList || []);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled || false
+    editingItem?.menuPageEnabled || false,
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled || false
+    editingItem?.feedbackPageEnabled || false,
   );
   const logoRef = useRef<HTMLButtonElement>(null);
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form
+    form,
   );
   const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
 
@@ -90,7 +93,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId
+    editingItem?.menuId,
   );
 
   useEffect(() => {
@@ -113,7 +116,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     menulandingMutation.mutate(data);
   };
 
-  const handleMenuEnabledChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMenuEnabledChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const checkedValueMenu = {
       option: {
         menuPageEnabled: event?.currentTarget?.checked,
@@ -123,7 +128,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     setIsMenuEnabled(event?.currentTarget?.checked);
   };
 
-  const handleFeedbackEnabledChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFeedbackEnabledChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const checkedValueMenu = {
       option: {
         feedbackPageEnabled: event?.currentTarget?.checked,
@@ -132,7 +139,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     menulandingOptionMutation.mutate(checkedValueMenu);
     setIsFeedbackEnabled(event?.currentTarget?.checked);
   };
-  
+
   return (
     <Grid>
       <Grid.Col span={{ base: 12, md: 7.5, lg: 8 }} p={"md"}>

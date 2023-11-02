@@ -9,3 +9,7 @@
   --light-grey-color: #f0f0f0;
   --bg-grey-color: #f7f7f7;
 }
+
+html {
+  scroll-behavior: smooth;
+}

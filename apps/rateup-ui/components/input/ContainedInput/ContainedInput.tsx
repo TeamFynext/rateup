@@ -41,7 +41,7 @@ export function ContainedPasswordInput(props: PasswordInputProps) {
 export const ContainedFileInput = React.forwardRef(
   (props: FileInputProps, ref: React.Ref<HTMLButtonElement>) => {
     return <FileInput ref={ref} classNames={classes} {...props} />;
-  }
+  },
 );
 
 export function ContainedNumberInput(props: NumberInputProps) {

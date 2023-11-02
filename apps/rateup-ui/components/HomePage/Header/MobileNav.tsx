@@ -33,6 +33,9 @@ function MobileNav() {
           duration: 300,
           timingFunction: "ease",
         }}
+        onChange={(opened) => {
+          setIsMobileNavOpen(opened);
+        }}
       >
         <Menu.Target>
           <Burger

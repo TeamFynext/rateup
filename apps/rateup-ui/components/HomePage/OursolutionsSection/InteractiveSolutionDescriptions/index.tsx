@@ -30,12 +30,13 @@ function InteractiveSolutionDescriptions({
     threshold: 0,
   });
 
+  const descriptionsCarousalRef = useRef(null);
+
   const autoplay = useRef(Autoplay({ delay: 4000 }));
 
   const variableValues = useRef({
     activeSlideIndex: null,
     imageCarousalEmblaInstance: null,
-    descriptionsCarousalEmblaInstance: null,
     autoplayInterval: null,
   });
 
@@ -72,6 +73,27 @@ function InteractiveSolutionDescriptions({
   }, []);
 
   useEffect(() => {
+    const descriptionsCarouselRootElement = descriptionsCarousalRef.current;
+    let controls = [];
+    const onControlClick = (e) => {
+      autoplay.current?.stop();
+    };
+    if (descriptionsCarouselRootElement) {
+      controls = descriptionsCarouselRootElement.querySelectorAll(
+        ".mantine-Carousel-control",
+      );
+      controls.forEach((control, index) => {
+        control.addEventListener("click", onControlClick);
+      });
+    }
+    return () => {
+      controls.forEach((control, index) => {
+        control.removeEventListener("click", onControlClick);
+      });
+    };
+  }, [descriptionsCarousalRef.current]);
+
+  useEffect(() => {
     return () => autoplay.current?.destroy();
   }, []);
 
@@ -99,6 +121,7 @@ function InteractiveSolutionDescriptions({
           onMouseEnter={autoplay.current.stop}
           onMouseLeave={() => autoplay.current.play()}
           speed={5}
+          ref={descriptionsCarousalRef}
           // withControls={false}
         >
           <DescriptionsCarouselSlides

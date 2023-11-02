@@ -32,7 +32,7 @@ export const useMenuLandingMutationById = (menuId: string) => {
 export const useUpdateMenuLandingPageOptionById = (menuId: string) => {
   const queryClient = useQueryClient();
   const menuLandingMutation = useMutation({
-    mutationFn: (data:any) => updateMenuLandingPageOptionById(menuId, data),
+    mutationFn: (data: any) => updateMenuLandingPageOptionById(menuId, data),
     onSuccess: () => {
       showSuccessToast("MenuLanding options updated successfully");
       queryClient.invalidateQueries({ queryKey: ["menuLanding", menuId] });

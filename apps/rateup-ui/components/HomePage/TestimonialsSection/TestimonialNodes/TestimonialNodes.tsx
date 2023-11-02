@@ -41,11 +41,15 @@ function TestimonialNodes({ discName, popoversState }: testimonialNodesProps) {
               </div>
             </Popover.Target>
             <Popover.Dropdown>
-              <Text>{testimonialObj.testimonial}</Text>
+              <Text className={styles1["testimonial-text"]}>
+                "{testimonialObj.testimonial}"
+              </Text>
               <div className={styles1["name-role-and-companylogo-container"]}>
                 <div className={styles1["name-role"]}>
-                  <p>{testimonialObj.name}</p>
-                  <p>{testimonialObj.jobRole}</p>
+                  <Text className={styles1["name-para"]}>
+                    {testimonialObj.name}
+                  </Text>
+                  <Text>{testimonialObj.jobRole}</Text>
                 </div>
                 <div className={styles1["compnaylogo"]}>
                   <img

@@ -17,7 +17,7 @@ type ShareMenuProps = {
   teamId: string;
 };
 
-const ShareMenu = ({ menuId, teamId }:ShareMenuProps) => {
+const ShareMenu = ({ menuId, teamId }: ShareMenuProps) => {
   const queryClient = useQueryClient();
   const [selectedSurvey, setSelectedSurvey] = useState<string | null>(null);
   const {
@@ -121,7 +121,6 @@ const ShareMenu = ({ menuId, teamId }:ShareMenuProps) => {
     </Stack>
   );
 };
-
 
 export default ShareMenu;
 function showErrorToast(message: any) {

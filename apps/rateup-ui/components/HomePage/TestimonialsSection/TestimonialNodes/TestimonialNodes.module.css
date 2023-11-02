@@ -6,8 +6,9 @@
   padding: 1.5rem;
 }
 
-.dropdown > p {
-  font-weight: 600;
+.testimonial-text {
+  margin-bottom: 1rem;
+  font-weight: bold;
 }
 
 .name-role-and-companylogo-container {
@@ -15,8 +16,9 @@
   justify-content: space-between;
 }
 
-.name-role {
-  font-weight: 600;
+.name-para {
+  margin-bottom: 0.3125rem;
+  font-weight: bold;
 }
 
 .compnaylogo {
