@@ -12,7 +12,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
 import { CategoryCard } from "../../../components/menu/category/CategoryCard";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { useMenu } from "../../../backend/menu/menu.query";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import MenuSettings from "../../../components/menu/Settings/MenuSettings";
@@ -38,35 +37,34 @@ export default ({ categories: initialCategories }) => {
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
-    () => {},
+    () => {}
   );
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null,
+    null
   );
 
   const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu,
+    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu
   );
 
   const {
     isLoading: isLoadingMenu,
     isError: isErrorMenu,
-    data: menu,
-  } = useMenu(menuId);
+    data: menuLandingData,
+  } = useMenuLandingById(menuId);
+  let menu = menuLandingData?.menu;
 
   const {
     isLoading,
     isError,
     data: categories,
   } = useCategories(menuId, initialCategories);
-  const { isLoading: isMenuLandingLoading, data: menuLandingData } =
-    useMenuLandingById(menuId);
   let filteredCategory = categories;
 
   if (selectedTeamId !== "all") {
     filteredCategory = filteredCategory?.filter(
-      (category) => category?.teamId === selectedTeamId,
+      (category) => category?.teamId === selectedTeamId
     );
   }
   const teamId = menu && menu.teamId;
@@ -81,10 +79,10 @@ export default ({ categories: initialCategories }) => {
     }
   }, [tab]);
 
-  if ((!categories && (isLoading || isError)) || isMenuLandingLoading) {
+  if ((!categories && (isLoading || isError)) || isLoadingMenu) {
     return <CenteredSpinner />;
   }
-  const transformedData = transformData(menuLandingData?.data);
+  const transformedData = transformData(menuLandingData);
   function handleCreateCategory() {
     setEditingCategory(null);
     open();
@@ -174,7 +172,7 @@ export default ({ categories: initialCategories }) => {
           <LandingPage editingItem={transformedData} />
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Share}>
-          {menu && <ShareMenu menuId={menu.id} teamId={menu.teamId} />}
+          {menu && <ShareMenu menu={menu}/>}
         </Tabs.Panel>
       </StyledTabs>
     </Group>

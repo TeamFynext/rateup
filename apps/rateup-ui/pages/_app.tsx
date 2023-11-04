@@ -137,7 +137,7 @@ export default function App({
                     <motion.div
                       style={{ height: "100%" }}
                       key={appProps.router.pathname}
-                      initial={{ opacity: 0 }}
+                      // initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5 }}
                     >

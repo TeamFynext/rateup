@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Grid, SimpleGrid, Center, Image, Skeleton } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import {
   ContainedFileInput,
+  ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../../input/TeamSelector";
@@ -12,6 +13,8 @@ import Heading from "../../styled/Heading/Heading";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
 import { useFileUpload } from "../hook/fileUpload";
+import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
+import CenteredSpinner from "../../Loaders/CenteredSpinner";
 
 const GeneralSettings = ({ editingItem }) => {
   const form = useForm({
@@ -25,6 +28,7 @@ const GeneralSettings = ({ editingItem }) => {
       logo: "",
       backgroundImage: "",
       teamId: "",
+      surveyId: "",
     },
     validate: {
       name: (value) => (value?.trim().length ? null : "Cannot be empty"),
@@ -40,13 +44,24 @@ const GeneralSettings = ({ editingItem }) => {
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form,
+    form
   );
   const { isPending, error, mutate } = useUpdateMenuMutation(
     editingItem?.id,
     () => {},
-    () => {},
+    () => {}
   );
+  const { data: surveys = [], isPending: surveyIsPending } = useSurveysByTeam(
+    form?.values?.teamId,
+    !!form?.values?.teamId
+  );
+
+  if (surveyIsPending) return <CenteredSpinner />;
+
+  const surveyFormatedData = surveys?.map((survey) => ({
+    value: survey.id,
+    label: survey.title,
+  }));
   const onSubmit = (values: any) => {
     mutate({
       menuId: editingItem?.id,
@@ -92,18 +107,38 @@ const GeneralSettings = ({ editingItem }) => {
               {...form.getInputProps("locationUrl")}
             />
           </SimpleGrid>
-          <SimpleGrid cols={2} spacing="md">
-            <ContainedTextField
-              label="Website Label"
-              placeholder="paragonHotels.in"
-              {...form.getInputProps("websiteText")}
-            />
-            <ContainedTextField
-              label="Website URL"
-              placeholder="https://paragonHotels.in"
-              {...form.getInputProps("websiteUrl")}
-            />
-          </SimpleGrid>
+          <Grid>
+            <Grid.Col span={6}>
+              <ContainedTextField
+                label="Website Label"
+                placeholder="paragonHotels.in"
+                {...form.getInputProps("websiteText")}
+              />
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <ContainedTextField
+                label="Website URL"
+                placeholder="https://paragonHotels.in"
+                {...form.getInputProps("websiteUrl")}
+              />
+            </Grid.Col>
+
+            <Grid.Col>
+              <ContainedSelection
+                withAsterisk
+                label="choose a survey to display in the menu pagel"
+                placeholder={
+                  surveyFormatedData?.length === 0
+                    ? "There is no published survay"
+                    : "Select survey"
+                }
+                disabled={surveyFormatedData?.length === 0}
+                required
+                data={surveyFormatedData}
+                {...form.getInputProps("surveyId")}
+              />
+            </Grid.Col>
+          </Grid>
           <SimpleGrid cols={2} spacing="md">
             <ContainedFileInput
               label="Upload Logo"

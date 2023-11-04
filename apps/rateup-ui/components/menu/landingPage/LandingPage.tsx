@@ -34,11 +34,11 @@ import {
   useUpdateMenuLandingPageOptionById,
 } from "../../../backend/menu/LandingPage/landingpage.query";
 import {
-  RateupButtonPrimary,
   RateupButtonBlue,
 } from "../../Button/RateupButtons";
 import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import TabsCommon from "./Tabs/TabsCommon";
 
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
@@ -66,34 +66,40 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       websiteUrl: "",
       logo: "",
       backgroundImage: "",
+      mobileBackgroundImage:"",
       menuId: "",
     },
   });
 
   const [logo, setLogo] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
+  const [mobileBackgroundImage, setMobileBackgroundImage] = useState<File | null>(null);
   const [fontListArray, setFontListArray] = useState<string[]>(fontList || []);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled || false,
+    editingItem?.menuPageEnabled ?? true
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled || false,
+    editingItem?.feedbackPageEnabled ?? true
   );
   const logoRef = useRef<HTMLButtonElement>(null);
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form,
+    form
   );
   const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
+  const { isUploading: isMobileBgUploading } = useFileUpload(mobileBackgroundImage, "mobileBackgroundImage", form);
 
+
+
+  const [selectedTab, setSelectedTab] = useState("Tablet");
   const imageWidth = useMediaQuery(`(max-width: ${em(750)})`) ? 60 : 127;
   const imageHeight = useMediaQuery(`(max-width: ${em(750)})`) ? 60 : 127;
   const fallbackImage = "/images/no_image_template.jpeg";
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId,
+    editingItem?.menuId
   );
 
   useEffect(() => {
@@ -117,7 +123,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleMenuEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -129,7 +135,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleFeedbackEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -139,30 +145,78 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     menulandingOptionMutation.mutate(checkedValueMenu);
     setIsFeedbackEnabled(event?.currentTarget?.checked);
   };
-
+  const renderFeedbackComponent = () => {
+    if (isFeedbackEnabled) {
+      return (
+        <Stack align="center">
+          <Image
+            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
+            h={"auto"}
+            w={selectedTab == "Mobile"?"80px":imageWidth}
+            maw={"100%"}
+          />
+          <Text c={"white"}>FEEDBACK</Text>
+        </Stack>
+      );
+    } else {
+      return <Stack h={imageHeight} w={imageWidth}></Stack>;
+    }
+  };
+  const renderMenuComponent = () => {
+    if (isMenuEnabled) {
+      return (
+        <Stack align="center">
+          <Image
+            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
+            h={"auto"}
+            w={selectedTab == "Mobile"?"80px":imageWidth}
+            maw={"100%"}
+          />
+          <Text c={"white"}>MENU</Text>
+        </Stack>
+      );
+    } else {
+      return <Stack h={imageHeight} w={imageWidth}></Stack>;
+    }
+  };
   return (
     <Grid>
       <Grid.Col span={{ base: 12, md: 7.5, lg: 8 }} p={"md"}>
         <PaperLayout>
-          <Flex p={"sm"}>
-            <RateupButtonPrimary title="tablet" />
-            <Flex justify={"center"} w={"100%"}>
-              <Title order={2}>Preview Screen</Title>
-            </Flex>
-          </Flex>
-          <Stack px={isMobile ? "xs" : "lg"} pb={"lg"} pos={"relative"}>
+          <SimpleGrid p={"sm"} cols={3}>
+            <TabsCommon
+              tabHeading={["Tablet", "Mobile"]}
+              radius={"lg"}
+              value={selectedTab}
+              onChange={(value) => setSelectedTab(value)}
+              children
+            />
+            <Title order={2}>Preview Screen</Title>
+            <div></div>
+          </SimpleGrid>
+          <Stack
+            px={isMobile ? "xs" : "lg"}
+            pb={"lg"}
+            pos={"relative"}
+            align="center"
+          >
             <LoadingOverlay
-              visible={isBackgroundImageUploading}
+              visible={isBackgroundImageUploading||isMobileBgUploading}
               zIndex={1000}
               overlayProps={{ radius: "sm", blur: 2 }}
             />
             <BackgroundImage
               src={
-                form?.values?.backgroundImage
+                selectedTab === "Mobile"
+                  ? form?.values?.mobileBackgroundImage
+                    ? getFileUrlFromKey(form?.values?.mobileBackgroundImage)
+                    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/mobileBackground.jpg`
+                  : form?.values?.backgroundImage
                   ? getFileUrlFromKey(form?.values?.backgroundImage)
                   : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg`
               }
               radius="xl"
+              w={selectedTab === "Mobile" && 300}
             >
               <Group mih={"60vh"} mah={"700"} w={"100%"}>
                 <Stack w={"100%"}>
@@ -185,19 +239,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     )}
                   </Center>
                   <Flex justify="space-between" px={isMobile ? "xs" : "xl"}>
-                    {isMenuEnabled ? (
-                      <Stack align="center">
-                        <Image
-                          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
-                          h={imageHeight}
-                          w={imageWidth}
-                          maw={"100%"}
-                        />
-                        <Text c={"white"}>MENU</Text>
-                      </Stack>
-                    ) : (
-                      <Stack h={imageHeight} w={imageWidth}></Stack>
-                    )}
+                    {selectedTab !== "Mobile" && renderMenuComponent()}
                     <Stack gap={0}>
                       <ContainedTextArea
                         placeholder="Welcome to"
@@ -254,20 +296,14 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         />
                       </Flex>
                     </Stack>
-                    {isFeedbackEnabled ? (
-                      <Stack align="center">
-                        <Image
-                          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
-                          h={imageHeight}
-                          w={imageWidth}
-                          maw={"100%"}
-                        />
-                        <Text c={"white"}>FEEDBACK</Text>
-                      </Stack>
-                    ) : (
-                      <Stack h={imageHeight} w={imageWidth}></Stack>
-                    )}
+                    {selectedTab !== "Mobile" && renderFeedbackComponent()}
                   </Flex>
+                  {selectedTab == "Mobile" && (
+                    <Group justify="center">
+                      {renderMenuComponent()}
+                      {renderFeedbackComponent()}
+                    </Group>
+                  )}
                 </Stack>
               </Group>
               <Center w="100%">
@@ -307,7 +343,17 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 <ContainedFileInput
                   mx={"lg"}
                   label=""
-                  placeholder="Click here to upload"
+                  placeholder="Upload Mobile Image"
+                  accept="image/*"
+                  multiple={false}
+                  error={form?.errors?.mobileBackgroundImage}
+                  onChange={setMobileBackgroundImage}
+                  
+                />
+                <ContainedFileInput
+                  mx={"lg"}
+                  label=""
+                  placeholder="Upload Tablet Image"
                   accept="image/*"
                   multiple={false}
                   error={form?.errors?.backgroundImage}
@@ -327,16 +373,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 />
 
                 <Text mt={"xs"}>Text Settings</Text>
-                <Tabs
+                <TabsCommon
+                  tabHeading={["header", "title", "other"]}
                   value={tabState}
+                  radius={"xl"}
                   onChange={(value: string) => setTabState(value)}
                 >
-                  <Tabs.List grow>
-                    <Tabs.Tab value="header">Header</Tabs.Tab>
-                    <Tabs.Tab value="title">Title</Tabs.Tab>
-                    <Tabs.Tab value="other">Other</Tabs.Tab>
-                  </Tabs.List>
-
                   <Tabs.Panel value="header">
                     <ContainedSelection
                       mx={"lg"}
@@ -379,7 +421,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       />
                     </SimpleGrid>
                   </Tabs.Panel>
-
                   <Tabs.Panel value="title">
                     <ContainedSelection
                       mx={"lg"}
@@ -443,7 +484,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       />
                     </SimpleGrid>
                   </Tabs.Panel>
-                </Tabs>
+                </TabsCommon>
 
                 <Center>
                   <RateupButtonBlue
