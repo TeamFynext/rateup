@@ -32,9 +32,9 @@ export const getServerSideProps = async (context: { params: MenuProp }) => {
 export default function ({ menuLanding }: { menuLanding: Data }) {
   const fallbackImage = "/images/no_image_template.jpeg";
   const fallbackImageBackround = "/images/menu/background.jpg";
-  const largeScreen = useMediaQuery("(min-width: 60em)");
+  const largeScreen = useMediaQuery("(min-width: 40em)");
 
-  if (!menuLanding)
+  if (!menuLanding || !menuLanding?.menu?.isPublished)
     return (
       <Stack align="center" h="50vh" justify="space-around">
         <Text size="xl" c="red" fw="600">
@@ -56,8 +56,9 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
           <div></div>
           <Stack>
             <Grid align="center" w="100%">
-              <Grid.Col order={largeScreen ? 1 : 2} span={largeScreen ? 3 : 6}>
-                {menuLanding?.menuPageEnabled && <MenuButton />}
+              <Grid.Col order={largeScreen ? 1 : 2} span={largeScreen ? 3 : 12}>
+                {(menuLanding?.menuPageEnabled === true ||
+                  menuLanding?.menuPageEnabled === undefined) && <MenuButton />}
               </Grid.Col>
               <Grid.Col
                 span={largeScreen ? 6 : 12}
@@ -85,15 +86,17 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   )}
                   <Stack align="center">
                     <Text
-                      fz={menuLanding?.headerStyle?.fontSize}
+                      fz={menuLanding?.headerStyle?.fontSize || "30px"}
                       fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
+                      ff={menuLanding?.headerStyle?.fontFamily}
                       c={menuLanding?.headerStyle?.color ?? "inherit"}
                     >
                       {menuLanding?.headerText ?? "Welcome To"}
                     </Text>
                     <Text
-                      fz={menuLanding?.titleStyle?.fontSize ?? "max(3vw, 2rem)"}
+                      fz={menuLanding?.titleStyle?.fontSize ?? "max(3vw, 4rem)"}
                       fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
+                      ff={menuLanding?.titleStyle?.fontFamily}
                       c={menuLanding?.titleStyle?.color ?? "inherit"}
                     >
                       {menuLanding?.menu?.displayName}
@@ -137,8 +140,11 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   </Group>
                 </Stack>
               </Grid.Col>
-              <Grid.Col order={3} span={largeScreen ? 3 : 6}>
-                {menuLanding?.feedbackPageEnabled && <FeedbackButton />}
+              <Grid.Col order={largeScreen ? 3 : 2} span={largeScreen ? 3 : 12}>
+                {(menuLanding?.feedbackPageEnabled === true ||
+                  menuLanding?.feedbackPageEnabled === undefined) && (
+                  <FeedbackButton />
+                )}
               </Grid.Col>
             </Grid>
           </Stack>

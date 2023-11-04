@@ -33,9 +33,7 @@ import {
   useMenuLandingMutationById,
   useUpdateMenuLandingPageOptionById,
 } from "../../../backend/menu/LandingPage/landingpage.query";
-import {
-  RateupButtonBlue,
-} from "../../Button/RateupButtons";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "./Tabs/TabsCommon";
@@ -66,14 +64,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       websiteUrl: "",
       logo: "",
       backgroundImage: "",
-      mobileBackgroundImage:"",
+      mobileBackgroundImage: "",
       menuId: "",
     },
   });
 
   const [logo, setLogo] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
-  const [mobileBackgroundImage, setMobileBackgroundImage] = useState<File | null>(null);
+  const [mobileBackgroundImage, setMobileBackgroundImage] =
+    useState<File | null>(null);
   const [fontListArray, setFontListArray] = useState<string[]>(fontList || []);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
     editingItem?.menuPageEnabled ?? true
@@ -88,9 +87,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     form
   );
   const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
-  const { isUploading: isMobileBgUploading } = useFileUpload(mobileBackgroundImage, "mobileBackgroundImage", form);
-
-
+  const { isUploading: isMobileBgUploading } = useFileUpload(
+    mobileBackgroundImage,
+    "mobileBackgroundImage",
+    form
+  );
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
   const imageWidth = useMediaQuery(`(max-width: ${em(750)})`) ? 60 : 127;
@@ -145,14 +146,20 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     menulandingOptionMutation.mutate(checkedValueMenu);
     setIsFeedbackEnabled(event?.currentTarget?.checked);
   };
+  const titleMobile = selectedTab === "Mobile" && {
+    fontSize: form?.values?.titleStyle.fontSize * 0.6,
+  };
+  const headerMobile = selectedTab === "Mobile" && {
+    fontSize: form?.values?.headerStyle.fontSize * 0.6,
+  };
   const renderFeedbackComponent = () => {
     if (isFeedbackEnabled) {
       return (
-        <Stack align="center">
+        <Stack align="center" gap={0}>
           <Image
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
             h={"auto"}
-            w={selectedTab == "Mobile"?"80px":imageWidth}
+            w={selectedTab == "Mobile" ? "50px" : imageWidth}
             maw={"100%"}
           />
           <Text c={"white"}>FEEDBACK</Text>
@@ -165,11 +172,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const renderMenuComponent = () => {
     if (isMenuEnabled) {
       return (
-        <Stack align="center">
+        <Stack align="center" gap={0}>
           <Image
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
-            h={"auto"}
-            w={selectedTab == "Mobile"?"80px":imageWidth}
+            w={selectedTab == "Mobile" ? "50px" : imageWidth}
             maw={"100%"}
           />
           <Text c={"white"}>MENU</Text>
@@ -201,7 +207,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
             align="center"
           >
             <LoadingOverlay
-              visible={isBackgroundImageUploading||isMobileBgUploading}
+              visible={isBackgroundImageUploading || isMobileBgUploading}
               zIndex={1000}
               overlayProps={{ radius: "sm", blur: 2 }}
             />
@@ -248,6 +254,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         styles={{
                           input: {
                             ...form?.values?.headerStyle,
+                            ...headerMobile,
                             border: "none",
                             textAlign: "center",
                           },
@@ -261,13 +268,20 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         styles={{
                           input: {
                             ...form?.values?.titleStyle,
+                            ...titleMobile,
                             border: "none",
                             textAlign: "center",
                           },
                         }}
                         {...form.getInputProps("titleText")}
                       />
-                      <Flex c={"white"} justify={"space-between"} columnGap={4}>
+                      <Flex
+                        c={"white"}
+                        justify={"center"}
+                        align={"center"}
+                        columnGap={4}
+                        direction={selectedTab === "Mobile" ? "column" : "row"}
+                      >
                         <ContainedTextArea
                           placeholder="location"
                           leftSection={<IconMapPin size={10} />}
@@ -299,10 +313,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     {selectedTab !== "Mobile" && renderFeedbackComponent()}
                   </Flex>
                   {selectedTab == "Mobile" && (
-                    <Group justify="center">
+                    <Stack justify="center">
                       {renderMenuComponent()}
                       {renderFeedbackComponent()}
-                    </Group>
+                    </Stack>
                   )}
                 </Stack>
               </Group>
@@ -348,7 +362,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   multiple={false}
                   error={form?.errors?.mobileBackgroundImage}
                   onChange={setMobileBackgroundImage}
-                  
                 />
                 <ContainedFileInput
                   mx={"lg"}

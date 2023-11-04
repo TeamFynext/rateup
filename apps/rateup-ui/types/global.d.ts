@@ -284,6 +284,7 @@ declare global {
     teamId: string;
     logo?: string;
     backgroundImage?: string;
+    isPublished?: boolean;
   };
 
   type MenuCategory = {
