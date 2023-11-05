@@ -8,7 +8,7 @@ const surveyCore = {
     invalid_type_error: "Title must be a string",
   }),
   languages: z.array(z.string()),
-  teamId: z.string({ required_error: "TeamId is required" }),
+  teamIds: z.array(z.string({ required_error: "TeamId is required" })),
   active: z.boolean().default(true),
   type: z.string().default("web"),
   getLocation: z.boolean().default(false),

@@ -116,16 +116,18 @@ export async function getPublicSurveyByIdHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const survey = await getPublicSurveyById(request.params.id);
-    if (!survey) {
-      reply.code(404);
-    } else {
-      reply.send(survey);
-    }
-  } catch (e) {
-    reply.code(500);
-  }
+  // try {
+  //   const survey = await getPublicSurveyById(request.params.id);
+  //   if (!survey) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.send(survey);
+  //   }
+  // } catch (e) {
+  //   reply.code(500);
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 //---------------get landing page by id ----------
@@ -223,16 +225,18 @@ export async function getSurveyByTeamHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const survey = await getSurveysByTeam(request.params.id);
-    if (!survey) {
-      reply.code(404);
-    } else {
-      reply.send(survey);
-    }
-  } catch (e) {
-    reply.code(500);
-  }
+  // try {
+  //   const survey = await getSurveysByTeam(request.params.id);
+  //   if (!survey) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.send(survey);
+  //   }
+  // } catch (e) {
+  //   reply.code(500);
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function getSurveysHandler(
@@ -406,16 +410,18 @@ export async function visitedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const updateVisited = await updateVisitedSurvey(request.params.id);
-    if (!updateVisited) {
-      reply.code(404);
-    } else {
-      reply.code(200).send({ status: "success" });
-    }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
-  }
+  // try {
+  //   const updateVisited = await updateVisitedSurvey(request.params.id);
+  //   if (!updateVisited) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.code(200).send({ status: "success" });
+  //   }
+  // } catch (e) {
+  //   reply.code(500).send({ status: "error", message: e });
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function startedSurveyHandler(
@@ -424,16 +430,18 @@ export async function startedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const updateStarted = await updateStartedSurvey(request.params.id);
-    if (!updateStarted) {
-      reply.code(404);
-    } else {
-      reply.code(200).send({ status: "success" });
-    }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
-  }
+  // try {
+  //   const updateStarted = await updateStartedSurvey(request.params.id);
+  //   if (!updateStarted) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.code(200).send({ status: "success" });
+  //   }
+  // } catch (e) {
+  //   reply.code(500).send({ status: "error", message: e });
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function completedSurveyHandler(
@@ -442,16 +450,18 @@ export async function completedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const updateCompleted = await updateCompletedSurvey(request.params.id);
-    if (!updateCompleted) {
-      reply.code(404);
-    } else {
-      reply.code(200).send({ status: "success" });
-    }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
-  }
+  // try {
+  //   const updateCompleted = await updateCompletedSurvey(request.params.id);
+  //   if (!updateCompleted) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.code(200).send({ status: "success" });
+  //   }
+  // } catch (e) {
+  //   reply.code(500).send({ status: "error", message: e });
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function updateGoogleLinkHandler(
