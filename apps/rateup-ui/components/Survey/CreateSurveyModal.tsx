@@ -158,7 +158,7 @@ export function CreateSurveyModal({
           onChange={setTeamChoice}
           name="selectTeams"
           label="Select teams"
-          description="Team for which survey to be created."
+          //description="Team for which survey to be created."
           withAsterisk
         >
           <Group mt="xs">
@@ -171,8 +171,7 @@ export function CreateSurveyModal({
           <MultiSelect
             value={selectedTeams}
             onChange={setSelectedTeams}
-            label="Your favorite libraries"
-            placeholder="Pick value"
+            placeholder="Select teams"
             data={teamOptions}
             searchable
             error={form.errors.teamIds}
