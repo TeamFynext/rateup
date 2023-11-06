@@ -170,6 +170,7 @@ model Survey {
 
   waCustomerSurveySendHistory      WaCustomerSurveySendHistory[]
   waCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
+  menuLanding                      MenuLanding[]
 }
 
 model SurveyLanding {
@@ -312,8 +313,8 @@ model WelcomeTheme {
 }
 
 model Menu {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime @default(now())
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime       @default(now())
   name            String // name of the menu
   displayName     String // name displayed to clients (eg: Restaurant's Name)
   locationText    String? // location of the restaurant
@@ -322,11 +323,11 @@ model Menu {
   websiteText     String? // text to display for website url
   logo            String? // logo url
   backgroundImage String?
-
-  categories  MenuCategory[]
-  team        Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId      String         @db.Uuid
-  menuLanding MenuLanding?
+  isPublished     Boolean        @default(false)
+  categories      MenuCategory[]
+  team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId          String         @db.Uuid
+  menuLanding     MenuLanding?
 }
 
 model MenuCategory {
@@ -395,17 +396,20 @@ model WaTemplate {
 }
 
 model MenuLanding {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime? @updatedAt
-  headerText          String?
-  headerStyle         Json?
-  titleStyle          Json?
-  otherStyle          Json?
-  logoStyles          Json?
-  backgroundImage     String?
-  menuPageEnabled     Boolean   @default(true)
-  feedbackPageEnabled Boolean   @default(true)
-  menu                Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  menuId              String    @unique @db.Uuid
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime? @updatedAt
+  headerText            String?
+  headerStyle           Json?
+  titleStyle            Json?
+  otherStyle            Json?
+  logoStyles            Json?
+  backgroundImage       String?
+  mobileBackgroundImage String?
+  menuPageEnabled       Boolean   @default(true)
+  feedbackPageEnabled   Boolean   @default(true)
+  menu                  Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId                String    @unique @db.Uuid
+  survey                Survey?   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId              String?   @db.Uuid
 }
