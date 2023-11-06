@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Image,
   Stack,
@@ -50,6 +50,7 @@ function _NavbarLink({
             label={!opened ? label : ""}
             position="right"
             styles={{ tooltip: { display: opened && "none" } }}
+            key={parentIndex}
           >
             <NavLink
               styles={{
@@ -83,7 +84,7 @@ function _NavbarLink({
               }}
               children={
                 submenus?.length > 0
-                  ? submenus.map(({ Icon, label, href, role }) => {
+                  ? submenus.map(({ Icon, label, href, role }, index) => {
                       if (
                         role &&
                         currentRole !== role &&
@@ -91,7 +92,7 @@ function _NavbarLink({
                       )
                         return null;
                       return (
-                        <>
+                        <React.Fragment key={index}>
                           <Tooltip label={label} position="right">
                             <NavLink
                               styles={{
@@ -111,7 +112,7 @@ function _NavbarLink({
                             />
                           </Tooltip>
                           <Divider opacity={0.5} />
-                        </>
+                        </React.Fragment>
                       );
                     })
                   : null
