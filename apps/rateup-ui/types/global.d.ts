@@ -284,6 +284,7 @@ declare global {
     teamId: string;
     logo?: string;
     backgroundImage?: string;
+    isPublished?: boolean;
   };
 
   type MenuCategory = {
@@ -333,4 +334,37 @@ declare global {
     name: string;
     teamId: string;
   };
+}
+
+export interface MenuLanding {
+  success: boolean;
+  data: Data;
+}
+
+export interface Data {
+  id?: string;
+  headerText?: string;
+  headerStyle?: Style;
+  titleStyle?: Style;
+  otherStyle?: OtherStyle;
+  logoStyles?: null;
+  backgroundImage?: string;
+  mobileBackgroundImage?: string;
+  menuPageEnabled?: boolean;
+  feedbackPageEnabled?: boolean;
+  menuId?: string;
+  menu: Menu;
+  landingData: boolean;
+}
+
+export interface Style {
+  color?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  fontWeight?: string;
+}
+
+export interface OtherStyle {
+  color?: string;
+  fontFamily?: string;
 }

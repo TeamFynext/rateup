@@ -1,45 +1,50 @@
 export function transformData(inputData: any) {
-  const defaultHeaderStyle = {
-    fontFamily: "Roboto",
-    fontWeight: "400",
-    fontSize: 18,
-    color: "#ffffff",
+  const defaultStyles = {
+    headerStyle: {
+      fontFamily: "Roboto",
+      fontWeight: "400",
+      fontSize: 30,
+      color: "#ffffff",
+    },
+    titleStyle: {
+      fontFamily: "Roboto",
+      fontWeight: "700",
+      fontSize: 60,
+      color: "#ffffff",
+    },
+    otherStyle: {
+      fontFamily: "Roboto",
+      color: "#ffffff",
+    },
   };
 
-  const defaultTitleStyle = {
-    fontFamily: "Roboto",
-    fontWeight: "700",
-    fontSize: 32,
-    color: "#ffffff",
+  const defaultTexts = {
+    headerText: inputData?.titleText ?? "Welcome To",
+    titleText: inputData?.menu?.displayName || "HOTEL NAME",
+    locationText: inputData?.menu?.locationText || "",
+    websiteUrl: inputData?.menu?.websiteUrl || "",
+    logo: inputData?.menu?.logo || "",
   };
-
-  const defaultOtherStyle = {
-    fontFamily: "Roboto",
-    color: "#ffffff",
-  };
-
-  const defaultHeaderText = "Welcome To";
-  const defaultTitleText = "HOTEL NAME";
 
   if (inputData?.landingData) {
     return {
       headerStyle: {
-        ...defaultHeaderStyle,
-        ...inputData?.headerStyle,
+        fontFamily: inputData?.headerStyle?.fontFamily ?? "Roboto",
+        fontWeight: inputData?.headerStyle?.fontWeight ?? "400",
+        fontSize: inputData?.headerStyle?.fontSize ?? 30,
+        color: inputData?.headerStyle?.color ?? "#ffffff",
       },
       titleStyle: {
-        ...defaultTitleStyle,
-        ...inputData?.titleStyle,
+        fontFamily: inputData?.titleStyle?.fontFamily ?? "Roboto",
+        fontWeight: inputData?.titleStyle?.fontWeight ?? "700",
+        fontSize: inputData?.titleStyle?.fontSize ?? 60,
+        color: inputData?.titleStyle?.color ?? "#ffffff",
       },
       otherStyle: {
-        ...defaultOtherStyle,
-        ...inputData?.otherStyle,
+        fontFamily: inputData?.otherStyle?.fontFamily ?? "Roboto",
+        color: inputData?.otherStyle?.color ?? "#ffffff",
       },
-      headerText: inputData?.headerText || defaultHeaderText,
-      titleText: inputData?.menu?.displayName || defaultTitleText,
-      locationText: inputData?.menu?.locationText || "",
-      websiteUrl: inputData?.menu?.websiteUrl || "",
-      logo: inputData?.menu?.logo || "",
+      ...defaultTexts,
       backgroundImage: inputData?.backgroundImage || "",
       menuId: inputData?.menuId,
       menuPageEnabled: inputData?.menuPageEnabled,
@@ -47,21 +52,11 @@ export function transformData(inputData: any) {
     };
   } else {
     return {
-      headerStyle: {
-        ...defaultHeaderStyle,
-        fontSize: defaultTitleStyle.fontSize,
-      },
-      titleStyle: defaultTitleStyle,
-      otherStyle: defaultOtherStyle,
-      headerText: defaultHeaderText,
-      titleText: inputData?.displayName || defaultTitleText,
-      locationText: inputData?.locationText || "",
-      websiteUrl: inputData?.websiteUrl || "",
-      logo: inputData?.logo || "",
-      backgroundImage: inputData?.backgroundImage || "",
-      menuId: inputData?.id,
-      menuPageEnabled: inputData?.menuPageEnabled,
-      feedbackPageEnabled: inputData?.feedbackPageEnabled,
+      ...defaultStyles,
+      ...defaultTexts,
+      menuId: inputData?.menu?.id,
+      menuPageEnabled: inputData?.menu?.menuPageEnabled,
+      feedbackPageEnabled: inputData?.menu?.feedbackPageEnabled,
     };
   }
 }

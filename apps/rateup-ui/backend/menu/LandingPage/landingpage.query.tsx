@@ -22,7 +22,6 @@ export const useMenuLandingMutationById = (menuId: string) => {
     onSuccess: () => {
       showSuccessToast("MenuLanding updated successfully");
       queryClient.invalidateQueries({ queryKey: ["menuLanding", menuId] });
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId] });
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
     },
   });
@@ -36,7 +35,6 @@ export const useUpdateMenuLandingPageOptionById = (menuId: string) => {
     onSuccess: () => {
       showSuccessToast("MenuLanding options updated successfully");
       queryClient.invalidateQueries({ queryKey: ["menuLanding", menuId] });
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId] });
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
     },
   });
