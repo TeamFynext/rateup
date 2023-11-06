@@ -290,8 +290,8 @@ export async function getSurveyBylandingId(landingid: string) {
  */
  export async function getSurveysByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData.map(
-    (item: { teamId: string }) => item.teamId
+  const teamIds: string[] = teamData?.map(
+    (item: { teamId: string }) => item?.teamId
   );
 
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
@@ -305,9 +305,13 @@ export async function getSurveyBylandingId(landingid: string) {
     },
   });
 
-  const surveys = surveyTeamMaps.map(surveyTeamMap => excludeFields(surveyTeamMap.survey, ["questions", "password"]));
+  const surveys = surveyTeamMaps?.map(surveyTeamMap => surveyTeamMap?.survey);
 
-  return surveys;
+  const uniqueSurveys = Array.from(new Set(surveys.map(survey => survey?.id)))
+  ?.map(id => surveys?.find(survey => survey.id === id))
+  ?.map(survey => excludeFields(survey, ["questions", "password"]));
+  
+  return uniqueSurveys;
  }
 
 
