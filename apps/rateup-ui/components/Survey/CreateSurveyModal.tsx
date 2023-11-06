@@ -88,9 +88,25 @@ export function CreateSurveyModal({
     form.setFieldValue("teamIds", selectedTeams);
   }, [selectedTeams]);
 
+  function arraysEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a?.length !== b?.length) return false;
+
+    a.sort();
+    b.sort();
+
+    for (let i = 0; i < a?.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
   useEffect(() => {
-    if (teamChoice === "all") form.setFieldValue("teamIds", allTeams);
-  }, [allTeams, teamChoice]);
+    if (teamChoice === "all" && !arraysEqual(form?.values?.teamIds, allTeams)) {
+      form.setFieldValue("teamIds", allTeams);
+    }
+  }, [allTeams, teamChoice, form?.values?.teamIds]);
 
   const resetForm = () => {
     form.reset();
@@ -171,7 +187,7 @@ export function CreateSurveyModal({
           <MultiSelect
             value={selectedTeams}
             onChange={setSelectedTeams}
-            placeholder="Select teams"
+            placeholder="Select teams (type in to search)"
             data={teamOptions}
             searchable
             error={form.errors.teamIds}
