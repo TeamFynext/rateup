@@ -108,8 +108,8 @@ export default function Surveys() {
   }
   const surveys =
     selectedTeamId === "all" || !selectedTeamId
-      ? allSurveys.filter((s: Survey) => s.type !== "whatsapp")
-      : allSurveys.filter(
+      ? allSurveys?.filter((s: Survey) => s.type !== "whatsapp")
+      : allSurveys?.filter(
           (s: Survey) => s.teamId === selectedTeamId && s.type !== "whatsapp",
         );
   //--------handle check box click ----------
@@ -187,7 +187,7 @@ export default function Surveys() {
         p={1}
       >
         {surveys
-          .sort((a, b) =>
+          ?.sort((a, b) =>
             sort
               ? new Date(b.createdAt).getTime() -
                 new Date(a.createdAt).getTime()
@@ -405,7 +405,7 @@ function SurveyMenu({ survey }) {
         }}
       >
         <Stack>
-          <Text pr="xl" color="dark.2">
+          <Text pr="xl" c="dark.2">
             Select the team in which the copy to be created.
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>

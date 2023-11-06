@@ -6,7 +6,9 @@ import {
   Stack,
   Switch,
   Text,
+  Radio,
   TextInput,
+  MultiSelect,
 } from "@mantine/core";
 import {
   PillsInput,
@@ -20,6 +22,8 @@ import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
 import { TeamSelector } from "../input/TeamSelector";
 import { useForm } from "@mantine/form";
+import { useTeamsByUser } from "../../backend/team/team.query";
+import FormModalLayout from "../Modal/FormModalLayout";
 interface FormValues {
   title: string;
   languages: Array<string>;
@@ -42,12 +46,27 @@ export function CreateSurveyModal({
   onCreate = (_) => {},
 }: CreateSurveyModalProps) {
   const [languages, setLanguages] = useState<string[]>([]);
+  const [teamChoice, setTeamChoice] = useState("all");
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error,
+  } = useTeamsByUser();
+
+  const allTeams = teamRes?.data.map((team) => team.teamId);
+  const teamOptions = teamRes?.data.map((team) => ({
+    value: team.teamId,
+    label: team.teamName,
+  }));
 
   const form = useForm({
     initialValues: {
       title: "",
       languages: [],
-      teamId: null,
+      teamIds: [],
       type: surveyType ? surveyType : "web",
       getLocation: false,
     },
@@ -55,7 +74,8 @@ export function CreateSurveyModal({
       title: (value) => (value.length ? null : "Cannot be empty"),
       languages: (values) =>
         values.length ? null : "Must contain atleast one language",
-      teamId: (value) => (value ? null : "Must select a team"),
+      teamIds: (values) =>
+        values.length ? null : "Must contain atleast one team",
       type: (value) => (value ? null : "Must select a type"),
     },
   });
@@ -63,6 +83,14 @@ export function CreateSurveyModal({
   useEffect(() => {
     form.setFieldValue("languages", languages);
   }, [languages]);
+
+  useEffect(() => {
+    form.setFieldValue("teamIds", selectedTeams);
+  }, [selectedTeams]);
+
+  useEffect(() => {
+    if (teamChoice === "all") form.setFieldValue("teamIds", allTeams);
+  }, [allTeams, teamChoice]);
 
   const resetForm = () => {
     form.reset();
@@ -100,45 +128,57 @@ export function CreateSurveyModal({
     createSurveyMutation.mutate(form.values);
   };
   return (
-    <Modal
+    <FormModalLayout
       opened={open}
       onClose={() => {
         close();
         form.reset();
       }}
-      title="Create Survey"
+      title={"Create Survey"}
       centered
-      styles={{
-        title: {
-          fontSize: "25px",
-          fontWeight: 700,
-          padding: "10px",
-        },
-      }}
+      onSubmit={form.onSubmit(onSubmit)}
+      buttonTitle={"Submit"}
     >
-      <form onSubmit={form.onSubmit(onSubmit)}>
-        <Stack style={{ minHeight: "300px" }} mt="xl">
-          <TextInput
-            placeholder="Enter title"
-            label="Title"
-            withAsterisk
-            {...form.getInputProps("title")}
-          />
+      <Stack style={{ minHeight: "300px" }} mt="xl">
+        <TextInput
+          placeholder="Enter title"
+          label="Title"
+          withAsterisk
+          {...form.getInputProps("title")}
+        />
 
-          {/* // TODO: Add a user-level language list */}
-          <MultiSelectCreatable
-            value={languages}
-            setValue={setLanguages}
-            errors={form.errors.languages}
+        {/* // TODO: Add a user-level language list */}
+        <MultiSelectCreatable
+          value={languages}
+          setValue={setLanguages}
+          errors={form.errors.languages}
+        />
+        <Radio.Group
+          value={teamChoice}
+          onChange={setTeamChoice}
+          name="selectTeams"
+          label="Select teams"
+          description="Team for which survey to be created."
+          withAsterisk
+        >
+          <Group mt="xs">
+            <Radio checked label="All teams" value="all" />
+            <Radio label="Select Manually" value="manual" />
+          </Group>
+        </Radio.Group>
+
+        {teamChoice === "manual" && (
+          <MultiSelect
+            value={selectedTeams}
+            onChange={setSelectedTeams}
+            label="Your favorite libraries"
+            placeholder="Pick value"
+            data={teamOptions}
+            searchable
+            error={form.errors.teamIds}
           />
-          <TeamSelector
-            label="Team"
-            placeholder="Select team"
-            withAsterisk
-            value={form.values.teamId}
-            onChange={(value) => form.setFieldValue("teamId", value)}
-          />
-          {form.values.type !== "whatsapp" && (
+        )}
+        {/* {form.values.type !== "whatsapp" && (
             <Box>
               <Switch
                 label="Save Respondent's location"
@@ -148,18 +188,9 @@ export function CreateSurveyModal({
                 {`(Automatically fetched from the browser if the respondent allows it.)`}
               </Text>
             </Box>
-          )}
-          <Group justify="flex-end" pt="xl" mt="lg">
-            <Button variant="subtle" onClick={close}>
-              Cancel
-            </Button>
-            <Button variant="filled" type="submit" loading={isCreating}>
-              Submit
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+          )} */}
+      </Stack>
+    </FormModalLayout>
   );
 }
 
