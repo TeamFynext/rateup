@@ -53,7 +53,6 @@ export default ({ categories: initialCategories }) => {
     isError: isErrorMenu,
     data: menuLandingData,
   } = useMenuLandingById(menuId);
-  let menu = menuLandingData?.menu;
 
   const {
     isLoading,
@@ -67,7 +66,6 @@ export default ({ categories: initialCategories }) => {
       (category) => category?.teamId === selectedTeamId
     );
   }
-  const teamId = menu && menu.teamId;
 
   useEffect(() => {
     if (
@@ -82,6 +80,11 @@ export default ({ categories: initialCategories }) => {
   if ((!categories && (isLoading || isError)) || isLoadingMenu) {
     return <CenteredSpinner />;
   }
+  let menu = menuLandingData?.menu;
+  if (menuLandingData?.surveyId) {
+    menu.surveyId = menuLandingData?.surveyId;
+  }
+
   const transformedData = transformData(menuLandingData);
   function handleCreateCategory() {
     setEditingCategory(null);
@@ -172,7 +175,7 @@ export default ({ categories: initialCategories }) => {
           <LandingPage editingItem={transformedData} />
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Share}>
-          {menu && <ShareMenu menu={menu}/>}
+          {menu && <ShareMenu menu={menu} />}
         </Tabs.Panel>
       </StyledTabs>
     </Group>

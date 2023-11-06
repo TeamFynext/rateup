@@ -355,6 +355,7 @@ export interface Data {
   menuId?: string;
   menu: Menu;
   landingData: boolean;
+  surveyId: string;
 }
 
 export interface Style {
