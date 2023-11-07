@@ -108,7 +108,10 @@ export default function Surveys() {
   }
   const surveys =
     selectedTeamId === "all" || !selectedTeamId
-      ? allSurveys?.filter((s: Survey) => s.type !== "whatsapp")
+      ? allSurveys?.filter(
+          (s: Survey, i: number, arr: Survey[]) =>
+            s.type !== "whatsapp" && arr.findIndex((x) => x.id === s.id) === i,
+        )
       : allSurveys?.filter(
           (s: Survey) => s.teamId === selectedTeamId && s.type !== "whatsapp",
         );
