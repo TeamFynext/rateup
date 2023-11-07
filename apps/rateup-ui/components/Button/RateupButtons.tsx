@@ -22,6 +22,7 @@ interface Props {
   ml?: string;
   styles?: any;
   color?: string;
+  className?: string;
 }
 
 export const RateupButtonPrimary = ({

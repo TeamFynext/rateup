@@ -1,7 +1,8 @@
-import React, { ReactElement, ReactNode, useEffect } from "react";
+import React, { ReactElement, ReactNode, useCallback, useEffect } from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
 import { MantineProvider } from "@mantine/core";
+import { nprogress, NavigationProgress } from "@mantine/nprogress";
 import { Notifications } from "@mantine/notifications";
 import SuperTokensReact, {
   redirectToAuth,
@@ -20,17 +21,18 @@ import { UserProvider } from "../context/UserContext";
 import { HydrationBoundary, keepPreviousData } from "@tanstack/react-query";
 
 import SuperTokens from "supertokens-web-js";
-import WithLoader from "../components/Layout/Loader/WithLoader";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/carousel/styles.css";
+import "@mantine/nprogress/styles.css";
 import "../styles/global.css";
 import { GilroyRegular } from "../public/fonts";
 import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import axios from "axios";
+import { useRouter } from "next/router";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -48,6 +50,7 @@ export default function App({
   pageProps,
   ...appProps
 }: AppPropsWithLayout) {
+  const router = useRouter();
   const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
   let LayoutComponent;
   // page has pre defined layout
@@ -111,6 +114,31 @@ export default function App({
 
     doRefresh();
   }, [pageProps.fromSupertokens]);
+
+  useEffect(() => {
+    const startNavigationProgress = () => {
+      nprogress.start();
+    };
+
+    const completeNavigationProgress = () => {
+      nprogress.complete();
+    };
+
+    const resetNavigationProgress = () => {
+      nprogress.reset();
+    };
+
+    router.events.on("routeChangeStart", startNavigationProgress);
+    router.events.on("routeChangeComplete", completeNavigationProgress);
+    router.events.on("routeChangeError", resetNavigationProgress);
+
+    return () => {
+      router.events.off("routeChangeStart", startNavigationProgress);
+      router.events.off("routeChangeComplete", completeNavigationProgress);
+      router.events.off("routeChangeError", resetNavigationProgress);
+    };
+  }, [router]);
+
   if (pageProps.fromSupertokens === "needs-refresh") {
     return null;
   }
@@ -128,6 +156,7 @@ export default function App({
       {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
       <main className={GilroyRegular.className}>
         <MantineProvider theme={theme}>
+          <NavigationProgress color="gray.9" size={4} />
           <Notifications />
           <QueryClientProvider client={queryClient}>
             <HydrationBoundary state={pageProps.dehydratedState}>
@@ -141,9 +170,7 @@ export default function App({
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <WithLoader>
-                        <Component {...pageProps} />
-                      </WithLoader>
+                      <Component {...pageProps} />
                     </motion.div>
                   </AnimatePresence>
                 </LayoutComponent>

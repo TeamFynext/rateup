@@ -1,4 +1,5 @@
 import { notifications } from "@mantine/notifications";
+import React from "react";
 
 export function showSuccessToast(message: string, id = undefined) {
   notifications.show({
@@ -9,12 +10,17 @@ export function showSuccessToast(message: string, id = undefined) {
   });
 }
 
-export function showErrorToast(message: string, id = undefined) {
+export function showErrorToast(
+  message: string,
+  id?: string,
+  icon?: React.ReactNode,
+) {
   notifications.show({
     color: "red",
     title: "Error",
     message: message,
     autoClose: 2000,
+    icon,
   });
 }
 

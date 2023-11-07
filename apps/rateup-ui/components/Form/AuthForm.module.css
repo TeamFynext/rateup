@@ -1,0 +1,106 @@
+.auth-form-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem;
+  overflow: auto;
+  max-width: 26.25rem;
+  background-color: white;
+}
+
+.SIGNUP-auth-form-container {
+  justify-content: flex-start;
+}
+
+.auth-type-signup-form {
+  justify-content: center;
+}
+
+.auth-type-signup-form .login-signup-form-heading {
+  margin-bottom: 2rem;
+}
+
+.rateup-logo-img {
+  display: inline;
+  width: 6.25rem;
+  padding: 0.625rem 0;
+  object-fit: contain;
+}
+
+/* login signup pages common styles */
+.login-signup-form-heading {
+  font-size: 1.75rem;
+  text-align: center;
+  color: var(--tertiary-color);
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.signup-form-heading span {
+  display: block;
+}
+
+.signup-form-heading span:nth-last-child(1) {
+  font-weight: normal;
+}
+
+.login-form-forgot-password-link {
+  display: block;
+  text-align: right;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  color: var(--tertiary-color);
+}
+
+.login-signup-form-submit-btn {
+  display: block;
+  width: 100%;
+  height: 3.125rem;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  font-size: 1rem;
+}
+
+.login-signup-with-google-btn {
+  display: block;
+  width: 100%;
+  height: 3.125rem;
+  border-radius: 1rem;
+  border: 1px solid var(--tertiary-color);
+  color: #2564ae;
+  font-size: 1rem;
+}
+
+.login-sign-up-form .root {
+  margin-bottom: 1rem;
+}
+
+.login-sign-up-form .input {
+  font-size: 1rem;
+  height: 3.125rem;
+  border-radius: 1rem;
+}
+
+.login-form .root:nth-child(2) {
+  margin-bottom: 0;
+}
+
+/* VerifyEmailPage Styles */
+.verify-email-para {
+  text-align: center;
+}
+
+.resend-change-email-navlink-component {
+  font-weight: 600;
+  color: rgb(34, 139, 230);
+  background-color: var(--light-grey-color);
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .auth-form-container {
+    border-radius: 1rem;
+  }
+}

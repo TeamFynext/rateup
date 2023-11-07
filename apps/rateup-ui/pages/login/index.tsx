@@ -2,18 +2,16 @@ import { useDisclosure } from "@mantine/hooks";
 import AuthForm from "../../components/Form/AuthForm";
 import { useCheckSession } from "../../hooks/checkSession";
 import { AuthMode } from "../../utils/enums";
-import { LoadingOverlay} from '@mantine/core';
-
+import { Center, Flex, LoadingOverlay } from "@mantine/core";
+import LoginSignupLayout from "../../components/LoginSignupLayout";
 
 const Login = () => {
-  const isLoading = useCheckSession();
-  const [visible, { toggle }] = useDisclosure(false);
+  const doesSessionExist = useCheckSession();
 
   return (
-    <>
-      {isLoading ? <LoadingOverlay visible={visible} overlayProps={{ blur: 2 }}
- /> : <AuthForm mode={AuthMode.LOGIN} />}
-    </>
+    <LoginSignupLayout>
+      <AuthForm mode={AuthMode.LOGIN} />
+    </LoginSignupLayout>
   );
 };
 

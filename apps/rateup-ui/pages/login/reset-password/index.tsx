@@ -1,8 +1,13 @@
 import ResetPasswordForm from "../../../components/Form/ResetPasswordForm";
+import LoginSignupLayout from "../../../components/LoginSignupLayout";
 import { ResetSteps } from "../../../utils/enums";
 
 const ResetPassword = () => {
-  return <ResetPasswordForm mode={ResetSteps.STEP_ONE} />;
+  return (
+    <LoginSignupLayout>
+      <ResetPasswordForm mode={ResetSteps.STEP_ONE} />
+    </LoginSignupLayout>
+  );
 };
 
 export default ResetPassword;
