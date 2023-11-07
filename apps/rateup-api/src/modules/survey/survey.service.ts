@@ -285,11 +285,9 @@ export async function getSurveyBylandingId(landingid: string) {
 //   }
  }
 
-/**
- * Returns surveys from ALL TEAMs in which the user is a member of
- * @param userId
- * @returns Array of surveys without questions
- */
+
+//------------get ALL Surveys list of a logged user (without qns)--------
+
  export async function getSurveysByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
   const teamIds: string[] = teamData?.map(
@@ -325,27 +323,62 @@ export async function getSurveyBylandingId(landingid: string) {
  * @param userId
  * @returns Array of surveys without questions
  */
- export async function getWebSurveysByUserId(userId: string) {
-//   const teamData = await getTeamsByUserId(userId);
-//   const teamIds: string[] = teamData.map(
-//     (item: { teamId: string }) => item.teamId
-//   );
-//   const surveys = await prisma.survey.findMany({
-//     where: {
-//       type:"web",
-//       teamId: {
-//         in: teamIds,
-//       },
-//     },
-//   });
 
-//   const surveysWithoutQuestions = surveys.map((s) =>
-//     excludeFields(s, ["questions", "password"])
-//   );
-//   return surveysWithoutQuestions;
+//------------get web survey list --------
+ export async function getWebSurveysByUserId(userId: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData?.map(
+    (item: { teamId: string }) => item?.teamId
+  );
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  const webSurveys = allSurveys.filter(survey => survey?.type === 'web')
+  return webSurveys;
  }
 
-//TODO verify SURVEYTEAMMAPS
+
+//------------get whatsapp survey list --------
+export async function getWhatsappSurveysByUserId(userId: string, type: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData?.map(
+    (item: { teamId: string }) => item?.teamId
+  );
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  const whatsAppSurveys = allSurveys.filter(survey => survey?.type === type)
+  return whatsAppSurveys;
+ }
+
 
 
 //------------SURVEY SUMMARY  ----
@@ -422,32 +455,6 @@ export async function getSurveyLandingByUserId(userId: string) {
   return surveysLanding;
 }
 
-//------------get whatsapp survey list --------
- export async function getWhatsappSurveysByUserId(userId: string, type: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData?.map(
-    (item: { teamId: string }) => item?.teamId
-  );
-
-  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
-    where: {
-      teamId: {
-        in: teamIds,
-      },
-    },
-    include: {
-      survey: true,
-    },
-  });
-
-  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
-    return excludeFields(survey, ["questions", "password"]);
-  });
-
-  const whatsAppSurveys = allSurveys.filter(survey => survey?.type === type)
-  return whatsAppSurveys;
- }
 
 
  //------------get survey list  by team id --------
