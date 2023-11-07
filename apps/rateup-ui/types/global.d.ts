@@ -360,3 +360,9 @@ export interface OtherStyle {
   color?: string;
   fontFamily?: string;
 }
+
+export type ReviewSuggestion = {
+  id: string;
+  teamId: string;
+  review: string;
+};
