@@ -9,7 +9,6 @@ import {
   Button,
   Badge,
   ScrollArea,
-  Dialog,
   Divider,
 } from "@mantine/core";
 import {
@@ -28,7 +27,7 @@ import { IconTrash, IconUserEdit } from "@tabler/icons-react";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { useUpdateActiveStatusMutation } from "../../../backend/user/user.query";
 import { useDisclosure } from "@mantine/hooks";
-import DangerZone from "../../../components/DangerZone/DangerZone";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 const Members = () => {
   const router = useRouter();
@@ -127,7 +126,7 @@ const SmallMemberCard = ({
 //small member card ends here
 
 //member modal starts here
-const MemberEditFormModal = ({
+export const MemberEditFormModal = ({
   id,
   onClose,
   member,
@@ -138,7 +137,7 @@ const MemberEditFormModal = ({
 }) => {
   const [newRole, setNewRole] = React.useState(member?.role);
   const updateRole = useUpdateRoleMutation();
-
+  const { user } = useUser();
   function onChangeRole(id: string, role: string) {
     const data = { memberId: id, body: { role: role } };
     updateRole.mutate(data);
@@ -161,10 +160,7 @@ const MemberEditFormModal = ({
       onClose={onClose}
       title="Edit Member"
       buttonTitle="Save"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onChangeRole(member?.id, newRole);
-      }}
+      onSubmit={() => onChangeRole(member?.id, newRole)}
     >
       <Stack gap={"xl"}>
         <SmallMemberCard member={member} />
@@ -172,6 +168,7 @@ const MemberEditFormModal = ({
           <Text fw={900}>Change Role</Text>
           <ContainedSelection
             placeholder="Select Role"
+            disabled={user.role !== "SUPER_ADMIN" || member.id === user.userId}
             defaultValue={member?.role}
             data={[
               { value: UserRole.SUPADM, label: "Super Admin" },
@@ -197,10 +194,7 @@ const LongMemberCard = ({
   teams: Team[];
   openModal?: () => void;
 }) => {
-  const [
-    isDialougeOpened,
-    { close: dialougeClose, open: dialougeOpen, toggle: dialougeToggle },
-  ] = useDisclosure();
+  const [modalOpened, { close, open, toggle }] = useDisclosure();
   const { user } = useUser();
   const updateStatus = useUpdateActiveStatusMutation();
   function onUpdateStatus() {
@@ -213,7 +207,7 @@ const LongMemberCard = ({
       autoClose: false,
       withCloseButton: false,
     });
-    dialougeClose();
+    close();
   }
   return (
     <>
@@ -267,23 +261,21 @@ const LongMemberCard = ({
             size="compact-md"
             color="red"
             disabled={user.userId === member.id}
-            onClick={dialougeOpen}
+            onClick={open}
           >
             <IconTrash size={15} />
           </Button>
         </Group>
       </Group>
-      <Dialog opened={isDialougeOpened}>
-        <Stack>
-          <Heading
-            subtitle="Delete Member"
-            label="Are you sure to delete this team member?"
-          />
-          <Button color="red" fw={100} onClick={onUpdateStatus}>
-            Delete
-          </Button>
-        </Stack>
-      </Dialog>
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={modalOpened}
+        confirmLabel="Delete"
+        headerTitle="Delete Member"
+        headerLabel="Are you sure to delete this team Member?"
+        onConfirm={onUpdateStatus}
+        onClose={close}
+      />
     </>
   );
 };

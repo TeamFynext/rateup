@@ -227,7 +227,14 @@ declare global {
   };
 
   //for individual team
-
+  type member = {
+    id: string;
+    name: string;
+    email: string;
+    role: "ADMIN" | "MEMBER" | "SUPER_ADMIN";
+    userId: string;
+    active: boolean;
+  };
   interface ITeamResponseData {
     teamId: string;
     teamName: string;
@@ -241,14 +248,7 @@ declare global {
       type: "TEAM";
       invitedBy: string;
     }>;
-    members: Array<{
-      id: string;
-      name: string;
-      email: string;
-      role: "ADMIN" | "MEMBER" | "SUPER_ADMIN";
-      userId: string;
-      active: boolean;
-    }>;
+    members: Array<member>;
   }
 
   type UseTeamResult = {

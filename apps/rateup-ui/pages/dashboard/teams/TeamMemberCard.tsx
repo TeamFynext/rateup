@@ -1,82 +1,87 @@
 import React, { useState, useEffect } from "react";
 import {
   Flex,
-  Paper,
   Text,
   Badge,
   Menu,
   ActionIcon,
   Stack,
   Title,
-  Dialog,
   Button,
+  Group,
 } from "@mantine/core";
-import { IconCheck, IconDots, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconDots,
+  IconPencilMinus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { deleteInviteById } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
-import { UserRole } from "../../../utils/enums";
 import { useUser } from "../../../context/UserContext";
-import { useDisclosure } from "@mantine/hooks";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import Heading from "../../../components/styled/Heading/Heading";
-import { useUpdateRoleMutation } from "../../../backend/org/org.query";
+import { MemberEditFormModal } from "../members";
+import { UserRole } from "../../../utils/enums";
 
-const TeamMemberCard = ({ member }) => {
+const TeamMemberCard = ({
+  member,
+}: {
+  member: {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+    status?: string;
+    active?: boolean;
+  };
+}) => {
   const { user } = useUser();
-  const [dialogOpened, { open: openDialog, close: closeDialog }] =
-    useDisclosure(false);
-  const [role, setRole] = useState(member.role);
-  const updateRole = useUpdateRoleMutation();
-
-  function onChangeRole(id: string = member.id) {
-    const data = { memberId: id, body: { role: role } };
-    updateRole.mutate(data);
-    notifications.show({
-      id: "load-data",
-      loading: true,
-      title: "Updating role..",
-      message: `Hold on, your changes are getting updated...`,
-      autoClose: false,
-      withCloseButton: false,
-    });
-    closeDialog();
-  }
+  const [memberModalOpenId, setMemberModalOpenedId] = useState("");
   return (
     <>
-      <PaperLayout>
+      <PaperLayout mih={170} mah={170}>
         <Stack justify="space-between" h={"100%"}>
           <Flex justify={"space-between"} align={"center"}>
             <Stack gap={1}>
-              <Title order={2}>{member.name}</Title>
-              <Text mr={"sm"} truncate fw={600} color="gray">
+              <Title order={3}>{member.name}</Title>
+              <Text mr={"sm"} truncate fw={600} c="gray" size="sm">
                 {member.email}
               </Text>
             </Stack>
-            {member.status === "PENDING" && (
-              <TeamMemberMenu status={member.status} inviteId={member.id} />
+            {member?.status === "PENDING" ? (
+              <TeamMemberMenu status={member?.status} inviteId={member.id} />
+            ) : (
+              <Group gap={0}>
+                <Text size="xs">Edit</Text>
+                <Button
+                  size="compact-sm"
+                  ml={5}
+                  disabled={
+                    user.role !== "SUPER_ADMIN" || member.id === user.userId
+                  }
+                  variant="subtle"
+                  onClick={() => setMemberModalOpenedId(member.id)}
+                >
+                  <IconPencilMinus size={15} />
+                </Button>
+              </Group>
             )}
           </Flex>
           <Flex align={"center"} justify={"space-between"}>
-            {member.status !== "PENDING" && (
-              <ContainedSelection
-                disabled={
-                  user.role !== "SUPER_ADMIN" || member.id === user.userId
-                }
-                defaultValue={member.role}
-                radius={"xl"}
-                data={[
-                  { value: UserRole.SUPADM, label: "Super Admin" },
-                  { value: UserRole.ADM, label: "Admin" },
-                  { value: UserRole.MEMBER, label: "Member" },
-                ]}
-                onChange={(value) => {
-                  setRole(value);
-                  openDialog();
-                }}
-              />
-            )}
+            <Badge
+              color={
+                member?.role === UserRole.SUPADM
+                  ? "red"
+                  : member?.role === UserRole.ADM
+                  ? "orange"
+                  : "green"
+              }
+              variant="dot"
+              size="sm"
+            >
+              {member?.role}
+            </Badge>
             <Badge
               color={member.status === "PENDING" ? "yellow" : "green"}
               variant="light"
@@ -88,17 +93,17 @@ const TeamMemberCard = ({ member }) => {
           </Flex>
         </Stack>
       </PaperLayout>
-      <Dialog opened={dialogOpened}>
-        <Stack>
-          <Heading
-            subtitle="Change Member Role"
-            label="Are you sure to change the role for this team member?"
-          />
-          <Button fw={100} onClick={() => onChangeRole()}>
-            Save
-          </Button>
-        </Stack>
-      </Dialog>
+      <MemberEditFormModal
+        id={memberModalOpenId}
+        onClose={() => setMemberModalOpenedId("")}
+        member={{
+          email: member.email,
+          id: member.id,
+          name: member.name,
+          role: member?.role,
+        }}
+        key={member.id}
+      />
     </>
   );
 };

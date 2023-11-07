@@ -33,6 +33,7 @@ export function useUpdateRoleMutation() {
         autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
     },
     onError: (error: any) => {
       console.error("Error Role Update:", error.message);

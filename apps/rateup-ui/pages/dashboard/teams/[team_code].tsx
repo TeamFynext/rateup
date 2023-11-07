@@ -111,7 +111,6 @@ const TeamDetails = () => {
   }, [teamsMembersData]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
     const validationErrors = validateNameAndEmail(name, email);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -178,7 +177,7 @@ const TeamDetails = () => {
             <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
             <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
           </Tabs.List>
-          <Group>
+          <Group mih={60}>
             <Heading
               title={teamsMembersData?.teamName || "Team"}
               titleprops={{ w: "fit-content" }}
@@ -194,7 +193,7 @@ const TeamDetails = () => {
             </Tabs.Panel>
           </Group>
         </Stack>
-        <Tabs.Panel value={TabEnum.Members} mt={30}>
+        <Tabs.Panel value={TabEnum.Members}>
           <SimpleGrid
             p={1}
             spacing={"lg"}
