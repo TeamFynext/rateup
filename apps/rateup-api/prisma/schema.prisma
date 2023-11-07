@@ -430,7 +430,7 @@ model MenuLanding {
   backgroundImage       String?
   mobileBackgroundImage String?
   menuPageEnabled       Boolean   @default(true)
-  feedbackPageEnabled   Boolean   @default(true)
+  feedbackPageEnabled   Boolean   @default(false)
   menu                  Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId                String    @unique @db.Uuid
   survey                Survey?   @relation(fields: [surveyId], references: [id], onDelete: Cascade)

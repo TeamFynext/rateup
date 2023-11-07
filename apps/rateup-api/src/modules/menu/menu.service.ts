@@ -168,7 +168,7 @@ export async function updateMenuLanding(
   let updatedMenuData = {
     displayName: body.titleText,
     locationUrl: body.locationText,
-    websiteUrl: body.websiteUrl,
+    websiteText: body.websiteText,
     logo: body.logo,
   };
   await prisma.menu.update({
