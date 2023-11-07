@@ -40,6 +40,8 @@ import { contactSchemas } from "./modules/contact/contact.schema";
 import { contactRoutes } from "./modules/contact/contact.route";
 import { campaignSchemas } from "./modules/campaign/campaign.schema";
 import { campaignRoutes } from "./modules/campaign/campaign.route";
+import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSuggestion.schema";
+import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -58,7 +60,8 @@ export function registerRoutes(server: FastifyInstance): void {
     menuItemSchemas,
     contactFormSchemas,
     contactSchemas,
-    campaignSchemas
+    campaignSchemas,
+    reviewSuggestionSchemas
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -91,4 +94,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(electionPublicRoutes, { prefix: "api/public/election" });
   server.register(contactRoutes, { prefix: "api/contact" })
   server.register(campaignRoutes, { prefix: "api/campaign" })
+  server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" })
 }

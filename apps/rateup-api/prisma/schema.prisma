@@ -106,15 +106,16 @@ model Team {
   googleLink String?
   tags       String[] @default([])
 
-  org           Org            @relation(fields: [orgId], references: [id])
-  orgId         String         @db.Uuid
-  members       TeamMember[]
-  surveys       Survey[]
-  invitations   Invitation[]
-  contacts      Contact[]
-  contactGroups ContactGroup[]
-  menu          Menu[]
-  campaigns     Campaign[]
+  org               Org                @relation(fields: [orgId], references: [id])
+  orgId             String             @db.Uuid
+  members           TeamMember[]
+  surveys           Survey[]
+  invitations       Invitation[]
+  contacts          Contact[]
+  contactGroups     ContactGroup[]
+  menu              Menu[]
+  campaigns         Campaign[]
+  reviewSuggestions ReviewSuggestion[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -435,4 +436,11 @@ model MenuLanding {
   menuId                String    @unique @db.Uuid
   survey                Survey?   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId              String?   @db.Uuid
+}
+
+model ReviewSuggestion {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String @db.Uuid
+  review String
 }

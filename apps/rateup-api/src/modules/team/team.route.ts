@@ -67,7 +67,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.put(
     "/edit/:id",
     {
-      preHandler: verifyTeamAdminAccess,
+      preHandler: [checkSession, verifyTeamAdminAccess],
       schema: {
         body: $Tref("editTeamSchema"),
         params: $Tref("idParamRequestSchema")
