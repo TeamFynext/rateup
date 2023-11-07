@@ -13,7 +13,7 @@ import {
 export const useTeamsMembersOfOrg = () => {
   return useQuery({
     queryKey: ["orgTeamsDataQuery"],
-    queryFn: () => getTeamsMembersOfOrg,
+    queryFn: () => getTeamsMembersOfOrg(),
   });
 };
 

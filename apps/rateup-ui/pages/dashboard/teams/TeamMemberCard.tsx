@@ -8,6 +8,8 @@ import {
   ActionIcon,
   Stack,
   Title,
+  Dialog,
+  Button,
 } from "@mantine/core";
 import { IconCheck, IconDots, IconTrash } from "@tabler/icons-react";
 import { deleteInviteById } from "../../../backend/team/team.api";
@@ -15,49 +17,89 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
 import { UserRole } from "../../../utils/enums";
+import { useUser } from "../../../context/UserContext";
+import { useDisclosure } from "@mantine/hooks";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import Heading from "../../../components/styled/Heading/Heading";
+import { useUpdateRoleMutation } from "../../../backend/org/org.query";
 
 const TeamMemberCard = ({ member }) => {
+  const { user } = useUser();
+  const [dialogOpened, { open: openDialog, close: closeDialog }] =
+    useDisclosure(false);
+  const [role, setRole] = useState(member.role);
+  const updateRole = useUpdateRoleMutation();
+
+  function onChangeRole(id: string = member.id) {
+    const data = { memberId: id, body: { role: role } };
+    updateRole.mutate(data);
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Updating role..",
+      message: `Hold on, your changes are getting updated...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
+    closeDialog();
+  }
   return (
-    <Paper
-      p="md"
-      shadow="md"
-      radius="lg"
-      style={{ cursor: "pointer", minWidth: "300px", height: "170px" }}
-    >
-      <Stack justify="space-between" h={"100%"}>
-        <Flex justify={"space-between"} align={"center"}>
-          <Stack gap={1}>
-            <Title order={2}>{member.name}</Title>
-            <Text mr={"sm"} truncate fw={600} color="gray">
-              {member.email}
-            </Text>
-          </Stack>
-          {member.status === "PENDING" && (
-            <TeamMemberMenu status={member.status} inviteId={member.id} />
-          )}
-        </Flex>
-        <Flex align={"center"} justify={"space-between"}>
-          {member.status !== "PENDING" && (
-            <ContainedSelection
-              radius={"xl"}
-              data={[
-                { value: UserRole.SUPADM, label: "Super Admin" },
-                { value: UserRole.ADM, label: "Admin" },
-              ]}
-            />
-          )}
-          <Badge
-            color={member.status === "PENDING" ? "yellow" : "green"}
-            variant="light"
-            p={"sm"}
-            ml="auto"
-          >
-            {" "}
-            {member.status}{" "}
-          </Badge>
-        </Flex>
-      </Stack>
-    </Paper>
+    <>
+      <PaperLayout>
+        <Stack justify="space-between" h={"100%"}>
+          <Flex justify={"space-between"} align={"center"}>
+            <Stack gap={1}>
+              <Title order={2}>{member.name}</Title>
+              <Text mr={"sm"} truncate fw={600} color="gray">
+                {member.email}
+              </Text>
+            </Stack>
+            {member.status === "PENDING" && (
+              <TeamMemberMenu status={member.status} inviteId={member.id} />
+            )}
+          </Flex>
+          <Flex align={"center"} justify={"space-between"}>
+            {member.status !== "PENDING" && (
+              <ContainedSelection
+                disabled={
+                  user.role !== "SUPER_ADMIN" || member.id === user.userId
+                }
+                defaultValue={member.role}
+                radius={"xl"}
+                data={[
+                  { value: UserRole.SUPADM, label: "Super Admin" },
+                  { value: UserRole.ADM, label: "Admin" },
+                  { value: UserRole.MEMBER, label: "Member" },
+                ]}
+                onChange={(value) => {
+                  setRole(value);
+                  openDialog();
+                }}
+              />
+            )}
+            <Badge
+              color={member.status === "PENDING" ? "yellow" : "green"}
+              variant="light"
+              p={"sm"}
+              ml="auto"
+            >
+              {member.active ? "ACTIVE" : member?.status}
+            </Badge>
+          </Flex>
+        </Stack>
+      </PaperLayout>
+      <Dialog opened={dialogOpened}>
+        <Stack>
+          <Heading
+            subtitle="Change Member Role"
+            label="Are you sure to change the role for this team member?"
+          />
+          <Button fw={100} onClick={() => onChangeRole()}>
+            Save
+          </Button>
+        </Stack>
+      </Dialog>
+    </>
   );
 };
 

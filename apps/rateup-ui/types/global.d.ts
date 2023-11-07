@@ -177,11 +177,17 @@ declare global {
     data: TeamMembersData[];
   }
 
-  export interface TeamMembersData {
+  type Team = {
     team_id: string;
     team_name: string;
     team_code: string;
-    members: Member[];
+  };
+  export interface TeamMembersData {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    teams: Team[];
   }
 
   export interface Member {
@@ -223,40 +229,25 @@ declare global {
   //for individual team
 
   interface ITeamResponseData {
-    team: {
-      id: string;
-      name: string;
-      googleLink: null | string;
-      code: string;
-    };
-    members: Array<{
+    teamId: string;
+    teamName: string;
+    code: string;
+    googleLink?: string | null;
+    invitations: Array<{
       id: string;
       name: string;
       email: string;
       status: string;
+      type: "TEAM";
+      invitedBy: string;
     }>;
-  }
-
-  type UseTeamResult = {
-    isLoading: boolean;
-    data: ITeamResponseData;
-    refetch: () => void;
-  };
-
-  //for individual team
-
-  interface ITeamResponseData {
-    team: {
-      id: string;
-      name: string;
-      googleLink: null | string;
-      code: string;
-    };
     members: Array<{
       id: string;
       name: string;
       email: string;
-      status: string;
+      role: "ADMIN" | "MEMBER" | "SUPER_ADMIN";
+      userId: string;
+      active: boolean;
     }>;
   }
 

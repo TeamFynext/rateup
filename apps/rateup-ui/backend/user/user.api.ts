@@ -80,3 +80,10 @@ export const changeUserPassword = (data: IChangePassword) =>
     method: "POST",
     data: data,
   });
+
+//function for soft deleting the user account
+export const updateActiveStatus = (userId: string) =>
+  axiosClient({
+    url: `/user/update-active-status/${userId}`,
+    method: "PUT",
+  });
