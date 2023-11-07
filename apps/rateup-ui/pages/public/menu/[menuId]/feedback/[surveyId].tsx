@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useRouter } from "next/router";
-import { IconMapPin } from "@tabler/icons-react";
+import { IconMapPin, IconWorld } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
 import classes from "./Feedback.module.css";
 import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
@@ -26,13 +26,17 @@ export const getServerSideProps = async (context: { params: MenuProp }) => {
   const params = context.params;
 
   const menuLanding = await getMenuPublicById(params.menuId);
+  console.log(menuLanding);
+  
   return { props: { menuLanding: menuLanding } };
 };
 
 export default function ({ menuLanding }: { menuLanding: Data }) {
   const fallbackImage = "/images/no_image_template.jpeg";
-  const fallbackImageBackround = "/images/menu/background.jpg";
   const largeScreen = useMediaQuery("(min-width: 40em)");
+  const fallbackImageBackround = largeScreen
+    ? "/images/menu/background.jpg"
+    : "/images/menu/mobileBackground.jpg";
 
   if (!menuLanding || !menuLanding?.menu?.isPublished)
     return (
@@ -49,9 +53,15 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
   const bgSrc = backgroundImage
     ? getFileUrlFromKey(backgroundImage)
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}${fallbackImageBackround}`;
+
   return (
-    <Container fluid h={"100vh"} px={0} c={"white"}>
-      <BackgroundImage src={bgSrc} w={"100%"} h={"100%"}>
+    <Container fluid h={"100vh"} px={0}>
+      <BackgroundImage
+        src={bgSrc}
+        w={"100%"}
+        h={"100%"}
+        maw={largeScreen ? "2440px" : "768px"}
+      >
         <Stack h={"100vh"} justify={"space-between"}>
           <div></div>
           <Stack>
@@ -86,18 +96,34 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   )}
                   <Stack align="center">
                     <Text
-                      fz={menuLanding?.headerStyle?.fontSize || "30px"}
+                      fz={
+                        menuLanding?.headerStyle?.fontSize
+                          ? largeScreen
+                            ? menuLanding?.headerStyle?.fontSize
+                            : menuLanding?.headerStyle?.fontSize * 0.6
+                          : "30px"
+                      }
                       fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
                       ff={menuLanding?.headerStyle?.fontFamily}
                       c={menuLanding?.headerStyle?.color ?? "inherit"}
+                      tt={"capitalize"}
+                      truncate
                     >
                       {menuLanding?.headerText ?? "Welcome To"}
                     </Text>
                     <Text
-                      fz={menuLanding?.titleStyle?.fontSize ?? "max(3vw, 4rem)"}
+                      fz={
+                        menuLanding?.titleStyle?.fontSize
+                          ? largeScreen
+                            ? menuLanding?.titleStyle?.fontSize
+                            : menuLanding?.titleStyle?.fontSize * 0.6
+                          : "clamp(35px,3vw, 4rem)"
+                      }
                       fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
                       ff={menuLanding?.titleStyle?.fontFamily}
                       c={menuLanding?.titleStyle?.color ?? "inherit"}
+                      ta={"center"}
+                      tt={"uppercase"}
                     >
                       {menuLanding?.menu?.displayName}
                     </Text>
@@ -110,6 +136,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                           href={menuLanding?.menu?.locationUrl}
                           style={{
                             textDecoration: "none",
+                            color: "inherit",
                             ...menuLanding?.otherStyle,
                           }}
                           target="_blank"
@@ -127,12 +154,13 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                           href={menuLanding?.menu?.websiteUrl}
                           style={{
                             textDecoration: "none",
+                            color: "inherit",
                             ...menuLanding?.otherStyle,
                           }}
                           target="_blank"
                         >
                           <Group>
-                            <IconMapPin />
+                            <IconWorld />
                             <Text>{menuLanding?.menu?.websiteText}</Text>
                           </Group>
                         </Link>
@@ -142,7 +170,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
               </Grid.Col>
               <Grid.Col order={largeScreen ? 3 : 2} span={largeScreen ? 3 : 12}>
                 {(menuLanding?.feedbackPageEnabled === true ||
-                  menuLanding?.feedbackPageEnabled === undefined) && (
+                  menuLanding?.feedbackPageEnabled !== undefined) && (
                   <FeedbackButton />
                 )}
               </Grid.Col>
@@ -172,7 +200,7 @@ function FeedbackButton() {
         href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
-        <Stack align="center">
+        <Stack align="center" gap={0}>
           <Image
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
             maw={"min(200px, 40vw)"}
@@ -194,7 +222,7 @@ function MenuButton() {
         href={`/public/menu/${router.query.menuId}/view`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
-        <Stack align="center">
+        <Stack align="center" gap={0}>
           <Image
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
             maw={"min(200px, 40vw)"}

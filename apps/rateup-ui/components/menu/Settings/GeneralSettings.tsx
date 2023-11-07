@@ -162,6 +162,7 @@ const GeneralSettings = ({ editingItem }) => {
                       ? getFileUrlFromKey(editingItem?.logo)
                       : ""
                   }
+                  alt="image of logo"
                 />
               )}
             </Center>
@@ -190,6 +191,7 @@ const GeneralSettings = ({ editingItem }) => {
                       ? getFileUrlFromKey(editingItem?.backgroundImage)
                       : ""
                   }
+                  alt="image of background"
                 />
               )}
             </Center>

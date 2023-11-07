@@ -1,4 +1,4 @@
-import { Box, Group, Modal, Stack, Text } from "@mantine/core";
+import { Box, Group, Image, Modal, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -15,7 +15,7 @@ export function ItemDetailedViewModal({
   onClose,
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0],
+    item?.videoUrl ? item?.videoUrl : item?.images[0]
   );
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function ItemDetailedViewModal({
       }
     }
   }, [item]);
-
+  const fallbackImage = "/images/no_image_template.jpeg";
   return (
     <Modal
       centered
@@ -62,13 +62,15 @@ export function ItemDetailedViewModal({
                   }}
                 />
               ) : (
-                <img
+                <Image
                   style={{
-                    width: "400px",
                     aspectRatio: "4 / 3",
-                    borderRadius: "16px",
                   }}
+                  width={"400px"}
+                  radius={"lg"}
                   src={getFileUrlFromKey(selectedMedia)}
+                  fallbackSrc={fallbackImage}
+                  alt="background image of menu"
                 />
               )
             }
@@ -76,34 +78,35 @@ export function ItemDetailedViewModal({
 
           <Group justify="center" mt="sm">
             {item?.images?.map((imageKey) => (
-              <img
+              <Image
                 key={imageKey}
-                width="75px"
+                w="75px"
                 style={{
                   aspectRatio: "4 / 3",
                   cursor: "pointer",
-                  borderRadius: "8px",
                 }}
+                radius={"sm"}
                 src={getFileUrlFromKey(imageKey)}
                 onClick={() => setSelectedMedia(imageKey)}
+                fallbackSrc={fallbackImage}
+                alt="background image of menu (thumbnail)"
               />
             ))}
             <Box
-              style={{
-                position: "relative",
-              }}
+              pos={"relative"}
               onClick={() => setSelectedMedia(item?.videoUrl)}
             >
               {item.videoUrl && extractVideoId(item?.videoUrl) && (
-                <img
-                  width="75px"
+                <Image
+                  w="75px"
                   style={{
                     cursor: "pointer",
                     aspectRatio: "4 / 3",
                   }}
                   src={`http://img.youtube.com/vi/${extractVideoId(
-                    item?.videoUrl,
+                    item?.videoUrl
                   )}/0.jpg`}
+                  alt="video of menu"
                 />
               )}
               <IconPlayerPlayFilled
@@ -124,13 +127,7 @@ export function ItemDetailedViewModal({
         </Box>
 
         <Box>
-          <Text
-            fz="1.5rem"
-            fw={600}
-            style={{
-              textAlign: "center",
-            }}
-          >
+          <Text fz="xl" fw={600} tt={"capitalize"} ta={"center"}>
             {item.name}
           </Text>
           <Text
@@ -145,20 +142,20 @@ export function ItemDetailedViewModal({
             {item.description}
           </Text>
         </Box>
-        <Group mt="sm">
-          {item?.price?.variants?.length > 0 ? (
-            item?.price?.variants?.map((v, i) => (
-              <Stack align="center" gap={"0px"} key={i}>
-                <Text fz=".9rem" c="dimmed">
-                  {v?.name}
+        <Group justify="space-evenly" gap={"sm"}>
+          {item.price.variants?.length > 0 ? (
+            item.price.variants.map((varient, index) => (
+              <Stack align="center" gap={"0px"} key={index}>
+                <Text fz="sm" c="dimmed">
+                  {varient.name}
                 </Text>
-                <Text color="#AF6B2E" fz="1.2rem">
-                  ₹{v?.price}
+                <Text c="var(--shade-of-brown)" fz="xl">
+                  ₹{varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
-            <Text color="#AF6B2E" fz="1.2rem">
+            <Text c="var(--shade-of-brown)" fz="xl" mt={"md"}>
               ₹{item?.price?.price}
             </Text>
           )}

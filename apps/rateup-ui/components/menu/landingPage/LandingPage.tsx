@@ -37,6 +37,7 @@ import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "./Tabs/TabsCommon";
+import { showErrorToast } from "../../../utils/notifications";
 
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
@@ -61,7 +62,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       headerText: "Welcome To",
       titleText: "HOTEL NAME",
       locationText: "",
-      websiteUrl: "",
+      websiteText: "",
       logo: "",
       backgroundImage: "",
       mobileBackgroundImage: "",
@@ -73,12 +74,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
-  const [fontListArray, setFontListArray] = useState<string[]>(fontList || []);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
     editingItem?.menuPageEnabled ?? true
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled ?? true
+    editingItem?.feedbackPageEnabled ?? false
   );
   const logoRef = useRef<HTMLButtonElement>(null);
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
@@ -112,12 +112,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       setTabState("title");
       form.setTouched({ titleText: false });
     }
-    if (form.isTouched("websiteUrl") || form.isTouched("locationText")) {
+    if (form.isTouched("websiteText") || form.isTouched("locationText")) {
       setTabState("other");
-      form.setTouched({ websiteUrl: false });
+      form.setTouched({ websiteText: false });
       form.setTouched({ locationText: false });
     }
-  }, [form.isTouched]);
+  }, [form, form.isTouched]);
 
   const handleSubmit = (data: any) => {
     menulandingMutation.mutate(data);
@@ -143,6 +143,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         feedbackPageEnabled: event?.currentTarget?.checked,
       },
     };
+    if (!editingItem?.surveyId && !isFeedbackEnabled) {
+      showErrorToast(
+        "In order to enable feedback, you must have selected a survey in the settings."
+      );
+      return;
+    }
     menulandingOptionMutation.mutate(checkedValueMenu);
     setIsFeedbackEnabled(event?.currentTarget?.checked);
   };
@@ -152,6 +158,18 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const headerMobile = selectedTab === "Mobile" && {
     fontSize: form?.values?.headerStyle.fontSize * 0.6,
   };
+  let backgroundImageSrc = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg`;
+  let mobileBackgroundImageSrc = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/mobileBackground.jpg`;
+
+  if (form?.values?.backgroundImage) {
+    backgroundImageSrc = getFileUrlFromKey(form.values.backgroundImage);
+  }
+
+  if (form?.values?.mobileBackgroundImage) {
+    mobileBackgroundImageSrc = getFileUrlFromKey(
+      form.values.mobileBackgroundImage
+    );
+  }
   const renderFeedbackComponent = () => {
     if (isFeedbackEnabled) {
       return (
@@ -161,8 +179,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
             h={"auto"}
             w={selectedTab == "Mobile" ? "50px" : imageWidth}
             maw={"100%"}
+            alt="icon of feedbak"
           />
-          <Text c={"white"}>FEEDBACK</Text>
+          <Text c={"black"}>FEEDBACK</Text>
         </Stack>
       );
     } else {
@@ -177,8 +196,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
             w={selectedTab == "Mobile" ? "50px" : imageWidth}
             maw={"100%"}
+            alt="icon of menu"
           />
-          <Text c={"white"}>MENU</Text>
+          <Text c={"black"}>MENU</Text>
         </Stack>
       );
     } else {
@@ -195,8 +215,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               radius={"lg"}
               value={selectedTab}
               onChange={(value) => setSelectedTab(value)}
-              children
-            />
+            >
+              {}
+            </TabsCommon>
             <Title order={2}>Preview Screen</Title>
             <div></div>
           </SimpleGrid>
@@ -211,123 +232,136 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               zIndex={1000}
               overlayProps={{ radius: "sm", blur: 2 }}
             />
-            <BackgroundImage
-              src={
-                selectedTab === "Mobile"
-                  ? form?.values?.mobileBackgroundImage
-                    ? getFileUrlFromKey(form?.values?.mobileBackgroundImage)
-                    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/mobileBackground.jpg`
-                  : form?.values?.backgroundImage
-                  ? getFileUrlFromKey(form?.values?.backgroundImage)
-                  : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg`
-              }
-              radius="xl"
-              w={selectedTab === "Mobile" && 300}
-            >
-              <Group mih={"60vh"} mah={"700"} w={"100%"}>
-                <Stack w={"100%"}>
-                  <Center>
-                    {isLogoUploading ? (
-                      <Skeleton w={50} h={50} />
-                    ) : (
-                      <Image
-                        src={
-                          form?.values?.logo &&
-                          getFileUrlFromKey(form?.values?.logo)
-                        }
-                        onClick={() => logoRef?.current?.click()}
-                        h={50}
-                        w={50}
-                        maw={50}
-                        radius={"md"}
-                        fallbackSrc={fallbackImage}
-                      />
+            <PaperLayout p={0} w={selectedTab === "Mobile" && 300}>
+              <BackgroundImage
+                src={
+                  selectedTab === "Mobile"
+                    ? form?.values?.mobileBackgroundImage
+                      ? getFileUrlFromKey(form?.values?.mobileBackgroundImage)
+                      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/mobileBackground.jpg`
+                    : form?.values?.backgroundImage
+                    ? getFileUrlFromKey(form?.values?.backgroundImage)
+                    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg`
+                }
+                radius="xl"
+                w={selectedTab === "Mobile" && 300}
+              >
+                <Group
+                  mih={selectedTab === "Mobile" ? "70vh" : "60vh"}
+                  mah={"700"}
+                  w={"100%"}
+                >
+                  <Stack w={"100%"}>
+                    <Center>
+                      {isLogoUploading ? (
+                        <Skeleton w={50} h={50} />
+                      ) : (
+                        <Image
+                          src={
+                            form?.values?.logo &&
+                            getFileUrlFromKey(form?.values?.logo)
+                          }
+                          onClick={() => logoRef?.current?.click()}
+                          h={50}
+                          w={50}
+                          maw={50}
+                          radius={"md"}
+                          fallbackSrc={fallbackImage}
+                          alt="image of logo"
+                        />
+                      )}
+                    </Center>
+                    <Flex
+                      justify="space-between"
+                      px={isMobile || selectedTab == "Mobile" ? "xs" : "xl"}
+                    >
+                      {selectedTab !== "Mobile" && renderMenuComponent()}
+                      <Stack gap={0}>
+                        <ContainedTextArea
+                          placeholder="Welcome to"
+                          variant="unstyled"
+                          autosize
+                          styles={{
+                            input: {
+                              ...form?.values?.headerStyle,
+                              ...headerMobile,
+                              border: "none",
+                              textAlign: "center",
+                            },
+                          }}
+                          {...form.getInputProps("headerText")}
+                        />
+                        <ContainedTextArea
+                          placeholder="HOTEL NAME"
+                          variant="unstyled"
+                          autosize
+                          styles={{
+                            input: {
+                              ...form?.values?.titleStyle,
+                              ...titleMobile,
+                              border: "none",
+                              textAlign: "center",
+                            },
+                          }}
+                          {...form.getInputProps("titleText")}
+                        />
+                        <Flex
+                          c={"black"}
+                          justify={"center"}
+                          align={"center"}
+                          columnGap={4}
+                          direction={
+                            selectedTab === "Mobile" ? "column" : "row"
+                          }
+                        >
+                          <ContainedTextArea
+                            placeholder="location"
+                            leftSection={<IconMapPin size={10} />}
+                            variant="unstyled"
+                            autosize
+                            styles={{
+                              input: {
+                                ...form?.values?.otherStyle,
+                                border: "none",
+                              },
+                            }}
+                            {...form.getInputProps("locationText")}
+                          />
+                          <ContainedTextArea
+                            placeholder="Website Text"
+                            leftSection={<IconWorld size={10} />}
+                            variant="unstyled"
+                            autosize
+                            styles={{
+                              input: {
+                                ...form?.values?.otherStyle,
+                                border: "none",
+                              },
+                            }}
+                            {...form.getInputProps("websiteText")}
+                          />
+                        </Flex>
+                      </Stack>
+                      {selectedTab !== "Mobile" && renderFeedbackComponent()}
+                    </Flex>
+                    {selectedTab == "Mobile" && (
+                      <Stack justify="center">
+                        {renderMenuComponent()}
+                        {renderFeedbackComponent()}
+                      </Stack>
                     )}
-                  </Center>
-                  <Flex justify="space-between" px={isMobile ? "xs" : "xl"}>
-                    {selectedTab !== "Mobile" && renderMenuComponent()}
-                    <Stack gap={0}>
-                      <ContainedTextArea
-                        placeholder="Welcome to"
-                        variant="unstyled"
-                        autosize
-                        styles={{
-                          input: {
-                            ...form?.values?.headerStyle,
-                            ...headerMobile,
-                            border: "none",
-                            textAlign: "center",
-                          },
-                        }}
-                        {...form.getInputProps("headerText")}
-                      />
-                      <ContainedTextArea
-                        placeholder="HOTEL NAME"
-                        variant="unstyled"
-                        autosize
-                        styles={{
-                          input: {
-                            ...form?.values?.titleStyle,
-                            ...titleMobile,
-                            border: "none",
-                            textAlign: "center",
-                          },
-                        }}
-                        {...form.getInputProps("titleText")}
-                      />
-                      <Flex
-                        c={"white"}
-                        justify={"center"}
-                        align={"center"}
-                        columnGap={4}
-                        direction={selectedTab === "Mobile" ? "column" : "row"}
-                      >
-                        <ContainedTextArea
-                          placeholder="location"
-                          leftSection={<IconMapPin size={10} />}
-                          variant="unstyled"
-                          autosize
-                          styles={{
-                            input: {
-                              ...form?.values?.otherStyle,
-                              border: "none",
-                            },
-                          }}
-                          {...form.getInputProps("locationText")}
-                        />
-                        <ContainedTextArea
-                          placeholder="Website url"
-                          leftSection={<IconWorld size={10} />}
-                          variant="unstyled"
-                          autosize
-                          styles={{
-                            input: {
-                              ...form?.values?.otherStyle,
-                              border: "none",
-                            },
-                          }}
-                          {...form.getInputProps("websiteUrl")}
-                        />
-                      </Flex>
-                    </Stack>
-                    {selectedTab !== "Mobile" && renderFeedbackComponent()}
-                  </Flex>
-                  {selectedTab == "Mobile" && (
-                    <Stack justify="center">
-                      {renderMenuComponent()}
-                      {renderFeedbackComponent()}
-                    </Stack>
-                  )}
-                </Stack>
-              </Group>
-              <Center w="100%">
-                <Image
-                  src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
-                  h={54}
-                  w={94}
-                />
-              </Center>
-            </BackgroundImage>
+                  </Stack>
+                </Group>
+                <Center w="100%">
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
+                    h={54}
+                    w={94}
+                    alt="logo company"
+                  />
+                </Center>
+              </BackgroundImage>
+            </PaperLayout>
           </Stack>
         </PaperLayout>
       </Grid.Col>
@@ -401,7 +435,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       label=""
                       placeholder="Select font family"
                       required
-                      data={fontListArray}
+                      data={fontList || []}
                       {...form.getInputProps("headerStyle.fontFamily")}
                     />
                     <SimpleGrid mx={"lg"} cols={2}>
@@ -443,7 +477,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       allowDeselect={false}
                       placeholder="Select font family"
                       required
-                      data={fontListArray}
+                      data={fontList || []}
                       {...form.getInputProps("titleStyle.fontFamily")}
                     />
                     <SimpleGrid mx={"lg"} cols={2}>
@@ -485,7 +519,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       allowDeselect={false}
                       placeholder="Select font family"
                       required
-                      data={fontListArray}
+                      data={fontList || []}
                       {...form.getInputProps("otherStyle.fontFamily")}
                     />
                     <SimpleGrid mx={"lg"} cols={2}>
