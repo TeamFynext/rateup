@@ -17,20 +17,20 @@ export async function createSurvey(
   input: CreateSurveyInput,
   createdBy: string
 ) {
+  const teamIds = input?.teamIds?.map(teamId => ({ teamId }))
   const survey = await prisma.survey.create({
     data: {
       // ...input,
       title: input.title,
+      languages: input.languages,
       createdBy,
       teams: {
-        create: input?.teamIds?.map(teamId => ({ teamId })),
+        create: teamIds,
       },
-      languages: input.languages,
     },
    });
    
   //-------------create a default landing page theme todo-------------
-
 
   let landingData = defaultTheme;
 
@@ -51,7 +51,9 @@ export async function createSurvey(
     },
   });
 
-  return survey;
+  let surveyRes = {...survey, teamIds: input?.teamIds}
+
+  return surveyRes;
 }
 
 //----------------create survey landing-----------------
@@ -305,13 +307,16 @@ export async function getSurveyBylandingId(landingid: string) {
     },
   });
 
-  const surveys = surveyTeamMaps?.map(surveyTeamMap => surveyTeamMap?.survey);
+  const surveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    return excludeFields(survey, ["questions", "password"]);
+  });
 
-  const uniqueSurveys = Array.from(new Set(surveys.map(survey => survey?.id)))
-  ?.map(id => surveys?.find(survey => survey.id === id))
-  ?.map(survey => excludeFields(survey, ["questions", "password"]));
+  // const uniqueSurveys = Array.from(new Set(surveys.map(survey => survey?.id)))
+  // ?.map(id => surveys?.find(survey => survey.id === id))
+  // ?.map(survey => excludeFields(survey, ["questions", "password"]));
   
-  return uniqueSurveys;
+  return surveys;
  }
 
 
