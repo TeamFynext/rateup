@@ -355,59 +355,66 @@ export async function getSurveyBylandingId(landingid: string) {
  * @returns Array of active surveys - responses, stats
  */
  export async function getActiveSurveysSummmaryByUserId(userId: string) {
-//   const teamData = await getTeamsByUserId(userId);
-//   const teamIds: string[] = teamData.map(
-//     (item: { teamId: string }) => item.teamId
-//   );
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData.map(
+    (item: { teamId: string }) => item.teamId
+  );
 
-//   const allSurveys = await prisma.survey.findMany({
-//     where: {
-//       teamId: {
-//         in: teamIds,
-//       },
-//     }
-//   });
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    },
+    include: {
+      survey: true,
+      responses: {
+        select: {
+          id: true,
+          createdAt: true,
+        },
+      },
+      surveyStats: true,
+      team: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
 
-//   const activeSurveys = await prisma.survey.findMany({
-//     where: {
-//       teamId: {
-//         in: teamIds,
-//       },
-//       active: true,
-//     },
-//     select: {
-//       id: true,
-//       title: true,
-//       active: true,
-//       createdAt: true,
-//       type: true,
-//       team: {
-//         select: {
-//           name: true,
-//         },
-//       },
-//       responses: {
-//         select: {
-//           id: true,
-//           createdAt: true,
-//         },
-//       },
-//       surveyStats: true,
-//     },
-    
-//   });
+  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const surveys = { 
+      ...surveyTeamMap.survey, 
+      teamId : surveyTeamMap.teamId,
+      responses: surveyTeamMap.responses,
+      surveyStats: surveyTeamMap.surveyStats,
+      team: surveyTeamMap.team.name
+    };
+    return surveys;
+  });
 
+  const activeSurveys = allSurveys.filter(survey => survey?.active === true)
+  .map(({ id, title, active, createdAt, type, surveyStats, responses, team }) => ({
+    id,
+    title,
+    active,
+    createdAt,
+    type,
+    surveyStats,
+    responses,
+    team
+  }));
 
-//   let summaryData = {
-//     totalTeamsCount : teamData?.length,
-//     totalSurveysCount: allSurveys?.length,
-//     activeSurveysCount: activeSurveys?.length,
-//     surveys: activeSurveys
-//   }
+  let summaryData = {
+    totalTeamsCount : teamData?.length,
+    totalSurveysCount: allSurveys?.length,
+    activeSurveysCount: activeSurveys?.length,
+    surveys: activeSurveys
+  }
 
-//   return summaryData;
+  return summaryData;
  }
-//TODO verify SURVEYTEAMMAPS
 
 
 /**
