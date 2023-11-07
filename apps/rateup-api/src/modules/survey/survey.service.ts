@@ -457,18 +457,23 @@ export async function getSurveyLandingByUserId(userId: string) {
 
 
  export async function getSurveysByTeam(teamId: string) {
-//   const surveys = await prisma.survey.findMany({
-//     where: {
-//       teamId,
-//     },
-//   });
 
-//   const surveysWithoutQuestions = surveys.map((s) =>
-//     excludeFields(s, ["questions", "password"])
-//   );
-//   return surveysWithoutQuestions;
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const surveysWithoutQuestions = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  return surveysWithoutQuestions;
  }
-//TODO verify SURVEYTEAMMAPS
 
 
 export async function deleteSurveyById(id: string) {

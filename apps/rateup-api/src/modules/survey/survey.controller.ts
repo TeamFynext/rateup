@@ -225,18 +225,16 @@ export async function getSurveyByTeamHandler(
   }>,
   reply: FastifyReply
 ) {
-  // try {
-  //   const survey = await getSurveysByTeam(request.params.id);
-  //   if (!survey) {
-  //     reply.code(404);
-  //   } else {
-  //     reply.send(survey);
-  //   }
-  // } catch (e) {
-  //   reply.code(500);
-  // }
-  //TODO verify SURVEYTEAMMAPS
-
+  try {
+    const survey = await getSurveysByTeam(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
 }
 
 export async function getSurveysHandler(
