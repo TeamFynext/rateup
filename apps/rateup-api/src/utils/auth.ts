@@ -9,19 +9,30 @@ export async function getUserIdFromRequest(request: FastifyRequest, reply: Fasti
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {
-    const survey = await prisma.survey.findUnique({
+    // Find the SurveyTeamMap records related to the survey
+    const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
       where: {
-        id: surveyId,
+        surveyId: surveyId,
+      },
+      include: {
+        team: true,
       },
     });
-    const teamId = survey!.teamId;
-    const teamMember = await prisma.teamMember.findFirst({
-      where: {
-        userId,
-        teamId,
-      },
-    });
-    return teamMember !== null;
+
+    // Check if the user is part of any of the teams associated with the survey
+    for (let surveyTeamMap of surveyTeamMaps) {
+      const teamId = surveyTeamMap.team.id;
+      const teamMember = await prisma.teamMember.findFirst({
+        where: {
+          userId,
+          teamId,
+        },
+      });
+      if (teamMember) {
+        return true;
+      }
+    }
+
   } catch (e) {
     console.log(e);
     return false;
