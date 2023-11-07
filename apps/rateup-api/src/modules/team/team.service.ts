@@ -1,13 +1,21 @@
 import prisma from "../../utils/prisma";
 import { createUser } from "../user/user.service";
-import { CreateTeamInput, EditTeamInput, GetTeamMembersInput, GetTeamsByOrgInput, IdParamInput, InviteMemberInput } from "./team.schema";
+import {
+  CreateTeamInput,
+  EditTeamInput,
+  GetTeamMembersInput,
+  GetTeamsByOrgInput,
+  IdParamInput,
+  InviteMemberInput,
+} from "./team.schema";
 import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createEmailBody } from "../../utils/email/supertoken/inviteEmail";
 import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import ThirdPartyEmailPassword from"supertokens-node/recipe/thirdpartyemailpassword";
+import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
+import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -26,7 +34,7 @@ export async function createTeam(input: CreateTeamInput) {
   });
 
   if (existingTeamCode) {
-    throw new Error('Team Code already in use');
+    throw new Error("Team Code already in use");
   }
 
   const existingTeam = await prisma.team.findFirst({
@@ -38,7 +46,7 @@ export async function createTeam(input: CreateTeamInput) {
 
   if (existingTeam) {
     // Team with the same data combination already exists
-    throw new Error('Team already exists');
+    throw new Error("Team already exists");
   }
 
   try {
@@ -55,12 +63,12 @@ export async function createTeam(input: CreateTeamInput) {
           select: {
             id: true,
             name: true,
-            code:true
+            code: true,
           },
         });
 
-        console.log('New team created:', team);
-       
+        console.log("New team created:", team);
+
         // Second action: Insert teamId, userId to TeamMember table
         const teamMember = await prisma.teamMember.create({
           data: {
@@ -111,7 +119,7 @@ export async function deleteTeamById(id: string) {
   return team;
 }
 
-export async function inviteTeamMember(input : InviteMemberInput){
+export async function inviteTeamMember(input: InviteMemberInput) {
   if (input.name.length < 2) {
     throw new Error("Invalid name.");
   }
@@ -120,10 +128,10 @@ export async function inviteTeamMember(input : InviteMemberInput){
   if (input.email.length < 6 || !emailRegex.test(input.email)) {
     throw new Error("Invalid email. Please enter a valid email address.");
   }
-try {
+  try {
     const { email, name, orgId, teamId, invitedBy, type } = input;
 
-     // Check if team member with the input email already exists
+    // Check if team member with the input email already exists
     const existingTeamMember = await prisma.teamMember.findFirst({
       where: {
         user: {
@@ -136,9 +144,10 @@ try {
     });
 
     if (existingTeamMember) {
-      throw new Error('Team member with the provided email already exists in the team.');
+      throw new Error(
+        "Team member with the provided email already exists in the team."
+      );
     }
-
 
     // Check if the user with the input email is already a member in any organization with role SUPER_ADMIN
     const existingOrgMember = await prisma.orgMember.findFirst({
@@ -146,32 +155,37 @@ try {
         user: {
           email,
         },
-        role: 'SUPER_ADMIN',
+        role: "SUPER_ADMIN",
       },
     });
 
     if (existingOrgMember) {
-      throw new Error('User with the provided email is already a SUPER_ADMIN member in an organization.');
+      throw new Error(
+        "User with the provided email is already a SUPER_ADMIN member in an organization."
+      );
     }
 
-        // Check if the email already exists in the invitation table
+    // Check if the email already exists in the invitation table
     const existingInvitation = await prisma.invitation.findFirst({
       where: {
         email,
-        teamId
+        teamId,
       },
     });
 
     if (existingInvitation) {
-      if (existingInvitation.status === 'PENDING') {
-       
+      if (existingInvitation.status === "PENDING") {
         // Call Resend email function here
-       //TODO
-        
-        throw new Error('Invitation with the provided email is already pending.');
-      }
-       else if (existingInvitation.status === 'ACCEPTED' && existingInvitation.teamId === teamId) {
-        throw new Error('Team member with the provided email already exists.');
+        //TODO
+
+        throw new Error(
+          "Invitation with the provided email is already pending."
+        );
+      } else if (
+        existingInvitation.status === "ACCEPTED" &&
+        existingInvitation.teamId === teamId
+      ) {
+        throw new Error("Team member with the provided email already exists.");
       }
     }
 
@@ -182,30 +196,32 @@ try {
         orgId,
         teamId,
         type,
-        invitedBy
-      }
+        invitedBy,
+      },
     });
 
-    if(newInvite){
+    if (newInvite) {
       const msg = {
         to: email, // Change to your recipient
-       // from: 'hello@rateup.app', // Change to your verified sender
-        subject: 'Invitation to Join Team - RateUp.app',
-        text: 'You are invited to manage a Team in RateUp. Click on the accept to continue with the process.',
-        html: createEmailBody(`${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}`, email)
-      }
+        // from: 'hello@rateup.app', // Change to your verified sender
+        subject: "Invitation to Join Team - RateUp.app",
+        text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
+        html: createEmailBody(
+          `${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}`,
+          email
+        ),
+      };
       try {
         //sendEmail(msg);
-        sendAWSEmail(msg)
+        sendAWSEmail(msg);
       } catch (error) {
-        console.error(error)
-        throw new Error('Email sending failed. E:'+ error);
+        console.error(error);
+        throw new Error("Email sending failed. E:" + error);
       }
-  }
-    
+    }
+
     console.log("Invite created successfully");
-    return newInvite
-    
+    return newInvite;
   } catch (error) {
     console.error(error);
     throw error;
@@ -215,84 +231,100 @@ try {
 //Complete Email invite
 export async function completeInvite(token: string) {
   const invitation = await prisma.invitation.findUnique({
-        where: { id: token }
-    });
-  
-  if (!invitation) throw new Error('Invitation not found');
+    where: { id: token },
+  });
+
+  if (!invitation) throw new Error("Invitation not found");
 
   const updatedInvitation = await prisma.invitation.update({
     where: {
       id: token,
     },
     data: {
-      status: 'ACCEPTED',
+      status: "ACCEPTED",
     },
   });
 
   // find user in User table with the same email as the invitation
   const user = await prisma.user.findFirst({
     where: {
-      email: updatedInvitation.email, 
-    }
+      email: updatedInvitation.email,
+    },
   });
 
   const isUser = user !== null;
-  let redirectLink =''
+  let redirectLink = "";
 
-  if(!isUser){
+  if (!isUser) {
     //Create new user , verify email
     const FAKE_PASSWORD = "qwerty123";
-    let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp("public", updatedInvitation.email, FAKE_PASSWORD);
+    let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp(
+      "public",
+      updatedInvitation.email,
+      FAKE_PASSWORD
+    );
     if (signUpResult.status === "EMAIL_ALREADY_EXISTS_ERROR") {
-        throw new Error('User already exists');
+      throw new Error("User already exists");
     }
 
-    const tokenRes = await EmailVerification.createEmailVerificationToken("public", signUpResult.user.id);
+    const tokenRes = await EmailVerification.createEmailVerificationToken(
+      "public",
+      signUpResult.user.id
+    );
     if (tokenRes.status === "OK") {
-        await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
-        let id = signUpResult.user.id
-        let email = updatedInvitation.email
-        const user = await createUser({ id, email });
+      await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
+      let id = signUpResult.user.id;
+      let email = updatedInvitation.email;
+      const user = await createUser({ id, email });
 
-        if(!user){
-          throw new Error('failed user adding');
-        }
+      if (!user) {
+        throw new Error("failed user adding");
+      }
 
-          await prisma.user.update({
-          where: { id: id },
-          data: { name: updatedInvitation.name },
-        });
+      await prisma.user.update({
+        where: { id: id },
+        data: { name: updatedInvitation.name },
+      });
     }
     //Create as ADMIN / SUPER_ADMIN in orgMember based on invite type
-    if (updatedInvitation.type === 'TEAM') {
-        let orgMember = await prisma.orgMember.create({
-            data: {
-              orgId: updatedInvitation.orgId,
-              userId: signUpResult.user.id,
-              role: Role.ADMIN,
-            },
-          });
+    if (updatedInvitation.type === "TEAM") {
+      let orgMember = await prisma.orgMember.create({
+        data: {
+          orgId: updatedInvitation.orgId,
+          userId: signUpResult.user.id,
+          role: Role.ADMIN,
+        },
+      });
 
       //Create Team member
       if (orgMember && updatedInvitation.teamId) {
-                createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id)
-        }
+        createTeamMemberIfNotExists(
+          updatedInvitation.teamId,
+          signUpResult.user.id
+        );
+      }
       // change password page
-      let passwordResetToken = await ThirdPartyEmailPassword.createResetPasswordToken("public", signUpResult.user.id);
+      let passwordResetToken =
+        await ThirdPartyEmailPassword.createResetPasswordToken(
+          "public",
+          signUpResult.user.id
+        );
 
       if (passwordResetToken.status === "UNKNOWN_USER_ID_ERROR") {
-          throw new Error("Should never come here");
+        throw new Error("Should never come here");
       }
-      redirectLink = `${process.env.FRONTEND_URL}/login/reset-password?token=` + passwordResetToken.token+`&rid=emailpassword`
+      redirectLink =
+        `${process.env.FRONTEND_URL}/login/reset-password?token=` +
+        passwordResetToken.token +
+        `&rid=emailpassword`;
     }
-
-  }
-  else{  //for existing user
+  } else {
+    //for existing user
     if (!user.name) {
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { name: updatedInvitation.name },
-        });
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { name: updatedInvitation.name },
+      });
     }
 
     let orgMember = await prisma.orgMember.findFirst({
@@ -303,42 +335,41 @@ export async function completeInvite(token: string) {
       },
     });
     if (!orgMember) {
-        let orgMember = await prisma.orgMember.create({
-            data: {
-              orgId: updatedInvitation.orgId,
-              userId: user.id,
-              role: Role.ADMIN,
-            },
-          });
-        //Create Team member
-        if (orgMember && updatedInvitation.teamId) {
-            const teamMember = await prisma.teamMember.create({
-                data: {
-                  teamId: updatedInvitation.teamId,
-                  userId: user.id,
-                },
-            });
-         }
-    }else{
+      let orgMember = await prisma.orgMember.create({
+        data: {
+          orgId: updatedInvitation.orgId,
+          userId: user.id,
+          role: Role.ADMIN,
+        },
+      });
+      //Create Team member
       if (orgMember && updatedInvitation.teamId) {
-        createTeamMemberIfNotExists(updatedInvitation.teamId, user.id)
+        const teamMember = await prisma.teamMember.create({
+          data: {
+            teamId: updatedInvitation.teamId,
+            userId: user.id,
+          },
+        });
+      }
+    } else {
+      if (orgMember && updatedInvitation.teamId) {
+        createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
       }
     }
 
-    redirectLink=`${process.env.FRONTEND_URL}/login}`
+    redirectLink = `${process.env.FRONTEND_URL}/login}`;
   }
 
-  return {...updatedInvitation, isUser: isUser, redirectLink};
+  return { ...updatedInvitation, isUser: isUser, redirectLink };
 }
 
-
-async function createTeamMemberIfNotExists(teamId : string, userId : string) {
+async function createTeamMemberIfNotExists(teamId: string, userId: string) {
   // Fetch the record with the same teamId and userId
   const existingTeamMember = await prisma.teamMember.findFirst({
     where: {
       teamId: teamId,
       userId: userId,
-    }
+    },
   });
 
   // If the record doesn't exist, create a new one
@@ -350,12 +381,10 @@ async function createTeamMemberIfNotExists(teamId : string, userId : string) {
       },
     });
     return teamMember;
-  }
-  else {
-    throw new Error('Team member Record already exists');
+  } else {
+    throw new Error("Team member Record already exists");
   }
 }
-
 
 export function getTeamMembers(input: GetTeamMembersInput) {
   return prisma.teamMember.findMany({
@@ -367,7 +396,7 @@ export function getTeamMembers(input: GetTeamMembersInput) {
       user: {
         select: {
           id: true,
-          email:true,
+          email: true,
           name: true,
         },
       },
@@ -375,7 +404,10 @@ export function getTeamMembers(input: GetTeamMembersInput) {
   });
 }
 
-export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
+export async function getTeamMembersAndFromInvitation(
+  orgId: string,
+  input: GetTeamMembersInput
+) {
   const team = await prisma.team.findUnique({
     where: {
       id: input.teamId,
@@ -385,31 +417,63 @@ export async function getTeamMembersFromInvitation(input: GetTeamMembersInput) {
       name: true,
       googleLink: true,
       code: true,
+      invitations: {
+        where: {
+          status: {
+            not: "ACCEPTED",
+          },
+        },
+      },
+      members: {
+        select: {
+          teamId: true,
+          userId: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              active: true,
+              orgMember: {
+                where: {
+                  orgId: { equals: orgId },
+                },
+                select: {
+                  role: true,
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
-
-  const membersQ = await prisma.invitation.findMany({
-    where: {
-      teamId: input.teamId,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      status: true,
-    },
-  });
-
-  let members
-  if(membersQ.length === 0){
-    members = "No members found"
-  }else{
-    members = membersQ
-  }
-  
   return {
-    team,
-    members,
+    teamId: team.id,
+    teamName: team.name,
+    googleLink: team.googleLink,
+    code: team.code,
+    members: team.members.map((member) => {
+      return {
+        id: member.user.id,
+        name: member.user.name,
+        email: member.user.email,
+        active: member.user.active,
+        role: member.user.orgMember[0].role,
+        userId: member.user.orgMember[0].userId,
+      };
+    }),
+    invitations: team.invitations.map((invite) => {
+      return {
+        id: invite.id,
+        email: invite.email,
+        name: invite.name,
+        status: invite.status,
+        type: invite.type,
+        invitedBy: invite.invitedBy,
+      };
+    }),
   };
 }
 
@@ -433,42 +497,44 @@ export async function getTeamsByUserId(userId: string) {
           id: true,
           name: true, // Team name
           code: true,
-        }
-      }
-    }
+        },
+      },
+    },
   });
 
-  const teamData = await Promise.all(teams.map(async (team) => {
-    const teamMembersCount = await prisma.teamMember.count({
-      where: { teamId: team.team.id },
-    });
+  const teamData = await Promise.all(
+    teams.map(async (team) => {
+      const teamMembersCount = await prisma.teamMember.count({
+        where: { teamId: team.team.id },
+      });
 
-    return {
-      teamId: team.team.id,
-      teamName: team.team.name,
-      code: team.team.code,
-      memberCount: teamMembersCount
-    };
-  }));
+      return {
+        teamId: team.team.id,
+        teamName: team.team.name,
+        code: team.team.code,
+        memberCount: teamMembersCount,
+      };
+    })
+  );
 
   return teamData;
-  
 }
 
-
-export async function editTeam({ name, code, googleLink }: EditTeamInput, params: IdParamInput, 
-   request: FastifyRequest,
-  reply: FastifyReply) {
-
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
+export async function editTeam(
+  { name, code, googleLink }: EditTeamInput,
+  params: IdParamInput,
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  let session = await Session.getSession(request, reply);
+  let userId = session.getUserId();
 
   const user = await prisma.team.update({
     where: { id: params.id },
     data: {
       name,
       code,
-      googleLink
+      googleLink,
     },
   });
 

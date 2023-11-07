@@ -15,7 +15,7 @@ import { electionConfig } from "./election.config";
 import { GetSurveyByIdParams } from "../survey/survey.schema";
 import { rankQuerySchema } from "./election.schema";
 import { ratingObjectType } from "./election.types";
-import { average, compareByRating, retrieveTag } from "./election.utils";
+import { average,compareByRating, retrieveRating, retrieveTag } from "./election.utils";
 export async function getAllElectionConstituencyTeamByOrgHandler(
   request: FastifyRequest<{
     Params: GetTeamsByOrgInput;
@@ -45,11 +45,19 @@ export async function getAllSurveysUnderConstituencyTeamHandler(
   reply: FastifyReply
 ) {
   try {
-    const surveys = await getSurveysByConstituency(request.params.id);
-    if (!surveys || surveys.length === 0) {
-      reply.code(404).send({ message: "No Surveys found at the moment" });
-    } else {
-      reply.send(surveys);
+    const currentTeamId = request.params.id
+    const teams = await getElectionConstituencyTeamsByOrgId(electionConfig.orgId)
+    const teamIds = teams.map(team=>team.id)
+    if (teamIds.includes(currentTeamId)){
+      const surveys = await getSurveysByConstituency(request.params.id);
+      if (!surveys || surveys.length === 0) {
+        reply.code(404).send({ message: "No Surveys found at the moment" });
+      } else {
+        reply.send(surveys);
+      }
+    }
+    else{
+      reply.code(401).send({ message: "Unauthorized access" });
     }
   } catch (e) {
     reply.code(500).send({ message: "Internal server error" });
@@ -70,7 +78,7 @@ export async function getAllMpHandler(
     const partyMedia = media.filter((media) => media?.type === "party");
     const tagArray = constituencies
       .filter((constituency) => constituency?.tags.length != 0)
-      .map((constituency) => constituency?.tags);
+      .map((constituency) => {return({constituency_id:constituency?.id,tag:constituency?.tags})});
     //only true if query rank is true
     let surveyResponses: any;
     let surveys: any;
@@ -82,7 +90,7 @@ export async function getAllMpHandler(
     }
     const result = [];
     await Promise.all(
-      tagArray.map((tag, i) => {
+      tagArray.map(({constituency_id,tag}, i) => {
         const resultSchema: ratingObjectType = {
           name: "",
           image: "",
@@ -91,6 +99,7 @@ export async function getAllMpHandler(
           state: "",
           rating: 0,
           no_of_responses: 0,
+          constituency_id:constituency_id
         };
         resultSchema.name = retrieveTag(tag, "mp");
         resultSchema.state = retrieveTag(tag, "state");
@@ -111,7 +120,7 @@ export async function getAllMpHandler(
           if (filteredSurveyResponses.length !== 0) {
             let avgRating: number;
             avgRating = filteredSurveyResponses.reduce(
-              (acc, response) => acc + response.responses[0].response.Rating,
+              (acc, response) => acc + retrieveRating(response.responses),
               0
             );
             avgRating = avgRating / filteredSurveyResponses.length;
@@ -186,7 +195,7 @@ export async function getAllPartiesHandler(
           let avg;
           if (filteredResponses.length > 0) {
             avg = average(
-              filteredResponses.map((fr) => fr.responses[0].response.Rating)
+              filteredResponses.map((fr) => retrieveRating(fr.responses))
             );
           }
           resultSchema.rating = avg;

@@ -226,3 +226,14 @@ export async function getUserByEmail(email: string) {
 }
 
 export { createUser, getOrgIdAndRole };
+
+//this service is for updating the account-active status of user. Currently used for soft deleting the user.
+export async function updateUserActiveStatus(userId: string) {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      active: false,
+    },
+  });
+  return user;
+}

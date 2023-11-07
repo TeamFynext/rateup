@@ -16,3 +16,7 @@ export function retrieveTag(array: Array<string>, toSearch: string) {
     return "";
   }
 }
+
+export function retrieveRating(array:any):number{
+  return array.find(ele=>ele.type === "Rating")?.response?.Rating
+}
