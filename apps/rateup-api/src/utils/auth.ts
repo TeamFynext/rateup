@@ -1,11 +1,7 @@
 import prisma from "./prisma";
 import { FastifyReply, FastifyRequest } from "fastify";
-import Session from "supertokens-node/recipe/session";
-
-export async function getUserIdFromRequest(request: FastifyRequest, reply: FastifyReply) {
-  let session = await Session.getSession(request, reply);
-  return session.getUserId();
-}
+import { Role } from "@prisma/client";
+import { log } from "./logger";
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {
@@ -64,4 +60,21 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
   }
 
   return false;
+}
+
+export async function verifyRole(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  role: Role
+) {
+  try {
+    if (request.user.role !== role) {
+      reply.code(403).send({ message: 'Not authorized' })
+    } else {
+      return true
+    }
+  } catch (err) {
+    log.fatal('Error verifying role\n%o\nrequest.user => %o', err, request.user)
+    reply.code(403).send({ message: 'Not authorized' })
+  }
 }

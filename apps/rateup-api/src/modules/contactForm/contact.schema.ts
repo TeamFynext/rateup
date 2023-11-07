@@ -11,6 +11,6 @@ const createContactMessageInputSchema = z.object({
 export const { schemas: contactFormSchemas, $ref: $Cref } = buildJsonSchemas({
     createContactMessageInputSchema
 },
-{ $id: "contactSchema" });
+{ $id: "contactFormSchema" });
 
 export type CreateContactMessageInput = z.infer<typeof createContactMessageInputSchema>;

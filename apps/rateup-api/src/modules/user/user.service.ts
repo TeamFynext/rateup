@@ -9,6 +9,7 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { Role } from "../../utils/enums";
+import { access } from "fs";
 
 const prisma = new PrismaClient();
 

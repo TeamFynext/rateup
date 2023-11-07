@@ -33,9 +33,13 @@ import { menuItemSchemas } from "./modules/menu/item/item.schema";
 import { menuItemRoutes } from "./modules/menu/item/item.route";
 import { menuPublicRoutes } from "./modules/menu/menu.public.route";
 import { contactFormSchemas } from "./modules/contactForm/contact.schema";
-import { contactPublicRoutes } from "./modules/contactForm/contact.public.route";
+import { contactFormPublicRoutes } from "./modules/contactForm/contact.public.route";
 import { electionPublicRoutes } from "./modules/election/election.public.routes";
 import { whatsappRoutes } from "./modules/whatsapp/wa_routes";
+import { contactSchemas } from "./modules/contact/contact.schema";
+import { contactRoutes } from "./modules/contact/contact.route";
+import { campaignSchemas } from "./modules/campaign/campaign.schema";
+import { campaignRoutes } from "./modules/campaign/campaign.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -53,6 +57,8 @@ export function registerRoutes(server: FastifyInstance): void {
     menuCategorySchemas,
     menuItemSchemas,
     contactFormSchemas,
+    contactSchemas,
+    campaignSchemas
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -81,6 +87,8 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(menuPublicRoutes, { prefix: "api/public/menu" })
   server.register(menuCategoryRoutes, { prefix: "api/mcategory" })
   server.register(menuItemRoutes, { prefix: "api/mitem" })
-  server.register(contactPublicRoutes, { prefix: "api/public/contact" })
+  server.register(contactFormPublicRoutes, { prefix: "api/public/contact" })
   server.register(electionPublicRoutes, { prefix: "api/public/election" });
+  server.register(contactRoutes, { prefix: "api/contact" })
+  server.register(campaignRoutes, { prefix: "api/campaign" })
 }

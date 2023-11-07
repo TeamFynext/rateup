@@ -1,4 +1,5 @@
 // Any modification to this file should be reflected in the frontend
+import { Role } from "@prisma/client";
 import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus } from "./enums";
 
 type GoogleReview = {
@@ -69,7 +70,7 @@ declare global {
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
-      [QuestionType.WaList]?: {title: string, description?: string};
+      [QuestionType.WaList]?: { title: string, description?: string };
     };
   };
   type LogicJump = {
@@ -94,6 +95,12 @@ declare global {
 
 declare module 'fastify' {
   interface FastifyRequest {
-    userId: string
+    userId: string,
+    user: {
+      userId: string,
+      role: Role,
+      orgId: string,
+      email: string,
+    }
   }
 }

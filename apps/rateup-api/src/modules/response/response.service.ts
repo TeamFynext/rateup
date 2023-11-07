@@ -1,9 +1,5 @@
-import { ResponsePlatform } from "@prisma/client";
 import prisma from "../../utils/prisma";
 import { CreateResponseInput } from "./response.schema";
-
-import { getSurveyById } from "../survey/survey.service";
-import { getOrCreateWaCustomer } from "../whatsapp/customer/waCustomer/waCustomer.service";
 
 export async function getResponses(surveyId: string) {
     const responses = await prisma.surveyResponse.findMany({
@@ -42,30 +38,12 @@ export async function deleteResponse(id: string) {
 }
 
 export async function createResponse(input: CreateResponseInput) {
-    let waCustomer = undefined;
-
-    if (input.platform === ResponsePlatform.WHATSAPP) {
-        // Create waCustomer with phone number
-        const { phone, ...restOfInput } = input;
-        input = restOfInput;
-        if (!phone) {
-            throw new Error("Phone number is required for Whatsapp responses");
-        }
-
-        const survey = await getSurveyById(input.surveyId);
-        const teamId = survey?.teamId;
-
-        // TODO: get name from whatsapp
-        waCustomer = await getOrCreateWaCustomer(teamId, phone);
-    }
-
     const surveyResponse = await prisma.surveyResponse.create({
         data: {
             ...input,
             surveyId: input.surveyId,
             language: input.language,
             responses: input.responses,
-            waCustomerId: waCustomer?.id
         }
     })
 

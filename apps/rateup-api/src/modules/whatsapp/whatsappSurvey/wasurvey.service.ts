@@ -1,5 +1,5 @@
 import { WaSession, ResponsePlatform, Survey } from "@prisma/client";
-import { LogicAction } from "../../../types/enums";
+import { CampaignParticipantStatus, LogicAction } from "../../../types/enums";
 import { WaSendMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
@@ -9,6 +9,7 @@ import { createResponse } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage } from "./wasurvey.utils";
+import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 
 
 
@@ -24,9 +25,11 @@ export async function sendMessage(orgId: string, messageData: WaSendMessageBody)
       messageData
     )
     log.trace(`sent successfully %o %o `, res.data, res.statusText)
+    return true;
   } catch (e: any) {
     log.error("Error sending message")
     console.log(e.response);
+    return false
   }
 }
 
@@ -75,7 +78,8 @@ export async function createSession(
   orgId: string,
   templateId?: string,
   language: string = "",
-  currentQuestionId?: string
+  currentQuestionId?: string,
+  campaignParticipantId?: string
 ) {
   log.info("Creating session \n%o\n", { phone, surveyId, language });
 
@@ -87,6 +91,7 @@ export async function createSession(
       templateId: templateId,
       orgId: orgId,
       currentQuestionId: currentQuestionId,
+      campaignParticipantId: campaignParticipantId
     },
   });
 
@@ -176,12 +181,15 @@ async function saveResponses(session: WaSession) {
   const surveyResponse = {
     surveyId: session.surveyId,
     responses: questionResponses,
-    phone: session.phone,
     language: session.language,
     platform: ResponsePlatform.WHATSAPP,
   };
-  await createResponse(surveyResponse);
+  const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);
+  await updateCampaignParticipant(session.campaignParticipantId, {
+    status: CampaignParticipantStatus.COMPLETED,
+    responseId: res.id
+  })
 }
 
 export async function updateResponses(
@@ -232,4 +240,26 @@ export async function sendSurveyToWaCustomer(phone: string, survey: Survey, dbTe
 
   // TODO: send error if sending template failed
   await sendMessage(session.orgId, consentTemplateMessage);
+}
+
+export async function sendSurveyToParticipant(campaignParticipantId: string, phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
+  try {
+    log.trace("Sending survey to participant %s", phone);
+    const session = await createSession(phone, survey.id, dbTemplate.orgId, dbTemplate.id, survey.languages[0], undefined, campaignParticipantId)
+    log.trace("Session created %o", session)
+    const { name, language } = dbTemplate.data;
+    const templateQuery = {
+      name,
+      language: {
+        code: language
+      }
+    }
+    const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
+
+    // TODO: send error if sending template failed
+    return await sendMessage(session.orgId, consentTemplateMessage);
+  } catch (e) {
+    log.error(e)
+    return false
+  }
 }

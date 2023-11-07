@@ -56,7 +56,7 @@ export async function getTemplatesByOrgId(orgId: string) {
 
 }
 
-export async function getTemplate(templateId: string) {
+export async function getDbTemplate(templateId: string) {
     try {
         const res = await prisma.waTemplate.findUnique({
             where: {
@@ -227,7 +227,7 @@ export async function editTemplate(orgId: string, hsm_id: string, components: Ar
  * First updates template in WhatsApp Business API then updates in db
  */
 export async function updateTemplate(templateId: string, data: CreateWaTemplateInput) {
-    const template = await getTemplate(templateId);
+    const template = await getDbTemplate(templateId);
     const { components } = generateTemplate(data)
     const res = await editTemplate(template.orgId, template.data.id, components)
     if (res) {

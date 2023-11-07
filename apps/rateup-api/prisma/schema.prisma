@@ -105,14 +105,15 @@ model Team {
   googleLink String?
   tags       String[] @default([])
 
-  org              Org               @relation(fields: [orgId], references: [id])
-  orgId            String            @db.Uuid
-  members          TeamMember[]
-  surveys          Survey[]
-  invitations      Invitation[]
-  waCustomers      WaCustomer[]
-  waCustomerGroups WaCustomerGroup[]
-  menu             Menu[]
+  org           Org            @relation(fields: [orgId], references: [id])
+  orgId         String         @db.Uuid
+  members       TeamMember[]
+  surveys       Survey[]
+  invitations   Invitation[]
+  contacts      Contact[]
+  contactGroups ContactGroup[]
+  menu          Menu[]
+  campaigns     Campaign[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -167,10 +168,8 @@ model Survey {
   getLocation        Boolean          @default(false)
   welcomePageEnabled Boolean          @default(true)
   tags               String[]         @default([])
-
-  waCustomerSurveySendHistory      WaCustomerSurveySendHistory[]
-  waCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
-  menuLanding                      MenuLanding[]
+  menuLanding        MenuLanding[]
+  campaigns          Campaign[]
 }
 
 model SurveyLanding {
@@ -186,21 +185,22 @@ model SurveyLanding {
 }
 
 model SurveyResponse {
-  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime         @default(now())
-  survey       Survey           @relation(fields: [surveyId], references: [id])
-  surveyId     String           @db.Uuid
-  responses    Json[]
-  language     String           @default("")
-  platform     ResponsePlatform @default(WEB)
-  waCustomer   WaCustomer?      @relation(fields: [waCustomerId], references: [id])
-  waCustomerId String?          @db.Uuid
-  ip           String?
-  location     Json? // { 
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt            DateTime              @default(now())
+  survey               Survey                @relation(fields: [surveyId], references: [id])
+  surveyId             String                @db.Uuid
+  responses            Json[]
+  language             String                @default("")
+  platform             ResponsePlatform      @default(WEB)
+  ip                   String?
+  location             Json? // { 
   //                      coordinates: {latitude: number, longitude: number},
   //                      city: string, state: string, country: string
   //                    }
-  deviceData   Json?
+  deviceData           Json?
+  Contact              Contact?              @relation(fields: [contactId], references: [id])
+  contactId            String?               @db.Uuid
+  CampaignParticipants CampaignParticipant[]
 }
 
 model SurveyStats {
@@ -214,82 +214,105 @@ model SurveyStats {
 
 // Whatsapp session
 model WaSession {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt         DateTime    @default(now())
-  phone             String
-  survey            Survey      @relation(fields: [surveyId], references: [id])
-  surveyId          String      @db.Uuid
-  template          WaTemplate? @relation(fields: [templateId], references: [id])
-  templateId        String?     @db.Uuid
-  currentQuestionId String?
-  responses         Json[]
-  language          String      @default("")
-  orgId             String      @db.Uuid
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt             DateTime             @default(now())
+  phone                 String
+  survey                Survey               @relation(fields: [surveyId], references: [id])
+  surveyId              String               @db.Uuid
+  template              WaTemplate?          @relation(fields: [templateId], references: [id])
+  templateId            String?              @db.Uuid
+  currentQuestionId     String?
+  campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
+  campaignParticipantId String?              @unique @db.Uuid
+  responses             Json[]
+  language              String               @default("")
+  orgId                 String               @db.Uuid
 
   @@unique([phone, orgId])
 }
 
-model WaCustomer {
+model Contact {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
-  name      String?
-  phone     String
-  email     String?
 
-  team                        Team                          @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                      String                        @db.Uuid
-  responses                   SurveyResponse[]
-  waCustomerGroups            WaCustomerGroupMap[]
-  waCustomerSurveySendHistory WaCustomerSurveySendHistory[]
+  name  String?
+  phone String?
+  email String?
 
-  @@unique([phone, teamId], name: "customer_phone_team_id_unique")
+  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId               String                @db.Uuid
+  responses            SurveyResponse[]
+  contactGroups        ContactGroupMap[]
+  campaignParticipants CampaignParticipant[]
+
+  @@unique([phone, teamId], name: "contact_phone_team_id_unique")
+  @@unique([email, teamId], name: "contact_email_team_id_unique")
 }
 
-// customer groups to send surveys to
-model WaCustomerGroup {
+model ContactGroup {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
-  name      String
 
-  waCustomers                      WaCustomerGroupMap[]
-  waCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
-  team                             Team                               @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                           String                             @db.Uuid
+  name String
+  icon String?
+
+  contacts             ContactGroupMap[]
+  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId               String                @db.Uuid
+  campaignParticipants CampaignParticipant[]
 
   @@unique([name, teamId], name: "group_name_team_id_unique")
 }
 
-model WaCustomerGroupMap {
-  waCustomer        WaCustomer      @relation(fields: [waCustomerId], references: [id], onDelete: Cascade)
-  waCustomerId      String          @db.Uuid
-  waCustomerGroup   WaCustomerGroup @relation(fields: [waCustomerGroupId], references: [id], onDelete: Cascade)
-  waCustomerGroupId String          @db.Uuid
+model ContactGroupMap {
+  contact        Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId      String       @db.Uuid
+  contactGroup   ContactGroup @relation(fields: [contactGroupId], references: [id], onDelete: Cascade)
+  contactGroupId String       @db.Uuid
 
-  @@id([waCustomerId, waCustomerGroupId])
+  @@id([contactId, contactGroupId])
 }
 
-// survey "send" history
-// records when a survey was sent to a customer (whatsapp)
-model WaCustomerSurveySendHistory {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  survey       Survey     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId     String     @db.Uuid
-  template     WaTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  templateId   String     @db.Uuid
-  waCustomer   WaCustomer @relation(fields: [waCustomerId], references: [id], onDelete: Cascade)
-  waCustomerId String     @db.Uuid
-  createdAt    DateTime   @default(now())
+model Campaign {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+
+  name      String
+  startedAt DateTime?
+  endedAt   DateTime?
+  status    String    @default("INACTIVE") // enums.ts: CampaignStatus
+  type      String // enums.ts: CampaignType
+
+  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId               String                @db.Uuid
+  survey               Survey                @relation(fields: [surveyId], references: [id], onDelete: Cascade) // TODO: cascade or not?
+  surveyId             String                @db.Uuid
+  waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  waTemplateId         String?               @db.Uuid
+  // TODO: add email template?
+  campaignParticipants CampaignParticipant[]
 }
 
-model WaCustomerGroupSurveySendHistory {
-  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  waCustomerGroup   WaCustomerGroup @relation(fields: [waCustomerGroupId], references: [id], onDelete: Cascade)
-  waCustomerGroupId String          @db.Uuid
-  survey            Survey          @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId          String          @db.Uuid
-  template          WaTemplate      @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  templateId        String          @db.Uuid
-  createdAt         DateTime        @default(now())
+model CampaignParticipant {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+
+  status      String    @default("PENDING") // enums.ts: CampaignParticipantStatus
+  sentAt      DateTime?
+  respondedAt DateTime?
+  source      String    @default("INDIVIDUAL") // enums.ts: CampaignParticipantSource
+
+  campaign       Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId     String          @db.Uuid
+  contact        Contact         @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId      String          @db.Uuid
+  contactGroup   ContactGroup?   @relation(fields: [contactGroupId], references: [id], onDelete: Cascade)
+  contactGroupId String?         @db.Uuid
+  response       SurveyResponse? @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  responseId     String?         @db.Uuid
+  WaSession      WaSession?
+
+  @@unique([campaignId, contactId], name: "campaign_contact_unique")
 }
 
 //----------welcome page styles-----------
@@ -388,11 +411,10 @@ model WaTemplate {
   data         Json
   acceptButton String // QuickReplyButton text which on clicking will send the survey to the user
 
-  org                              Org                                @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                            String                             @db.Uuid
-  waSession                        WaSession[]
-  waCustomerSurveySendHistory      WaCustomerSurveySendHistory[]
-  waCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
+  org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String      @db.Uuid
+  waSession WaSession[]
+  Campaign  Campaign[]
 }
 
 model MenuLanding {

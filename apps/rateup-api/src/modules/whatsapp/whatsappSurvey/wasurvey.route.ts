@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { sendSurveyToWaCustomerGroupHandler, sendSurveyToWaCustomerHandler, webhookSubscribeHandler, whatsappEventHandler } from "./wasurvey.controller";
+import { webhookSubscribeHandler, whatsappEventHandler } from "./wasurvey.controller";
 
 // TODO: split this module to webhook & sendSurvey
 export async function waWebhookRoutes(server: FastifyInstance) {
@@ -11,10 +11,4 @@ export async function waWebhookRoutes(server: FastifyInstance) {
     "/:orgId",
     whatsappEventHandler
   );
-}
-
-export async function whatsappSurveyRoutes(server: FastifyInstance) {
-  server.get("/send/:surveyId/template/:templateId/waCustomer/:waCustomerId", sendSurveyToWaCustomerHandler);
-  server.get("/send/:surveyId/template/:templateId/waCustomerGroup/:waCustomerGroupId", sendSurveyToWaCustomerGroupHandler);
-
 }
