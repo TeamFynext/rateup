@@ -181,6 +181,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       style={style}
       w={"100%"}
       h={"100%"}
+      miw={opened ? (isMobile ? 360 : 250) : 70}
       maw={opened ? (isMobile ? 360 : 250) : 70}
     >
       {opened ? (

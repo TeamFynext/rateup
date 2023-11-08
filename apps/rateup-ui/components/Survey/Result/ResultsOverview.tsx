@@ -191,8 +191,7 @@ const ResultsOverview = () => {
         </Stack>
       ) : (
         <Group m="50px" ml="150px">
-          {" "}
-          No quantitative questions data available!{" "}
+          No quantitative questions data available!
         </Group>
       )}
     </>

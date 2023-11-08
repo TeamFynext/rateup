@@ -27,3 +27,37 @@ export function getResponse(qId: string, response: SurveyResponse) {
   }
   return qResponse.response[type];
 }
+
+export function filterResponses(
+  responses: SurveyResponse[],
+  filters: Array<{ question_id: string; responses: Array<string> }>,
+) {
+  if (filters.length === 0) {
+    return responses;
+  } else {
+    const filteredResponses = responses?.filter(
+      (response) =>
+        filters?.every((filter) => {
+          const question = response?.responses?.find(
+            (item) => item?.questionId === filter?.question_id,
+          );
+          if (question) {
+            if (
+              question.type === QuestionType.Opinion ||
+              question.type === QuestionType.Rating
+            ) {
+              return filter?.responses.includes(
+                question?.response[question?.type]?.toString(),
+              );
+            }
+            return filter?.responses?.includes(
+              question?.response[question?.type],
+            );
+          } else {
+            return false;
+          }
+        }),
+    );
+    return filteredResponses;
+  }
+}

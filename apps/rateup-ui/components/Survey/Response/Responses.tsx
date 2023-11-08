@@ -8,6 +8,8 @@ import {
   Divider,
   TextInput,
   Stack,
+  ScrollArea,
+  Badge,
 } from "@mantine/core";
 import {
   RateupButtonBlackOutline,
@@ -22,17 +24,15 @@ import dayjs from "dayjs";
 import { getResponse } from "../../../utils/response";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useDownloadExcel } from "react-export-table-to-excel";
-import {
-  useDeleteResponse,
-  useResponses,
-} from "../../../backend/surveys/response/response.query";
+import { useDeleteResponse } from "../../../backend/surveys/response/response.query";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useUser } from "../../../context/UserContext";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
+import { QuestionType } from "../../../types/enums";
 
-const Responses = ({ survey }) => {
+const Responses = ({ survey, responses }) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -51,7 +51,6 @@ const Responses = ({ survey }) => {
     throw new Error("surveyId is an array");
   }
 
-  const { isLoading, error, data: responses } = useResponses(surveyId);
   const {
     isLoading: isQLoading,
     error: QError,
@@ -75,7 +74,6 @@ const Responses = ({ survey }) => {
   };
 
   const openActions = (id) => {
-    // console.log(id)
     selectedRowId === id ? setSelectedRowId("") : setSelectedRowId(id);
     selectedRowId !== id && open();
   };
@@ -109,12 +107,12 @@ const Responses = ({ survey }) => {
     }
   };
 
-  if (isLoading || isQLoading) return <Loader />;
-  if (error || QError) return <Text>An error has occurred</Text>;
+  if (isQLoading) return <Loader />;
+  if (QError) return <Text>An error has occurred</Text>;
 
   return (
-    <Stack h="100%">
-      <PaperLayout style={{ cursor: "pointer" }} mb={30}>
+    <Stack h="100%" style={{ flex: 1 }}>
+      <PaperLayout style={{ cursor: "pointer" }}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <RateupButtonBlue
@@ -129,16 +127,9 @@ const Responses = ({ survey }) => {
       </PaperLayout>
       {responseCount > 0 && (
         <PaperLayout style={{ flex: 1 }}>
-          {/* TODO-FIX-SCROLL-BAR */}
-          <div style={{ overflowX: "auto", width: "100%", height: "100%" }}>
+          <ScrollArea h={"100%"}>
             <Stack h={"100%"}>
-              <Table
-                highlightOnHover
-                ref={tableRef}
-                withColumnBorders
-                withRowBorders
-                withTableBorder
-              >
+              <Table highlightOnHover ref={tableRef} withRowBorders>
                 <TableHead questions={questions} />
                 <Table.Tbody>
                   {responses?.map((response) => (
@@ -151,9 +142,8 @@ const Responses = ({ survey }) => {
                       }}
                     >
                       <Table.Td style={cellGap}>
-                        {" "}
-                        <Text color="dark.3">
-                          {dayjs(response.createdAt).format("DD-MM-YYYY")}{" "}
+                        <Text c="dark.3" p={10} miw={200}>
+                          {dayjs(response.createdAt).format("DD-MM-YYYY")}
                         </Text>
                       </Table.Td>
                       {questions?.map((q) => (
@@ -162,14 +152,10 @@ const Responses = ({ survey }) => {
                           style={cellGap}
                           title={getResponse(q.id, response)}
                         >
-                          <Text
-                            color="dark.3"
-                            truncate="end"
-                            style={{ maxWidth: "150px" }}
-                          >
-                            {" "}
-                            {getResponse(q.id, response)}{" "}
-                          </Text>
+                          <BadgeorText
+                            questionType={q.type}
+                            response={getResponse(q.id, response)}
+                          />
                         </Table.Td>
                       ))}
                     </Table.Tr>
@@ -177,7 +163,7 @@ const Responses = ({ survey }) => {
                 </Table.Tbody>
               </Table>
             </Stack>
-          </div>
+          </ScrollArea>
           <Modal
             opened={opened}
             onClose={close}
@@ -245,14 +231,15 @@ function TableHead({ questions }: TableHeadProps) {
     top: 0,
     zIndex: 100,
     backgroundColor: "white",
+    minHeight: 100,
   };
 
-  if (!questions?.length) return <>No Responses. </>;
+  if (!questions?.length) return <>No Responses.</>;
   return (
     <Table.Thead style={stickyHeaderStyles}>
-      <Table.Tr>
+      <Table.Tr mih={50}>
         <Table.Th>
-          <Text fz="sm" c="dark.9" fw="400">
+          <Text fz="lg" c="dark.5" fw="600" p={10}>
             Date
           </Text>
         </Table.Th>
@@ -262,11 +249,12 @@ function TableHead({ questions }: TableHeadProps) {
             title={q?.title[selectedLanguage] || q?.title["English"]}
           >
             <Text
-              c="dark.9"
-              fz="sm"
-              fw="400"
+              c="dark.5"
+              fz="lg"
+              fw="600"
               truncate="end"
-              style={{ maxWidth: "150px" }}
+              miw={200}
+              maw={200}
             >
               {q?.title[selectedLanguage] || q?.title["English"]}
             </Text>
@@ -277,4 +265,68 @@ function TableHead({ questions }: TableHeadProps) {
       </Table.Tr>
     </Table.Thead>
   );
+}
+
+function BadgeorText({
+  questionType,
+  response,
+}: {
+  questionType: QuestionType;
+  response: string;
+}) {
+  const badgeRequired = [
+    QuestionType.Rating,
+    QuestionType.Smiley,
+    QuestionType.LD,
+    QuestionType.YN,
+    QuestionType.Opinion,
+  ];
+  function returnBadgeColor() {
+    switch (response.toString()) {
+      case "VeryHappy":
+      case "Like":
+      case "Yes":
+      case "9":
+      case "10":
+        return "green";
+      case "Happy":
+      case "Neutral":
+      case "7":
+      case "8":
+        return "yellow";
+      case "Sad":
+      case "No":
+      case "5":
+      case "6":
+        return "orange";
+      case "VerySad":
+      case "Dislike":
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+        return "red";
+      default:
+        return "dark";
+    }
+  }
+  if (badgeRequired.includes(questionType)) {
+    return (
+      <Badge
+        size="lg"
+        fw={600}
+        radius={10}
+        color={returnBadgeColor()}
+        variant="light"
+      >
+        {response}
+      </Badge>
+    );
+  } else {
+    return (
+      <Text c="dark.3" truncate="end" miw={200} maw={200}>
+        {response}
+      </Text>
+    );
+  }
 }
