@@ -47,10 +47,10 @@ export function filterResponses(
               question.type === QuestionType.Rating
             ) {
               return filter?.responses.includes(
-                question?.response[question?.type].toString(),
+                question?.response[question?.type]?.toString(),
               );
             }
-            return filter?.responses.includes(
+            return filter?.responses?.includes(
               question?.response[question?.type],
             );
           } else {
