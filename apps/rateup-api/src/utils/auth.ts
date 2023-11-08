@@ -9,7 +9,10 @@ export async function getUserIdFromRequest(request: FastifyRequest, reply: Fasti
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {
-    // Find the SurveyTeamMap records related to the survey
+    if (!surveyId || !userId) {
+      throw new Error('surveyId and userId must not be empty strings');
+    }
+    
     const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
       where: {
         surveyId: surveyId,

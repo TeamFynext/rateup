@@ -153,6 +153,19 @@ export async function surveyRoutes(server: FastifyInstance) {
     deleteSurveyByIdHandler
   );
 
+  // delete team survey by surveyId, teamId
+  server.delete(
+    "/teamsurvey/:id",
+    {
+      preHandler: verifySurveyAccess,
+      schema: {
+        params: $Sref("getSurveyByIdParamsSchema"),
+        body: $Sref("deleteTeamSurveyRequestSchema"),
+      },
+    },
+    deleteSurveyByIdHandler
+  );
+
   // update survey by id
   server.put(
     "/:id",

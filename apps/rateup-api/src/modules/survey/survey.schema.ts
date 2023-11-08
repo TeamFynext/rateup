@@ -52,6 +52,10 @@ const getSurveyLandingByIdParamsSchema = z.object({
   id: z.string(),
 });
 
+const deleteTeamSurveyRequestSchema = z.object({
+  teamId: z.string().uuid(),
+});
+
 const idParamsSchema = z.object({
   id: z.string(),
 });
@@ -135,6 +139,7 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     idParamsSchema,
     cloneSurveySchema,
     updateGoogleLinkRequestSchema,
+    deleteTeamSurveyRequestSchema
   },
   { $id: "surveySchema" }
 );
@@ -150,6 +155,7 @@ export type UpdateLandingPageInput = z.infer<typeof updateLandingPageRequestSche
 export type UpdateSurveyPassword = z.infer<
   typeof updateSurveyPasswordRequestSchema
 >;
+export type DeleteTeamSurveyInput = z.infer<typeof deleteTeamSurveyRequestSchema>;
 export type IdParamInput = z.infer<typeof idParamsSchema>;
 export type CloneSurveyInput = z.infer<typeof cloneSurveySchema>;
 export type UpdateGoogleLinkInput = z.infer<

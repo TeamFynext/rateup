@@ -4,6 +4,7 @@ import {
   createSurvey,
   createSurveyLanding,
   deleteSurveyById,
+  deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
   getGoogleUrlBySurveyId,
   getPublicSurveyById,
@@ -27,6 +28,7 @@ import {
   CloneSurveyInput,
   CreateSurveyInput,
   CreateSurveyLandingInput,
+  DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   IdParamInput,
   UpdateGoogleLinkInput,
@@ -332,6 +334,27 @@ export async function deleteSurveyByIdHandler(
         error: 'An unknown error occurred.'
       });
     }
+  }
+}
+
+export async function deleteTeamSurveyHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+    Body: DeleteTeamSurveyInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    let response = await deleteSurveyFromTeam(request.params.id, request.body);
+    if (!response) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ message: "Deleted successfully." , info: response});
+    }
+    //TODO improve response handling
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
   }
 }
 

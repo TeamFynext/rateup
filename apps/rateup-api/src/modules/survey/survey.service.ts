@@ -2,6 +2,7 @@ import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
   CreateSurveyLandingInput,
+  DeleteTeamSurveyInput,
   UpdateGoogleLinkInput,
   UpdateLandingPageInput,
   UpdateSurveyInput,
@@ -180,6 +181,9 @@ export async function cloneSurvey(
 }
 
 export async function getSurveyById(id: string) {
+  if (!id) {
+    throw new Error('ID must be provided');
+  }
   const survey = await prisma.survey.findUnique({
     where: {
       id,
@@ -317,13 +321,6 @@ export async function getSurveyBylandingId(landingid: string) {
   return surveys;
  }
 
-
-/**
- * Returns surveys from ALL TEAMs in which the user is a member of
- * @param userId
- * @returns Array of surveys without questions
- */
-
 //------------get web survey list --------
  export async function getWebSurveysByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
@@ -379,6 +376,36 @@ export async function getWhatsappSurveysByUserId(userId: string, type: string) {
   return whatsAppSurveys;
  }
 
+ 
+//------------get survey landing survey list --------
+export async function getSurveyLandingByUserId(userId: string) {
+  const surveysLanding = await prisma.surveyLanding.findMany({
+    where: { createdBy: userId },
+  });
+
+  return surveysLanding;
+}
+
+
+//------------get survey list  by team id --------
+ export async function getSurveysByTeam(teamId: string) {
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const surveysWithoutQuestions = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  return surveysWithoutQuestions;
+ }
 
 
 //------------SURVEY SUMMARY  ----
@@ -446,36 +473,6 @@ export async function getWhatsappSurveysByUserId(userId: string, type: string) {
   return summaryData;
  }
 
-//------------get survey landing survey list --------
-export async function getSurveyLandingByUserId(userId: string) {
-  const surveysLanding = await prisma.surveyLanding.findMany({
-    where: { createdBy: userId },
-  });
-
-  return surveysLanding;
-}
-
-
-
- //------------get survey list  by team id --------
- export async function getSurveysByTeam(teamId: string) {
-
-  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
-    where: {
-      teamId
-    },
-    include: {
-      survey: true,
-    },
-  });
-
-  const surveysWithoutQuestions = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey };
-    return excludeFields(survey, ["questions", "password"]);
-  });
-
-  return surveysWithoutQuestions;
- }
 
 
 //------------DELETE SURVEY by id --------
@@ -486,6 +483,47 @@ export async function deleteSurveyById(id: string) {
     },
   });
   return survey;
+}
+
+//------------DELETE SURVEY from a team --------
+export async function deleteSurveyFromTeam(id: string, input: DeleteTeamSurveyInput) {
+
+  const surveyTeams = await prisma.surveyTeamMap.findMany({
+    where: {
+      surveyId: id,
+    }
+  });
+
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: {
+      surveyId: id,
+      teamId: input?.teamId
+    },
+    include: {
+      responses: true
+    }
+  });
+
+  if (!surveyTeamMap) {
+    throw new Error('No survey found with the provided id and teamId');
+  }
+
+  if (surveyTeamMap.responses && surveyTeamMap.responses.length > 0) {
+    throw new Error('Cannot delete survey that has responses');
+  }
+
+  if(surveyTeams?.length > 1){
+    const deletedSurvey = await prisma.surveyTeamMap.delete({
+      where: { id: surveyTeamMap?.id }
+    });
+    return deletedSurvey;
+  }else{
+    const deletedSurvey = await prisma.survey.delete({
+      where: { id }
+    });
+    return deletedSurvey;
+  }
+
 }
 
 
