@@ -37,7 +37,7 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    fullMenu?.categories[0]?.id
+    fullMenu?.categories[0]?.id,
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
@@ -89,7 +89,9 @@ export default function ({ fullMenu }) {
             />
           )}
           <div>
-            <Text ta={"center"} tt={"capitalize"}>Welcome To</Text>
+            <Text ta={"center"} tt={"capitalize"}>
+              Welcome To
+            </Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
             <Text fz={"max(3vw, 2rem)"} fw="bold" tt={"uppercase"}>
               {fullMenu?.displayName ?? "Name"}

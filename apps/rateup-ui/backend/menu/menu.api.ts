@@ -28,7 +28,6 @@ export const getMenuPublicById = async (id: string) => {
   }
 };
 
-
 export const getFullMenuPublicById = async (menuId: string) => {
   try {
     const res = await axiosClient.get(`${PUBLIC_MENU_URL}/full/${menuId}`);

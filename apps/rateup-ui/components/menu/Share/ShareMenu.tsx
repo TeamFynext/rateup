@@ -17,7 +17,7 @@ const ShareMenu = ({ menu: { id, isPublished, surveyId } }: ShareMenuProps) => {
   const { isPending, error, mutate } = useUpdateMenuMutation(
     id,
     () => {},
-    () => {}
+    () => {},
   );
 
   const shareLink = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/menu/${id}/feedback/${surveyId}`;

@@ -27,6 +27,7 @@
     "@mantine/dates": "^7.1.2",
     "@mantine/form": "^7.1.2",
     "@mantine/hooks": "^7.1.2",
+    "@mantine/modals": "^7.1.2",
     "@mantine/next": "^6.0.21",
     "@mantine/notifications": "^7.1.2",
     "@mantine/nprogress": "^7.1.2",

@@ -27,7 +27,7 @@ export const getServerSideProps = async (context: { params: MenuProp }) => {
 
   const menuLanding = await getMenuPublicById(params.menuId);
   console.log(menuLanding);
-  
+
   return { props: { menuLanding: menuLanding } };
 };
 

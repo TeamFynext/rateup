@@ -6,7 +6,11 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
     <Button
       component="a"
       href={`#${categoryId}`}
-      bg={selected ? "var(--shade-of-brown-selected)" : "var(--shade-of-brown-unselected)"}
+      bg={
+        selected
+          ? "var(--shade-of-brown-selected)"
+          : "var(--shade-of-brown-unselected)"
+      }
       radius={"md"}
       onClick={() => onClick(categoryId)}
     >

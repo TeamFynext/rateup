@@ -32,6 +32,7 @@ import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import axios from "axios";
+import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
@@ -156,32 +157,33 @@ export default function App({
       {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
       <main className={GilroyRegular.className}>
         <MantineProvider theme={theme}>
-          <NavigationProgress color="gray.9" size={4} />
-          <Notifications />
-          <QueryClientProvider client={queryClient}>
-            <HydrationBoundary state={pageProps.dehydratedState}>
-              <UserProvider>
-                <LayoutComponent>
-                  <AnimatePresence>
-                    <motion.div
-                      style={{ height: "100%" }}
-                      key={appProps.router.pathname}
-                      // initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Component {...pageProps} />
-                    </motion.div>
-                  </AnimatePresence>
-                </LayoutComponent>
-              </UserProvider>
-              <ReactQueryDevtools
-                initialIsOpen={false}
-                buttonPosition="top-right"
-              />
-            </HydrationBoundary>
-          </QueryClientProvider>
-          <Notifications />
+          <ModalsProvider>
+            <Notifications />
+            <QueryClientProvider client={queryClient}>
+              <HydrationBoundary state={pageProps.dehydratedState}>
+                <UserProvider>
+                  <LayoutComponent>
+                    <AnimatePresence>
+                      <motion.div
+                        style={{ height: "100%" }}
+                        key={appProps.router.pathname}
+                        // initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Component {...pageProps} />
+                      </motion.div>
+                    </AnimatePresence>
+                  </LayoutComponent>
+                </UserProvider>
+                <ReactQueryDevtools
+                  initialIsOpen={false}
+                  buttonPosition="top-right"
+                />
+              </HydrationBoundary>
+            </QueryClientProvider>
+            <Notifications />
+          </ModalsProvider>
         </MantineProvider>
         {/* </SuperTokensWrapper> */}
       </main>

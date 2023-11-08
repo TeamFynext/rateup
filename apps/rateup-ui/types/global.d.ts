@@ -325,6 +325,36 @@ declare global {
     name: string;
     teamId: string;
   };
+
+  // for contacts
+  type ContactsData = {
+    id: string;
+    teamId: string;
+    name: string;
+    phone: string;
+    email: number;
+    createdAt: Date;
+  };
+
+  type ContactsResponse = {
+    message: string;
+    data: ContactsData[];
+  };
+
+  type ContactGroup = {
+    id: string;
+    name: string;
+    teamId: string;
+    icon: string;
+  };
+  type ContactGroupResponse = {
+    message: string;
+    data: ContactGroup[];
+  };
+
+  interface ContactGroupwithContacts extends ContactGroup {
+    contacts: ContactsData[];
+  }
 }
 
 export interface MenuLanding {
