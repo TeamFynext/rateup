@@ -68,7 +68,7 @@ const ResultsOverview = () => {
       let promoters = 0;
       let passives = 0;
       let detractors = 0;
-      responsesForQuestion.forEach((response: any) => {
+      responsesForQuestion?.forEach((response: any) => {
         const rating = response?.response[response?.type];
         switch (response?.type) {
           case QuestionType.Rating:
