@@ -10,9 +10,7 @@ import {
   CheckIcon,
   useCombobox,
 } from "@mantine/core";
-import {
-  RateupButtonPrimary,
-} from "../../Button/RateupButtons";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -48,7 +46,6 @@ const GeneralSettings = ({
 
   useEffect(() => {
     surveyForm.setFieldValue("languages", languages);
-    console.log(languages);
   }, [languages]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -142,9 +139,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
   });
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
+  useEffect(() => {}, [errors]);
 
   let languages = Array.from(Languages);
   const [search, setSearch] = useState("");
