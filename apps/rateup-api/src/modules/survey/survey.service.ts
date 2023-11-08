@@ -206,7 +206,7 @@ export async function getSurveyById(id: string) {
   }
 
   let teams = survey?.teams?.map((team) => {
-    const teamData = { id: team?.team?.id, name: team?.team?.name };
+    const teamData = { id: team?.team?.id, name: team?.team?.name, mapId: team?.id };
     return teamData;
   });
 
