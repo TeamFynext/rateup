@@ -11,3 +11,10 @@
 .title {
   font-size: 1.5rem;
 }
+
+.close {
+  color: white;
+}
+.close:hover {
+  color: black;
+}

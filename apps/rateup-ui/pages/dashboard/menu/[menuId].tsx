@@ -1,4 +1,4 @@
-import { Flex, Group, Stack, Tabs, Title } from "@mantine/core";
+import { Flex, Grid, Group, Stack, Tabs, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
@@ -19,6 +19,7 @@ import ShareMenu from "../../../components/menu/Share/ShareMenu";
 import LandingPage from "../../../components/menu/landingPage/LandingPage";
 import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
 import { transformData } from "../../../components/menu/util/transformData";
+import Heading from "../../../components/styled/Heading/Heading";
 
 enum TabEnum {
   Menu = "Menu",
@@ -108,20 +109,19 @@ export default ({ categories: initialCategories }) => {
         value={activeTab}
         onChange={setActiveTab as (tab: string) => void}
       >
-        <Group justify="space-between" mb="md">
-          {activeTab === TabEnum.Menu && (
-            <Title order={3}>
-              {menu &&
-                menu?.name?.charAt(0)?.toUpperCase() + menu?.name?.slice(1)}
-            </Title>
-          )}
-          <Tabs.List>
-            <Tabs.Tab value={TabEnum.Menu}>Menu</Tabs.Tab>
-            <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
-            <Tabs.Tab value={TabEnum.LandingPage}>Landing Page</Tabs.Tab>
-            <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
-          </Tabs.List>
-        </Group>
+        <Grid columns={10} mb="md">
+          <Grid.Col span={2}>
+            <Heading title={menu?.name} titleprops={{ tt: "capitalize" }} />
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Tabs.List>
+              <Tabs.Tab value={TabEnum.Menu}>Menu</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.LandingPage}>Landing Page</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
+            </Tabs.List>
+          </Grid.Col>
+        </Grid>
         <Tabs.Panel value={TabEnum.Menu}>
           <Flex justify={"space-between"} wrap={"wrap"}>
             <RateupButtonBlue

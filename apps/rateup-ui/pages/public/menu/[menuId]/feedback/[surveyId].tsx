@@ -26,7 +26,6 @@ export const getServerSideProps = async (context: { params: MenuProp }) => {
   const params = context.params;
 
   const menuLanding = await getMenuPublicById(params.menuId);
-  console.log(menuLanding);
 
   return { props: { menuLanding: menuLanding } };
 };
@@ -203,7 +202,8 @@ function FeedbackButton() {
         <Stack align="center" gap={0}>
           <Image
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
-            maw={"min(200px, 40vw)"}
+            w={"clamp(8.125rem, 4.107rem + 10.714vw, 13.75rem)"}
+            maw={"220px"}
             h={"auto"}
             alt="feedback image"
           />
@@ -225,7 +225,8 @@ function MenuButton() {
         <Stack align="center" gap={0}>
           <Image
             src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
-            maw={"min(200px, 40vw)"}
+            w={"clamp(8.125rem, 4.107rem + 10.714vw, 13.75rem)"}
+            maw={"220px"}
             h={"auto"}
             alt="feedback image"
           />
