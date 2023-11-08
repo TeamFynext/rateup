@@ -26,7 +26,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
@@ -41,10 +41,13 @@ import {
 } from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
+import SelectedTeamContext from "../../../context/SelectedTeam";
 
 const ShareSurvey = ({ survey, setActiveTab }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
+  const [mapId, setMapId] = useState();
+  const { selectedTeamId } = useContext(SelectedTeamContext);
 
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const queryClient = useQueryClient();
@@ -54,20 +57,24 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
   );
 
   useEffect(() => {
-    if (!surveyId) return;
+    setMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
+  }, [selectedTeamId, survey]);
+
+  useEffect(() => {
+    if (!surveyId || !mapId) return;
     if (survey.type === "whatsapp") {
       // TODO: get phone number from phone id (add phone number field)
       setShareUrl(
         `https://wa.me/7907137774?text=${encodeURIComponent(
-          "/start " + survey.id,
+          "/start " + survey.id, //TODO verify  id:    use mapId if required
         )}`,
       );
     } else {
       setShareUrl(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`,
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${mapId}`,
       );
     }
-  }, [surveyId]);
+  }, [surveyId, mapId]);
 
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(surveyId, data),
@@ -209,15 +216,15 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
                 <Paper
                   radius="lg"
                   shadow="md"
-                  key={item.id}
+                  key={item?.id}
                   p="md"
                   style={{ marginBottom: "10px" }}
                 >
                   <Title order={4}>
-                    {Object.values(item.title)[0] as React.ReactNode}
+                    {Object.values(item?.title)[0] as React.ReactNode}
                   </Title>
                   <ul>
-                    {item.errors.map((error, index) => (
+                    {item?.errors?.map((error, index) => (
                       <li>
                         {" "}
                         <Text key={index} c="#fa5252">
