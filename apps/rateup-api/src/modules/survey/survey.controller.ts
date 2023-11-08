@@ -118,18 +118,16 @@ export async function getPublicSurveyByIdHandler(
   }>,
   reply: FastifyReply
 ) {
-  // try {
-  //   const survey = await getPublicSurveyById(request.params.id);
-  //   if (!survey) {
-  //     reply.code(404);
-  //   } else {
-  //     reply.send(survey);
-  //   }
-  // } catch (e) {
-  //   reply.code(500);
-  // }
-  //TODO verify SURVEYTEAMMAPS
-
+  try {
+    const survey = await getPublicSurveyById(request.params.id);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
 }
 
 //---------------get landing page by id ----------

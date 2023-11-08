@@ -180,6 +180,9 @@ export async function cloneSurvey(
   }
 }
 
+
+//-----------get single survey with id -------
+
 export async function getSurveyById(id: string) {
   if (!id) {
     throw new Error('ID must be provided');
@@ -188,48 +191,60 @@ export async function getSurveyById(id: string) {
     where: {
       id,
     },
-    // include: {
-    //   surveyStats: true,
-    // },
-    //TODO verify SURVEYTEAMMAPS
 
+    include: {
+      teams: {
+        include: {
+          team: true,
+        },
+      },
+    },
   });
 
   if (!survey) {
     throw new Error(`Could not find survey with id ${id}`);
   }
-  return survey;
+
+  let teams = survey?.teams?.map((team) => {
+    const teamData = { id: team?.team?.id, name: team?.team?.name };
+    return teamData;
+  });
+
+  return {...survey, teams: teams};
 }
 
 
 //-----------get public survey with org logo -------
 
  export async function getPublicSurveyById(id: string) {
-//   const survey = await prisma.survey.findUnique({
-//     where: {
-//       id,
-//     }
-//   });
+  
+  const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id,
+    },    
+    include: {
+      survey: true,
+    },
+  });
 
-//   if (!survey) {
-//     throw new Error(`Could not find survey with id ${id}`);
-//   }
+  if (!surveyTeamMap) {
+    throw new Error(`Could not find survey with id ${id}`);
+  }
 
-//   let org = await prisma.team.findUnique({
-//     where: {
-//       id : survey?.teamId,
-//     },
-//     include: {
-//       org: true,
-//     },
-//   });
+  let org = await prisma.team.findUnique({
+    where: {
+      id : surveyTeamMap?.teamId,
+    },
+    include: {
+      org: true,
+    },
+  });
 
-//   let orgLogo ={ orgLogo : org?.org?.logo}
-//   let publicSurvey = { ...survey, ...orgLogo}
+  let orgLogo ={ orgLogo : org?.org?.logo}
+  let publicSurvey = { ...surveyTeamMap.survey, ...orgLogo}
 
-//   return publicSurvey;
+  return publicSurvey;
  }
-//TODO verify SURVEYTEAMMAPS
 
 
 
