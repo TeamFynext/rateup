@@ -158,14 +158,20 @@ export async function verifySurveyPassword(surveyId: string, data) {
   );
 }
 
-export async function updateSurveyVisited(surveyId: string) {
-  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/visited`);
+export async function updateSurveyVisited(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/visited`,
+  );
 }
 
-export async function updateSurveyStarted(surveyId: string) {
-  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/started`);
+export async function updateSurveyStarted(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/started`,
+  );
 }
 
-export async function updateSurveyCompleted(surveyId: string) {
-  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/completed`);
+export async function updateSurveyCompleted(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/completed`,
+  );
 }

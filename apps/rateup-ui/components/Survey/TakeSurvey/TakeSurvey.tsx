@@ -256,7 +256,7 @@ function TakeSurvey() {
     // }
 
     submitSurvey({
-      surveyId,
+      surveyTeamMapId: surveyId,
       responses,
       selectedLanguage,
       setIsSavingResponses,
@@ -469,14 +469,14 @@ function TakeSurvey() {
 }
 
 function submitSurvey({
-  surveyId,
+  surveyTeamMapId,
   responses,
   selectedLanguage,
   setIsSavingResponses,
   coordinates,
 }) {
   return createResponsePublic({
-    surveyId,
+    surveyTeamMapId,
     responses,
     language: selectedLanguage,
     location: { coordinates },

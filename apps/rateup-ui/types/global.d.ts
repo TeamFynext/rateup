@@ -114,7 +114,7 @@ declare global {
   type SurveyResponse = {
     id: string;
     createdAt: string;
-    surveyId: string;
+    surveyTeamMapId: string;
     responses: Array<QuestionResponse>;
     language: string;
     location?: {
