@@ -2,7 +2,9 @@ import { axiosClient } from "../apiClient";
 
 export async function getTeamsMembersOfOrg() {
   try {
-    let members: MembersResponse = (await axiosClient.get("/org/members")).data;
+    let members: MembersResponse = (
+      await axiosClient.get("/org/members-with-teams")
+    ).data;
     return members;
   } catch (e) {
     console.error(e);

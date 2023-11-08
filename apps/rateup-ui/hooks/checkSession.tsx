@@ -1,30 +1,27 @@
-import { useState, useEffect } from "react";
-import { useRouter } from 'next/router';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/router";
 
-import Session from 'supertokens-web-js/recipe/session';
+import Session from "supertokens-web-js/recipe/session";
 
 export const useCheckSession = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const [doesSessionExist, setDoesSessionExist] = useState(false);
+
+  const checkSession = useCallback(async () => {
+    try {
+      const doesSessionExist = await Session.doesSessionExist();
+      if (doesSessionExist) {
+        router.push("/dashboard");
+      }
+      setDoesSessionExist(doesSessionExist);
+    } catch (error) {
+      console.error("Error checking session:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        if (await Session.doesSessionExist()) {
-          //console.log("session exists");
-          router.push('/dashboard');
-        } else {
-          // console.log("session does not exist");
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setIsLoading(false);
-      }
-    };
-
     checkSession();
   }, []);
 
-  return isLoading;
+  return doesSessionExist;
 };

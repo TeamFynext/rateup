@@ -45,7 +45,7 @@ export function MenuCard({
       5000,
     );
     return () => clearInterval(timeoutID);
-  }, []);
+  }, [menu?.createdAt]);
 
   return (
     <PaperLayout

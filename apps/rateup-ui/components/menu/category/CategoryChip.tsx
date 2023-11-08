@@ -1,28 +1,20 @@
-import { Box } from "@mantine/core";
+import { Box, Button } from "@mantine/core";
 import Link from "next/link";
 
 export function CategoryChip({ categoryId, name, selected, onClick }) {
   return (
-    <Link
+    <Button
+      component="a"
       href={`#${categoryId}`}
-      style={{
-        textDecoration: "none",
-      }}
+      bg={
+        selected
+          ? "var(--shade-of-brown-selected)"
+          : "var(--shade-of-brown-unselected)"
+      }
+      radius={"md"}
+      onClick={() => onClick(categoryId)}
     >
-      <Box
-        p="sm"
-        onClick={() => onClick(categoryId)}
-        key={categoryId}
-        style={{
-          borderRadius: "8px",
-          backgroundColor: selected ? "#B06B2E" : "#A3A3A3",
-          color: "white",
-          textDecoration: "none",
-          cursor: "pointer",
-        }}
-      >
-        {name}
-      </Box>
-    </Link>
+      {name}
+    </Button>
   );
 }

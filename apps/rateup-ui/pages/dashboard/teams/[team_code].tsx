@@ -15,19 +15,19 @@ import { IconCheck } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import validateNameAndEmail from "./validation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { getOrgIdRole, getUserID } from "../../../utils/userInfo";
-import {
-  getTeamMembersFromInvitation,
-  inviteTeamMember,
-} from "../../../backend/team/team.api";
+import { inviteTeamMember } from "../../../backend/team/team.api";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import TeamMemberCard from "./TeamMemberCard";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import TeamSettings from "./TeamSettings";
-import { useTeamsByUser } from "../../../backend/team/team.query";
+import {
+  useTeamMembersFromInvitation,
+  useTeamsByUser,
+} from "../../../backend/team/team.query";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
@@ -40,26 +40,25 @@ const TeamDetails = () => {
   const [email, setEmail] = useState("");
   const [sort, setSort] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [teamID, setTeamID] = useState("");
 
   const queryClient = useQueryClient();
   const { update } = useRouteParams();
-
+  //fecthing teams data
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsDataUser,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
   } = useTeamsByUser() as UseTeamsByUserResult;
-
   let teamsData = teamsDataUser?.data;
   let teamCode: string = team_code?.toString();
-
-  useEffect(() => {
-    let id = getTeamIdByCode(teamsData, teamCode);
-    if (id) setTeamID(id);
-  }, [teamsData, teamCode]);
-
+  let teamID = getTeamIdByCode(teamsData, teamCode);
+  //fetching team members data from invitation
+  const {
+    isLoading: isLoadingMembers,
+    data: teamsMembersData,
+    refetch: refetchInvitedTeamMembers,
+  } = useTeamMembersFromInvitation(teamID) as UseTeamResult;
   enum TabEnum {
     Members = "Members",
     Survey = "Survey",
@@ -90,7 +89,7 @@ const TeamDetails = () => {
           autoClose: 3000,
         });
       close();
-      refetch();
+      refetchInvitedTeamMembers();
     },
 
     onError: (error: any) => {
@@ -107,32 +106,11 @@ const TeamDetails = () => {
     },
   });
 
-  const fetchTeamMembers = async () => {
-    if (teamID) {
-      return getTeamMembersFromInvitation(teamID);
-    } else {
-      return null;
-    }
-  };
-
-  const {
-    isLoading: isLoadingMembers,
-    data: teamsMembersData,
-    refetch,
-  } = useQuery({
-    queryKey: ["teamsDetailsQuery"],
-    queryFn: fetchTeamMembers,
-  }) as UseTeamResult;
-
   useEffect(() => {
-    if (teamID && !teamsMembersData) refetch();
-  }, [teamID]);
-
-  useEffect(() => {
-    update({ team_code: teamsMembersData?.team?.name });
+    update({ team_code: teamsMembersData?.teamName });
   }, [teamsMembersData]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
     const validationErrors = validateNameAndEmail(name, email);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -199,8 +177,11 @@ const TeamDetails = () => {
             <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
             <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
           </Tabs.List>
-          <Group>
-            <Heading title={teamsMembersData?.team?.name || "Team"} />
+          <Group mih={60}>
+            <Heading
+              title={teamsMembersData?.teamName || "Team"}
+              titleprops={{ w: "fit-content" }}
+            />
             <Tabs.Panel value={TabEnum.Members} mt={30}>
               <RateupButtonBlue
                 title="Add Member"
@@ -212,13 +193,17 @@ const TeamDetails = () => {
             </Tabs.Panel>
           </Group>
         </Stack>
-        <Tabs.Panel value={TabEnum.Members} mt={30}>
+        <Tabs.Panel value={TabEnum.Members}>
           <SimpleGrid
             p={1}
             spacing={"lg"}
             cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
             style={{ overflow: "auto" }}
           >
+            {teamsMembersData?.invitations?.length > 0 &&
+              teamsMembersData?.invitations?.map((member, i) => (
+                <TeamMemberCard key={i} member={member} />
+              ))}
             {teamsMembersData?.members?.length > 0 ? (
               Array.isArray(teamsMembersData?.members) ? (
                 (sort
@@ -243,7 +228,12 @@ const TeamDetails = () => {
         <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <TeamSettings
             id={teamID?.toString()}
-            teamData={teamsMembersData?.team}
+            teamData={{
+              code: teamsMembersData?.code,
+              googleLink: teamsMembersData?.googleLink,
+              name: teamsMembersData?.teamName,
+              id: teamsMembersData?.teamId,
+            }}
           />
         </Tabs.Panel>
       </StyledTabs>

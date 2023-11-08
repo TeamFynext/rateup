@@ -1,4 +1,4 @@
-import { Box, Drawer, Stack, Text } from "@mantine/core";
+import { Box, Drawer, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import classes from "./CategoriesDrawerStyles.module.css";
 
@@ -17,19 +17,20 @@ export function CategoriesDrawer({
       opened={opened}
       onClose={close}
       title="Categories"
+      size={"xs"}
       classNames={{
         content: classes.content,
         header: classes.header,
         title: classes.title,
       }}
     >
-      <Stack align="center">
+      <Stack align="center" mt={"lg"}>
         {categories?.map((c) => (
           <Box
             key={c.id}
-            mah="300px"
-            mih={"200px"}
-            miw="200px"
+            h={"125px"}
+            w="243px"
+            my={"sm"}
             style={{
               overflow: "clip",
               position: "relative",
@@ -41,13 +42,14 @@ export function CategoriesDrawer({
               window.location.href = `#${c.id}`;
             }}
           >
-            <img
+            <Image
               src={
                 c.image
                   ? getFileUrlFromKey(c.image)
                   : "/images/no_image_template.jpeg"
               }
               width={"100%"}
+              maw={"240px"}
             />
             <Box
               px="sm"

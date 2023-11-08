@@ -44,16 +44,16 @@ const GeneralSettings = ({ editingItem }) => {
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form
+    form,
   );
   const { isPending, error, mutate } = useUpdateMenuMutation(
     editingItem?.id,
     () => {},
-    () => {}
+    () => {},
   );
   const { data: surveys = [], isPending: surveyIsPending } = useSurveysByTeam(
     form?.values?.teamId,
-    !!form?.values?.teamId
+    !!form?.values?.teamId,
   );
 
   if (surveyIsPending) return <CenteredSpinner />;
@@ -162,6 +162,7 @@ const GeneralSettings = ({ editingItem }) => {
                       ? getFileUrlFromKey(editingItem?.logo)
                       : ""
                   }
+                  alt="image of logo"
                 />
               )}
             </Center>
@@ -190,6 +191,7 @@ const GeneralSettings = ({ editingItem }) => {
                       ? getFileUrlFromKey(editingItem?.backgroundImage)
                       : ""
                   }
+                  alt="image of background"
                 />
               )}
             </Center>

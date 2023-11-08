@@ -9,10 +9,10 @@ export const updateMenuLandingPageById = async (id: string, data: any) =>
 
 export async function updateMenuLandingPageOptionById(
   menuId: string,
-  data: any
+  data: any,
 ) {
   return await axiosClient.put(
     `${MENU_URL}/updateLandingPageOption/${menuId}`,
-    data
+    data,
   );
 }

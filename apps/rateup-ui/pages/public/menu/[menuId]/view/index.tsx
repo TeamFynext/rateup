@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
   Loader,
+  Image,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -17,38 +18,38 @@ import { CategoriesDrawer } from "../../../../../components/menu/category/Catego
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { useRouter } from "next/router";
 import { useFullMenu } from "../../../../../backend/menu/menu.query";
+import { getFullMenuById } from "../../../../../backend/menu/menu.api";
+import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
-export default function () {
-  const { menuId } = useRouter().query as { menuId: string };
-  const {
-    data: fullMenu,
-    isLoading: loading,
-    error: error,
-  } = useFullMenu(menuId);
-  const largeScreen = useMediaQuery("(min-width: 60em)");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [drawerOpen, { open, close }] = useDisclosure();
+type MenuViewProp = {
+  menuId: string;
+};
+
+export const getServerSideProps = async (context: { params: MenuViewProp }) => {
+  const params = context.params;
+
+  const fullMenu = await getFullMenuById(params.menuId);
   console.log(fullMenu);
 
-  useEffect(() => {
-    if (!fullMenu || selectedCategory || fullMenu?.categories?.length === 0)
-      return;
-    setSelectedCategory(fullMenu?.categories[0].id);
-  }, [fullMenu]);
+  return { props: { fullMenu: fullMenu } };
+};
+
+export default function ({ fullMenu }) {
+  const largeScreen = useMediaQuery("(min-width: 60em)");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    fullMenu?.categories[0]?.id,
+  );
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [drawerOpen, { open, close }] = useDisclosure();
 
   function handleCategoryChipClick(categoryId: string) {
     setSelectedCategory(categoryId);
   }
 
-  const backgroundImageBorderRadius = largeScreen ? "32px" : "16px";
-  if (loading) return <Loader />;
+  const backgroundImageBorderRadius = largeScreen ? "47px" : "16px";
+
   return (
-    <Paper
-      style={{
-        height: "100vh",
-      }}
-    >
+    <Paper h={"100vh"}>
       <Container
         fluid
         px={largeScreen ? "10vw" : "1vw"}
@@ -60,7 +61,7 @@ export default function () {
               ? `url(${getFileUrlFromKey(fullMenu?.backgroundImage)})`
               : ""
           }`,
-          backgroundColor: "#121212",
+          backgroundColor: "var(--shade-of-black)",
           backgroundPosition: "center",
           backgroundSize: "cover",
           height: "33vh",
@@ -78,7 +79,7 @@ export default function () {
           mb="lg"
         >
           {fullMenu?.logo && (
-            <img
+            <Image
               width="100px"
               height={"100px"}
               style={{
@@ -88,16 +89,18 @@ export default function () {
             />
           )}
           <div>
-            <Text style={{ textAlign: "center" }}>Welcome To</Text>
+            <Text ta={"center"} tt={"capitalize"}>
+              Welcome To
+            </Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
-            <Text fz={"max(3vw, 2rem)"} fw="bold">
+            <Text fz={"max(3vw, 2rem)"} fw="bold" tt={"uppercase"}>
               {fullMenu?.displayName ?? "Name"}
             </Text>
           </div>
         </Stack>
       </Container>
       <Group px="2vw" m="sm" wrap="nowrap" pb="md">
-        <ActionIcon onClick={open}>
+        <ActionIcon onClick={open} variant="transparent">
           <IconMenu2 />
         </ActionIcon>
         <Group

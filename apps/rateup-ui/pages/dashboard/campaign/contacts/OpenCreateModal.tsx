@@ -5,7 +5,7 @@ import { IconUser, IconUsersGroup } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../../components/Modal/FormModalLayout";
 
-const OpenCreateModal = () => {
+const OpenCreateModal = ({ close }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
     useDisclosure(false);
   const [groupOpened, { open: groupOpen, close: groupClose }] =
@@ -45,7 +45,10 @@ const OpenCreateModal = () => {
         title="Create customer"
         size={"lg"}
       >
-        <CreateContactModal contactClose={contactClose}></CreateContactModal>
+        <CreateContactModal
+          contactClose={contactClose}
+          close={close}
+        ></CreateContactModal>
       </FormModalLayout>
       <FormModalLayout
         centered
@@ -54,7 +57,10 @@ const OpenCreateModal = () => {
         title="Create contact group"
         size="lg"
       >
-        <CreateGroupModal groupClose={groupClose}></CreateGroupModal>
+        <CreateGroupModal
+          groupClose={groupClose}
+          close={close}
+        ></CreateGroupModal>
       </FormModalLayout>
     </Container>
   );

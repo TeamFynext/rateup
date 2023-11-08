@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, Stack, Text, Grid, Group } from "@mantine/core";
+import { Dialog, Stack, Text, Grid, Group, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   RateupButtonPrimary,
@@ -16,6 +16,7 @@ import DangerZone from "../../../components/DangerZone/DangerZone";
 import Heading from "../../../components/styled/Heading/Heading";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { ReviewSuggestionModal } from "../../../components/reviewSuggestion/ReviewSuggestionModal";
 
 export interface ITeamData {
   name: string;
@@ -60,6 +61,11 @@ const TeamSettings = ({
       },
     },
   });
+
+  const [
+    reviewModalOpened,
+    { open: openReviewModal, close: closeReviewModal },
+  ] = useDisclosure(false);
 
   useEffect(() => {
     if (teamData?.name) {
@@ -154,6 +160,20 @@ const TeamSettings = ({
                 />
               </Grid.Col>
             </Grid>
+
+            <Grid>
+              <Grid.Col span={2}>
+                <Button variant="light" onClick={openReviewModal}>
+                  Add review suggestions
+                </Button>
+              </Grid.Col>
+            </Grid>
+            <ReviewSuggestionModal
+              teamId={id}
+              opened={reviewModalOpened}
+              onClose={closeReviewModal}
+            />
+
             <Grid justify="flex-end" pt="xl">
               <Grid.Col span={2}>
                 <RateupButtonSecondary

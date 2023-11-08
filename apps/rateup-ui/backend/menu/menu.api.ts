@@ -1,5 +1,6 @@
 import { axiosClient } from "../apiClient";
 const MENU_URL = "/menu";
+const PUBLIC_MENU_URL = "/public/menu";
 
 type CreateMenu = Omit<Menu, "id" | "createdAt">;
 export const createMenu = async (menu: CreateMenu) =>
@@ -11,20 +12,18 @@ export const getMenusByTeamId = async (teamId: string) =>
 export const getMenuById = async (id: string) =>
   (await axiosClient.get(`${MENU_URL}/${id}`)).data as Menu;
 export const getFullMenuById = async (menuId: string) =>
-  (await axiosClient.get(`${MENU_URL}/full/${menuId}`)).data as FullMenu;
+  (await axiosClient.get(`${PUBLIC_MENU_URL}/full/${menuId}`)).data as FullMenu;
 export const updateMenu = async ({ menuId, updatedData }) =>
   await axiosClient.put(`${MENU_URL}/${menuId}`, updatedData);
 export const deleteMenu = async (id: string) =>
   await axiosClient.delete(`${MENU_URL}/${id}`);
 
 // PUBLIC
-const PUBLIC_MENU_URL = "/public/menu";
 export const getMenuPublicById = async (id: string) => {
   try {
     const res = await axiosClient.get(`${PUBLIC_MENU_URL}/${id}`);
     return res.data as Menu;
   } catch (e) {
-    console.log(e);
     return null;
   }
 };

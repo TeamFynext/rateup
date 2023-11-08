@@ -8,6 +8,10 @@
   --grey-color: #494949;
   --light-grey-color: #f0f0f0;
   --bg-grey-color: #f7f7f7;
+  --shade-of-brown: #af6b2e;
+  --shade-of-brown-selected: #b06b2e;
+  --shade-of-brown-unselected: #a3a3a3;
+  --shade-of-black: #161616;
 }
 
 html {

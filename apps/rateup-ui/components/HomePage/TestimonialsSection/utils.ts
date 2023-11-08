@@ -1,8 +1,6 @@
 import styles from "./TestimonialsSection.module.css";
 
-
 export const placeAvatarsOnCircle = (outerDiscElement) => {
-
   const personAvatarElements = outerDiscElement.querySelectorAll(
     `.${styles["person-avatar"]}`,
   );
@@ -21,7 +19,6 @@ export const placeAvatarsOnCircle = (outerDiscElement) => {
   }
 };
 
-
 export let playTestimonialsInterval = null;
 
 export const playTestimonials = (outerDiscHtmlElement, setPopoverStates) => {
@@ -30,14 +27,12 @@ export const playTestimonials = (outerDiscHtmlElement, setPopoverStates) => {
     `.${styles["person-avatar"]}`,
   );
   playTestimonialsInterval = setInterval(() => {
-    
     const { disc, id } = personAvatarElements[currentPersonAvatarIndex].dataset;
     setPopoverStates({ [`${disc}_${id}`]: true });
 
     currentPersonAvatarIndex += 1;
-    if(currentPersonAvatarIndex === personAvatarElements.length) {
+    if (currentPersonAvatarIndex === personAvatarElements.length) {
       currentPersonAvatarIndex = 0;
     }
   }, 5000);
-}
-
+};

@@ -177,11 +177,17 @@ declare global {
     data: TeamMembersData[];
   }
 
-  export interface TeamMembersData {
+  type Team = {
     team_id: string;
     team_name: string;
     team_code: string;
-    members: Member[];
+  };
+  export interface TeamMembersData {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    teams: Team[];
   }
 
   export interface Member {
@@ -221,43 +227,28 @@ declare global {
   };
 
   //for individual team
-
-  interface ITeamResponseData {
-    team: {
-      id: string;
-      name: string;
-      googleLink: null | string;
-      code: string;
-    };
-    members: Array<{
-      id: string;
-      name: string;
-      email: string;
-      status: string;
-    }>;
-  }
-
-  type UseTeamResult = {
-    isLoading: boolean;
-    data: ITeamResponseData;
-    refetch: () => void;
+  type member = {
+    id: string;
+    name: string;
+    email: string;
+    role: "ADMIN" | "MEMBER" | "SUPER_ADMIN";
+    userId: string;
+    active: boolean;
   };
-
-  //for individual team
-
   interface ITeamResponseData {
-    team: {
-      id: string;
-      name: string;
-      googleLink: null | string;
-      code: string;
-    };
-    members: Array<{
+    teamId: string;
+    teamName: string;
+    code: string;
+    googleLink?: string | null;
+    invitations: Array<{
       id: string;
       name: string;
       email: string;
       status: string;
+      type: "TEAM";
+      invitedBy: string;
     }>;
+    members: Array<member>;
   }
 
   type UseTeamResult = {
@@ -334,6 +325,36 @@ declare global {
     name: string;
     teamId: string;
   };
+
+  // for contacts
+  type ContactsData = {
+    id: string;
+    teamId: string;
+    name: string;
+    phone: string;
+    email: number;
+    createdAt: Date;
+  };
+
+  type ContactsResponse = {
+    message: string;
+    data: ContactsData[];
+  };
+
+  type ContactGroup = {
+    id: string;
+    name: string;
+    teamId: string;
+    icon: string;
+  };
+  type ContactGroupResponse = {
+    message: string;
+    data: ContactGroup[];
+  };
+
+  interface ContactGroupwithContacts extends ContactGroup {
+    contacts: ContactsData[];
+  }
 }
 
 export interface MenuLanding {
@@ -355,6 +376,7 @@ export interface Data {
   menuId?: string;
   menu: Menu;
   landingData: boolean;
+  surveyId: string;
 }
 
 export interface Style {
@@ -368,3 +390,9 @@ export interface OtherStyle {
   color?: string;
   fontFamily?: string;
 }
+
+export type ReviewSuggestion = {
+  id: string;
+  teamId: string;
+  review: string;
+};

@@ -10,7 +10,9 @@ const TabsCommon = (props: TabsProps & TabsCommonProps) => {
     <Tabs variant="pills" radius="xs" {...props}>
       <Tabs.List>
         {tabHeading?.map((heading: string) => (
-          <Tabs.Tab value={heading}>{heading}</Tabs.Tab>
+          <Tabs.Tab value={heading} key={heading}>
+            {heading}
+          </Tabs.Tab>
         ))}
       </Tabs.List>
       {children}

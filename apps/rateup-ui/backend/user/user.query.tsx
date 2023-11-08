@@ -9,6 +9,7 @@ import {
   changeUserPassword,
   createGoogleUser,
   fetchUserProfile,
+  updateActiveStatus,
   updateUserProfile,
   updateUserProfilePhoto,
 } from "./user.api";
@@ -154,6 +155,40 @@ export function useUpdateProfilePhotoMutation(setIsLoadingUpload) {
       });
 
       setIsLoadingUpload(false);
+    },
+  });
+}
+
+export function useUpdateActiveStatusMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => updateActiveStatus(userId),
+    onSuccess: () => {
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        loading: false,
+        title: "Success",
+        message: "Member Deleted Successfully!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+    },
+    onError: (error: any) => {
+      console.error("Error deleting member", error.message);
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        loading: false,
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
     },
   });
 }

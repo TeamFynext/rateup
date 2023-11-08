@@ -1,63 +1,110 @@
 import React, { useState, useEffect } from "react";
 import {
   Flex,
-  Paper,
   Text,
   Badge,
   Menu,
   ActionIcon,
   Stack,
   Title,
+  Button,
+  Group,
 } from "@mantine/core";
-import { IconCheck, IconDots, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconDots,
+  IconPencilMinus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { deleteInviteById } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
+import { useUser } from "../../../context/UserContext";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { MemberEditFormModal } from "../members";
 import { UserRole } from "../../../utils/enums";
 
-const TeamMemberCard = ({ member }) => {
+const TeamMemberCard = ({
+  member,
+}: {
+  member: {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+    status?: string;
+    active?: boolean;
+  };
+}) => {
+  const { user } = useUser();
+  const [memberModalOpenId, setMemberModalOpenedId] = useState("");
   return (
-    <Paper
-      p="md"
-      shadow="md"
-      radius="lg"
-      style={{ cursor: "pointer", minWidth: "300px", height: "170px" }}
-    >
-      <Stack justify="space-between" h={"100%"}>
-        <Flex justify={"space-between"} align={"center"}>
-          <Stack gap={1}>
-            <Title order={2}>{member.name}</Title>
-            <Text mr={"sm"} truncate fw={600} color="gray">
-              {member.email}
-            </Text>
-          </Stack>
-          {member.status === "PENDING" && (
-            <TeamMemberMenu status={member.status} inviteId={member.id} />
-          )}
-        </Flex>
-        <Flex align={"center"} justify={"space-between"}>
-          {member.status !== "PENDING" && (
-            <ContainedSelection
-              radius={"xl"}
-              data={[
-                { value: UserRole.SUPADM, label: "Super Admin" },
-                { value: UserRole.ADM, label: "Admin" },
-              ]}
-            />
-          )}
-          <Badge
-            color={member.status === "PENDING" ? "yellow" : "green"}
-            variant="light"
-            p={"sm"}
-            ml="auto"
-          >
-            {" "}
-            {member.status}{" "}
-          </Badge>
-        </Flex>
-      </Stack>
-    </Paper>
+    <>
+      <PaperLayout mih={170} mah={170}>
+        <Stack justify="space-between" h={"100%"}>
+          <Flex justify={"space-between"} align={"center"}>
+            <Stack gap={1}>
+              <Title order={3}>{member.name}</Title>
+              <Text mr={"sm"} truncate fw={600} c="gray" size="sm">
+                {member.email}
+              </Text>
+            </Stack>
+            {member?.status === "PENDING" ? (
+              <TeamMemberMenu status={member?.status} inviteId={member.id} />
+            ) : (
+              <Group gap={0}>
+                <Text size="xs">Edit</Text>
+                <Button
+                  size="compact-sm"
+                  ml={5}
+                  disabled={
+                    user.role !== "SUPER_ADMIN" || member.id === user.userId
+                  }
+                  variant="subtle"
+                  onClick={() => setMemberModalOpenedId(member.id)}
+                >
+                  <IconPencilMinus size={15} />
+                </Button>
+              </Group>
+            )}
+          </Flex>
+          <Flex align={"center"} justify={"space-between"}>
+            <Badge
+              color={
+                member?.role === UserRole.SUPADM
+                  ? "red"
+                  : member?.role === UserRole.ADM
+                  ? "orange"
+                  : "green"
+              }
+              variant="dot"
+              size="sm"
+            >
+              {member?.role}
+            </Badge>
+            <Badge
+              color={member.status === "PENDING" ? "yellow" : "green"}
+              variant="light"
+              p={"sm"}
+              ml="auto"
+            >
+              {member.active ? "ACTIVE" : member?.status}
+            </Badge>
+          </Flex>
+        </Stack>
+      </PaperLayout>
+      <MemberEditFormModal
+        id={memberModalOpenId}
+        onClose={() => setMemberModalOpenedId("")}
+        member={{
+          email: member.email,
+          id: member.id,
+          name: member.name,
+          role: member?.role,
+        }}
+        key={member.id}
+      />
+    </>
   );
 };
 

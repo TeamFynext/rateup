@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IEditTeam, createTeam, editTeam, getTeamsByUser } from "./team.api";
+import {
+  IEditTeam,
+  createTeam,
+  editTeam,
+  getTeamMembersFromInvitation,
+  getTeamsByUser,
+} from "./team.api";
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -9,6 +15,12 @@ export function useTeamsByUser() {
   return useQuery({
     queryKey: ["teamsDataUserQuery"],
     queryFn: () => getTeamsByUser(),
+  });
+}
+export function useTeamMembersFromInvitation(teamId: string) {
+  return useQuery({
+    queryKey: ["invitedTeamMembers", teamId],
+    queryFn: () => getTeamMembersFromInvitation(teamId),
   });
 }
 

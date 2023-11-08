@@ -1,39 +1,40 @@
 import { LogicAction, LogicCondition, QuestionType } from "../types/enums";
 import { logicSupportedTypes } from "./data";
 
-
 export function getTimeSince(date: string) {
   //@ts-ignore
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   let interval = Math.floor(seconds / 31536000);
 
   if (interval >= 1) {
-    return `${interval} year${interval === 1 ? '' : 's'} ago`;
+    return `${interval} year${interval === 1 ? "" : "s"} ago`;
   }
 
   interval = Math.floor(seconds / 2592000);
   if (interval >= 1) {
-    return `${interval} month${interval === 1 ? '' : 's'} ago`;
+    return `${interval} month${interval === 1 ? "" : "s"} ago`;
   }
 
   interval = Math.floor(seconds / 86400);
   if (interval >= 2) {
     return `${interval} days ago`;
   } else if (interval === 1) {
-    return 'Yesterday';
+    return "Yesterday";
   }
 
   interval = Math.floor(seconds / 3600);
   if (interval >= 1) {
-    return `${interval} hour${interval === 1 ? '' : 's'} ago`;
+    return `${interval} hour${interval === 1 ? "" : "s"} ago`;
   }
 
   interval = Math.floor(seconds / 60);
   if (interval >= 1) {
-    return `${interval} minute${interval === 1 ? '' : 's'} ago`;
+    return `${interval} minute${interval === 1 ? "" : "s"} ago`;
   }
 
-  return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? '' : 's'} ago`;
+  return `${Math.floor(seconds)} second${
+    Math.floor(seconds) === 1 ? "" : "s"
+  } ago`;
 }
 
 export function arrayEquals(a: Array<string>, b: Array<string>) {
@@ -41,12 +42,16 @@ export function arrayEquals(a: Array<string>, b: Array<string>) {
   return a.every((val, index) => b.includes(val));
 }
 
-export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], userResponse: any): LogicAction | string {
+export function parseLogicAction(
+  type: QuestionType,
+  logicJumps: LogicJump[],
+  userResponse: any,
+): LogicAction | string {
   // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
   try {
     if (!logicSupportedTypes.includes(type) || !userResponse) {
-      return LogicAction.NextQ
+      return LogicAction.NextQ;
     }
 
     let flag = false;
@@ -66,13 +71,17 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
 
         case LogicCondition.IncludesAllOf:
           if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
-            flag = logic.response.every((val: string) => userResponse.includes(val));
+            flag = logic.response.every((val: string) =>
+              userResponse.includes(val),
+            );
           }
           break;
 
         case LogicCondition.IncludesAnyOf:
           if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
-            flag = logic.response.some((val: string) => userResponse.includes(val));
+            flag = logic.response.some((val: string) =>
+              userResponse.includes(val),
+            );
           } else {
             flag = logic.response.includes(userResponse);
           }
@@ -80,7 +89,9 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
 
         case LogicCondition.IncludesNoneOf:
           if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
-            flag = logic.response.every((val: string) => !userResponse.includes(val));
+            flag = logic.response.every(
+              (val: string) => !userResponse.includes(val),
+            );
           } else {
             flag = !logic.response.includes(userResponse);
           }
@@ -91,7 +102,7 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
           break;
 
         default:
-         // console.error("Invalid LogicCondition: ", logic.condition);
+          // console.error("Invalid LogicCondition: ", logic.condition);
           break;
       }
       if (flag) {
@@ -101,7 +112,15 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
     return LogicAction.NextQ;
   } catch (e) {
     // TODO: show error toast if in dev mode
-   // console.error(e);
+    // console.error(e);
     return LogicAction.NextQ;
   }
+}
+
+export function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }

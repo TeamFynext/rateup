@@ -22,6 +22,7 @@ interface Props {
   ml?: string;
   styles?: any;
   color?: string;
+  className?: string;
 }
 
 export const RateupButtonPrimary = ({
@@ -84,6 +85,7 @@ export const RateupButtonBlue = ({
       size={size}
       style={sx}
       loading={loading}
+      fw={300}
       {...other}
     >
       {title}

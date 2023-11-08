@@ -7,10 +7,7 @@ import styles from "./OurSolutionsSection.module.css";
 
 function OurSolutionsSection() {
   return (
-    <Stack 
-      id="our-solutions"
-      className={styles["our-solutions-container"]}
-    >
+    <Stack id="our-solutions" className={styles["our-solutions-container"]}>
       <Title>Our Solutions</Title>
       <InteractiveSolutionDescriptions solutions={solutionsList} />
       <TrustedBy />

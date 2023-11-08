@@ -1,7 +1,5 @@
 import {
-  Paper,
   Stack,
-  Center,
   Text,
   Box,
   SimpleGrid,
@@ -9,10 +7,9 @@ import {
   Button,
   FileButton,
   Group,
+  Avatar,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconUpload, IconUsersGroup } from "@tabler/icons-react";
-import FormModalLayout from "../../../../../components/Modal/FormModalLayout";
+import { IconUpload } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { TeamSelector } from "../../../../../components/input/TeamSelector";
 import { useEffect, useState } from "react";
@@ -20,32 +17,148 @@ import {
   RateupButtonSecondary,
   RateupButtonBlue,
 } from "../../../../../components/Button/RateupButtons";
+import {
+  useCreateContactGroupMutation,
+  useEditContactGroupMutation,
+} from "../../../../../backend/campaign/contactGroup/contactGroup.query";
+import {
+  getFileUrlFromKey,
+  uploadFile,
+} from "../../../../../utils/file-upload/upload";
+import { showErrorToast } from "../../../../../utils/notifications";
 
-const CreateGroupModal = ({ groupClose }) => {
-  const [selectedTeamID, setSelectedTeamID] = useState("");
+interface GroupModalProps {
+  groupClose: () => void;
+  close?: () => void;
+  isEdit?: boolean;
+  groupDetails?: ContactGroup;
+}
+
+const CreateGroupModal = ({
+  groupClose,
+  close,
+  isEdit,
+  groupDetails,
+}: GroupModalProps) => {
   const [file, setFile] = useState<File | null>(null);
-  const form = useForm({});
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+
+  const form = useForm({
+    initialValues: groupDetails || {
+      name: "",
+      icon: "",
+      teamId: "",
+    },
+    validate: {
+      name: (value) => (value.length ? null : "Cannot be empty"),
+      teamId: (value) => !isEdit && !value && "Must select a team",
+    },
+  });
+
   useEffect(() => {
-    close();
+    const initialImageUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user-group-icon-t.png`;
+    fetch(initialImageUrl)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const initialFile = new File([blob], "user-group-icon-t.png", {
+          type: "image/png",
+        });
+        setFile(initialFile);
+      })
+      .catch((error) => showErrorToast("Something went wrong"));
   }, []);
+
+  useEffect(() => {
+    if (groupDetails) {
+      form.setValues(groupDetails);
+      form.setFieldValue("teamId", groupDetails.teamId);
+    } else {
+      form.reset();
+    }
+  }, [groupDetails]);
+
+  const createContactGroupMutation = useCreateContactGroupMutation(
+    () => {
+      groupClose();
+      close();
+      setIsCreating(false);
+      form.reset();
+    },
+    () => {
+      groupClose();
+      close();
+      setIsCreating(false);
+      form.reset();
+    },
+  );
+
+  const editContactGroupMutation = useEditContactGroupMutation(
+    groupDetails?.id,
+    () => {
+      groupClose();
+      setIsCreating(false);
+      form.reset();
+    },
+    () => {
+      groupClose();
+      setIsCreating(false);
+      form.reset();
+    },
+  );
+
+  const handleSubmit = () => {
+    const validation = form.validate();
+    if (validation.hasErrors) {
+      return;
+    }
+    setIsCreating(true);
+    if (isEdit) {
+      editContactGroupMutation.mutate(form.values);
+    } else {
+      createContactGroupMutation.mutate(form.values);
+    }
+  };
+
+  useEffect(() => {
+    form.setFieldValue("teamId", selectedTeamId);
+  }, [selectedTeamId]);
+
+  useEffect(() => {
+    if (!file) return;
+    setIsUploading(true);
+    uploadFile(file)
+      .then((key) => {
+        form.setFieldValue("icon", key);
+        setIsUploading(false);
+      })
+      .catch((err) => {
+        showErrorToast("Error uploading icon. Please try again.");
+        setIsUploading(false);
+      });
+  }, [file]);
+
   return (
     <Box>
-      <form>
+      <form onSubmit={handleSubmit}>
         <SimpleGrid cols={2}>
           <TextInput
             label="Group Name"
             placeholder="Enter group name"
-            {...form.getInputProps("groupName")}
+            {...form.getInputProps("name")}
             size="md"
             radius={"md"}
           ></TextInput>
-          <Stack gap={0}>
-            <Text>Select Team</Text>
-            <TeamSelector
-              value={selectedTeamID}
-              onChange={setSelectedTeamID}
-            ></TeamSelector>
-          </Stack>
+          {!isEdit && (
+            <Stack gap={0}>
+              <Text>Select Team</Text>
+              <TeamSelector
+                value={selectedTeamId}
+                onChange={(value) => setSelectedTeamId(value)}
+              ></TeamSelector>
+            </Stack>
+          )}
           <Stack gap={0}>
             <Text>Upload profile picture</Text>
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
@@ -63,15 +176,22 @@ const CreateGroupModal = ({ groupClose }) => {
               )}
             </FileButton>
           </Stack>
+          <Avatar
+            radius={"xl"}
+            src={form?.values?.icon && getFileUrlFromKey(form.values.icon)}
+            size={"xl"}
+          ></Avatar>
         </SimpleGrid>
-        <Group justify="flex-end">
+        <Group justify="flex-end" mt={"md"}>
           <RateupButtonSecondary
             title="cancel"
             onClick={groupClose}
           ></RateupButtonSecondary>
           <RateupButtonBlue
-            title="Create Group"
-            type="submit"
+            title={isEdit ? "Edit Group" : "Create Group"}
+            onClick={handleSubmit}
+            loading={isCreating}
+            disabled={isUploading}
           ></RateupButtonBlue>
         </Group>
       </form>

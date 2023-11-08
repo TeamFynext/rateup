@@ -1,94 +1,74 @@
-import { Box, Group, Paper, Stack, Text } from "@mantine/core";
+import { Card, Group, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface ItemDisplayProps {
   item: MenuItem;
   setSelectedItem: (item: MenuItem) => void;
 }
 export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
-  const bordeRadius = "12px";
+  const fallbackImage = "/images/no_image_template.jpeg";
+  const smallScreen = useMediaQuery("(max-width: 40em)");
+
   return (
-    <Paper
-      mx="sm"
-      style={{
-        borderRadius: bordeRadius,
-        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.25)",
-        height: "100%",
-        width: "300px",
-      }}
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="lg"
+      mx={smallScreen ? "auto" : "sm"}
+      w={"300px"}
       onClick={() => setSelectedItem(item)}
     >
-      <Box
-        style={{
-          width: "300px",
-          aspectRatio: "4 / 3",
-          overflow: "clip",
-          borderRadius: `${bordeRadius} ${bordeRadius} 0 0}`,
-        }}
-      >
-        <img
+      <Card.Section>
+        <Image
           width={"100%"}
+          h={"100%"}
+          maw={"300px"}
           src={
-            item.images.length > 0 ? (
-              getFileUrlFromKey(item.images[0])
-            ) : (
-              "/images/no_image_template.jpeg"
-            )}
+            item.images.length > 0
+              ? getFileUrlFromKey(item.images[0])
+              : fallbackImage
+          }
           style={{
             aspectRatio: "4 / 3",
-          }} />
-      </Box>
-      <Stack
-        p="md"
-      >
+          }}
+          fallbackSrc={fallbackImage}
+          alt="image of menu item"
+        />
+      </Card.Section>
+      <Group justify="space-between" mt="md" mb="xs">
         <Text
-          fz="1.5rem"
-          color="#AF6B2E"
-          fw={600}
+          fw={500}
+          fz="xl"
+          c="var(--shade-of-brown)"
           truncate
+          tt={"capitalize"}
         >
           {item.name}
         </Text>
-        <Text
-          style={{
-            height: "100px"
-          }}
-          lineClamp={4}
-        >
-          {item.description}
-        </Text>
-        <Group
-          h="50px"
-          justify="center"
-          gap={"sm"}
-        >
-          {item.price.variants?.length > 0 ? (
-            item.price.variants.map((v, index) => (
-              <Stack
-                align="center"
-                gap={"0px"}
-                key={index}
-              >
-                <Text
-                  fz=".9rem"
-                  c="dimmed"
+      </Group>
 
-                >{v.name}</Text>
-                <Text
-                  c="#AF6B2E"
-                  fz="1.2rem"
-                >₹{v.price}</Text>
-              </Stack>
-            ))
-
-          ) : (
-            <Text
-              c="#AF6B2E"
-              fz="1.2rem"
-            >₹{item.price.price}</Text>
-          )}
-        </Group>
-      </Stack>
-    </Paper>
+      <Text size="sm" c="dimmed" lineClamp={4} h={"82px"}>
+        {item.description}
+      </Text>
+      <Group justify="space-evenly" gap={"sm"} mt="md">
+        {item.price.variants?.length > 0 ? (
+          item.price.variants.map((varient, index) => (
+            <Stack align="center" gap={"0px"} key={index}>
+              <Text fz="sm" c="dimmed">
+                {varient.name}
+              </Text>
+              <Text c="var(--shade-of-brown)" fz="xl">
+                ₹{varient.price}
+              </Text>
+            </Stack>
+          ))
+        ) : (
+          <Text c="var(--shade-of-brown)" fz="xl" mt={"md"}>
+            ₹{item?.price?.price}
+          </Text>
+        )}
+      </Group>
+    </Card>
   );
 }

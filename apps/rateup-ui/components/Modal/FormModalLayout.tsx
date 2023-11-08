@@ -48,7 +48,13 @@ export default function FormModalLayout({
           <Title size={30}>{title}</Title>
         </Stack>
       )}
-      <form onSubmit={onSubmit} style={{ padding: 20 }}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit();
+        }}
+        style={{ padding: 20 }}
+      >
         {children}
         <Space h={"md"} />
         <Group justify={includeCancelButton ? "flex-end" : "center"}>

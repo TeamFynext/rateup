@@ -18,6 +18,7 @@ import {
   Group,
   Image,
   NavLink,
+  Flex,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useForm } from "@mantine/form";
@@ -28,7 +29,7 @@ import {
 } from "../../utils/auth/resetPassword";
 import { ResetSteps } from "../../utils/enums";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import classes from "./FormStyle.module.css";
+import styles from "./AuthForm.module.css";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
@@ -118,167 +119,143 @@ const ResetPasswordForm = ({ mode }) => {
   return (
     <>
       {page !== ResetSteps.STEP_TWO ? (
-        <Container size={420} my={40}>
-          <Paper
-            withBorder
-            shadow="md"
-            p={30}
-            mt={30}
-            radius="md"
-            style={{ background: "#F7F7F7" }}
-          >
-            <Link href="/">
+        <Flex className={styles["auth-form-container"]}>
+          <Flex justify="center">
+            <Link href="/" className={styles["rateup-logo-link"]}>
               <Image
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+                className={styles["rateup-logo-img"]}
+                src="/images/logo.svg"
                 alt="RateUp Logo"
-                w={140}
-                h={36}
               />
             </Link>
+          </Flex>
 
-            <Title
+          <Title className={`${styles["login-signup-form-heading"]}`} order={2}>
+            {page !== ResetSteps.STEP_THREE
+              ? "Reset your Password!"
+              : "Create new password!"}
+          </Title>
+          <Text
+            color="dimmed"
+            size="sm"
+            mt={5}
+            mb="xl"
+            style={{ textAlign: "center" }}
+          >
+            {isEmailPage ? (
+              <>We will send you an email to reset your password.</>
+            ) : (
+              <>Enter your new password and confirm </>
+            )}
+          </Text>
+
+          <form
+            onSubmit={
+              isEmailPage
+                ? emailForm.onSubmit(onSubmit)
+                : pwdForm.onSubmit(onSubmit)
+            }
+          >
+            {isEmailPage ? (
+              <TextInput
+                classNames={styles}
+                placeholder="Email ID"
+                {...emailForm.getInputProps("email")}
+              />
+            ) : (
+              <>
+                <PasswordInput
+                  classNames={styles}
+                  placeholder="Password"
+                  required
+                  {...pwdForm.getInputProps("password")}
+                  mt="md"
+                />
+
+                <PasswordInput
+                  classNames={styles}
+                  placeholder="Confirm Password"
+                  required
+                  {...pwdForm.getInputProps("confirmPassword")}
+                  mt="md"
+                />
+              </>
+            )}
+
+            <RateupButtonBlue
               mt="xl"
-              order={2}
-              style={(theme) => ({
-                fontFamily: `Greycliff CF, ${theme.fontFamily}`,
-                fontWeight: 900,
-              })}
-            >
-              {page !== ResetSteps.STEP_THREE
-                ? "Reset your Password!"
-                : "Create new password!"}
-            </Title>
-            <Text color="dimmed" size="sm" mt={5} mb="xl">
-              {isEmailPage ? (
-                <>We will send you an email to reset your password.</>
-              ) : (
-                <>Enter your new password and confirm </>
-              )}
-            </Text>
-
-            <form
-              onSubmit={
-                isEmailPage
-                  ? emailForm.onSubmit(onSubmit)
-                  : pwdForm.onSubmit(onSubmit)
-              }
-            >
-              {isEmailPage ? (
-                <TextInput
-                  withAsterisk
-                  label="Email"
-                  placeholder="your@email.com"
-                  {...emailForm.getInputProps("email")}
-                />
-              ) : (
-                <>
-                  <PasswordInput
-                    label="Password"
-                    placeholder="Your password"
-                    required
-                    {...pwdForm.getInputProps("password")}
-                    mt="md"
-                  />
-
-                  <PasswordInput
-                    label="Confirm Password"
-                    placeholder="Your password again"
-                    required
-                    {...pwdForm.getInputProps("confirmPassword")}
-                    mt="md"
-                  />
-                </>
-              )}
-
-              <RateupButtonBlue
-                mt="xl"
-                size="md"
-                fullWidth={true}
-                type="submit"
-                loading={isLoading}
-                title={isEmailPage ? "Email Reset Link" : "Change Password"}
-              />
-              <Group justify="center" mt="xl" pt="xl">
-                {/* <Checkbox label="Remember me" /> */}
-                <Anchor component="button" size="sm">
-                  <Link href="/login" className={classes.forgot}>
-                    <Group>
-                      <IconArrowLeft size="1rem" />
-                      <Text> Go Back to Login</Text>
-                    </Group>
-                  </Link>
-                </Anchor>
-              </Group>
-            </form>
-          </Paper>
-        </Container>
+              size="md"
+              fullWidth={true}
+              type="submit"
+              loading={isLoading}
+              title={isEmailPage ? "Email Reset Link" : "Change Password"}
+            />
+            <Group justify="center" mt="xl" pt="xl">
+              <Anchor component="button" size="sm">
+                <Link
+                  href="/login"
+                  style={{ textDecoration: "none", color: "black" }}
+                >
+                  <Group>
+                    <IconArrowLeft size="1rem" />
+                    <Text>Go Back to Login</Text>
+                  </Group>
+                </Link>
+              </Anchor>
+            </Group>
+          </form>
+        </Flex>
       ) : (
-        <Container size={420} my={40}>
-          <Paper
-            withBorder
-            shadow="md"
-            p={30}
-            mt={30}
-            radius="md"
-            style={{ background: "#F7F7F7" }}
-          >
-            <Link href="/">
+        <div className={styles["auth-form-container"]}>
+          <Flex justify="center">
+            <Link href="/" className={styles["rateup-logo-link"]}>
               <Image
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+                className={styles["rateup-logo-img"]}
+                src="/images/logo.svg"
                 alt="RateUp Logo"
-                w={140}
-                h={36}
               />
             </Link>
-            <Space h="lg" />
-            <Title order={2}>Check your email</Title>
-            <Space h="xl" />
-            <Text>
-              A password reset email has been sent to{" "}
-              <Text span c="blue" inherit>
-                {emailTo}
-              </Text>{" "}
-              . If it exists in our system.{" "}
-            </Text>
-            <Space h="xl" />
+          </Flex>
+          <Title order={2} className={`${styles["login-signup-form-heading"]}`}>
+            Check your email
+          </Title>
+          <Text style={{ textAlign: "center" }}>
+            A password reset email has been sent to{" "}
+            <Text span c="blue" inherit>
+              {emailTo}
+            </Text>{" "}
+            . If it exists in our system.{" "}
+          </Text>
 
-            <Group justify="center" py="xl">
-              <Image
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`}
-                alt="email"
-                w={90}
-                h={60}
-              />
-            </Group>
+          <Group justify="center" py="xl">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`}
+              alt="email"
+              w={90}
+              h={60}
+            />
+          </Group>
 
-            <Space h="xl" />
+          <Link href="/login/reset-password" style={{ textDecoration: "none" }}>
+            <NavLink
+              className={styles["resend-change-email-navlink-component"]}
+              component="div"
+              label="Resend or change email"
+              leftSection={<IconSend size="1rem" stroke={1.5} />}
+              rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
+              variant="subtle"
+            />
+          </Link>
 
-            <Text c="blue.6" className={classes.txtStyle}>
-              <Link
-                href="/login/reset-password"
-                style={{ textDecoration: "none" }}
-              >
-                <NavLink
-                  label="Resend or change email"
-                  leftSection={<IconSend size="1rem" stroke={1.5} />}
-                  rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
-                  variant="subtle"
-                />
-              </Link>
-            </Text>
-            <Text inline c="blue.6" className={classes.txtStyle}>
-              <Link href="/login" style={{ textDecoration: "none" }}>
-                <NavLink
-                  label="Login"
-                  leftSection={
-                    <IconArrowAutofitLeft size="1rem" stroke={1.5} />
-                  }
-                  variant="subtle"
-                />
-              </Link>
-            </Text>
-          </Paper>
-        </Container>
+          <Link href="/login" style={{ textDecoration: "none" }}>
+            <NavLink
+              component="div"
+              label="Login"
+              leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
+              variant="subtle"
+            />
+          </Link>
+        </div>
       )}
     </>
   );
