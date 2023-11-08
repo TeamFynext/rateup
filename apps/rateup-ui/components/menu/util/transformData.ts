@@ -22,7 +22,7 @@ export function transformData(inputData: any) {
     headerText: inputData?.titleText ?? "Welcome To",
     titleText: inputData?.menu?.displayName || "HOTEL NAME",
     locationText: inputData?.menu?.locationText || "",
-    websiteUrl: inputData?.menu?.websiteUrl || "",
+    websiteText: inputData?.menu?.websiteText || "",
     logo: inputData?.menu?.logo || "",
   };
 

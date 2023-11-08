@@ -39,58 +39,16 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       setIsCreating(false);
     },
   );
-  const [logo, setLogo] = useState<File | null>(null);
-  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
-
-  useEffect(() => {
-    if (!logo) return;
-
-    setIsUploading(true);
-    uploadFile(logo)
-      .then((key) => {
-        form.setFieldValue("logo", key);
-        setIsUploading(false);
-      })
-      .catch((err) => {
-        showErrorToast("Error uploading logo. Please try again.");
-        console.error(err);
-        setIsUploading(false);
-      });
-  }, [logo]);
-
-  useEffect(() => {
-    if (!backgroundImage) return;
-
-    setIsUploading(true);
-    uploadFile(backgroundImage)
-      .then((key) => {
-        form.setFieldValue("backgroundImage", key);
-        setIsUploading(false);
-      })
-      .catch((err) => {
-        showErrorToast("Error uploading background image. Please try again.");
-        console.error(err);
-        setIsUploading(false);
-      });
-  }, [backgroundImage]);
 
   const form = useForm({
     initialValues: editingItem || {
       name: "",
       displayName: "",
-      locationUrl: "",
-      locationText: "",
-      websiteUrl: "",
-      websiteText: "",
-      logo: "",
-      backgroundImage: "",
       teamId: "",
     },
     validate: {
       name: (value) => (value?.trim().length ? null : "Cannot be empty"),
       displayName: (value) => (value?.trim().length ? null : "Cannot be empty"),
-      locationText: (value) =>
-        value?.trim().length ? null : "Cannot be empty",
       teamId: (value) => (value?.trim().length ? null : "select a team"),
     },
   });
@@ -152,77 +110,6 @@ export function CreateMenuModal({ opened, close, editingItem }) {
           withAsterisk
           {...form.getInputProps("displayName")}
         />
-        <Group wrap="nowrap" className={classes.groupChildElements}>
-          <ContainedTextField
-            label="Location Label"
-            withAsterisk
-            placeholder="Kannur Rd, near CH Over bridge"
-            {...form.getInputProps("locationText")}
-          />
-          <ContainedTextField
-            label="Location URL"
-            placeholder="https://goo.gl/maps/xyz1234"
-            {...form.getInputProps("locationUrl")}
-          />
-        </Group>
-        <Group wrap="nowrap" className={classes.groupChildElements}>
-          <ContainedTextField
-            label="Website Label"
-            placeholder="paragonHotels.in"
-            {...form.getInputProps("websiteText")}
-          />
-          <ContainedTextField
-            label="Website URL"
-            placeholder="https://paragonHotels.in"
-            {...form.getInputProps("websiteUrl")}
-          />
-        </Group>
-        <SimpleGrid cols={2} spacing="md" className={classes.simpleGridImg}>
-          <ContainedFileInput
-            label="Upload Logo"
-            placeholder="Click here to upload"
-            accept="image/*"
-            multiple={false}
-            error={form.errors.logo && form.errors.logo}
-            onChange={setLogo}
-          />
-          <ContainedFileInput
-            label="Upload background image"
-            placeholder="Click here to upload"
-            accept="image/*"
-            multiple={false}
-            error={form.errors.backgroundImage && form.errors.backgroundImage}
-            onChange={setBackgroundImage}
-          />
-          <Center>
-            <Image
-              style={{
-                maxHeight: "200px",
-                maxWidth: "70%",
-              }}
-              src={
-                form.values.logo
-                  ? getFileUrlFromKey(form.values.logo)
-                  : editingItem?.logo
-                  ? getFileUrlFromKey(editingItem.logo)
-                  : ""
-              }
-            />
-          </Center>
-          <Center>
-            <Image
-              width="75%"
-              height="auto"
-              src={
-                form.values.backgroundImage
-                  ? getFileUrlFromKey(form.values.backgroundImage)
-                  : editingItem?.backgroundImage
-                  ? getFileUrlFromKey(editingItem.backgroundImage)
-                  : ""
-              }
-            />
-          </Center>
-        </SimpleGrid>
       </Stack>
     </FormModalLayout>
   );

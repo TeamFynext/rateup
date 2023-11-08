@@ -205,11 +205,7 @@ export function CreateMenuItemModal({
             <Text>Add Images (max 3)</Text>
             {form.values.images.length > 0 ? (
               <Box>
-                <Image
-                  src={getFileUrlFromKey(selectedImage)}
-                  {...imageProps}
-                  alt="image of menu"
-                />
+                <Image src={getFileUrlFromKey(selectedImage)} {...imageProps} alt="image of menu"/>
                 <Center mt="xs">
                   <Button
                     radius={"xs"}
@@ -231,11 +227,7 @@ export function CreateMenuItemModal({
                 </Center>
               </Box>
             ) : (
-              <Image
-                src={fallbackImage}
-                {...imageProps}
-                alt="placholder image of menu"
-              />
+              <Image src={fallbackImage} {...imageProps} alt="placholder image of menu"/>
             )}
           </Group>
           <Group>

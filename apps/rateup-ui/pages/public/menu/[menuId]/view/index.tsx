@@ -36,8 +36,9 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
+  let categorys = [{ id: "1", name: "all" }].concat(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    fullMenu?.categories[0]?.id,
+    categorys[0]?.id
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
@@ -80,8 +81,8 @@ export default function ({ fullMenu }) {
         >
           {fullMenu?.logo && (
             <Image
-              width="100px"
-              height={"100px"}
+              w="100px"
+              h={"100px"}
               style={{
                 borderRadius: "4px",
               }}
@@ -109,7 +110,7 @@ export default function ({ fullMenu }) {
             overflowX: "scroll",
           }}
         >
-          {fullMenu?.categories?.map((c) => (
+          {categorys?.map((c) => (
             <CategoryChip
               key={c.id}
               categoryId={c.id}

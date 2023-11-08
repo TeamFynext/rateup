@@ -33,8 +33,6 @@ const GeneralSettings = ({ editingItem }) => {
     validate: {
       name: (value) => (value?.trim().length ? null : "Cannot be empty"),
       displayName: (value) => (value?.trim().length ? null : "Cannot be empty"),
-      locationText: (value) =>
-        value?.trim().length ? null : "Cannot be empty",
       teamId: (value) => (value?.trim().length ? null : "select a team"),
     },
   });
@@ -97,7 +95,6 @@ const GeneralSettings = ({ editingItem }) => {
           <SimpleGrid cols={2} spacing="md">
             <ContainedTextField
               label="Location Label"
-              withAsterisk
               placeholder="Kannur Rd, near CH Over bridge"
               {...form.getInputProps("locationText")}
             />
@@ -126,7 +123,7 @@ const GeneralSettings = ({ editingItem }) => {
             <Grid.Col>
               <ContainedSelection
                 withAsterisk
-                label="choose a survey to display in the menu pagel"
+                label="Choose a survey to display in the menu pagel"
                 placeholder={
                   surveyFormatedData?.length === 0
                     ? "There is no published survay"

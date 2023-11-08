@@ -78,7 +78,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     editingItem?.menuPageEnabled ?? true,
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled ?? false,
+    editingItem?.feedbackPageEnabled ?? false
   );
   const logoRef = useRef<HTMLButtonElement>(null);
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
@@ -145,7 +145,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     };
     if (!editingItem?.surveyId && !isFeedbackEnabled) {
       showErrorToast(
-        "In order to enable feedback, you must have selected a survey in the settings.",
+        "In order to enable feedback, you must have selected a survey in the settings."
       );
       return;
     }
@@ -167,7 +167,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
 
   if (form?.values?.mobileBackgroundImage) {
     mobileBackgroundImageSrc = getFileUrlFromKey(
-      form.values.mobileBackgroundImage,
+      form.values.mobileBackgroundImage
     );
   }
   const renderFeedbackComponent = () => {
@@ -446,7 +446,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         label=""
                         placeholder="font weight"
                         required
-                        variant="unstyled"
                         data={FontWeights}
                         {...form.getInputProps("headerStyle.fontWeight")}
                       />
@@ -488,7 +487,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         allowDeselect={false}
                         placeholder="font weight"
                         required
-                        variant="unstyled"
                         data={FontWeights}
                         {...form.getInputProps("titleStyle.fontWeight")}
                       />
