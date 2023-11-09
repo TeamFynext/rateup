@@ -16,13 +16,14 @@ export const useResponses = (surveyTeamMapId: string) =>
 
 export function useResetResponsesStats(
   surveyId: string,
+  surveyTeamMapId: string,
   close: () => void,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => resetResponsesStats(surveyId),
+    mutationFn: () => resetResponsesStats(surveyTeamMapId),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
@@ -63,13 +64,14 @@ export function useResetResponsesStats(
 
 export function useDeleteResponse(
   surveyId: string,
+  surveyTeamMapId: string,
   close: () => void,
   setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteResponse(id, surveyId),
+    mutationFn: (id: string) => deleteResponse(id, surveyTeamMapId),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });

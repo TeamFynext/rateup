@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Text, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
@@ -9,16 +9,19 @@ import { IconX } from "@tabler/icons-react";
 import DangerZone from "../../DangerZone/DangerZone";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import SurveyContext from "../../../context/SurveyContext";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const { surveyId } = useRouter().query as { surveyId: string };
+  const { surveyTeamMapId } = useContext(SurveyContext);
   const [verifyEmail, setVerifyEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
 
   const resetResponsesStats = useResetResponsesStats(
     surveyId,
+    surveyTeamMapId,
     close,
     setIsLoading,
   );

@@ -12,14 +12,16 @@ export async function createResponsePublic(data: CreateResponseType) {
   return await axiosClient.post(`/public/response`, data);
 }
 
-export async function resetResponsesStats(surveyId: string) {
-  const res = await axiosClient.delete(`${RESPONSE_URL}/reset/${surveyId}`);
+export async function resetResponsesStats(surveyTeamMapId: string) {
+  const res = await axiosClient.delete(
+    `${RESPONSE_URL}/reset/${surveyTeamMapId}`,
+  );
   return res.data;
 }
 
-export async function deleteResponse(id: string, surveyId: string) {
+export async function deleteResponse(id: string, surveyTeamMapId: string) {
   const res = await axiosClient.delete(
-    `${RESPONSE_URL}/${surveyId}/delete/${id}`,
+    `${RESPONSE_URL}/${surveyTeamMapId}/delete/${id}`,
   );
   return res.data;
 }
