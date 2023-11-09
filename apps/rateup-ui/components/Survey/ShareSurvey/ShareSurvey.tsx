@@ -41,13 +41,12 @@ import {
 } from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
-import SelectedTeamContext from "../../../context/SelectedTeam";
+import SurveyContext from "../../../context/SurveyContext";
 
 const ShareSurvey = ({ survey, setActiveTab }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
-  const [mapId, setMapId] = useState();
-  const { selectedTeamId } = useContext(SelectedTeamContext);
+  const { surveyTeamMapId, selectedTeamName } = useContext(SurveyContext);
 
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const queryClient = useQueryClient();
@@ -57,24 +56,20 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
   );
 
   useEffect(() => {
-    setMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
-  }, [selectedTeamId, survey]);
-
-  useEffect(() => {
-    if (!surveyId || !mapId) return;
+    if (!surveyId || !surveyTeamMapId) return;
     if (survey.type === "whatsapp") {
       // TODO: get phone number from phone id (add phone number field)
       setShareUrl(
         `https://wa.me/7907137774?text=${encodeURIComponent(
-          "/start " + survey.id, //TODO verify  id:    use mapId if required
+          "/start " + surveyTeamMapId, //TODO verify  id:    use survey.id if required
         )}`,
       );
     } else {
       setShareUrl(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${mapId}`,
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}`,
       );
     }
-  }, [surveyId, mapId]);
+  }, [surveyId, surveyTeamMapId]);
 
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(surveyId, data),
@@ -258,7 +253,10 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
         <PaperLayout p="md" radius="md" shadow="lg">
           <SimpleGrid cols={2} spacing="xl">
             <Stack style={{ maxWidth: "450px" }} p="md">
-              <Title order={4}>Share Survey</Title>
+              <Group>
+                <Title order={4}>Share Survey</Title>
+                <Text c="dark.0"> (Team : {selectedTeamName})</Text>
+              </Group>
               <CopyLinkComponent value={shareUrl} />
             </Stack>
 

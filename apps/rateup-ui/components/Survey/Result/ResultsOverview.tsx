@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { useResponses } from "../../../backend/surveys/response/response.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
@@ -9,15 +9,17 @@ import { Divider, Stack, Group } from "@mantine/core";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
+import SurveyContext from "../../../context/SurveyContext";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [languages, setLanguages] = useState<string[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
+  const { surveyTeamMapId } = useContext(SurveyContext);
   let chartData;
 
-  const { isLoading, error, data: responses } = useResponses(surveyId);
+  const { isLoading, error, data: responses } = useResponses(surveyTeamMapId);
   const {
     isLoading: isQLoading,
     error: QError,

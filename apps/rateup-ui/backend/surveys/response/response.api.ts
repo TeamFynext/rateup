@@ -2,8 +2,8 @@ import { axiosClient } from "../../apiClient";
 
 const RESPONSE_URL = "/response";
 
-export async function getResponses(surveyId: string) {
-  const res = await axiosClient.get(`${RESPONSE_URL}/${surveyId}`);
+export async function getResponses(surveyTeamMapId: string) {
+  const res = await axiosClient.get(`${RESPONSE_URL}/${surveyTeamMapId}`);
   return res.data as Array<SurveyResponse>;
 }
 

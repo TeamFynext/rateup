@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Responses from "../../../../components/Survey/Response/Responses";
 import { useSurvey } from "../../../../backend/surveys/surveys.query";
 import { useRouter } from "next/router";
@@ -6,6 +6,7 @@ import { Title, Group, Stack } from "@mantine/core";
 import { useRouteParams } from "../../../../context/RouteParamsContext";
 import { useResponses } from "../../../../backend/surveys/response/response.query";
 import { ResultFilter } from "../../../../components/Survey/Result/Result";
+import SurveyContext from "../../../../context/SurveyContext";
 
 //page made for MEMBER role to just view responses
 
@@ -15,6 +16,7 @@ import { ResultFilter } from "../../../../components/Survey/Result/Result";
 const ViewResponses = () => {
   const router = useRouter();
   const surveyId = router.query.surveyId as string;
+  const { surveyTeamMapId } = useContext(SurveyContext);
   const {
     isLoading: isSurveyLoading,
     error: surveyError,
@@ -24,7 +26,7 @@ const ViewResponses = () => {
     data: responses,
     error: responseFetchError,
     isLoading: isLoading,
-  } = useResponses(survey?.id);
+  } = useResponses(surveyTeamMapId);
   const [filteredResponses, setFilteredResponses] = useState(responses);
 
   const { update } = useRouteParams();

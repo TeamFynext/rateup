@@ -7,10 +7,11 @@ import {
 } from "./response.api";
 import { notifications } from "@mantine/notifications";
 
-export const useResponses = (surveyId: string) =>
+export const useResponses = (surveyTeamMapId: string) =>
   useQuery({
-    queryKey: ["responses", surveyId],
-    queryFn: () => getResponses(surveyId),
+    queryKey: ["responses", surveyTeamMapId],
+    queryFn: () => getResponses(surveyTeamMapId),
+    enabled: !!surveyTeamMapId,
   });
 
 export function useResetResponsesStats(

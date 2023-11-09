@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import {
   Checkbox,
@@ -31,13 +37,15 @@ import {
 import { useImmer } from "use-immer";
 import { useResponses } from "../../../backend/surveys/response/response.query";
 import { filterResponses } from "../../../utils/response";
+import SurveyContext from "../../../context/SurveyContext";
 const Result = ({ survey }) => {
+  const { surveyTeamMapId } = useContext(SurveyContext);
   //fetching the responses associated with the survey
   const {
     data: responses,
     error: responseFetchError,
     isLoading: isLoading,
-  } = useResponses(survey?.id);
+  } = useResponses(surveyTeamMapId);
   const [filteredResponses, setFilteredResponses] = useState(responses);
   enum ResultTab {
     OverView = "overview",

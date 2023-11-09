@@ -7,8 +7,6 @@ import { useSurvey } from "../../../backend/surveys/surveys.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import ShareSurvey from "../../../components/Survey/ShareSurvey/ShareSurvey";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { IconChevronDown } from "@tabler/icons-react";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import SurveySettings from "../../../components/Survey/Settings/SurveySettings";
 import Result from "../../../components/Survey/Result/Result";
@@ -16,7 +14,7 @@ import { useUser } from "../../../context/UserContext";
 import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
 import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
-import SelectedTeamContext from "../../../context/SelectedTeam";
+import SurveyContext from "../../../context/SurveyContext";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -50,7 +48,10 @@ export default () => {
   }, [survey?.title]);
 
   const [selectedLanguage, setSelectedLanguage] = useState(null);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [selectedTeamName, setSelectedTeamName] = useState("");
+  const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
+
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
   const [addQnTrigger, setaddQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
@@ -58,7 +59,7 @@ export default () => {
   useEffect(() => {
     user?.role === "MEMBER" &&
       router.push(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${surveyId}`,
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${surveyTeamMapId}`,
       );
   }, [user]);
 
@@ -80,8 +81,19 @@ export default () => {
   }, [survey]);
 
   useEffect(() => {
-    teamOptions && setSelectedTeam(teamOptions[0]?.value);
+    teamOptions && setSelectedTeamId(teamOptions[0]?.value);
   }, [teamOptions]);
+
+  useEffect(() => {
+    if (selectedTeamId) {
+      setSurveyTeamMapId(
+        survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId,
+      );
+      setSelectedTeamName(
+        survey?.teams?.find((team) => team.id === selectedTeamId)?.name,
+      );
+    }
+  }, [selectedTeamId]);
 
   if (isLoading || isSurveyLoading) return <Loader />;
   if (error || surveyError) {
@@ -91,7 +103,9 @@ export default () => {
 
   return (
     <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
-      <SelectedTeamContext.Provider value={{ selectedTeamId: selectedTeam }}>
+      <SurveyContext.Provider
+        value={{ selectedTeamId, surveyTeamMapId, selectedTeamName }}
+      >
         <StyledTabs
           value={activeTab}
           onChange={(tab) => setActiveTab(tab as TabEnum)}
@@ -126,8 +140,8 @@ export default () => {
                   <ContainedSelection
                     maw={130}
                     data={teamOptions}
-                    value={selectedTeam}
-                    onChange={setSelectedTeam}
+                    value={selectedTeamId}
+                    onChange={setSelectedTeamId}
                   />
                 </Group>
               ) : null}
@@ -158,7 +172,7 @@ export default () => {
             <SurveyTheme survey={survey} />
           </Tabs.Panel>
         </StyledTabs>
-      </SelectedTeamContext.Provider>
+      </SurveyContext.Provider>
     </SelectedLanguageContext.Provider>
   );
 };

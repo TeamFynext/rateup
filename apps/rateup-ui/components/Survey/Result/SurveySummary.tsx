@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { Rating, Text, Group, Chip, Button, Stack, Space } from "@mantine/core";
@@ -7,6 +7,7 @@ import { useResponses } from "../../../backend/surveys/response/response.query";
 import Heading from "../../styled/Heading/Heading";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import SurveyContext from "../../../context/SurveyContext";
 
 type ResponseCounts = Record<string, Record<string, number>>;
 
@@ -68,12 +69,17 @@ const countResponses = (surveyResponses: any) => {
 const SurveySummary = () => {
   const router = useRouter();
   const { surveyId } = router.query;
+  const { surveyTeamMapId } = useContext(SurveyContext);
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
   }
 
-  const { isLoading, error, data: responseData } = useResponses(surveyId);
+  const {
+    isLoading,
+    error,
+    data: responseData,
+  } = useResponses(surveyTeamMapId);
   const {
     isLoading: isQLoading,
     error: QError,
