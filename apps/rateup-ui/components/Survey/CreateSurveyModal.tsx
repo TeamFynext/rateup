@@ -24,6 +24,9 @@ import { TeamSelector } from "../input/TeamSelector";
 import { useForm } from "@mantine/form";
 import { useTeamsByUser } from "../../backend/team/team.query";
 import FormModalLayout from "../Modal/FormModalLayout";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import classes from "../input/ContainedInput/ContainedInput.module.css";
+
 interface FormValues {
   title: string;
   languages: Array<string>;
@@ -156,13 +159,12 @@ export function CreateSurveyModal({
       buttonTitle={"Submit"}
     >
       <Stack style={{ minHeight: "300px" }} mt="xl">
-        <TextInput
+        <ContainedTextField
           placeholder="Enter title"
           label="Title"
           withAsterisk
           {...form.getInputProps("title")}
         />
-
         {/* // TODO: Add a user-level language list */}
         <MultiSelectCreatable
           value={languages}
@@ -174,7 +176,6 @@ export function CreateSurveyModal({
           onChange={setTeamChoice}
           name="selectTeams"
           label="Select teams"
-          //description="Team for which survey to be created."
           withAsterisk
         >
           <Group mt="xs">
