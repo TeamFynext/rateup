@@ -764,67 +764,64 @@ export async function verifySurveyPassword(
 }
 
  export async function updateVisitedSurvey(id: string) {
-//   let surveyStats;
-//   try {
-//     surveyStats = await prisma.surveyStats.update({
-//       where: { surveyId: id },
-//       data: { visited: { increment: 1 } },
-//     });
-//   } catch (error: any) {
-//     if (error?.code === "P2025") {
-//       // Record not found error
-//       surveyStats = await prisma.surveyStats.create({
-//         data: { surveyId: id, visited: 1 },
-//       });
-//     } else {
-//       throw error;
-//     }
-//   }
-//   return surveyStats;
+  let surveyStats;
+  try {
+    surveyStats = await prisma.surveyStats.update({
+      where: { surveyTeamMapId: id },
+      data: { visited: { increment: 1 } },
+    });
+  } catch (error: any) {
+    if (error?.code === "P2025") {
+      // Record not found error
+      surveyStats = await prisma.surveyStats.create({
+        data: { surveyTeamMapId: id, visited: 1 },
+      });
+    } else {
+      throw error;
+    }
+  }
+  return surveyStats;
  }
-//TODO verify SURVEYTEAMMAPS
 
 
  export async function updateStartedSurvey(id: string) {
-//   let surveyStats;
-//   try {
-//     surveyStats = await prisma.surveyStats.update({
-//       where: { surveyId: id },
-//       data: { started: { increment: 1 } },
-//     });
-//   } catch (error: any) {
-//     if (error?.code === "P2025") {
-//       // Record not found error
-//       surveyStats = await prisma.surveyStats.create({
-//         data: { surveyId: id, visited: 1 },
-//       });
-//     } else {
-//       throw error;
-//     }
-//   }
-//   return surveyStats;
+  let surveyStats;
+  try {
+    surveyStats = await prisma.surveyStats.update({
+      where: { surveyTeamMapId: id },
+      data: { started: { increment: 1 } },
+    });
+  } catch (error: any) {
+    if (error?.code === "P2025") {
+      // Record not found error
+      surveyStats = await prisma.surveyStats.create({
+        data: { surveyTeamMapId: id, visited: 1 },
+      });
+    } else {
+      throw error;
+    }
+  }
+  return surveyStats;
  }
-//TODO verify SURVEYTEAMMAPS
 
 
  export async function updateCompletedSurvey(id: string) {
-//   let surveyStats;
-//   try {
-//     surveyStats = await prisma.surveyStats.update({
-//       where: { surveyId: id },
-//       data: { completed: { increment: 1 } },
-//     });
-//   } catch (error: any) {
-//     if (error?.code === "P2025") {
-//       // Record not found error
-//       surveyStats = await prisma.surveyStats.create({
-//         data: { surveyId: id, completed: 1 },
-//       });
-//     } else {
-//       throw error;
-//     }
-//   }
-//   return surveyStats;
+  let surveyStats;
+  try {
+    surveyStats = await prisma.surveyStats.update({
+      where: { surveyTeamMapId: id },
+      data: { completed: { increment: 1 } },
+    });
+  } catch (error: any) {
+    if (error?.code === "P2025") {
+      // Record not found error
+      surveyStats = await prisma.surveyStats.create({
+        data: { surveyTeamMapId: id, completed: 1 },
+      });
+    } else {
+      throw error;
+    }
+  }
+  return surveyStats;
  }
-//TODO verify SURVEYTEAMMAPS
 
