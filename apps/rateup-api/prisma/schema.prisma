@@ -166,21 +166,23 @@ model Survey {
   getLocation        Boolean         @default(false)
   welcomePageEnabled Boolean         @default(true)
   tags               String[]        @default([])
-  menuLanding        MenuLanding[]
-  campaigns          Campaign[]
+
+  MenuLanding MenuLanding[]
 }
 
 model SurveyTeamMap {
-  id                               String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyId                         String                             @db.Uuid
-  teamId                           String                             @db.Uuid
-  survey                           Survey                             @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  team                             Team                               @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  responses                        SurveyResponse[]
-  sessions                         WaSession[]
-  surveyStats                      SurveyStats?
-  WaCustomerSurveySendHistory      WaCustomerSurveySendHistory[]
-  WaCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  surveyId    String           @db.Uuid
+  teamId      String           @db.Uuid
+  survey      Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  responses   SurveyResponse[]
+  sessions    WaSession[]
+  surveyStats SurveyStats?
+  //WaCustomerSurveySendHistory      WaCustomerSurveySendHistory[]
+  //WaCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
+  campaign    Campaign[]
+  menuLanding MenuLanding[]
 }
 
 model SurveyLanding {
@@ -203,9 +205,9 @@ model SurveyResponse {
   responses       Json[]
   language        String           @default("")
   platform        ResponsePlatform @default(WEB)
-  
-  ip              String?
-  location        Json? // { 
+
+  ip                   String?
+  location             Json? // { 
   //                      coordinates: {latitude: number, longitude: number},
   //                      city: string, state: string, country: string
   //                    }
@@ -226,19 +228,19 @@ model SurveyStats {
 
 // Whatsapp session
 model WaSession {
-  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt         DateTime      @default(now())
-  phone             String
-  surveyTeamMap     SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id])
-  surveyTeamMapId   String        @db.Uuid
-  template          WaTemplate?   @relation(fields: [templateId], references: [id])
-  templateId        String?       @db.Uuid
-  currentQuestionId String?
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt             DateTime             @default(now())
+  phone                 String
+  surveyTeamMap         SurveyTeamMap        @relation(fields: [surveyTeamMapId], references: [id])
+  surveyTeamMapId       String               @db.Uuid
+  template              WaTemplate?          @relation(fields: [templateId], references: [id])
+  templateId            String?              @db.Uuid
+  currentQuestionId     String?
   campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
-  campaignParticipantId String?              @unique @db.Uuidresponses         Json[]
+  campaignParticipantId String?              @unique @db.Uuid
   responses             Json[]
-  language          String        @default("")
-  orgId             String        @db.Uuid
+  language              String               @default("")
+  orgId                 String               @db.Uuid
 
   @@unique([phone, orgId])
 }
@@ -297,8 +299,8 @@ model Campaign {
 
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
-  surveyTeamMap     SurveyTeamMap   @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId   String          @db.Uuid
+  surveyTeamMap        SurveyTeamMap         @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+  surveyTeamMapId      String                @db.Uuid
   waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   waTemplateId         String?               @db.Uuid
   // TODO: add email template?
@@ -430,9 +432,9 @@ model WaTemplate {
 }
 
 model MenuLanding {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime? @updatedAt
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime?     @updatedAt
   headerText            String?
   headerStyle           Json?
   titleStyle            Json?
@@ -440,12 +442,14 @@ model MenuLanding {
   logoStyles            Json?
   backgroundImage       String?
   mobileBackgroundImage String?
-  menuPageEnabled       Boolean   @default(true)
-  feedbackPageEnabled   Boolean   @default(false)
-  menu                  Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  menuId                String    @unique @db.Uuid
-  surveyTeamMap     SurveyTeamMap   @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId   String          @db.Uuid
+  menuPageEnabled       Boolean       @default(true)
+  feedbackPageEnabled   Boolean       @default(false)
+  menu                  Menu          @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId                String        @unique @db.Uuid
+  surveyTeamMap         SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+  surveyTeamMapId       String        @db.Uuid
+  Survey                Survey?       @relation(fields: [surveyId], references: [id])
+  surveyId              String?       @db.Uuid
 }
 
 model ReviewSuggestion {
