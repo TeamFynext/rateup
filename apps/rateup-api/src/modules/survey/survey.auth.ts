@@ -2,7 +2,6 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth";
 import { CreateSurveyInput } from "./survey.schema";
 import { GetSurveyByIdParams } from "./survey.schema";
-import Session from "supertokens-node/recipe/session";
 
 export async function verifySurveyAccess(
   request: FastifyRequest<{
@@ -24,10 +23,12 @@ export async function verifySurveyCreateAccess(
   }>,
   reply: FastifyReply
 ) {
-  const teamId = request.body.teamId;
+  const teamIds = request.body.teamIds;
 
-  if (!(await hasAccessToTeam(teamId, request.userId))) {
-    reply.code(403).send();
-    return;
+  for (let teamId of teamIds) {
+    if (!(await hasAccessToTeam(teamId, request.userId))) {
+      reply.code(403).send();
+      return;
+    }
   }
 }

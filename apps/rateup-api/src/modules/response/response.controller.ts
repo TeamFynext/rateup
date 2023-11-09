@@ -11,8 +11,8 @@ export async function getResponsesHandler(
   reply: FastifyReply
 ) {
   try {
-    const surveyId = request.params.surveyId;
-    const responses = await getResponses(surveyId);
+    const surveyTeamMapId = request.params.surveyTeamMapId;
+    const responses = await getResponses(surveyTeamMapId);
     reply.send(responses);
   } catch (e) {
     console.error(e);
@@ -27,8 +27,8 @@ export async function resetResponsesHandler(
   reply: FastifyReply
 ) {
   try {
-    const surveyId = request.params.surveyId;
-    const reset = await resetResponsesStats(surveyId);
+    const surveyTeamMapId = request.params.surveyTeamMapId;
+    const reset = await resetResponsesStats(surveyTeamMapId);
     reply.code(201).send({ success: true, data: reset });
   } catch (e) {
     console.error(e);

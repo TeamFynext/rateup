@@ -10,7 +10,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.addHook("preHandler", verifyAccess);
   server.get(
-    "/:surveyId",
+    "/:surveyTeamMapId",
     {
       // TODO: verifySurveyAccess
       schema: {
@@ -22,7 +22,7 @@ export async function responseRoutes(server: FastifyInstance) {
 
   //to reset survey responses & stats
   server.delete(  
-    "/reset/:surveyId",
+    "/reset/:surveyTeamMapId",
     {
       preHandler: [ checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
@@ -35,7 +35,7 @@ export async function responseRoutes(server: FastifyInstance) {
 
     //to delete single response
     server.delete(  
-      "/:surveyId/delete/:id",
+      "/:surveyTeamMapId/delete/:id",
       {
         preHandler: [ checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
         schema: {

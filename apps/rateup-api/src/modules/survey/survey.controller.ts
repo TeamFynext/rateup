@@ -4,6 +4,7 @@ import {
   createSurvey,
   createSurveyLanding,
   deleteSurveyById,
+  deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
   getGoogleUrlBySurveyId,
   getPublicSurveyById,
@@ -27,6 +28,7 @@ import {
   CloneSurveyInput,
   CreateSurveyInput,
   CreateSurveyLandingInput,
+  DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   IdParamInput,
   UpdateGoogleLinkInput,
@@ -333,6 +335,27 @@ export async function deleteSurveyByIdHandler(
   }
 }
 
+export async function deleteTeamSurveyHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+    Body: DeleteTeamSurveyInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    let response = await deleteSurveyFromTeam(request.params.id, request.body);
+    if (!response) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ message: "Deleted successfully." , info: response});
+    }
+    //TODO improve response handling
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
+  }
+}
+
 export async function updateSurveyByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
@@ -406,16 +429,18 @@ export async function visitedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const updateVisited = await updateVisitedSurvey(request.params.id);
-    if (!updateVisited) {
-      reply.code(404);
-    } else {
-      reply.code(200).send({ status: "success" });
-    }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
-  }
+  // try {
+  //   const updateVisited = await updateVisitedSurvey(request.params.id);
+  //   if (!updateVisited) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.code(200).send({ status: "success" });
+  //   }
+  // } catch (e) {
+  //   reply.code(500).send({ status: "error", message: e });
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function startedSurveyHandler(
@@ -424,16 +449,18 @@ export async function startedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const updateStarted = await updateStartedSurvey(request.params.id);
-    if (!updateStarted) {
-      reply.code(404);
-    } else {
-      reply.code(200).send({ status: "success" });
-    }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
-  }
+  // try {
+  //   const updateStarted = await updateStartedSurvey(request.params.id);
+  //   if (!updateStarted) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.code(200).send({ status: "success" });
+  //   }
+  // } catch (e) {
+  //   reply.code(500).send({ status: "error", message: e });
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function completedSurveyHandler(
@@ -442,16 +469,18 @@ export async function completedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  try {
-    const updateCompleted = await updateCompletedSurvey(request.params.id);
-    if (!updateCompleted) {
-      reply.code(404);
-    } else {
-      reply.code(200).send({ status: "success" });
-    }
-  } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
-  }
+  // try {
+  //   const updateCompleted = await updateCompletedSurvey(request.params.id);
+  //   if (!updateCompleted) {
+  //     reply.code(404);
+  //   } else {
+  //     reply.code(200).send({ status: "success" });
+  //   }
+  // } catch (e) {
+  //   reply.code(500).send({ status: "error", message: e });
+  // }
+  //TODO verify SURVEYTEAMMAPS
+
 }
 
 export async function updateGoogleLinkHandler(

@@ -1,29 +1,29 @@
 import prisma from "../../utils/prisma";
 import { CreateResponseInput } from "./response.schema";
 
-export async function getResponses(surveyId: string) {
+export async function getResponses(surveyTeamMapId: string) {
     const responses = await prisma.surveyResponse.findMany({
         where: {
-            surveyId,
+            surveyTeamMapId,
         }
     })
     return responses;
 }
 
-export async function resetResponsesStats(surveyId: string) {
+export async function resetResponsesStats(surveyTeamMapId: string) {
     const deleteResponses = await prisma.surveyResponse.deleteMany({
         where: {
-            surveyId,
+            surveyTeamMapId,
         }
     });
 
     const deleteStats = await prisma.surveyStats.deleteMany({
         where: {
-            surveyId,
+            surveyTeamMapId,
         }
     });
 
-    const deletionMessage = `Deleted.. ${deleteResponses.count} survey responses for survey ID: ${surveyId}`;
+    const deletionMessage = `Deleted.. ${deleteResponses.count} survey responses for survey ID: ${surveyTeamMapId}`;
     return deletionMessage;
 }
 
@@ -41,7 +41,7 @@ export async function createResponse(input: CreateResponseInput) {
     const surveyResponse = await prisma.surveyResponse.create({
         data: {
             ...input,
-            surveyId: input.surveyId,
+            surveyTeamMapId: input.surveyTeamMapId,
             language: input.language,
             responses: input.responses,
         }

@@ -8,7 +8,7 @@ const surveyCore = {
     invalid_type_error: "Title must be a string",
   }),
   languages: z.array(z.string()),
-  teamId: z.string({ required_error: "TeamId is required" }),
+  teamIds: z.array(z.string({ required_error: "TeamId is required" })),
   active: z.boolean().default(true),
   type: z.string().default("web"),
   getLocation: z.boolean().default(false),
@@ -50,6 +50,10 @@ const getSurveyByIdParamsSchema = z.object({
 });
 const getSurveyLandingByIdParamsSchema = z.object({
   id: z.string(),
+});
+
+const deleteTeamSurveyRequestSchema = z.object({
+  teamId: z.string().uuid(),
 });
 
 const idParamsSchema = z.object({
@@ -135,6 +139,7 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     idParamsSchema,
     cloneSurveySchema,
     updateGoogleLinkRequestSchema,
+    deleteTeamSurveyRequestSchema
   },
   { $id: "surveySchema" }
 );
@@ -150,6 +155,7 @@ export type UpdateLandingPageInput = z.infer<typeof updateLandingPageRequestSche
 export type UpdateSurveyPassword = z.infer<
   typeof updateSurveyPasswordRequestSchema
 >;
+export type DeleteTeamSurveyInput = z.infer<typeof deleteTeamSurveyRequestSchema>;
 export type IdParamInput = z.infer<typeof idParamsSchema>;
 export type CloneSurveyInput = z.infer<typeof cloneSurveySchema>;
 export type UpdateGoogleLinkInput = z.infer<

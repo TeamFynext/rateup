@@ -12,7 +12,7 @@ const questionResponseSchema = z.object({
 
 // Survey response
 const responseCore = {
-  surveyId: z.string(),
+  surveyTeamMapId: z.string(),
   language: z.string(),
   responses: z.array(questionResponseSchema),
   location: z.object({
@@ -52,7 +52,7 @@ const createResponseInputSchema = z.object({
 });
 
 const getResponsesParamsSchema = z.object({
-  surveyId: z.string(),
+  surveyTeamMapId: z.string(),
 });
 
 const idInputParamsSchema = z.object({
@@ -61,7 +61,7 @@ const idInputParamsSchema = z.object({
 
 const deleteResponseParamsSchema = z.object({
   id: z.string(),
-  surveyId: z.string(),
+  surveyTeamMapId: z.string(),
 });
 
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({

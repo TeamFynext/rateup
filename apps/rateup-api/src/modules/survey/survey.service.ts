@@ -2,6 +2,7 @@ import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
   CreateSurveyLandingInput,
+  DeleteTeamSurveyInput,
   UpdateGoogleLinkInput,
   UpdateLandingPageInput,
   UpdateSurveyInput,
@@ -17,14 +18,19 @@ export async function createSurvey(
   input: CreateSurveyInput,
   createdBy: string
 ) {
+  const teamIds = input?.teamIds?.map(teamId => ({ teamId }))
   const survey = await prisma.survey.create({
     data: {
-      ...input,
+      // ...input,
       title: input.title,
-      teamId: input.teamId,
+      languages: input.languages,
       createdBy,
+      teams: {
+        create: teamIds,
+      },
     },
-  });
+   });
+   
   //-------------create a default landing page theme todo-------------
 
   let landingData = defaultTheme;
@@ -46,7 +52,9 @@ export async function createSurvey(
     },
   });
 
-  return survey;
+  let surveyRes = {...survey, teamIds: input?.teamIds}
+
+  return surveyRes;
 }
 
 //----------------create survey landing-----------------
@@ -99,6 +107,7 @@ export async function updateSurveyLanding(
   return Landing;
 }
 
+//TODO verify SURVEYTEAMMAPS
 export async function cloneSurvey(
   surveyId: string,
   userId: string,
@@ -115,10 +124,20 @@ export async function cloneSurvey(
 
     const existingSurveys = await prisma.survey.findMany({
       where: {
-        title: {
-          startsWith: survey.title,
-        },
-        teamId: survey.teamId,
+        AND: [
+          {
+            title: {
+              startsWith: survey.title,
+            },
+          },
+          // {
+          //   surveyTeamMaps: {
+          //     some: {
+          //       teamId: survey.teamId,
+          //     },
+          //   },
+          // },
+        ],
       },
       orderBy: {
         title: "asc",
@@ -161,39 +180,60 @@ export async function cloneSurvey(
   }
 }
 
+
+//-----------get single survey with id -------
+
 export async function getSurveyById(id: string) {
+  if (!id) {
+    throw new Error('ID must be provided');
+  }
   const survey = await prisma.survey.findUnique({
     where: {
       id,
     },
+
     include: {
-      surveyStats: true,
+      teams: {
+        include: {
+          team: true,
+        },
+      },
     },
   });
 
   if (!survey) {
     throw new Error(`Could not find survey with id ${id}`);
   }
-  return survey;
+
+  let teams = survey?.teams?.map((team) => {
+    const teamData = { id: team?.team?.id, name: team?.team?.name, mapId: team?.id };
+    return teamData;
+  });
+
+  return {...survey, teams: teams};
 }
 
 
 //-----------get public survey with org logo -------
 
-export async function getPublicSurveyById(id: string) {
-  const survey = await prisma.survey.findUnique({
+ export async function getPublicSurveyById(id: string) {
+  
+  const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
     where: {
       id,
-    }
+    },    
+    include: {
+      survey: true,
+    },
   });
 
-  if (!survey) {
+  if (!surveyTeamMap) {
     throw new Error(`Could not find survey with id ${id}`);
   }
 
   let org = await prisma.team.findUnique({
     where: {
-      id : survey?.teamId,
+      id : surveyTeamMap?.teamId,
     },
     include: {
       org: true,
@@ -201,10 +241,11 @@ export async function getPublicSurveyById(id: string) {
   });
 
   let orgLogo ={ orgLogo : org?.org?.logo}
-  let publicSurvey = { ...survey, ...orgLogo}
+  let publicSurvey = { ...surveyTeamMap.survey, ...orgLogo}
 
   return publicSurvey;
-}
+ }
+
 
 
 //---------------get lnding page by landingId------------
@@ -235,118 +276,162 @@ export async function getSurveyBylandingId(landingid: string) {
   return surveyResponse;
 }
 
-export async function getGoogleUrlBySurveyId(id: string) {
-  const survey = await prisma.survey.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      teamId: true,
-    },
-  });
 
-  if (survey) {
-    const team = await prisma.team.findUnique({
-      where: {
-        id: survey.teamId,
-      },
-      select: {
-        googleLink: true,
-      },
-    });
+//------------get ALL Surveys list of a logged user (without qns)--------
 
-    return team;
-  } else {
-    return { error: "Survey not found" };
-  }
-}
-
-/**
- * Returns surveys from ALL TEAMs in which the user is a member of
- * @param userId
- * @returns Array of surveys without questions
- */
-export async function getSurveysByUserId(userId: string) {
+ export async function getSurveysByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData.map(
-    (item: { teamId: string }) => item.teamId
+  const teamIds: string[] = teamData?.map(
+    (item: { teamId: string }) => item?.teamId
   );
-  const surveys = await prisma.survey.findMany({
+
+  const surveyRes = await prisma.survey.findMany({
     where: {
-      teamId: {
-        in: teamIds,
-      },
-    },
-  });
-
-  const surveysWithoutQuestions = surveys.map((s) =>
-    excludeFields(s, ["questions", "password"])
-  );
-  return surveysWithoutQuestions;
-}
-/**
- * Returns surveys from ALL TEAMs in which the user is a member of
- * @param userId
- * @returns Array of surveys without questions
- */
-export async function getWebSurveysByUserId(userId: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData.map(
-    (item: { teamId: string }) => item.teamId
-  );
-  const surveys = await prisma.survey.findMany({
-    where: {
-      type:"web",
-      teamId: {
-        in: teamIds,
-      },
-    },
-  });
-
-  const surveysWithoutQuestions = surveys.map((s) =>
-    excludeFields(s, ["questions", "password"])
-  );
-  return surveysWithoutQuestions;
-}
-
-/**
- * Returns summary(responses, stats) of active surveys
- * from ALL TEAMs in which the user is a member of
- * @param userId
- * @returns Array of active surveys - responses, stats
- */
-export async function getActiveSurveysSummmaryByUserId(userId: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData.map(
-    (item: { teamId: string }) => item.teamId
-  );
-
-  const allSurveys = await prisma.survey.findMany({
-    where: {
-      teamId: {
-        in: teamIds,
-      },
-    }
-  });
-
-  const activeSurveys = await prisma.survey.findMany({
-    where: {
-      teamId: {
-        in: teamIds,
-      },
-      active: true,
-    },
-    select: {
-      id: true,
-      title: true,
-      active: true,
-      createdAt: true,
-      type: true,
-      team: {
-        select: {
-          name: true,
+      teams: {
+        some: {
+          teamId: {
+            in: teamIds,
+          },
         },
       },
+    },
+    include: {
+      teams: {
+        where: {
+          teamId: {
+            in: teamIds,
+          },
+        },
+        include: {
+          team: true,
+        },
+      },
+    },
+  });
+
+  let surveyTeamOptimized = surveyRes.map(survey => {
+      const optimizedTeams = survey.teams.map(team => {
+          return {
+              id: team.teamId,
+              name: team.team.name,
+              mapId: team.id
+          };
+      });
+      return { ...survey, teams: optimizedTeams };
+  });
+
+  const surveys = surveyTeamOptimized?.map(survey => {
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  return surveys;
+ }
+
+
+//------------get web survey list --------
+ export async function getWebSurveysByUserId(userId: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData?.map(
+    (item: { teamId: string }) => item?.teamId
+  );
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  const webSurveys = allSurveys.filter(survey => survey?.type === 'web')
+  return webSurveys;
+ }
+
+
+//------------get whatsapp survey list --------
+export async function getWhatsappSurveysByUserId(userId: string, type: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData?.map(
+    (item: { teamId: string }) => item?.teamId
+  );
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  const whatsAppSurveys = allSurveys.filter(survey => survey?.type === type)
+  return whatsAppSurveys;
+ }
+
+ 
+//------------get survey landing survey list --------
+export async function getSurveyLandingByUserId(userId: string) {
+  const surveysLanding = await prisma.surveyLanding.findMany({
+    where: { createdBy: userId },
+  });
+
+  return surveysLanding;
+}
+
+
+//------------get survey list  by team id --------
+ export async function getSurveysByTeam(teamId: string) {
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId
+    },
+    include: {
+      survey: true,
+    },
+  });
+
+  const surveysWithoutQuestions = surveyTeamMaps?.map(surveyTeamMap => {
+    const survey = { ...surveyTeamMap.survey };
+    return excludeFields(survey, ["questions", "password"]);
+  });
+
+  return surveysWithoutQuestions;
+ }
+
+
+//------------SURVEY SUMMARY  ----
+//-----Returns summary(responses, stats) of active surveys -- from ALL TEAMs in which the user is a member of 
+
+ export async function getActiveSurveysSummmaryByUserId(userId: string) {
+  const teamData = await getTeamsByUserId(userId);
+  const teamIds: string[] = teamData.map(
+    (item: { teamId: string }) => item.teamId
+  );
+
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: {
+        in: teamIds,
+      },
+    },
+    include: {
+      survey: true,
       responses: {
         select: {
           id: true,
@@ -354,10 +439,36 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
         },
       },
       surveyStats: true,
+      team: {
+        select: {
+          name: true,
+        },
+      },
     },
-    
   });
 
+  const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
+    const surveys = { 
+      ...surveyTeamMap.survey, 
+      teamId : surveyTeamMap.teamId,
+      responses: surveyTeamMap.responses,
+      surveyStats: surveyTeamMap.surveyStats,
+      team: surveyTeamMap.team.name
+    };
+    return surveys;
+  });
+
+  const activeSurveys = allSurveys.filter(survey => survey?.active === true)
+  .map(({ id, title, active, createdAt, type, surveyStats, responses, team }) => ({
+    id,
+    title,
+    active,
+    createdAt,
+    type,
+    surveyStats,
+    responses,
+    team
+  }));
 
   let summaryData = {
     totalTeamsCount : teamData?.length,
@@ -367,58 +478,11 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
   }
 
   return summaryData;
-}
+ }
 
-/**
- * returns all whatsapp surveys
- * @param userId
- * @returns
- * @author harshad
- */
 
-export async function getSurveyLandingByUserId(userId: string) {
-  const surveysLanding = await prisma.surveyLanding.findMany({
-    where: { createdBy: userId },
-  });
 
-  return surveysLanding;
-}
-
-//------------get landing surevey list --------
-export async function getWhatsappSurveysByUserId(userId: string, type: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData.map(
-    (item: { teamId: string }) => item.teamId
-  );
-  const surveys = await prisma.survey.findMany({
-    where: {
-      teamId: {
-        in: teamIds,
-      },
-
-      type,
-    },
-  });
-
-  const surveysWithoutQuestions = surveys.map((s) =>
-    excludeFields(s, ["questions", "password"])
-  );
-  return surveysWithoutQuestions;
-}
-
-export async function getSurveysByTeam(teamId: string) {
-  const surveys = await prisma.survey.findMany({
-    where: {
-      teamId,
-    },
-  });
-
-  const surveysWithoutQuestions = surveys.map((s) =>
-    excludeFields(s, ["questions", "password"])
-  );
-  return surveysWithoutQuestions;
-}
-
+//------------DELETE SURVEY by id --------
 export async function deleteSurveyById(id: string) {
   const survey = await prisma.survey.delete({
     where: {
@@ -428,6 +492,49 @@ export async function deleteSurveyById(id: string) {
   return survey;
 }
 
+//------------DELETE SURVEY from a team --------
+export async function deleteSurveyFromTeam(id: string, input: DeleteTeamSurveyInput) {
+
+  const surveyTeams = await prisma.surveyTeamMap.findMany({
+    where: {
+      surveyId: id,
+    }
+  });
+
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: {
+      surveyId: id,
+      teamId: input?.teamId
+    },
+    include: {
+      responses: true
+    }
+  });
+
+  if (!surveyTeamMap) {
+    throw new Error('No survey found with the provided id and teamId');
+  }
+
+  if (surveyTeamMap.responses && surveyTeamMap.responses.length > 0) {
+    throw new Error('Cannot delete survey that has responses');
+  }
+
+  if(surveyTeams?.length > 1){
+    const deletedSurvey = await prisma.surveyTeamMap.delete({
+      where: { id: surveyTeamMap?.id }
+    });
+    return deletedSurvey;
+  }else{
+    const deletedSurvey = await prisma.survey.delete({
+      where: { id }
+    });
+    return deletedSurvey;
+  }
+
+}
+
+
+//------------UPDATE SURVEY by id --------
 export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
   let action = 'edit'
@@ -539,11 +646,37 @@ function validateSurvey(surveyData) {
 
 
 
-export async function updateGoogleLink(
+export async function getGoogleUrlBySurveyId(id: string) {
+  const survey = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      teamId: true,
+    },
+  });
+
+  if (survey) {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: survey.teamId,
+      },
+      select: {
+        googleLink: true,
+      },
+    });
+
+    return team;
+  } else {
+    return { error: "Survey not found" };
+  }
+ }
+
+ export async function updateGoogleLink(
   id: string,
   data: UpdateGoogleLinkInput
 ) {
-  const survey = await prisma.survey.findUnique({
+  const survey = await prisma.surveyTeamMap.findUnique({
     where: {
       id,
     },
@@ -566,7 +699,8 @@ export async function updateGoogleLink(
   } else {
     return { error: "Survey not found" };
   }
-}
+ }
+
 
 export async function updateSurveyPassword(
   id: string,
@@ -626,62 +760,65 @@ export async function verifySurveyPassword(
   }
 }
 
-export async function updateVisitedSurvey(id: string) {
+ export async function updateVisitedSurvey(id: string) {
   let surveyStats;
   try {
     surveyStats = await prisma.surveyStats.update({
-      where: { surveyId: id },
+      where: { surveyTeamMapId: id },
       data: { visited: { increment: 1 } },
     });
   } catch (error: any) {
     if (error?.code === "P2025") {
       // Record not found error
       surveyStats = await prisma.surveyStats.create({
-        data: { surveyId: id, visited: 1 },
+        data: { surveyTeamMapId: id, visited: 1 },
       });
     } else {
       throw error;
     }
   }
   return surveyStats;
-}
+ }
 
-export async function updateStartedSurvey(id: string) {
+
+ export async function updateStartedSurvey(id: string) {
   let surveyStats;
   try {
     surveyStats = await prisma.surveyStats.update({
-      where: { surveyId: id },
+      where: { surveyTeamMapId: id },
       data: { started: { increment: 1 } },
     });
   } catch (error: any) {
     if (error?.code === "P2025") {
       // Record not found error
       surveyStats = await prisma.surveyStats.create({
-        data: { surveyId: id, visited: 1 },
+        data: { surveyTeamMapId: id, visited: 1 },
       });
     } else {
       throw error;
     }
   }
   return surveyStats;
-}
+ }
 
-export async function updateCompletedSurvey(id: string) {
+
+ export async function updateCompletedSurvey(id: string) {
   let surveyStats;
   try {
     surveyStats = await prisma.surveyStats.update({
-      where: { surveyId: id },
+      where: { surveyTeamMapId: id },
       data: { completed: { increment: 1 } },
     });
   } catch (error: any) {
     if (error?.code === "P2025") {
       // Record not found error
       surveyStats = await prisma.surveyStats.create({
-        data: { surveyId: id, completed: 1 },
+        data: { surveyTeamMapId: id, completed: 1 },
       });
     } else {
       throw error;
     }
   }
   return surveyStats;
-}
+ }
+

@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessToSurvey } from "../../utils/auth";
 import { GetResponsesParams } from "./response.schema";
 import Session from "supertokens-node/recipe/session";
+import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions";
 
 export async function verifyAccess(
   request: FastifyRequest<{
@@ -9,7 +10,7 @@ export async function verifyAccess(
   }>,
   reply: FastifyReply
 ) {
-  const surveyId = request.params.surveyId;
+  const surveyId = await getSurveyIdfromMap(request.params.surveyTeamMapId)
   const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
 
   if (!hasAccess) {
