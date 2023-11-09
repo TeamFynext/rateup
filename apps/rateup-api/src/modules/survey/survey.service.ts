@@ -313,28 +313,48 @@ export async function getSurveyBylandingId(landingid: string) {
     (item: { teamId: string }) => item?.teamId
   );
 
-  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+  const surveyRes = await prisma.survey.findMany({
     where: {
-      teamId: {
-        in: teamIds,
+      teams: {
+        some: {
+          teamId: {
+            in: teamIds,
+          },
+        },
       },
     },
     include: {
-      survey: true,
+      teams: {
+        where: {
+          teamId: {
+            in: teamIds,
+          },
+        },
+        include: {
+          team: true,
+        },
+      },
     },
   });
 
-  const surveys = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+  let surveyTeamOptimized = surveyRes.map(survey => {
+      const optimizedTeams = survey.teams.map(team => {
+          return {
+              id: team.teamId,
+              name: team.team.name,
+              mapId: team.id
+          };
+      });
+      return { ...survey, teams: optimizedTeams };
+  });
+
+  const surveys = surveyTeamOptimized?.map(survey => {
     return excludeFields(survey, ["questions", "password"]);
   });
 
-  // const uniqueSurveys = Array.from(new Set(surveys.map(survey => survey?.id)))
-  // ?.map(id => surveys?.find(survey => survey.id === id))
-  // ?.map(survey => excludeFields(survey, ["questions", "password"]));
-  
   return surveys;
  }
+
 
 //------------get web survey list --------
  export async function getWebSurveysByUserId(userId: string) {
