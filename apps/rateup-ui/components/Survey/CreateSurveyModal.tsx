@@ -59,10 +59,10 @@ export function CreateSurveyModal({
     error,
   } = useTeamsByUser();
 
-  const allTeams = teamRes?.data.map((team) => team.teamId);
-  const teamOptions = teamRes?.data.map((team) => ({
-    value: team.teamId,
-    label: team.teamName,
+  const allTeams = teamRes?.data?.map((team) => team?.teamId);
+  const teamOptions = teamRes?.data?.map((team) => ({
+    value: team?.teamId,
+    label: team?.teamName,
   }));
 
   const form = useForm({
@@ -74,11 +74,11 @@ export function CreateSurveyModal({
       getLocation: false,
     },
     validate: {
-      title: (value) => (value.length ? null : "Cannot be empty"),
+      title: (value) => (value?.length ? null : "Cannot be empty"),
       languages: (values) =>
-        values.length ? null : "Must contain atleast one language",
+        values?.length ? null : "Must contain atleast one language",
       teamIds: (values) =>
-        values.length ? null : "Must contain atleast one team",
+        values?.length ? null : "Must contain atleast one team",
       type: (value) => (value ? null : "Must select a type"),
     },
   });
