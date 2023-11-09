@@ -31,12 +31,14 @@ import { useUser } from "../../../context/UserContext";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
 import { QuestionType } from "../../../types/enums";
+import SurveyContext from "../../../context/SurveyContext";
 
 const Responses = ({ survey, responses }) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
+  const { surveyTeamMapId } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const [verifyEmail, setVerifyEmail] = useState("");
@@ -44,7 +46,12 @@ const Responses = ({ survey, responses }) => {
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const deleteResponse = useDeleteResponse(surveyId, close, setIsDeleting);
+  const deleteResponse = useDeleteResponse(
+    surveyId,
+    surveyTeamMapId,
+    close,
+    setIsDeleting,
+  );
 
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {

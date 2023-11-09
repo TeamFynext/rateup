@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
   Paper,
@@ -26,6 +26,7 @@ import {
   useUpdateSurveyGoogleLinkMutation,
 } from "../../../backend/surveys/surveys.query";
 import { mapSmileyIcon } from "../TakeSurvey/RatingSmiley";
+import SurveyContext from "../../../context/SurveyContext";
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
@@ -40,13 +41,14 @@ const GoogleReviewEditor = ({
   const { surveyId } = useRouter().query as { surveyId: string };
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { surveyTeamMapId } = useContext(SurveyContext);
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
     setIsSaving,
   });
   const googleLinkUpdateMutation = useUpdateSurveyGoogleLinkMutation(
-    surveyId,
+    surveyTeamMapId,
     setLinkUpdateStatus,
   );
 
@@ -141,7 +143,7 @@ const GoogleReviewEditor = ({
     isLoading,
     isError,
     data: googleLink,
-  } = usePublicSurveyGoogleLink(surveyId?.toString());
+  } = usePublicSurveyGoogleLink(surveyTeamMapId?.toString());
 
   useEffect(() => {
     if (googleLink) setGoogleReviewLink(googleLink);

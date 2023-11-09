@@ -21,7 +21,7 @@ import {
   IconRefresh,
   IconWand,
 } from "@tabler/icons-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import {
@@ -37,6 +37,7 @@ import {
 } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { shuffleArray } from "../../../../utils";
 import { ReviewSuggestion } from "../../../../types/global";
+import SurveyContext from "../../../../context/SurveyContext";
 
 export default function ThankYou() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -44,6 +45,7 @@ export default function ThankYou() {
   const { msg } = router.query;
   const { k } = router.query as { k: string }; //kioskMode
   const { surveyId } = router.query as { surveyId: string };
+  const { selectedTeamId } = useContext(SurveyContext);
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false);
   const { data: survey } = useSurvey(surveyId);
@@ -90,7 +92,7 @@ export default function ThankYou() {
             Thank you
           </Title>
           {enableGoogleReview && !isLoading && googleLink?.length > 4 && (
-            <GoogleReview googleLink={googleLink} teamId={survey.teamId} />
+            <GoogleReview googleLink={googleLink} teamId={selectedTeamId} />
           )}
 
           {k === "cs" && (

@@ -70,11 +70,11 @@ export const usePublicSurvey = (surveyId: string) => {
   });
 };
 
-export const usePublicSurveyGoogleLink = (surveyId: string) =>
+export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
   useQuery({
-    enabled: !!surveyId,
-    queryKey: ["public-survey-google-link", surveyId],
-    queryFn: () => getPublicSurveyGoogleLink(surveyId),
+    enabled: !!surveyTeamMapId,
+    queryKey: ["public-survey-google-link", surveyTeamMapId],
+    queryFn: () => getPublicSurveyGoogleLink(surveyTeamMapId),
   });
 
 // export const useSurveys = (teamIsSelected) =>
@@ -395,12 +395,12 @@ export function useEditSurveyMutation(id, setIsLoading) {
 }
 
 export const useUpdateSurveyGoogleLinkMutation = (
-  surveyId: string,
+  surveyTeamMapId: string,
   setLinkUpdateStatus: (value: boolean) => void,
 ) => {
   const updateMutation = useMutation({
     mutationFn: ({ data }: any) => {
-      return updateSurveyGoogleLink(surveyId, data);
+      return updateSurveyGoogleLink(surveyTeamMapId, data);
     },
     onSuccess: (data) => {
       notifications.clean();

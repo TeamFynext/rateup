@@ -123,9 +123,9 @@ export async function getPublicSurvey(surveyId: string) {
   return res.data as Survey;
 }
 
-export async function getPublicSurveyGoogleLink(surveyId: string) {
+export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
   const res = await axiosClient.get(
-    `${SURVEY_PUBLIC_URL}/googlelink/${surveyId}`,
+    `${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`,
   );
   return res?.data?.data?.googleLink;
 }
@@ -137,9 +137,9 @@ export async function updateSurvey(surveyId: string, data) {
   return await axiosClient.put(`${SURVEYURL}/${surveyId}`, data);
 }
 
-export async function updateSurveyGoogleLink(surveyId: string, data) {
+export async function updateSurveyGoogleLink(surveyTeamMapId: string, data) {
   return await axiosClient.put(
-    `${SURVEYURL}/googlelink-update/${surveyId}`,
+    `${SURVEYURL}/googlelink-update/${surveyTeamMapId}`,
     data,
   );
 }
@@ -158,14 +158,20 @@ export async function verifySurveyPassword(surveyId: string, data) {
   );
 }
 
-export async function updateSurveyVisited(surveyId: string) {
-  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/visited`);
+export async function updateSurveyVisited(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/visited`,
+  );
 }
 
-export async function updateSurveyStarted(surveyId: string) {
-  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/started`);
+export async function updateSurveyStarted(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/started`,
+  );
 }
 
-export async function updateSurveyCompleted(surveyId: string) {
-  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyId}/completed`);
+export async function updateSurveyCompleted(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/completed`,
+  );
 }

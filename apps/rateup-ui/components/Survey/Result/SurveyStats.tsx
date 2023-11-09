@@ -1,21 +1,23 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Paper, Group, Text, Badge, Stack, Box, Grid } from "@mantine/core";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
 import { useResponses } from "../../../backend/surveys/response/response.query";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import SurveyContext from "../../../context/SurveyContext";
 enum LocationType {
   City = "city",
   State = "state",
   Country = "country",
 }
 const SurveyStats = ({ survey }) => {
+  const { surveyTeamMapId } = useContext(SurveyContext);
   const {
     data: responses,
     isLoading: isResponsesLoading,
     error: responsesError,
-  } = useResponses(survey?.id);
+  } = useResponses(surveyTeamMapId);
   const [zoom, setZoom] = useState(7);
   const [locationType, setLocationType] = useState(LocationType.City);
   if (isResponsesLoading || !responses) {

@@ -52,7 +52,7 @@ declare global {
     active: boolean;
     createdBy: string;
     createdAt: string;
-    teamId: string;
+    teams: STeam[];
     isProtected: boolean;
     isPublished: boolean;
     kioskMode: boolean;
@@ -61,6 +61,12 @@ declare global {
     welcomePageEnabled: boolean;
     orgLogo?: string;
   };
+
+  interface STeam {
+    id: string;
+    name: string;
+    mapId: string;
+  }
 
   interface SurveySummary {
     id: string;
@@ -108,7 +114,7 @@ declare global {
   type SurveyResponse = {
     id: string;
     createdAt: string;
-    surveyId: string;
+    surveyTeamMapId: string;
     responses: Array<QuestionResponse>;
     language: string;
     location?: {
