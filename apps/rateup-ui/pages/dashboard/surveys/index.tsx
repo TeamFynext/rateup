@@ -113,7 +113,9 @@ export default function Surveys() {
             s.type !== "whatsapp" && arr.findIndex((x) => x.id === s.id) === i,
         )
       : allSurveys?.filter(
-          (s: Survey) => s.teamId === selectedTeamId && s.type !== "whatsapp",
+          (s: Survey) =>
+            s?.teams?.some((team) => team.id === selectedTeamId) &&
+            s.type !== "whatsapp",
         );
   //--------handle check box click ----------
 
