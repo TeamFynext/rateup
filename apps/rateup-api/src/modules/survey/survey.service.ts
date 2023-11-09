@@ -276,34 +276,6 @@ export async function getSurveyBylandingId(landingid: string) {
   return surveyResponse;
 }
 
-//TODO verify SURVEYTEAMMAPS
-
- export async function getGoogleUrlBySurveyId(id: string) {
-//   const survey = await prisma.survey.findUnique({
-//     where: {
-//       id,
-//     },
-//     select: {
-//       teamId: true,
-//     },
-//   });
-
-//   if (survey) {
-//     const team = await prisma.team.findUnique({
-//       where: {
-//         id: survey.teamId,
-//       },
-//       select: {
-//         googleLink: true,
-//       },
-//     });
-
-//     return team;
-//   } else {
-//     return { error: "Survey not found" };
-//   }
- }
-
 
 //------------get ALL Surveys list of a logged user (without qns)--------
 
@@ -674,35 +646,60 @@ function validateSurvey(surveyData) {
 
 
 
+export async function getGoogleUrlBySurveyId(id: string) {
+  const survey = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      teamId: true,
+    },
+  });
+
+  if (survey) {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: survey.teamId,
+      },
+      select: {
+        googleLink: true,
+      },
+    });
+
+    return team;
+  } else {
+    return { error: "Survey not found" };
+  }
+ }
+
  export async function updateGoogleLink(
   id: string,
   data: UpdateGoogleLinkInput
 ) {
-//   const survey = await prisma.survey.findUnique({
-//     where: {
-//       id,
-//     },
-//     select: {
-//       teamId: true,
-//     },
-//   });
+  const survey = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      teamId: true,
+    },
+  });
 
-//   if (survey) {
-//     const team = await prisma.team.update({
-//       where: {
-//         id: survey.teamId,
-//       },
-//       data: {
-//         googleLink: data.googleLink,
-//       },
-//     });
+  if (survey) {
+    const team = await prisma.team.update({
+      where: {
+        id: survey.teamId,
+      },
+      data: {
+        googleLink: data.googleLink,
+      },
+    });
 
-//     return team;
-//   } else {
-//     return { error: "Survey not found" };
-//   }
+    return team;
+  } else {
+    return { error: "Survey not found" };
+  }
  }
-//TODO verify SURVEYTEAMMAPS
 
 
 export async function updateSurveyPassword(
