@@ -123,9 +123,9 @@ export async function getPublicSurvey(surveyId: string) {
   return res.data as Survey;
 }
 
-export async function getPublicSurveyGoogleLink(surveyId: string) {
+export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
   const res = await axiosClient.get(
-    `${SURVEY_PUBLIC_URL}/googlelink/${surveyId}`,
+    `${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`,
   );
   return res?.data?.data?.googleLink;
 }
@@ -137,9 +137,9 @@ export async function updateSurvey(surveyId: string, data) {
   return await axiosClient.put(`${SURVEYURL}/${surveyId}`, data);
 }
 
-export async function updateSurveyGoogleLink(surveyId: string, data) {
+export async function updateSurveyGoogleLink(surveyTeamMapId: string, data) {
   return await axiosClient.put(
-    `${SURVEYURL}/googlelink-update/${surveyId}`,
+    `${SURVEYURL}/googlelink-update/${surveyTeamMapId}`,
     data,
   );
 }
