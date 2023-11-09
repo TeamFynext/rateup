@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { getUserIdFromRequest } from "./auth";
 import { log } from "./logger";
+import Session from "supertokens-node/recipe/session";
 
 /**
  * Verifies that the session is valid and sets the userId on the request object.
@@ -12,12 +12,17 @@ export const checkSession = async (
   reply: FastifyReply,
 ) => {
   try {
-    const userId = await getUserIdFromRequest(request, reply);
+    let session = await Session.getSession(request, reply);
+    const userId = session.getUserId();
     if (!userId) {
       log.error('No userId found in session\n%o', request.headers);
       reply.code(401).send({ message: 'Not authorized' })
     }
+    // TODO: verify the below works as expected
     (request as any).userId! = userId;
+    const {role, orgId, email} = session.getAccessTokenPayload();
+    const user = {userId, role, orgId, email};
+    (request as any).user! = user;
   } catch (err) {
     log.error('Error checking session\n%o', err)
     reply.code(401).send({ message: 'Not authorized' })

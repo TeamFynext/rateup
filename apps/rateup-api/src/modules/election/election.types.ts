@@ -6,4 +6,5 @@ export type ratingObjectType = {
   state?: string;
   rating: number;
   no_of_responses: number;
+  constituency_id?:string
 };

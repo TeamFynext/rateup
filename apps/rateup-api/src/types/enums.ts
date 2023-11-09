@@ -80,3 +80,25 @@ export enum WaEvent {
   TemplateStatusChange = 'message_template_status_update',
   Message = 'messages'
 }
+
+// Changes to these enums should be reflected in schema.prisma defaultValues
+export enum CampaignStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  COMPLETED = "COMPLETED",
+}
+export enum CampaignType {
+  WHATSAPP = "WHATSAPP",
+  EMAIL = "EMAIL",
+}
+export enum CampaignParticipantSource {
+  GROUP = "GROUP",
+  INDIVIDUAL = "INDIVIDUAL",
+}
+export enum CampaignParticipantStatus {
+  PENDING = "PENDING",
+  SENT = "SENT",
+  RESPONDING = "RESPONDING",
+  FAILED = "FAILED",
+  COMPLETED = "COMPLETED",
+}

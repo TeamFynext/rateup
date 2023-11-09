@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
+  getAllMembersWithTeams,
   getTeamsMembers,
   updateOrgDetails,
   updateOrgLogo,
@@ -43,6 +44,29 @@ export async function getAllTeamsAndMembers(
     const orgId = accessTokenPayload.orgId;
 
     const teamsMembers = await getTeamsMembers(orgId);
+
+    if (!teamsMembers || teamsMembers.length === 0) {
+      reply.code(200).send({ message: "No teams found." });
+    } else {
+      reply.send({ message: `Success`, data: teamsMembers });
+    }
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
+
+export async function getAllMembersWithTeamsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+
+    const accessTokenPayload = session.getAccessTokenPayload();
+    const orgId = accessTokenPayload.orgId;
+
+    const teamsMembers = await getAllMembersWithTeams(orgId);
 
     if (!teamsMembers || teamsMembers.length === 0) {
       reply.code(200).send({ message: "No teams found." });

@@ -59,6 +59,7 @@ export async function createResponseHandler(
   reply: FastifyReply
 ) {
   const data = request.body;
+  console.log(data)
   try {
     const response = await createResponse(data);
     reply.code(201).send(response);

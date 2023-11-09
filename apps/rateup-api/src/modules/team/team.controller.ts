@@ -1,5 +1,16 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { completeInvite, createTeam, deleteTeamById, getTeamsByUserId, getTeamMembers, getTeamsByOrgId, inviteTeamMember, getTeamMembersFromInvitation, deleteMemberInvite, editTeam } from "./team.service";
+import {
+  completeInvite,
+  createTeam,
+  deleteTeamById,
+  getTeamsByUserId,
+  getTeamMembers,
+  getTeamsByOrgId,
+  inviteTeamMember,
+  deleteMemberInvite,
+  editTeam,
+  getTeamMembersAndFromInvitation,
+} from "./team.service";
 import {
   CreateTeamInput,
   DeleteTeamInput,
@@ -28,7 +39,7 @@ export async function createTeamHandler(
     reply.code(500).send({ success: false, message: e.message });
     return;
   }
-  
+
   reply.code(201).send(team);
 }
 
@@ -64,7 +75,7 @@ export async function getTeamsByUserHandler(
       reply.send({ message: `Teams found for user : ${userId}`, data: teams });
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
     reply.code(500).send();
   }
 }
@@ -87,7 +98,6 @@ export async function deleteTeamByIdHandler(
     reply.code(500);
   }
 }
-
 
 export async function inviteMemberHandler(
   request: FastifyRequest<{
@@ -115,12 +125,13 @@ export async function completeInviteHandler(
   }>,
   reply: FastifyReply
 ) {
-
   try {
     const invite = await completeInvite(request.params.token);
-    reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
+    reply
+      .code(200)
+      .send({ message: "Invite Accepted successfully.", data: invite });
   } catch (e) {
-    reply.code(500).send({ message: `Internal server error : ${e}`});
+    reply.code(500).send({ message: `Internal server error : ${e}` });
   }
 }
 
@@ -143,7 +154,6 @@ export async function deleteInviteHandler(
   }
 }
 
-
 //Get Team Members by Team Id
 
 export async function getTeamMembersHandler(
@@ -152,7 +162,6 @@ export async function getTeamMembersHandler(
   }>,
   reply: FastifyReply
 ) {
-
   try {
     const members = await getTeamMembers({ teamId: request.params.teamId });
     if (!members || members.length === 0) {
@@ -161,7 +170,7 @@ export async function getTeamMembersHandler(
       reply.send(members);
     }
   } catch (e) {
-    reply.code(500).send({ message: "Internal server error"});
+    reply.code(500).send({ message: "Internal server error" });
   }
 }
 
@@ -173,43 +182,43 @@ export async function getTeamMembersFromInviteHandler(
   }>,
   reply: FastifyReply
 ) {
+  let session = await Session.getSession(request, reply);
 
+  const accessTokenPayload = session.getAccessTokenPayload();
+  const orgId = accessTokenPayload.orgId;
   try {
-    const members = await getTeamMembersFromInvitation({ teamId: request.params.teamId });
-    if(!members){
+    const data = await getTeamMembersAndFromInvitation(orgId, {
+      teamId: request.params.teamId,
+    });
+    if (!data) {
       reply.code(200).send({ response: "Error..." });
     }
-    else if (members?.members?.length === 0) {
-      reply.code(200).send({ message: "No members found for this team" });
-    } else {
-      reply.send(members);
-    }
+    reply.send(data);
   } catch (e) {
-    reply.code(500).send({ message: "Internal server error"});
+    reply.code(500).send({ message: "Internal server error" });
   }
 }
-
 
 //Edit or Update Team name, google url
 
 export async function editTeamHandler(
   request: FastifyRequest<{
-    Body: EditTeamInput,
-    Params: IdParamInput
+    Body: EditTeamInput;
+    Params: IdParamInput;
   }>,
   reply: FastifyReply
 ) {
   const body = request.body;
-  const id = request.params
+  const id = request.params;
   let team;
 
   try {
-    team = await editTeam(body, id, request, reply); 
+    team = await editTeam(body, id, request, reply);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
     return;
   }
-  
-  reply.code(201).send({ success: true, data: team});
+
+  reply.code(201).send({ success: true, data: team });
 }

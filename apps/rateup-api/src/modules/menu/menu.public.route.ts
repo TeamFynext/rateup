@@ -8,9 +8,6 @@ export async function menuPublicRoutes(server: FastifyInstance) {
         {
             schema: {
                 params: $Mref("ByMenuIdParamsSchema"),
-                response: {
-                    200: $Mref("menuPublicResponseSchema")
-                }
             }
         },
         getMenuByIdHandler

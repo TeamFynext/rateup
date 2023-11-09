@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { createTemplate, deleteTemplate, deleteTemplateFromDb, getTemplate, getTemplatesByOrgId, getUnregisteredTemplates, registerTemplatesInDb, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
+import { createTemplate, deleteTemplate, deleteTemplateFromDb, getDbTemplate, getTemplatesByOrgId, getUnregisteredTemplates, registerTemplatesInDb, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
 import { CreateWaTemplateInput, ByTemplateIdParamsSchema, WaTemplateFormatted, RegisterTemplatesInDbBodySchema } from "./wa_templates.schema";
 import { generateTemplate } from "./wa_templates.utils";
 import { log } from "../../../utils/logger";
@@ -44,7 +44,7 @@ export async function updateTemplateHandler(
   reply: FastifyReply
 ) {
   const { orgId } = await getOrgIdAndRole({ id: request.userId });
-  const template = await getTemplate(request.params.templateId);
+  const template = await getDbTemplate(request.params.templateId);
 
   if (!template) {
     reply.status(404);
@@ -72,7 +72,7 @@ export async function deleteTemplateHandler(
 ) {
   const { templateId } = request.params;
   try {
-    const { data: template, orgId } = await getTemplate(templateId);
+    const { data: template, orgId } = await getDbTemplate(templateId);
     const { orgId: userOrg } = await getOrgIdAndRole({ id: request.userId });
     if (userOrg !== orgId) {
       reply.code(403);

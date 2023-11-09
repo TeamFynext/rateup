@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   createOrgHandler,
+  getAllMembersWithTeamsHandler,
   getAllTeamsAndMembers,
   updateLogoHandler,
   updateOrgDetailsHandler,
@@ -27,11 +28,19 @@ export async function orgRoutes(server: FastifyInstance) {
   );
 
   server.get(
-    "/members",
+    "/teams-and-members",
     {
       preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
     },
     getAllTeamsAndMembers
+  );
+
+  server.get(
+    "/members-with-teams",
+    {
+      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+    },
+    getAllMembersWithTeamsHandler
   );
 
   server.put(

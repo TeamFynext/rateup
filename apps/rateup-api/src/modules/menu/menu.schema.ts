@@ -21,6 +21,8 @@ const updateMenuInputSchema = z.object({
   websiteUrl: z.string().optional(),
   logo: z.string().optional(),
   backgroundImage: z.string().optional(),
+  surveyId:z.string().optional(),
+  isPublished:z.boolean().optional()
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
@@ -84,9 +86,10 @@ const updateMenuLandingInputSchema = z.object({
   headerText: z.string(),
   titleText: z.string(),
   locationText: z.string().optional(),
-  websiteUrl: z.string().optional(),
+  websiteText: z.string().optional(),
   logo: z.string().optional(),
   backgroundImage: z.string().optional(),
+  mobileBackgroundImage:z.string().optional()
 });
 
 const atLeastOneDefined = (obj: Record<string, unknown>) => Object.values(obj).some(v => v !== undefined);

@@ -15,23 +15,24 @@ import {
   sendMessage,
   sendNextQuestion,
   sendQuestion,
+  sendSurveyToParticipant,
   sendSurveyToWaCustomer,
   sendTextMessage,
   updateResponses,
   updateSession,
 } from "./wasurvey.service";
 import { WaSession, Survey } from "@prisma/client";
-import { WaEvent, WaTemplateStatus } from "../../../types/enums";
+import { CampaignParticipantStatus, WaEvent, WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
 import { getQuestionById } from "../../question/question.service";
 import { getSurveyById } from "../../survey/survey.service";
-import { getWaCustomerById, createWaCustomerSurveySendRecord } from "../customer/waCustomer/waCustomer.service";
-import { getWaCustomersByWaCustomerGroupId, createWaCustomerGroupSurveySendRecord } from "../customer/waCustomerGroup/waCustomerGroup.service";
-import { getTemplateWithHSMId, updateTemplateInDb, getTemplate } from "../messageTemplates/wa_templates.service";
+import { getTemplateWithHSMId, updateTemplateInDb, getDbTemplate } from "../messageTemplates/wa_templates.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { SendSurveyToWaCustomerParams, SendSurveyToWaCustomerGroupParams } from "./wasurvey.schema";
 import { WaMessageBody } from "../../../types/whatsapp.types";
+import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
+import prisma from "../../../utils/prisma";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -92,7 +93,7 @@ export async function whatsappEventHandler(
       await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
     }
   } catch (e) {
-    log.error(e)
+    log.error(e);
   } finally {
     reply.code(200).send();
   }
@@ -135,7 +136,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
       if (!session.templateId) {
         throw new Error("TemplateId not found in session");
       }
-      const dbTemplate = await getTemplate(session.templateId);
+      const dbTemplate = await getDbTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
         const firstQId = await getFirstQuestionId(session.surveyId);
@@ -262,66 +263,47 @@ async function handleLanguageResponse(session: WaSession, message: string) {
   }
 }
 
-// TODO: generalize above functions and optimize code
-// TODO: create handleStartSurvey(surveyId, phone)
-export async function sendSurveyToWaCustomerHandler(
-  request: FastifyRequest<
-    { Params: SendSurveyToWaCustomerParams }
-  >,
-  reply: FastifyReply
-) {
-  const { surveyId, waCustomerId, templateId } = request.params;
-  const survey = await getSurveyById(surveyId);
-  const dbTemplate = await getTemplate(templateId);
-  const waCustomer = await getWaCustomerById(waCustomerId);
-  if (!waCustomer) {
-    throw new Error("WaCustomer not found");
-  }
-  if (!survey) {
-    throw new Error("Survey not found");
-  }
-  const phone = waCustomer.phone;
-  if (!phone) {
-    throw new Error("WaCustomer phone number not found");
-  }
-  // TODO: throw error if there is a session already
-  await deleteSession(dbTemplate.orgId, phone);
-  await sendSurveyToWaCustomer(phone, survey, dbTemplate)
-  await createWaCustomerSurveySendRecord(waCustomerId, surveyId, templateId);
-  reply.code(200).send();
-}
-
-export async function sendSurveyToWaCustomerGroupHandler(
-  request: FastifyRequest<{
-    Params: SendSurveyToWaCustomerGroupParams
-  }>,
-  reply: FastifyReply
-) {
-  const { surveyId, waCustomerGroupId, templateId } = request.params;
-  log.trace(`Preparing to send survey ${surveyId} to waCustomerGroup ${waCustomerGroupId}`);
-  const survey = await getSurveyById(surveyId);
-  const dbTemplate = await getTemplate(templateId);
-  const waCustomers = await getWaCustomersByWaCustomerGroupId(waCustomerGroupId);
-  log.trace('waCustomers %o', waCustomers)
-  if (!survey) {
-    throw new Error("Survey not found");
-  }
-
-  // TODO: limit rate of sending messages
-  //TODO: Currently executing sequentially. We can parallelize this after implementing rate limiting
-  for (const { phone, id: waCustomerId } of waCustomers) {
-    try {
-      await deleteSession(dbTemplate.orgId, phone);
-    } catch (e) {
-      log.error(e)
+export async function sendSurveyToParticipants(campaignId: string) {
+  try {
+    const campaign = await prisma.campaign.findUnique({
+      where: {
+        id: campaignId
+      },
+      include: {
+        campaignParticipants: {
+          include: {
+            contact: true
+          }
+        }
+      }
+    })
+    const survey = await getSurveyById(campaign.surveyId);
+    if (!survey) {
+      throw new Error(`Survey with id ${campaign.surveyId} not found`);
     }
-    // TODO: remove tracking of group-send-record individually and assume
-    // if waCustomer is in a group, then they have received the survey?
-    await createWaCustomerSurveySendRecord(waCustomerId, surveyId, templateId);
-    // TODO: We can only send templates first. Replace below with a template
-    await sendSurveyToWaCustomer(phone, survey, dbTemplate)
-  }
+    const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+    if (!dbTemplate) {
+      throw new Error(`Template with id ${campaign.waTemplateId} not found`);
+    }
 
-  await createWaCustomerGroupSurveySendRecord(waCustomerGroupId, surveyId, templateId);
-  reply.code(200).send();
+    for (const { contact, id } of campaign.campaignParticipants) {
+      if (!contact.phone) {
+        log.trace('Contact %o does not have a phone number', contact);
+        // TODO: handle this case. maybe send email?
+        continue;
+      }
+      // TODO: add rate limiting 
+      // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
+      if (!(await sendSurveyToParticipant(id, contact.phone, survey, dbTemplate))) {
+        log.error('Error sending survey to participant %o', contact);
+      } else {
+        log.trace('Survey sent to participant %o', contact);
+        await updateCampaignParticipant(id, { status: CampaignParticipantStatus.SENT });
+      }
+    }
+    return true;
+  } catch (e) {
+    log.error(e);
+    return false;
+  }
 }

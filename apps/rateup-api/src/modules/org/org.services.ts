@@ -55,6 +55,36 @@ export async function getTeamsMembers(orgId: string) {
     }),
   }));
 }
+export async function getAllMembersWithTeams(orgId: string) {
+  const members = await prisma.orgMember.findMany({
+    where: { orgId: orgId, user: { active: true } },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          teamMember: {
+            include: {
+              team: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return members.map((m) => ({
+    id: m.user.id,
+    name: m.user.name,
+    email: m.user.email,
+    role: m.role,
+    teams: m.user.teamMember.map((tm) => ({
+      team_id: tm.team.id,
+      team_name: tm.team.name,
+      team_code: tm.team.code,
+    })),
+  }));
+}
 
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -139,5 +169,5 @@ export async function updateOrgDetails(
       name,
     },
   });
-  return org
+  return org;
 }

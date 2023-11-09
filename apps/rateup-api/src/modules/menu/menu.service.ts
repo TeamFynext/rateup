@@ -85,12 +85,31 @@ export async function getMenus(teamId: string) {
 }
 
 export async function updateMenu(id: string, data: UpdateMenuInput) {
+  const { surveyId, ...newObject } = data;
+
   const menu = await prisma.menu.update({
     where: {
       id,
     },
-    data,
+    data: newObject,
   });
+
+  if (surveyId) {
+    const createMenuLandingData = {
+      menu: { connect: { id: id } },
+    };
+    let surveyId = { survey: { connect: { id: data.surveyId } } };
+    await prisma.menuLanding.upsert({
+      where: {
+        menuId: id,
+      },
+      create: {
+        ...createMenuLandingData,
+        ...surveyId,
+      },
+      update: surveyId,
+    });
+  }
   return menu;
 }
 
@@ -120,11 +139,26 @@ export async function getMenuLanding(id: string) {
         id: id,
       },
     });
-    menu.landingData = false;
+    menu = {
+      success: true,
+      menu,
+      landingData: false,
+    };
   } else {
     menu.landingData = true;
+    menu = {
+      success: true,
+      ...menu,
+    };
   }
-  return menu;
+  if (menu) {
+    return menu;
+  } else {
+    return {
+      success: false,
+      message: "Menu data not found",
+    };
+  }
 }
 
 export async function updateMenuLanding(
@@ -134,7 +168,7 @@ export async function updateMenuLanding(
   let updatedMenuData = {
     displayName: body.titleText,
     locationUrl: body.locationText,
-    websiteUrl: body.websiteUrl,
+    websiteText: body.websiteText,
     logo: body.logo,
   };
   await prisma.menu.update({
@@ -147,6 +181,7 @@ export async function updateMenuLanding(
     titleStyle: body.titleStyle,
     otherStyle: body.otherStyle,
     backgroundImage: body.backgroundImage,
+    mobileBackgroundImage: body.mobileBackgroundImage,
     menu: { connect: { id: id } },
   };
   const menuLanding = await prisma.menuLanding.findFirst({
@@ -179,12 +214,15 @@ export async function updateLandingPage(
     menu: { connect: { id: id } },
   };
 
-  await prisma.menuLanding.upsert({
+  const menuLanding = await prisma.menuLanding.upsert({
     where: {
       menuId: id,
     },
-    create: createMenuLandingData,
+    create: {
+      ...createMenuLandingData,
+      ...data?.option,
+    },
     update: data?.option,
   });
-  return ;
+  return menuLanding;
 }
