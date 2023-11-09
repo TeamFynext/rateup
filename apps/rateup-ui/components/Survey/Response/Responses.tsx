@@ -289,7 +289,7 @@ function BadgeorText({
     QuestionType.Opinion,
   ];
   function returnBadgeColor() {
-    switch (response.toString()) {
+    switch (response?.toString()) {
       case "VeryHappy":
       case "Like":
       case "Yes":
