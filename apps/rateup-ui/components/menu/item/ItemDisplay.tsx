@@ -1,6 +1,7 @@
 import { Card, Group, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
+import { GilroyMedium, GilroyRegular } from "../../../public/fonts";
 
 interface ItemDisplayProps {
   item: MenuItem;
@@ -38,7 +39,6 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       </Card.Section>
       <Group justify="space-between" mt="md" mb="xs">
         <Text
-          fw={500}
           fz="xl"
           c="var(--shade-of-brown)"
           truncate
@@ -48,14 +48,14 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
         </Text>
       </Group>
 
-      <Text size="sm" c="dimmed" lineClamp={4} h={"82px"}>
+      <Text size="sm" c="dimmed" lineClamp={4} h={"82px"} className={GilroyMedium.className}>
         {item.description}
       </Text>
-      <Group justify="space-evenly" gap={"sm"} mt="md">
+      <Group justify="space-evenly" gap={"sm"} mt="md" className={GilroyMedium.className}>
         {item.price.variants?.length > 0 ? (
           item.price.variants.map((varient, index) => (
             <Stack align="center" gap={"0px"} key={index}>
-              <Text fz="sm" c="dimmed">
+              <Text fz="sm" c="dimmed" className={GilroyRegular.className}>
                 {varient.name}
               </Text>
               <Text c="var(--shade-of-brown)" fz="xl">

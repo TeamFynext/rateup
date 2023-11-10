@@ -1,18 +1,15 @@
-import React, { useState } from "react";
-import { Grid, SimpleGrid, Center, Image, Skeleton } from "@mantine/core";
+import React from "react";
+import { Grid, SimpleGrid } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import {
-  ContainedFileInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../../input/TeamSelector";
 import Heading from "../../styled/Heading/Heading";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
-import { useFileUpload } from "../hook/fileUpload";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import CenteredSpinner from "../../Loaders/CenteredSpinner";
 
@@ -25,10 +22,8 @@ const GeneralSettings = ({ editingItem }) => {
       locationText: "",
       websiteUrl: "",
       websiteText: "",
-      logo: "",
-      backgroundImage: "",
       teamId: "",
-      surveyId: "",
+      surveyTeamMapId: "",
     },
     validate: {
       name: (value) => (value?.trim().length ? null : "Cannot be empty"),
@@ -36,28 +31,21 @@ const GeneralSettings = ({ editingItem }) => {
       teamId: (value) => (value?.trim().length ? null : "select a team"),
     },
   });
-  const [logo, setLogo] = useState<File | null>(null);
-  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
-  const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
-  const { isUploading: isBackgroundImageUploading } = useFileUpload(
-    backgroundImage,
-    "backgroundImage",
-    form,
-  );
+
   const { isPending, error, mutate } = useUpdateMenuMutation(
     editingItem?.id,
     () => {},
-    () => {},
+    () => {}
   );
   const { data: surveys = [], isPending: surveyIsPending } = useSurveysByTeam(
     form?.values?.teamId,
-    !!form?.values?.teamId,
+    !!form?.values?.teamId
   );
 
   if (surveyIsPending) return <CenteredSpinner />;
 
   const surveyFormatedData = surveys?.map((survey) => ({
-    value: survey.id,
+    value: survey.surveyTeamMapId,
     label: survey.title,
   }));
   const onSubmit = (values: any) => {
@@ -104,94 +92,30 @@ const GeneralSettings = ({ editingItem }) => {
               {...form.getInputProps("locationUrl")}
             />
           </SimpleGrid>
-          <Grid>
-            <Grid.Col span={6}>
-              <ContainedTextField
-                label="Website Label"
-                placeholder="paragonHotels.in"
-                {...form.getInputProps("websiteText")}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <ContainedTextField
-                label="Website URL"
-                placeholder="https://paragonHotels.in"
-                {...form.getInputProps("websiteUrl")}
-              />
-            </Grid.Col>
-
-            <Grid.Col>
-              <ContainedSelection
-                withAsterisk
-                label="Choose a survey to display in the menu pagel"
-                placeholder={
-                  surveyFormatedData?.length === 0
-                    ? "There is no published survay"
-                    : "Select survey"
-                }
-                disabled={surveyFormatedData?.length === 0}
-                required
-                data={surveyFormatedData}
-                {...form.getInputProps("surveyId")}
-              />
-            </Grid.Col>
-          </Grid>
+          <ContainedSelection
+            label="Choose a survey to display in the menu pagel"
+            placeholder={
+              surveyFormatedData?.length === 0
+                ? "There is no published survay"
+                : "Select survey"
+            }
+            disabled={surveyFormatedData?.length === 0}
+            required
+            allowDeselect={false}
+            data={surveyFormatedData}
+            {...form.getInputProps("surveyTeamMapId")}
+          />
           <SimpleGrid cols={2} spacing="md">
-            <ContainedFileInput
-              label="Upload Logo"
-              placeholder="Click here to upload"
-              accept="image/*"
-              multiple={false}
-              error={form?.errors?.logo && form?.errors?.logo}
-              onChange={setLogo}
+            <ContainedTextField
+              label="Website Label"
+              placeholder="paragonHotels.in"
+              {...form.getInputProps("websiteText")}
             />
-            <Center>
-              {isLogoUploading ? (
-                <Skeleton w={50} h={50} />
-              ) : (
-                <Image
-                  w={50}
-                  h={50}
-                  src={
-                    form?.values?.logo
-                      ? getFileUrlFromKey(form?.values?.logo)
-                      : editingItem?.logo
-                      ? getFileUrlFromKey(editingItem?.logo)
-                      : ""
-                  }
-                  alt="image of logo"
-                />
-              )}
-            </Center>
-            <ContainedFileInput
-              label="Upload background image"
-              placeholder="Click here to upload"
-              accept="image/*"
-              multiple={false}
-              error={
-                form?.errors?.backgroundImage && form?.errors?.backgroundImage
-              }
-              onChange={setBackgroundImage}
+            <ContainedTextField
+              label="Website URL"
+              placeholder="https://paragonHotels.in"
+              {...form.getInputProps("websiteUrl")}
             />
-
-            <Center>
-              {isBackgroundImageUploading ? (
-                <Skeleton w={50} h={50} />
-              ) : (
-                <Image
-                  w={50}
-                  h={50}
-                  src={
-                    form?.values?.backgroundImage
-                      ? getFileUrlFromKey(form?.values?.backgroundImage)
-                      : editingItem?.backgroundImage
-                      ? getFileUrlFromKey(editingItem?.backgroundImage)
-                      : ""
-                  }
-                  alt="image of background"
-                />
-              )}
-            </Center>
           </SimpleGrid>
         </SimpleGrid>
         <Grid justify="flex-end" mt={"md"}>

@@ -15,6 +15,6 @@
 .close {
   color: white;
 }
-.close:hover {
+.close:active {
   color: black;
 }

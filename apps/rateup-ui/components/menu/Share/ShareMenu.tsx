@@ -9,18 +9,18 @@ type ShareMenuProps = {
   menu: {
     id: string;
     isPublished: boolean;
-    surveyId?: string;
+    surveyTeamMapId?: string;
   };
 };
 
-const ShareMenu = ({ menu: { id, isPublished, surveyId } }: ShareMenuProps) => {
+const ShareMenu = ({ menu: { id, isPublished, surveyTeamMapId } }: ShareMenuProps) => {
   const { isPending, error, mutate } = useUpdateMenuMutation(
     id,
     () => {},
     () => {},
   );
 
-  const shareLink = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/menu/${id}/feedback/${surveyId}`;
+  const shareLink = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/menu/${id}/feedback/${surveyTeamMapId}`;
   return (
     <Stack>
       <Paper px="md" py="lg" radius="md" shadow="lg">

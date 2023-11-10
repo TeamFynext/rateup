@@ -15,3 +15,7 @@ export const GilroyRegular = localFont({
   src: "./Gilroy-Regular.ttf",
   variable: "--gilroy-regular",
 });
+export const GilroyBold = localFont({
+  src: "./Gilroy-Bold.ttf",
+  variable: "--gilroy-700",
+});

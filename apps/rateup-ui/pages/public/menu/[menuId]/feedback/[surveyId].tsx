@@ -16,6 +16,7 @@ import classes from "./Feedback.module.css";
 import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
+import { GilroySemibold } from "../../../../../public/fonts";
 
 type MenuProp = {
   menuId: string;
@@ -50,11 +51,11 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     : menuLanding?.mobileBackgroundImage;
 
   const bgSrc = backgroundImage
-    ? getFileUrlFromKey(backgroundImage)
+    ? getFileUrlFromKey(encodeURI(backgroundImage))
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}${fallbackImageBackround}`;
 
   return (
-    <Container fluid h={"100vh"} px={0}>
+    <Container fluid h={"100vh"} px={0} className={GilroySemibold.className}>
       <BackgroundImage
         src={bgSrc}
         w={"100%"}
@@ -128,42 +129,50 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                     </Text>
                   </Stack>
                   <Group w="100%" justify="center" gap={"50px"}>
-                    {menuLanding?.menu?.locationText &&
-                      menuLanding?.menu?.locationUrl && (
-                        <Link
-                          className={classes.hoverEffect}
-                          href={menuLanding?.menu?.locationUrl}
-                          style={{
-                            textDecoration: "none",
-                            color: "inherit",
-                            ...menuLanding?.otherStyle,
-                          }}
-                          target="_blank"
-                        >
-                          <Group>
-                            <IconMapPin />
-                            <Text>{menuLanding?.menu?.locationText}</Text>
-                          </Group>
-                        </Link>
-                      )}
-                    {menuLanding?.menu?.websiteText &&
-                      menuLanding?.menu?.websiteUrl && (
-                        <Link
-                          className={classes.base1}
-                          href={menuLanding?.menu?.websiteUrl}
-                          style={{
-                            textDecoration: "none",
-                            color: "inherit",
-                            ...menuLanding?.otherStyle,
-                          }}
-                          target="_blank"
-                        >
-                          <Group>
-                            <IconWorld />
-                            <Text>{menuLanding?.menu?.websiteText}</Text>
-                          </Group>
-                        </Link>
-                      )}
+                    {menuLanding?.menu?.locationText && (
+                      <Link
+                        className={classes.hoverEffect}
+                        href={
+                          menuLanding?.menu?.locationUrl
+                            ? menuLanding?.menu?.locationUrl
+                            : "#"
+                        }
+                        style={{
+                          textDecoration: "none",
+                          color: "inherit",
+                          ...menuLanding?.otherStyle,
+                          cursor: !menuLanding?.menu?.locationUrl && "default",
+                        }}
+                        target={menuLanding?.menu?.locationUrl && "_blank"}
+                      >
+                        <Group>
+                          <IconMapPin />
+                          <Text>{menuLanding?.menu?.locationText}</Text>
+                        </Group>
+                      </Link>
+                    )}
+                    {menuLanding?.menu?.websiteText && (
+                      <Link
+                        className={classes.base1}
+                        href={
+                          menuLanding?.menu?.websiteUrl
+                            ? menuLanding?.menu?.websiteUrl
+                            : "#"
+                        }
+                        style={{
+                          textDecoration: "none",
+                          color: "inherit",
+                          ...menuLanding?.otherStyle,
+                          cursor: !menuLanding?.menu?.websiteUrl && "default",
+                        }}
+                        target={menuLanding?.menu?.websiteUrl && "_blank"}
+                      >
+                        <Group>
+                          <IconWorld />
+                          <Text>{menuLanding?.menu?.websiteText}</Text>
+                        </Group>
+                      </Link>
+                    )}
                   </Group>
                 </Stack>
               </Grid.Col>

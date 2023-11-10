@@ -75,7 +75,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled ?? true,
+    editingItem?.menuPageEnabled ?? true
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
     editingItem?.feedbackPageEnabled ?? false
@@ -84,23 +84,27 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form,
+    form
   );
   const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
   const { isUploading: isMobileBgUploading } = useFileUpload(
     mobileBackgroundImage,
     "mobileBackgroundImage",
-    form,
+    form
   );
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
   const imageWidth = useMediaQuery(`(max-width: ${em(750)})`) ? 60 : 127;
-  const imageHeight = useMediaQuery(`(max-width: ${em(750)})`) ? 60 : 127;
+  const imageHeight = useMediaQuery(`(max-width: ${em(750)})`)
+    ? 60
+    : selectedTab === "Mobile"
+    ? 60
+    : 127;
   const fallbackImage = "/images/no_image_template.jpeg";
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId,
+    editingItem?.menuId
   );
 
   useEffect(() => {
@@ -124,7 +128,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleMenuEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -136,14 +140,14 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleFeedbackEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
         feedbackPageEnabled: event?.currentTarget?.checked,
       },
     };
-    if (!editingItem?.surveyId && !isFeedbackEnabled) {
+    if (!editingItem?.surveyTeamMapId && !isFeedbackEnabled) {
       showErrorToast(
         "In order to enable feedback, you must have selected a survey in the settings."
       );
@@ -170,6 +174,22 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       form.values.mobileBackgroundImage
     );
   }
+  const isMobileTab = selectedTab === "Mobile";
+  const imageKey = isMobileTab ? "mobileBackgroundImage" : "backgroundImage";
+  const hasImage = form?.values?.[imageKey];
+
+  let result = "";
+
+  if (hasImage) {
+    result = form.values[imageKey]?.startsWith("blob")
+      ? form.values[imageKey]
+      : encodeURI(getFileUrlFromKey(form.values[imageKey]));
+  } else {
+    result = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/${
+      isMobileTab ? "mobileBackground" : "background"
+    }.jpg`;
+  }
+
   const renderFeedbackComponent = () => {
     if (isFeedbackEnabled) {
       return (
@@ -207,7 +227,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
   return (
     <Grid>
-      <Grid.Col span={{ base: 12, md: 7.5, lg: 8 }} p={"md"}>
+      <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
         <PaperLayout>
           <SimpleGrid p={"sm"} cols={3}>
             <TabsCommon
@@ -234,24 +254,16 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
             />
             <PaperLayout p={0} w={selectedTab === "Mobile" && 300}>
               <BackgroundImage
-                src={
-                  selectedTab === "Mobile"
-                    ? form?.values?.mobileBackgroundImage
-                      ? getFileUrlFromKey(form?.values?.mobileBackgroundImage)
-                      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/mobileBackground.jpg`
-                    : form?.values?.backgroundImage
-                    ? getFileUrlFromKey(form?.values?.backgroundImage)
-                    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg`
-                }
+                src={result}
                 radius="xl"
                 w={selectedTab === "Mobile" && 300}
               >
                 <Group
-                  mih={selectedTab === "Mobile" ? "70vh" : "60vh"}
+                  mih={selectedTab === "Mobile" ? "min(550px,65vh)" : "60vh"}
                   mah={"700"}
                   w={"100%"}
                 >
-                  <Stack w={"100%"}>
+                  <Stack w={"100%"} justify="center">
                     <Center>
                       {isLogoUploading ? (
                         <Skeleton w={50} h={50} />
@@ -274,6 +286,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     <Flex
                       justify="space-between"
                       px={isMobile || selectedTab == "Mobile" ? "xs" : "xl"}
+                      align={"center"}
                     >
                       {selectedTab !== "Mobile" && renderMenuComponent()}
                       <Stack gap={0}>
@@ -287,8 +300,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                               ...headerMobile,
                               border: "none",
                               textAlign: "center",
+                              textTransform: "capitalize",
                             },
                           }}
+                          p={0}
                           {...form.getInputProps("headerText")}
                         />
                         <ContainedTextArea
@@ -301,8 +316,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                               ...titleMobile,
                               border: "none",
                               textAlign: "center",
+                              textTransform: "uppercase",
                             },
                           }}
+                          p={0}
                           {...form.getInputProps("titleText")}
                         />
                         <Flex
@@ -365,7 +382,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
           </Stack>
         </PaperLayout>
       </Grid.Col>
-      <Grid.Col span={"auto"} p="md">
+      <Grid.Col span={{ base: 12, lg: 4 }} p="md">
         <Group gap={"md"}>
           <PaperLayout>
             <Group>
@@ -395,15 +412,17 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   accept="image/*"
                   multiple={false}
                   error={form?.errors?.mobileBackgroundImage}
+                  maw={285}
                   onChange={setMobileBackgroundImage}
                 />
                 <ContainedFileInput
                   mx={"lg"}
                   label=""
-                  placeholder="Upload Tablet Image"
+                  placeholder="Upload Tablet Images"
                   accept="image/*"
                   multiple={false}
                   error={form?.errors?.backgroundImage}
+                  maw={285}
                   onChange={setBackgroundImage}
                 />
                 <Text mt={"xs"}>Upload logo</Text>
@@ -416,6 +435,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   multiple={false}
                   error={form?.errors?.logo}
                   onChange={setLogo}
+                  maw={285}
                   ref={logoRef}
                 />
 
@@ -451,12 +471,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       />
                       <ContainedNumberInput
                         withAsterisk
-                        label="Enter between 0 to 60"
+                        label="Enter between 0 to 70"
                         placeholder="font size"
                         required
                         clampBehavior="strict"
                         min={0}
-                        max={80}
+                        max={70}
                         {...form.getInputProps("headerStyle.fontSize")}
                       />
                       <ContainedColorInput
@@ -492,12 +512,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       />
                       <ContainedNumberInput
                         withAsterisk
-                        label="Enter between 0 to 60"
+                        label="Enter between 0 to 70"
                         placeholder="font size"
                         required
                         clampBehavior="strict"
                         min={0}
-                        max={80}
+                        max={70}
                         {...form.getInputProps("titleStyle.fontSize")}
                       />
                       <ContainedColorInput

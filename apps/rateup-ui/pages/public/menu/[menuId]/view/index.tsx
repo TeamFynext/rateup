@@ -5,21 +5,18 @@ import {
   Paper,
   Stack,
   Text,
-  Loader,
   Image,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CategoryChip } from "../../../../../components/menu/category/CategoryChip";
 import { CategoryDisplay } from "../../../../../components/menu/category/CategoryDisplay";
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
-import { useRouter } from "next/router";
-import { useFullMenu } from "../../../../../backend/menu/menu.query";
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
-import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
+import { GilroyBold, GilroyMedium } from "../../../../../public/fonts";
 
 type MenuViewProp = {
   menuId: string;
@@ -29,28 +26,41 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
   const params = context.params;
 
   const fullMenu = await getFullMenuById(params.menuId);
-  console.log(fullMenu);
 
   return { props: { fullMenu: fullMenu } };
 };
 
 export default function ({ fullMenu }) {
-  const largeScreen = useMediaQuery("(min-width: 60em)");
-  let categorys = [{ id: "1", name: "all" }].concat(fullMenu?.categories);
+  const largeScreen = useMediaQuery("(min-width: 40em)");
+  let categoryChipLabel = [{ id: "1", name: "all" }].concat(
+    fullMenu?.categories
+  );
+  const [categorys, setcategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categorys[0]?.id
+    categoryChipLabel[0]?.id
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
 
   function handleCategoryChipClick(categoryId: string) {
+    setcategorys(
+      categoryId === "1"
+        ? categoryChipLabel.filter((category) => category.id !== categoryId)
+        : categoryChipLabel.filter((category) => category.id === categoryId)
+    );
     setSelectedCategory(categoryId);
   }
 
   const backgroundImageBorderRadius = largeScreen ? "47px" : "16px";
-
+  const backgroundImage = largeScreen
+    ? fullMenu?.menuLanding?.backgroundImage
+    : fullMenu?.menuLanding?.mobileBackgroundImage;
+  const backgroundImageFallback = largeScreen
+    ? "/images/menu/background.jpg"
+    : "/images/menu/mobileBackground.jpg";
+    
   return (
-    <Paper h={"100vh"}>
+    <Paper mih={"100vh"}>
       <Container
         fluid
         px={largeScreen ? "10vw" : "1vw"}
@@ -58,9 +68,9 @@ export default function ({ fullMenu }) {
         style={{
           // TODO: add blur to background image
           background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${
-            fullMenu?.backgroundImage
-              ? `url(${getFileUrlFromKey(fullMenu?.backgroundImage)})`
-              : ""
+            backgroundImage
+              ? `url(${encodeURI(getFileUrlFromKey(backgroundImage))})`
+              : `url(${backgroundImageFallback})`
           }`,
           backgroundColor: "var(--shade-of-black)",
           backgroundPosition: "center",
@@ -90,17 +100,26 @@ export default function ({ fullMenu }) {
             />
           )}
           <div>
-            <Text ta={"center"} tt={"capitalize"}>
+            <Text ta={"center"} tt={"capitalize"} className={GilroyMedium.className} fz={"clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"}>
               Welcome To
             </Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
-            <Text fz={"max(3vw, 2rem)"} fw="bold" tt={"uppercase"}>
+            <Text fz={"clamp(1.75rem, 0.857rem + 2.381vw, 3rem)"}  tt={"uppercase"} className={GilroyBold.className}>
               {fullMenu?.displayName ?? "Name"}
             </Text>
           </div>
         </Stack>
       </Container>
-      <Group px="2vw" m="sm" wrap="nowrap" pb="md">
+      <Group
+        px="2vw"
+        m="sm"
+        wrap="nowrap"
+        py="md"
+        pos={"sticky"}
+        top={0}
+        bg={"white"}
+        style={{ zIndex: 10 }}
+      >
         <ActionIcon onClick={open} variant="transparent">
           <IconMenu2 />
         </ActionIcon>
@@ -110,7 +129,7 @@ export default function ({ fullMenu }) {
             overflowX: "scroll",
           }}
         >
-          {categorys?.map((c) => (
+          {categoryChipLabel?.map((c) => (
             <CategoryChip
               key={c.id}
               categoryId={c.id}
@@ -123,7 +142,7 @@ export default function ({ fullMenu }) {
       </Group>
 
       <Stack px={largeScreen ? "10vw" : "2vw"}>
-        {fullMenu?.categories?.map((c) => (
+        {categorys?.map((c) => (
           <CategoryDisplay
             key={c.id}
             setSelectedItem={setSelectedItem}

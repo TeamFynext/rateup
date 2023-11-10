@@ -49,7 +49,7 @@ export function transformData(inputData: any) {
       menuId: inputData?.menuId,
       menuPageEnabled: inputData?.menuPageEnabled,
       feedbackPageEnabled: inputData?.feedbackPageEnabled,
-      surveyId: inputData?.surveyId,
+      surveyTeamMapId: inputData?.surveyTeamMapId,
     };
   } else {
     return {
@@ -58,7 +58,7 @@ export function transformData(inputData: any) {
       menuId: inputData?.menu?.id,
       menuPageEnabled: inputData?.menu?.menuPageEnabled,
       feedbackPageEnabled: inputData?.menu?.feedbackPageEnabled,
-      surveyId: inputData?.surveyId,
+      surveyTeamMapId: inputData?.surveyTeamMapId,
     };
   }
 }

@@ -98,6 +98,7 @@ export function ItemDetailedViewModal({
               onClick={() => setSelectedMedia(item?.videoUrl)}
             >
               {item.videoUrl && extractVideoId(item?.videoUrl) && (
+               <>
                 <Image
                   w="75px"
                   style={{
@@ -109,20 +110,22 @@ export function ItemDetailedViewModal({
                   )}/0.jpg`}
                   alt="video of menu"
                 />
+                <IconPlayerPlayFilled
+                  color="white"
+                  style={{
+                    color: "white",
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    borderRadius: 1000,
+                    border: "2px solid white",
+                    boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+                  }}
+                />
+                
+                </>
               )}
-              <IconPlayerPlayFilled
-                color="white"
-                style={{
-                  color: "white",
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  borderRadius: 1000,
-                  border: "2px solid white",
-                  boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-                }}
-              />
             </Box>
           </Group>
         </Box>

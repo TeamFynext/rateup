@@ -196,7 +196,7 @@ export function CreateMenuItemModal({
       title={editingItem ? "Edit Item" : "Create Item"}
       centered
       onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={editingItem ? "Edit Item" : "Create Item"}
+      buttonTitle={editingItem ? "Save Item" : "Create Item"}
       size={"lg"}
     >
       <Flex>

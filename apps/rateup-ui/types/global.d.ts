@@ -60,6 +60,7 @@ declare global {
     getLocation: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
+    surveyTeamMapId?: string;
   };
 
   interface STeam {

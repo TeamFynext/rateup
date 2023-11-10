@@ -82,8 +82,8 @@ export default ({ categories: initialCategories }) => {
     return <CenteredSpinner />;
   }
   let menu = menuLandingData?.menu;
-  if (menuLandingData?.surveyId) {
-    menu.surveyId = menuLandingData?.surveyId;
+  if (menuLandingData?.surveyTeamMapId) {
+    menu.surveyTeamMapId = menuLandingData?.surveyTeamMapId;
   }
 
   const transformedData = transformData(menuLandingData);
