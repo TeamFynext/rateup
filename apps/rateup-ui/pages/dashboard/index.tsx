@@ -50,6 +50,9 @@ import { SurveyTypeFilters } from "../../types/enums";
 import { IconRefresh } from "@tabler/icons-react";
 import classes from "./dashboard.module.css";
 import { notifications } from "@mantine/notifications";
+import FormModalLayout from "../../components/Modal/FormModalLayout";
+import PaperLayout from "../../components/styled/Layouts/PaperLayout";
+import NothingFound from "../../components/NothingFound/NothingFound";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -431,23 +434,11 @@ export default function DashboardHome() {
               </Paper>
             </Group>
 
-            <Modal
+            <FormModalLayout
               centered
               opened={opened}
               onClose={close}
               title="Create new"
-              overlayProps={{
-                color: theme.colors.dark[9],
-                opacity: 0.55,
-                blur: 3,
-              }}
-              styles={{
-                title: {
-                  fontSize: "31px",
-                  fontWeight: 700,
-                  padding: "10px",
-                },
-              }}
             >
               <Group py="xl" px="sm" mb="md">
                 <CardActionButton
@@ -586,7 +577,7 @@ export default function DashboardHome() {
                   </Center>
                 </CardActionButton>
               </Group>
-            </Modal>
+            </FormModalLayout>
 
             <Paper radius="md" px="xl" py="lg" my="xl" pt="xl" shadow="lg">
               <Group justify="space-between">
@@ -629,16 +620,17 @@ export default function DashboardHome() {
               </Group>
             </Paper>
 
-            <SimpleGrid
-              spacing="lg"
-              mb="xl"
-              pb="xl"
-              mx="sm"
-              cols={{ xs: 1, sm: 1, md: 2, lg: 3, xl: 4 }}
-            >
-              {Array.isArray(surveysSummary?.surveys) &&
-                (surveysSummary?.surveys?.length > 0
-                  ? surveysSummary?.surveys
+            {surveysSummary?.surveys?.length > 0 ? (
+              <SimpleGrid
+                spacing="lg"
+                mb="xl"
+                pb="xl"
+                mx="sm"
+                cols={{ xs: 1, sm: 1, md: 2, lg: 3, xl: 4 }}
+              >
+                {Array.isArray(surveysSummary?.surveys) &&
+                  (surveysSummary?.surveys?.length > 0 ? (
+                    surveysSummary?.surveys
                       ?.filter((s) => s.active === true)
                       .sort((a, b) =>
                         sort
@@ -657,8 +649,13 @@ export default function DashboardHome() {
                         }
                       })
                       .map((s) => <ActiveSurveyCard key={s.id} survey={s} />)
-                  : " No active surveys.")}
-            </SimpleGrid>
+                  ) : (
+                    <NothingFound text="No active surveys at the moment" />
+                  ))}
+              </SimpleGrid>
+            ) : (
+              <NothingFound text="No active surveys at the moment" />
+            )}
           </Stack>
         </Container>
       ) : !surveysSummary?.error ? (
@@ -681,7 +678,9 @@ export default function DashboardHome() {
 function CardActionButton({ children, ...props }) {
   const { hovered, ref } = useHover();
   return (
-    <Paper
+    <PaperLayout
+      style={{ cursor: "pointer", flex: 1 }}
+      miw="150px"
       shadow={hovered ? "sm" : "xs"}
       radius="lg"
       p="md"
@@ -690,6 +689,6 @@ function CardActionButton({ children, ...props }) {
       {...props}
     >
       {children}
-    </Paper>
+    </PaperLayout>
   );
 }

@@ -145,8 +145,8 @@ export const ResultFilter = ({
     data: questions,
   } = useQuestions(survey?.id);
 
-  const quantitativeQuestions = questions?.filter((question) =>
-    quantitativeQuestionTypes.includes(question?.type),
+  const quantitativeQuestions = questions?.filter(
+    (question) => quantitativeQuestionTypes?.includes(question?.type),
   );
   const [filters, setFilters] = useImmer<
     Array<{ question_id: string; responses: Array<string> }>
@@ -155,12 +155,12 @@ export const ResultFilter = ({
   const handleUpdate = useCallback(
     (question_id: string, responses: Array<string>) => {
       setFilters((draft) => {
-        const question = draft.find(
+        const question = draft?.find(
           (question) => question.question_id === question_id,
         );
         if (question) {
           question.responses = responses;
-          if (question.responses.length === 0) {
+          if (question.responses?.length === 0) {
             draft.splice(draft.indexOf(question), 1);
           }
         } else {

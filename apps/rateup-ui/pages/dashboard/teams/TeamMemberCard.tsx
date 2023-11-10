@@ -69,19 +69,21 @@ const TeamMemberCard = ({
             )}
           </Flex>
           <Flex align={"center"} justify={"space-between"}>
-            <Badge
-              color={
-                member?.role === UserRole.SUPADM
-                  ? "red"
-                  : member?.role === UserRole.ADM
-                  ? "orange"
-                  : "green"
-              }
-              variant="dot"
-              size="sm"
-            >
-              {member?.role}
-            </Badge>
+            {member?.role && (
+              <Badge
+                color={
+                  member?.role === UserRole.SUPADM
+                    ? "red"
+                    : member?.role === UserRole.ADM
+                    ? "orange"
+                    : "green"
+                }
+                variant="dot"
+                size="sm"
+              >
+                {member?.role}
+              </Badge>
+            )}
             <Badge
               color={member.status === "PENDING" ? "yellow" : "green"}
               variant="light"

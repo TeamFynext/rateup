@@ -59,6 +59,7 @@ import { UserRole } from "../../../utils/enums";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import CreateSurveyLandingModal from "../groupsurveys/CreateSurveyLandingModal";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 
 export default function Surveys() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -138,7 +139,7 @@ export default function Surveys() {
   };
 
   return (
-    <>
+    <Stack h={"100%"}>
       <Group gap="md" justify="space-between">
         <Group gap="md" justify="flex-start">
           <Title order={1}>Surveys : </Title>
@@ -149,7 +150,7 @@ export default function Surveys() {
           />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
-              title="Add Survey"
+              title="Create Survey"
               rightIcon={<IconPlus />}
               radius="xl"
               size="md"
@@ -180,40 +181,44 @@ export default function Surveys() {
         </Group>
       </Group>
 
-      <Space h="lg" />
+      {/* <Space h="lg" /> */}
 
-      <SimpleGrid
-        style={{ overflow: "auto" }}
-        spacing={"lg"}
-        cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
-        p={1}
-      >
-        {surveys
-          ?.sort((a, b) =>
-            sort
-              ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-              : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime(),
-          )
-          .filter((s) => {
-            if (filterParam === "active") {
-              return s.active === true;
-            } else if (filterParam === "paused") {
-              return s.active === false;
-            } else {
-              return true;
-            }
-          })
-          .map((s) => (
-            <SurveyCard
-              key={s.id}
-              survey={s}
-              handleCheckBox={handleCheckBox}
-              isChecked={isChecked}
-            />
-          ))}
-      </SimpleGrid>
+      {surveys?.length > 0 ? (
+        <SimpleGrid
+          style={{ overflow: "auto" }}
+          spacing={"lg"}
+          cols={{ base: 4, sm: 2, md: 2, lg: 2, xl: 3 }}
+          p={1}
+        >
+          {surveys
+            ?.sort((a, b) =>
+              sort
+                ? new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+                : new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime(),
+            )
+            .filter((s) => {
+              if (filterParam === "active") {
+                return s.active === true;
+              } else if (filterParam === "paused") {
+                return s.active === false;
+              } else {
+                return true;
+              }
+            })
+            .map((s) => (
+              <SurveyCard
+                key={s.id}
+                survey={s}
+                handleCheckBox={handleCheckBox}
+                isChecked={isChecked}
+              />
+            ))}
+        </SimpleGrid>
+      ) : (
+        <NothingFound text="No Surveys Found" />
+      )}
       <CreateSurveyModal
         open={createSurveyOpened}
         close={close}
@@ -231,7 +236,7 @@ export default function Surveys() {
         surveyIdArray={surveyidArray}
         mergeSurvey={true}
       ></CreateSurveyLandingModal>
-    </>
+    </Stack>
   );
 }
 
