@@ -146,7 +146,7 @@ const ResultsOverview = () => {
                       item.type === QuestionType.YN ||
                       item.type === QuestionType.Opinion,
                   )
-                  .map((item, index, filteredArray) => (
+                  ?.map((item, index, filteredArray) => (
                     <React.Fragment key={index}>
                       <QuestionPieChart
                         no={index + 1}
@@ -174,7 +174,7 @@ const ResultsOverview = () => {
                       item.type === QuestionType.DDSS ||
                       item.type === QuestionType.DDMS,
                   )
-                  .map((item, index) => (
+                  ?.map((item, index) => (
                     <React.Fragment key={index}>
                       <QuestionBarChart
                         key={index}

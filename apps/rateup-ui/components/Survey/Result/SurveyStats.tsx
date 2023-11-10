@@ -49,7 +49,7 @@ const SurveyStats = ({ survey }) => {
               {responses?.length ?? 0} &nbsp;{" "}
               {responses?.length > 1 ? "Responses" : "Response"}
             </Text>
-            {surveyStatsCountArray.map(({ count, label }) => (
+            {surveyStatsCountArray?.map(({ count, label }) => (
               <PaperLayout style={{ flex: 1 }} key={label}>
                 <Stack align={"center"}>
                   <Text fs={"20px"} fw="900" size={"30px"}>
