@@ -4,6 +4,7 @@ import {
   deleteContact,
   getContactListByTeamId,
   getContactsList,
+  importContacts,
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
@@ -31,6 +32,27 @@ export const useCreateContactMutation = (
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
         showSuccessToast("Contact created successfully.");
+      onSuccess();
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error creating the contact: ${error?.response?.data?.message}`,
+      );
+      onError();
+    },
+  });
+};
+
+export const useImportContactMutation = (
+  onSuccess = () => {},
+  onError = () => {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importContacts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      showSuccessToast("Contacts imported successfully");
       onSuccess();
     },
     onError: (error: any) => {

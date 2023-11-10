@@ -1,6 +1,6 @@
-.tabLabel {
-  color: "var(--tertiary-color)";
+.tabLabel[data-active] {
+  color: var(--tertiary-color);
 }
-.inactive {
-  color: "dimmed";
+.tabLabel[data-inactive] {
+  color: rgb(173, 167, 167);
 }

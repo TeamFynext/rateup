@@ -15,17 +15,19 @@ import {
   RateupButtonSecondary,
   RateupButtonBlue,
 } from "../../../../../components/Button/RateupButtons";
-import CSVReader from "../../../../../components/Promotion/CSVReader";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
-import { IconCheck, IconSearch } from "@tabler/icons-react";
+import { IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
 } from "../../../../../backend/campaign/contactGroup/contactGroup.query";
 import { useCampaignContactsByTeamId } from "../../../../../backend/campaign/contacts/contacts.query";
 import { contactAddType, importMethod } from "../../../../../utils/enums";
-import { notifications } from "@mantine/notifications";
+import { ContainedFileInput } from "../../../../../components/input/ContainedInput/ContainedInput";
+import { ImportContact } from "../CreateContactModal";
+import Papa from "papaparse";
+import { showErrorToast } from "../../../../../utils/notifications";
 
 export interface IAddCustomer {
   name: string;
@@ -35,12 +37,14 @@ export interface IAddCustomer {
 
 const AddCustomerModal = ({ groupId, close, teamId }) => {
   const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
-  const [csvData, setCsvData] = useState("");
+  const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [addType, setAddType] = useState(contactAddType.NEW);
   const [customerList, setCustomerList] = useState<string[]>([]);
   const [filteredCustomerList, setFilteredCustomerList] = useState([]);
+  const [csvfile, setCsvfile] = useState<File | null>(null);
+  const [isUpload, setIsUpload] = useState(false);
 
   const {
     isLoading: isLoading,
@@ -64,6 +68,7 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
     },
     validate: {
       phone: (value) =>
+        form.values.importMethod == importMethod.MANUAL &&
         addType === contactAddType.NEW &&
         contactType.includes("phone") &&
         (value.length !== 10
@@ -72,10 +77,13 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
           ? "Must contain only numbers"
           : null),
       name: (value) =>
-        addType == contactAddType.NEW && !value.length
+        form.values.importMethod == importMethod.MANUAL &&
+        addType == contactAddType.NEW &&
+        !value.length
           ? "Cannot be empty"
           : null,
       email: (value) =>
+        form.values.importMethod == importMethod.MANUAL &&
         addType === contactAddType.NEW &&
         contactType.includes("email") &&
         !/^\S+@\S+$/.test(value)
@@ -136,42 +144,95 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
     }
   }, [searchTerm, contactDataByTeamId?.data]);
 
+  useEffect(() => {
+    console.log("csvdata", csvfile);
+    if (csvfile == null) return;
+
+    setIsUpload(true);
+    Papa.parse(csvfile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        setCsvData(results?.data as ImportContact[]);
+        setIsUpload(false);
+      },
+    });
+  }, [csvfile]);
+
   const handleSubmit = () => {
     const validation = form.validate();
     if (validation.hasErrors) {
       if (validation.errors.contactType) {
-        notifications.show({
-          id: "show-error",
-          title: "Failed",
-          message: validation.errors.contactType,
-          color: "red",
-          icon: <IconCheck size={"1rem"}></IconCheck>,
-          autoClose: 3000,
-        });
+        showErrorToast(validation.errors.contactType);
       }
       return;
     }
     setIsCreating(true);
-    if (addType == contactAddType.EXISTING) {
-      addExistingContactsMutation.mutate({
-        customerList: customerList,
-        groupId: groupId,
+    if (form.values.importMethod == importMethod.CSV) {
+      let isValid: boolean = true;
+      csvData?.every(function (contact, index) {
+        console.log("contact?.phone", contact?.phone);
+        if (
+          contactType.includes("phone") &&
+          contact?.phone.length != 10 &&
+          !/^\d+$/.test(contact?.phone)
+        ) {
+          showErrorToast("Failed to import: file contain invalid phone number");
+          isValid = false;
+          return false;
+        }
+        if (
+          contactType.includes("email") &&
+          !/^\S+@\S+$/.test(contact?.email)
+        ) {
+          showErrorToast("Failed to import: file contain invalid Email");
+          isValid = false;
+          return false;
+        }
+        return true;
       });
+      if (!isValid) {
+        setCsvfile(null);
+        setIsCreating(false);
+        return;
+      }
+      let dataToUpload: IAddCustomer[] = csvData?.map(
+        ({ name, email, phone }) => ({
+          name,
+          email: !email ? undefined : email,
+          phone: !phone ? undefined : phone,
+        }),
+      );
+      createNewContactMutation.mutate({ data: dataToUpload, groupId: groupId });
     } else {
-      let contactData: IAddCustomer = form.values;
-      if (!contactType.includes("email")) {
-        contactData = {
-          name: form.values.name,
-          phone: form.values.phone,
-        };
+      if (addType == contactAddType.EXISTING) {
+        addExistingContactsMutation.mutate({
+          customerList: customerList,
+          groupId: groupId,
+        });
+      } else {
+        let contactData: IAddCustomer[] = [form.values];
+        if (!contactType.includes("email")) {
+          contactData = [
+            {
+              name: form.values.name,
+              phone: form.values.phone,
+            },
+          ];
+        }
+        if (!contactType.includes("phone")) {
+          contactData = [
+            {
+              name: form.values.name,
+              email: form.values.email,
+            },
+          ];
+        }
+        createNewContactMutation.mutate({
+          data: contactData,
+          groupId: groupId,
+        });
       }
-      if (!contactType.includes("phone")) {
-        contactData = {
-          name: form.values.name,
-          email: form.values.email,
-        };
-      }
-      createNewContactMutation.mutate({ data: contactData, groupId: groupId });
     }
   };
 
@@ -210,7 +271,6 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
           }
         />
       </Table.Td>
-      {/* <Table.Td>{contact?.position}</Table.Td> */}
       <Table.Td>{contact?.name}</Table.Td>
       <Table.Td>{contact?.phone}</Table.Td>
     </Table.Tr>
@@ -324,7 +384,21 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
                 </SimpleGrid>
               )}
               {form.values.importMethod == importMethod.CSV && (
-                <CSVReader setCsvData={setCsvData}></CSVReader>
+                <ContainedFileInput
+                  mx={"lg"}
+                  label=""
+                  placeholder="Upload a csv file (.csv)"
+                  accept=".csv"
+                  multiple={false}
+                  onChange={setCsvfile}
+                  styles={{
+                    input: {
+                      border: "2px dashed lightgrey",
+                      height: "60px",
+                      textAlign: "center",
+                    },
+                  }}
+                ></ContainedFileInput>
               )}
             </>
           )}
@@ -351,6 +425,7 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
               title="Add Customer"
               onClick={handleSubmit}
               loading={isCreating}
+              disabled={isUpload}
             ></RateupButtonBlue>
           </Group>
         </Stack>

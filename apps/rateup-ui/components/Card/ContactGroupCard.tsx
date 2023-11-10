@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { useTeamsByUser } from "../../backend/team/team.query";
 
-export const GroupCard = ({ group }) => {
+export const ContactGroupCard = ({ group }) => {
   const router = useRouter();
   const createdAt = new Date(group?.createdAt);
   const date =
@@ -36,6 +36,9 @@ export const GroupCard = ({ group }) => {
       radius="md"
       onClick={() => {
         router.push(`contacts/contact-group/${group.id}`);
+      }}
+      style={{
+        cursor: "pointer",
       }}
     >
       <Group justify="space-between">

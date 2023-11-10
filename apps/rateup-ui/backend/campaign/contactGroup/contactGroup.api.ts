@@ -1,4 +1,3 @@
-import { IAddCustomer } from "../../../pages/dashboard/campaign/contacts/contact-group/AddCustomerModal";
 import { axiosClient } from "../../apiClient";
 
 export interface ICreateContactGroup {
@@ -45,19 +44,8 @@ export const createContactGroup = (data: ICreateContactGroup) => {
   return res;
 };
 
-export const addNewContact = ({
-  data,
-  groupId,
-}: {
-  data: IAddCustomer;
-  groupId: any;
-}) => {
-  let dataArray: ICreateNewContact[] = [];
-  dataArray.push(data);
-  let res = axiosClient.post(
-    `/contact/group/${groupId}/contacts/new`,
-    dataArray,
-  );
+export const addNewContact = ({ data, groupId }) => {
+  let res = axiosClient.post(`/contact/group/${groupId}/contacts/new`, data);
   return res;
 };
 

@@ -24,6 +24,11 @@ export const createContact = async (data: ICreateContact) => {
   return res;
 };
 
+export const importContacts = async (data) => {
+  let res = await axiosClient.post("/contact/importcontacts", data);
+  return res;
+};
+
 export const deleteContact = (contactId: string) => {
   let res = axiosClient.delete(`/contact/${contactId}`);
   return res;

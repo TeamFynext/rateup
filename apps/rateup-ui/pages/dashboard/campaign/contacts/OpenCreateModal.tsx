@@ -13,7 +13,14 @@ const OpenCreateModal = ({ close }) => {
   return (
     <Container>
       <Group gap="xl" justify="space-evenly">
-        <Paper shadow="xl" p="xl" onClick={contactOpen}>
+        <Paper
+          shadow="xl"
+          p="xl"
+          onClick={contactOpen}
+          style={{
+            cursor: "pointer",
+          }}
+        >
           <Stack gap={0}>
             <Center>
               <IconUser
@@ -25,7 +32,14 @@ const OpenCreateModal = ({ close }) => {
             <Text>Customer</Text>
           </Stack>
         </Paper>
-        <Paper shadow="xl" p="xl" onClick={groupOpen}>
+        <Paper
+          shadow="xl"
+          p="xl"
+          onClick={groupOpen}
+          style={{
+            cursor: "pointer",
+          }}
+        >
           <Stack gap={0} px="sm">
             <Center>
               <IconUsersGroup

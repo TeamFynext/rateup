@@ -12,6 +12,7 @@ import {
   IconBrandWhatsapp,
   IconFileDescription,
   IconLayoutDashboard,
+  IconPhone,
 } from "@tabler/icons-react";
 //navbar interface
 export interface NavbarLinkProps {
@@ -88,6 +89,18 @@ export const navTopData: Array<NavbarLinkProps> = [
     ],
   },
   { Icon: IconClipboardList, label: "Menu", href: "/dashboard/menu" },
+  {
+    Icon: IconSpeakerphone,
+    label: "Campaign",
+    href: "",
+    submenus: [
+      {
+        Icon: IconPhone,
+        label: "Contacts",
+        href: "/dashboard/campaign/contacts",
+      },
+    ],
+  },
 ];
 //data Array consisting of NavbarBottomData
 export const navBottomData: Array<NavbarLinkProps> = [

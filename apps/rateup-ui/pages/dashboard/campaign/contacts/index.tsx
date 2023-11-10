@@ -17,7 +17,7 @@ import ContactCard from "../../../../components/Card/ContactCard";
 import { IconSearch } from "@tabler/icons";
 import styles from "./contacts.module.css";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
-import { GroupCard } from "../../../../components/Card/GroupCard";
+import { ContactGroupCard } from "../../../../components/Card/ContactGroupCard";
 import FormModalLayout from "../../../../components/Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
 import OpenCreateModal from "./OpenCreateModal";
@@ -149,7 +149,7 @@ export default function Contacts() {
               <Tabs.Tab value="customers" className={styles.tabLabel}>
                 <Title order={4}>Customers</Title>
               </Tabs.Tab>
-              <Tabs.Tab value="groups">
+              <Tabs.Tab value="groups" className={styles.tabLabel}>
                 <Title order={4}>Groups</Title>
               </Tabs.Tab>
             </Tabs.List>
@@ -185,7 +185,10 @@ export default function Contacts() {
             >
               {filteredContacts?.length > 0 ? (
                 filteredContacts?.map((contact) => (
-                  <ContactCard contact={contact} key={contact.id}></ContactCard>
+                  <ContactCard
+                    contact={contact}
+                    key={contact?.id}
+                  ></ContactCard>
                 ))
               ) : (
                 <Container p="xl">
@@ -209,7 +212,10 @@ export default function Contacts() {
             >
               {filteredGroups?.length > 0 ? (
                 filteredGroups?.map((group) => (
-                  <GroupCard group={group} key={group.id}></GroupCard>
+                  <ContactGroupCard
+                    group={group}
+                    key={group?.id}
+                  ></ContactGroupCard>
                 ))
               ) : (
                 <Container p="xl">
