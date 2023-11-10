@@ -71,7 +71,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         order={2}
       >
         <span>Sign up now</span>
-        <span>Start engaging with your cutomers</span>
+        <span>Start engaging with your Customers</span>
       </Title>
 
       <LoginSignupLinks isSignup />

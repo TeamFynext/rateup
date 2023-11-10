@@ -1,5 +1,4 @@
-import React, { useRef, useState } from "react";
-import { useQRCode } from "next-qrcode";
+import React, { useEffect, useRef, useState } from "react";
 import { Paper, Text, Stack, Title, Center } from "@mantine/core";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { IconDownload } from "@tabler/icons-react";
@@ -10,12 +9,13 @@ interface iProps {
   title: string;
   description: string;
   textSize: number;
-  logoSize: number;
+  logoFilter: string;
+  logoFillType: string;
   descriptionSize: number;
   textColor: string;
   descriptionColor: string;
   backgroundColor: string;
-  qrColor: string;
+  qrSize: number;
   qrBgColor: string;
   logo: string;
   gradient: { start: string; end: string };
@@ -28,24 +28,22 @@ const Preview = ({
   title,
   description,
   textSize,
-  logoSize,
   descriptionSize,
   textColor,
   descriptionColor,
   backgroundColor,
-  qrColor,
+  qrSize,
   qrBgColor,
   logo,
+  logoFilter,
+  logoFillType,
   gradient,
   bgTransparency,
   bgImage,
   activeBgStyle,
 }: iProps) => {
-  const { Canvas } = useQRCode();
   const printRef = useRef();
-
-  const [logoUrl, setLogoUrl] = useState("");
-  const [bgImgUrl, setBgImgUrl] = useState("");
+  const qartCanvasContainerRef = useRef(null);
 
   // FOR server upload - template setup
 
@@ -98,6 +96,24 @@ const Preview = ({
     }
   };
 
+  useEffect(() => {
+    const createCanvas = async () => {
+      const QArt = (await import("qartjs")).default;
+      const qart = new QArt({
+        value: url,
+        imagePath: logo,
+        size: qrSize,
+        filter: logoFilter,
+        background: qrBgColor,
+        fillType: logoFillType,
+      });
+      if (qartCanvasContainerRef.current) {
+        qart.make(qartCanvasContainerRef.current);
+      }
+    };
+    createCanvas();
+  }, [url, logo, logoFilter, qrBgColor, qrSize, logoFillType]);
+
   return (
     <Stack align="center" ml="lg">
       <Title order={3}> Preview </Title>
@@ -108,7 +124,7 @@ const Preview = ({
           p="md"
           style={{
             width: "250px",
-            height: "330px",
+            height: "auto",
             alignContent: "center",
             backgroundColor:
               activeBgStyle === "Color" ? backgroundColor : "transparent",
@@ -134,7 +150,7 @@ const Preview = ({
               {title}{" "}
             </Title>
             <Center>
-              <Canvas
+              {/* <Canvas
                 text={url}
                 options={{
                   errorCorrectionLevel: "M",
@@ -158,7 +174,13 @@ const Preview = ({
                       }
                     : undefined
                 }
-              />
+              /> */}
+              <div
+                className="qart-canvas-container"
+                ref={qartCanvasContainerRef}
+              ></div>
+              {/* QR background image is not getting displayed without this img tag */}
+              <img src={logo} style={{ width: 0, height: 0 }} />
             </Center>
 
             <Text

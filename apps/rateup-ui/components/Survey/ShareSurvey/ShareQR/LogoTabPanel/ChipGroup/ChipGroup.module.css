@@ -1,0 +1,22 @@
+.root {
+  margin-bottom: 1rem;
+}
+
+.root:nth-last-child(1) {
+  margin-bottom: 0;
+}
+
+.root .label {
+  padding: 0.625rem 1.5rem;
+  width: 100%;
+  height: auto;
+  font-size: 1.125rem;
+}
+
+.root .label[data-checked="true"] {
+  background-color: var(--tertiary-color);
+}
+
+.root .label:not([data-checked="true"]) {
+  background-color: var(--mantine-color-gray-2);
+}

@@ -9,6 +9,7 @@ import {
   Title,
   Tabs,
   ColorInput,
+  Slider,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { uploadFile } from "../../../../utils/file-upload/upload";
@@ -18,8 +19,8 @@ import { IconCheck } from "@tabler/icons-react";
 const StyleTab = ({
   backgroundColor,
   setBackgroundColor,
-  qrColor,
-  setQRColor,
+  qrSize,
+  setQRSize,
   qrBgColor,
   setQRBgColor,
   gradient,
@@ -195,11 +196,14 @@ const StyleTab = ({
         </Radio.Group>
       </Group>
       <Stack style={{ maxWidth: "300px" }} ml="xl">
-        <ColorInput
-          placeholder="Select color"
-          label="QR Color"
-          value={qrColor}
-          onChange={setQRColor}
+        <Text>QR Size</Text>
+        <Slider
+          label={(value) => value}
+          value={qrSize}
+          onChange={setQRSize}
+          defaultValue={195}
+          min={195}
+          max={250}
         />
         <ColorInput
           placeholder="Select color"

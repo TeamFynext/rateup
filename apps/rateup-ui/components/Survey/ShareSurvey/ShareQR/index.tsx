@@ -13,6 +13,7 @@ import {
   ColorInput,
   Textarea,
   Slider,
+  FileInput,
 } from "@mantine/core";
 import {
   IconBrandSketch,
@@ -20,12 +21,14 @@ import {
   IconPhotoEdit,
   IconTemplate,
 } from "@tabler/icons-react";
-import React, { useState, useEffect } from "react";
-import Preview from "./Preview";
+import React, { useState, useEffect, useCallback } from "react";
+import Preview from "../Preview";
 import { notifications } from "@mantine/notifications";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import StyleTab from "./QRtabs/StyleTab";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { RateupButtonSecondary } from "../../../Button/RateupButtons";
+import StyleTab from "../QRtabs/StyleTab";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import styles from "./ShareQR.module.css";
+import LogoTabpanel from "./LogoTabPanel";
 
 interface ShareQRProps {
   url: string;
@@ -37,13 +40,17 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
 
   const [textSize, setTextSize] = useState(20);
   const [descriptionSize, setDescriptionSize] = useState(14);
-  const [logoSize, setLogoSize] = useState(30);
 
   const [textColor, setTextColor] = useState("#000");
   const [descriptionColor, setDescriptionColor] = useState("#000");
   const [backgroundColor, setBackgroundColor] = useState("skyblue");
-  const [qrColor, setQRColor] = useState("#010599FF");
-  const [qrBgColor, setQRBgColor] = useState("#FFBF60FF");
+
+  const [qrSize, setQRSize] = useState<number>(195);
+
+  const [qrBgColor, setQRBgColor] = useState("#FFFFFF");
+
+  const [logoFilter, setLogoFilter] = useState<string>("color");
+  const [logoFillType, setLogoFillType] = useState<string>("fill");
 
   const [activeBgStyle, setActiveBgStyle] = useState("Color");
   const [gradient, setGradient] = useState({
@@ -57,11 +64,10 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
 
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
 
-  const [logoSrc, setLogoSrc] = useState("");
+  const [logoSrc, setLogoSrc] = useState("/images/rateup-star.svg");
 
   useEffect(() => {
     //For server upload - template setup
-
     // const uploadAndUpdate = async () => {
     //   if (file) {
     //     notifications.show({
@@ -79,18 +85,26 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
     //   }
     // };
     // uploadAndUpdate();
+  }, []);
 
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setLogoSrc(url);
+  const removeLogo = useCallback(function () {
+    URL.revokeObjectURL(logoSrc);
+    setLogoSrc("/images/rateup-star.svg");
+  }, []);
+
+  const handleLogoInputFormReset = useCallback(() => {
+    removeLogo();
+  }, []);
+
+  const handleLogoInputChange = useCallback((e) => {
+    const filesArray = e.target.files;
+    if (filesArray.length) {
+      const fileUrl = URL.createObjectURL(filesArray[0]);
+      setLogoSrc(fileUrl);
     } else {
-      console.error("No file selected");
+      removeLogo();
     }
-  }, [file]);
-
-  function removePhoto() {
-    setLogoSrc(null);
-  }
+  }, []);
 
   return (
     <PaperLayout shadow="sm" my="xl" p="xl" style={{ ...sx }}>
@@ -260,8 +274,8 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
               <StyleTab
                 backgroundColor={backgroundColor}
                 setBackgroundColor={setBackgroundColor}
-                qrColor={qrColor}
-                setQRColor={setQRColor}
+                qrSize={qrSize}
+                setQRSize={setQRSize}
                 qrBgColor={qrBgColor}
                 setQRBgColor={setQRBgColor}
                 activeBgStyle={activeBgStyle}
@@ -276,45 +290,15 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
             </Tabs.Panel>
 
             <Tabs.Panel value="logo" style={{ minHeight: "350px" }}>
-              <Title order={3} mt="xl">
-                {" "}
-                Select a logo
-              </Title>
-              <Text>This will appear at the center of the QR code.</Text>
-
-              <Group>
-                <Stack style={{ minWidth: "40%" }} mr="lg" mt="xl">
-                  <Stack justify="center" style={{ maxWidth: "200px" }}>
-                    <FileButton
-                      onChange={setFile}
-                      accept="image/png,image/jpeg"
-                    >
-                      {(props) => (
-                        <Button fullWidth size="lg" radius="lg" {...props}>
-                          Upload Logo
-                        </Button>
-                      )}
-                    </FileButton>
-
-                    <RateupButtonSecondary
-                      title="Remove Logo"
-                      size="sm"
-                      onClick={removePhoto}
-                    />
-                  </Stack>
-                </Stack>
-
-                <Stack style={{ minWidth: "20%" }} ml="xl">
-                  <Stack>
-                    <Text>Logo Size</Text>
-                    <Slider value={logoSize} onChange={setLogoSize} max={38} />
-                  </Stack>
-                  {/* <Stack pt="xl">
-                     <Text>Outer margin</Text>
-                    <Slider value={descriptionSize} onChange={setDescriptionSize} />
-                  </Stack> */}
-                </Stack>
-              </Group>
+              <LogoTabpanel
+                handleLogoInputChange={handleLogoInputChange}
+                handleLogoInputFormReset={handleLogoInputFormReset}
+                removeLogo={removeLogo}
+                logoFilter={logoFilter}
+                setLogoFilter={setLogoFilter}
+                logoFillType={logoFillType}
+                setLogoFillType={setLogoFillType}
+              />
             </Tabs.Panel>
             <Tabs.Panel value="template" style={{ minHeight: "350px" }}>
               text tab content
@@ -330,11 +314,12 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
               url={url}
               textSize={textSize}
               descriptionSize={descriptionSize}
-              logoSize={logoSize}
+              logoFilter={logoFilter}
+              logoFillType={logoFillType}
               textColor={textColor}
               descriptionColor={descriptionColor}
               backgroundColor={backgroundColor}
-              qrColor={qrColor}
+              qrSize={qrSize}
               qrBgColor={qrBgColor}
               logo={logoSrc}
               activeBgStyle={activeBgStyle}

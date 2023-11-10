@@ -1,0 +1,48 @@
+.logo-tab-options-container {
+  gap: 1rem;
+}
+
+.panel-heading {
+  margin: 1.25rem 0;
+}
+
+.option-heading {
+  margin-bottom: 1rem;
+}
+
+.option-container {
+  flex-direction: column;
+  width: 200px;
+  flex: 1 1 auto;
+  padding: 1rem;
+}
+
+.upload-qr-background-logo-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.qr-background-logo {
+  display: none;
+}
+
+.qr-background-logo-label {
+  background-color: var(--tertiary-color);
+  color: white;
+  padding: 0.625rem 1.5rem;
+  font-weight: bold;
+  display: block;
+  border-radius: 1rem;
+  text-align: center;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.qr-background-logo-remove-btn {
+  display: block;
+  padding: 0.625rem 1.5rem;
+  height: auto;
+}
