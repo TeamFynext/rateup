@@ -11,9 +11,11 @@ export const createContactSchema = contactCoreSchema.extend({
     teamId: z.string(),
 })
 
+export const createMultipleContactSchema = z.array(createContactSchema)
+
 const updateContactSchema = z.object({
     name: z.string().optional(),
-    email: z.string().email().optional(),
+    email: z.string().email().nullable().optional(),
     phone: z.string().optional(),
 })
 
@@ -30,6 +32,7 @@ export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas({
     byContactIdSchema,
     updateContactSchema,
     getContactQuerySchema,
+    createMultipleContactSchema
 }, {
     $id: 'contactSchema'
 })
@@ -38,3 +41,4 @@ export type GetContactQuery = z.infer<typeof getContactQuerySchema>;
 export type CreateContactInput = z.infer<typeof createContactSchema>;
 export type ByContactIdParams = z.infer<typeof byContactIdSchema>;
 export type updateContactSchema = z.infer<typeof updateContactSchema>;
+export type createMultipleContactInput = z.infer<typeof createMultipleContactSchema>;

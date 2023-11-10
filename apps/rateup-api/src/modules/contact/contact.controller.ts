@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { ByContactIdParams, CreateContactInput, GetContactQuery } from "./contact.schema";
+import { ByContactIdParams, CreateContactInput, GetContactQuery, createMultipleContactInput, updateContactSchema } from "./contact.schema";
 import { log } from "../../utils/logger";
-import { createContact, deleteContactById, getContactById, getContactsByOrgId, getContactsByTeamId, updateContactById } from "./contact.service";
+import { createContact, createMultipleContacts, deleteContactById, getContactById, getContactsByOrgId, getContactsByTeamId, updateContactById } from "./contact.service";
 import { ByTeamIdParams } from "../team/team.schema";
 import { verifyRole } from "../../utils/auth";
 import { Role } from "@prisma/client";
@@ -16,6 +16,19 @@ export async function createContactHandler(
     } catch (error) {
         log.error(error);
         reply.code(500).send({ error: "Something went wrong" });
+    }
+}
+
+export async function createMultipleContactsHandler(
+    request: FastifyRequest<{ Body: createMultipleContactInput }>,
+    reply: FastifyReply
+) {
+    try {
+        const contacts = await createMultipleContacts(request.body);
+        reply.code(201).send(contacts)
+    } catch (error) {
+        log.error(error)
+        reply.code(500).send({ error: "Something went wrong" })
     }
 }
 
@@ -58,7 +71,7 @@ export async function deleteContactByIdHandler(
 }
 
 export async function updateContactByIdHandler(
-    request: FastifyRequest<{ Params: ByContactIdParams, Body: CreateContactInput }>,
+    request: FastifyRequest<{ Params: ByContactIdParams, Body: updateContactSchema }>,
     reply: FastifyReply
 ) {
     try {

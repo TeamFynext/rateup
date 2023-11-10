@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $contactRef } from "./contact.schema";
-import { createContactHandler, deleteContactByIdHandler, getContactsHandler, updateContactByIdHandler } from "./contact.controller";
+import { createContactHandler, createMultipleContactsHandler, deleteContactByIdHandler, getContactsHandler, updateContactByIdHandler } from "./contact.controller";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
 import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
 import { checkSession } from "../../utils/checkSession";
@@ -19,6 +19,16 @@ export async function contactRoutes(server: FastifyInstance) {
             }
         },
         createContactHandler
+    )
+
+    server.post(
+        '/importcontacts',
+        {
+            schema: {
+                body: $contactRef('createMultipleContactSchema')
+            }
+        },
+        createMultipleContactsHandler
     )
 
     server.get(

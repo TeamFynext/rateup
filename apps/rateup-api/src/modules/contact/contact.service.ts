@@ -1,5 +1,5 @@
 import prisma from "../../utils/prisma";
-import { CreateContactInput } from "./contact.schema";
+import { CreateContactInput, createMultipleContactInput } from "./contact.schema";
 
 export async function createContact(contact: CreateContactInput) {
     if (!contact.phone && !contact.email) {
@@ -14,6 +14,19 @@ export async function createContact(contact: CreateContactInput) {
         }
     });
     return user;
+}
+
+export async function createMultipleContacts(contacts: createMultipleContactInput) {
+    const result = await prisma.contact.createMany({
+        data:contacts.map((contact) => (
+            {
+                name: contact.name,
+                teamId: contact.teamId,
+                phone: contact.phone,
+                email: contact.email
+            }
+        ))
+    })
 }
 
 export async function getContactById(contactId: string) {
