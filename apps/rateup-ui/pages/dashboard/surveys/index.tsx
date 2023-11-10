@@ -150,7 +150,7 @@ export default function Surveys() {
           />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
-              title="Add Survey"
+              title="Create Survey"
               rightIcon={<IconPlus />}
               radius="xl"
               size="md"

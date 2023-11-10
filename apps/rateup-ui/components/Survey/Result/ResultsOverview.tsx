@@ -151,11 +151,11 @@ const ResultsOverview = () => {
                       <QuestionPieChart
                         no={index + 1}
                         type={item.type}
-                        responseCount={responses.length}
+                        responseCount={responses?.length}
                         question={item.question}
                         data={item.nps}
                       />
-                      {index < filteredArray.length - 1 && <Divider my="md" />}
+                      {index < filteredArray?.length - 1 && <Divider my="md" />}
                     </React.Fragment>
                   ))}
               </PaperLayout>

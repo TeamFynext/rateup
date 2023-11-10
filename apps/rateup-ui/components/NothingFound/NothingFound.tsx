@@ -5,7 +5,7 @@ interface NothingFoundProps {
 }
 export default function NothingFound({ text }: NothingFoundProps) {
   return (
-    <Stack h={"100%"} align={"center"} justify="center">
+    <Stack h={"100%"} align={"center"} justify="center" p={"xl"}>
       <Image
         src="/images/nodata.svg"
         alt="Nothing found"
