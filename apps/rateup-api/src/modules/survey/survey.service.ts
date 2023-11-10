@@ -407,7 +407,7 @@ export async function getSurveyLandingByUserId(userId: string) {
   });
 
   const surveysWithoutQuestions = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey };
+    const survey = { ...surveyTeamMap.survey,...{surveyTeamMapId:surveyTeamMap.id} };
     return excludeFields(survey, ["questions", "password"]);
   });
 

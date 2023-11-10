@@ -21,8 +21,8 @@ const updateMenuInputSchema = z.object({
   websiteUrl: z.string().optional(),
   logo: z.string().optional(),
   backgroundImage: z.string().optional(),
-  surveyId:z.string().optional(),
-  isPublished:z.boolean().optional()
+  surveyTeamMapId: z.string().optional(),
+  isPublished: z.boolean().optional(),
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
@@ -43,7 +43,6 @@ const menuPublicResponseSchema = z.object({
   websiteText: z.string().optional(),
   websiteUrl: z.string().optional(),
   logo: z.string().optional(),
-  backgroundImage: z.string().optional(),
 });
 
 const fullMenuPublicResponseSchema = z.object({
@@ -65,6 +64,12 @@ const fullMenuPublicResponseSchema = z.object({
       ),
     })
   ),
+  menuLanding: z
+    .object({
+      backgroundImage: z.string().optional().nullable(),
+      mobileBackgroundImage: z.string().optional().nullable(),
+    })
+    .nullable(),
 });
 const StyleSchema = z.object({
   fontFamily: z.string(),
@@ -89,16 +94,21 @@ const updateMenuLandingInputSchema = z.object({
   websiteText: z.string().optional(),
   logo: z.string().optional(),
   backgroundImage: z.string().optional(),
-  mobileBackgroundImage:z.string().optional()
+  mobileBackgroundImage: z.string().optional(),
 });
 
-const atLeastOneDefined = (obj: Record<string, unknown>) => Object.values(obj).some(v => v !== undefined);
+const atLeastOneDefined = (obj: Record<string, unknown>) =>
+  Object.values(obj).some((v) => v !== undefined);
 
 const updateLandingPageOptionSchema = z.object({
-  option: z.object({
-    menuPageEnabled: z.boolean().optional(),
-    feedbackPageEnabled: z.boolean().optional(),
-  }).refine(atLeastOneDefined, { message: "At least one option must be selected" }),
+  option: z
+    .object({
+      menuPageEnabled: z.boolean().optional(),
+      feedbackPageEnabled: z.boolean().optional(),
+    })
+    .refine(atLeastOneDefined, {
+      message: "At least one option must be selected",
+    }),
 });
 
 export const { schemas: menuSchemas, $ref: $Mref } = buildJsonSchemas(

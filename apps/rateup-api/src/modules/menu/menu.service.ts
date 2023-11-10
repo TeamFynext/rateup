@@ -45,6 +45,12 @@ export async function getFullMenu(menuId: string) {
           items: true,
         },
       },
+      menuLanding: {
+        select: {
+          backgroundImage: true,
+          mobileBackgroundImage: true,
+        },
+      },
     },
   });
   return menu;
@@ -85,7 +91,7 @@ export async function getMenus(teamId: string) {
 }
 
 export async function updateMenu(id: string, data: UpdateMenuInput) {
-  const { surveyId, ...newObject } = data;
+  const { surveyTeamMapId, ...newObject } = data;
 
   const menu = await prisma.menu.update({
     where: {
@@ -94,11 +100,11 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
     data: newObject,
   });
 
-  if (surveyId) {
+  if (surveyTeamMapId) {
     const createMenuLandingData = {
       menu: { connect: { id: id } },
     };
-    let surveyId = { survey: { connect: { id: data.surveyId } } };
+    let surveyId = { surveyTeamMap: { connect: { id: data.surveyTeamMapId } } };
     await prisma.menuLanding.upsert({
       where: {
         menuId: id,
@@ -167,7 +173,7 @@ export async function updateMenuLanding(
 ) {
   let updatedMenuData = {
     displayName: body.titleText,
-    locationUrl: body.locationText,
+    locationText: body.locationText,
     websiteText: body.websiteText,
     logo: body.logo,
   };
