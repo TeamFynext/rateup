@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $Sref } from "./welcometheme.schema";
-import { getWelcomeThemeByIdHandler } from "./welcometheme.controller";
+import { getWelcomeThemeByMapIdHandler } from "./welcometheme.controller";
 
 export async function WelcomeThemePublicRoutes(server: FastifyInstance) {
   // get survey by landingid
@@ -11,6 +11,6 @@ export async function WelcomeThemePublicRoutes(server: FastifyInstance) {
         params: $Sref("getWelcomeThemeBySurveyIdParamsSchema"),
       },
     },
-    getWelcomeThemeByIdHandler
+    getWelcomeThemeByMapIdHandler
   );
 }

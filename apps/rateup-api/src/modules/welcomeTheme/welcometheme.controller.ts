@@ -1,8 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
-import { Prisma } from '@prisma/client';
 import { CreateWelcomeThemeInput, GetWelcomeThemeInput, updateWelomeTheme } from "./welcometheme.schema";
-import { UpdateWelcomeTheme, createWelomeTheme, getWelcomeThemeBySurveyId } from "./welcometheme.service";
+import { UpdateWelcomeTheme, createWelcomeTheme, getWelcomeThemeBySurveyId, getWelcomeThemeBySurveyTeamMapId } from "./welcometheme.service";
 
 
 //------------create survey landing handler--------------
@@ -23,18 +22,16 @@ export async function createWelcomeThemeHandler(
 
       // let surveyid = request.params.id
       // data.surveyid = surveyid
-      // console.log(data, ">>>data survey controller---");
       //---------pass survey id todo-------
-      // console.log(req)
-      const WelcomeTheme = await createWelomeTheme(data);
+      const WelcomeTheme = await createWelcomeTheme(data);
       reply.code(201).send(WelcomeTheme);
     } catch (e) {
       console.error(e);
-      reply.code(500).send();
+      reply.code(500).send({status:"failed" , message: e.message});
     }
   }
 
-  //-----------get welocome by landing id-------------
+  //-----------get welcome by survey id-------------
   export async function getWelcomeThemeByIdHandler(
     request: FastifyRequest<{
       Params: GetWelcomeThemeInput;
@@ -42,7 +39,6 @@ export async function createWelcomeThemeHandler(
     reply: FastifyReply
   ) {
     try {
-      // console.log("7768",request.params.id)
       const welcomeTheme = await getWelcomeThemeBySurveyId(request.params.id);
       if (!welcomeTheme) {
         reply.code(404);
@@ -50,9 +46,28 @@ export async function createWelcomeThemeHandler(
         reply.send(welcomeTheme);
       }
     } catch (e) {
-      reply.code(500);
+      reply.code(500).send({status:"failed" , message: e.message});
     }
   }
+
+    //-----------get welcome by map id-------------
+    export async function getWelcomeThemeByMapIdHandler(
+      request: FastifyRequest<{
+        Params: GetWelcomeThemeInput;
+      }>,
+      reply: FastifyReply
+    ) {
+      try {
+        const welcomeTheme = await getWelcomeThemeBySurveyTeamMapId(request.params.id);
+        if (!welcomeTheme) {
+          reply.code(404);
+        } else {
+          reply.send(welcomeTheme);
+        }
+      } catch (e) {
+        reply.code(500).send({status:"failed" , message: e.message});
+      }
+    }
 
   //-------------update welcome styles------------
   export async function updateSurveyByIdHandler(
@@ -68,10 +83,6 @@ export async function createWelcomeThemeHandler(
       //const userId = request.session.getUserId();
      
       let themeId = request.params.id
-
-      // console.log(data,">>>moopan",themeId)
-  
-      // console.log(data, ">>>data survey controller---");
       const survey = await UpdateWelcomeTheme(themeId,data);
       reply.code(201).send(survey);
     } catch (e) {

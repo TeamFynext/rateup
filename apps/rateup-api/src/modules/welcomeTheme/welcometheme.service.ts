@@ -1,27 +1,49 @@
-import prisma, { excludeFields } from "../../utils/prisma";
+import prisma from "../../utils/prisma";
 import { CreateWelcomeThemeInput, GetWelomeThemeSurvey } from "./welcometheme.schema";
 
-//--------------get landing page by id
+//--------------get survey welcome page by surveyTeamMapId
+export async function getWelcomeThemeBySurveyTeamMapId(surveyTeamMapId: string) {
+
+  const survey = await prisma.surveyTeamMap.findFirst({
+    where: {
+      id: surveyTeamMapId,
+    },
+  });
+
+  if (!survey) {
+    throw new Error(`Could not find survey with map id ${surveyTeamMapId}`);
+  } else{
+    const welcomeTheme = await prisma.welcomeTheme.findFirst({
+      where: {
+        surveyId : survey?.surveyId
+      },
+    });
+  
+    if (!welcomeTheme) {
+      throw new Error(`Could not find welcomeTheme with id ${survey?.surveyId}`);
+    }
+    return welcomeTheme;
+
+  }  
+}
+
+//--------------get survey welcome page by survey id
+
 export async function getWelcomeThemeBySurveyId(surveyId: string) {
-  // console.log("ento 7778");
   const welcomeTheme = await prisma.welcomeTheme.findFirst({
     where: {
       surveyId,
     },
   });
-  // console.log(welcomeTheme, ">>istanbilll");
-
   if (!welcomeTheme) {
     throw new Error(`Could not find welcomeTheme with id ${surveyId}`);
   }
   return welcomeTheme;
 }
 
-export async function createWelomeTheme(
+export async function createWelcomeTheme(
   input: GetWelomeThemeSurvey
 ) {
-
-  // console.log(input,">>>>looped")
   const survey = await prisma.welcomeTheme.create({
     data: {
       ...input,
@@ -48,7 +70,6 @@ export async function UpdateWelcomeTheme(
   themeId,
   input: CreateWelcomeThemeInput
 ) {
-  // console.log(input,">>info667")
   const WelcomeTheme = await prisma.welcomeTheme.update({
     where: {
       id: themeId,

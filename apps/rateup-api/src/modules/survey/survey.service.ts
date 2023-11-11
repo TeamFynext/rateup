@@ -588,19 +588,66 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     }
   }
 
+  let { teams, ...dataInput} = input
+
   const survey = await prisma.survey.update({
     where: {
       id,
     },
-    data: input,
+    data: dataInput,
   });
 
-  let data = {
+  if(teams?.length){
+    let teamIds = teams.map(team => ({ teamId: team }))
+    const surveyTeams = await prisma.surveyTeamMap.findMany({
+      where: {
+        surveyId: id,
+      }
+    });
+
+    let existingTeams = surveyTeams.map(team => team?.teamId)
+    let newTeams = teamIds?.filter(team => !existingTeams?.includes(team?.teamId))
+
+    if(newTeams?.length){
+      const newSurveyTeams = await prisma.surveyTeamMap.createMany({
+        data: newTeams.map(team => ({ surveyId: id, ...team }))
+      });
+    }
+
+    let deletedTeams = existingTeams?.filter(team => !teamIds?.map(team => team?.teamId).includes(team))
+
+    if(deletedTeams?.length){
+      await Promise.all(deletedTeams?.map(async teamId => {
+        const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+          where: {
+            surveyId: id,
+            teamId: teamId
+          },
+          include: {
+            responses: true
+          }
+        });
+
+        if (!surveyTeamMap) {
+          throw new Error('No survey found with the provided id and teamId');
+        }
+
+        if (surveyTeamMap?.responses && surveyTeamMap?.responses?.length > 0) {
+          throw new Error('Remove team failed. Team survey has responses');
+        }
+
+        const deletedSurvey = await prisma.surveyTeamMap.delete({
+          where: { id: surveyTeamMap?.id }
+        });
+      }));
+      }
+  }
+
+  return {
     status: "success",
     action: action,
     data: survey
   }
-  return data
 }
 
 function validateSurvey(surveyData) {

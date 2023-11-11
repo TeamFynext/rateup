@@ -86,6 +86,7 @@ const updateSurveyRequestSchema = z.object({
     })
     .optional(),
   languages: z.array(z.string()).optional(),
+  teams: z.array(z.string()).optional(),
   active: z.boolean().optional(),
   kioskMode: z.boolean().optional(),
   isPublished: z.boolean().optional(),

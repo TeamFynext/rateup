@@ -367,7 +367,7 @@ export async function updateSurveyByIdHandler(
     }
   } catch (e) {
     console.log(e);
-    reply.code(500);
+    reply.code(500).send({status: "failed", message: e.message});
   }
 }
 
