@@ -3,19 +3,13 @@ import {
   Loader,
   Table,
   Text,
-  Modal,
   Group,
-  Divider,
-  TextInput,
   Stack,
   ScrollArea,
   Badge,
+  Button,
 } from "@mantine/core";
-import {
-  RateupButtonBlackOutline,
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { IconFileDownload, IconTrashXFilled, IconX } from "@tabler/icons-react";
 import { useContext } from "react";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
@@ -32,6 +26,9 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
 import { QuestionType } from "../../../types/enums";
 import SurveyContext from "../../../context/SurveyContext";
+import NothingFound from "../../NothingFound/NothingFound";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 
 const Responses = ({ survey, responses }) => {
   const [responseCount, setResponseCount] = useState(0);
@@ -42,7 +39,6 @@ const Responses = ({ survey, responses }) => {
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const [verifyEmail, setVerifyEmail] = useState("");
-  const [isDeleteAction, setIsDeleteAction] = useState(false);
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -74,20 +70,8 @@ const Responses = ({ survey, responses }) => {
     sheet: "Responses",
   });
 
-  const cellGap = {
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    minWidth: "100px",
-  };
-
-  const openActions = (id) => {
-    selectedRowId === id ? setSelectedRowId("") : setSelectedRowId(id);
-    selectedRowId !== id && open();
-  };
-
   useEffect(() => {
     setVerifyEmail("");
-    setIsDeleteAction(false);
   }, [opened]);
 
   const confirmDelete = () => {
@@ -132,94 +116,81 @@ const Responses = ({ survey, responses }) => {
           />
         </Group>
       </PaperLayout>
-      {responseCount > 0 && (
+      {responseCount > 0 ? (
         <PaperLayout style={{ flex: 1 }}>
-          <ScrollArea h={"100%"}>
-            <Stack h={"100%"}>
-              <Table highlightOnHover ref={tableRef} withRowBorders>
-                <TableHead questions={questions} />
-                <Table.Tbody>
-                  {responses?.map((response) => (
-                    <Table.Tr
-                      key={response.id}
-                      onClick={() => openActions(response.id)}
-                      style={{
-                        backgroundColor:
-                          selectedRowId === response.id ? "silver" : "",
-                      }}
-                    >
-                      <Table.Td style={cellGap}>
-                        <Text c="dark.3" p={10} miw={200}>
-                          {dayjs(response.createdAt).format("DD-MM-YYYY")}
-                        </Text>
-                      </Table.Td>
-                      {questions?.map((q) => (
-                        <Table.Td
-                          key={q.id}
-                          style={cellGap}
-                          title={getResponse(q.id, response)}
-                        >
-                          <BadgeorText
-                            questionType={q.type}
-                            response={getResponse(q.id, response)}
-                          />
+          <>
+            <ScrollArea h={"100%"}>
+              <Stack h={"100%"}>
+                <Table ref={tableRef} withRowBorders>
+                  <TableHead questions={questions} />
+                  <Table.Tbody>
+                    {responses?.map((response) => (
+                      <Table.Tr
+                        key={response.id}
+                        style={{ alignItems: "center" }}
+                      >
+                        <Table.Td>
+                          <Text c="dark.3" p={10} miw={200}>
+                            {dayjs(response.createdAt).format("DD-MM-YYYY")}
+                          </Text>
                         </Table.Td>
-                      ))}
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Stack>
-          </ScrollArea>
-          <Modal
-            opened={opened}
-            onClose={close}
-            title="Response Actions"
-            centered
-          >
-            {!isDeleteAction && (
-              <Group py="xl">
-                <RateupButtonBlackOutline
-                  leftIcon={<IconTrashXFilled />}
-                  title="Delete Response"
-                  onClick={() => setIsDeleteAction(true)}
-                />
-              </Group>
-            )}
-            <Stack style={{ display: isDeleteAction ? "block" : "none" }}>
-              <Divider pb="2rem" />
-              <Text fz="lg"> Delete this Reponse </Text>
-              <Text color="red">
-                Once deleted, response entry data will be lost.
-              </Text>
-
-              <Stack pt="xl">
-                <Text>
-                  To proceed further, type in your email id and click confirm
-                  delete.
-                </Text>
-                <TextInput
-                  style={{ maxWidth: "300px" }}
+                        {questions?.map((q) => (
+                          <Table.Td
+                            key={q.id}
+                            title={getResponse(q.id, response)}
+                          >
+                            <BadgeorText
+                              questionType={q.type}
+                              response={getResponse(q.id, response)}
+                            />
+                          </Table.Td>
+                        ))}
+                        <Table.Td p={10} miw={50}>
+                          <Button
+                            variant="subtle"
+                            color="red"
+                            onClick={() => {
+                              setSelectedRowId(response?.id);
+                              open();
+                            }}
+                          >
+                            <IconTrashXFilled />
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Stack>
+            </ScrollArea>
+            <FormModalLayout
+              opened={opened}
+              onClose={close}
+              title="Delete Response"
+              centered
+              buttonTitle="Delete"
+              includeCancelButton
+              onSubmit={confirmDelete}
+            >
+              <Stack py={"sm"}>
+                <Text>To proceed further, verify your email id.</Text>
+                <ContainedTextField
                   withAsterisk
                   label="Verify email"
                   placeholder="Enter your login email"
                   required
-                  mt="md"
                   value={verifyEmail}
                   onChange={(e) => setVerifyEmail(e.target.value)}
                 />
+                <Text c="red">
+                  Once deleted, response entry data will be lost.
+                </Text>
               </Stack>
-              <Group mt="xl" pt="xl">
-                <RateupButtonSecondary onClick={close} title="Close" />
-                <RateupButtonBlue
-                  onClick={confirmDelete}
-                  title="Confirm"
-                  loading={isDeleting}
-                />
-              </Group>
-            </Stack>
-          </Modal>
+            </FormModalLayout>
+          </>
         </PaperLayout>
+      ) : (
+        <NothingFound text="No responses yet" />
       )}
     </Stack>
   );
@@ -267,6 +238,11 @@ function TableHead({ questions }: TableHeadProps) {
             </Text>
           </Table.Th>
         ))}
+        <Table.Th>
+          <Text fz="lg" c="dark.5" fw="600" p={10}>
+            Delete
+          </Text>
+        </Table.Th>
         {/* TODO : above 'English' given as a temporary fix,
            change default language for page survey/response/id */}
       </Table.Tr>

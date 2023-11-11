@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Group,
-  Flex,
-  SimpleGrid,
-  Title,
-  Space,
-  ScrollArea,
-} from "@mantine/core";
+import { Group, SimpleGrid, Title, Space, Stack } from "@mantine/core";
 import { useContext, useState } from "react";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
@@ -21,6 +14,7 @@ import {
 } from "../../../components/Button/RateupButtons";
 import { UserRole } from "../../../utils/enums";
 import { useUser } from "../../../context/UserContext";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -41,10 +35,10 @@ export default function MenuPage() {
     setEditingItem(null);
     close();
   }
-
+  console.log(selectedTeamId);
   return (
-    <>
-      <Flex justify={"space-between"} align={"center"} mb={"lg"}>
+    <Stack h={"100%"}>
+      <Group justify="space-between">
         <Group>
           <Title size="calc(2rem * var(--mantine-scale))">All Menus</Title>
           {user?.role !== UserRole.MEMBER && (
@@ -52,7 +46,7 @@ export default function MenuPage() {
               title="Add Menu"
               rightIcon={<IconPlus />}
               radius="xl"
-              size="md"
+              size="lg"
               onClick={handleCreateClick}
             />
           )}
@@ -71,35 +65,31 @@ export default function MenuPage() {
             rightIcon={<IconSelector size="1rem" />}
           />
         </Group>
-      </Flex>
-      <Space h="xl" />
-
-      <ScrollArea h="70vh">
-        <SimpleGrid
-          p={1}
-          spacing={"lg"}
-          cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
-          my="lg"
-        >
-          <SelectedTeamContext.Provider value={{ selectedTeamId }}>
-            {selectedTeamId && (
-              <CreateMenuModal
-                opened={openCreateModal}
-                close={handleCreateEditClose}
-                editingItem={editingItem}
-              />
-            )}
-            <DisplayMenus handleEditClick={handleEditClick} sorthandle={sort} />
-          </SelectedTeamContext.Provider>
-        </SimpleGrid>
-      </ScrollArea>
-    </>
+      </Group>
+      <Space h="lg" />
+      <SimpleGrid
+        p={1}
+        spacing={"lg"}
+        cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
+        style={{ overflow: "auto" }}
+      >
+        <SelectedTeamContext.Provider value={{ selectedTeamId }}>
+          {selectedTeamId && (
+            <CreateMenuModal
+              opened={openCreateModal}
+              close={handleCreateEditClose}
+              editingItem={editingItem}
+            />
+          )}
+          <DisplayMenus handleEditClick={handleEditClick} sorthandle={sort} />
+        </SelectedTeamContext.Provider>
+      </SimpleGrid>
+    </Stack>
   );
 }
 
 function DisplayMenus({ handleEditClick, sorthandle }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-
   const { isError, isLoading, data: menus } = useAllMenus();
 
   if (isLoading || isError) {
@@ -117,14 +107,19 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
     const dateB = new Date(b.createdAt).getTime();
     return sorthandle ? dateA - dateB : dateB - dateA;
   });
-
-  if (sortedMenus?.length === 0) return <>No Menu data Avaliable</>;
-
   return (
     <>
-      {sortedMenus?.map((menu) => (
-        <MenuCard key={menu.id} menu={menu} handleEditClick={handleEditClick} />
-      ))}
+      {sortedMenus?.length > 0 ? (
+        sortedMenus?.map((menu) => (
+          <MenuCard
+            key={menu.id}
+            menu={menu}
+            handleEditClick={handleEditClick}
+          />
+        ))
+      ) : (
+        <NothingFound text="No menus available." />
+      )}
     </>
   );
 }

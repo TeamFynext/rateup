@@ -11,6 +11,7 @@ import {
   ScrollArea,
   Divider,
   Box,
+  Badge,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
@@ -21,7 +22,6 @@ import {
   IconPlus,
   IconStar,
   IconTrash,
-  IconX,
 } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
@@ -39,11 +39,12 @@ import {
   logicSupportedTypes,
   validationSupportedTypes,
 } from "../../../utils/data";
-import { showErrorToast } from "../../../utils/notifications";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -111,11 +112,14 @@ export function QuestionDetailedView({
         surveyLanguages,
         form.values.title,
       );
+      const completedLangs = surveyLanguages.filter(
+        (lang) => !missingLangs.includes(lang),
+      );
 
       if (missingLangs.length > 0) {
         setIsSaving(false);
         setSelectedLanguage(missingLangs[0]);
-        showErrorToast(`Question is missing in ${missingLangs[0]} language`);
+        showSuccessToast(`Question is added in ${completedLangs}.`);
         return "error";
       }
 
@@ -143,47 +147,57 @@ export function QuestionDetailedView({
 
     return "saved";
   };
-
   // TODO: show question type somewhere
   return (
-    <Stack justify="space-between" style={{ height: "100%" }}>
-      <form onSubmit={form.onSubmit(handleSave)}>
+    <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
+      <Stack justify="space-between" style={{ height: "100%" }}>
         <ScrollArea style={{ height: "80%" }}>
           <Stack>
-            <Stack style={{ minHeight: "150px", height: "100%" }}>
-              <TextInput
-                fw={800}
-                fz="lg"
-                ref={textInputRef}
-                styles={{
-                  input: {
-                    fontSize: titleFontSize,
-                    fontWeight: 700, // set custom font size for this TextInput
-                  },
-                }}
-                style={{
-                  marginBottom: "20px", // add 30px bottom margin
-                }}
-                variant="unstyled"
-                size="xl"
-                placeholder="Enter question title here *"
-                {...form.getInputProps(`title.${selectedLanguage}`)}
-                value={form.values.title[selectedLanguage]}
+            <Group justify="space-between" p={2} gap={2}>
+              <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
+                <TextInput
+                  fw={800}
+                  fz="lg"
+                  ref={textInputRef}
+                  styles={{
+                    input: {
+                      fontSize: titleFontSize,
+                      fontWeight: 700, // set custom font size for this TextInput
+                    },
+                  }}
+                  style={{
+                    marginBottom: "20px", // add 30px bottom margin
+                  }}
+                  variant="unstyled"
+                  size="xl"
+                  placeholder="Enter question title here *"
+                  {...form.getInputProps(`title.${selectedLanguage}`)}
+                  value={form.values.title[selectedLanguage]}
+                />
+                <TextInput
+                  variant="unstyled"
+                  placeholder="Enter question description here"
+                  {...form.getInputProps(`description.${selectedLanguage}`)}
+                  value={form.values.description[selectedLanguage]}
+                  styles={{
+                    input: {
+                      fontSize: "1.1rem",
+                      fontWeight: 400, // set custom font size for this TextInput
+                    },
+                  }}
+                />
+                <ExtraProps form={form} question={question} />
+              </Stack>
+              <LanguageCompletionView
+                selectedLanguage={selectedLanguage}
+                setSelectedLanguage={setSelectedLanguage}
+                languages={surveyLanguages}
+                notCompletedLanguages={validateAllLanguagesArePopulated(
+                  surveyLanguages,
+                  form.values.title,
+                )}
               />
-              <TextInput
-                variant="unstyled"
-                placeholder="Enter question description here"
-                {...form.getInputProps(`description.${selectedLanguage}`)}
-                value={form.values.description[selectedLanguage]}
-                styles={{
-                  input: {
-                    fontSize: "1.1rem",
-                    fontWeight: 400, // set custom font size for this TextInput
-                  },
-                }}
-              />
-              <ExtraProps form={form} question={question} />
-            </Stack>
+            </Group>
             <Divider
               my="xs"
               variant="dashed"
@@ -201,7 +215,7 @@ export function QuestionDetailedView({
           </Stack>
         </ScrollArea>
 
-        <Stack style={{ height: "10%", position: "sticky", bottom: "0" }}>
+        <Stack>
           <Divider />
 
           <Group mt="sm" justify="space-between" gap="sm">
@@ -262,8 +276,8 @@ export function QuestionDetailedView({
             </Group>
           </Group>
         </Stack>
-      </form>
-    </Stack>
+      </Stack>
+    </form>
   );
 }
 
@@ -346,7 +360,6 @@ interface ChoiceProps {
 }
 function Choice({ choice, onDelete }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
-
   return (
     <Group ref={ref} style={{ height: "30px" }}>
       <Checkbox label={choice} checked={false} readOnly />
@@ -379,3 +392,43 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
       return null;
   }
 }
+
+const LanguageCompletionView = ({
+  languages,
+  notCompletedLanguages,
+  selectedLanguage,
+  setSelectedLanguage,
+}: {
+  languages: string[];
+  notCompletedLanguages: string[];
+  selectedLanguage?: string;
+  setSelectedLanguage?: React.Dispatch<React.SetStateAction<string>>;
+}) => {
+  function isLanguageCompleted(language: string) {
+    return !notCompletedLanguages.includes(language);
+  }
+
+  return (
+    <PaperLayout w={"fit-content"} p={10} radius={"md"}>
+      <Stack gap={5}>
+        {languages.map((language) => {
+          const { hovered, ref } = useHover();
+          return (
+            <Badge
+              id={language}
+              ref={ref}
+              style={{ cursor: "pointer" }}
+              color={isLanguageCompleted(language) ? "green" : "red"}
+              variant={
+                selectedLanguage === language || hovered ? "filled" : "light"
+              }
+              onClick={() => setSelectedLanguage(language)}
+            >
+              {language}
+            </Badge>
+          );
+        })}
+      </Stack>
+    </PaperLayout>
+  );
+};

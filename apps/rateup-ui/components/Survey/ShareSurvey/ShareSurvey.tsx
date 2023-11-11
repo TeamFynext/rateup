@@ -21,7 +21,6 @@ import {
   IconChevronLeft,
   IconCopy,
   IconMail,
-  IconPhonePause,
   IconPlayerPause,
   IconPlayerPlay,
   IconX,
@@ -146,8 +145,7 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
 
   return (
     <Stack p={2}>
-      <Paper
-        radius="lg"
+      <PaperLayout
         p="30px"
         style={{
           boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
@@ -197,7 +195,7 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
             }
           />
         </Group>
-      </Paper>
+      </PaperLayout>
 
       <FormModalLayout
         centered
@@ -250,71 +248,68 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           />
         </Center>
       </FormModalLayout>
-      <Stack>
-        <PaperLayout p="md" radius="md" shadow="lg">
-          <SimpleGrid cols={2} spacing="xl">
-            <Stack style={{ maxWidth: "450px" }} p="md">
-              <Group>
-                <Title order={4}>Share Survey</Title>
-                <Text c="dark.0"> (Team : {selectedTeamName})</Text>
-              </Group>
-              <CopyLinkComponent value={shareUrl} />
-            </Stack>
+      <PaperLayout p="md" shadow="lg">
+        <SimpleGrid cols={2} spacing="xl">
+          <Stack style={{ maxWidth: "450px" }} p="md">
+            <Group>
+              <Title order={4}>Share Survey</Title>
+              <Text c="dark.0"> (Team : {selectedTeamName})</Text>
+            </Group>
+            <CopyLinkComponent value={shareUrl} />
+          </Stack>
 
-            <Stack style={{ maxWidth: "400px" }} p="md">
-              <Title order={4} style={{ textAlign: "center" }}>
-                How would you like to survey people?
-              </Title>
-              <Group justify="center">
-                <ActionIcon
-                  size="xl"
-                  variant="light"
-                  onClick={() => shareButtonAction("mail")}
-                  style={{ background: "none" }}
-                >
-                  <Image
-                    alt="mail icon"
-                    src={"/images/social-media-icons/mail.svg"}
-                    width={40}
-                    height={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </ActionIcon>
-                <ActionIcon
-                  size="xl"
-                  variant="light"
-                  onClick={() => shareButtonAction("whatsapp")}
-                  style={{ background: "none" }}
-                >
-                  <Image
-                    alt="whatsapp icon"
-                    src={"/images/social-media-icons/whatsapp.svg"}
-                    width={40}
-                    height={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </ActionIcon>
-                <ActionIcon
-                  size="xl"
-                  variant="light"
-                  onClick={() => shareButtonAction("fb")}
-                  style={{ background: "none" }}
-                >
-                  <Image
-                    alt="facebook icon"
-                    src={"/images/social-media-icons/facebook.svg"}
-                    width={40}
-                    height={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </ActionIcon>
-              </Group>
-            </Stack>
-          </SimpleGrid>
-        </PaperLayout>
-
-        <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
-      </Stack>
+          <Stack style={{ maxWidth: "400px" }} p="md">
+            <Title order={4} style={{ textAlign: "center" }}>
+              How would you like to survey people?
+            </Title>
+            <Group justify="center">
+              <ActionIcon
+                size="xl"
+                variant="light"
+                onClick={() => shareButtonAction("mail")}
+                style={{ background: "none" }}
+              >
+                <Image
+                  alt="mail icon"
+                  src={"/images/social-media-icons/mail.svg"}
+                  width={40}
+                  height={40}
+                  style={{ objectFit: "contain" }}
+                />
+              </ActionIcon>
+              <ActionIcon
+                size="xl"
+                variant="light"
+                onClick={() => shareButtonAction("whatsapp")}
+                style={{ background: "none" }}
+              >
+                <Image
+                  alt="whatsapp icon"
+                  src={"/images/social-media-icons/whatsapp.svg"}
+                  width={40}
+                  height={40}
+                  style={{ objectFit: "contain" }}
+                />
+              </ActionIcon>
+              <ActionIcon
+                size="xl"
+                variant="light"
+                onClick={() => shareButtonAction("fb")}
+                style={{ background: "none" }}
+              >
+                <Image
+                  alt="facebook icon"
+                  src={"/images/social-media-icons/facebook.svg"}
+                  width={40}
+                  height={40}
+                  style={{ objectFit: "contain" }}
+                />
+              </ActionIcon>
+            </Group>
+          </Stack>
+        </SimpleGrid>
+      </PaperLayout>
+      <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
     </Stack>
   );
 };

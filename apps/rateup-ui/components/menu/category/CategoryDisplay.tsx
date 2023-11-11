@@ -4,13 +4,19 @@ import { GilroySemibold } from "../../../public/fonts";
 
 export function CategoryDisplay({ category, setSelectedItem }) {
   return (
-    <Stack id={category?.id}  className={GilroySemibold.className}>
-      <Text c="var(--grey-color)" fz="clamp(1.25rem, 0.714rem + 1.429vw, 2rem)" tt={"capitalize"}>
+    <Stack id={category?.id} className={GilroySemibold.className}>
+      <Text
+        c="var(--grey-color)"
+        fz="clamp(1.25rem, 0.714rem + 1.429vw, 2rem)"
+        tt={"capitalize"}
+      >
         {category?.name}
       </Text>
       <Flex wrap="wrap" rowGap={"sm"}>
         {category?.items?.length === 0 ? (
-          <Text ml={"sm"} size="sm" pb={"lg"}>No Data Found</Text>
+          <Text ml={"sm"} size="sm" pb={"lg"}>
+            No Data Found
+          </Text>
         ) : (
           category?.items?.map((i: MenuItem) => (
             <ItemDisplay

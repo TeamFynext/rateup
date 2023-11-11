@@ -1,11 +1,12 @@
-import { Flex, Stack, Paper, Text, Badge } from "@mantine/core";
+import { Flex, Stack, Text, Badge } from "@mantine/core";
 import { useRouter } from "next/router";
 import React from "react";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
 const TeamCard = ({ team }) => {
   const router = useRouter();
   return (
-    <Paper
+    <PaperLayout
       p="md"
       shadow="md"
       radius="lg"
@@ -13,6 +14,7 @@ const TeamCard = ({ team }) => {
       onClick={() => {
         router.push(`teams/${team.code}`);
       }}
+      hoveractive
     >
       <Flex justify={"space-between"} align={"center"} h={"100%"}>
         <Stack gap={0}>
@@ -32,7 +34,7 @@ const TeamCard = ({ team }) => {
           </Text>
         </Stack>
       </Flex>
-    </Paper>
+    </PaperLayout>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Paper, Group, Text, Badge, Stack, Box, Grid } from "@mantine/core";
+import { Group, Text, Badge, Stack, Box, Grid } from "@mantine/core";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
 import { useResponses } from "../../../backend/surveys/response/response.query";
 import Heading from "../../styled/Heading/Heading";
@@ -43,7 +43,7 @@ const SurveyStats = ({ survey }) => {
     <Stack>
       <Heading subtitle="User Stats" />
       <Stack mih="400px" gap={10}>
-        <Paper shadow="xl" radius="lg" px="lg" py="md">
+        <PaperLayout px="lg" py={"lg"}>
           <Group justify="space-between">
             <Text c="var(--tertiary-color" size="28px" fw="700" px="xl">
               {responses?.length ?? 0} &nbsp;{" "}
@@ -62,7 +62,7 @@ const SurveyStats = ({ survey }) => {
               </PaperLayout>
             ))}
           </Group>
-        </Paper>
+        </PaperLayout>
         <Grid columns={10} p={2}>
           {/* Location-wise response frequency */}
           <Grid.Col span={{ xs: 10, md: 4 }}>
@@ -85,12 +85,12 @@ const SurveyStats = ({ survey }) => {
           </Grid.Col>
           {/* MAP Component */}
           <Grid.Col span={{ xs: 10, md: 6 }}>
-            <Paper
-              style={{ overflow: "hidden", borderRadius: "12px" }}
+            <PaperLayout
+              style={{ overflow: "hidden" }}
+              p={0}
               w="100%"
               h={"100%"}
               mih={350}
-              bg="red"
             >
               <Map
                 // TODO: set center = avg(responseLocations)?
@@ -124,7 +124,7 @@ const SurveyStats = ({ survey }) => {
                     );
                   })}
               </Map>
-            </Paper>
+            </PaperLayout>
           </Grid.Col>
         </Grid>
       </Stack>

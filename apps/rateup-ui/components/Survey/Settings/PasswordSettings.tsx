@@ -40,23 +40,28 @@ export const PasswordProtection = ({ surveyId, isProtected }) => {
 
   return (
     <PaperLayout>
-      <Switch
-        checked={passwordProtect}
-        onChange={(event) => handleSwitch(event)}
-        label="Enable"
-      />
-      {passwordProtect && (
-        <Stack px={30} py={20} style={{ maxWidth: "400px" }}>
-          <ContainedTextField
-            label="Password"
-            type="text"
-            placeholder="Enter new password"
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="off"
-          />
-          <RateupButtonBlue title={"Save Password"} onClick={updatePassword} />
-        </Stack>
-      )}
+      <>
+        <Switch
+          checked={passwordProtect}
+          onChange={(event) => handleSwitch(event)}
+          label="Enable"
+        />
+        {passwordProtect && (
+          <Stack px={30} py={20} style={{ maxWidth: "400px" }}>
+            <ContainedTextField
+              label="Password"
+              type="text"
+              placeholder="Enter new password"
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="off"
+            />
+            <RateupButtonBlue
+              title={"Save Password"}
+              onClick={updatePassword}
+            />
+          </Stack>
+        )}
+      </>
     </PaperLayout>
   );
 };

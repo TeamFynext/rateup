@@ -10,6 +10,7 @@ import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
 import SurveyContext from "../../../context/SurveyContext";
+import NothingFound from "../../NothingFound/NothingFound";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -192,9 +193,7 @@ const ResultsOverview = () => {
           </Stack>
         </Stack>
       ) : (
-        <Group m="50px" ml="150px">
-          No quantitative questions data available!
-        </Group>
+        <NothingFound text="No quantitative question responses!" />
       )}
     </>
   );

@@ -10,6 +10,7 @@ import {
   NavLink,
   Tooltip,
   Divider,
+  ScrollArea,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useMediaQuery } from "@mantine/hooks";
@@ -53,8 +54,9 @@ function _NavbarLink({
             key={parentIndex}
           >
             <NavLink
+              mt={5}
               styles={{
-                children: { display: !opened && "none" },
+                children: { display: !opened && "none", marginTop: 5 },
                 root: {
                   borderRadius: 5,
                 },
@@ -93,7 +95,11 @@ function _NavbarLink({
                         return null;
                       return (
                         <React.Fragment key={index}>
-                          <Tooltip label={label} position="right">
+                          <Tooltip
+                            label={!opened ? label : ""}
+                            position="right"
+                            styles={{ tooltip: { display: opened && "none" } }}
+                          >
                             <NavLink
                               styles={{
                                 children: { display: !opened && "none" },
@@ -134,7 +140,6 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   const theme = useMantineTheme();
   const router = useRouter();
   const [active, setActive] = useState(0);
-  const isLargerThanSm = useMediaQuery("(min-width: 768px)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { user } = useUser();
   const [userProfileAvatar, setUserProfileAvatar] = useState(
@@ -266,41 +271,46 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
         </>
       )}
 
-      <Stack
+      <ScrollArea
         mt={40}
-        w={"100%"}
-        justify="space-between"
-        style={{ flex: 1, overflow: "auto" }}
+        mb={20}
+        p={1}
+        h={"100%"}
+        scrollbarSize={2}
+        offsetScrollbars
+        styles={{
+          scrollbar: {
+            opacity: 0.3,
+          },
+        }}
       >
-        <Stack p={1} h={"100%"} style={{ overflow: "auto" }}>
-          <_NavbarLink
-            data={navTopData}
-            opened={opened}
-            currentRole={userInfo.role}
-            setOpened={setOpened}
-            active={active}
-            setActive={setActive}
-          />
-        </Stack>
-        <Stack gap={10}>
-          <_NavbarLink
-            data={navBottomData}
-            opened={opened}
-            currentRole={userInfo.role}
-            setOpened={setOpened}
-            active={active}
-            setActive={setActive}
-          />
-          <img
-            src={
-              opened
-                ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
-                : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/rateup_new_logo.svg`
-            }
-            alt=""
-            height={opened ? 40 : 20}
-          />
-        </Stack>
+        <_NavbarLink
+          data={navTopData}
+          opened={opened}
+          currentRole={userInfo.role}
+          setOpened={setOpened}
+          active={active}
+          setActive={setActive}
+        />
+      </ScrollArea>
+      <Stack gap={10}>
+        <_NavbarLink
+          data={navBottomData}
+          opened={opened}
+          currentRole={userInfo.role}
+          setOpened={setOpened}
+          active={active}
+          setActive={setActive}
+        />
+        <img
+          src={
+            opened
+              ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
+              : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/rateup_new_logo.svg`
+          }
+          alt=""
+          height={opened ? 40 : 20}
+        />
       </Stack>
     </Stack>
   );

@@ -4,7 +4,6 @@
   RateupButtonPrimary,
 } from "../../../components/Button/RateupButtons";
 import {
-  Flex,
   Title,
   Loader,
   Space,
@@ -126,14 +125,7 @@ export default function Teams() {
           />
         </Box>
       </FormModalLayout>
-      <Flex
-        mih={50}
-        gap="md"
-        justify="space-between"
-        align="center"
-        direction="row"
-        wrap="wrap"
-      >
+      <Group gap="md" justify="space-between">
         <Group gap={"md"}>
           <Title order={1}>Teams</Title>
           {retrieveRole(user?.role) === "Super Admin" && (
@@ -152,7 +144,7 @@ export default function Teams() {
           variant="subtle"
           rightIcon={<IconSelector size="1rem" />}
         />
-      </Flex>
+      </Group>
 
       <Space h="lg" />
 

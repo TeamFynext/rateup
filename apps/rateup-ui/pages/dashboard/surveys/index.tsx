@@ -3,17 +3,14 @@ import {
   Text,
   Stack,
   SimpleGrid,
-  Flex,
   Menu,
   Avatar,
   Badge,
   ActionIcon,
-  useMantineTheme,
   Group,
   Loader,
   Space,
   Modal,
-  Checkbox,
   Dialog,
   rem,
 } from "@mantine/core";
@@ -27,7 +24,6 @@ import {
   IconShare,
   IconTrash,
   IconSelector,
-  IconPencil,
   IconSettings,
   IconCheck,
   IconReload,
@@ -139,21 +135,16 @@ export default function Surveys() {
   };
 
   return (
-    <Stack h={"100%"}>
+    <Stack h={"100%"} gap={0}>
       <Group gap="md" justify="space-between">
         <Group gap="md" justify="flex-start">
-          <Title order={1}>Surveys : </Title>
-          <TeamSelector
-            value={selectedTeamId}
-            onChange={(teamId) => setSelectedTeamId(teamId)}
-            enableAll={true}
-          />
+          <Title order={1}>All Surveys</Title>
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
               title="Create Survey"
               rightIcon={<IconPlus />}
               radius="xl"
-              size="md"
+              size="lg"
               onClick={open}
             />
           )}
@@ -166,7 +157,11 @@ export default function Surveys() {
               onClick={() => openMergeSurvey()}
             />
           )}
-
+          <TeamSelector
+            value={selectedTeamId}
+            onChange={(teamId) => setSelectedTeamId(teamId)}
+            enableAll={true}
+          />
           <StatusFilterMenu
             filterParam={filterParam}
             setFilterParam={setFilterParam}
@@ -180,9 +175,7 @@ export default function Surveys() {
           />
         </Group>
       </Group>
-
-      {/* <Space h="lg" /> */}
-
+      <Space h="lg" />
       {surveys?.length > 0 ? (
         <SimpleGrid
           style={{ overflow: "auto" }}
@@ -250,10 +243,8 @@ export function SurveyCard({
   handleCheckBox,
   isChecked,
 }: SurveyCardProps): JSX.Element {
-  const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
-  const { user, setUser } = useUser();
-
+  const { user } = useUser();
   useEffect(() => {
     setTimeSince(getTimeSince(survey?.createdAt));
     const timeoutID = setInterval(
@@ -267,6 +258,8 @@ export function SurveyCard({
 
   return (
     <PaperLayout
+      hoveractive
+      mah={200}
       p="md"
       shadow="lg"
       radius="lg"
@@ -282,62 +275,58 @@ export function SurveyCard({
               );
       }}
     >
-      <Flex justify={"space-between"} align={"center"}>
-        <Text
-          mr={"sm"}
-          style={{ maxWidth: "70%" }}
-          truncate="end"
-          size="xl"
-          fw={700}
-        >
-          {survey?.title}
-        </Text>
-        <Group align={"center"} mt="sm" gap="xs">
-          <IconPencil />
-          <SurveyMenu survey={survey} />
-
-          <Checkbox
-            onClick={(e) => {
-              handleCheckBox(e, survey?.id);
-            }}
-          ></Checkbox>
+      <Stack justify="space-between" h={"100%"}>
+        <Group justify={"space-between"} align={"center"}>
+          <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
+            {survey?.title}
+          </Text>
+          <Group align={"center"} gap="xs">
+            <SurveyMenu survey={survey} />
+            {/* <Checkbox
+              onClick={(e) => {
+                handleCheckBox(e, survey?.id);
+              }}
+            ></Checkbox> */}
+          </Group>
         </Group>
-      </Flex>
-      <Group justify="space-between">
-        <Group align={"center"} mt="sm" gap="xs">
+        <Group gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
             Created {timeSince}
           </Text>
         </Group>
-        <StatusBadge active={survey?.active} />
-      </Group>
-
-      <Space h="xl" />
-      <Space h="lg" />
-
-      <Flex justify={"space-between"} mt="xl" align={"center"}>
-        <Badge
-          mt="md"
-          color={survey?.type == "web" ? "var(--tertiary-color)" : "green"}
-        >
-          {survey?.type}
-        </Badge>
-        {/* <Text>Total Responses : #</Text> */}
-        {/* //TODO */}
-        <Link
-          href={`/dashboard/surveys/${survey?.id}?tab=Responses`}
-          style={{ color: "var(--tertiary-color)" }}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Group gap="4px">
-            <IconChartBar size={20} />
-            <Text>Responses</Text>
+        <Group justify="space-between">
+          <Group>
+            <StatusBadge active={survey?.active} />
+            <Badge
+              color={survey?.type == "web" ? "var(--tertiary-color)" : "green"}
+            >
+              {survey?.type}
+            </Badge>
           </Group>
-        </Link>
-      </Flex>
+          <Group justify={"space-between"} align={"center"}>
+            {/* <Text>Total Responses : #</Text> */}
+            {/* //TODO */}
+            <PaperLayout p={2} radius={5}>
+              <Link
+                href={`/dashboard/surveys/${survey?.id}?tab=Responses`}
+                style={{
+                  color: "var(--tertiary-color)",
+                  textDecoration: "none",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <Group gap="4px">
+                  <IconChartBar size={15} />
+                  <Text fw={500}>Responses</Text>
+                </Group>
+              </Link>
+            </PaperLayout>
+          </Group>
+        </Group>
+      </Stack>
     </PaperLayout>
   );
 }
@@ -542,7 +531,7 @@ function SurveyMenu({ survey }) {
 
 function StatusBadge({ active }) {
   return (
-    <Badge mt="md" color={active ? "green" : "yellow"}>
+    <Badge color={active ? "green" : "yellow"}>
       {active ? "Active" : "Paused"}
     </Badge>
   );

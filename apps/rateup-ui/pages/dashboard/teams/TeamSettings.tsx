@@ -6,7 +6,6 @@ import {
   Grid,
   Group,
   Button,
-  Title,
   useMantineTheme,
   Badge,
 } from "@mantine/core";
@@ -244,44 +243,46 @@ function GoogleReviewSettings({ teamId }) {
       </Group>
       <Heading label="Add review link & suggestions" />
       <PaperLayout>
-        <Grid align="center">
-          <Grid.Col span={{ md: 6, lg: 4 }}>
-            <Text size={"md"}>Google Reviews Link: </Text>
-          </Grid.Col>
-          <Grid.Col span={{ md: 6, lg: 4 }}>
-            <ContainedTextField
-              placeholder="Enter google url"
-              required
-              mt="md"
-              {...form.getInputProps("googleLink")}
-            />
-          </Grid.Col>
-        </Grid>
+        <>
+          <Grid align="center">
+            <Grid.Col span={{ md: 6, lg: 4 }}>
+              <Text size={"md"}>Google Reviews Link: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
+              <ContainedTextField
+                placeholder="Enter google url"
+                required
+                mt="md"
+                {...form.getInputProps("googleLink")}
+              />
+            </Grid.Col>
+          </Grid>
 
-        <Grid>
-          <Grid.Col span={2}>
-            <Button variant="light" onClick={openReviewModal}>
-              Manage review suggestions
-              <Badge ml="xs">{count}</Badge>
-            </Button>
-          </Grid.Col>
-        </Grid>
-        <ReviewSuggestionModal
-          teamId={teamId}
-          opened={reviewModalOpened}
-          onClose={closeReviewModal}
-        />
-        <Grid justify="flex-end" pt="xl">
-          <Grid.Col span={2}>
-            <RateupButtonSecondary
-              onClick={handleSave}
-              loading={editTeamMutation.isPending}
-              title="Save Changes"
-              color="var(--tertiary-color)"
-            />
-          </Grid.Col>
-          <Grid.Col span={5}></Grid.Col>
-        </Grid>
+          <Grid>
+            <Grid.Col span={2}>
+              <Button variant="light" onClick={openReviewModal}>
+                Manage review suggestions
+                <Badge ml="xs">{count}</Badge>
+              </Button>
+            </Grid.Col>
+          </Grid>
+          <ReviewSuggestionModal
+            teamId={teamId}
+            opened={reviewModalOpened}
+            onClose={closeReviewModal}
+          />
+          <Grid justify="flex-end" pt="xl">
+            <Grid.Col span={2}>
+              <RateupButtonSecondary
+                onClick={handleSave}
+                loading={editTeamMutation.isPending}
+                title="Save Changes"
+                color="var(--tertiary-color)"
+              />
+            </Grid.Col>
+            <Grid.Col span={5}></Grid.Col>
+          </Grid>
+        </>
       </PaperLayout>
     </>
   );

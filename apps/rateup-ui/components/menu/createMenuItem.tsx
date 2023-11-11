@@ -101,7 +101,7 @@ export function CreateMenuItemModal({
     },
   });
   const [selectedImage, setSelectedImage] = useState(
-    form.values.images[0] || ""
+    form.values.images[0] || "",
   );
 
   useEffect(() => {
@@ -127,7 +127,7 @@ export function CreateMenuItemModal({
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
 
   const updateMenuItemMutation = useUpdateMenuItemMutation(
@@ -140,7 +140,7 @@ export function CreateMenuItemModal({
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
 
   useEffect(() => {
@@ -223,8 +223,8 @@ export function CreateMenuItemModal({
                       form.removeListItem(
                         "images",
                         form?.values?.images?.findIndex(
-                          (image) => image === selectedImage
-                        )
+                          (image) => image === selectedImage,
+                        ),
                       );
                       setSelectedImage(form?.values?.images[0] || "");
                     }}
@@ -361,7 +361,7 @@ function PriceSection({ form }: { form: any }) {
                 onClick={() => {
                   const newVariants = form?.values?.price?.variants?.slice(
                     0,
-                    -1
+                    -1,
                   );
                   form.setFieldValue("price.variants", newVariants);
                 }}

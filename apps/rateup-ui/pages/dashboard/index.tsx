@@ -8,17 +8,13 @@ import {
   Title,
   Text,
   Container,
-  Paper,
   Stack,
-  Modal,
   SimpleGrid,
   Button,
   ActionIcon,
-  Center,
-  useMantineTheme,
 } from "@mantine/core";
 import { Tooltip as MantineTooltip } from "@mantine/core";
-import { useDisclosure, useHover, useMediaQuery } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Loading from "../../components/Page/Loading";
@@ -31,6 +27,7 @@ import {
   IconSelector,
   IconSocial,
   IconReload,
+  IconSquareRoundedPlusFilled,
 } from "@tabler/icons-react";
 import { useSurveysSummary } from "../../backend/surveys/surveys.query";
 import { IconSpeakerphone } from "@tabler/icons-react";
@@ -61,8 +58,6 @@ export default function DashboardHome() {
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
   const [opened, { open, close }] = useDisclosure(false);
   const [timePeriod, setTimePeriod] = useState("weekly");
-  const theme = useMantineTheme();
-  const isLargerScreen = useMediaQuery("(min-width: 1100px)");
 
   const {
     isLoading: isLoadingSummary,
@@ -184,13 +179,67 @@ export default function DashboardHome() {
     return null;
   };
 
+  const createModalContent: Array<{
+    Icon: any;
+    title: string;
+    routerPath: string;
+  }> = [
+    {
+      Icon: IconCheckupList,
+      title: "Web Survey",
+      routerPath: "/dashboard/surveys?action=create",
+    },
+    {
+      Icon: IconSocial,
+      title: "Team",
+      routerPath: "/dashboard/teams?action=create",
+    },
+    {
+      Icon: IconBrandWhatsapp,
+      title: "WhatsApp Survey",
+      routerPath: "/dashboard/whatsapp/surveys?action=create",
+    },
+    {
+      Icon: IconPageBreak,
+      title: "Group Survey",
+      routerPath: "/dashboard/groupsurveys?action=create",
+    },
+    {
+      Icon: IconSpeakerphone,
+      title: "Promotion",
+      routerPath: "/dashboard/whatsapp/promotion?action=create",
+    },
+  ];
+
+  const summaryArray: Array<{
+    summaryname: string;
+    summaryvalue: string;
+    route: string;
+  }> = [
+    {
+      summaryname: "Active Surveys",
+      summaryvalue: surveysSummary?.activeSurveysCount ?? 0,
+      route: "/dashboard/surveys",
+    },
+    {
+      summaryname: "Total Surveys",
+      summaryvalue: surveysSummary?.totalSurveysCount ?? 0,
+      route: "/dashboard/surveys",
+    },
+    {
+      summaryname: "Total Teams",
+      summaryvalue: surveysSummary?.totalTeamsCount ?? 0,
+      route: "/dashboard/teams",
+    },
+  ];
+
   return (
     <>
       {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
         <Container fluid w="100%">
-          <Stack>
+          <Stack gap={"xl"}>
             <Group>
-              <Stack style={{ width: isLargerScreen && "28%" }}>
+              <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
                 <RateupButtonBlue
                   onClick={open}
                   title={"Create"}
@@ -214,224 +263,166 @@ export default function DashboardHome() {
                     },
                   }}
                 />
-                <Paper
-                  style={{ height: "105px", cursor: "pointer" }}
-                  radius="md"
-                  px="xl"
-                  py="sm"
-                  shadow="lg"
-                  onClick={() => router.push("/dashboard/surveys")}
-                >
-                  <Title
-                    style={{ textAlign: "center", color: "#1C518E" }}
-                    order={2}
-                    size="36px"
+                {summaryArray.map(({ summaryname, summaryvalue, route }) => (
+                  <PaperLayout
+                    hoveractive
+                    style={{ height: "105px", cursor: "pointer" }}
+                    py={"xl"}
+                    onClick={() => router.push(route)}
                   >
-                    {surveysSummary?.activeSurveysCount
-                      ? surveysSummary?.activeSurveysCount
-                      : 0}
-                  </Title>
-                  <Text
-                    style={{ textAlign: "center" }}
-                    mb="lg"
-                    fw={700}
-                    fz="xl"
-                    c="#595959"
-                  >
-                    {" "}
-                    Active Surveys
-                  </Text>
-                </Paper>
-
-                <Paper
-                  style={{ height: "105px", cursor: "pointer" }}
-                  radius="md"
-                  px="xl"
-                  py="sm"
-                  shadow="lg"
-                  onClick={() => router.push("/dashboard/surveys")}
-                >
-                  <Title
-                    style={{ textAlign: "center", color: "#1C518E" }}
-                    order={2}
-                    size="36px"
-                  >
-                    {surveysSummary?.totalSurveysCount
-                      ? surveysSummary?.totalSurveysCount
-                      : 0}
-                  </Title>
-                  <Text
-                    style={{ textAlign: "center" }}
-                    mb="lg"
-                    fw={700}
-                    fz="xl"
-                    c="#595959"
-                  >
-                    {" "}
-                    Total Surveys
-                  </Text>
-                </Paper>
-
-                <Paper
-                  style={{ height: "105px", cursor: "pointer" }}
-                  radius="md"
-                  px="xl"
-                  py="sm"
-                  shadow="lg"
-                  onClick={() => router.push("/dashboard/teams")}
-                >
-                  <Title
-                    style={{ textAlign: "center", color: "#1C518E" }}
-                    order={2}
-                    size="36px"
-                  >
-                    {surveysSummary?.totalTeamsCount
-                      ? surveysSummary?.totalTeamsCount
-                      : 0}
-                  </Title>
-                  <Text
-                    style={{ textAlign: "center" }}
-                    mb="lg"
-                    fw={700}
-                    fz="xl"
-                    c="#595959"
-                  >
-                    {" "}
-                    Total Teams
-                  </Text>
-                </Paper>
+                    <Stack gap={0} justify="center" h={"100%"}>
+                      <Title
+                        style={{ textAlign: "center", color: "#1C518E" }}
+                        order={2}
+                        size="36px"
+                      >
+                        {summaryvalue ? summaryvalue : 0}
+                      </Title>
+                      <Text
+                        style={{ textAlign: "center" }}
+                        fw={700}
+                        fz="xl"
+                        c="#595959"
+                      >
+                        {summaryname}
+                      </Text>
+                    </Stack>
+                  </PaperLayout>
+                ))}
               </Stack>
 
-              <Paper
-                radius="md"
+              <PaperLayout
                 px="xl"
-                py="lg"
-                my="xl"
-                shadow="lg"
-                style={{
-                  minWidth: "400px",
-                  width: "70%",
-                  height: "500px",
-                  alignContent: "center",
-                }}
+                py="sm"
+                style={{ flex: 0.7 }}
+                miw={300}
+                w={"100%"}
               >
-                <Stack>
-                  <Group justify="space-between">
-                    <Group>
-                      <Title order={3} c="gray">
-                        Overall Responses
-                      </Title>
-                      <MantineTooltip label="Refresh data">
-                        <ActionIcon
-                          variant="light"
-                          aria-label="Settings"
-                          onClick={refetch}
+                <>
+                  <Stack>
+                    <Group justify="space-between">
+                      <Group>
+                        <Title order={3} c="gray">
+                          Overall Responses
+                        </Title>
+                        <MantineTooltip label="Refresh data">
+                          <ActionIcon
+                            variant="light"
+                            aria-label="Settings"
+                            onClick={refetch}
+                          >
+                            <IconRefresh
+                              className={
+                                fetchStatus === "!fetching" &&
+                                classes.rotateInfinitely
+                              }
+                              style={{ width: "90%", height: "90%" }}
+                              stroke={1.5}
+                            />
+                          </ActionIcon>
+                        </MantineTooltip>
+                      </Group>
+
+                      <Group justify="flex-end">
+                        <Button
+                          variant={timePeriod === "daily" ? "filled" : "subtle"}
+                          radius="lg"
+                          color={timePeriod === "daily" ? "dark" : "gray"}
+                          onClick={() => setTimePeriod("daily")}
                         >
-                          <IconRefresh
-                            className={
-                              fetchStatus === "!fetching" &&
-                              classes.rotateInfinitely
-                            }
-                            style={{ width: "90%", height: "90%" }}
-                            stroke={1.5}
-                          />
-                        </ActionIcon>
-                      </MantineTooltip>
+                          Daily
+                        </Button>
+                        <Button
+                          variant={
+                            timePeriod === "weekly" ? "filled" : "subtle"
+                          }
+                          radius="lg"
+                          color={timePeriod === "weekly" ? "dark" : "gray"}
+                          onClick={() => setTimePeriod("weekly")}
+                        >
+                          Weekly
+                        </Button>
+                        <Button
+                          variant={
+                            timePeriod === "monthly" ? "filled" : "subtle"
+                          }
+                          radius="lg"
+                          color={timePeriod === "monthly" ? "dark" : "gray"}
+                          onClick={() => setTimePeriod("monthly")}
+                        >
+                          Monthly
+                        </Button>
+                      </Group>
                     </Group>
 
-                    <Group justify="flex-end">
-                      <Button
-                        variant={timePeriod === "daily" ? "filled" : "subtle"}
-                        radius="lg"
-                        color={timePeriod === "daily" ? "dark" : "gray"}
-                        onClick={() => setTimePeriod("daily")}
+                    <Group justify="flex-start">
+                      <Text
+                        mb="md"
+                        mt="-15px"
+                        ml="md"
+                        fw={700}
+                        fz="xl"
+                        c="#595959"
                       >
-                        Daily
-                      </Button>
-                      <Button
-                        variant={timePeriod === "weekly" ? "filled" : "subtle"}
-                        radius="lg"
-                        color={timePeriod === "weekly" ? "dark" : "gray"}
-                        onClick={() => setTimePeriod("weekly")}
-                      >
-                        Weekly
-                      </Button>
-                      <Button
-                        variant={timePeriod === "monthly" ? "filled" : "subtle"}
-                        radius="lg"
-                        color={timePeriod === "monthly" ? "dark" : "gray"}
-                        onClick={() => setTimePeriod("monthly")}
-                      >
-                        Monthly
-                      </Button>
+                        {total}
+                      </Text>
                     </Group>
-                  </Group>
-
-                  <Group justify="flex-start">
-                    <Text
-                      mb="md"
-                      mt="-15px"
-                      ml="md"
-                      fw={700}
-                      fz="xl"
-                      c="#595959"
-                    >
-                      {" "}
-                      {total}
-                    </Text>
-                  </Group>
-                </Stack>
-
-                <ResponsiveContainer width="100%" height={380}>
-                  <AreaChart
-                    data={filteredData}
-                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorCount"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
+                  </Stack>
+                  <ResponsiveContainer width="100%" height={380}>
+                    {filteredData?.length > 0 ? (
+                      <AreaChart
+                        data={filteredData}
+                        margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                       >
-                        <stop
-                          offset="5%"
-                          stopColor="#3F5BA9"
-                          stopOpacity={0.7}
+                        <defs>
+                          <linearGradient
+                            id="colorCount"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#3F5BA9"
+                              stopOpacity={0.7}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#62CBE6"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#FFFFFF"
+                              stopOpacity={0.8}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(str) => dayjs(str).format("MMM DD")}
                         />
-                        <stop
-                          offset="95%"
-                          stopColor="#62CBE6"
-                          stopOpacity={0.8}
+                        <YAxis />
+                        <Tooltip content={<CustomTooltip />} />
+                        {/* <Legend /> */}
+                        <CartesianGrid stroke="#f5f5f5" />
+                        <Area
+                          type="monotone"
+                          dataKey="responses"
+                          stroke="#3F5BA9"
+                          fillOpacity={1}
+                          fill="url(#colorCount)"
                         />
-                        <stop
-                          offset="100%"
-                          stopColor="#FFFFFF"
-                          stopOpacity={0.8}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(str) => dayjs(str).format("MMM DD")}
-                    />
-                    <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
-                    {/* <Legend /> */}
-                    <CartesianGrid stroke="#f5f5f5" />
-                    <Area
-                      type="monotone"
-                      dataKey="responses"
-                      stroke="#3F5BA9"
-                      fillOpacity={1}
-                      fill="url(#colorCount)"
-                    />
-                  </AreaChart>
+                      </AreaChart>
+                    ) : (
+                      <NothingFound text="No data to display" />
+                    )}
 
-                  {/* TODO : dots showing only on hover, show dots always in area chart */}
-                </ResponsiveContainer>
-              </Paper>
+                    {/* TODO : dots showing only on hover, show dots always in area chart */}
+                  </ResponsiveContainer>
+                </>
+              </PaperLayout>
             </Group>
 
             <FormModalLayout
@@ -440,22 +431,18 @@ export default function DashboardHome() {
               onClose={close}
               title="Create new"
             >
-              <Group py="xl" px="sm" mb="md">
-                <CardActionButton
-                  sx={{
-                    width: "160px",
-                    height: "100px",
-                    alignContent: "center",
-                    cursor: "pointer",
-                  }}
-                  onClick={() =>
-                    router.push("/dashboard/surveys?action=create")
-                  }
-                >
-                  <Center h="100%">
-                    <Stack align="center" gap="0">
-                      <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
-                        <IconCheckupList size="2rem" color="#595959" />
+              <Stack p={"md"}>
+                {createModalContent.map(({ Icon, routerPath, title }) => (
+                  <CardActionButton
+                    key={routerPath}
+                    sx={{
+                      cursor: "pointer",
+                    }}
+                    onClick={() => router.push(routerPath)}
+                  >
+                    <Group align="center" gap="10">
+                      <ActionIcon variant="subtle">
+                        <Icon size={30} color="#595959" />
                       </ActionIcon>
                       <Text
                         style={{ textAlign: "center" }}
@@ -463,123 +450,18 @@ export default function DashboardHome() {
                         fw={700}
                         c="#595959"
                       >
-                        Web Survey
+                        {title}
                       </Text>
-                    </Stack>
-                  </Center>
-                </CardActionButton>
-                <CardActionButton
-                  onClick={() => router.push("/dashboard/teams?action=create")}
-                  sx={{
-                    width: "170px",
-                    height: "100px",
-                    alignContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Center h="100%">
-                    <Stack align="center" gap="0">
-                      <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
-                        <IconSocial size="2rem" color="#595959" />
-                      </ActionIcon>
-                      <Text
-                        style={{ textAlign: "center" }}
-                        size="20px"
-                        fw={700}
-                        c="#595959"
-                      >
-                        Team
-                      </Text>
-                    </Stack>
-                  </Center>
-                </CardActionButton>
-                <CardActionButton
-                  sx={{
-                    width: "240px",
-                    height: "100px",
-                    alignContent: "center",
-                    cursor: "pointer",
-                  }}
-                  onClick={() =>
-                    router.push("/dashboard/whatsappsurvey?action=create")
-                  }
-                >
-                  <Center h="100%">
-                    <Stack align="center" gap="0">
-                      <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
-                        <IconBrandWhatsapp size="2rem" color="#595959" />
-                      </ActionIcon>
-                      <Text
-                        style={{ textAlign: "center" }}
-                        size="20px"
-                        fw={700}
-                        c="#595959"
-                      >
-                        WhatsApp Survey
-                      </Text>
-                    </Stack>
-                  </Center>
-                </CardActionButton>
-
-                <CardActionButton
-                  onClick={() =>
-                    router.push("/dashboard/groupsurveys?action=create")
-                  }
-                  sx={{
-                    width: "180px",
-                    height: "100px",
-                    alignContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Center h="100%">
-                    <Stack align="center" gap="0">
-                      <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
-                        <IconPageBreak size="2rem" color="#595959" />
-                      </ActionIcon>
-                      <Text
-                        style={{ textAlign: "center" }}
-                        size="20px"
-                        fw={700}
-                        c="#595959"
-                      >
-                        Group Survey
-                      </Text>
-                    </Stack>
-                  </Center>
-                </CardActionButton>
-
-                <CardActionButton
-                  onClick={() =>
-                    router.push("/dashboard/promotion?action=create")
-                  }
-                  sx={{
-                    width: "170px",
-                    height: "100px",
-                    alignContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Center h="100%">
-                    <Stack align="center" gap="0">
-                      <ActionIcon size="xl" variant="subtle" color="#F8F8F9">
-                        <IconSpeakerphone size="2rem" color="#595959" />
-                      </ActionIcon>
-                      <Text
-                        style={{ textAlign: "center" }}
-                        size="20px"
-                        fw={700}
-                        c="#595959"
-                      >
-                        Promotion
-                      </Text>
-                    </Stack>
-                  </Center>
-                </CardActionButton>
-              </Group>
+                      <Group ml={"auto"}>
+                        <IconSquareRoundedPlusFilled fillOpacity={0.4} />
+                      </Group>
+                    </Group>
+                  </CardActionButton>
+                ))}
+              </Stack>
             </FormModalLayout>
 
-            <Paper radius="md" px="xl" py="lg" my="xl" pt="xl" shadow="lg">
+            <PaperLayout p={"lg"}>
               <Group justify="space-between">
                 <Group align="center">
                   <Title order={2}>Active Surveys</Title>
@@ -618,7 +500,7 @@ export default function DashboardHome() {
                   />
                 </Group>
               </Group>
-            </Paper>
+            </PaperLayout>
 
             {surveysSummary?.surveys?.length > 0 ? (
               <SimpleGrid
@@ -676,16 +558,12 @@ export default function DashboardHome() {
 }
 
 function CardActionButton({ children, ...props }) {
-  const { hovered, ref } = useHover();
   return (
     <PaperLayout
       style={{ cursor: "pointer", flex: 1 }}
       miw="150px"
-      shadow={hovered ? "sm" : "xs"}
       radius="lg"
       p="md"
-      ref={ref}
-      bg={hovered ? "#F8F8F9" : "white"}
       {...props}
     >
       {children}

@@ -1,11 +1,4 @@
-import {
-  Card,
-  Grid,
-  Group,
-  Image,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Card, Grid, Group, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
 import { GilroyMedium, GilroyRegular } from "../../../public/fonts";

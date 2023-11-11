@@ -111,7 +111,7 @@ export function ItemDetailedViewModal({
                       aspectRatio: "4 / 3",
                     }}
                     src={`http://img.youtube.com/vi/${extractVideoId(
-                      item?.videoUrl
+                      item?.videoUrl,
                     )}/0.jpg`}
                     alt="video of menu"
                   />
