@@ -31,7 +31,7 @@ export function TeamSelector({
     if (enableAll) {
       onChange("all");
     } else if (teamRes?.data?.length > 0) {
-      onChange(teamRes?.data[0]?.teamId);
+      onChange(teamRes?.data[0]?.id);
     }
   }, [teamRes, value]);
   if (isError) {
@@ -47,8 +47,8 @@ export function TeamSelector({
     return <Text>No teams found!</Text>;
   }
   const teamOptions = teams.map((team) => ({
-    value: team.teamId,
-    label: team.teamName,
+    value: team.id,
+    label: team.name,
   }));
   if (enableAll) teamOptions.unshift({ value: "all", label: "All Teams" });
 

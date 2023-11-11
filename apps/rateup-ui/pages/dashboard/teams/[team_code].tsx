@@ -243,11 +243,11 @@ const TeamDetails = () => {
 
 export default TeamDetails;
 
-export function getTeamIdByCode(teamsData, code) {
+export function getTeamIdByCode(teamsData: Array<TeamData>, code: string) {
   let teamId = "";
   teamsData?.forEach((team) => {
     if (team.code === code) {
-      teamId = team.teamId;
+      teamId = team.id;
     }
   });
   return teamId;

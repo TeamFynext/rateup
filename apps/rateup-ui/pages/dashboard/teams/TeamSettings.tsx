@@ -155,7 +155,7 @@ const TeamSettings = ({
             </Grid>
           </form>
         </PaperLayout>
-        <GoogleReviewSettings teamId={id} />
+        <GoogleReviewSettings googleLink={teamData.googleLink} teamId={id} />
         <DangerZone
           title={"Delete Team"}
           message="Are you sure to delete this team?"
@@ -202,11 +202,11 @@ const TeamSettings = ({
 };
 
 export default TeamSettings;
-function GoogleReviewSettings({ teamId }) {
+function GoogleReviewSettings({ teamId, googleLink }) {
   const theme = useMantineTheme();
   const form = useForm({
     initialValues: {
-      googleLink: "",
+      googleLink: googleLink || "",
     },
     validate: {
       googleLink: (value) =>
@@ -216,13 +216,21 @@ function GoogleReviewSettings({ teamId }) {
     },
   });
 
+  useEffect(() => {
+    if (googleLink) {
+      form.setValues({
+        googleLink: googleLink,
+      });
+    }
+  }, [googleLink]);
+
   const [
     reviewModalOpened,
     { open: openReviewModal, close: closeReviewModal },
   ] = useDisclosure(false);
 
   const { data: count } = useReviewSuggestionsCount(!!teamId, teamId);
-  const editTeamMutation = useEditTeamMutation(teamId, () => {});
+  const editTeamMutation = useEditTeamMutation(teamId, () => { });
 
   function handleSave() {
     const res = form.validate();
@@ -251,7 +259,6 @@ function GoogleReviewSettings({ teamId }) {
             <Grid.Col span={{ md: 6, lg: 4 }}>
               <ContainedTextField
                 placeholder="Enter google url"
-                required
                 mt="md"
                 {...form.getInputProps("googleLink")}
               />

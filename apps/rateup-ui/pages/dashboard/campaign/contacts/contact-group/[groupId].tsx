@@ -117,7 +117,7 @@ export default function () {
   };
 
   const teamObj = teamsData?.data?.find((team) => {
-    return team?.teamId === groupDetails?.teamId;
+    return team?.id === groupDetails?.teamId;
   });
 
   return (
@@ -181,7 +181,7 @@ export default function () {
                     variant="outline"
                     size="xl"
                   >
-                    {teamObj?.teamName}
+                    {teamObj?.name}
                   </Badge>
                   <Stack gap={0}>
                     <Center>

@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
-  Paper,
   TextInput,
   Rating,
   Group,
@@ -11,6 +10,8 @@ import {
   Text,
   SimpleGrid,
   Button,
+  Divider,
+  Tooltip,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -21,12 +22,9 @@ import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
-import {
-  usePublicSurveyGoogleLink,
-  useUpdateSurveyGoogleLinkMutation,
-} from "../../../backend/surveys/surveys.query";
 import { mapSmileyIcon } from "../TakeSurvey/RatingSmiley";
-import SurveyContext from "../../../context/SurveyContext";
+import { useTeamsByUser } from "../../../backend/team/team.query";
+import { useSurvey } from "../../../backend/surveys/surveys.query";
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
@@ -41,19 +39,14 @@ const GoogleReviewEditor = ({
   const { surveyId } = useRouter().query as { surveyId: string };
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { data: survey } = useSurvey(surveyId);
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
     setIsSaving,
   });
-  const googleLinkUpdateMutation = useUpdateSurveyGoogleLinkMutation(
-    surveyTeamMapId,
-    setLinkUpdateStatus,
-  );
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false);
-  const [googleReviewLink, setGoogleReviewLink] = useState("");
   const [minRating, setMinRating] = useState(3);
   const [minOpinion, setMinOpinion] = useState(6);
   const [selectedSmileys, setSelectedSmileys] = useState([
@@ -139,48 +132,22 @@ const GoogleReviewEditor = ({
     }),
   );
 
-  const {
-    isLoading,
-    isError,
-    data: googleLink,
-  } = usePublicSurveyGoogleLink(surveyTeamMapId?.toString());
-
-  useEffect(() => {
-    if (googleLink) setGoogleReviewLink(googleLink);
-  }, [googleLink]);
+  const { data: teamsRes } = useTeamsByUser();
 
   const handleSave = async () => {
-    if (googleReviewLink.length > 4) {
-      notifications.show({
-        id: "load-data",
-        loading: true,
-        title: "Enabling google review",
-        message: `Hold on, your changes are getting updated...`,
-        autoClose: false,
-        withCloseButton: false,
-      });
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Enabling google review",
+      message: `Hold on, your changes are getting updated...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
 
-      try {
-        if (googleReviewLink !== googleLink) {
-          setIsSaving(true);
-          await googleLinkUpdateMutation.mutateAsync({
-            data: { googleLink: googleReviewLink },
-          });
-        } else {
-          setLinkUpdateStatus(true);
-        }
-      } catch (error) {
-        handleError(error);
-      }
-    } else {
-      notifications.show({
-        id: "load-data",
-        color: "red",
-        title: "Error",
-        message: "Enter valid Google Link",
-        icon: <IconX size="1rem" />,
-        autoClose: 2000,
-      });
+    try {
+      setLinkUpdateStatus(true);
+    } catch (error) {
+      handleError(error);
     }
   };
 
@@ -210,148 +177,178 @@ const GoogleReviewEditor = ({
     setLinkUpdateStatus(false);
   };
 
+  const teamsToDisplay = teamsRes?.data?.filter(
+    (t) => survey?.teams.some((st) => st.id === t.id),
+  );
+
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Title order={3}>Google Reviews Setup</Title>
-      <Paper
-        p="xl"
-        style={{ minHeight: "350px", minWidth: "600px", maxWidth: "600px" }}
-      >
-        <Group align="center" justify="center" pb="xl">
-          <Switch.Group
-            pb={30}
+      <Stack px="lg" h="100%">
+        <>
+          <Switch
             label="Google Reviews"
             description="Setup Google Page review for users."
-          >
-            <Group></Group>
-          </Switch.Group>
+            labelPosition="left"
+            checked={enableGoogleReview}
+            onChange={(event) => handleSwitch(event)}
+            size="lg"
+            styles={{
+              body: {
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+              },
+            }}
+          />
 
-          <Stack justify="center">
-            <Switch
-              px={30}
-              py={20}
-              checked={enableGoogleReview}
-              onChange={(event) => handleSwitch(event)}
-              label="Enable"
-            />
-          </Stack>
-        </Group>
-
-        {enableGoogleReview && (
-          <Stack px={30} py={10} style={{ maxWidth: "600px" }}>
-            <Group pb={30}>
-              {(() => {
-                switch (selectedQ?.type) {
-                  case Q.Smiley:
-                    return (
-                      <SimpleGrid cols={3} spacing={30}>
-                        <Text fw={500}>
-                          {" "}
-                          Select the emojis for which Google Review to be
-                          enabled:{" "}
-                        </Text>
-                        <Text fw={500}> : </Text>
-                        <Group style={{ minWidth: "300px" }}>
-                          {SMILEY_OPTIONS.map(({ value, label }) => (
-                            <Button
-                              key={value}
-                              variant={
-                                selectedSmileys.includes(value)
-                                  ? "gradient"
-                                  : "default"
-                              }
-                              gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
-                              onClick={() => updateSmileyResponse(value)}
-                              style={{ minHeight: "20px", maxWidth: "70px" }}
-                            >
-                              {mapSmileyIcon(value)}
-                            </Button>
-                          ))}
-                        </Group>
-                      </SimpleGrid>
-                    );
-                  case Q.Rating:
-                    return (
-                      <SimpleGrid cols={3} spacing={30}>
-                        <Text fw={500}>
-                          {" "}
-                          Select minimum rating for enabling Google Review:{" "}
-                        </Text>
-                        <Text fw={500}> : </Text>
-                        <Stack align="center">
-                          <Rating
-                            value={minRating}
-                            onChange={setMinRating}
-                            size="xl"
-                          />
-                          <Text> {minRating} stars and above.</Text>
-                        </Stack>
-                      </SimpleGrid>
-                    );
-                  case Q.Opinion:
-                    return (
-                      <SimpleGrid cols={3} spacing={30}>
-                        <Text fw={500}>
-                          {" "}
-                          Select minimum scale value for enabling Google Review:{" "}
-                        </Text>
-                        <Text fw={500}> : </Text>
-                        <Stack>
-                          <Group style={{ minWidth: "300px" }}>
-                            {(() => {
-                              const buttons = [];
-                              for (let i = 1; i <= 10; i++) {
-                                buttons.push(
-                                  <Button
-                                    key={i}
-                                    radius="xl"
-                                    size="xs"
-                                    onClick={() => setMinOpinion(i)}
-                                    color={minOpinion === i ? "blue" : "blue.9"}
-                                    variant={
-                                      minOpinion === i ? "gradient" : "default"
-                                    }
-                                    gradient={{
-                                      from: "#62CBE6",
-                                      to: "#3F5BA9",
-                                    }}
-                                  >
-                                    {i}
-                                  </Button>,
-                                );
-                              }
-                              return buttons;
-                            })()}
-                          </Group>
-                          <Text pt="sm" fz="sm" c="dimmed">
-                            {" "}
-                            For {minOpinion} and above.
-                          </Text>
-                        </Stack>
-                      </SimpleGrid>
-                    );
-                  default:
-                    return null;
-                }
-              })()}
-            </Group>
-
-            <SimpleGrid cols={3} spacing={30}>
-              <Text fw={500}> Google Review Link </Text>
-              <Text fw={500}> : </Text>
-              <TextInput
-                style={{ minWidth: "300px" }}
-                type="text"
-                withAsterisk
-                placeholder="Enter Google Review Link"
-                value={googleReviewLink}
-                onChange={(e) => setGoogleReviewLink(e.target.value)}
-                autoComplete="off"
-              />
-            </SimpleGrid>
-          </Stack>
-        )}
-      </Paper>
+          {enableGoogleReview && (
+            <>
+              <Stack>
+                <Group>
+                  {(() => {
+                    switch (selectedQ?.type) {
+                      case Q.Smiley:
+                        return (
+                          <SimpleGrid cols={3} spacing={30}>
+                            <Text fw={500}>
+                              Select the emojis for which Google Review to be
+                              enabled:
+                            </Text>
+                            <Text fw={500}> : </Text>
+                            <Group style={{ minWidth: "300px" }}>
+                              {SMILEY_OPTIONS.map(({ value, label }) => (
+                                <Button
+                                  key={value}
+                                  variant={
+                                    selectedSmileys.includes(value)
+                                      ? "gradient"
+                                      : "default"
+                                  }
+                                  gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
+                                  onClick={() => updateSmileyResponse(value)}
+                                  style={{
+                                    minHeight: "20px",
+                                    maxWidth: "70px",
+                                  }}
+                                >
+                                  {mapSmileyIcon(value)}
+                                </Button>
+                              ))}
+                            </Group>
+                          </SimpleGrid>
+                        );
+                      case Q.Rating:
+                        return (
+                          <SimpleGrid cols={3} spacing={30}>
+                            <Text fw={500}>
+                              Select minimum rating for enabling Google Review:
+                            </Text>
+                            <Text fw={500}> : </Text>
+                            <Stack align="center">
+                              <Rating
+                                value={minRating}
+                                onChange={setMinRating}
+                                size="xl"
+                              />
+                              <Text> {minRating} stars and above.</Text>
+                            </Stack>
+                          </SimpleGrid>
+                        );
+                      case Q.Opinion:
+                        return (
+                          <SimpleGrid cols={3} spacing={30}>
+                            <Text fw={500}>
+                              {" "}
+                              Select minimum scale value for enabling Google
+                              Review:{" "}
+                            </Text>
+                            <Text fw={500}> : </Text>
+                            <Stack>
+                              <Group style={{ minWidth: "300px" }}>
+                                {(() => {
+                                  const buttons = [];
+                                  for (let i = 1; i <= 10; i++) {
+                                    buttons.push(
+                                      <Button
+                                        key={i}
+                                        radius="xl"
+                                        size="xs"
+                                        onClick={() => setMinOpinion(i)}
+                                        color={
+                                          minOpinion === i ? "blue" : "blue.9"
+                                        }
+                                        variant={
+                                          minOpinion === i
+                                            ? "gradient"
+                                            : "default"
+                                        }
+                                        gradient={{
+                                          from: "#62CBE6",
+                                          to: "#3F5BA9",
+                                        }}
+                                      >
+                                        {i}
+                                      </Button>,
+                                    );
+                                  }
+                                  return buttons;
+                                })()}
+                              </Group>
+                              <Text pt="sm" fz="sm" c="dimmed">
+                                {" "}
+                                For {minOpinion} and above.
+                              </Text>
+                            </Stack>
+                          </SimpleGrid>
+                        );
+                      default:
+                        return null;
+                    }
+                  })()}
+                </Group>
+              </Stack>
+              <Divider m="md" />
+              <Text fw={600} size="1.1rem" my="xs">
+                Google Review Links
+              </Text>
+              <Stack
+                p="sm"
+                style={{
+                  overflowY: "scroll",
+                  flexGrow: 1,
+                }}
+              >
+                {teamsToDisplay &&
+                  teamsToDisplay.map((team) => (
+                    <Group justify="space-between">
+                      <Text
+                        style={{
+                          flex: 1,
+                        }}
+                      >
+                        {team.name}
+                      </Text>
+                      <Text>:</Text>
+                      <Tooltip
+                        label={"Edit these links in the Team's Settings page"}
+                        openDelay={500}
+                      >
+                        <TextInput
+                          style={{
+                            flexGrow: 1,
+                          }}
+                          value={team.googleLink}
+                          readOnly
+                        />
+                      </Tooltip>
+                    </Group>
+                  ))}
+              </Stack>
+            </>
+          )}
+        </>
+      </Stack>
 
       <Group justify="space-between">
         <RateupButtonSecondary

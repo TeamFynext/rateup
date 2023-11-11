@@ -105,8 +105,8 @@ export default function GroupSurveysList() {
   useEffect(() => {
     if (teamsData?.length) {
       const newOptions = teamsData?.map((team) => ({
-        value: team?.teamId,
-        label: team?.teamName,
+        value: team?.id,
+        label: team?.name,
       }));
 
       setOptions((prev) => {
@@ -305,7 +305,11 @@ export function SurveyCard({
   );
 }
 
-function SurveyMenu({ survey, teamsData }) {
+interface SurveyMenuProps {
+  survey: Survey;
+  teamsData: TeamData[];
+}
+function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -320,8 +324,8 @@ function SurveyMenu({ survey, teamsData }) {
 
   useEffect(() => {
     const newOptions = teamsData?.map((team) => ({
-      value: team?.teamId,
-      label: team?.teamName,
+      value: team?.id,
+      label: team?.name,
     }));
 
     setOptions(newOptions);

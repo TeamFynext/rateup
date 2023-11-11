@@ -59,10 +59,10 @@ export function CreateSurveyModal({
     error,
   } = useTeamsByUser();
 
-  const allTeams = teamRes?.data?.map((team) => team?.teamId);
+  const allTeams = teamRes?.data?.map((team) => team?.id);
   const teamOptions = teamRes?.data?.map((team) => ({
-    value: team?.teamId,
-    label: team?.teamName,
+    value: team?.id,
+    label: team?.name,
   }));
 
   const form = useForm({

@@ -26,7 +26,7 @@ export const ContactGroupCard = ({ group }) => {
   };
 
   const teamObj = teamsData?.data?.find((team) => {
-    return team?.teamId === group?.teamId;
+    return team?.id === group?.teamId;
   });
 
   return (
@@ -61,7 +61,7 @@ export const ContactGroupCard = ({ group }) => {
       <Group justify="space-between" mt="md">
         <Text c="dimmed">created on {date}</Text>
         <Badge color="var(--tertiary-color)" variant="outline" size="lg">
-          {teamObj?.teamName}
+          {teamObj?.name}
         </Badge>
       </Group>
     </Paper>

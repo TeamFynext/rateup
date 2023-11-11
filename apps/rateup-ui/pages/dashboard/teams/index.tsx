@@ -155,7 +155,7 @@ export default function Teams() {
         >
           {teamsData?.data
             ? teamsData?.data?.map((team, i: number) => (
-                <CardButton key={i} title={team?.teamName}></CardButton>
+                <CardButton key={i} title={team?.name}></CardButton>
               ))
             : "No teams found."}
         </SimpleGrid>
@@ -171,14 +171,14 @@ export default function Teams() {
                 {teamsData?.data?.length > 0 ? (
                   (sort
                     ? [...teamsData?.data]?.sort((a, b) =>
-                        b.teamName.localeCompare(a.teamName),
+                        b.name.localeCompare(a.name),
                       )
                     : [...teamsData?.data]?.sort((a, b) =>
-                        a.teamName.localeCompare(b.teamName),
+                        a.name.localeCompare(b.name),
                       )
                   ).map((team, key) => (
                     <Grid.Col span={{ xs: 9, md: 4.5, lg: 3 }} key={key}>
-                      <TeamCard key={team.teamId} team={team} />
+                      <TeamCard key={team.id} team={team} />
                     </Grid.Col>
                   ))
                 ) : (

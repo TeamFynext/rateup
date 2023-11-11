@@ -61,6 +61,7 @@ declare global {
     welcomePageEnabled: boolean;
     orgLogo?: string;
     surveyTeamMapId?: string;
+    skipPreview: boolean;
   };
 
   interface STeam {
@@ -214,10 +215,13 @@ declare global {
   //for individual teams
 
   type TeamData = {
-    teamId: string;
-    teamName: string;
+    id: string;
+    name: string;
     code: string;
-    memberCount: number;
+    _count: {
+      members: number;
+    };
+    googleLink?: string | null;
   };
 
   type TeamsResponse = {

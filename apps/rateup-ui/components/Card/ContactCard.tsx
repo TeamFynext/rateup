@@ -31,7 +31,7 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
   };
 
   const teamObj = teamsData?.data?.find((team) => {
-    return team?.teamId === contact?.teamId;
+    return team?.id === contact?.teamId;
   });
   const openDeleteModal = () => {
     modals.openConfirmModal({
@@ -71,7 +71,7 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
       <Group justify="space-between">
         <Text c="dimmed">created on {date}</Text>
         <Badge color="var(--tertiary-color)" variant="outline" size="lg">
-          {teamObj?.teamName}
+          {teamObj?.name}
         </Badge>
       </Group>
     </Paper>

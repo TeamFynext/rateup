@@ -14,7 +14,7 @@ import { useRouter } from "next/router";
 export function useTeamsByUser() {
   return useQuery({
     queryKey: ["teamsDataUserQuery"],
-    queryFn: () => getTeamsByUser(),
+    queryFn: getTeamsByUser,
   });
 }
 export function useTeamMembersFromInvitation(teamId: string) {

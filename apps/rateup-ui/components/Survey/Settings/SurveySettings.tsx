@@ -11,6 +11,7 @@ const defaultEnabledModules = [
   "language",
   "kiosk",
   "teams",
+  "preview",
 ];
 const SurveySettings = ({
   surveyId,

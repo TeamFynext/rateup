@@ -19,7 +19,7 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-const defaultEnabledModules = ["name", "language", "kiosk", "teams"];
+const defaultEnabledModules = ["name", "language", "kiosk", "teams", "preview"];
 const GeneralSettings = ({
   survey,
   enabledModules = defaultEnabledModules,
@@ -31,8 +31,8 @@ const GeneralSettings = ({
   const { data: teamRes } = useTeamsByUser();
 
   const teamOptions = (teamRes?.data || []).map((team) => ({
-    value: team?.teamId,
-    label: team?.teamName,
+    value: team?.id,
+    label: team?.name,
   }));
 
   const surveyForm = useForm({
@@ -40,6 +40,7 @@ const GeneralSettings = ({
       title: "",
       languages: [],
       teams: [],
+      skipPreview: false,
     },
     validate: {
       title: (value) => (value.length ? null : "Cannot be empty"),
@@ -72,6 +73,7 @@ const GeneralSettings = ({
       title: values?.title,
       languages: values?.languages,
       teams: values?.teams,
+      skipPreview: values?.skipPreview,
       kioskMode: kioskMode,
     };
     editSurvey.mutate(data);
@@ -140,6 +142,19 @@ const GeneralSettings = ({
                 onChange={(event) => {
                   setKioskMode(event.target.checked);
                 }}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+        {enabledModules.includes("preview") && (
+          <Grid align="center" mt="md">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Skip Preview:</Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Switch
+                size={"md"}
+                {...surveyForm.getInputProps("skipPreview")}
               />
             </Grid.Col>
           </Grid>

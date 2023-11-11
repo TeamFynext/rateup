@@ -178,7 +178,7 @@ function TakeSurvey() {
           // Do nothing since we are already going to next question
         } else if (action === LogicAction.EndSurvey) {
           // End survey and submit
-          open();
+          openConfirmationModal();
           return;
         } else {
           // Action is a question id
@@ -197,9 +197,17 @@ function TakeSurvey() {
       goTo(survey.questions[index + 1]);
     } else {
       // Survey completed
-      open();
+      openConfirmationModal();
     }
   };
+
+  function openConfirmationModal() {
+    if (survey.skipPreview) {
+      finishSurvey();
+    } else {
+      open();
+    }
+  }
 
   const finishSurvey = () => {
     setIsSavingResponses(true);
