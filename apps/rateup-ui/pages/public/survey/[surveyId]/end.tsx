@@ -14,41 +14,33 @@ import {
   Box,
 } from "@mantine/core";
 import {
-  IconBrandGoogle,
   IconCircleCheck,
   IconHome,
-  IconJewishStar,
   IconRefresh,
   IconWand,
 } from "@tabler/icons-react";
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
-import {
-  usePublicSurveyGoogleLink,
-  useSurvey,
-} from "../../../../backend/surveys/surveys.query";
+import { usePublicSurveyGoogleLink } from "../../../../backend/surveys/surveys.query";
 import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
 import { GoogleIcon } from "../../../../public/images/icons/GoogleIcon";
 import {
   useDeleteReviewSuggestionMutation,
-  useReviewSuggestions,
+  usePublicReviewSuggestions,
 } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { shuffleArray } from "../../../../utils";
 import { ReviewSuggestion } from "../../../../types/global";
-import SurveyContext from "../../../../context/SurveyContext";
 
 export default function ThankYou() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const router = useRouter();
   const { msg } = router.query;
   const { k } = router.query as { k: string }; //kioskMode
-  const { surveyId } = router.query as { surveyId: string };
-  const { selectedTeamId } = useContext(SurveyContext);
+  const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(false);
-  const { data: survey } = useSurvey(surveyId);
 
   const {
     isLoading,
@@ -75,9 +67,6 @@ export default function ThankYou() {
     }
   }, [k]);
 
-  if (!survey) return null;
-
-  // TODO: add customisable thankyou page
   return (
     <Container style={{ background: "#F7F7F7" }}>
       <Stack style={{ height: "100vh" }}>
@@ -87,12 +76,12 @@ export default function ThankYou() {
           gap="xl"
           style={{ height: "90vh" }}
         >
-          <IconCircleCheck size={"4rem"} />
+          {enableGoogleReview || <IconCircleCheck size={"4rem"} />}
           <Title order={1} style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
             Thank you
           </Title>
           {enableGoogleReview && !isLoading && googleLink?.length > 4 && (
-            <GoogleReview googleLink={googleLink} teamId={selectedTeamId} />
+            <GoogleReview googleLink={googleLink} surveyTeamMapId={surveyId} />
           )}
 
           {k === "cs" && (
@@ -121,9 +110,10 @@ export default function ThankYou() {
   );
 }
 
-function GoogleReview({ googleLink, teamId }) {
+function GoogleReview({ googleLink, surveyTeamMapId }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const { data: reviewSuggestions } = useReviewSuggestions(true, teamId);
+  const { data: reviewSuggestions } =
+    usePublicReviewSuggestions(surveyTeamMapId);
 
   const [reviewIndex, setReviewIndex] = useState<number>(null);
   const [shuffledArray, setShuffledArray] =
@@ -158,25 +148,33 @@ function GoogleReview({ googleLink, teamId }) {
   }
 
   const deleteReviewMutation = useDeleteReviewSuggestionMutation(
-    teamId,
-    () => setLastCopiedReview(null),
-    undefined,
+    null, // TODO
     true,
   );
   // if user clicks on go to review page, delete the last copied review
   function handleGoToReviewPage() {
-    lastCopiedReview && deleteReviewMutation.mutate(lastCopiedReview.id);
+    lastCopiedReview &&
+      deleteReviewMutation.mutate(lastCopiedReview.id, {
+        onSuccess: () => {
+          setLastCopiedReview(null);
+        },
+      });
   }
 
   return (
-    <Stack w="100%" align="center" maw={400}>
-      <Text>Kindly Leave a Google Review</Text>
+    <Stack w="100%" align="center" maw={300}>
+      <Image
+        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/RateUsOnGoogle.png`}
+        alt="Rate Us On Google"
+        maw="200px"
+        mah="200px"
+      />
       {
-        // Only show suggestions if there are atleas 3 reviews
+        // Only show suggestions if there are atleast 3 reviews
         reviewSuggestions?.length >= 3 &&
           (showSuggestions && shuffledArray !== undefined ? (
-            <Paper shadow="sm" radius="md" p="sm">
-              <Stack gap={"xs"} align="center" miw="250px">
+            <Paper shadow="sm" radius="md" p="sm" w="100%">
+              <Stack gap={"xs"} align="center">
                 <Group justify="space-between" w="100%">
                   <Title order={4}>Suggestions</Title>
                   <ActionIcon
@@ -247,6 +245,11 @@ function GoogleReview({ googleLink, teamId }) {
           variant="outline"
           fullWidth
           onClick={handleGoToReviewPage}
+          h="50px"
+          bg="white"
+          style={{
+            boxShadow: "0px 7.20472px 43.22835px 0px rgba(0, 0, 0, 0.13)",
+          }}
         >
           Go to Review Page
         </Button>

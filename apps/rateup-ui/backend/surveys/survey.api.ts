@@ -127,7 +127,7 @@ export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
   const res = await axiosClient.get(
     `${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`,
   );
-  return res?.data?.data?.googleLink;
+  return res.data as string;
 }
 export async function deleteSurvey(surveyId: string) {
   return await axiosClient.delete(`${SURVEYURL}/${surveyId}`);

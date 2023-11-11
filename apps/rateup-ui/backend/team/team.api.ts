@@ -16,9 +16,9 @@ export interface IInviteMember {
 }
 
 export interface IEditTeam {
-  name: string;
-  googleLink: string;
-  code: string;
+  name?: string;
+  googleLink?: string;
+  code?: string;
 }
 
 export const createTeam = (data: ICreateTeam) =>

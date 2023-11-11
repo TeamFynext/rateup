@@ -1,15 +1,20 @@
 import {
   ActionIcon,
+  Badge,
+  Box,
   Button,
+  FileButton,
   Flex,
+  Group,
   Modal,
-  Paper,
+  Space,
   Stack,
+  Tabs,
   Text,
   Textarea,
 } from "@mantine/core";
 import {
-  useCreateReviewSuggestionMutation,
+  useCreateReviewSuggestionsMutation,
   useDeleteReviewSuggestionMutation,
   useReviewSuggestions,
   useUpdateReviewSuggestionMutation,
@@ -22,9 +27,15 @@ import {
   IconPencil,
   IconPlus,
   IconTrash,
+  IconUpload,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "@mantine/form";
 
+enum ReviewSuggestionTab {
+  Custom = "custom",
+  Json = "json",
+}
 interface ReviewSuggestionModalProps {
   teamId: string;
   opened: boolean;
@@ -47,20 +58,136 @@ export function ReviewSuggestionModal({
   }
 
   return (
-    <Modal title="Suggest reviews" opened={opened} onClose={onClose} size="lg">
+    <Modal
+      title="Suggest reviews"
+      opened={opened}
+      onClose={onClose}
+      size="lg"
+      styles={{
+        title: {
+          fontSize: "1.4rem",
+          fontWeight: 600,
+        },
+      }}
+    >
+      <Tabs defaultValue={ReviewSuggestionTab.Custom}>
+        <Tabs.List>
+          <Tabs.Tab value={ReviewSuggestionTab.Custom}>Custom</Tabs.Tab>
+          <Tabs.Tab value={ReviewSuggestionTab.Json}>JSON</Tabs.Tab>
+        </Tabs.List>
+        <Space h="12px" />
+        <Tabs.Panel value={ReviewSuggestionTab.Custom}>
+          <CustomPanel
+            teamId={teamId}
+            reviewSuggestions={reviewSuggestions}
+            handleClose={onClose}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={ReviewSuggestionTab.Json}>
+          <ImportJsonPanel handleClose={onClose} teamId={teamId} />
+        </Tabs.Panel>
+      </Tabs>
+    </Modal>
+  );
+}
+
+function CustomPanel({ teamId, reviewSuggestions, handleClose }) {
+  return (
+    <>
+      <CreateReviewSuggestionComponent teamId={teamId} />
       <Stack
-        mah="70vh"
+        mah="60vh"
         style={{
-          backgroundColor: "whitesmoke",
-          borderRadius: "8px",
           overflowY: "auto",
+          backgroundColor: "transparent",
         }}
         p="md"
       >
         <DisplayReviews reviews={reviewSuggestions} />
       </Stack>
-      <CreateReviewSuggestionComponent teamId={teamId} />
-    </Modal>
+      <Group justify="end" pt="sm">
+        <Button variant="outline" color="gray" onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleClose}>Save</Button>
+      </Group>
+    </>
+  );
+}
+
+const expectedJsonFormat = `[
+  "Review 1",
+  "Review 2",
+  "Review 3"
+]`;
+
+function ImportJsonPanel({ handleClose, teamId }) {
+  const [file, setFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      form.setFieldValue("json", e.target.result as string);
+    };
+    reader.readAsText(file);
+  }, [file]);
+
+  const form = useForm({
+    initialValues: {
+      json: "",
+    },
+    validate: {
+      json: (value) => {
+        try {
+          JSON.parse(value);
+          return null;
+        } catch (e) {
+          return "Invalid JSON";
+        }
+      },
+    },
+    validateInputOnBlur: true,
+  });
+
+  const createMutation = useCreateReviewSuggestionsMutation(teamId);
+  function handleImport() {
+    const { hasErrors } = form.validate();
+    if (hasErrors) {
+      showErrorToast("Invalid JSON");
+      return;
+    }
+    const reviews = JSON.parse(form.values.json) as Array<string>;
+    createMutation.mutate({
+      reviewSuggestions: reviews,
+      teamId: teamId,
+    });
+  }
+  return (
+    <Stack>
+      <Textarea
+        label="Paste JSON"
+        placeholder={expectedJsonFormat}
+        rows={5}
+        {...form.getInputProps("json")}
+      />
+      <Text ta={"center"}>OR</Text>
+      <FileButton accept="application/json" onChange={setFile}>
+        {(props) => (
+          <Button leftSection={<IconUpload />} {...props}>
+            Upload JSON
+          </Button>
+        )}
+      </FileButton>
+      <Group justify="end" mt="sm">
+        <Button variant="outline" color="gray" onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleImport}>Import</Button>
+      </Group>
+    </Stack>
   );
 }
 
@@ -77,8 +204,10 @@ function DisplayReviews({ reviews }: DisplayReviewsProps) {
   }
   return (
     <>
-      {reviews.map((review) => (
+      {reviews.map((review, index) => (
         <ReviewCard
+          index={index + 1}
+          key={review.id}
           review={review}
           isEditing={editingItem === review.id}
           setEditingItem={setEditingItem}
@@ -92,39 +221,49 @@ interface ReviewCardProps {
   review: ReviewSuggestion;
   isEditing?: boolean;
   setEditingItem?: (id: string) => void;
+  index: number;
 }
 function ReviewCard({
+  index,
   review: { review, id, teamId },
   isEditing,
   setEditingItem,
 }: ReviewCardProps) {
   const [value, setValue] = useState(review);
-  const updateMutation = useUpdateReviewSuggestionMutation(
-    teamId,
-    () => {
-      setEditingItem(null);
-    },
-    () => {
-      setEditingItem(null);
-    },
-  );
+  const updateMutation = useUpdateReviewSuggestionMutation(teamId);
   const deleteMutation = useDeleteReviewSuggestionMutation(teamId);
   function handleUpdate() {
     if (value !== review) {
-      updateMutation.mutate({
-        review: value,
-        id,
-      });
+      updateMutation.mutate(
+        {
+          review: value,
+          id,
+        },
+        {
+          onSuccess: () => {
+            setEditingItem(null);
+          },
+          onError: () => {
+            setEditingItem(null);
+          },
+        },
+      );
+    } else {
+      setEditingItem(null);
     }
   }
   return (
-    <Paper p="sm">
-      <Flex gap={"sm"}>
+    <Box p="sm">
+      <Flex gap={"sm"} align={"center"}>
+        <Badge p="sm" radius={"xl"}>
+          {index}
+        </Badge>
         {isEditing ? (
           <>
             <Textarea
               value={value}
               onChange={(e) => setValue(e.currentTarget.value)}
+              autoFocus
               style={{
                 flexGrow: 1,
               }}
@@ -142,7 +281,11 @@ function ReviewCard({
             <Text
               style={{
                 flexGrow: 1,
+                border: "1px solid gray",
+                borderRadius: "12px",
               }}
+              onDoubleClick={() => setEditingItem(id)}
+              p="md"
             >
               {review}
             </Text>
@@ -162,40 +305,56 @@ function ReviewCard({
           <IconTrash />
         </ActionIcon>
       </Flex>
-    </Paper>
+    </Box>
   );
 }
 
 function CreateReviewSuggestionComponent({ teamId }) {
-  const createReviewMutation = useCreateReviewSuggestionMutation(teamId);
+  const createReviewMutation = useCreateReviewSuggestionsMutation(teamId);
   const [newReview, setNewReview] = useState("");
 
   function handleAddReview() {
     createReviewMutation.mutate({
-      review: newReview,
+      reviewSuggestions: [newReview],
       teamId,
     });
     setNewReview("");
   }
   return (
-    <Flex py="sm" gap={"sm"} align={"center"}>
+    <Flex
+      p="sm"
+      gap={"sm"}
+      align={"stretch"}
+      style={{
+        border: "1px solid gray",
+        borderRadius: "12px",
+        boxShadow: "0px 6px 16px 0px rgba(0, 0, 0, 0.1)",
+      }}
+    >
       <ContainedTextArea
         placeholder="Suggest a review"
         style={{
-          flex: 2,
+          flex: 4,
         }}
+        styles={{
+          input: {
+            border: "none",
+          },
+        }}
+        variant="unstyled"
+        rows={4}
         value={newReview}
         onChange={(e) => setNewReview(e.currentTarget.value)}
       />
       <Button
-        variant="outline"
-        leftSection={<IconPlus />}
         style={{
-          flex: 1,
+          height: "inherit",
+          minWidth: "80px",
         }}
+        radius={"xl"}
         onClick={handleAddReview}
       >
-        Add suggestion
+        Add
       </Button>
     </Flex>
   );

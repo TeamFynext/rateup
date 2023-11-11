@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, Stack, Text, Grid, Group, Button } from "@mantine/core";
+import {
+  Dialog,
+  Stack,
+  Text,
+  Grid,
+  Group,
+  Button,
+  Title,
+  useMantineTheme,
+  Badge,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   RateupButtonPrimary,
@@ -10,13 +20,15 @@ import {
   useEditTeamMutation,
 } from "../../../backend/team/team.query";
 import { useDisclosure } from "@mantine/hooks";
-import { deleteTeamById } from "../../../backend/team/team.api";
+import { deleteTeamById, editTeam } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import DangerZone from "../../../components/DangerZone/DangerZone";
 import Heading from "../../../components/styled/Heading/Heading";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { ReviewSuggestionModal } from "../../../components/reviewSuggestion/ReviewSuggestionModal";
+import { GoogleIcon } from "../../../public/images/icons/GoogleIcon";
+import { useReviewSuggestionsCount } from "../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 
 export interface ITeamData {
   name: string;
@@ -36,7 +48,6 @@ const TeamSettings = ({
     initialValues: {
       name: "",
       code: "",
-      googleLink: "",
     },
     validate: {
       name: (value) => {
@@ -51,28 +62,14 @@ const TeamSettings = ({
         }
         return null; // Validation passed
       },
-      googleLink: (value) => {
-        if (value.length < 12) {
-          return "Enter valid Google Url: https://....";
-
-          //TODO  - add detailed url validation supporting shortened url
-        }
-        return null; // Validation passed
-      },
     },
   });
-
-  const [
-    reviewModalOpened,
-    { open: openReviewModal, close: closeReviewModal },
-  ] = useDisclosure(false);
 
   useEffect(() => {
     if (teamData?.name) {
       teamForm.setValues({
         name: teamData?.name || "",
         code: teamData?.code || "",
-        googleLink: teamData?.googleLink || "",
       });
     }
   }, [teamData]);
@@ -84,7 +81,6 @@ const TeamSettings = ({
     const data = {
       name: values.name,
       code: values.code,
-      googleLink: values.googleLink,
     };
     editTeam.mutate(data);
   };
@@ -147,33 +143,6 @@ const TeamSettings = ({
                 />
               </Grid.Col>
             </Grid>
-            <Grid align="center">
-              <Grid.Col span={{ md: 6, lg: 4 }}>
-                <Text size={"md"}>Google Reviews Link: </Text>
-              </Grid.Col>
-              <Grid.Col span={{ md: 6, lg: 4 }}>
-                <ContainedTextField
-                  placeholder="Enter google url"
-                  required
-                  mt="md"
-                  {...teamForm.getInputProps("googleLink")}
-                />
-              </Grid.Col>
-            </Grid>
-
-            <Grid>
-              <Grid.Col span={2}>
-                <Button variant="light" onClick={openReviewModal}>
-                  Add review suggestions
-                </Button>
-              </Grid.Col>
-            </Grid>
-            <ReviewSuggestionModal
-              teamId={id}
-              opened={reviewModalOpened}
-              onClose={closeReviewModal}
-            />
-
             <Grid justify="flex-end" pt="xl">
               <Grid.Col span={2}>
                 <RateupButtonSecondary
@@ -187,6 +156,7 @@ const TeamSettings = ({
             </Grid>
           </form>
         </PaperLayout>
+        <GoogleReviewSettings teamId={id} />
         <DangerZone
           title={"Delete Team"}
           message="Are you sure to delete this team?"
@@ -233,3 +203,86 @@ const TeamSettings = ({
 };
 
 export default TeamSettings;
+function GoogleReviewSettings({ teamId }) {
+  const theme = useMantineTheme();
+  const form = useForm({
+    initialValues: {
+      googleLink: "",
+    },
+    validate: {
+      googleLink: (value) =>
+        value.startsWith("https://") || value === ""
+          ? null
+          : "Please enter a valid url (https://...)",
+    },
+  });
+
+  const [
+    reviewModalOpened,
+    { open: openReviewModal, close: closeReviewModal },
+  ] = useDisclosure(false);
+
+  const { data: count } = useReviewSuggestionsCount(!!teamId, teamId);
+  const editTeamMutation = useEditTeamMutation(teamId, () => {});
+
+  function handleSave() {
+    const res = form.validate();
+    if (res.hasErrors) {
+      return;
+    }
+    editTeamMutation.mutate(form.values);
+  }
+
+  return (
+    <>
+      <Group gap={"xs"}>
+        <GoogleIcon width={"1.3rem"} height={"1.3rem"} />
+        <Heading
+          subtitle="Google Review"
+          titleprops={{ c: theme.colors.dark[5] }}
+        />
+      </Group>
+      <Heading label="Add review link & suggestions" />
+      <PaperLayout>
+        <Grid align="center">
+          <Grid.Col span={{ md: 6, lg: 4 }}>
+            <Text size={"md"}>Google Reviews Link: </Text>
+          </Grid.Col>
+          <Grid.Col span={{ md: 6, lg: 4 }}>
+            <ContainedTextField
+              placeholder="Enter google url"
+              required
+              mt="md"
+              {...form.getInputProps("googleLink")}
+            />
+          </Grid.Col>
+        </Grid>
+
+        <Grid>
+          <Grid.Col span={2}>
+            <Button variant="light" onClick={openReviewModal}>
+              Manage review suggestions
+              <Badge ml="xs">{count}</Badge>
+            </Button>
+          </Grid.Col>
+        </Grid>
+        <ReviewSuggestionModal
+          teamId={teamId}
+          opened={reviewModalOpened}
+          onClose={closeReviewModal}
+        />
+        <Grid justify="flex-end" pt="xl">
+          <Grid.Col span={2}>
+            <RateupButtonSecondary
+              onClick={handleSave}
+              loading={editTeamMutation.isPending}
+              title="Save Changes"
+              color="var(--tertiary-color)"
+            />
+          </Grid.Col>
+          <Grid.Col span={5}></Grid.Col>
+        </Grid>
+      </PaperLayout>
+    </>
+  );
+}

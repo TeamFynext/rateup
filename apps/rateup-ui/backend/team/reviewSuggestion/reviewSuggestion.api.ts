@@ -7,10 +7,29 @@ export async function getReviewsByTeamId(teamId: string) {
   return (await axiosClient.get(`${REVIEW_SUGGESTION_URL}/${teamId}`))
     .data as Array<ReviewSuggestion>;
 }
-export async function createReviewSuggestion(
-  reviewSuggestion: Omit<ReviewSuggestion, "id">,
+export async function getPublicReviewsBySurveyTeamMapId(
+  surveyTeamMapId: string,
 ) {
-  return await axiosClient.post(`${REVIEW_SUGGESTION_URL}`, reviewSuggestion);
+  return (
+    await axiosClient.get(`${REVIEW_SUGGESTION_URL}/public/${surveyTeamMapId}`)
+  ).data as Array<ReviewSuggestion>;
+}
+export async function getReviewsCountByTeamId(teamId: string) {
+  return (await axiosClient.get(`${REVIEW_SUGGESTION_URL}/${teamId}/count`))
+    .data as number;
+}
+interface CreateReviewSuggestionsProps {
+  reviewSuggestions: Array<string>;
+  teamId: string;
+}
+export async function createReviewSuggestions({
+  reviewSuggestions,
+  teamId,
+}: CreateReviewSuggestionsProps) {
+  return await axiosClient.post(
+    `${REVIEW_SUGGESTION_URL}/${teamId}`,
+    reviewSuggestions,
+  );
 }
 export async function updateReviewSuggestion(
   reviewSuggestion: Omit<ReviewSuggestion, "teamId">,

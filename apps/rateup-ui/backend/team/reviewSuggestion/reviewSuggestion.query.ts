@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createReviewSuggestion,
+  createReviewSuggestions,
   deleteReviewSuggestion,
+  getPublicReviewsBySurveyTeamMapId,
   getReviewsByTeamId,
+  getReviewsCountByTeamId,
   updateReviewSuggestion,
 } from "./reviewSuggestion.api";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
@@ -13,25 +15,30 @@ export const useReviewSuggestions = (enabled: boolean, teamId: string) =>
     queryKey: ["reviewSuggestion", teamId],
     queryFn: () => getReviewsByTeamId(teamId),
   });
-
-export const useCreateReviewSuggestionMutation = (
-  teamId: string,
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const usePublicReviewSuggestions = (surveyTeamMapId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: ["reviewSuggestion", surveyTeamMapId],
+    queryFn: () => getPublicReviewsBySurveyTeamMapId(surveyTeamMapId),
+  });
+export const useReviewSuggestionsCount = (enabled: boolean, teamId: string) =>
+  useQuery({
+    enabled: enabled,
+    queryKey: ["reviewSuggestion", teamId, "count"],
+    queryFn: () => getReviewsCountByTeamId(teamId),
+  });
+export const useCreateReviewSuggestionsMutation = (teamId: string) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: createReviewSuggestion,
+    mutationFn: createReviewSuggestions,
     onSuccess: () => {
-      showSuccessToast("Review suggestion created successfully");
-      onSuccess();
+      showSuccessToast("Review suggestions created successfully");
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
     },
     onError: () => {
-      showErrorToast("Error creating review suggestion");
-      onError();
+      showErrorToast("Error creating review suggestions");
     },
   });
   return createMutation;
@@ -63,8 +70,6 @@ export const useUpdateReviewSuggestionMutation = (
 
 export const useDeleteReviewSuggestionMutation = (
   teamId: string,
-  onSuccess = () => {},
-  onError = () => {},
   suppressNotifications = false,
 ) => {
   const queryClient = useQueryClient();
@@ -73,7 +78,6 @@ export const useDeleteReviewSuggestionMutation = (
     onSuccess: () => {
       suppressNotifications ||
         showSuccessToast("Review suggestion deleted successfully");
-      onSuccess();
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
@@ -81,7 +85,6 @@ export const useDeleteReviewSuggestionMutation = (
     onError: () => {
       suppressNotifications ||
         showErrorToast("Error deleting review suggestion");
-      onError();
     },
   });
   return deleteMutation;
