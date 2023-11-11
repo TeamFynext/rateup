@@ -8,7 +8,7 @@ import {
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
-import { getTeamsByUserId } from "../team/team.service";
+import { getTeamIdsByUserId } from "../team/team.service";
 import defaultTheme from "../welcomeTheme/defaultTheme";
 import { QuestionType } from "../../types/enums";
 const CryptoJS = require("crypto-js");
@@ -281,10 +281,7 @@ export async function getSurveyBylandingId(landingid: string) {
 //------------get ALL Surveys list of a logged user (without qns)--------
 
 export async function getSurveysByUserId(userId: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData?.map(
-    (item: { teamId: string }) => item?.teamId
-  );
+  const teamIds: string[] = await getTeamIdsByUserId(userId)
 
   const surveyRes = await prisma.survey.findMany({
     where: {
@@ -331,11 +328,7 @@ export async function getSurveysByUserId(userId: string) {
 
 //------------get web survey list --------
 export async function getWebSurveysByUserId(userId: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData?.map(
-    (item: { teamId: string }) => item?.teamId
-  );
-
+  const teamIds = await getTeamIdsByUserId(userId)
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
       teamId: {
@@ -359,10 +352,7 @@ export async function getWebSurveysByUserId(userId: string) {
 
 //------------get whatsapp survey list --------
 export async function getWhatsappSurveysByUserId(userId: string, type: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData?.map(
-    (item: { teamId: string }) => item?.teamId
-  );
+  const teamIds: string[] = await getTeamIdsByUserId(userId)
 
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
@@ -420,10 +410,7 @@ export async function getSurveysByTeam(teamId: string) {
 //-----Returns summary(responses, stats) of active surveys -- from ALL TEAMs in which the user is a member of 
 
 export async function getActiveSurveysSummmaryByUserId(userId: string) {
-  const teamData = await getTeamsByUserId(userId);
-  const teamIds: string[] = teamData.map(
-    (item: { teamId: string }) => item.teamId
-  );
+  const teamIds = await getTeamIdsByUserId(userId)
 
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
@@ -472,7 +459,7 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
     }));
 
   let summaryData = {
-    totalTeamsCount: teamData?.length,
+    totalTeamsCount: teamIds?.length,
     totalSurveysCount: allSurveys?.length,
     activeSurveysCount: activeSurveys?.length,
     surveys: activeSurveys
@@ -588,7 +575,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     }
   }
 
-  let { teams, ...dataInput} = input
+  let { teams, ...dataInput } = input
 
   const survey = await prisma.survey.update({
     where: {
@@ -597,7 +584,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     data: dataInput,
   });
 
-  if(teams?.length){
+  if (teams?.length) {
     let teamIds = teams.map(team => ({ teamId: team }))
     const surveyTeams = await prisma.surveyTeamMap.findMany({
       where: {
@@ -608,7 +595,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     let existingTeams = surveyTeams.map(team => team?.teamId)
     let newTeams = teamIds?.filter(team => !existingTeams?.includes(team?.teamId))
 
-    if(newTeams?.length){
+    if (newTeams?.length) {
       const newSurveyTeams = await prisma.surveyTeamMap.createMany({
         data: newTeams.map(team => ({ surveyId: id, ...team }))
       });
@@ -616,7 +603,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
     let deletedTeams = existingTeams?.filter(team => !teamIds?.map(team => team?.teamId).includes(team))
 
-    if(deletedTeams?.length){
+    if (deletedTeams?.length) {
       await Promise.all(deletedTeams?.map(async teamId => {
         const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
           where: {
@@ -640,7 +627,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
           where: { id: surveyTeamMap?.id }
         });
       }));
-      }
+    }
   }
 
   return {

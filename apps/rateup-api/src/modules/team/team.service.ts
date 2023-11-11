@@ -497,28 +497,33 @@ export async function getTeamsByUserId(userId: string) {
           id: true,
           name: true, // Team name
           code: true,
+          googleLink: true,
+          _count: {
+            select: {
+              members: true,
+            },
+          }
         },
       },
     },
   });
 
-  const teamData = await Promise.all(
-    teams.map(async (team) => {
-      const teamMembersCount = await prisma.teamMember.count({
-        where: { teamId: team.team.id },
-      });
-
-      return {
-        teamId: team.team.id,
-        teamName: team.team.name,
-        code: team.team.code,
-        memberCount: teamMembersCount,
-      };
-    })
-  );
-
-  return teamData;
+  return teams.map(({ team }) => team);
 }
+
+export async function getTeamIdsByUserId(userId: string) {
+  const teams = await prisma.teamMember.findMany({
+    where: {
+      userId,
+    },
+    select: {
+      teamId: true,
+    },
+  });
+
+  return teams.map(({ teamId }) => teamId);
+}
+
 
 export async function editTeam(
   { name, code, googleLink }: EditTeamInput,

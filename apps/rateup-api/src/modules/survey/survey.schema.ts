@@ -31,6 +31,7 @@ const createSurveyLandingRequestSchema = z.object({
 });
 const createSurveyResponseSchema = z.object({
   ...surveyCore,
+  skipPreview: z.boolean(),
   id: z.string(),
 });
 const createSurveyLandingResponseSchema = z.object({
@@ -76,6 +77,7 @@ const getSurveyPublicResponseSchema = z.object({
   getLocation: z.boolean(),
   welcomePageEnabled: z.boolean(),
   orgLogo:z.string(),
+  skipPreview: z.boolean(),
 });
 
 const updateSurveyRequestSchema = z.object({
@@ -91,6 +93,7 @@ const updateSurveyRequestSchema = z.object({
   kioskMode: z.boolean().optional(),
   isPublished: z.boolean().optional(),
   welcomePageEnabled: z.boolean().optional(),
+  skipPreview: z.boolean().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z
