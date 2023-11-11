@@ -22,7 +22,7 @@ export function CategoriesDrawer({
         content: classes.content,
         header: classes.header,
         title: classes.title,
-        close: classes.close
+        close: classes.close,
       }}
     >
       <Stack align="center" mt={"lg"}>

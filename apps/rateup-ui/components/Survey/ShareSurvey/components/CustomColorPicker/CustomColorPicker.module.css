@@ -1,0 +1,40 @@
+.custom-color-picker-container {
+  display: flex;
+  gap: 0.625rem;
+  width: fit-content;
+}
+
+.color-indicator {
+  padding: 3px;
+  width: 60px;
+  height: 50px;
+  border-radius: 1rem;
+  border: 2px solid black;
+  background-clip: content-box;
+  cursor: pointer;
+  background-color: black;
+  flex: 0 0 auto;
+}
+
+.text-input-for-picking-color {
+  background-color: var(--mantine-color-gray-1);
+  /* border: none; */
+  border-radius: 1rem;
+  padding: 0.625rem 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1rem;
+  flex: 0 0 auto;
+}
+
+.eye-dropper-btn {
+  height: auto;
+  border-radius: 1rem;
+}
+
+.eye-dropper-not-supported-text {
+  font-size: 14px;
+  height: 50px;
+  overflow: auto;
+  max-width: 100px;
+}

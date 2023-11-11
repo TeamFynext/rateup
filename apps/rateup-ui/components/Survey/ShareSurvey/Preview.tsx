@@ -97,6 +97,7 @@ const Preview = ({
   };
 
   useEffect(() => {
+    const qartCanvasContainer = qartCanvasContainerRef.current;
     const createCanvas = async () => {
       const QArt = (await import("qartjs")).default;
       const qart = new QArt({
@@ -107,8 +108,8 @@ const Preview = ({
         background: qrBgColor,
         fillType: logoFillType,
       });
-      if (qartCanvasContainerRef.current) {
-        qart.make(qartCanvasContainerRef.current);
+      if (qartCanvasContainer) {
+        qart.make(qartCanvasContainer);
       }
     };
     createCanvas();
@@ -134,6 +135,7 @@ const Preview = ({
                 : activeBgStyle === "Image"
                 ? `url(${bgImage})`
                 : "none",
+            backgroundSize: "cover",
             opacity: activeBgStyle === "Transparent" ? bgTransparency : 1,
           }}
         >
@@ -150,31 +152,6 @@ const Preview = ({
               {title}{" "}
             </Title>
             <Center>
-              {/* <Canvas
-                text={url}
-                options={{
-                  errorCorrectionLevel: "M",
-                  margin: 3,
-                  scale: 4,
-                  width: 150,
-                  color: {
-                    dark: qrColor,
-                    light: qrBgColor,
-                  },
-                }}
-                logo={
-                  logo
-                    ? {
-                        src: logo,
-                        options: {
-                          width: logoSize,
-                          x: undefined,
-                          y: undefined,
-                        },
-                      }
-                    : undefined
-                }
-              /> */}
               <div
                 className="qart-canvas-container"
                 ref={qartCanvasContainerRef}

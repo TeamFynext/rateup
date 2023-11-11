@@ -13,7 +13,9 @@ type ShareMenuProps = {
   };
 };
 
-const ShareMenu = ({ menu: { id, isPublished, surveyTeamMapId } }: ShareMenuProps) => {
+const ShareMenu = ({
+  menu: { id, isPublished, surveyTeamMapId },
+}: ShareMenuProps) => {
   const { isPending, error, mutate } = useUpdateMenuMutation(
     id,
     () => {},

@@ -14,6 +14,7 @@ import {
   Textarea,
   Slider,
   FileInput,
+  Image,
 } from "@mantine/core";
 import {
   IconBrandSketch,
@@ -29,12 +30,20 @@ import StyleTab from "../QRtabs/StyleTab";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import styles from "./ShareQR.module.css";
 import LogoTabpanel from "./LogoTabPanel";
+import CustomColorPicker from "../components/CustomColorPicker";
+import TemplateSvg from "./svg-icons-components/TemplateSvg";
+import LogoSvg from "./svg-icons-components/LogoSvg";
+import BackgroundSvg from "./svg-icons-components/BackgroundSvg";
+import TextSvg from "./svg-icons-components/TextSvg";
 
 interface ShareQRProps {
   url: string;
   sx?: any;
 }
+
 const ShareQR = ({ url, sx }: ShareQRProps) => {
+  const [activeTab, setActiveTab] = useState<string | null>("text");
+
   const [title, setTitle] = useState("QR Code");
   const [description, setDescription] = useState("Scan QR code for details.");
 
@@ -87,24 +96,37 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
     // uploadAndUpdate();
   }, []);
 
-  const removeLogo = useCallback(function () {
-    URL.revokeObjectURL(logoSrc);
-    setLogoSrc("/images/rateup-star.svg");
-  }, []);
+  const removeLogo = useCallback(
+    function () {
+      setLogoSrc("/images/rateup-star.svg");
+    },
+    [logoSrc],
+  );
 
   const handleLogoInputFormReset = useCallback(() => {
     removeLogo();
-  }, []);
+  }, [removeLogo]);
 
-  const handleLogoInputChange = useCallback((e) => {
-    const filesArray = e.target.files;
-    if (filesArray.length) {
-      const fileUrl = URL.createObjectURL(filesArray[0]);
-      setLogoSrc(fileUrl);
-    } else {
-      removeLogo();
-    }
-  }, []);
+  const handleLogoInputChange = useCallback(
+    (e) => {
+      const filesArray = e.target.files;
+      if (filesArray.length) {
+        const reader = new FileReader();
+        reader.addEventListener(
+          "load",
+          function () {
+            const url = reader.result.toString();
+            setLogoSrc(url);
+          },
+          false,
+        );
+        reader.readAsDataURL(filesArray[0]);
+      } else {
+        removeLogo();
+      }
+    },
+    [removeLogo],
+  );
 
   return (
     <PaperLayout shadow="sm" my="xl" p="xl" style={{ ...sx }}>
@@ -113,101 +135,57 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
         Generate & Share QR Code
       </Title>
 
-      <Tabs variant="pills" color="gray" defaultValue="text">
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        variant="pills"
+        color="gray"
+        defaultValue="text"
+      >
         <Group>
           <Stack justify="flex-start" style={{ minWidth: "65%" }} mb="xl">
             {/*..... QR Editor Tab titles........ */}
             <Group>
-              <Tabs.List>
-                <Tabs.Tab value="text">
-                  <Paper
-                    shadow="xs"
-                    radius="lg"
-                    p="md"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      alignContent: "center",
-                    }}
-                  >
+              <Tabs.List className={styles["sharqr-tab-list"]}>
+                <Tabs.Tab value="text" className={styles["SharQRTab"]}>
+                  <Paper className={styles["tab-content-container"]}>
                     <Center h="100%">
                       <Stack align="center" gap="0">
-                        <ActionIcon size="xl">
-                          <IconLetterCase size="2rem" />
-                        </ActionIcon>
-                        <Text style={{ textAlign: "center" }} c="#000">
-                          Text
-                        </Text>
+                        <TextSvg className={styles["tab-icon-svg"]} />
+                        <Text style={{ textAlign: "center" }}>Text</Text>
                       </Stack>
                     </Center>
                   </Paper>
                 </Tabs.Tab>
-                <Tabs.Tab value="style">
-                  <Paper
-                    shadow="xs"
-                    radius="lg"
-                    p="md"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      alignContent: "center",
-                    }}
-                  >
+                <Tabs.Tab value="style" className={styles["SharQRTab"]}>
+                  <Paper className={styles["tab-content-container"]}>
                     <Center h="100%">
                       <Stack align="center" gap="0">
-                        <ActionIcon size="xl">
-                          <IconPhotoEdit size="2rem" />
-                        </ActionIcon>
-                        <Text style={{ textAlign: "center" }} c="#000">
-                          Style
-                        </Text>
+                        <BackgroundSvg className={styles["tab-icon-svg"]} />
+                        <Text style={{ textAlign: "center" }}>Background</Text>
                       </Stack>
                     </Center>
                   </Paper>
                 </Tabs.Tab>
-                <Tabs.Tab value="logo">
-                  <Paper
-                    shadow="xs"
-                    radius="lg"
-                    p="md"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      alignContent: "center",
-                    }}
-                  >
+                <Tabs.Tab value="logo" className={styles["SharQRTab"]}>
+                  <Paper className={styles["tab-content-container"]}>
                     <Center h="100%">
                       <Stack align="center" gap="0">
-                        <ActionIcon size="xl">
-                          <IconBrandSketch size="2rem" />
-                        </ActionIcon>
-                        <Text style={{ textAlign: "center" }} c="#000">
-                          Logo
-                        </Text>
+                        <LogoSvg className={styles["tab-icon-svg"]} />
+                        <Text style={{ textAlign: "center" }}>Logo</Text>
                       </Stack>
                     </Center>
                   </Paper>
                 </Tabs.Tab>
 
-                <Tabs.Tab value="template">
-                  <Paper
-                    shadow="xs"
-                    radius="lg"
-                    p="md"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      alignContent: "center",
-                    }}
-                  >
+                <Tabs.Tab value="template" className={styles["SharQRTab"]}>
+                  <Paper className={styles["tab-content-container"]}>
                     <Center h="100%">
                       <Stack align="center" gap="0">
-                        <ActionIcon size="xl">
-                          <IconTemplate size="2rem" />
-                        </ActionIcon>
-                        <Text style={{ textAlign: "center" }} c="#000">
-                          Template
-                        </Text>
+                        <TemplateSvg
+                          className={`${styles["tab-icon-svg"]} ${styles["template-svg"]}`}
+                        />
+                        <Text style={{ textAlign: "center" }}>Template</Text>
                       </Stack>
                     </Center>
                   </Paper>
@@ -245,22 +223,27 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
 
                 <Stack style={{ minWidth: "20%" }} ml="xl">
                   <Stack>
-                    <ColorInput
-                      placeholder="Select color"
-                      label="Text color"
+                    <Text>Title Color</Text>
+                    <CustomColorPicker
                       value={textColor}
                       onChange={setTextColor}
                     />
+                  </Stack>
+                  <Stack>
+                    <Text>Title Color</Text>
                     <Slider value={textSize} onChange={setTextSize} />
                   </Stack>
+
                   <Stack pt="xl">
-                    <ColorInput
-                      placeholder="Select color"
-                      label="Description color"
+                    <Text>Description color</Text>
+                    <CustomColorPicker
                       value={descriptionColor}
                       onChange={setDescriptionColor}
                     />
+                  </Stack>
 
+                  <Stack>
+                    <Text>Description color</Text>
                     <Slider
                       value={descriptionSize}
                       onChange={setDescriptionSize}

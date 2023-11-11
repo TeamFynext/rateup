@@ -33,11 +33,11 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
-    fullMenu?.categories
+    fullMenu?.categories,
   );
   const [categorys, setcategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categoryChipLabel[0]?.id
+    categoryChipLabel[0]?.id,
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
@@ -46,7 +46,7 @@ export default function ({ fullMenu }) {
     setcategorys(
       categoryId === "1"
         ? categoryChipLabel.filter((category) => category.id !== categoryId)
-        : categoryChipLabel.filter((category) => category.id === categoryId)
+        : categoryChipLabel.filter((category) => category.id === categoryId),
     );
     setSelectedCategory(categoryId);
   }
@@ -58,7 +58,7 @@ export default function ({ fullMenu }) {
   const backgroundImageFallback = largeScreen
     ? "/images/menu/background.jpg"
     : "/images/menu/mobileBackground.jpg";
-    
+
   return (
     <Paper mih={"100vh"}>
       <Container
@@ -100,11 +100,20 @@ export default function ({ fullMenu }) {
             />
           )}
           <div>
-            <Text ta={"center"} tt={"capitalize"} className={GilroyMedium.className} fz={"clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"}>
+            <Text
+              ta={"center"}
+              tt={"capitalize"}
+              className={GilroyMedium.className}
+              fz={"clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"}
+            >
               Welcome To
             </Text>
             {/* TODO: make this text responsive. (if longer name, smaller font) */}
-            <Text fz={"clamp(1.75rem, 0.857rem + 2.381vw, 3rem)"}  tt={"uppercase"} className={GilroyBold.className}>
+            <Text
+              fz={"clamp(1.75rem, 0.857rem + 2.381vw, 3rem)"}
+              tt={"uppercase"}
+              className={GilroyBold.className}
+            >
               {fullMenu?.displayName ?? "Name"}
             </Text>
           </div>

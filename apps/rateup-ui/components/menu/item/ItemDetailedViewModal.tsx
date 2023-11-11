@@ -15,7 +15,7 @@ export function ItemDetailedViewModal({
   onClose,
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0]
+    item?.videoUrl ? item?.videoUrl : item?.images[0],
   );
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function ItemDetailedViewModal({
         content: classes.content,
         header: classes.header,
         title: classes.title,
-        close: classes.close
+        close: classes.close,
       }}
     >
       <Stack align="center">
@@ -98,32 +98,31 @@ export function ItemDetailedViewModal({
               onClick={() => setSelectedMedia(item?.videoUrl)}
             >
               {item.videoUrl && extractVideoId(item?.videoUrl) && (
-               <>
-                <Image
-                  w="75px"
-                  style={{
-                    cursor: "pointer",
-                    aspectRatio: "4 / 3",
-                  }}
-                  src={`http://img.youtube.com/vi/${extractVideoId(
-                    item?.videoUrl
-                  )}/0.jpg`}
-                  alt="video of menu"
-                />
-                <IconPlayerPlayFilled
-                  color="white"
-                  style={{
-                    color: "white",
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    borderRadius: 1000,
-                    border: "2px solid white",
-                    boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-                  }}
-                />
-                
+                <>
+                  <Image
+                    w="75px"
+                    style={{
+                      cursor: "pointer",
+                      aspectRatio: "4 / 3",
+                    }}
+                    src={`http://img.youtube.com/vi/${extractVideoId(
+                      item?.videoUrl,
+                    )}/0.jpg`}
+                    alt="video of menu"
+                  />
+                  <IconPlayerPlayFilled
+                    color="white"
+                    style={{
+                      color: "white",
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      borderRadius: 1000,
+                      border: "2px solid white",
+                      boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+                    }}
+                  />
                 </>
               )}
             </Box>

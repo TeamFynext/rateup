@@ -12,6 +12,7 @@ import {
   Text,
   ScrollArea,
   Center,
+  Image,
 } from "@mantine/core";
 import {
   IconBrandFacebook,
@@ -269,22 +270,43 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
                   size="xl"
                   variant="light"
                   onClick={() => shareButtonAction("mail")}
+                  style={{ background: "none" }}
                 >
-                  <IconMail size="2rem" />
+                  <Image
+                    alt="mail icon"
+                    src={"/images/social-media-icons/mail.svg"}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
                 </ActionIcon>
                 <ActionIcon
                   size="xl"
                   variant="light"
                   onClick={() => shareButtonAction("whatsapp")}
+                  style={{ background: "none" }}
                 >
-                  <IconBrandWhatsapp size="2rem" />
+                  <Image
+                    alt="whatsapp icon"
+                    src={"/images/social-media-icons/whatsapp.svg"}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
                 </ActionIcon>
                 <ActionIcon
                   size="xl"
                   variant="light"
                   onClick={() => shareButtonAction("fb")}
+                  style={{ background: "none" }}
                 >
-                  <IconBrandFacebook size="2rem" />
+                  <Image
+                    alt="facebook icon"
+                    src={"/images/social-media-icons/facebook.svg"}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
                 </ActionIcon>
               </Group>
             </Stack>

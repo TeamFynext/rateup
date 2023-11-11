@@ -15,6 +15,7 @@ import { notifications } from "@mantine/notifications";
 import { uploadFile } from "../../../../utils/file-upload/upload";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 import { IconCheck } from "@tabler/icons-react";
+import CustomColorPicker from "../components/CustomColorPicker";
 
 const StyleTab = ({
   backgroundColor,
@@ -127,29 +128,30 @@ const StyleTab = ({
 
         <Tabs.Panel value="Color" style={{ minHeight: "70px" }}>
           <Stack style={{ maxWidth: "300px" }} ml="xl">
-            <ColorInput
-              placeholder="Select color"
-              label="Select Color"
+            <Text>Select Color</Text>
+            <CustomColorPicker
               value={backgroundColor}
               onChange={setBackgroundColor}
             />
           </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="Gradient" style={{ minHeight: "70px" }}>
-          <Group>
-            <ColorInput
-              placeholder="Select color"
-              label="Start Color"
-              value={gradient.start}
-              onChange={(e) => setGradient({ ...gradient, start: e })}
-            />
-            <ColorInput
-              placeholder="Select color"
-              label="End Color"
-              value={gradient.end}
-              onChange={(e) => setGradient({ ...gradient, end: e })}
-            />
-          </Group>
+          <Stack>
+            <Stack>
+              <Text>Start Color</Text>
+              <CustomColorPicker
+                value={gradient.start}
+                onChange={(e) => setGradient({ ...gradient, start: e })}
+              />
+            </Stack>
+            <Stack>
+              <Text>End Color</Text>
+              <CustomColorPicker
+                value={gradient.end}
+                onChange={(e) => setGradient({ ...gradient, end: e })}
+              />
+            </Stack>
+          </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="Image" style={{ minHeight: "70px" }}>
           <Stack justify="center" style={{ maxWidth: "200px" }}>
@@ -205,12 +207,10 @@ const StyleTab = ({
           min={195}
           max={250}
         />
-        <ColorInput
-          placeholder="Select color"
-          label="QR Background Color"
-          value={qrBgColor}
-          onChange={setQRBgColor}
-        />
+        <Stack>
+          <Text>QR Background Color</Text>
+          <CustomColorPicker value={qrBgColor} onChange={setQRBgColor} />
+        </Stack>
       </Stack>
     </Stack>
   );

@@ -75,22 +75,22 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled ?? true
+    editingItem?.menuPageEnabled ?? true,
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled ?? false
+    editingItem?.feedbackPageEnabled ?? false,
   );
   const logoRef = useRef<HTMLButtonElement>(null);
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form
+    form,
   );
   const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
   const { isUploading: isMobileBgUploading } = useFileUpload(
     mobileBackgroundImage,
     "mobileBackgroundImage",
-    form
+    form,
   );
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
@@ -104,7 +104,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId
+    editingItem?.menuId,
   );
 
   useEffect(() => {
@@ -128,7 +128,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleMenuEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const checkedValueMenu = {
       option: {
@@ -140,7 +140,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleFeedbackEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const checkedValueMenu = {
       option: {
@@ -149,7 +149,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     };
     if (!editingItem?.surveyTeamMapId && !isFeedbackEnabled) {
       showErrorToast(
-        "In order to enable feedback, you must have selected a survey in the settings."
+        "In order to enable feedback, you must have selected a survey in the settings.",
       );
       return;
     }
@@ -171,7 +171,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
 
   if (form?.values?.mobileBackgroundImage) {
     mobileBackgroundImageSrc = getFileUrlFromKey(
-      form.values.mobileBackgroundImage
+      form.values.mobileBackgroundImage,
     );
   }
   const isMobileTab = selectedTab === "Mobile";

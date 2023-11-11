@@ -38,20 +38,26 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
         />
       </Card.Section>
       <Group justify="space-between" mt="md" mb="xs">
-        <Text
-          fz="xl"
-          c="var(--shade-of-brown)"
-          truncate
-          tt={"capitalize"}
-        >
+        <Text fz="xl" c="var(--shade-of-brown)" truncate tt={"capitalize"}>
           {item.name}
         </Text>
       </Group>
 
-      <Text size="sm" c="dimmed" lineClamp={4} h={"82px"} className={GilroyMedium.className}>
+      <Text
+        size="sm"
+        c="dimmed"
+        lineClamp={4}
+        h={"82px"}
+        className={GilroyMedium.className}
+      >
         {item.description}
       </Text>
-      <Group justify="space-evenly" gap={"sm"} mt="md" className={GilroyMedium.className}>
+      <Group
+        justify="space-evenly"
+        gap={"sm"}
+        mt="md"
+        className={GilroyMedium.className}
+      >
         {item.price.variants?.length > 0 ? (
           item.price.variants.map((varient, index) => (
             <Stack align="center" gap={"0px"} key={index}>
