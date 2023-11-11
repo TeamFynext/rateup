@@ -383,12 +383,12 @@ export function useEditSurveyMutation(id, setIsLoading) {
       notifications.show({
         id: "load-data",
         color: "red",
-        title: "Failed",
+        title: "Some Changes Failed",
         message: error?.response?.data?.message,
         icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
+        autoClose: 5000,
       });
-
+      queryClient.invalidateQueries({ queryKey: ["survey"] });
       setIsLoading(false);
     },
   });

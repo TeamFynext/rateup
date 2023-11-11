@@ -186,6 +186,7 @@ export function CreateSurveyModal({
 
         {teamChoice === "manual" && (
           <MultiSelect
+            radius="md"
             value={selectedTeams}
             onChange={setSelectedTeams}
             placeholder="Select teams (type in to search)"
@@ -279,12 +280,13 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     >
       <Combobox.DropdownTarget>
         <PillsInput
+          radius="md"
           error={errors ? errors : false}
           label="Languages"
           withAsterisk
           onClick={() => combobox.openDropdown()}
         >
-          <Pill.Group>
+          <Pill.Group p="4px">
             {values}
 
             <Combobox.EventsTarget>

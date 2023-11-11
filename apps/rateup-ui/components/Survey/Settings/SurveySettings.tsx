@@ -5,7 +5,13 @@ import { PasswordProtection } from "./PasswordSettings";
 import OtherSettings from "./OtherSettings";
 import Heading from "../../styled/Heading/Heading";
 
-const defaultEnabledModules = ["name", "password", "language", "kiosk"];
+const defaultEnabledModules = [
+  "name",
+  "password",
+  "language",
+  "kiosk",
+  "teams",
+];
 const SurveySettings = ({
   surveyId,
   survey,

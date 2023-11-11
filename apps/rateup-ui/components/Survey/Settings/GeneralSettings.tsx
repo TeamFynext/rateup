@@ -9,39 +9,55 @@ import {
   Combobox,
   CheckIcon,
   useCombobox,
+  MultiSelect,
 } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import { useTeamsByUser } from "../../../backend/team/team.query";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-const defaultEnabledModules = ["name", "language", "kiosk"];
+const defaultEnabledModules = ["name", "language", "kiosk", "teams"];
 const GeneralSettings = ({
   survey,
   enabledModules = defaultEnabledModules,
 }) => {
   const [kioskMode, setKioskMode] = useState(false);
   const [languages, setLanguages] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState(null);
+
+  const { data: teamRes } = useTeamsByUser();
+
+  const teamOptions = (teamRes?.data || []).map((team) => ({
+    value: team?.teamId,
+    label: team?.teamName,
+  }));
+
   const surveyForm = useForm({
     initialValues: {
       title: "",
       languages: [],
+      teams: [],
     },
     validate: {
       title: (value) => (value.length ? null : "Cannot be empty"),
       languages: (values) =>
         values.length ? null : "Must contain atleast one language",
+      teams: (values) =>
+        values.length ? null : "Must contain atleast one team",
     },
   });
   useEffect(() => {
     surveyForm.setValues({
       title: survey?.title || "",
-      languages: survey?.languages || "",
+      languages: survey?.languages || [],
+      teams: survey?.teams?.map((team) => team?.id) || [],
     });
     setKioskMode(survey?.kioskMode);
     setLanguages(survey?.languages);
+    setSelectedTeams(survey?.teams?.map((team) => team?.id));
   }, [survey]);
 
   useEffect(() => {
@@ -53,8 +69,9 @@ const GeneralSettings = ({
   const onSubmit = (values) => {
     setIsLoading(true);
     const data = {
-      title: values.title,
-      languages: values.languages,
+      title: values?.title,
+      languages: values?.languages,
+      teams: values?.teams,
       kioskMode: kioskMode,
     };
     editSurvey.mutate(data);
@@ -88,6 +105,23 @@ const GeneralSettings = ({
                 value={languages}
                 setValue={setLanguages}
                 errors={surveyForm.errors.languages}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+        {enabledModules.includes("teams") && (
+          <Grid align="center" mt={"md"}>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Teams: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <MultiSelect
+                radius="md"
+                placeholder="Select teams"
+                value={selectedTeams}
+                data={teamOptions}
+                {...surveyForm.getInputProps("teams")}
+                error={surveyForm.errors.teams}
               />
             </Grid.Col>
           </Grid>
