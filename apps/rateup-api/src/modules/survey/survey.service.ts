@@ -647,30 +647,20 @@ function validateSurvey(surveyData) {
 
 
 
-export async function getGoogleUrlBySurveyId(id: string) {
-  const survey = await prisma.surveyTeamMap.findUnique({
+export async function getGoogleUrlBySurveyTeamMapId(surveyTeamMapId: string) {
+  const { team: { googleLink } } = await prisma.surveyTeamMap.findUnique({
     where: {
-      id,
+      id: surveyTeamMapId,
     },
     select: {
-      teamId: true,
+      team: {
+        select: {
+          googleLink: true,
+        },
+      }
     },
   });
-
-  if (survey) {
-    const team = await prisma.team.findUnique({
-      where: {
-        id: survey.teamId,
-      },
-      select: {
-        googleLink: true,
-      },
-    });
-
-    return team;
-  } else {
-    return { error: "Survey not found" };
-  }
+  return googleLink
 }
 
 export async function updateGoogleLink(

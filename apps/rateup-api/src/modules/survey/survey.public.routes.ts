@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { $Sref } from "./survey.schema";
 import { completedSurveyHandler, fetchGoogleUrlBySurveyIdHandler, getPublicSurveyByIdHandler, getSurveyByIdHandler, getSurveyBylandingIdhandler, startedSurveyHandler, verifySurveyPasswordHandler, visitedSurveyHandler } from "./survey.controller";
+import { $Tref } from "../team/team.schema";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
   server.get(
@@ -60,10 +61,10 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
   );
 
   server.get(
-    "/googlelink/:id",
+    "/googlelink/:surveyTeamMapId",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: $Tref('bySurveyTeamMapIdParamsSchema'),
       },
     },
     fetchGoogleUrlBySurveyIdHandler

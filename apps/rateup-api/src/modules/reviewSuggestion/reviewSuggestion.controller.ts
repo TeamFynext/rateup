@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { ByTeamIdParams } from "../team/team.schema";
-import { createReviewSuggestion, deleteReviewSuggestion, getReviewById, getReviewsByTeamId, updateReviewSuggestion } from "./reviewSuggestion.service";
-import { byReviewSuggestionIdSchema, createReviewSuggestionSchema, updateReviewSuggestionSchema } from "./reviewSuggestion.schema";
+import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
+import { createReviewSuggestions, deleteReviewSuggestion, getReviewSuggestionsCountByTeamId, getReviewsBySurveyTeamMapId, getReviewsByTeamId, updateReviewSuggestion } from "./reviewSuggestion.service";
+import { byReviewSuggestionIdSchema, createReviewSuggestionsSchema, updateReviewSuggestionSchema } from "./reviewSuggestion.schema";
 import { log } from "../../utils/logger";
 import { hasAccessToReview } from "./reviewSuggestion.auth";
 
@@ -14,12 +14,34 @@ export async function getReviewsByTeamIdHandler(
     reply.send(reviews)
 }
 
-export async function createReviewSuggestionHandler(
-    request: FastifyRequest<{ Body: createReviewSuggestionSchema }>,
+export async function getReviewsBySurveyTeamMapIdHandler(
+    request: FastifyRequest<{ Params: BySurveyTeamMapIdParams }>,
     reply: FastifyReply
 ) {
-    const review = await createReviewSuggestion(request.body)
-    reply.send(review)
+    const { surveyTeamMapId } = request.params
+    const reviews = await getReviewsBySurveyTeamMapId(surveyTeamMapId)
+    reply.send(reviews)
+}
+
+export async function getReviewsSuggestionCountByTeamIdHandler(
+    request: FastifyRequest<{ Params: ByTeamIdParams }>,
+    reply: FastifyReply
+) {
+    const { teamId } = request.params
+    const count = await getReviewSuggestionsCountByTeamId(teamId)
+    reply.send(count)
+}
+
+
+export async function createReviewSuggestionsHandler(
+    request: FastifyRequest<{
+        Params: ByTeamIdParams,
+        Body: createReviewSuggestionsSchema
+    }>,
+    reply: FastifyReply
+) {
+    const reviews = await createReviewSuggestions(request.body, request.params.teamId)
+    reply.send(reviews)
 }
 
 export async function updateReviewSuggestionHandler(

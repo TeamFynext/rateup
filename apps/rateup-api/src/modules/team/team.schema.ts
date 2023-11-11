@@ -62,9 +62,9 @@ const inviteCompleteRequestSchema = z.object({
 });
 
 const editTeamSchema = z.object({
-  name: z.string().min(4),
-  code: z.string().min(2),
-  googleLink: z.string().min(10),
+  name: z.string().min(4).optional(),
+  code: z.string().min(2).optional(),
+  googleLink: z.string().optional(),
 });
 
 const idParamRequestSchema = z.object({
@@ -74,6 +74,9 @@ const idParamRequestSchema = z.object({
 // Could be used by other modules which are related to team
 const byTeamIdParamsSchema = z.object({
   teamId: z.string()
+})
+const bySurveyTeamMapIdParamsSchema = z.object({
+  surveyTeamMapId: z.string()
 })
 
 
@@ -89,7 +92,8 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     inviteCompleteRequestSchema,
     editTeamSchema,
     idParamRequestSchema,
-    byTeamIdParamsSchema
+    byTeamIdParamsSchema,
+    bySurveyTeamMapIdParamsSchema
   },
   { $id: "teamSchema" }
 );
@@ -103,6 +107,7 @@ export type InviteCompleteInput = z.infer<typeof inviteCompleteRequestSchema>;
 export type EditTeamInput = z.infer<typeof editTeamSchema>;
 export type IdParamInput = z.infer<typeof idParamRequestSchema>;
 export type ByTeamIdParams = z.infer<typeof byTeamIdParamsSchema>;
+export type BySurveyTeamMapIdParams = z.infer<typeof bySurveyTeamMapIdParamsSchema>;
 
 
 

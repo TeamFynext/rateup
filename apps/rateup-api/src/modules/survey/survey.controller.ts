@@ -6,7 +6,7 @@ import {
   deleteSurveyById,
   deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
-  getGoogleUrlBySurveyId,
+  getGoogleUrlBySurveyTeamMapId,
   getPublicSurveyById,
   getSurveyById,
   getSurveyBylandingId,
@@ -38,6 +38,7 @@ import {
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from '@prisma/client';
 import { getLandingPageById } from "../landingPage/landingpage.service";
+import { BySurveyTeamMapIdParams } from "../team/team.schema";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -172,24 +173,16 @@ export async function getSurveyBylandingIdhandler(
 
 export async function fetchGoogleUrlBySurveyIdHandler(
   request: FastifyRequest<{
-    Params: IdParamInput;
+    Params: BySurveyTeamMapIdParams;
   }>,
   reply: FastifyReply
 ) {
-  let url;
-
   try {
-    url = await getGoogleUrlBySurveyId(request.params.id);
+    return await getGoogleUrlBySurveyTeamMapId(request.params.surveyTeamMapId);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
     return;
-  }
-
-  if ("error" in url) {
-    reply.code(404).send({ success: false, data: url });
-  } else {
-    reply.code(201).send({ success: true, data: url });
   }
 }
 

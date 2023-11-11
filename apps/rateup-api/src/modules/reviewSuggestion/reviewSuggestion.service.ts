@@ -1,5 +1,5 @@
 import prisma from "../../utils/prisma";
-import { createReviewSuggestionSchema } from "./reviewSuggestion.schema";
+import { createReviewSuggestionsSchema } from "./reviewSuggestion.schema";
 
 export async function getReviewsByTeamId(teamId: string) {
     return await prisma.reviewSuggestion.findMany({
@@ -7,6 +7,21 @@ export async function getReviewsByTeamId(teamId: string) {
             teamId: teamId
         }
     })
+}
+export async function getReviewsBySurveyTeamMapId(surveyTeamMapId: string) {
+    const { team: { reviewSuggestions } } = await prisma.surveyTeamMap.findUnique({
+        where: {
+            id: surveyTeamMapId
+        },
+        include: {
+            team: {
+                include: {
+                    reviewSuggestions: true
+                }
+            }
+        }
+    })
+    return reviewSuggestions
 }
 
 export async function getReviewById(reviewSuggestionId: string) {
@@ -17,12 +32,20 @@ export async function getReviewById(reviewSuggestionId: string) {
     })
 }
 
-export async function createReviewSuggestion(review: createReviewSuggestionSchema) {
-    return await prisma.reviewSuggestion.create({
-        data: {
-            review: review.review,
-            teamId: review.teamId
+export async function getReviewSuggestionsCountByTeamId(teamId: string) {
+    return await prisma.reviewSuggestion.count({
+        where: {
+            teamId: teamId
         }
+    })
+}
+
+export async function createReviewSuggestions(reviews: createReviewSuggestionsSchema, teamId: string) {
+    return await prisma.reviewSuggestion.createMany({
+        data: reviews.map((review) => ({
+            review,
+            teamId
+        }))
     })
 }
 
