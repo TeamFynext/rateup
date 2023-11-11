@@ -1,4 +1,3 @@
-import { WaSession } from "@prisma/client";
 import { WaEvent, YNResponse, LDResponse, SmileyResponse } from "../../../types/enums";
 import { WaMessageBody, WaSendMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
@@ -188,7 +187,7 @@ export function createNativeListMessage(
 }
 
 export async function generateMessageDataFromQuestion(
-  session: WaSession,
+  session: WaSessionWithRelations,
   question: Question
 ): Promise<WaSendMessageBody> {
   const to = session.phone;
@@ -334,7 +333,7 @@ export function isValidResponse(
 export async function parseResponse(
   waMessage: WaMessageBody,
   question: Question,
-  session: WaSession
+  session: WaSessionWithRelations
 ) {
   let message = parseMessage(waMessage).message;
   try {
@@ -403,7 +402,7 @@ export async function parseResponse(
 }
 
 /* Downloads image from whatsapp & uploads it to s3 */
-async function downloadAndUpload(session: WaSession, imageId: string) {
+async function downloadAndUpload(session: WaSessionWithRelations, imageId: string) {
   const waSettings = await getWaSettings(session.orgId);
   const res = await callWhatsappApi(`/${imageId}`, 'GET', waSettings.accessToken);
   log.trace(`got image link => %o`, res.data);
@@ -426,6 +425,16 @@ async function downloadAndUpload(session: WaSession, imageId: string) {
   return uniqueFilename;
 }
 
+export function getQuestionByIdFromSession(session: WaSessionWithRelations, questionId: string) {
+  const question = (session.surveyTeamMap.survey.questions as Question[]).find(
+    (q) => q.id === questionId
+  );
+  if (!question) {
+    log.fatal("Question not found");
+    throw new Error("Question not found");
+  }
+  return question;
+}
 
 const _templateStatusChangeEventSampleData = {
   "entry": [

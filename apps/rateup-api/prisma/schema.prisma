@@ -177,8 +177,6 @@ model SurveyTeamMap {
   responses   SurveyResponse[]
   sessions    WaSession[]
   surveyStats SurveyStats?
-  //WaCustomerSurveySendHistory      WaCustomerSurveySendHistory[]
-  //WaCustomerGroupSurveySendHistory WaCustomerGroupSurveySendHistory[]
   campaign    Campaign[]
   menuLanding MenuLanding[]
 }

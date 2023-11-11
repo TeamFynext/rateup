@@ -1,6 +1,7 @@
 // Any modification to this file should be reflected in the frontend
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus } from "./enums";
+import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 
 type GoogleReview = {
   minRating?: number;
@@ -91,8 +92,18 @@ declare global {
     acceptButton: string
     orgId: string
   }
+  type WaSessionWithRelations = Prisma.WaSessionGetPayload<typeof fullWaSession>
 }
 
+const fullWaSession = Prisma.validator<Prisma.WaSessionArgs>()({
+  include: {
+    surveyTeamMap: {
+      include: {
+        survey: true
+      }
+    },
+  }
+})
 declare module 'fastify' {
   interface FastifyRequest {
     userId: string,

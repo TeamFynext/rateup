@@ -2,6 +2,7 @@ import prisma from "../../utils/prisma";
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendSurveyToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { CampaignStatus } from "../../types/enums";
+import { log } from "../../utils/logger";
 
 export async function getCampaignById(campaignId: string) {
     const campaign = await prisma.campaign.findUnique({
@@ -37,7 +38,7 @@ export async function createCampaign(data: CreateCampaignInput) {
             name: data.name,
             type: data.type,
             teamId: data.teamId,
-            surveyId: data.surveyId,
+            surveyTeamMapId: data.surveyTeamMapId,
             waTemplateId: data.waTemplateId,
         }
     })
@@ -63,6 +64,7 @@ export async function deleteCampaign(campaignId: string) {
 
 export async function startCampaign(campaignId: string) {
     await updateCampaign(campaignId, { status: CampaignStatus.ACTIVE })
+    log.trace('updated campaign status to active')
     sendSurveyToParticipants(campaignId)
     // add state indicating survey is sent to all participants?
 }

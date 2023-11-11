@@ -1,4 +1,4 @@
-import { WaSession, ResponsePlatform, Survey } from "@prisma/client";
+import { ResponsePlatform, Survey } from "@prisma/client";
 import { CampaignParticipantStatus, LogicAction } from "../../../types/enums";
 import { WaSendMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
@@ -8,8 +8,9 @@ import { parseLogicAction } from "../../question/question.utils";
 import { createResponse } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
-import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage } from "./wasurvey.utils";
+import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession } from "./wasurvey.utils";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
+import { CreateResponseInput } from "../../response/response.schema";
 
 
 
@@ -41,6 +42,13 @@ export async function getSession(orgId: string, phone: string) {
         orgId: orgId,
       }
     },
+    include: {
+      surveyTeamMap: {
+        include: {
+          survey: true
+        }
+      }
+    }
   });
   if (!session) {
     throw new Error("Session not found");
@@ -74,25 +82,32 @@ export async function getFirstQuestionId(surveyId: string) {
 
 export async function createSession(
   phone: string,
-  surveyId: string,
+  surveyTeamMapId: string,
   orgId: string,
   templateId?: string,
   language: string = "",
   currentQuestionId?: string,
   campaignParticipantId?: string
 ) {
-  log.info("Creating session \n%o\n", { phone, surveyId, language });
+  log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
 
   const session = await prisma.waSession.create({
     data: {
       phone: phone,
-      surveyId: surveyId,
+      surveyTeamMapId: surveyTeamMapId,
       language: language,
       templateId: templateId,
       orgId: orgId,
       currentQuestionId: currentQuestionId,
       campaignParticipantId: campaignParticipantId
     },
+    include: {
+      surveyTeamMap: {
+        include: {
+          survey: true
+        }
+      }
+    }
   });
 
   log.info("Session created \n%o\n", session);
@@ -108,19 +123,26 @@ export async function updateSession(orgId: string, phone: string, data: any) {
         orgId: orgId,
       }
     },
+    include: {
+      surveyTeamMap: {
+        include: {
+          survey: true
+        }
+      }
+    },
     data: data,
   });
   log.trace("Session updated \n%o\n", session)
   return session;
 }
 
-export async function sendNextQuestion(session: WaSession, response: any) {
-  const { currentQuestionId, surveyId } = session;
+export async function sendNextQuestion(session: WaSessionWithRelations, response: any) {
+  const { currentQuestionId, surveyTeamMap } = session;
   if (!currentQuestionId) {
     log.error("CurrentQuestionId is null")
     throw new Error("CurrentQuestionId is null")
   }
-  const questions = await getQuestionsBySurveyId(surveyId);
+  const questions = surveyTeamMap.survey.questions as Array<Question>;
   const currentQuestion = questions.find(q => q.id === currentQuestionId)
   if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found")
@@ -146,7 +168,7 @@ export async function sendNextQuestion(session: WaSession, response: any) {
     await deleteSession(session.orgId, session.phone);
   } else {
     // 'next' is a question id
-    const nextQuestion = await getQuestionById(surveyId, next);
+    const nextQuestion = getQuestionByIdFromSession(session, next)
     if (!nextQuestion) {
       throw new Error("Question not found");
     }
@@ -168,18 +190,18 @@ async function updateCurrentQuestion(orgId: string, from: string, newQId: string
     },
   });
 }
-export async function sendQuestion(question: Question, session: WaSession) {
+export async function sendQuestion(question: Question, session: WaSessionWithRelations) {
   const message = await generateMessageDataFromQuestion(session, question);
   await updateCurrentQuestion(session.orgId, session.phone, question.id,);
   await sendMessage(session.orgId, message);
 }
-async function saveResponses(session: WaSession) {
+async function saveResponses(session: WaSessionWithRelations) {
   log.trace("Saving responses for %o", session)
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 
-  const surveyResponse = {
-    surveyId: session.surveyId,
+  const surveyResponse: CreateResponseInput = {
+    surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
     language: session.language,
     platform: ResponsePlatform.WHATSAPP,
@@ -207,11 +229,18 @@ export async function updateResponses(
     data: {
       responses: responses as any,
     },
+    include: {
+      surveyTeamMap: {
+        include: {
+          survey: true
+        }
+      }
+    }
   });
 }
 
 export async function sendTextMessage(
-  session: WaSession,
+  session: WaSessionWithRelations,
   title: string,
   description: string = ""
 ) {
@@ -242,10 +271,10 @@ export async function sendSurveyToWaCustomer(phone: string, survey: Survey, dbTe
   await sendMessage(session.orgId, consentTemplateMessage);
 }
 
-export async function sendSurveyToParticipant(campaignParticipantId: string, phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
+export async function sendSurveyToParticipant(campaignParticipantId: string, phone: string, surveyTeamMapId: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
   try {
     log.trace("Sending survey to participant %s", phone);
-    const session = await createSession(phone, survey.id, dbTemplate.orgId, dbTemplate.id, survey.languages[0], undefined, campaignParticipantId)
+    const session = await createSession(phone, surveyTeamMapId, dbTemplate.orgId, dbTemplate.id, survey.languages[0], undefined, campaignParticipantId)
     log.trace("Session created %o", session)
     const { name, language } = dbTemplate.data;
     const templateQuery = {

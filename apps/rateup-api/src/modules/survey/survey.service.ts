@@ -19,9 +19,10 @@ export async function createSurvey(
   createdBy: string
 ) {
   const teamIds = input?.teamIds?.map(teamId => ({ teamId }))
+  delete input.teamIds;
   const survey = await prisma.survey.create({
     data: {
-      // ...input,
+      ...input,
       title: input.title,
       languages: input.languages,
       createdBy,
@@ -29,8 +30,8 @@ export async function createSurvey(
         create: teamIds,
       },
     },
-   });
-   
+  });
+
   //-------------create a default landing page theme todo-------------
 
   let landingData = defaultTheme;
@@ -52,7 +53,7 @@ export async function createSurvey(
     },
   });
 
-  let surveyRes = {...survey, teamIds: input?.teamIds}
+  let surveyRes = { ...survey, teamIds: input?.teamIds }
 
   return surveyRes;
 }
@@ -210,18 +211,18 @@ export async function getSurveyById(id: string) {
     return teamData;
   });
 
-  return {...survey, teams: teams};
+  return { ...survey, teams: teams };
 }
 
 
 //-----------get public survey with org logo -------
 
- export async function getPublicSurveyById(id: string) {
-  
+export async function getPublicSurveyById(id: string) {
+
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
     where: {
       id,
-    },    
+    },
     include: {
       survey: true,
     },
@@ -233,18 +234,18 @@ export async function getSurveyById(id: string) {
 
   let org = await prisma.team.findUnique({
     where: {
-      id : surveyTeamMap?.teamId,
+      id: surveyTeamMap?.teamId,
     },
     include: {
       org: true,
     },
   });
 
-  let orgLogo ={ orgLogo : org?.org?.logo}
-  let publicSurvey = { ...surveyTeamMap.survey, ...orgLogo}
+  let orgLogo = { orgLogo: org?.org?.logo }
+  let publicSurvey = { ...surveyTeamMap.survey, ...orgLogo }
 
   return publicSurvey;
- }
+}
 
 
 
@@ -279,7 +280,7 @@ export async function getSurveyBylandingId(landingid: string) {
 
 //------------get ALL Surveys list of a logged user (without qns)--------
 
- export async function getSurveysByUserId(userId: string) {
+export async function getSurveysByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
   const teamIds: string[] = teamData?.map(
     (item: { teamId: string }) => item?.teamId
@@ -310,14 +311,14 @@ export async function getSurveyBylandingId(landingid: string) {
   });
 
   let surveyTeamOptimized = surveyRes.map(survey => {
-      const optimizedTeams = survey.teams.map(team => {
-          return {
-              id: team.teamId,
-              name: team.team.name,
-              mapId: team.id
-          };
-      });
-      return { ...survey, teams: optimizedTeams };
+    const optimizedTeams = survey.teams.map(team => {
+      return {
+        id: team.teamId,
+        name: team.team.name,
+        mapId: team.id
+      };
+    });
+    return { ...survey, teams: optimizedTeams };
   });
 
   const surveys = surveyTeamOptimized?.map(survey => {
@@ -325,11 +326,11 @@ export async function getSurveyBylandingId(landingid: string) {
   });
 
   return surveys;
- }
+}
 
 
 //------------get web survey list --------
- export async function getWebSurveysByUserId(userId: string) {
+export async function getWebSurveysByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
   const teamIds: string[] = teamData?.map(
     (item: { teamId: string }) => item?.teamId
@@ -347,13 +348,13 @@ export async function getSurveyBylandingId(landingid: string) {
   });
 
   const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    const survey = { ...surveyTeamMap.survey, teamId: surveyTeamMap.teamId };
     return excludeFields(survey, ["questions", "password"]);
   });
 
   const webSurveys = allSurveys.filter(survey => survey?.type === 'web')
   return webSurveys;
- }
+}
 
 
 //------------get whatsapp survey list --------
@@ -375,15 +376,15 @@ export async function getWhatsappSurveysByUserId(userId: string, type: string) {
   });
 
   const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey,  teamId : surveyTeamMap.teamId };
+    const survey = { ...surveyTeamMap.survey, teamId: surveyTeamMap.teamId };
     return excludeFields(survey, ["questions", "password"]);
   });
 
   const whatsAppSurveys = allSurveys.filter(survey => survey?.type === type)
   return whatsAppSurveys;
- }
+}
 
- 
+
 //------------get survey landing survey list --------
 export async function getSurveyLandingByUserId(userId: string) {
   const surveysLanding = await prisma.surveyLanding.findMany({
@@ -395,7 +396,7 @@ export async function getSurveyLandingByUserId(userId: string) {
 
 
 //------------get survey list  by team id --------
- export async function getSurveysByTeam(teamId: string) {
+export async function getSurveysByTeam(teamId: string) {
 
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
@@ -407,18 +408,18 @@ export async function getSurveyLandingByUserId(userId: string) {
   });
 
   const surveysWithoutQuestions = surveyTeamMaps?.map(surveyTeamMap => {
-    const survey = { ...surveyTeamMap.survey,...{surveyTeamMapId:surveyTeamMap.id} };
+    const survey = { ...surveyTeamMap.survey, ...{ surveyTeamMapId: surveyTeamMap.id } };
     return excludeFields(survey, ["questions", "password"]);
   });
 
   return surveysWithoutQuestions;
- }
+}
 
 
 //------------SURVEY SUMMARY  ----
 //-----Returns summary(responses, stats) of active surveys -- from ALL TEAMs in which the user is a member of 
 
- export async function getActiveSurveysSummmaryByUserId(userId: string) {
+export async function getActiveSurveysSummmaryByUserId(userId: string) {
   const teamData = await getTeamsByUserId(userId);
   const teamIds: string[] = teamData.map(
     (item: { teamId: string }) => item.teamId
@@ -448,9 +449,9 @@ export async function getSurveyLandingByUserId(userId: string) {
   });
 
   const allSurveys = surveyTeamMaps?.map(surveyTeamMap => {
-    const surveys = { 
-      ...surveyTeamMap.survey, 
-      teamId : surveyTeamMap.teamId,
+    const surveys = {
+      ...surveyTeamMap.survey,
+      teamId: surveyTeamMap.teamId,
       responses: surveyTeamMap.responses,
       surveyStats: surveyTeamMap.surveyStats,
       team: surveyTeamMap.team.name
@@ -459,26 +460,26 @@ export async function getSurveyLandingByUserId(userId: string) {
   });
 
   const activeSurveys = allSurveys.filter(survey => survey?.active === true)
-  .map(({ id, title, active, createdAt, type, surveyStats, responses, team }) => ({
-    id,
-    title,
-    active,
-    createdAt,
-    type,
-    surveyStats,
-    responses,
-    team
-  }));
+    .map(({ id, title, active, createdAt, type, surveyStats, responses, team }) => ({
+      id,
+      title,
+      active,
+      createdAt,
+      type,
+      surveyStats,
+      responses,
+      team
+    }));
 
   let summaryData = {
-    totalTeamsCount : teamData?.length,
+    totalTeamsCount: teamData?.length,
     totalSurveysCount: allSurveys?.length,
     activeSurveysCount: activeSurveys?.length,
     surveys: activeSurveys
   }
 
   return summaryData;
- }
+}
 
 
 
@@ -519,12 +520,12 @@ export async function deleteSurveyFromTeam(id: string, input: DeleteTeamSurveyIn
     throw new Error('Cannot delete survey that has responses');
   }
 
-  if(surveyTeams?.length > 1){
+  if (surveyTeams?.length > 1) {
     const deletedSurvey = await prisma.surveyTeamMap.delete({
       where: { id: surveyTeamMap?.id }
     });
     return deletedSurvey;
-  }else{
+  } else {
     const deletedSurvey = await prisma.survey.delete({
       where: { id }
     });
@@ -541,48 +542,48 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
   if ('isPublished' in input) {
     action = 'publish'
-    if(input?.isPublished === true){   //check for all language inputs
-        const fetchedSurvey = await prisma.survey.findUnique({
-          where: {
-            id,
-          },
+    if (input?.isPublished === true) {   //check for all language inputs
+      const fetchedSurvey = await prisma.survey.findUnique({
+        where: {
+          id,
+        },
+      });
+
+      if (fetchedSurvey?.questions.length < 1) {
+        let data = {
+          status: "failed",
+          data: {
+            error: "No questions found."
+          }
+        }
+        return data
+      }
+
+      let result = validateSurvey(fetchedSurvey);
+
+      if (result?.length) {
+        let groupedSurveys = {};
+        // group the survey errors
+        result.forEach(survey => {
+          if (!groupedSurveys[survey.id]) {
+            groupedSurveys[survey.id] = {
+              id: survey.id,
+              title: survey.title,
+              errors: []
+            };
+          }
+          groupedSurveys[survey.id].errors.push(survey.error);
         });
 
-        if(fetchedSurvey?.questions.length < 1){
-          let data = {
-            status: "failed",
-            data: {
-              error: "No questions found."
-            }
-          }
-          return data
+        let combinedResult = Object.values(groupedSurveys);
+
+        let data = {
+          status: "failed",
+          data: combinedResult
         }
-
-        let result = validateSurvey(fetchedSurvey);
-        
-        if(result?.length){
-          let groupedSurveys = {};
-          // group the survey errors
-          result.forEach(survey => {
-            if (!groupedSurveys[survey.id]) {
-              groupedSurveys[survey.id] = {
-                id: survey.id,
-                title: survey.title,
-                errors: []
-              };
-            }
-            groupedSurveys[survey.id].errors.push(survey.error);
-          });
-
-          let combinedResult = Object.values(groupedSurveys);
-
-          let data = {
-            status: "failed",
-            data: combinedResult
-          }
-          return data
-        }
-    }else{
+        return data
+      }
+    } else {
       action = 'unpublish'
     }
   }
@@ -603,45 +604,45 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 }
 
 function validateSurvey(surveyData) {
-    let languages = surveyData?.languages ?? [];
-    let incompleteQuestions = [];
+  let languages = surveyData?.languages ?? [];
+  let incompleteQuestions = [];
 
-    surveyData?.questions?.forEach(question => {
-        // Check if title contains all languages
-        let titleLanguages = question?.title ? Object.keys(question.title) : [];
-        let missingLangTitle = languages.filter(lang => !titleLanguages.includes(lang));
-        if(missingLangTitle.length > 0) {
-            incompleteQuestions.push({id: question?.id, title: question?.title, error: `Missing title for languages: ${missingLangTitle.join(', ')}`});
+  surveyData?.questions?.forEach(question => {
+    // Check if title contains all languages
+    let titleLanguages = question?.title ? Object.keys(question.title) : [];
+    let missingLangTitle = languages.filter(lang => !titleLanguages.includes(lang));
+    if (missingLangTitle.length > 0) {
+      incompleteQuestions.push({ id: question?.id, title: question?.title, error: `Missing title for languages: ${missingLangTitle.join(', ')}` });
+    }
+
+    if ([QuestionType.MCQ, QuestionType.MSQ, QuestionType.DDSS, QuestionType.DDMS].includes(question?.type)) {
+      if (question?.choices) {
+        let choiceLanguages = Object.keys(question.choices);
+        let missingLangChoices = languages.filter(lang => !choiceLanguages.includes(lang));
+        if (missingLangChoices.length > 0) {
+          incompleteQuestions.push({ id: question.id, title: question.title, error: `Missing choices for languages: ${missingLangChoices.join(', ')}` });
         }
 
-        if([QuestionType.MCQ, QuestionType.MSQ, QuestionType.DDSS, QuestionType.DDMS].includes(question?.type)) {
-            if(question?.choices) {
-                let choiceLanguages = Object.keys(question.choices);
-                let missingLangChoices = languages.filter(lang => !choiceLanguages.includes(lang));
-                if(missingLangChoices.length > 0) {
-                    incompleteQuestions.push({id: question.id, title: question.title, error: `Missing choices for languages: ${missingLangChoices.join(', ')}`});
-                }
-
-                // Check if all languages have the maximum number of choices
-                let maxChoices = Math.max(...Object.values(question.choices).map((choiceArr: any[])=> choiceArr?.length));
-                let unequalChoices = Object.values(question.choices).some((choiceArr: any[]) => choiceArr?.length < maxChoices);
-                if(unequalChoices) {
-                    incompleteQuestions.push({id: question.id, title: question.title, error: `All languages must have ${maxChoices} choices.`});
-                }
-
-                // Check for minimum 2 choices
-                let insufficientChoices = Object.values(question.choices).some((choiceArr: any[]) => choiceArr.length < 2);
-                if(insufficientChoices) {
-                    incompleteQuestions.push({id: question.id, title: question.title, error: 'Minimum 2 choices required for all languages.'});
-                }
-            } else {
-                // If choices are not present but the question type requires choices
-                incompleteQuestions.push({id: question.id, title: question.title, error: 'Choices are required but missing for some languages.'});
-            }
+        // Check if all languages have the maximum number of choices
+        let maxChoices = Math.max(...Object.values(question.choices).map((choiceArr: any[]) => choiceArr?.length));
+        let unequalChoices = Object.values(question.choices).some((choiceArr: any[]) => choiceArr?.length < maxChoices);
+        if (unequalChoices) {
+          incompleteQuestions.push({ id: question.id, title: question.title, error: `All languages must have ${maxChoices} choices.` });
         }
-    });
 
-    return incompleteQuestions;
+        // Check for minimum 2 choices
+        let insufficientChoices = Object.values(question.choices).some((choiceArr: any[]) => choiceArr.length < 2);
+        if (insufficientChoices) {
+          incompleteQuestions.push({ id: question.id, title: question.title, error: 'Minimum 2 choices required for all languages.' });
+        }
+      } else {
+        // If choices are not present but the question type requires choices
+        incompleteQuestions.push({ id: question.id, title: question.title, error: 'Choices are required but missing for some languages.' });
+      }
+    }
+  });
+
+  return incompleteQuestions;
 }
 
 
@@ -670,9 +671,9 @@ export async function getGoogleUrlBySurveyId(id: string) {
   } else {
     return { error: "Survey not found" };
   }
- }
+}
 
- export async function updateGoogleLink(
+export async function updateGoogleLink(
   id: string,
   data: UpdateGoogleLinkInput
 ) {
@@ -699,7 +700,7 @@ export async function getGoogleUrlBySurveyId(id: string) {
   } else {
     return { error: "Survey not found" };
   }
- }
+}
 
 
 export async function updateSurveyPassword(
@@ -760,7 +761,7 @@ export async function verifySurveyPassword(
   }
 }
 
- export async function updateVisitedSurvey(id: string) {
+export async function updateVisitedSurvey(id: string) {
   let surveyStats;
   try {
     surveyStats = await prisma.surveyStats.update({
@@ -778,10 +779,10 @@ export async function verifySurveyPassword(
     }
   }
   return surveyStats;
- }
+}
 
 
- export async function updateStartedSurvey(id: string) {
+export async function updateStartedSurvey(id: string) {
   let surveyStats;
   try {
     surveyStats = await prisma.surveyStats.update({
@@ -799,10 +800,10 @@ export async function verifySurveyPassword(
     }
   }
   return surveyStats;
- }
+}
 
 
- export async function updateCompletedSurvey(id: string) {
+export async function updateCompletedSurvey(id: string) {
   let surveyStats;
   try {
     surveyStats = await prisma.surveyStats.update({
@@ -820,5 +821,5 @@ export async function verifySurveyPassword(
     }
   }
   return surveyStats;
- }
+}
 

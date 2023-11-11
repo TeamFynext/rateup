@@ -3,6 +3,7 @@ import {
   createListMessage,
   getEventType,
   getMessageObject,
+  getQuestionByIdFromSession,
   isValidResponse,
   parseMessage,
   parseResponse,
@@ -21,7 +22,7 @@ import {
   updateResponses,
   updateSession,
 } from "./wasurvey.service";
-import { WaSession, Survey } from "@prisma/client";
+import { Survey } from "@prisma/client";
 import { CampaignParticipantStatus, WaEvent, WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
@@ -139,7 +140,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
       const dbTemplate = await getDbTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
-        const firstQId = await getFirstQuestionId(session.surveyId);
+        const firstQId = (session.surveyTeamMap.survey.questions[0] as Question).id;
         session = await updateSession(orgId, from, { currentQuestionId: firstQId });
         log.trace('sending first question')
         await sendFirstQuestion(session);
@@ -176,12 +177,8 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   await sendFirstQuestion(session);
 }
 
-async function sendFirstQuestion(session: WaSession) {
-  const firstQuestion = await getQuestionById(
-    session.surveyId,
-    // TODO
-    session.currentQuestionId!
-  );
+async function sendFirstQuestion(session: WaSessionWithRelations) {
+  const firstQuestion = getQuestionByIdFromSession(session, session.currentQuestionId!)
   await sendQuestion(firstQuestion!, session);
 }
 
@@ -198,11 +195,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
     return;
   }
   // save response
-  const question = await getQuestionById(
-    session.surveyId,
-    // TODO
-    session.currentQuestionId!
-  );
+  const question = getQuestionByIdFromSession(session, session.currentQuestionId!)
   if (!question) {
     throw new Error("Question not found");
   }
@@ -231,7 +224,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   await sendNextQuestion(session, message);
 }
 
-async function handleLanguageSelection(session: WaSession, survey: Survey) {
+async function handleLanguageSelection(session: WaSessionWithRelations, survey: Survey) {
   if (survey.languages.length > 10) {
     throw new Error('Too many languages')
   }
@@ -245,8 +238,8 @@ async function handleLanguageSelection(session: WaSession, survey: Survey) {
   await sendMessage(session.orgId, message);
 }
 
-async function handleLanguageResponse(session: WaSession, message: string) {
-  const survey = await getSurveyById(session.surveyId);
+async function handleLanguageResponse(session: WaSessionWithRelations, message: string) {
+  const survey = session.surveyTeamMap.survey;
 
   // if language is not valid, send error message
   if (survey.languages.includes(message)) {
@@ -272,15 +265,17 @@ export async function sendSurveyToParticipants(campaignId: string) {
       include: {
         campaignParticipants: {
           include: {
-            contact: true
+            contact: true,
+          },
+        },
+        surveyTeamMap: {
+          include: {
+            survey: true,
           }
         }
       }
     })
-    const survey = await getSurveyById(campaign.surveyId);
-    if (!survey) {
-      throw new Error(`Survey with id ${campaign.surveyId} not found`);
-    }
+    const survey = campaign.surveyTeamMap.survey;
     const dbTemplate = await getDbTemplate(campaign.waTemplateId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${campaign.waTemplateId} not found`);
@@ -294,13 +289,14 @@ export async function sendSurveyToParticipants(campaignId: string) {
       }
       // TODO: add rate limiting 
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      if (!(await sendSurveyToParticipant(id, contact.phone, survey, dbTemplate))) {
+      if (!(await sendSurveyToParticipant(id, contact.phone, campaign.surveyTeamMap.id, survey, dbTemplate))) {
         log.error('Error sending survey to participant %o', contact);
       } else {
         log.trace('Survey sent to participant %o', contact);
         await updateCampaignParticipant(id, { status: CampaignParticipantStatus.SENT });
       }
     }
+    log.trace("Survey sent to all participants");
     return true;
   } catch (e) {
     log.error(e);
