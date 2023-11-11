@@ -101,12 +101,15 @@ export function CreateMenuItemModal({
     },
   });
   const [selectedImage, setSelectedImage] = useState(
-    form.values.images[0] || "",
+    form.values.images[0] || ""
   );
 
   useEffect(() => {
     if (editingItem) {
       form.setValues(editingItem);
+      if (!editingItem.price?.variants) {
+        form.setFieldValue("price.variants", []);
+      }
     } else {
       form.reset();
       setImageToUpload(null);
@@ -124,7 +127,7 @@ export function CreateMenuItemModal({
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
 
   const updateMenuItemMutation = useUpdateMenuItemMutation(
@@ -137,7 +140,7 @@ export function CreateMenuItemModal({
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
 
   useEffect(() => {
@@ -203,7 +206,7 @@ export function CreateMenuItemModal({
         <Stack style={{ flex: 1 }}>
           <Group>
             <Text>Add Images (max 3)</Text>
-            {form.values.images.length > 0 ? (
+            {form?.values?.images?.length > 0 ? (
               <Box>
                 <Image
                   src={getFileUrlFromKey(selectedImage)}
@@ -219,11 +222,11 @@ export function CreateMenuItemModal({
                     onClick={() => {
                       form.removeListItem(
                         "images",
-                        form.values.images.findIndex(
-                          (image) => image === selectedImage,
-                        ),
+                        form?.values?.images?.findIndex(
+                          (image) => image === selectedImage
+                        )
                       );
-                      setSelectedImage(form.values.images[0] || "");
+                      setSelectedImage(form?.values?.images[0] || "");
                     }}
                   >
                     Delete
@@ -239,7 +242,7 @@ export function CreateMenuItemModal({
             )}
           </Group>
           <Group>
-            {form.values.images.map((image) => (
+            {form?.values?.images?.map((image) => (
               <Image
                 onClick={() => setSelectedImage(image)}
                 style={{ borderRadius: "8px", cursor: "pointer" }}
@@ -251,7 +254,7 @@ export function CreateMenuItemModal({
                 alt="thumbnail image of menu item"
               />
             ))}
-            {form.values.images.length < 3 && (
+            {form?.values?.images?.length < 3 && (
               <FileButton
                 onChange={setImageToUpload}
                 accept="image/png,image/jpeg"
@@ -306,14 +309,14 @@ function PriceSection({ form }: { form: any }) {
           </Group>
         </Radio.Group>
       </Group>
-      {form.values.price.type === MenuItemPriceType.FIXED ? (
+      {form?.values?.price?.type === MenuItemPriceType.FIXED ? (
         <ContainedTextField
           placeholder="399"
           {...form.getInputProps("price.price")}
         />
       ) : (
         <Group>
-          {form.values.price.variants.map((_variant, index) => {
+          {form?.values?.price?.variants?.map((_variant, index) => {
             return (
               <Box
                 w="80px"
@@ -324,6 +327,7 @@ function PriceSection({ form }: { form: any }) {
                   borderRadius: "15px",
                 }}
               >
+                {form?.values?.price?.variant}
                 <TextInput
                   placeholder="Small"
                   variant="unstyled"
@@ -341,7 +345,7 @@ function PriceSection({ form }: { form: any }) {
             );
           })}
           <SimpleGrid>
-            {form.values.price.variants.length < 3 && (
+            {form?.values?.price?.variants?.length < 3 && (
               <ActionIcon
                 variant="filled"
                 size={"lg"}
@@ -350,12 +354,15 @@ function PriceSection({ form }: { form: any }) {
                 <IconPlus size={16} />
               </ActionIcon>
             )}
-            {form.values.price.variants.length > 1 && (
+            {form?.values?.price?.variants?.length > 1 && (
               <ActionIcon
                 variant="filled"
                 size={"lg"}
                 onClick={() => {
-                  const newVariants = form.values.price.variants.slice(0, -1);
+                  const newVariants = form?.values?.price?.variants?.slice(
+                    0,
+                    -1
+                  );
                   form.setFieldValue("price.variants", newVariants);
                 }}
               >

@@ -96,7 +96,7 @@ export function CategoryCard({
           <Text>₹{item.price.price}</Text>
         ) : (
           <Stack>
-            {item.price.variants.map((element, index) => (
+            {item?.price?.variants?.map((element, index) => (
               <Box key={index}>
                 <Text c="dimmed" fz="md">
                   {element.name}

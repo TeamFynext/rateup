@@ -88,7 +88,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       title={editingItem ? "Edit Menu" : "Create Menu"}
       centered
       onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={editingItem ? "Edit Menu" : "Create Menu"}
+      buttonTitle={editingItem ? "Save Menu" : "Create Menu"}
     >
       <Title order={3}>General Info</Title>
       <Stack>

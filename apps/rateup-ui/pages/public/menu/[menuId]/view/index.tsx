@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
   Image,
+  Flex,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -17,6 +18,8 @@ import { CategoriesDrawer } from "../../../../../components/menu/category/Catego
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
 import { GilroyBold, GilroyMedium } from "../../../../../public/fonts";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 type MenuViewProp = {
   menuId: string;
@@ -51,13 +54,14 @@ export default function ({ fullMenu }) {
     setSelectedCategory(categoryId);
   }
 
-  const backgroundImageBorderRadius = largeScreen ? "47px" : "16px";
+  const backgroundImageBorderRadius = largeScreen ? "47px" : "22px";
   const backgroundImage = largeScreen
     ? fullMenu?.menuLanding?.backgroundImage
     : fullMenu?.menuLanding?.mobileBackgroundImage;
   const backgroundImageFallback = largeScreen
     ? "/images/menu/background.jpg"
     : "/images/menu/mobileBackground.jpg";
+  const router = useRouter();
 
   return (
     <Paper mih={"100vh"}>
@@ -67,12 +71,12 @@ export default function ({ fullMenu }) {
         py="3vh"
         style={{
           // TODO: add blur to background image
-          background: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), ${
+          background: `linear-gradient(111deg, rgba(251, 181, 75, 0.73) -12.96%, rgba(246, 67, 0, 0.73) 57.7%), ${
             backgroundImage
               ? `url(${encodeURI(getFileUrlFromKey(backgroundImage))})`
               : `url(${backgroundImageFallback})`
           }`,
-          backgroundColor: "var(--shade-of-black)",
+          backgroundColor: "var(--orange-400)",
           backgroundPosition: "center",
           backgroundSize: "cover",
           height: "33vh",
@@ -113,6 +117,7 @@ export default function ({ fullMenu }) {
               fz={"clamp(1.75rem, 0.857rem + 2.381vw, 3rem)"}
               tt={"uppercase"}
               className={GilroyBold.className}
+              ta={"center"}
             >
               {fullMenu?.displayName ?? "Name"}
             </Text>
@@ -150,7 +155,7 @@ export default function ({ fullMenu }) {
         </Group>
       </Group>
 
-      <Stack px={largeScreen ? "10vw" : "2vw"}>
+      <Stack px={largeScreen ? "7vw" : "2vw"}>
         {categorys?.map((c) => (
           <CategoryDisplay
             key={c.id}
@@ -163,6 +168,7 @@ export default function ({ fullMenu }) {
         opened={drawerOpen}
         close={close}
         categories={fullMenu?.categories}
+        handleCategoryChipClick={handleCategoryChipClick}
       />
       {selectedItem && (
         <ItemDetailedViewModal
@@ -170,6 +176,41 @@ export default function ({ fullMenu }) {
           onClose={() => setSelectedItem(null)}
         />
       )}
+      <Flex
+        justify={"end"}
+        pos={"sticky"}
+        bottom={"0"}
+        display={router?.query?.surveyId === undefined && "none"}
+      >
+        <Link
+          href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${router?.query?.surveyId}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <Stack
+            w={largeScreen ? "80px" : "50px"}
+            h={largeScreen ? "80px" : "50px"}
+            p={"lg"}
+            m={"lg"}
+            bg={"#F8951D"}
+            style={{ borderRadius: "100%" }}
+            justify="center"
+            align="center"
+            gap={0}
+          >
+            <Image
+              src={"/images/menu/whiteRateUpLogo.png"}
+              w={largeScreen ? "42px" : "26px"}
+              h={largeScreen ? "38px" : "26px"}
+            />
+            <Text
+              fz={"clamp(0.5rem, 0.243rem + 0.685vw, 0.859rem)"}
+              c={"white"}
+            >
+              Feedback
+            </Text>
+          </Stack>
+        </Link>
+      </Flex>
     </Paper>
   );
 }

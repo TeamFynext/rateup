@@ -1,19 +1,10 @@
 .content {
-  background-color: #161616;
-  color: white;
-  border-radius: 16px;
-}
-
-.header {
-  background-color: inherit;
+  border-radius: 25px;
 }
 
 .title {
   font-size: 1.5rem;
 }
 .close {
-  color: white;
-}
-.close:active {
-  color: black;
+  color: var(--orange-400);
 }

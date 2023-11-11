@@ -228,7 +228,7 @@ function MenuButton() {
   return (
     <Stack align="center">
       <Link
-        href={`/public/menu/${router.query.menuId}/view`}
+        href={`/public/menu/${router.query.menuId}/view?feedback=${router.query.surveyId}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Stack align="center" gap={0}>

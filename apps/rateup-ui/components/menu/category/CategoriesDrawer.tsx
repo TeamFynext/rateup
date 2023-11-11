@@ -6,11 +6,13 @@ interface CategoriesDrawerProps {
   opened: boolean;
   close: () => void;
   categories: FullCategory[];
+  handleCategoryChipClick: any;
 }
 export function CategoriesDrawer({
   opened,
   close,
   categories,
+  handleCategoryChipClick,
 }: CategoriesDrawerProps) {
   return (
     <Drawer
@@ -19,11 +21,11 @@ export function CategoriesDrawer({
       title="Categories"
       size={"xs"}
       classNames={{
-        content: classes.content,
-        header: classes.header,
         title: classes.title,
+        header: classes.header,
         close: classes.close,
       }}
+      closeButtonProps={{ iconSize: "30px" }}
     >
       <Stack align="center" mt={"lg"}>
         {categories?.map((c) => (
@@ -40,7 +42,7 @@ export function CategoriesDrawer({
             }}
             onClick={() => {
               close();
-              window.location.href = `#${c.id}`;
+              handleCategoryChipClick(c.id);
             }}
           >
             <Image
@@ -55,23 +57,16 @@ export function CategoriesDrawer({
             <Box
               px="sm"
               py="2px"
+              bg={"var(--orange-400)"}
+              pos={"absolute"}
+              bottom={"10px"}
+              left={"50%"}
               style={{
-                backgroundColor: "black",
                 borderRadius: "8px",
-                position: "absolute",
-                bottom: "10px",
-                left: "50%",
                 transform: "translate(-50%, 0)",
               }}
             >
-              <Text
-                c="white"
-                w={"100%"}
-                fw={600}
-                style={{
-                  textAlign: "center",
-                }}
-              >
+              <Text c="white" w={"100%"} fw={600} ta={"center"}>
                 {c.name}
               </Text>
             </Box>

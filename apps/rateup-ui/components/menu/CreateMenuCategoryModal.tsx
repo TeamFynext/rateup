@@ -119,7 +119,7 @@ export function CreateMenuCategoryModal({
       title={editingItem ? "Edit Category" : "Create Category"}
       centered
       onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={editingItem ? "Edit Category" : "Create Category"}
+      buttonTitle={editingItem ? "Save Category" : "Create Category"}
     >
       <Stack>
         <ContainedTextField

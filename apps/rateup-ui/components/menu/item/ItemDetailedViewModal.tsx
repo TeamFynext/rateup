@@ -34,17 +34,18 @@ export function ItemDetailedViewModal({
       size={"auto"}
       classNames={{
         content: classes.content,
-        header: classes.header,
         title: classes.title,
         close: classes.close,
       }}
+      closeButtonProps={{ iconSize: "22px" }}
     >
       <Stack align="center">
         <Box>
           <Box
             style={{
-              width: "400px",
-              height: "300px",
+              maxWidth: "400px",
+              maxHeight: "300px",
+              minHeight: "230px",
               overflow: "clip",
             }}
           >
@@ -69,7 +70,11 @@ export function ItemDetailedViewModal({
                   }}
                   width={"400px"}
                   radius={"lg"}
-                  src={getFileUrlFromKey(selectedMedia)}
+                  src={
+                    selectedMedia
+                      ? getFileUrlFromKey(selectedMedia)
+                      : fallbackImage
+                  }
                   fallbackSrc={fallbackImage}
                   alt="background image of menu"
                 />
@@ -106,7 +111,7 @@ export function ItemDetailedViewModal({
                       aspectRatio: "4 / 3",
                     }}
                     src={`http://img.youtube.com/vi/${extractVideoId(
-                      item?.videoUrl,
+                      item?.videoUrl
                     )}/0.jpg`}
                     alt="video of menu"
                   />
