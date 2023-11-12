@@ -263,6 +263,14 @@ function ConditionBlock({
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
 
+  function handleSetMatchData(value: string) {
+    if ([Q.Rating, Q.Opinion].includes(selectedQ.type)) {
+      setMatchData(parseInt(value));
+    } else {
+      setMatchData(value);
+    }
+  }
+
   useEffect(() => {
     setCurrentLogicJump({
       condition: selectedCondition,
@@ -314,7 +322,7 @@ function ConditionBlock({
           label="Match Data"
           value={Array.isArray(matchData) ? "" : matchData}
           data={getResponses(selectedQ, selectedLanguage)}
-          onChange={setMatchData}
+          onChange={handleSetMatchData}
         />
       )}
       <Text>then</Text>

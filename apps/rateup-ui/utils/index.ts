@@ -112,7 +112,7 @@ export function parseLogicAction(
     return LogicAction.NextQ;
   } catch (e) {
     // TODO: show error toast if in dev mode
-    // console.error(e);
+    console.warn(e);
     return LogicAction.NextQ;
   }
 }
