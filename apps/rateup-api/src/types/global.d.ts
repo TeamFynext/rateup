@@ -42,7 +42,7 @@ declare global {
   };
   type WaSectionsType = Array<{
     title?: string;
-    rows: Array<{ title: string; description: string }>;
+    rows: Array<{ id?: string, title: string; description?: string }>;
   }>;
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.

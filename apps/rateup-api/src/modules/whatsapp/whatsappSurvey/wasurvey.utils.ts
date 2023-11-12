@@ -5,8 +5,17 @@ import { QuestionType as Q } from "../../../types/enums";
 import { callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { uploadFile } from "../../../utils/upload/s3Upload";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 
-
+const smileyEmojiMap = {
+  [SmileyResponse.VeryHappy]: "😁",
+  [SmileyResponse.Happy]: "😀",
+  [SmileyResponse.Neutral]: "😐",
+  [SmileyResponse.Sad]: "🙁",
+  [SmileyResponse.VerySad]: "😠",
+};
 export function getEventType(data: WaMessageBody) {
   if (data.object === 'whatsapp_business_account') {
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
@@ -138,7 +147,7 @@ export function createListMessage(
         sections: [
           {
             //TODO: title have a 24char limit. Description may have 200chars
-            rows: choices.map((choice) => ({ id: choice, title: choice })),
+            rows: choices.map((choice, index) => ({ id: index.toString(), title: choice })),
           },
         ],
       },
@@ -177,8 +186,8 @@ export function createNativeListMessage(
         sections: sections.map(section => ({
           title: section.title,
           rows: section.rows.map((row, index) => ({
-            ...row,
-            id: index.toString()
+            id: index.toString(),
+            ...row
           }))
         }))
       },
@@ -214,9 +223,6 @@ export async function generateMessageDataFromQuestion(
     case Q.Rating:
       choices = [1, 2, 3, 4, 5].map((i) => i.toString());
       break;
-    case Q.Smiley:
-      choices = Object.values(SmileyResponse);
-      break;
     case Q.Opinion:
       choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => i.toString());
       break;
@@ -226,6 +232,20 @@ export async function generateMessageDataFromQuestion(
     case Q.DateTime:
       description += "\n\nPlease enter date in DD/MM/YYYY format";
       break;
+    case Q.Smiley: {
+      const sections: WaSectionsType = [{
+        rows: Object.entries(smileyEmojiMap).map(([key, value]) => ({
+          id: key,
+          title: value + key,
+        }))
+      }]
+      return createNativeListMessage(
+        to,
+        title,
+        description,
+        sections
+      )
+    }
     case Q.WaList:
       const sections = question.sections?.[lang] || [];
       return createNativeListMessage(
@@ -325,6 +345,8 @@ export function isValidResponse(
       return typeof response === 'string' && response.length > 0; // Key of the uploaded file
     case Q.Email:
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(response);
+    case Q.Smiley:
+      return Object.values(SmileyResponse).includes(response);
     default:
       return true;
   }
@@ -346,9 +368,10 @@ export async function parseResponse(
       case Q.Email:
       case Q.Opinion:
       case Q.WaButtons:
-      // TODO: smiley, testimonial
-      case Q.Smiley:
         return message;
+      case Q.Smiley:
+        return waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id
+      // TODO: testimonial
       case Q.Testimonial:
         return {
           testimonial: message,
@@ -356,7 +379,10 @@ export async function parseResponse(
       case Q.Rating:
         return Number(message);
       case Q.DateTime:
-        return new Date(message);
+        if(!dayjs(message, "DD/MM/YYYY", true).isValid()) {
+          return ""
+        }
+        return dayjs(message, "DD/MM/YYYY").toDate()
       case Q.MSQ:
         const selectedChoices = message.split(" ").map((i) => Number(i));
         return selectedChoices.map(

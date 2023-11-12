@@ -8,10 +8,9 @@ export function parseLogicAction(type: QuestionType, logicJumps: LogicJump[], us
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
   try {
-    if (!logicSupportedTypes.includes(type) || !userResponse) {
+    if (!logicSupportedTypes.includes(type) || !userResponse || !logicJumps) {
       return LogicAction.NextQ
     }
-
     let flag = false;
     for (const logic of logicJumps) {
       switch (logic.condition) {

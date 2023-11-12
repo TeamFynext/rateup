@@ -405,6 +405,17 @@ export async function getSurveysByTeam(teamId: string) {
   return surveysWithoutQuestions;
 }
 
+export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
+  const teamMap = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id: surveyTeamMapId,
+    },
+    include: {
+      survey: true,
+    },
+  })
+  return teamMap.survey;
+}
 
 //------------SURVEY SUMMARY  ----
 //-----Returns summary(responses, stats) of active surveys -- from ALL TEAMs in which the user is a member of 
@@ -846,4 +857,3 @@ export async function updateCompletedSurvey(id: string) {
   }
   return surveyStats;
 }
-

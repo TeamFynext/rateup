@@ -12,8 +12,6 @@ import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessa
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import { CreateResponseInput } from "../../response/response.schema";
 
-
-
 export async function sendMessage(orgId: string, messageData: WaSendMessageBody) {
   const waSettings = await getWaSettings(orgId);
 
@@ -80,14 +78,24 @@ export async function getFirstQuestionId(surveyId: string) {
   return questions[0].id;
 }
 
-export async function createSession(
+interface createSessionParams {
   phone: string,
   surveyTeamMapId: string,
   orgId: string,
   templateId?: string,
-  language: string = "",
+  language?: string,
   currentQuestionId?: string,
   campaignParticipantId?: string
+}
+export async function createSession({
+  phone,
+  surveyTeamMapId,
+  orgId,
+  templateId,
+  language = "",
+  currentQuestionId,
+  campaignParticipantId
+}: createSessionParams
 ) {
   log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
 
@@ -208,10 +216,12 @@ async function saveResponses(session: WaSessionWithRelations) {
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);
-  await updateCampaignParticipant(session.campaignParticipantId, {
-    status: CampaignParticipantStatus.COMPLETED,
-    responseId: res.id
-  })
+  if (session.campaignParticipantId) {
+    await updateCampaignParticipant(session.campaignParticipantId, {
+      status: CampaignParticipantStatus.COMPLETED,
+      responseId: res.id
+    })
+  }
 }
 
 export async function updateResponses(
@@ -247,34 +257,27 @@ export async function sendTextMessage(
   const messageData = createTextMessage(session.phone, title, description);
   await sendMessage(session.orgId, messageData);
 }
-
-/**
- * Creates a session with currentQuestionId as null & sends the template with name "survey_consent"
- * @param phone 
- * @param survey 
- */
-export async function sendSurveyToWaCustomer(phone: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
-  log.trace("Sending survey to waCustomer %s", phone);
-  // TODO: implement language selection
-  const session = await createSession(phone, survey.id, dbTemplate.orgId, dbTemplate.id, survey.languages[0])
-  log.trace("Session created %o", session)
-  const { name, language } = dbTemplate.data;
-  const templateQuery = {
-    name,
-    language: {
-      code: language
-    }
-  }
-  const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
-
-  // TODO: send error if sending template failed
-  await sendMessage(session.orgId, consentTemplateMessage);
+interface sendSurveyToParticipantParams {
+  campaignParticipantId: string;
+  phone: string;
+  surveyTeamMapId: string;
+  dbTemplate: WaTemplateWithTypes
 }
-
-export async function sendSurveyToParticipant(campaignParticipantId: string, phone: string, surveyTeamMapId: string, survey: Survey, dbTemplate: WaTemplateWithTypes) {
+export async function sendSurveyToParticipant({
+  campaignParticipantId,
+  phone,
+  surveyTeamMapId,
+  dbTemplate
+}: sendSurveyToParticipantParams) {
   try {
     log.trace("Sending survey to participant %s", phone);
-    const session = await createSession(phone, surveyTeamMapId, dbTemplate.orgId, dbTemplate.id, survey.languages[0], undefined, campaignParticipantId)
+    let session = await createSession({
+      phone,
+      surveyTeamMapId,
+      orgId: dbTemplate.orgId,
+      templateId: dbTemplate.id,
+      campaignParticipantId
+    })
     log.trace("Session created %o", session)
     const { name, language } = dbTemplate.data;
     const templateQuery = {

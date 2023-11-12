@@ -11,26 +11,20 @@ import {
 import {
   createSession,
   deleteSession,
-  getFirstQuestionId,
   getSession,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
   sendSurveyToParticipant,
-  sendSurveyToWaCustomer,
   sendTextMessage,
   updateResponses,
   updateSession,
 } from "./wasurvey.service";
-import { Survey } from "@prisma/client";
 import { CampaignParticipantStatus, WaEvent, WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
-import { getQuestionById } from "../../question/question.service";
-import { getSurveyById } from "../../survey/survey.service";
 import { getTemplateWithHSMId, updateTemplateInDb, getDbTemplate } from "../messageTemplates/wa_templates.service";
 import { getWaSettings } from "../settings/wa_settings.service";
-import { SendSurveyToWaCustomerParams, SendSurveyToWaCustomerGroupParams } from "./wasurvey.schema";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
@@ -140,8 +134,13 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
       const dbTemplate = await getDbTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
-        const firstQId = (session.surveyTeamMap.survey.questions[0] as Question).id;
-        session = await updateSession(orgId, from, { currentQuestionId: firstQId });
+        if(session.surveyTeamMap.survey.languages.length > 1) {
+          updateSession(orgId, from, { currentQuestionId: (session.surveyTeamMap.survey.questions[0] as Question).id })
+          await handleLanguageSelection(session);
+          return;
+        } else {
+          session = await updateSession(orgId, from, { language: session.surveyTeamMap.survey.languages[0] });
+        }
         log.trace('sending first question')
         await sendFirstQuestion(session);
       } else {
@@ -151,6 +150,10 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
         await deleteSession(orgId, from);
         return;
       }
+    } else if (!session.language) {
+      // If no language is set, then we assume this is the language selection
+      await handleLanguageResponse(session, message);
+      return;
     } else {
       // WaCustomer is in the middle of a survey
       await handleReplyMessage(orgId, waMessage);
@@ -163,22 +166,26 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   // delete any existing session if any
   await deleteSession(orgId, from);
   // create new session
-  const surveyId = message.split(" ")[1]; // format: /start <surveyId>
-  const survey = await getSurveyById(surveyId);
-  const firstQId = await getFirstQuestionId(survey.id);
+  const surveyTeamMapId = message.split(" ")[1]; // format: /start <surveyTeamMapId>
+  let session = await createSession({
+    phone: from,
+    surveyTeamMapId,
+    orgId
+  });
 
-  if (survey.languages.length > 1) {
-    const session = await createSession(from, survey.id, orgId, undefined, firstQId);
-    await handleLanguageSelection(session, survey);
+  if (session.surveyTeamMap.survey.languages.length > 1) {
+    updateSession(orgId, from, { currentQuestionId: (session.surveyTeamMap.survey.questions[0] as Question).id })
+    await handleLanguageSelection(session);
     return;
+  } else {
+    session = await updateSession(orgId, from, { language: session.surveyTeamMap.survey.languages[0] });
   }
-  const session = await createSession(from, survey.id, orgId, undefined, survey.languages[0], firstQId);
   console.log(session)
   await sendFirstQuestion(session);
 }
 
 async function sendFirstQuestion(session: WaSessionWithRelations) {
-  const firstQuestion = getQuestionByIdFromSession(session, session.currentQuestionId!)
+  const firstQuestion = session.surveyTeamMap.survey.questions[0] as Question;
   await sendQuestion(firstQuestion!, session);
 }
 
@@ -187,11 +194,6 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   let session = await getSession(orgId, from);
   if (!session) {
     // TODO: send error message
-    return;
-  }
-  // If no language is set, then we assume this is the language selection
-  if (!session.language) {
-    await handleLanguageResponse(session, message);
     return;
   }
   // save response
@@ -221,19 +223,19 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   const updatedResponses = [...currentResponses, formattedResponse] as any;
 
   session = await updateResponses(session.orgId, session.phone, updatedResponses);
-  await sendNextQuestion(session, message);
+  await sendNextQuestion(session, response);
 }
 
-async function handleLanguageSelection(session: WaSessionWithRelations, survey: Survey) {
-  if (survey.languages.length > 10) {
+async function handleLanguageSelection(session: WaSessionWithRelations) {
+  if (session.surveyTeamMap.survey.languages.length > 10) {
     throw new Error('Too many languages')
   }
   const message = createListMessage(
     session.phone,
-    "Please select your preferred language",
     "",
+    "Please select your preferred language",
     "View languages",
-    survey.languages
+    session.surveyTeamMap.survey.languages
   );
   await sendMessage(session.orgId, message);
 }
@@ -268,14 +270,9 @@ export async function sendSurveyToParticipants(campaignId: string) {
             contact: true,
           },
         },
-        surveyTeamMap: {
-          include: {
-            survey: true,
-          }
-        }
+        surveyTeamMap: true
       }
     })
-    const survey = campaign.surveyTeamMap.survey;
     const dbTemplate = await getDbTemplate(campaign.waTemplateId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${campaign.waTemplateId} not found`);
@@ -283,13 +280,18 @@ export async function sendSurveyToParticipants(campaignId: string) {
 
     for (const { contact, id } of campaign.campaignParticipants) {
       if (!contact.phone) {
-        log.trace('Contact %o does not have a phone number', contact);
+        log.warn('Contact %o does not have a phone number', contact);
         // TODO: handle this case. maybe send email?
         continue;
       }
       // TODO: add rate limiting 
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      if (!(await sendSurveyToParticipant(id, contact.phone, campaign.surveyTeamMap.id, survey, dbTemplate))) {
+      if (!(await sendSurveyToParticipant({
+        campaignParticipantId: id,
+        phone: contact.phone,
+        surveyTeamMapId: campaign.surveyTeamMap.id,
+        dbTemplate
+      }))) {
         log.error('Error sending survey to participant %o', contact);
       } else {
         log.trace('Survey sent to participant %o', contact);
