@@ -22,7 +22,6 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
   const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
-    console.log("saving sections", sections);
     saveSections(sections);
   }, [sections]);
 

@@ -225,7 +225,7 @@ interface SurveyCardProps {
 export function SurveyCard({
   survey,
   teamsData,
-}: SurveyCardProps & { teamsData: any }): JSX.Element {
+}: SurveyCardProps & { teamsData: TeamData[] }): JSX.Element {
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user } = useUser();

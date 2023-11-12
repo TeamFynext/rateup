@@ -1,4 +1,4 @@
-import { Flex, Paper, Tabs, Center, Text } from "@mantine/core";
+import { Flex, Tabs, Center, Text } from "@mantine/core";
 import { useState, useEffect, useContext } from "react";
 import GoogleReviewEditor from "../../Survey/Question/GoogleReviewEditor";
 import LogicEditor from "../../Survey/Question/LogicEditor";
@@ -9,6 +9,7 @@ import classes from "./WaEditSurvey.module.css";
 import { WaQuestionDetailedView } from "./WaQuestionDetailedView";
 import { QuestionType as Q } from "../../../types/enums";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -48,7 +49,7 @@ export function EditWhatsappSurvey({
 
   return (
     <Flex w={"100%"} h={"100%"} p={2} gap={5} className={classes.root}>
-      <Paper p={"md"} style={{ flex: 2 }} shadow="lg" radius="lg">
+      <PaperLayout style={{ flex: 2 }}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -56,8 +57,8 @@ export function EditWhatsappSurvey({
           setActiveTab={setActiveTab}
           addQnTrigger={addQnTrigger}
         />
-      </Paper>
-      <Paper p={"md"} style={{ flex: 3 }} shadow="lg" radius="lg">
+      </PaperLayout>
+      <PaperLayout p={"md"} style={{ flex: 3 }}>
         <Tabs
           pb="md"
           value={activeTab}
@@ -109,7 +110,7 @@ export function EditWhatsappSurvey({
             </Center>
           </Tabs.Panel>
         </Tabs>
-      </Paper>
+      </PaperLayout>
     </Flex>
   );
 }
@@ -124,6 +125,8 @@ const WA_QUESTION_TYPES = [
   Q.Phone,
   Q.DateTime,
   Q.Photo,
+  Q.Smiley,
+  Q.Opinion,
   // Whatsapp Exclusive
   Q.WaButtons,
   Q.WaList,

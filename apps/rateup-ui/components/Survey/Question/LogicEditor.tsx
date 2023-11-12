@@ -252,7 +252,9 @@ function ConditionBlock({
     { label: "Next Question", value: LogicAction.NextQ },
     { label: "End Survey", value: LogicAction.EndSurvey },
     ...possibleQuestions.map((q) => ({
-      label: "JUMP TO => " + q.title[selectedLanguage],
+      label: `JUMP TO => ${questions.findIndex((q1) => q1.id === q.id) + 1}) ${
+        q.title[selectedLanguage] || q.description[selectedLanguage]
+      }`, // TODO: truncate
       value: q.id,
     })),
   ];
