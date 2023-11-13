@@ -29,11 +29,6 @@ const createSurveyLandingRequestSchema = z.object({
   surveys: z.array(z.string()),
 
 });
-const createSurveyResponseSchema = z.object({
-  ...surveyCore,
-  skipPreview: z.boolean(),
-  id: z.string(),
-});
 const createSurveyLandingResponseSchema = z.object({
   title: z.string({
     required_error: "Title is required",
@@ -133,7 +128,6 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
     createSurveyLandingRequestSchema,
-    createSurveyResponseSchema,
     createSurveyLandingResponseSchema,
     getSurveyByIdParamsSchema,
     getSurveyLandingByIdParamsSchema,
