@@ -15,6 +15,22 @@
   border-color: var(--input-focus-color, var(--tertiary-color));
 }
 
+.opinion-scale {
+  gap: 1rem;
+}
+
+.opinion-scale-interval-btn {
+  padding: 0;
+  width: 52px;
+  height: 50px;
+  border-radius: 20px;
+}
+
+.opinion-scale-first-five-btns-container,
+.opinion-scale-last-five-btns-container {
+  gap: 1rem;
+}
+
 .rating svg {
   height: 50px;
   width: 50px;
@@ -24,5 +40,12 @@
   .rating svg {
     height: 50px;
     width: 50px;
+  }
+
+  .opinion-scale-interval-btn {
+    width: 42px;
+    height: 40px;
+    padding: 0;
+    border-radius: 16px;
   }
 }

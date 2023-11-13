@@ -1,4 +1,4 @@
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import {
   Button,
   Center,
@@ -26,22 +26,23 @@ import {
   Combobox,
   InputBase,
   useCombobox,
+  Flex,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import {
   usePublicSurvey,
   useUpdateCompletedMutation,
-} from "../../../backend/surveys/surveys.query";
+} from "../../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useState } from "react";
-import { SelectedQContext } from "../../../context/SelectedQ";
+import { SelectedQContext } from "../../../../context/SelectedQ";
 import dayjs from "dayjs";
 import {
   LDResponse,
   LogicAction,
   QuestionType as Q,
   YNResponse,
-} from "../../../types/enums";
+} from "../../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
   IconCalendarEvent,
@@ -54,21 +55,22 @@ import {
 } from "@tabler/icons-react";
 import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
-import { CurrentResponsesContext } from "../../../context/ResponseContext";
-import { createResponsePublic } from "../../../backend/surveys/response/response.api";
+import { CurrentResponsesContext } from "../../../../context/ResponseContext";
+import { createResponsePublic } from "../../../../backend/surveys/response/response.api";
 import {
   RateupButtonBlackOutline,
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import QuestionCountContext from "../../../context/QuestionCountContext";
+} from "../../../Button/RateupButtons";
+import QuestionCountContext from "../../../../context/QuestionCountContext";
 import classes from "./TakeSurvey.module.css";
-import { uploadFile } from "../../../utils/file-upload/upload";
+import modalStyles from "./ModalStyles.module.css";
+import { uploadFile } from "../../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
-import { parseLogicAction } from "../../../utils";
-import { validateQuestion } from "../../../utils/validation";
-import SmileyRating, { mapSmileyIcon } from "./RatingSmiley";
-import { GilroySemibold } from "../../../public/fonts";
+import { parseLogicAction } from "../../../../utils";
+import { validateQuestion } from "../../../../utils/validation";
+import SmileyRating, { mapSmileyIcon } from "../RatingSmiley";
+import { GilroySemibold } from "../../../../public/fonts";
 import Flag from "react-world-flags";
 
 function TakeSurvey() {
@@ -80,6 +82,7 @@ function TakeSurvey() {
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
+  const theme = useMantineTheme();
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
@@ -250,10 +253,17 @@ function TakeSurvey() {
           }
         }
       }
+
       if (shouldShowGoogleReview) {
         break;
       }
     }
+
+    // if (shouldShowGoogleReview) {
+    //     console.log("Show Google Review");
+    // } else {
+    //     console.log("Don't show Google Review");
+    // }
 
     submitSurvey({
       surveyTeamMapId: surveyId,
@@ -292,24 +302,147 @@ function TakeSurvey() {
     }
   };
 
+  const responseValues = responses.map((item) => {
+    const key = Object.keys(item.response)[0];
+    const value = item.response[key];
+    return value;
+  });
+
+  const filteredQuestions = survey?.questions?.filter(
+    (question) => question?.title[selectedLanguage],
+  );
+
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
         <Container size={"md"}>
-          <ConfirmationModal
+          <Modal
+            className={classes["modal"]}
             opened={opened}
-            close={close}
-            questionsHistory={questionsHistory.map((id) =>
-              survey.questions.find((q) => q.id === id),
-            )}
-            responses={responses}
-            selectedLanguage={selectedLanguage}
-            largeScreen={largeScreen}
-            isSavingResponses={isSavingResponses}
-            finishSurvey={finishSurvey}
-          />
+            title="Confirm your responses"
+            centered
+            onClose={close}
+            overlayProps={{
+              color: theme.colors.gray[2],
+              opacity: 0.55,
+              blur: 3,
+              className: classes["modal-overlay"],
+            }}
+            classNames={modalStyles}
+          >
+            <Flex className={modalStyles["modal-body-content-container"]}>
+              <Stack pb="xl">
+                {filteredQuestions.map((question) => {
+                  const response = responses.find(
+                    (response) => response.questionId === question.id,
+                  );
+                  return (
+                    <Stack key={question.id}>
+                      <Title pt="sm" order={4}>
+                        {question.title[selectedLanguage]}
+                      </Title>
+                      {response ? (
+                        <Text pb="sm">
+                          {(() => {
+                            switch (question.type) {
+                              case Q.Rating:
+                                return (
+                                  <Rating
+                                    value={Object.values(response?.response)[0]}
+                                    readOnly
+                                  />
+                                );
+                              case Q.Smiley:
+                                return mapSmileyIcon(
+                                  Object.values(response?.response)[0],
+                                );
+                              case Q.Photo:
+                                const imgUrl = `${
+                                  process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
+                                }${Object.values(response?.response)[0]}`;
+                                return (
+                                  <Image
+                                    radius="md"
+                                    maw={240}
+                                    mx="0px"
+                                    src={imgUrl}
+                                  />
+                                );
+                              case Q.MSQ:
+                              case Q.DDMS:
+                                const responseData = Object.values(
+                                  response?.response,
+                                )[0];
+                                if (Array.isArray(responseData)) {
+                                  return responseData.map((item, index) => {
+                                    return <li key={index}>{item}</li>;
+                                  });
+                                }
+                                return <li>{responseData}</li>;
+
+                              case Q.DateTime:
+                                return dayjs(
+                                  Object.values(response?.response)[0],
+                                ).format("DD, MMM , YYYY");
+
+                              case Q.Testimonial:
+                                const data = Object.values(
+                                  response?.response,
+                                )[0];
+                                return (
+                                  <Stack>
+                                    <Group>
+                                      {" "}
+                                      <Text fw="400">Name: </Text>{" "}
+                                      <Text fw="300">{data.name}</Text>{" "}
+                                    </Group>
+                                    <Group mt="-10px">
+                                      {" "}
+                                      <Text fw="400">Testimonial: </Text>{" "}
+                                      <Text fw="300">{data.testimonial}</Text>{" "}
+                                    </Group>
+                                  </Stack>
+                                );
+
+                              default:
+                                return JSON.stringify(
+                                  Object.values(response?.response)[0],
+                                );
+                            }
+                          })()}
+                        </Text>
+                      ) : (
+                        <Text pb="sm" c="dark.0" fz="xs">
+                          ... not answered...{" "}
+                        </Text>
+                      )}
+                      <Divider />
+                    </Stack>
+                  );
+                })}
+              </Stack>
+            </Flex>
+            <Flex className={modalStyles["modal-footer-container"]}>
+              <RateupButtonBlackOutline
+                radius={"xl"}
+                title=""
+                size={largeScreen ? "lg" : "xs"}
+                onClick={close}
+                leftIcon={<IconChevronLeft />}
+              />
+
+              <RateupButtonBlue
+                loading={isSavingResponses}
+                radius={"xl"}
+                title={"Confirm"}
+                size={largeScreen ? "lg" : "xs"}
+                leftIcon={<IconCheck />}
+                onClick={finishSurvey}
+              />
+            </Flex>
+          </Modal>
 
           <Stack>
             <Stack style={{ minHeight: "45vh" }} justify="center">
@@ -328,166 +461,6 @@ function TakeSurvey() {
         </Container>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>
-  );
-}
-
-interface ConfirmationModalProps {
-  opened: boolean;
-  close: () => void;
-  questionsHistory: Question[];
-  responses: QuestionResponse[];
-  selectedLanguage: string;
-  largeScreen: boolean;
-  isSavingResponses: boolean;
-  finishSurvey: () => void;
-}
-function ConfirmationModal({
-  opened,
-  close,
-  questionsHistory,
-  responses,
-  selectedLanguage,
-  largeScreen,
-  isSavingResponses,
-  finishSurvey,
-}: ConfirmationModalProps) {
-  const theme = useMantineTheme();
-  return (
-    <Modal
-      opened={opened}
-      title="Confirm your responses"
-      onClose={close}
-      overlayProps={{
-        color: theme.colors.gray[2],
-        opacity: 0.55,
-        blur: 3,
-      }}
-      styles={{
-        title: {
-          fontSize: "26px",
-          fontWeight: 700,
-          padding: "10px",
-        },
-      }}
-    >
-      <Stack pb="7rem" style={{ height: "100%", position: "relative" }}>
-        <Divider />
-        <Stack pb="xl">
-          {questionsHistory.map((question) => {
-            const response = responses.find(
-              (response) => response.questionId === question.id,
-            );
-            return (
-              <Stack key={question.id}>
-                <Title pt="sm" order={4}>
-                  {question.title[selectedLanguage]}
-                </Title>
-                {response ? (
-                  <Text pb="sm">
-                    {(() => {
-                      switch (question.type) {
-                        case Q.Rating:
-                          return (
-                            <Rating
-                              value={Object.values(response?.response)[0]}
-                              readOnly
-                            />
-                          );
-                        case Q.Smiley:
-                          return mapSmileyIcon(
-                            Object.values(response?.response)[0],
-                          );
-                        case Q.Photo:
-                          const imgUrl = `${
-                            process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
-                          }${Object.values(response?.response)[0]}`;
-                          return (
-                            <Image
-                              radius="md"
-                              maw={240}
-                              mx="0px"
-                              src={imgUrl}
-                            />
-                          );
-                        case Q.MSQ:
-                        case Q.DDMS:
-                          const responseData = Object.values(
-                            response?.response,
-                          )[0];
-                          if (Array.isArray(responseData)) {
-                            return responseData.map((item, index) => {
-                              return <li key={index}>{item}</li>;
-                            });
-                          }
-                          return <li>{responseData}</li>;
-
-                        case Q.DateTime:
-                          return dayjs(
-                            Object.values(response?.response)[0],
-                          ).format("DD, MMM , YYYY");
-
-                        case Q.Testimonial:
-                          const data = Object.values(response?.response)[0];
-                          return (
-                            <Stack>
-                              <Group>
-                                {" "}
-                                <Text fw="400">Name: </Text>{" "}
-                                <Text fw="300">{data.name}</Text>{" "}
-                              </Group>
-                              <Group mt="-10px">
-                                {" "}
-                                <Text fw="400">Testimonial: </Text>{" "}
-                                <Text fw="300">{data.testimonial}</Text>{" "}
-                              </Group>
-                            </Stack>
-                          );
-
-                        default:
-                          return JSON.stringify(
-                            Object.values(response?.response)[0],
-                          );
-                      }
-                    })()}
-                  </Text>
-                ) : (
-                  <Text pb="sm" c="dark.0" fz="xs">
-                    ... not answered...{" "}
-                  </Text>
-                )}
-                <Divider />
-              </Stack>
-            );
-          })}
-        </Stack>
-
-        <div style={{ position: "absolute", bottom: 0, left: 10, right: 10 }}>
-          <Group
-            gap="apart"
-            justify="space-between"
-            style={{ background: "#fff" }}
-            pb="md"
-          >
-            <RateupButtonBlackOutline
-              radius={"xl"}
-              title=""
-              size={largeScreen ? "lg" : "xs"}
-              onClick={close}
-              leftIcon={<IconChevronLeft />}
-            />
-
-            <RateupButtonBlue
-              loading={isSavingResponses}
-              radius={"xl"}
-              title={"Confirm"}
-              size={largeScreen ? "lg" : "xs"}
-              leftIcon={<IconCheck />}
-              onClick={finishSurvey}
-            />
-          </Group>
-        </div>
-      </Stack>
-    </Modal>
   );
 }
 
@@ -557,9 +530,9 @@ function QuestionForm() {
   const { selectedQ } = useContext(SelectedQContext);
   const { type } = selectedQ;
   const isMobile = useMediaQuery("(max-width: 480px)");
-
+  const className = type.toLowerCase().replaceAll(" ", "-") + "-container";
   return (
-    <Group>
+    <Group className={classes[className]}>
       {(() => {
         switch (type) {
           case Q.DateTime:
@@ -1040,10 +1013,12 @@ function LDForm() {
 function OpinionScaleForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const renderButtons = () => {
-    const buttons = [];
+    const oneToFive = [];
+    const fiveToTen = [];
     for (let i = 1; i <= 10; i++) {
-      buttons.push(
+      const button = (
         <Button
+          className={classes["opinion-scale-interval-btn"]}
           key={i}
           radius="md"
           onClick={() => updateResponse(i)}
@@ -1054,17 +1029,33 @@ function OpinionScaleForm() {
           }}
         >
           {i}
-        </Button>,
+        </Button>
       );
+      if (i <= 5) {
+        oneToFive.push(button);
+      } else {
+        fiveToTen.push(button);
+      }
     }
-    return buttons;
+    const firstFiveBtnsContiner = (
+      <Flex className={classes["opinion-scale-first-five-btns-container"]}>
+        {oneToFive}
+      </Flex>
+    );
+    const secondFiveBtnsContainer = (
+      <Flex className={classes["opinion-scale-last-five-btns-container"]}>
+        {fiveToTen}
+      </Flex>
+    );
+    return (
+      <>
+        {firstFiveBtnsContiner}
+        {secondFiveBtnsContainer}
+      </>
+    );
   };
 
-  return (
-    <Group justify="center" gap="xs">
-      {renderButtons()}
-    </Group>
-  );
+  return <Group className={classes["opinion-scale"]}>{renderButtons()}</Group>;
 }
 
 function YNForm() {

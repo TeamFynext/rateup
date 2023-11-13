@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { usePublicSurvey } from "../../../../backend/surveys/surveys.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurvey";
+import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { useMediaQuery } from "@mantine/hooks";
 

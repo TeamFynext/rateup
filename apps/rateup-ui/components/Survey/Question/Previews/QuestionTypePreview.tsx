@@ -15,7 +15,7 @@ import {
   Box,
   Textarea,
 } from "@mantine/core";
-import classes from "../../TakeSurvey/TakeSurvey.module.css";
+import classes from "../../TakeSurvey/TakeSurveyComponent/TakeSurvey.module.css";
 import {
   IconMail,
   IconThumbDownFilled,
