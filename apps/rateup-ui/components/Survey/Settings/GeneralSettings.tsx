@@ -19,11 +19,7 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-const defaultEnabledModules = ["name", "language", "kiosk", "teams", "preview"];
-const GeneralSettings = ({
-  survey,
-  enabledModules = defaultEnabledModules,
-}) => {
+const GeneralSettings = ({ survey, enabledModules }) => {
   const [kioskMode, setKioskMode] = useState(false);
   const [languages, setLanguages] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState(null);
@@ -41,6 +37,7 @@ const GeneralSettings = ({
       languages: [],
       teams: [],
       skipPreview: false,
+      getLocation: false,
     },
     validate: {
       title: (value) => (value.length ? null : "Cannot be empty"),
@@ -55,6 +52,8 @@ const GeneralSettings = ({
       title: survey?.title || "",
       languages: survey?.languages || [],
       teams: survey?.teams?.map((team) => team?.id) || [],
+      skipPreview: survey?.skipPreview || false,
+      getLocation: survey?.getLocation || false,
     });
     setKioskMode(survey?.kioskMode);
     setLanguages(survey?.languages);
@@ -75,6 +74,7 @@ const GeneralSettings = ({
       teams: values?.teams,
       skipPreview: values?.skipPreview,
       kioskMode: kioskMode,
+      getLocation: values?.getLocation,
     };
     editSurvey.mutate(data);
   };
@@ -154,7 +154,24 @@ const GeneralSettings = ({
             <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
               <Switch
                 size={"md"}
-                {...surveyForm.getInputProps("skipPreview")}
+                {...surveyForm.getInputProps("skipPreview", {
+                  type: "checkbox",
+                })}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+        {enabledModules.includes("location") && (
+          <Grid align="center" mt="md">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Fetch Location:</Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Switch
+                size={"md"}
+                {...surveyForm.getInputProps("getLocation", {
+                  type: "checkbox",
+                })}
               />
             </Grid.Col>
           </Grid>

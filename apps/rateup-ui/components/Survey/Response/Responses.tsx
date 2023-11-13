@@ -222,10 +222,7 @@ function TableHead({ questions }: TableHeadProps) {
           </Text>
         </Table.Th>
         {questions?.map((q) => (
-          <Table.Th
-            key={q?.id}
-            title={q?.title[selectedLanguage] || q?.title["English"]}
-          >
+          <Table.Th key={q?.id}>
             <Text
               c="dark.5"
               fz="lg"
@@ -234,7 +231,13 @@ function TableHead({ questions }: TableHeadProps) {
               miw={200}
               maw={200}
             >
-              {q?.title[selectedLanguage] || q?.title["English"]}
+              {q?.title[selectedLanguage] ||
+                q?.title["English"] ||
+                (
+                  q?.description[selectedLanguage] ||
+                  q?.description["English"] ||
+                  ""
+                ).substring(0, 15)}
             </Text>
           </Table.Th>
         ))}
