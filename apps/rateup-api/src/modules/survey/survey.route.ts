@@ -31,9 +31,6 @@ export async function surveyRoutes(server: FastifyInstance) {
       preHandler: verifySurveyCreateAccess,
       schema: {
         body: $Sref("createSurveyRequestSchema"),
-        response: {
-          201: $Sref("createSurveyResponseSchema"),
-        },
       },
     },
     createSurveyHandler
