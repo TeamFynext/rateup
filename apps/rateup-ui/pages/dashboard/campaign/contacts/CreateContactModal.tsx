@@ -90,31 +90,9 @@ const CreateContactModal = ({ contactClose, close }) => {
     });
   }, [csvfile]);
 
-  const createContactMutation = useCreateContactMutation(
-    () => {
-      setIsCreating(false);
-      contactClose();
-      close();
-      form.reset();
-    },
-    () => {
-      setIsCreating(false);
-      form.reset();
-    },
-  );
+  const createContactMutation = useCreateContactMutation();
 
-  const importContactMutation = useImportContactMutation(
-    () => {
-      setIsCreating(false);
-      contactClose();
-      close();
-    },
-    () => {
-      setIsCreating(false);
-      form.reset();
-      form.setFieldValue("importMethod", importMethod.CSV);
-    },
-  );
+  const importContactMutation = useImportContactMutation();
 
   useEffect(() => {
     if (form?.values) {
@@ -164,7 +142,18 @@ const CreateContactModal = ({ contactClose, close }) => {
         phone: !phone ? undefined : phone,
         name: name,
       }));
-      importContactMutation.mutate(dataToUpload);
+      importContactMutation.mutate(dataToUpload, {
+        onSuccess: () => {
+          setIsCreating(false);
+          contactClose();
+          close();
+        },
+        onError: () => {
+          setIsCreating(false);
+          form.reset();
+          form.setFieldValue("importMethod", importMethod.CSV);
+        },
+      });
     } else {
       let contactData: ICreateContact = form.values;
       if (!contactType.includes("email")) {
@@ -181,7 +170,18 @@ const CreateContactModal = ({ contactClose, close }) => {
           teamId: form.values.teamId,
         };
       }
-      createContactMutation.mutate(contactData);
+      createContactMutation.mutate(contactData, {
+        onSuccess: () => {
+          setIsCreating(false);
+          contactClose();
+          close();
+          form.reset();
+        },
+        onError: () => {
+          setIsCreating(false);
+          form.reset();
+        },
+      });
     }
   };
   return (

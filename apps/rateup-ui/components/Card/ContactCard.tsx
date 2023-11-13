@@ -1,8 +1,11 @@
-import { Badge, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { IconTrash } from "@tabler/icons-react";
+import { Badge, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core";
+import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
 import { useTeamsByUser } from "../../backend/team/team.query";
+import { useDisclosure } from "@mantine/hooks";
+import FormModalLayout from "../Modal/FormModalLayout";
+import EditContactModal from "../../pages/dashboard/campaign/contacts/EditContactModal";
 
 interface ContactCardProps {
   contact: ContactsData;
@@ -33,6 +36,29 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
   const teamObj = teamsData?.data?.find((team) => {
     return team?.id === contact?.teamId;
   });
+
+  return (
+    <Paper shadow="xl" radius="md" p="xl">
+      <Group justify="space-between">
+        <Title order={5}>{contact?.name}</Title>
+        <ContactMenu contact={contact} groupId={groupId}></ContactMenu>
+      </Group>
+      <Text c="dimmed">{contact?.phone}</Text>
+      <Text c="dimmed">{contact?.email}</Text>
+
+      <Group justify="space-between">
+        <Text c="dimmed">created on {date}</Text>
+        <Badge color="var(--tertiary-color)" variant="outline" size="lg">
+          {teamObj?.name}
+        </Badge>
+      </Group>
+    </Paper>
+  );
+};
+
+const ContactMenu = ({ contact, groupId }) => {
+  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
+    useDisclosure(false);
   const openDeleteModal = () => {
     modals.openConfirmModal({
       title: "Delete contact",
@@ -56,25 +82,41 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
     deleteMutation.mutate(contact?.id);
   };
   return (
-    <Paper shadow="xl" radius="md" p="xl">
-      <Group justify="space-between">
-        <Title order={5}>{contact?.name}</Title>
-        <IconTrash
-          size={24}
-          color="#FF6464"
-          onClick={openDeleteModal}
-        ></IconTrash>
-      </Group>
-      <Text c="dimmed">{contact?.phone}</Text>
-      <Text c="dimmed">{contact?.email}</Text>
+    <Menu shadow="xl" position="bottom-end">
+      <Menu.Target>
+        <IconDots color="grey"></IconDots>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<IconEdit size={"1rem"}></IconEdit>}
+          onClick={openEditModal}
+        >
+          Edit
+        </Menu.Item>
 
-      <Group justify="space-between">
-        <Text c="dimmed">created on {date}</Text>
-        <Badge color="var(--tertiary-color)" variant="outline" size="lg">
-          {teamObj?.name}
-        </Badge>
-      </Group>
-    </Paper>
+        <Menu.Divider />
+        <Menu.Item
+          color="red"
+          leftSection={<IconTrash size="1rem" />}
+          onClick={openDeleteModal}
+        >
+          Delete contact
+        </Menu.Item>
+      </Menu.Dropdown>
+      <FormModalLayout
+        opened={openedEditModal}
+        title="Edit Contact"
+        onClose={closeEditModal}
+        centered
+        size="lg"
+      >
+        <EditContactModal
+          contact={contact}
+          closeEditModal={closeEditModal}
+          groupId={groupId}
+        />
+      </FormModalLayout>
+    </Menu>
   );
 };
 

@@ -33,3 +33,8 @@ export const deleteContact = (contactId: string) => {
   let res = axiosClient.delete(`/contact/${contactId}`);
   return res;
 };
+
+export const editContact = async ({ data, contactId }) => {
+  let res = await axiosClient.put(`/contact/${contactId}`, data);
+  return res;
+};

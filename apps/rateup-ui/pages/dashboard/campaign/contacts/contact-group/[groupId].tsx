@@ -57,9 +57,7 @@ export default function () {
     refetch: any;
   };
 
-  const deleteGroupMutation = useDeleteGroupMutation(() => {
-    router.push("/dashboard/campaign/contacts/");
-  });
+  const deleteGroupMutation = useDeleteGroupMutation();
 
   const openDeleteModal = () => {
     modals.openConfirmModal({
@@ -78,7 +76,11 @@ export default function () {
     });
   };
   const deleteContactGroup = () => {
-    deleteGroupMutation.mutate(groupId);
+    deleteGroupMutation.mutate(groupId, {
+      onSuccess: () => {
+        router.push("/dashboard/campaign/contacts/");
+      },
+    });
   };
 
   useEffect(() => {

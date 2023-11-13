@@ -79,33 +79,10 @@ const CreateGroupModal = ({
     }
   }, [groupDetails]);
 
-  const createContactGroupMutation = useCreateContactGroupMutation(
-    () => {
-      groupClose();
-      close();
-      setIsCreating(false);
-      form.reset();
-    },
-    () => {
-      groupClose();
-      close();
-      setIsCreating(false);
-      form.reset();
-    },
-  );
+  const createContactGroupMutation = useCreateContactGroupMutation();
 
   const editContactGroupMutation = useEditContactGroupMutation(
     groupDetails?.id,
-    () => {
-      groupClose();
-      setIsCreating(false);
-      form.reset();
-    },
-    () => {
-      groupClose();
-      setIsCreating(false);
-      form.reset();
-    },
   );
 
   const handleSubmit = () => {
@@ -115,9 +92,33 @@ const CreateGroupModal = ({
     }
     setIsCreating(true);
     if (isEdit) {
-      editContactGroupMutation.mutate(form.values);
+      editContactGroupMutation.mutate(form.values, {
+        onSuccess: () => {
+          groupClose();
+          setIsCreating(false);
+          form.reset();
+        },
+        onError: () => {
+          groupClose();
+          setIsCreating(false);
+          form.reset();
+        },
+      });
     } else {
-      createContactGroupMutation.mutate(form.values);
+      createContactGroupMutation.mutate(form.values, {
+        onSuccess: () => {
+          groupClose();
+          close();
+          setIsCreating(false);
+          form.reset();
+        },
+        onError: () => {
+          groupClose();
+          close();
+          setIsCreating(false);
+          form.reset();
+        },
+      });
     }
   };
 

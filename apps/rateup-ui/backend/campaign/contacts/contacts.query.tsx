@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContact,
   deleteContact,
+  editContact,
   getContactListByTeamId,
   getContactsList,
   importContacts,
@@ -22,44 +23,34 @@ export const useCampaignContactsByTeamId = (teamId) => {
   });
 };
 
-export const useCreateContactMutation = (
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const useCreateContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createContact,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
         showSuccessToast("Contact created successfully.");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
         `Error creating the contact: ${error?.response?.data?.message}`,
       );
-      onError();
     },
   });
 };
 
-export const useImportContactMutation = (
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const useImportContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importContacts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
       showSuccessToast("Contacts imported successfully");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
         `Error creating the contact: ${error?.response?.data?.message}`,
       );
-      onError();
     },
   });
 };
@@ -77,6 +68,26 @@ export const useContactDeleteMutation = (groupId: string) => {
     },
     onError: (error: any) => {
       showErrorToast("Error deleting contact:", error?.response?.data?.error);
+    },
+  });
+};
+
+export const useEditContactMutation = (groupId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: editContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupById", groupId],
+      });
+      showSuccessToast("Contact updated successfully.");
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        "Error on updating contact:",
+        error?.response?.data?.error,
+      );
     },
   });
 };

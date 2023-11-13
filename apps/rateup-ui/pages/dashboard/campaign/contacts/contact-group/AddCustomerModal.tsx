@@ -93,33 +93,9 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
         !value.length ? "Must select any one: phone or email" : null,
     },
   });
-  const createNewContactMutation = useAddNewContactMutation(
-    groupId,
-    () => {
-      close();
-      setIsCreating(false);
-      form.reset();
-    },
-    () => {
-      close();
-      setIsCreating(false);
-      form.reset();
-    },
-  );
+  const createNewContactMutation = useAddNewContactMutation(groupId);
 
-  const addExistingContactsMutation = useAddExistingContactMutation(
-    groupId,
-    () => {
-      setCustomerList([]);
-      setIsCreating(false);
-      close();
-    },
-    () => {
-      setCustomerList([]);
-      setIsCreating(false);
-      close();
-    },
-  );
+  const addExistingContactsMutation = useAddExistingContactMutation(groupId);
 
   useEffect(() => {
     form.values.contactType = contactType;
@@ -203,13 +179,41 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
           phone: !phone ? undefined : phone,
         }),
       );
-      createNewContactMutation.mutate({ data: dataToUpload, groupId: groupId });
+      createNewContactMutation.mutate(
+        { data: dataToUpload, groupId: groupId },
+        {
+          onSuccess: () => {
+            close();
+            setIsCreating(false);
+            form.reset();
+          },
+          onError: () => {
+            close();
+            setIsCreating(false);
+            form.reset();
+          },
+        },
+      );
     } else {
       if (addType == contactAddType.EXISTING) {
-        addExistingContactsMutation.mutate({
-          customerList: customerList,
-          groupId: groupId,
-        });
+        addExistingContactsMutation.mutate(
+          {
+            customerList: customerList,
+            groupId: groupId,
+          },
+          {
+            onSuccess: () => {
+              setCustomerList([]);
+              setIsCreating(false);
+              close();
+            },
+            onError: () => {
+              setCustomerList([]);
+              setIsCreating(false);
+              close();
+            },
+          },
+        );
       } else {
         let contactData: IAddCustomer[] = [form.values];
         if (!contactType.includes("email")) {
@@ -228,10 +232,24 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
             },
           ];
         }
-        createNewContactMutation.mutate({
-          data: contactData,
-          groupId: groupId,
-        });
+        createNewContactMutation.mutate(
+          {
+            data: contactData,
+            groupId: groupId,
+          },
+          {
+            onSuccess: () => {
+              setIsCreating(false);
+              form.reset();
+              close();
+            },
+            onError: () => {
+              setIsCreating(false);
+              form.reset();
+              close();
+            },
+          },
+        );
       }
     }
   };

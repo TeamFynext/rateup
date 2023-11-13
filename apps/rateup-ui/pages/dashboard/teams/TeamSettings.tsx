@@ -230,7 +230,7 @@ function GoogleReviewSettings({ teamId, googleLink }) {
   ] = useDisclosure(false);
 
   const { data: count } = useReviewSuggestionsCount(!!teamId, teamId);
-  const editTeamMutation = useEditTeamMutation(teamId, () => { });
+  const editTeamMutation = useEditTeamMutation(teamId, () => {});
 
   function handleSave() {
     const res = form.validate();

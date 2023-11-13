@@ -32,10 +32,7 @@ export const useContactGroupsByTeamId = (teamId: string) => {
   });
 };
 
-export const useCreateContactGroupMutation = (
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const useCreateContactGroupMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createContactGroup,
@@ -44,20 +41,14 @@ export const useCreateContactGroupMutation = (
         queryKey: ["campaignContactGroupsData"],
       }),
         showSuccessToast("Contact Group created successfully.");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast("Error creating group", error?.response?.data?.message);
-      onError();
     },
   });
 };
 
-export const useAddNewContactMutation = (
-  groupId: string,
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const useAddNewContactMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addNewContact,
@@ -67,16 +58,14 @@ export const useAddNewContactMutation = (
       }),
         queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
         showSuccessToast("Added new customer successfully.");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast("Error adding customer", error?.response?.data?.message);
-      onError();
     },
   });
 };
 
-export const useDeleteGroupMutation = (onSuccess = () => {}) => {
+export const useDeleteGroupMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteContactGroup,
@@ -85,7 +74,6 @@ export const useDeleteGroupMutation = (onSuccess = () => {}) => {
         queryKey: ["campaignContactGroupsData"],
       });
       showSuccessToast("Contact Group Deleted successfully");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
@@ -96,11 +84,7 @@ export const useDeleteGroupMutation = (onSuccess = () => {}) => {
   });
 };
 
-export const useEditContactGroupMutation = (
-  groupId: string,
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const useEditContactGroupMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateContactGroup,
@@ -112,23 +96,17 @@ export const useEditContactGroupMutation = (
         queryKey: ["contactGroupById", groupId],
       });
       showSuccessToast("Contact Group Updated Successfully.");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
         "Error updating contact group",
         error?.response?.data?.message,
       );
-      onError();
     },
   });
 };
 
-export const useAddExistingContactMutation = (
-  groupId: string,
-  onSuccess = () => {},
-  onError = () => {},
-) => {
+export const useAddExistingContactMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addExistingContactsToGroup,
@@ -137,14 +115,12 @@ export const useAddExistingContactMutation = (
         queryKey: ["contactGroupById", groupId],
       });
       showSuccessToast("Customers added to  group successfully.");
-      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
         "Error adding customer to group",
         error?.response?.data?.message,
       );
-      onError();
     },
   });
 };
