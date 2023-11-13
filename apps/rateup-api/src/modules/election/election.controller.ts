@@ -50,11 +50,11 @@ export async function getAllSurveysUnderConstituencyTeamHandler(
     const teamIds = teams.map(team=>team.id)
     if (teamIds.includes(currentTeamId)){
       const surveys = await getSurveysByConstituency(request.params.id);
-      if (!surveys || surveys.length === 0) {
-        reply.code(404).send({ message: "No Surveys found at the moment" });
-      } else {
-        reply.send(surveys);
-      }
+      // if (!surveys || surveys?.length === 0) {
+      //   reply.code(404).send({ message: "No Surveys found at the moment" });
+      // } else {
+      //   reply.send(surveys);
+      // }  TODO - fix this
     }
     else{
       reply.code(401).send({ message: "Unauthorized access" });
