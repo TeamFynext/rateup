@@ -15,7 +15,6 @@ import {
 import React, { useState, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
-import { usePublicWelcomeThemeBySurveyId } from "../../../backend/WelcomeTheme/welcometheme.query";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 
 const buttonStyles = {
@@ -26,7 +25,13 @@ const buttonStyles = {
   paddingRight: "20px",
 };
 
-function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
+function WelcomePage({
+  surveyThemeData,
+  onStart,
+  isProtected,
+  surveyId,
+  largeScreen,
+}) {
   const [opened, { open, close }] = useDisclosure(false);
   const [passwordInput, setPasswordInput] = useState("");
 
@@ -36,15 +41,17 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
     onStart,
   );
 
-  //-----------get welcome page styles and content-------------
-  const {
-    isLoading,
-    error,
-    data: surveyThemeData,
-  } = usePublicWelcomeThemeBySurveyId(surveyId);
-  // if (isLoading) return <div>Loading...</div>
-
   useEffect(() => {
+    const loadFont = async (fontFamily) => {
+      const WebFont = await import("webfontloader");
+
+      WebFont.load({
+        google: {
+          families: [fontFamily],
+        },
+      });
+    };
+
     if (surveyThemeData?.descStyles?.fontFamily) {
       loadFont(surveyThemeData?.descStyles?.fontFamily);
     }
@@ -56,33 +63,6 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
     }
   }, [surveyThemeData]);
 
-  let WebFont = undefined;
-  useEffect(() => {
-    (async () => {
-      if (window) {
-        WebFont = await import("webfontloader");
-      }
-    })();
-  }, [window]);
-
-  async function loadFont(fontFamily) {
-    if (window) {
-      WebFont = await import("webfontloader");
-      // Code that depends on the window object
-      if (fontFamily) {
-        await WebFont.load({
-          google: {
-            families: [fontFamily],
-          },
-          active: () => {
-            // callback();
-          },
-          inactive: () => {},
-        });
-      }
-    }
-  }
-
   return (
     <>
       <Modal
@@ -92,7 +72,7 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
         centered
         size="sm"
       >
-        <Text size="sm" color="gray">
+        <Text size="sm" c="gray">
           Hey Welcome , <br /> You need to enter password to continue.
         </Text>
         <Space h="lg" />
@@ -116,79 +96,72 @@ function WelcomePage({ onStart, isProtected, surveyId, largeScreen }) {
 
       {/* .........Survey Welcome page.......... */}
 
-      {isLoading && <Text ta={"center"}> Loading...</Text>}
-      {!isLoading && (
-        <Stack
-          align="center"
-          justify="center"
-          gap="xl"
+      <Stack
+        align="center"
+        justify="center"
+        gap="xl"
+        style={{
+          height: "75vh",
+          borderRadius: 18,
+          ...surveyThemeData?.bgStyles,
+        }}
+      >
+        <BackgroundImage
           style={{
-            height: "75vh",
+            height: "100%",
+            width: "100%",
+            objectFit: "contain",
             borderRadius: 18,
-            ...surveyThemeData?.bgStyles,
           }}
+          src={
+            surveyThemeData?.bgUrl && surveyThemeData.bgType != "bgcolor"
+              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.bgUrl}`
+              : ""
+          }
         >
-          <BackgroundImage
-            style={{
-              height: "100%",
-              width: "100%",
-              objectFit: "contain",
-              borderRadius: 18,
-            }}
-            src={
-              surveyThemeData?.bgUrl && surveyThemeData.bgType != "bgcolor"
-                ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.bgUrl}`
-                : ""
-            }
+          <Flex
+            justify={"center"}
+            align={"center"}
+            h={"100%"}
+            direction={"column"}
+            // bg={"red"}
           >
-            <Flex
-              justify={"center"}
-              align={"center"}
-              h={"100%"}
-              direction={"column"}
-              // bg={"red"}
+            {surveyThemeData?.logoUrl && (
+              <Image
+                fit="contain"
+                src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.logoUrl}`}
+                alt=" Logoss "
+                style={surveyThemeData?.logoStyles}
+              />
+            )}
+            <Title
+              order={1}
+              style={{
+                fontSize: largeScreen ? "4rem" : "3rem",
+                ...surveyThemeData?.headerStyles,
+              }}
+              tt={"capitalize"}
+              mt={25}
             >
-              {surveyThemeData?.logoUrl && (
-                <Image
-                  fit="contain"
-                  src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.logoUrl}`}
-                  alt=" Logoss "
-                  style={surveyThemeData?.logoStyles}
-                />
-              )}
-              <Title
-                order={1}
-                style={{
-                  fontSize: largeScreen ? "4rem" : "3rem",
-                  ...surveyThemeData?.headerStyles,
-                }}
-                tt={"capitalize"}
-                mt={25}
-              >
-                {surveyThemeData?.headerText}
-              </Title>
-              <Text
-                mt={20}
-                style={surveyThemeData?.descStyles}
-                tt={"capitalize"}
-              >
-                {surveyThemeData?.descText}
-              </Text>
-              <Button
-                mt={20}
-                style={{ ...surveyThemeData?.buttonStyles, ...buttonStyles }} //VERIFY MANTINE
-                // className={classes.ButtonStyles}
-                onClick={isProtected ? open : onStart}
-                // size="xl"
-                // w={150}
-                miw={150}
-              >
-                {surveyThemeData?.buttonText}
-              </Button>
-            </Flex>
-          </BackgroundImage>
-        </Stack>
-      )}
+              {surveyThemeData?.headerText}
+            </Title>
+            <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
+              {surveyThemeData?.descText}
+            </Text>
+            <Button
+              mt={20}
+              style={{ ...surveyThemeData?.buttonStyles, ...buttonStyles }} //VERIFY MANTINE
+              // className={classes.ButtonStyles}
+              onClick={isProtected ? open : onStart}
+              // size="xl"
+              // w={150}
+              miw={150}
+            >
+              {surveyThemeData?.buttonText}
+            </Button>
+          </Flex>
+        </BackgroundImage>
+      </Stack>
     </>
   );
 }

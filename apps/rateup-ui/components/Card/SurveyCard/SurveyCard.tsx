@@ -13,6 +13,7 @@ interface SurveyCardProps {
   survey: Survey;
   handleCheckBox: any;
   isChecked: any;
+  selectedTeamId: string;
 }
 /**
  * The SurveyCard component used to display a survey in the surveys page (dashboard/surveys)
@@ -21,6 +22,7 @@ export function SurveyCard({
   survey,
   handleCheckBox,
   isChecked,
+  selectedTeamId,
 }: SurveyCardProps): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
   const { user } = useUser();
@@ -54,7 +56,7 @@ export function SurveyCard({
             {survey?.title}
           </Text>
           <Group align={"center"} gap="xs">
-            <SurveyMenu survey={survey} />
+            <SurveyMenu survey={survey} selectedTeamId={selectedTeamId} />
             {/* <Checkbox
               onClick={(e) => {
                 handleCheckBox(e, survey?.id);

@@ -129,8 +129,20 @@ export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
   );
   return res.data as string;
 }
+
 export async function deleteSurvey(surveyId: string) {
   return await axiosClient.delete(`${SURVEYURL}/${surveyId}`);
+}
+
+//remove a team from survey
+export async function deleteSurveyForOneTeam(surveyId: string, teamId: string) {
+  const data = {
+    teamId: teamId,
+  };
+
+  return await axiosClient.delete(`${SURVEYURL}/teamsurvey/${surveyId}`, {
+    data,
+  });
 }
 
 export async function updateSurvey(surveyId: string, data) {

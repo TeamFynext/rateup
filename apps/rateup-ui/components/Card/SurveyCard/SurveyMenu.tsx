@@ -25,6 +25,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import {
   deleteSurvey,
+  deleteSurveyForOneTeam,
   updateSurvey,
 } from "../../../backend/surveys/survey.api";
 import { useCloneSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -34,7 +35,12 @@ import {
 } from "../../Button/RateupButtons";
 import { TeamSelector } from "../../input/TeamSelector";
 
-export function SurveyMenu({ survey }) {
+interface SurveyMenuProps {
+  survey: Survey;
+  selectedTeamId: string;
+}
+
+export function SurveyMenu({ survey, selectedTeamId }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -49,7 +55,10 @@ export function SurveyMenu({ survey }) {
   });
 
   const surveyDeleteMutation = useMutation({
-    mutationFn: deleteSurvey,
+    mutationFn: ({ id, teamId }: { id: string; teamId?: string }) =>
+      selectedTeamId && selectedTeamId !== "all"
+        ? deleteSurveyForOneTeam(id, teamId)
+        : deleteSurvey(id),
     onSuccess: () => {
       notifications.update({
         id: "delete-data",
@@ -160,7 +169,12 @@ export function SurveyMenu({ survey }) {
                 autoClose: false,
                 withCloseButton: false,
               });
-              surveyDeleteMutation.mutate(survey?.id);
+              selectedTeamId && selectedTeamId !== "all"
+                ? surveyDeleteMutation.mutate({
+                    id: survey?.id,
+                    teamId: selectedTeamId,
+                  })
+                : surveyDeleteMutation.mutate({ id: survey?.id });
             }}
             loading={isLoading}
             size="md"

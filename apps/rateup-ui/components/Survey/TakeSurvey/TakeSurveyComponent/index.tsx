@@ -100,15 +100,15 @@ function TakeSurvey() {
   if (!selectedLanguage) throw new Error("No language selected");
 
   useEffect(() => {
-    if (survey.questions.length > 0 && selectedQ === null) {
+    if (survey?.questions?.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
       questionsHistoryHandlers.append(survey.questions[0].id);
     }
-    setQuestionCount(survey.questions.length);
+    setQuestionCount(survey?.questions?.length);
   }, [survey]);
 
   useEffect(() => {
-    const index = survey.questions.indexOf(selectedQ);
+    const index = survey?.questions?.indexOf(selectedQ);
     setQnNo(index + 1);
     setCurrentQuestionNo(index + 1);
   }, [selectedQ]);
@@ -116,7 +116,7 @@ function TakeSurvey() {
   // Getting location coordinates
   // TODO: fetching location is very slow. Plan what to do when user finishes survey before location is fetched
   useEffect(() => {
-    if (survey.getLocation) {
+    if (survey?.getLocation) {
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
           setCoordinates({

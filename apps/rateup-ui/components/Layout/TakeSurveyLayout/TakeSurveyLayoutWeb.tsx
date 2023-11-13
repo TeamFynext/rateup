@@ -1,16 +1,7 @@
-import {
-  Title,
-  Paper,
-  Text,
-  Stack,
-  Container,
-  Image,
-  Group,
-} from "@mantine/core";
+import { Paper, Text, Stack, Image, Group } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import {
-  usePublicSurvey,
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
 } from "../../../backend/surveys/surveys.query";
@@ -19,9 +10,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import Link from "next/link";
 
-export const TakeSurveyLayoutWeb = ({ children }) => {
+export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { start } = useRouter().query as { start?: boolean };
@@ -50,8 +40,6 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
     surveyId && updateStarted.mutate(surveyId);
     setStartClicked(true);
   };
-
-  if (isLoading || isError || !survey) return null;
 
   return (
     <QuestionCountContext.Provider
@@ -97,13 +85,14 @@ export const TakeSurveyLayoutWeb = ({ children }) => {
             <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
               {!startClicked && (
                 <WelcomePage
+                  surveyThemeData={surveyThemeData}
                   onStart={handleStartClick}
                   surveyId={surveyId}
                   isProtected={survey?.isProtected}
                   largeScreen={largeScreen}
                 />
               )}
-              {startClicked && <>{children.children}</>}
+              {startClicked && <>{children}</>}
             </Paper>
           ) : (
             <Paper

@@ -43,7 +43,7 @@ export function SurveysPage({ allSurveys, selectedTeamId, setSelectedTeamId }) {
     selectedTeamId === "all" || !selectedTeamId
       ? allSurveys
       : allSurveys?.filter(
-          (s: Survey) => s?.teams?.some((team) => team.id === selectedTeamId),
+          (s: Survey) => s?.teams?.some((team) => team?.id === selectedTeamId),
         );
   //--------handle check box click ----------
 
@@ -107,6 +107,7 @@ export function SurveysPage({ allSurveys, selectedTeamId, setSelectedTeamId }) {
                 survey={s}
                 handleCheckBox={handleCheckBox}
                 isChecked={isChecked}
+                selectedTeamId={selectedTeamId}
               />
             ))}
         </SurveyCardLayout>

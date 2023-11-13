@@ -1,21 +1,29 @@
-import { Center, Loader, Select, Title, Stack } from "@mantine/core";
+import { Center, Select, Title, Stack } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { usePublicSurvey } from "../../../../backend/surveys/surveys.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { useMediaQuery } from "@mantine/hooks";
+import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
+import { getPublicwelcomeTheme } from "../../../../backend/WelcomeTheme/welcometheme.api";
 
-export default function Page() {
+type SurveyViewProp = {
+  surveyId: string;
+};
+
+export const getServerSideProps = async (context: {
+  params: SurveyViewProp;
+}) => {
+  const params = context.params;
+  const surveyData = await getPublicSurvey(params.surveyId);
+  const surveyThemeData = await getPublicwelcomeTheme(params.surveyId);
+  return { props: { survey: surveyData, surveyThemeData: surveyThemeData } };
+};
+export default function Page({ survey, surveyThemeData }) {
   const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
-  const { isError, isLoading, data: survey } = usePublicSurvey(surveyId);
-
-  if (isError) return <div>Something went wrong</div>;
-  if (isLoading) return <Loader />;
   if (!selectedLanguage) {
     if (survey?.languages?.length > 1) {
       return (
@@ -30,9 +38,11 @@ export default function Page() {
     }
   }
   return (
-    <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
-      <TakeSurvey />
-    </SelectedLanguageContext.Provider>
+    <TakeSurveyLayoutWeb survey={survey} surveyThemeData={surveyThemeData}>
+      <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
+        <TakeSurvey />
+      </SelectedLanguageContext.Provider>
+    </TakeSurveyLayoutWeb>
   );
 }
 
@@ -47,7 +57,6 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
       </Stack>
 
       <Center style={{ height: isMobile ? "40vh" : "45vh" }}>
-        {/* TODO for mobile design 80vh */}
         <Select
           data={languages}
           placeholder="Select language"
@@ -58,7 +67,3 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
     </>
   );
 }
-
-Page.getLayout = function getLayout(page) {
-  return <TakeSurveyLayoutWeb>{page}</TakeSurveyLayoutWeb>;
-};
