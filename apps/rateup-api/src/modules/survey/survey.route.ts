@@ -17,6 +17,7 @@ import {
   updateSurveyLandingHandler,
   getActiveSurveysSummaryHandler,
   getWebSurveysHandler,
+  deleteTeamSurveyHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
@@ -160,7 +161,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         body: $Sref("deleteTeamSurveyRequestSchema"),
       },
     },
-    deleteSurveyByIdHandler
+    deleteTeamSurveyHandler
   );
 
   // update survey by id

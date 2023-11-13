@@ -514,7 +514,7 @@ export async function deleteSurveyFromTeam(id: string, input: DeleteTeamSurveyIn
     throw new Error('No survey found with the provided id and teamId');
   }
 
-  if (surveyTeamMap.responses && surveyTeamMap.responses.length > 0) {
+  if (surveyTeamMap?.responses && surveyTeamMap?.responses?.length > 0) {
     throw new Error('Cannot delete survey that has responses');
   }
 
