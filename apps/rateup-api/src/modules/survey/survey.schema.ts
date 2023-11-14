@@ -89,6 +89,7 @@ const updateSurveyRequestSchema = z.object({
   isPublished: z.boolean().optional(),
   welcomePageEnabled: z.boolean().optional(),
   skipPreview: z.boolean().optional(),
+  getLocation: z.boolean().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

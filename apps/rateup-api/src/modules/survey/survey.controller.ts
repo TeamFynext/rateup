@@ -340,7 +340,7 @@ export async function deleteTeamSurveyHandler(
     if (!response) {
       reply.code(404);
     } else {
-      reply.code(200).send({ message: "Deleted successfully." , info: response});
+      reply.code(200).send({ message: "Deleted successfully.", info: response });
     }
     //TODO improve response handling
   } catch (e) {
@@ -357,17 +357,12 @@ export async function updateSurveyByIdHandler(
   reply: FastifyReply
 ) {
   try {
-    // TODO: By using prisma error codes, we can return 404 if the survey doesn't exist and remove this check.
-    const survey = await getSurveyById(request.params.id);
-    if (!survey) {
-      reply.code(404);
-    } else {
-      let response = await updateSurveyById(request.params.id, request.body);
-      reply.code(200).send(response);
-    }
+    // TODO: By using prisma error codes, we can return 404 if the survey doesn't exist.
+    let response = await updateSurveyById(request.params.id, request.body);
+    reply.code(200).send(response);
   } catch (e) {
     console.log(e);
-    reply.code(500).send({status: "failed", message: e.message});
+    reply.code(500).send({ status: "failed", message: e.message });
   }
 }
 
