@@ -308,10 +308,6 @@ function TakeSurvey() {
     return value;
   });
 
-  const filteredQuestions = survey?.questions?.filter(
-    (question) => question?.title[selectedLanguage],
-  );
-
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
@@ -334,94 +330,98 @@ function TakeSurvey() {
           >
             <Flex className={modalStyles["modal-body-content-container"]}>
               <Stack pb="xl">
-                {filteredQuestions.map((question) => {
-                  const response = responses.find(
-                    (response) => response.questionId === question.id,
-                  );
-                  return (
-                    <Stack key={question.id}>
-                      <Title pt="sm" order={4}>
-                        {question.title[selectedLanguage]}
-                      </Title>
-                      {response ? (
-                        <Text pb="sm">
-                          {(() => {
-                            switch (question.type) {
-                              case Q.Rating:
-                                return (
-                                  <Rating
-                                    value={Object.values(response?.response)[0]}
-                                    readOnly
-                                  />
-                                );
-                              case Q.Smiley:
-                                return mapSmileyIcon(
-                                  Object.values(response?.response)[0],
-                                );
-                              case Q.Photo:
-                                const imgUrl = `${
-                                  process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
-                                }${Object.values(response?.response)[0]}`;
-                                return (
-                                  <Image
-                                    radius="md"
-                                    maw={240}
-                                    mx="0px"
-                                    src={imgUrl}
-                                  />
-                                );
-                              case Q.MSQ:
-                              case Q.DDMS:
-                                const responseData = Object.values(
-                                  response?.response,
-                                )[0];
-                                if (Array.isArray(responseData)) {
-                                  return responseData.map((item, index) => {
-                                    return <li key={index}>{item}</li>;
-                                  });
-                                }
-                                return <li>{responseData}</li>;
+                {survey.questions
+                  .filter((q) => questionsHistory.includes(q.id))
+                  .map((question) => {
+                    const response = responses.find(
+                      (response) => response.questionId === question.id,
+                    );
+                    return (
+                      <Stack key={question.id}>
+                        <Title pt="sm" order={4}>
+                          {question.title[selectedLanguage]}
+                        </Title>
+                        {response ? (
+                          <Text pb="sm">
+                            {(() => {
+                              switch (question.type) {
+                                case Q.Rating:
+                                  return (
+                                    <Rating
+                                      value={
+                                        Object.values(response?.response)[0]
+                                      }
+                                      readOnly
+                                    />
+                                  );
+                                case Q.Smiley:
+                                  return mapSmileyIcon(
+                                    Object.values(response?.response)[0],
+                                  );
+                                case Q.Photo:
+                                  const imgUrl = `${
+                                    process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
+                                  }${Object.values(response?.response)[0]}`;
+                                  return (
+                                    <Image
+                                      radius="md"
+                                      maw={240}
+                                      mx="0px"
+                                      src={imgUrl}
+                                    />
+                                  );
+                                case Q.MSQ:
+                                case Q.DDMS:
+                                  const responseData = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  if (Array.isArray(responseData)) {
+                                    return responseData.map((item, index) => {
+                                      return <li key={index}>{item}</li>;
+                                    });
+                                  }
+                                  return <li>{responseData}</li>;
 
-                              case Q.DateTime:
-                                return dayjs(
-                                  Object.values(response?.response)[0],
-                                ).format("DD, MMM , YYYY");
+                                case Q.DateTime:
+                                  return dayjs(
+                                    Object.values(response?.response)[0],
+                                  ).format("DD, MMM , YYYY");
 
-                              case Q.Testimonial:
-                                const data = Object.values(
-                                  response?.response,
-                                )[0];
-                                return (
-                                  <Stack>
-                                    <Group>
-                                      {" "}
-                                      <Text fw="400">Name: </Text>{" "}
-                                      <Text fw="300">{data.name}</Text>{" "}
-                                    </Group>
-                                    <Group mt="-10px">
-                                      {" "}
-                                      <Text fw="400">Testimonial: </Text>{" "}
-                                      <Text fw="300">{data.testimonial}</Text>{" "}
-                                    </Group>
-                                  </Stack>
-                                );
+                                case Q.Testimonial:
+                                  const data = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  return (
+                                    <Stack>
+                                      <Group>
+                                        {" "}
+                                        <Text fw="400">Name: </Text>{" "}
+                                        <Text fw="300">{data.name}</Text>{" "}
+                                      </Group>
+                                      <Group mt="-10px">
+                                        {" "}
+                                        <Text fw="400">Testimonial: </Text>{" "}
+                                        <Text fw="300">{data.testimonial}</Text>{" "}
+                                      </Group>
+                                    </Stack>
+                                  );
 
-                              default:
-                                return JSON.stringify(
-                                  Object.values(response?.response)[0],
-                                );
-                            }
-                          })()}
-                        </Text>
-                      ) : (
-                        <Text pb="sm" c="dark.0" fz="xs">
-                          ... not answered...{" "}
-                        </Text>
-                      )}
-                      <Divider />
-                    </Stack>
-                  );
-                })}
+                                default:
+                                  return JSON.stringify(
+                                    Object.values(response?.response)[0],
+                                  );
+                              }
+                            })()}
+                          </Text>
+                        ) : (
+                          <Text pb="sm" c="dark.0" fz="xs">
+                            ... not answered...{" "}
+                          </Text>
+                        )}
+                        <Divider />
+                      </Stack>
+                    );
+                  })}
               </Stack>
             </Flex>
             <Flex className={modalStyles["modal-footer-container"]}>
