@@ -255,32 +255,35 @@ export const useUpdateSurveyLandingPageMutation = ({
 
 type CloneProps = {
   close: () => void;
-  selectedTeamID: String;
+  selectedTeamId: String;
 };
 
-export function useCloneSurveyMutation({ close, selectedTeamID }: CloneProps) {
+export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, teamId }: { id: string; teamId: string }) =>
-      cloneSurvey(id, teamId),
+    mutationFn: ({ id, teamIds }: { id: string; teamIds: string[] }) =>
+      cloneSurvey(id, teamIds),
     onSuccess: (data, variables) => {
-      notifications.show({
+      notifications.update({
         id: "load-data",
         color: "teal",
         title: "Success",
+        loading: false,
         message: "Survey Copy created!",
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      queryClient.invalidateQueries({ queryKey: ["surveys", selectedTeamID] });
+      queryClient.invalidateQueries({ queryKey: ["surveys", selectedTeamId] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
       close();
     },
     onError: (error: any) => {
       console.error("Error Survey Clone:", error.message);
-      notifications.show({
+      notifications.update({
         id: "load-data",
         color: "red",
         title: "Failed",
+        loading: false,
         message: error?.response?.data?.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,

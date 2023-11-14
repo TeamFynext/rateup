@@ -62,6 +62,13 @@ export default function GroupSurveysList() {
   const router = useRouter();
   const { GroupId } = router.query;
 
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error: teamsError,
+  } = useTeamsByUser();
+
   const [options, setOptions] = useState([
     {
       value: "all",
@@ -219,6 +226,7 @@ export default function GroupSurveysList() {
         open={createSurveyOpened}
         close={close}
         surveyType={"web"}
+        teamsData={teamRes?.data}
       />
     </Container>
   );
@@ -314,10 +322,10 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const router = useRouter();
 
   const [opened, { close, open }] = useDisclosure(false);
-  const [selectedTeamID, setSelectedTeamID] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState("");
   const cloneSurvey = useCloneSurveyMutation({
     close,
-    selectedTeamID,
+    selectedTeamId,
   });
 
   const [options, setOptions] = useState([]);
@@ -378,8 +386,8 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
               mt="xs"
               placeholder="Pick one"
               data={options}
-              value={selectedTeamID}
-              onChange={(value) => setSelectedTeamID(value)}
+              value={selectedTeamId}
+              onChange={(value) => setSelectedTeamId(value)}
               onClick={(event) => {
                 event.stopPropagation();
               }}
@@ -390,7 +398,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             <RateupButtonPrimary
               title="Submit"
               onClick={() => {
-                cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
+                // cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamId }); //TODO
               }}
             />
           </Group>

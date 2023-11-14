@@ -8,6 +8,7 @@ import { SurveyCardLayout } from "../../Card/SurveyCard/SurveyCardLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import { CreateSurveyModal } from "../CreateSurveyModal";
 import { SurveyHeader } from "./SurveysPageHeader";
+import { useTeamsByUser } from "../../../backend/team/team.query";
 
 // USED IN:
 // dashboard/surveys
@@ -39,6 +40,14 @@ export function SurveysPage({
   const [filterParam, setFilterParam] = useState("all");
   const { action } = useRouter().query;
   const router = useRouter();
+
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error,
+  } = useTeamsByUser();
+
   useEffect(() => {
     if (action === "create") {
       openCreateSurvey();
@@ -120,6 +129,7 @@ export function SurveysPage({
                 handleCheckBox={handleCheckBox}
                 isChecked={isChecked}
                 selectedTeamId={selectedTeamId}
+                teamsData={teamRes?.data}
               />
             ))}
         </SurveyCardLayout>
@@ -133,6 +143,7 @@ export function SurveysPage({
         onCreate={(s) => {
           router.push(`${router.pathname}/${s.id}`);
         }}
+        teamsData={teamRes?.data}
       />
       {/* //---------create landing page modal ------------ */}
       <CreateSurveyLandingModal

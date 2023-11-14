@@ -33,10 +33,10 @@ export const createSurveyLandingPage = (data) =>
 export const updateSurveyLandingPage = (data) =>
   axiosClient.post(`${SURVEYURL}/updatelanding/${data.id}`, data);
 
-export async function cloneSurvey(surveyId: string, teamId: string) {
+export async function cloneSurvey(surveyId: string, teamIds: string[]) {
   if (!surveyId) return undefined;
   const data = {
-    teamId: teamId,
+    teamIds: teamIds,
   };
   const res = await axiosClient.post(`${SURVEYURL}/clone/${surveyId}`, data);
   return res.data as Survey;

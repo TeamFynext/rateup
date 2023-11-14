@@ -10,7 +10,6 @@ import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
-import { useTeamsByUser } from "../../backend/team/team.query";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 
@@ -29,26 +28,21 @@ interface CreateSurveyModalProps {
   close: () => void;
   surveyType: "web" | "whatsapp";
   onCreate?: (survey: Survey) => void;
+  teamsData: any;
 }
 export function CreateSurveyModal({
   open,
   close,
   surveyType,
   onCreate = (_) => {},
+  teamsData,
 }: CreateSurveyModalProps) {
   const [languages, setLanguages] = useState<string[]>([defaultLanguage]);
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
-  const {
-    data: teamRes,
-    isLoading: teamsLoading,
-    isError,
-    error,
-  } = useTeamsByUser();
-
-  const allTeams = teamRes?.data?.map((team) => team?.id);
-  const teamOptions = teamRes?.data?.map((team) => ({
+  const allTeams = teamsData?.map((team) => team?.id);
+  const teamOptions = teamsData?.map((team) => ({
     value: team?.id,
     label: team?.name,
   }));
@@ -90,6 +84,10 @@ export function CreateSurveyModal({
     }
     return true;
   }
+
+  useEffect(() => {
+    setSelectedTeams([]);
+  }, [teamChoice]);
 
   useEffect(() => {
     if (teamChoice === "all" && !arraysEqual(form?.values?.teamIds, allTeams)) {

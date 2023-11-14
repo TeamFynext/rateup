@@ -64,6 +64,12 @@ export default function SurveyLandingList() {
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error: teamsError,
+  } = useTeamsByUser();
 
   const specificTeamIsSelected = selectedTeamId !== "all";
 
@@ -214,6 +220,7 @@ export default function SurveyLandingList() {
         open={createSurveyOpened}
         close={close}
         surveyType={"web"}
+        teamsData={teamRes?.data}
       />
     </Container>
   );
@@ -311,7 +318,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const cloneSurvey = useCloneSurveyMutation({
     close,
-    selectedTeamID,
+    selectedTeamId: selectedTeamID,
   });
 
   const [options, setOptions] = useState([]);
@@ -384,7 +391,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             <RateupButtonPrimary
               title="Submit"
               onClick={() => {
-                cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
+                // cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });  //TODO
               }}
             />
           </Group>

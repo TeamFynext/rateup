@@ -1,12 +1,13 @@
 import {
   rem,
   Menu,
-  Modal,
   Stack,
   Group,
   Dialog,
   ActionIcon,
   Text,
+  Radio,
+  MultiSelect,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -22,7 +23,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   deleteSurvey,
   deleteSurveyForOneTeam,
@@ -33,25 +34,95 @@ import {
   RateupButtonSecondary,
   RateupButtonPrimary,
 } from "../../Button/RateupButtons";
-import { TeamSelector } from "../../input/TeamSelector";
+import { useForm } from "@mantine/form";
+import FormModalLayout from "../../Modal/FormModalLayout";
 
 interface SurveyMenuProps {
   survey: Survey;
   selectedTeamId: string;
+  teamsData: any;
 }
 
-export function SurveyMenu({ survey, selectedTeamId }: SurveyMenuProps) {
+export function SurveyMenu({
+  survey,
+  selectedTeamId,
+  teamsData,
+}: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
   const [opened, { close, open }] = useDisclosure(false);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [teamChoice, setTeamChoice] = useState("all");
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const allTeams = teamsData?.map((team) => team?.id);
+  const teamOptions = teamsData?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
+  }));
 
-  const [selectedTeamID, setSelectedTeamID] = useState("");
+  const cloneForm = useForm({
+    initialValues: {
+      teamIds: [],
+    },
+    validate: {
+      teamIds: (values) =>
+        values?.length ? null : "Must contain atleast one team",
+    },
+  });
+
+  useEffect(() => {
+    cloneForm.setFieldValue("teamIds", selectedTeams);
+  }, [selectedTeams]);
+
+  function arraysEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a?.length !== b?.length) return false;
+
+    a.sort();
+    b.sort();
+
+    for (let i = 0; i < a?.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  useEffect(() => {
+    setSelectedTeams([]);
+  }, [teamChoice]);
+
+  useEffect(() => {
+    if (
+      teamChoice === "all" &&
+      !arraysEqual(cloneForm?.values?.teamIds, allTeams)
+    ) {
+      cloneForm.setFieldValue("teamIds", allTeams);
+    }
+  }, [allTeams, teamChoice, cloneForm?.values?.teamIds]);
+
+  const onSubmit = (values) => {
+    const validationRes = cloneForm.validate();
+    if (validationRes.hasErrors) {
+      console.error(validationRes.errors);
+      return;
+    }
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Clonning survey..",
+      message: `Hold on, your survey is getting clonned...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
+    cloneSurvey.mutate({ id: survey?.id, teamIds: cloneForm.values.teamIds });
+  };
+
   const cloneSurvey = useCloneSurveyMutation({
     close,
-    selectedTeamID,
+    selectedTeamId,
   });
 
   const surveyDeleteMutation = useMutation({
@@ -99,38 +170,50 @@ export function SurveyMenu({ survey, selectedTeamId }: SurveyMenuProps) {
 
   return (
     <Menu width={200}>
-      <Modal
-        size="sm"
-        centered
+      <FormModalLayout
         opened={opened}
-        onClose={close}
-        title={<h2>Clone Survey</h2>}
-        onClick={(event) => {
-          event.stopPropagation();
+        onClose={() => {
+          close();
+          cloneForm.reset();
         }}
+        title={"Clone Survey"}
+        centered
+        onSubmit={cloneForm.onSubmit(onSubmit)}
+        buttonTitle={"Submit"}
       >
         <Stack>
           <Text pr="xl" c="dark.2">
-            Select the team in which the copy to be created.
+            Select the team/teams in which the survey copy to be created.
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>
-            <TeamSelector
-              label="Select Team"
-              value={selectedTeamID}
-              onChange={setSelectedTeamID}
-            />
-          </Group>
-          <Group mt="xl">
-            <RateupButtonSecondary title="Cancel" onClick={close} />
-            <RateupButtonPrimary
-              title="Submit"
-              onClick={() => {
-                cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });
-              }}
-            />
+            <Radio.Group
+              value={teamChoice}
+              onChange={setTeamChoice}
+              name="selectTeams"
+              label="Select teams"
+              withAsterisk
+            >
+              <Group mt="xs">
+                <Radio checked label="All teams" value="all" />
+                <Radio label="Select Manually" value="manual" />
+              </Group>
+            </Radio.Group>
+
+            {teamChoice === "manual" && (
+              <MultiSelect
+                radius="md"
+                value={selectedTeams}
+                onChange={setSelectedTeams}
+                placeholder="Select teams (type in to search)"
+                data={teamOptions}
+                searchable
+                error={cloneForm.errors.teamIds}
+                styles={{ root: { width: "100%" } }}
+              />
+            )}
           </Group>
         </Stack>
-      </Modal>
+      </FormModalLayout>
 
       <Dialog
         opened={dialogOpened}

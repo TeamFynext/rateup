@@ -42,6 +42,9 @@ export default function FormModalLayout({
       bg={"red"}
       style={{ zIndex: 9999999 }}
       size={size}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
     >
       {!noCustomHeader && (
         <Stack align={"center"}>
