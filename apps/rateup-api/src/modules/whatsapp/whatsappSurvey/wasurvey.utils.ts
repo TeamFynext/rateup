@@ -91,6 +91,58 @@ export function createReplyButtonsMessage(
   };
 }
 
+interface createCTAButtonMessageParams {
+  to: string,
+  header?: string,
+  body: string,
+  footer?: string,
+  buttonText: string,
+  url: string,
+
+}
+export function createCTAButtonMessage({
+  to,
+  header = "",
+  body,
+  footer = "",
+  buttonText,
+  url,
+}: createCTAButtonMessageParams): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "cta_url",
+      ...(header && {
+        header: {
+          type: "text",
+          text: header,
+        }
+      }),
+      ...(body && {
+        body: {
+          text: body,
+        }
+      }),
+      ...(footer && {
+        footer: {
+          text: footer,
+        }
+      }),
+
+      action: {
+        name: "cta_url",
+        parameters: {
+          display_text: buttonText,
+          url
+        }
+      },
+    },
+  };
+}
+
 export function createTextMessage(
   to: string,
   title: string,
@@ -379,7 +431,7 @@ export async function parseResponse(
       case Q.Rating:
         return Number(message);
       case Q.DateTime:
-        if(!dayjs(message, "DD/MM/YYYY", true).isValid()) {
+        if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
           return ""
         }
         return dayjs(message, "DD/MM/YYYY").toDate()

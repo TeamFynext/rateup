@@ -1,16 +1,26 @@
-import { ResponsePlatform, Survey } from "@prisma/client";
+import { ResponsePlatform } from "@prisma/client";
 import { CampaignParticipantStatus, LogicAction } from "../../../types/enums";
 import { WaSendMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
-import { getQuestionsBySurveyId, getQuestionById } from "../../question/question.service";
+import { getQuestionsBySurveyId } from "../../question/question.service";
 import { parseLogicAction } from "../../question/question.utils";
 import { createResponse } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
-import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession } from "./wasurvey.utils";
+import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession, createCTAButtonMessage } from "./wasurvey.utils";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import { CreateResponseInput } from "../../response/response.schema";
+import { QuestionType as Q } from "../../../types/enums";
+
+export const toBeIncludedWaSessionRelations = {
+  surveyTeamMap: {
+    include: {
+      survey: true,
+      team: true
+    }
+  }
+}
 
 export async function sendMessage(orgId: string, messageData: WaSendMessageBody) {
   const waSettings = await getWaSettings(orgId);
@@ -40,18 +50,12 @@ export async function getSession(orgId: string, phone: string) {
         orgId: orgId,
       }
     },
-    include: {
-      surveyTeamMap: {
-        include: {
-          survey: true
-        }
-      }
-    }
+    include: toBeIncludedWaSessionRelations
   });
   if (!session) {
     throw new Error("Session not found");
   }
-  return session;
+  return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 export async function deleteSession(orgId: string, phone: string) {
   log.info("Deleting session for %o", { phone, orgId });
@@ -109,17 +113,11 @@ export async function createSession({
       currentQuestionId: currentQuestionId,
       campaignParticipantId: campaignParticipantId
     },
-    include: {
-      surveyTeamMap: {
-        include: {
-          survey: true
-        }
-      }
-    }
+    include: toBeIncludedWaSessionRelations
   });
 
   log.info("Session created \n%o\n", session);
-  return session;
+  return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 
 export async function updateSession(orgId: string, phone: string, data: any) {
@@ -131,17 +129,11 @@ export async function updateSession(orgId: string, phone: string, data: any) {
         orgId: orgId,
       }
     },
-    include: {
-      surveyTeamMap: {
-        include: {
-          survey: true
-        }
-      }
-    },
+    include: toBeIncludedWaSessionRelations,
     data: data,
   });
   log.trace("Session updated \n%o\n", session)
-  return session;
+  return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 
 export async function sendNextQuestion(session: WaSessionWithRelations, response: any) {
@@ -155,7 +147,6 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
   if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found")
   }
-  // TODO
   const next = parseLogicAction(currentQuestion.type, currentQuestion.logic, response)
   log.info("Next action: %s", next);
   const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
@@ -166,13 +157,24 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
     await sendQuestion(nextQuestion, session);
   } else if (next === LogicAction.EndSurvey || questions.length <= currentIndex + 1) {
     // End Survey
-    const ThankYouMessage = createTextMessage(
-      session.phone,
-      "Thank You",
-      "Have a nice day!"
-    );
     await saveResponses(session);
-    await sendMessage(session.orgId, ThankYouMessage);
+    if (shouldShowGoogleReview({ session })) {
+      log.trace("Sending google review link to %s", session.phone)
+      const googleReviewMessage = createCTAButtonMessage({
+        to: session.phone,
+        buttonText: "Review us on Google",
+        url: session.surveyTeamMap.team.googleLink,
+        body: "Thank you for your feedback!"
+      })
+      await sendMessage(session.orgId, googleReviewMessage);
+    } else {
+      const ThankYouMessage = createTextMessage(
+        session.phone,
+        "Thank You",
+        "Have a nice day!"
+      );
+      await sendMessage(session.orgId, ThankYouMessage);
+    }
     await deleteSession(session.orgId, session.phone);
   } else {
     // 'next' is a question id
@@ -182,6 +184,34 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
     }
     await sendQuestion(nextQuestion, session);
   }
+}
+const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion]
+
+function shouldShowGoogleReview({ session }) {
+  let showGoogleReview = false;
+  session.surveyTeamMap.survey.questions.forEach((q: Question) => {
+    if (googleReviewSupportedTypes.includes(q.type) && q.googleReview) {
+      const questionResponse = session.responses.find((r) => r.questionId === q.id)
+      switch (q.type) {
+        case Q.Rating:
+          if (Number.parseInt(questionResponse.response[questionResponse.type]) >= q.googleReview.minRating) {
+            showGoogleReview = true;
+          }
+          break;
+        case Q.Smiley:
+          if (q.googleReview.reqOptions.includes(questionResponse.response[questionResponse.type])) {
+            showGoogleReview = true;
+          }
+          break;
+        case Q.Opinion:
+          if (Number.parseInt(questionResponse.response[questionResponse.type]) >= q.googleReview.minOpinion) {
+            showGoogleReview = true;
+          }
+          break;
+      }
+    }
+  })
+  return showGoogleReview;
 }
 
 async function updateCurrentQuestion(orgId: string, from: string, newQId: string) {
@@ -203,6 +233,10 @@ export async function sendQuestion(question: Question, session: WaSessionWithRel
   await updateCurrentQuestion(session.orgId, session.phone, question.id,);
   await sendMessage(session.orgId, message);
 }
+/**
+ * Saves responses to the database in SurveyResponse table.
+ * To be called after getting response to the last question.
+ */
 async function saveResponses(session: WaSessionWithRelations) {
   log.trace("Saving responses for %o", session)
   const questionResponses =
@@ -222,31 +256,6 @@ async function saveResponses(session: WaSessionWithRelations) {
       responseId: res.id
     })
   }
-}
-
-export async function updateResponses(
-  orgId: string,
-  phone: string,
-  responses: Array<QuestionResponse>
-) {
-  return await prisma.waSession.update({
-    where: {
-      phone_orgId: {
-        phone,
-        orgId: orgId,
-      }
-    },
-    data: {
-      responses: responses as any,
-    },
-    include: {
-      surveyTeamMap: {
-        include: {
-          survey: true
-        }
-      }
-    }
-  });
 }
 
 export async function sendTextMessage(
