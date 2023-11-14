@@ -57,7 +57,7 @@ const idParamsSchema = z.object({
 });
 
 const cloneSurveySchema = z.object({
-  teamId: z.string().uuid(),
+  teamIds: z.array(z.string().uuid()),
 });
 
 const getSurveyPublicResponseSchema = z.object({

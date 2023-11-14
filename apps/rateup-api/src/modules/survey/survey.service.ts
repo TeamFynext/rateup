@@ -112,7 +112,7 @@ export async function updateSurveyLanding(
 export async function cloneSurvey(
   surveyId: string,
   userId: string,
-  teamId: string
+  teamIds: string[]
 ) {
   const survey = await prisma.survey.findUnique({
     where: {
@@ -162,13 +162,17 @@ export async function cloneSurvey(
       }
     });
 
+    const teams = teamIds?.map(teamId => ({ teamId }))
+
     const clonedSurvey = {
       ...surveyWithoutId,
       createdBy: userId,
       createdAt: new Date(),
       updatedAt: null,
-      teamId: teamId,
       title: `${survey.title} Copy ${maxCopyNumber + 1}`,
+      teams: {
+        create: teams,
+      },
     };
 
     const newSurvey = await prisma.survey.create({

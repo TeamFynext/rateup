@@ -193,10 +193,10 @@ export async function cloneSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  let teamId = request?.body?.teamId;
+  let teamIds = request?.body?.teamIds;
   let survey;
   try {
-    survey = await cloneSurvey(request.params.id, request.userId, teamId);
+    survey = await cloneSurvey(request.params.id, request.userId, teamIds);
 
     // Check if the survey is an error message
     if (typeof survey === "string") {
