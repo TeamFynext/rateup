@@ -12,7 +12,7 @@ import {
   Switch,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
-import { IconX, IconEdit, IconEye } from "@tabler/icons-react";
+import { IconX, IconEdit, IconEye, IconStar } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -21,7 +21,10 @@ import {
 } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType } from "../../../types/enums";
-import { logicSupportedTypes } from "../../../utils/data";
+import {
+  googleReviewSupportedTypes,
+  logicSupportedTypes,
+} from "../../../utils/data";
 import {
   RateupButtonOutline,
   RateupButtonPrimary,
@@ -259,7 +262,19 @@ export function WaQuestionDetailedView({
                 }}
               />
             )}
-            {/* TODO: Implement Google review & Custom Validation*/}
+            {/* TODO: Implement Custom Validation*/}
+            {googleReviewSupportedTypes.includes(question?.type) && (
+              <RateupButtonOutline
+                title={"Google Review"}
+                leftIcon={<IconStar />}
+                size="sm"
+                onClick={() => {
+                  let save = handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                }}
+              />
+            )}
           </Group>
           <RateupButtonPrimary
             title={"Save"}

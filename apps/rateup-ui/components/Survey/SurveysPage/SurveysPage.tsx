@@ -13,7 +13,19 @@ import { SurveyHeader } from "./SurveysPageHeader";
 // dashboard/surveys
 // dashboard/whatsapp/surveys
 
-export function SurveysPage({ allSurveys, selectedTeamId, setSelectedTeamId }) {
+interface SurveysPageProps {
+  allSurveys: Survey[];
+  selectedTeamId: string;
+  setSelectedTeamId: (id: string) => void;
+  surveyType?: "web" | "whatsapp";
+}
+
+export function SurveysPage({
+  allSurveys,
+  selectedTeamId,
+  setSelectedTeamId,
+  surveyType = "web",
+}: SurveysPageProps) {
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },
@@ -117,7 +129,7 @@ export function SurveysPage({ allSurveys, selectedTeamId, setSelectedTeamId }) {
       <CreateSurveyModal
         open={createSurveyOpened}
         close={closeCreateSurvey}
-        surveyType={"web"}
+        surveyType={surveyType}
         onCreate={(s) => {
           router.push(`${router.pathname}/${s.id}`);
         }}

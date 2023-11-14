@@ -125,13 +125,6 @@ const GoogleReviewEditor = ({
     });
   };
 
-  const SMILEY_OPTIONS = Object.entries(SmileyResponse).map(
-    ([type, value]) => ({
-      value: type,
-      label: value,
-    }),
-  );
-
   const { data: teamsRes } = useTeamsByUser();
 
   const handleSave = async () => {
@@ -217,7 +210,7 @@ const GoogleReviewEditor = ({
                             </Text>
                             <Text fw={500}> : </Text>
                             <Group style={{ minWidth: "300px" }}>
-                              {SMILEY_OPTIONS.map(({ value, label }) => (
+                              {Object.values(SmileyResponse).map((value) => (
                                 <Button
                                   key={value}
                                   variant={

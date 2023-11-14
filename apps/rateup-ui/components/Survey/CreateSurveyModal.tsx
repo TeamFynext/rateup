@@ -1,15 +1,4 @@
-import {
-  Box,
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Switch,
-  Text,
-  Radio,
-  TextInput,
-  MultiSelect,
-} from "@mantine/core";
+import { Group, Stack, Radio, MultiSelect } from "@mantine/core";
 import {
   PillsInput,
   Pill,
@@ -20,12 +9,10 @@ import {
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
-import { TeamSelector } from "../input/TeamSelector";
 import { useForm } from "@mantine/form";
 import { useTeamsByUser } from "../../backend/team/team.query";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import classes from "../input/ContainedInput/ContainedInput.module.css";
 
 interface FormValues {
   title: string;
@@ -35,11 +22,12 @@ interface FormValues {
   getLocation: boolean;
 }
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
+const defaultLanguage = "English";
 
 interface CreateSurveyModalProps {
   open: boolean;
   close: () => void;
-  surveyType?: "web" | "whatsapp";
+  surveyType: "web" | "whatsapp";
   onCreate?: (survey: Survey) => void;
 }
 export function CreateSurveyModal({
@@ -48,7 +36,7 @@ export function CreateSurveyModal({
   surveyType,
   onCreate = (_) => {},
 }: CreateSurveyModalProps) {
-  const [languages, setLanguages] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([defaultLanguage]);
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
@@ -68,9 +56,8 @@ export function CreateSurveyModal({
   const form = useForm({
     initialValues: {
       title: "",
-      languages: [],
+      languages: languages,
       teamIds: [],
-      type: surveyType ? surveyType : "web",
       getLocation: false,
     },
     validate: {
@@ -79,7 +66,6 @@ export function CreateSurveyModal({
         values?.length ? null : "Must contain atleast one language",
       teamIds: (values) =>
         values?.length ? null : "Must contain atleast one team",
-      type: (value) => (value ? null : "Must select a type"),
     },
   });
 
@@ -113,12 +99,12 @@ export function CreateSurveyModal({
 
   const resetForm = () => {
     form.reset();
-    setLanguages([]);
+    setLanguages([defaultLanguage]);
   };
 
   useEffect(() => {
     form.reset();
-    setLanguages([]);
+    setLanguages([defaultLanguage]);
   }, [open]);
 
   const [isCreating, setIsCreating] = useState(false);
@@ -144,7 +130,7 @@ export function CreateSurveyModal({
       autoClose: false,
       withCloseButton: false,
     });
-    createSurveyMutation.mutate(form.values);
+    createSurveyMutation.mutate({ ...form.values, type: surveyType });
   };
   return (
     <FormModalLayout

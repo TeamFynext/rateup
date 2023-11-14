@@ -24,6 +24,7 @@ export default function Surveys() {
         allSurveys={allSurveys.filter((s) => s.type === "whatsapp")}
         selectedTeamId={selectedTeamId}
         setSelectedTeamId={setSelectedTeamId}
+        surveyType={"whatsapp"}
       />
     </MantineThemeProvider>
   );
