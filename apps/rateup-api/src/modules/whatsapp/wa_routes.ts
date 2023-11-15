@@ -4,13 +4,11 @@ import { waSettingsRoutes } from "./settings/wa_settings.route";
 import { waSettingsSchema } from "./settings/wa_settings.schema";
 import { waTemplateSchemas } from "./messageTemplates/wa_templates.schema";
 import { waWebhookRoutes} from "./whatsappSurvey/wasurvey.route";
-import { wasurveySchemas } from "./whatsappSurvey/wasurvey.schema";
 
 export async function whatsappRoutes(server: FastifyInstance) {
     const modules = [
         waSettingsSchema,
         waTemplateSchemas,
-        wasurveySchemas,
     ]
     for (const module of modules) {
         for (const schema of module) {
