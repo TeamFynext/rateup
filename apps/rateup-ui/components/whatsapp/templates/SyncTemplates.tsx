@@ -28,7 +28,7 @@ import WaTemplateStatusBadge from "./WaTemplateStatusBadge";
 import { useEffect, useState } from "react";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { WaResponseMessage } from "../MessageComponents";
-import whatsappStyles from "../../Promotion/RightPanel/style.module.css";
+import whatsappStyles from "../whatsapp.module.css";
 
 export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
   const [selectedTemplates, handlers] = useListState([]);

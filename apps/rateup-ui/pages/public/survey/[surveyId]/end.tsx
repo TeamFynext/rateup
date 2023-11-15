@@ -12,6 +12,8 @@ import {
   CopyButton,
   Skeleton,
   Box,
+  Flex,
+  useMantineTheme,
 } from "@mantine/core";
 import {
   IconCircleCheck,
@@ -22,35 +24,20 @@ import {
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
-import { usePublicSurveyGoogleLink } from "../../../../backend/surveys/surveys.query";
 import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
 import { GoogleIcon } from "../../../../public/images/icons/GoogleIcon";
-import {
-  useDeleteReviewSuggestionMutation,
-  usePublicReviewSuggestions,
-} from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { shuffleArray } from "../../../../utils";
 import { ReviewSuggestion } from "../../../../types/global";
+import { getPublicSurveyGoogleLink } from "../../../../backend/surveys/survey.api";
+import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 
-export default function ThankYou() {
+export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const router = useRouter();
-  const { msg } = router.query;
   const { k } = router.query as { k: string }; //kioskMode
   const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
-
-  const [enableGoogleReview, setEnableGoogleReview] = useState(false);
-
-  const {
-    isLoading,
-    isError,
-    data: googleLink,
-  } = usePublicSurveyGoogleLink(surveyId);
-
-  useEffect(() => {
-    msg === "thanks" && setEnableGoogleReview(true);
-  }, [router, msg]);
 
   useEffect(() => {
     //kioskMode redirect
@@ -67,21 +54,43 @@ export default function ThankYou() {
     }
   }, [k]);
 
+  const theme = useMantineTheme();
+  const enableBody = k === "cs" || enableGoogleReview;
   return (
-    <Container style={{ background: "#F7F7F7" }}>
-      <Stack style={{ height: "100vh" }}>
+    <Flex
+      style={{
+        height: "100vh",
+        backgroundColor: theme.colors[theme.primaryColor][6],
+      }}
+      direction={"column"}
+    >
+      <Stack
+        c="white"
+        align="center"
+        justify="center"
+        p="md"
+        style={{
+          height: enableGoogleReview ? "min(30vh, 300px)" : "100vh",
+        }}
+      >
+        {<IconCircleCheck size={"3rem"} />}
+        <Title order={1} style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}>
+          Thank you for your feedback!
+        </Title>
+      </Stack>
+      {enableBody && (
         <Stack
           align="center"
           justify="center"
           gap="xl"
-          style={{ height: "90vh" }}
+          style={{
+            height: "90vh",
+            borderRadius: "28px 28px 0px 0px",
+            backgroundColor: "whitesmoke",
+          }}
         >
-          {enableGoogleReview || <IconCircleCheck size={"4rem"} />}
-          <Title order={1} style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
-            Thank you
-          </Title>
-          {enableGoogleReview && !isLoading && googleLink?.length > 4 && (
-            <GoogleReview googleLink={googleLink} surveyTeamMapId={surveyId} />
+          {enableGoogleReview && (
+            <GoogleReview googleLink={googleLink} reviewSuggestions={reviews} />
           )}
 
           {k === "cs" && (
@@ -95,26 +104,35 @@ export default function ThankYou() {
             </Group>
           )}
         </Stack>
-        <Center mb={30}>
-          <Text fz="sm">Powered by </Text>
-          <Image
-            pl={10}
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-            alt="RateUp Logo"
-            w={80}
-            h={20}
-          />
-        </Center>
-      </Stack>
-    </Container>
+      )}
+      <Center
+        pt={10}
+        pb={20}
+        style={{
+          justifySelf: "flex-end",
+        }}
+        bg={enableBody ? "whitesmoke" : "inherit"}
+        c={enableBody ? "dark" : "white"}
+      >
+        <Text fz="sm">Powered by </Text>
+        <Image
+          pl={10}
+          src={
+            enableBody
+              ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`
+              : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo_white.svg`
+          }
+          alt="RateUp Logo"
+          h={35}
+          w="auto"
+        />
+      </Center>
+    </Flex>
   );
 }
 
-function GoogleReview({ googleLink, surveyTeamMapId }) {
+function GoogleReview({ googleLink, reviewSuggestions }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const { data: reviewSuggestions } =
-    usePublicReviewSuggestions(surveyTeamMapId);
-
   const [reviewIndex, setReviewIndex] = useState<number>(null);
   const [shuffledArray, setShuffledArray] =
     useState<Array<ReviewSuggestion>>(null);
@@ -162,18 +180,29 @@ function GoogleReview({ googleLink, surveyTeamMapId }) {
   }
 
   return (
-    <Stack w="100%" align="center" maw={300}>
-      <Image
-        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/RateUsOnGoogle.png`}
-        alt="Rate Us On Google"
-        maw="200px"
-        mah="200px"
-      />
+    <Stack
+      w="100%"
+      align="center"
+      justify="space-evenly"
+      maw={300}
+      style={{
+        flex: 1,
+      }}
+      pt={4}
+    >
+      <Box style={{ flexShrink: 1 }}>
+        <Image
+          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/RateUsOnGoogle1.png`}
+          alt="Rate Us On Google"
+          height={"auto"}
+          maw="min(25vh, 250px)"
+        />
+      </Box>
       {
         // Only show suggestions if there are atleast 3 reviews
         reviewSuggestions?.length >= 3 &&
           (showSuggestions && shuffledArray !== undefined ? (
-            <Paper shadow="sm" radius="md" p="sm" w="100%">
+            <Paper shadow="md" radius="md" p="sm" w="100%">
               <Stack gap={"xs"} align="center">
                 <Group justify="space-between" w="100%">
                   <Title order={4}>Suggestions</Title>
@@ -221,14 +250,18 @@ function GoogleReview({ googleLink, surveyTeamMapId }) {
               </Stack>
             </Paper>
           ) : (
-            <Button
-              leftSection={<IconWand />}
-              variant="outline"
-              onClick={() => setShowSuggestions(true)}
-              radius={"lg"}
-            >
-              Generate Suggestions
-            </Button>
+            <Stack align="center" gap={"xs"}>
+              <Text c="dark">Need Inspirations?</Text>
+              <Button
+                leftSection={<IconWand />}
+                variant="outline"
+                onClick={() => setShowSuggestions(true)}
+                radius={"xl"}
+                h="50px"
+              >
+                Generate Suggestions
+              </Button>
+            </Stack>
           ))
       }
       <Link
@@ -242,11 +275,10 @@ function GoogleReview({ googleLink, surveyTeamMapId }) {
         <Button
           leftSection={<GoogleIcon />}
           radius={"md"}
-          variant="outline"
+          variant="filled"
           fullWidth
           onClick={handleGoToReviewPage}
           h="50px"
-          bg="white"
           style={{
             boxShadow: "0px 7.20472px 43.22835px 0px rgba(0, 0, 0, 0.13)",
           }}
@@ -256,4 +288,23 @@ function GoogleReview({ googleLink, surveyTeamMapId }) {
       </Link>
     </Stack>
   );
+}
+
+export async function getServerSideProps(context) {
+  const { surveyId } = context.params;
+  const { msg } = context.query;
+
+  let propsToPass: any = { enableGoogleReview: false };
+  if (msg == "thanks") {
+    const [googleLink, reviews] = await Promise.all([
+      getPublicSurveyGoogleLink(surveyId),
+      getPublicReviewsBySurveyTeamMapId(surveyId),
+    ]);
+    propsToPass.googleLink = googleLink;
+    propsToPass.reviews = reviews;
+    if (googleLink) propsToPass.enableGoogleReview = true;
+  }
+  return {
+    props: propsToPass,
+  };
 }

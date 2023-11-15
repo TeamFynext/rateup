@@ -16,7 +16,7 @@ import { useContext } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { SendMessageMock } from "../MessageComponents";
 import { WaQuestionPreview } from "./WaQuestionPreview";
-import whatsappStyles from "../../Promotion/RightPanel/style.module.css";
+import whatsappStyles from "../whatsapp.module.css";
 
 export const WhatsappChatPreview = ({ selectedQ }) => {
   const [listOpened, { open, close }] = useDisclosure(false);

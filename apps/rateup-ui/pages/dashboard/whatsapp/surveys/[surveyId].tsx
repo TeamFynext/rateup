@@ -10,7 +10,7 @@ import { useRouteParams } from "../../../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { useUser } from "../../../../context/UserContext";
 import { EditWhatsappSurvey } from "../../../../components/whatsapp/surveys/WaEditSurvey";
-import { whatsappTheme } from "../../../../components/Promotion/promotion.config";
+import { whatsappTheme } from "../../../../config/mantineTheme";
 import SurveySettings from "../../../../components/Survey/Settings/SurveySettings";
 import { ContainedSelection } from "../../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../../components/styled/Heading/Heading";

@@ -2,7 +2,6 @@ import {
   IconNotification,
   IconChartPie3,
   IconBrowser,
-  IconSpeakerphone,
   IconClipboardList,
   IconBrandWhatsapp,
 } from "@tabler/icons-react";
@@ -17,11 +16,6 @@ export const navData = [
     icon: IconBrandWhatsapp,
     title: "WhatsApp Surveys",
     description: "Run feedback surveys over whatsapp.",
-  },
-  {
-    icon: IconSpeakerphone,
-    title: "Promotions",
-    description: "Yanma is capable of seeing 360 degrees without",
   },
   {
     icon: IconClipboardList,

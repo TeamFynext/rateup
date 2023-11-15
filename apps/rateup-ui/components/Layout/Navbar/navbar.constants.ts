@@ -14,6 +14,8 @@ import {
   IconLayoutDashboard,
   IconPhone,
 } from "@tabler/icons-react";
+
+const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
 export interface NavbarLinkProps {
   Icon: React.FC<any>;
@@ -35,10 +37,10 @@ export const navTopData: Array<NavbarLinkProps> = [
     label: "Teams",
     href: "",
     submenus: [
-      { Icon: IconSocial, label: "All Teams", href: "/dashboard/teams" },
+      { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
       {
         Icon: IconUsers,
-        label: "All Members",
+        label: "Members",
         href: "/dashboard/members",
         role: "SUPER_ADMIN",
       },
@@ -46,35 +48,34 @@ export const navTopData: Array<NavbarLinkProps> = [
   },
   {
     Icon: IconBrowser,
-    label: "Surveys",
+    label: "Web Survey",
     href: "",
     submenus: [
       {
         Icon: IconClipboardList,
-        label: "All Surveys",
+        label: "Surveys",
         href: "/dashboard/surveys",
       },
-      {
-        Icon: IconPageBreak,
-        label: "Group Surveys",
-        href: "/dashboard/groupsurveys",
-      },
+      ...(hiddenModules.includes("groupSurvey")
+        ? []
+        : [
+            {
+              Icon: IconPageBreak,
+              label: "Group Surveys",
+              href: "/dashboard/groupsurveys",
+            },
+          ]),
     ],
   },
   // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
   {
     Icon: IconBrandWhatsapp,
-    label: "WhatsApp",
+    label: "WhatsApp Survey",
     submenus: [
       {
         Icon: IconFileDescription,
-        label: "Survey",
+        label: "Surveys",
         href: "/dashboard/whatsapp/surveys",
-      },
-      {
-        Icon: IconSpeakerphone,
-        label: "Promotion",
-        href: "/dashboard/whatsapp/promotion",
       },
       {
         Icon: IconMessage2Code,
@@ -89,19 +90,24 @@ export const navTopData: Array<NavbarLinkProps> = [
     ],
   },
   { Icon: IconClipboardList, label: "Menu", href: "/dashboard/menu" },
-  {
-    Icon: IconSpeakerphone,
-    label: "Campaign",
-    href: "",
-    submenus: [
-      {
-        Icon: IconPhone,
-        label: "Contacts",
-        href: "/dashboard/campaign/contacts",
-      },
-    ],
-  },
+  ...(hiddenModules.includes("campaign")
+    ? []
+    : [
+        {
+          Icon: IconSpeakerphone,
+          label: "Campaign",
+          href: "",
+          submenus: [
+            {
+              Icon: IconPhone,
+              label: "Contacts",
+              href: "/dashboard/campaign/contacts",
+            },
+          ],
+        },
+      ]),
 ];
+
 //data Array consisting of NavbarBottomData
 export const navBottomData: Array<NavbarLinkProps> = [
   { Icon: IconSettings, label: "Settings", href: "/dashboard/settings" },

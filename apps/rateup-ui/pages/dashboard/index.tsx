@@ -204,11 +204,6 @@ export default function DashboardHome() {
       title: "Group Survey",
       routerPath: "/dashboard/groupsurveys?action=create",
     },
-    {
-      Icon: IconSpeakerphone,
-      title: "Promotion",
-      routerPath: "/dashboard/whatsapp/promotion?action=create",
-    },
   ];
 
   const summaryArray: Array<{
