@@ -57,7 +57,7 @@ const idParamsSchema = z.object({
 });
 
 const cloneSurveySchema = z.object({
-  teamId: z.string().uuid(),
+  teamIds: z.array(z.string().uuid()),
 });
 
 const getSurveyPublicResponseSchema = z.object({
@@ -89,6 +89,7 @@ const updateSurveyRequestSchema = z.object({
   isPublished: z.boolean().optional(),
   welcomePageEnabled: z.boolean().optional(),
   skipPreview: z.boolean().optional(),
+  getLocation: z.boolean().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

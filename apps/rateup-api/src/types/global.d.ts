@@ -2,6 +2,7 @@
 import { Prisma, Role } from "@prisma/client";
 import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
+import { toBeIncludedWaSessionRelations } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
 
 type GoogleReview = {
   minRating?: number;
@@ -92,17 +93,11 @@ declare global {
     acceptButton: string
     orgId: string
   }
-  type WaSessionWithRelations = Prisma.WaSessionGetPayload<typeof fullWaSession>
+  type WaSessionWithRelations = Omit<Prisma.WaSessionGetPayload<typeof fullWaSession>, "responses"> & { responses: Array<QuestionResponse> } // overriding JSON type
 }
 
 const fullWaSession = Prisma.validator<Prisma.WaSessionArgs>()({
-  include: {
-    surveyTeamMap: {
-      include: {
-        survey: true
-      }
-    },
-  }
+  include: toBeIncludedWaSessionRelations
 })
 declare module 'fastify' {
   interface FastifyRequest {

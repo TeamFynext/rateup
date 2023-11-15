@@ -17,7 +17,6 @@ import {
   sendQuestion,
   sendSurveyToParticipant,
   sendTextMessage,
-  updateResponses,
   updateSession,
 } from "./wasurvey.service";
 import { CampaignParticipantStatus, WaEvent, WaTemplateStatus } from "../../../types/enums";
@@ -134,7 +133,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
       const dbTemplate = await getDbTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
-        if(session.surveyTeamMap.survey.languages.length > 1) {
+        if (session.surveyTeamMap.survey.languages.length > 1) {
           updateSession(orgId, from, { currentQuestionId: (session.surveyTeamMap.survey.questions[0] as Question).id })
           await handleLanguageSelection(session);
           return;
@@ -222,7 +221,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   ).filter((r) => r.questionId !== session.currentQuestionId);
   const updatedResponses = [...currentResponses, formattedResponse] as any;
 
-  session = await updateResponses(session.orgId, session.phone, updatedResponses);
+  session = await updateSession(session.orgId, session.phone, { responses: updatedResponses })
   await sendNextQuestion(session, response);
 }
 

@@ -45,7 +45,7 @@ export type WaMessageBody = {
                   sha256: string;
                   link?: string;
                 };
-                type: "text" | "image" | "interactive"|"button";
+                type: "text" | "image" | "interactive" | "button";
                 button?: any;
               }
             ];
@@ -73,15 +73,15 @@ export interface WaSendMessageBody {
   recipient_type: "individual";
   to: string; // PHONE_NUMBER type
   type:
-    | "text"
-    | "image"
-    | "interactive"
-    | "audio"
-    | "document"
-    | "contacts"
-    | "sticker"
-    | "location"
-    | "template";
+  | "text"
+  | "image"
+  | "interactive"
+  | "audio"
+  | "document"
+  | "contacts"
+  | "sticker"
+  | "location"
+  | "template";
   text?: {
     preview_url?: boolean;
     body: string;
@@ -89,7 +89,7 @@ export interface WaSendMessageBody {
   template?: any;
   image?: {};
   interactive?: {
-    type: "button" | "list";
+    type: "button" | "list" | "cta_url";
     action: WaInteractiveMessageAction;
     body: {
       text: string; // max 1024 chars
@@ -120,7 +120,12 @@ type WaSection = {
   }>;
 };
 type WaInteractiveMessageAction = {
+  name?: string;
   button?: string; // max 20 chars
   sections?: Array<WaSection>;
   buttons?: Array<WaButton>;
+  parameters?: {
+    display_text: string;
+    url: string;
+  }
 };
