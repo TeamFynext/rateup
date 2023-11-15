@@ -381,6 +381,7 @@ model MenuItem {
   images      String[]
   videoUrl    String?
   price       Json
+  itemOrder    Int            @default(0)
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId  String       @db.Uuid
 }
@@ -431,7 +432,7 @@ model MenuLanding {
   menu                  Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId                String         @unique @db.Uuid
   surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId       String?        @db.Uuid
+  surveyTeamMapId          String?        @db.Uuid
   // Survey                Survey?       @relation(fields: [surveyId], references: [id])
   // surveyId              String?       @db.Uuid
 }

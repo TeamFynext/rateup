@@ -23,6 +23,7 @@ const updateMenuInputSchema = z.object({
   backgroundImage: z.string().optional(),
   surveyTeamMapId: z.string().optional(),
   isPublished: z.boolean().optional(),
+  itemOrder: z.string().optional()
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
