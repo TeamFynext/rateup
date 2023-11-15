@@ -7,28 +7,35 @@ import {
   Stack,
   Table,
   Text,
+  Image,
 } from "@mantine/core";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import {
+  IconArrowBadgeDownFilled,
+  IconEdit,
+  IconTrash,
+  IconArrowBadgeUpFilled,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import CenteredSpinner from "../../Loaders/CenteredSpinner";
 import { useDisclosure } from "@mantine/hooks";
 import {
   useDeleteMenuItemMutation,
   useItemsByCategoryId,
+  useUpdateMenuItemMutation,
 } from "../../../backend/menu/item/mItem.query";
 import { CreateMenuItemModal } from "../createMenuItem";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { MenuItemPriceType } from "../../../types/enums";
 import { CategoryCardHeader } from "./CategoryCardHeader";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { Image } from "@mantine/core";
+import DeleteConfirmationBox from "../dialogBox/DeleteConfirmationBox";
 
 const tableColumns = ["image", "name", "price", "description", "videoUrl"];
 interface CategoryCardProps {
-  category: MenuCategory;
-  handleDelete: (categoryId: string) => void;
-  handleEdit: (category: MenuCategory) => void;
-  searchText: string;
+  readonly category: MenuCategory;
+  readonly handleDelete: any;
+  readonly handleEdit: (category: MenuCategory) => void;
+  readonly searchText: string;
 }
 export function CategoryCard({
   category,
@@ -38,6 +45,8 @@ export function CategoryCard({
 }: CategoryCardProps) {
   const [createMenuItemModalOpened, { close, open }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+
   const {
     isLoading,
     isError,
@@ -47,12 +56,18 @@ export function CategoryCard({
     category.id,
     category.menuId,
     () => {},
+    () => {}
+  );
+  const updateMenuItemMutation = useUpdateMenuItemMutation(
+    category.id,
+    category.menuId,
     () => {},
+    () => {}
   );
   let itemsSearch = [];
   if (searchText !== "") {
     itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())
     );
   } else {
     itemsSearch = items;
@@ -61,7 +76,14 @@ export function CategoryCard({
     setEditingItem(null);
     open();
   };
-
+  const handleMenuOrder = (direction: string, item: any) => {
+    updateMenuItemMutation.mutate({
+      menuItemId: item.id,
+      menuItem: {
+        itemOrder: direction,
+      },
+    });
+  };
   if (isLoading || isError) {
     return (
       <Paper>
@@ -75,6 +97,7 @@ export function CategoryCard({
       </Paper>
     );
   }
+
   const rows = itemsSearch?.map((item) => (
     <Table.Tr key={item.id}>
       <Table.Td>
@@ -90,14 +113,14 @@ export function CategoryCard({
           w={100}
         />
       </Table.Td>
-      <Table.Td>{item.name}</Table.Td>
+      <Table.Td tt={"capitalize"}>{item.name}</Table.Td>
       <Table.Td>
         {item.price.type === MenuItemPriceType.FIXED ? (
           <Text>₹{item.price.price}</Text>
         ) : (
           <Stack>
-            {item?.price?.variants?.map((element, index) => (
-              <Box key={index}>
+            {item?.price?.variants?.map((element) => (
+              <Box key={element.name + item.id}>
                 <Text c="dimmed" fz="md">
                   {element.name}
                 </Text>
@@ -117,6 +140,13 @@ export function CategoryCard({
       </Table.Td>
       <Table.Td>
         <Group maw="100px" h="100px" align="center">
+          <DeleteConfirmationBox
+            closeDialog={closeDialog}
+            dialogOpened={dialogOpened}
+            data={item?.id}
+            mutation={deleteItemMutation}
+            text={"Are you sure to delete this Menu Item?"}
+          />
           <ActionIcon
             c={"var(--tertiary-color)"}
             bg={"white"}
@@ -128,15 +158,28 @@ export function CategoryCard({
           >
             <IconEdit />
           </ActionIcon>
-          <ActionIcon
-            c={"black"}
-            bg={"white"}
-            radius={"md"}
-            onClick={() => deleteItemMutation.mutate(item.id)}
-          >
+          <ActionIcon c={"black"} bg={"white"} radius={"md"} onClick={toggle}>
             <IconTrash />
           </ActionIcon>
         </Group>
+      </Table.Td>
+      <Table.Td>
+        <Stack pr={"sm"}>
+          <ActionIcon
+            disabled={item?.itemOrder === 0}
+            variant={"transparent"}
+            onClick={() => handleMenuOrder("up", item)}
+          >
+            <IconArrowBadgeUpFilled />
+          </ActionIcon>
+          <ActionIcon
+            disabled={item?.itemOrder === itemsSearch?.length - 1}
+            variant={"transparent"}
+            onClick={() => handleMenuOrder("down", item)}
+          >
+            <IconArrowBadgeDownFilled />
+          </ActionIcon>
+        </Stack>
       </Table.Td>
     </Table.Tr>
   ));
@@ -174,7 +217,7 @@ export function CategoryCard({
             ) : (
               <Table.Tr>
                 <Table.Td colSpan={tableColumns?.length}>
-                  <Text fw={500} ta="center">
+                  <Text fw={500} ta="center" c={"dimmed"}>
                     No Items
                   </Text>
                 </Table.Td>

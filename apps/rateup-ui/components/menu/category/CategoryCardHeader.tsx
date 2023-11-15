@@ -3,16 +3,17 @@ import {
   Button,
   Group,
   Text,
-  useMantineTheme,
 } from "@mantine/core";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import React from "react";
+import DeleteConfirmationBox from "../dialogBox/DeleteConfirmationBox";
+import { useDisclosure } from "@mantine/hooks";
 
 interface CategoryCardHeaderProps {
-  category: MenuCategory;
-  handleDelete: (categoryId: string) => void;
-  openCreateItem: () => void;
-  handleEdit: (category: MenuCategory) => void;
+  readonly category: MenuCategory;
+  readonly handleDelete: any;
+  readonly openCreateItem: () => void;
+  readonly handleEdit: (category: MenuCategory) => void;
 }
 export function CategoryCardHeader({
   category,
@@ -20,21 +21,7 @@ export function CategoryCardHeader({
   openCreateItem,
   handleEdit,
 }: CategoryCardHeaderProps) {
-  const theme = useMantineTheme();
-
-  const [isHovered, setIsHovered] = React.useState(false);
-  const iconStyle = {
-    color: isHovered ? theme.colors.blue[7] : "white",
-    transition: "color 0.3s ease", // Add a smooth transition effect
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
 
   return (
     <Group
@@ -46,10 +33,17 @@ export function CategoryCardHeader({
       }}
     >
       <div></div>
-      <Text fz="1.5rem" c="white" fw={700}>
+      <Text fz="1.5rem" c="white" fw={700} tt={"capitalize"}>
         {category.name}
       </Text>
       <Group>
+        <DeleteConfirmationBox
+          closeDialog={closeDialog}
+          dialogOpened={dialogOpened}
+          data={category?.id}
+          mutation={handleDelete}
+          text={"Are you sure to delete this Menu Category?"}
+        />
         <Button
           c={"var(--tertiary-color)"}
           bg={"white"}
@@ -64,17 +58,10 @@ export function CategoryCardHeader({
           bg={"white"}
           radius={"md"}
           onClick={() => handleEdit(category)}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         >
           <IconEdit />
         </ActionIcon>
-        <ActionIcon
-          c={"red"}
-          bg={"white"}
-          radius={"md"}
-          onClick={() => handleDelete(category.id)}
-        >
+        <ActionIcon c={"red"} bg={"white"} radius={"md"} onClick={toggle}>
           <IconTrash />
         </ActionIcon>
       </Group>

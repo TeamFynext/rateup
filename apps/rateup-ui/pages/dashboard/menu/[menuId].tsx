@@ -1,4 +1,4 @@
-import { Flex, Grid, Group, Stack, Tabs, Title } from "@mantine/core";
+import { Flex, Grid, Group, Stack, Tabs } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
@@ -20,6 +20,7 @@ import LandingPage from "../../../components/menu/landingPage/LandingPage";
 import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
 import { transformData } from "../../../components/menu/util/transformData";
 import Heading from "../../../components/styled/Heading/Heading";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 
 enum TabEnum {
   Menu = "Menu",
@@ -38,15 +39,15 @@ export default ({ categories: initialCategories }) => {
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
-    () => {},
+    () => {}
   );
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null,
+    null
   );
 
   const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu,
+    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu
   );
 
   const {
@@ -64,7 +65,7 @@ export default ({ categories: initialCategories }) => {
 
   if (selectedTeamId !== "all") {
     filteredCategory = filteredCategory?.filter(
-      (category) => category?.teamId === selectedTeamId,
+      (category) => category?.teamId === selectedTeamId
     );
   }
 
@@ -135,8 +136,8 @@ export default ({ categories: initialCategories }) => {
               searchText={searchText}
               setSearchText={setSearchText}
               sx={{
-                visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
-                // width: "50%",
+                // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
+                visibility: "hidden",
               }}
             />
             <TeamSelector
@@ -148,13 +149,13 @@ export default ({ categories: initialCategories }) => {
           </Flex>
           <Stack mt="sm">
             {filteredCategory?.length === 0 ? (
-              <>No Category data Avaliable</>
+              <NothingFound text="No Category available." />
             ) : (
               filteredCategory?.map((category) => (
                 <CategoryCard
                   key={category.id}
                   category={category}
-                  handleDelete={deleteMutation.mutate}
+                  handleDelete={deleteMutation}
                   handleEdit={handleEditCategory}
                   searchText={searchText}
                 />

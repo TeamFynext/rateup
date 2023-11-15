@@ -75,7 +75,7 @@ export const useUpdateMenuItemMutation = (
       menuItem,
     }: {
       menuItemId: string;
-      menuItem: string;
+      menuItem: any;
     }) => updateMenuItem(menuItemId, menuItem),
     onSuccess: () => {
       showSuccessToast("Menu item updated successfully");

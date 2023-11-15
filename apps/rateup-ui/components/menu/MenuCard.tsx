@@ -1,11 +1,9 @@
 import {
-  useMantineTheme,
   Flex,
   Group,
   Text,
   Menu,
   Box,
-  Dialog,
 } from "@mantine/core";
 import {
   IconDots,
@@ -21,20 +19,16 @@ import { getTimeSince } from "../../utils";
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  RateupButtonSecondary,
-  RateupButtonPrimary,
-} from "../Button/RateupButtons";
 import { updateSuccessToast } from "../../utils/notifications";
-// TODO: Create a generic Card with menu
+import DeleteConfirmationBox from "./dialogBox/DeleteConfirmationBox";
+
 export function MenuCard({
   menu,
   handleEditClick,
 }: {
-  menu: Menu;
-  handleEditClick: (menu: Menu) => void;
+  readonly menu: Menu;
+  readonly handleEditClick: (menu: Menu) => void;
 }): JSX.Element {
-  const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
 
   const router = useRouter();
@@ -42,7 +36,7 @@ export function MenuCard({
     setTimeSince(getTimeSince(menu.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(menu.createdAt)),
-      5000,
+      5000
     );
     return () => clearInterval(timeoutID);
   }, [menu?.createdAt]);
@@ -72,7 +66,8 @@ export function MenuCard({
               <IconPencil
                 size={20}
                 onClick={(e) => {
-                  e.stopPropagation(), handleEditClick(menu);
+                  e.stopPropagation();
+                  handleEditClick(menu);
                 }}
               />
               <MenuCardMenu menuId={menu.id} teamId={menu.teamId} close />
@@ -102,7 +97,7 @@ function MenuCardMenu({ menuId, teamId, close }) {
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
-    () => {},
+    () => {}
   );
   const router = useRouter();
 
@@ -110,43 +105,13 @@ function MenuCardMenu({ menuId, teamId, close }) {
     updateSuccessToast("Hold on, Menu is getting deleted", "menu-delete");
   return (
     <Menu offset={0} withArrow>
-      <Dialog
-        opened={dialogOpened}
-        withCloseButton
-        onClose={closeDialog}
-        size="lg"
-        radius="md"
-        position={{ top: "0", left: "40vw" }}
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <Text size="md" mb="xs" fw={500}>
-          Are you sure to delete this Menu?
-        </Text>
-
-        <Group align="center" pt="lg">
-          <RateupButtonSecondary
-            onClick={(e) => {
-              e.stopPropagation();
-              closeDialog();
-            }}
-            disabled={deleteMutation.isPending}
-            size="md"
-            title="Cancel"
-          />
-
-          <RateupButtonPrimary
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteMutation.mutate(menuId);
-            }}
-            loading={deleteMutation.isPending}
-            size="md"
-            title="Yes, Delete"
-          />
-        </Group>
-      </Dialog>
+      <DeleteConfirmationBox
+        closeDialog={closeDialog}
+        dialogOpened={dialogOpened}
+        data={menuId}
+        mutation={deleteMutation}
+        text={"Are you sure to delete this Menu?"}
+      />
       <Menu.Target>
         <Group
           onClick={(e) => {

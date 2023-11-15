@@ -7,6 +7,7 @@ import {
   Group,
   Image,
   LoadingOverlay,
+  Paper,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -14,7 +15,6 @@ import {
   Tabs,
   Text,
   Title,
-  em,
 } from "@mantine/core";
 import { IconMapPin, IconWorld } from "@tabler/icons-react";
 import { useFileUpload } from "../hook/fileUpload";
@@ -38,36 +38,14 @@ import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWe
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "./Tabs/TabsCommon";
 import { showErrorToast } from "../../../utils/notifications";
+import { GilroyMedium } from "../../../public/fonts";
+import { FeedbackButton, MenuButton } from "./Button/LandingButtons";
 
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
-  const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
+  const largeScreen = useMediaQuery("(min-width: 40em)");
+
   const form = useForm({
-    initialValues: editingItem || {
-      headerStyle: {
-        fontFamily: "Roboto",
-        fontWeight: "400",
-        fontSize: 18,
-        color: "#ffffff",
-      },
-      titleStyle: {
-        fontFamily: "Roboto",
-        fontWeight: "700",
-        fontSize: isMobile ? 26 : 32,
-        color: "#ffffff",
-      },
-      otherStyle: {
-        fontFamily: "Roboto",
-        color: "#ffffff",
-      },
-      headerText: "Welcome To",
-      titleText: "HOTEL NAME",
-      locationText: "",
-      websiteText: "",
-      logo: "",
-      backgroundImage: "",
-      mobileBackgroundImage: "",
-      menuId: "",
-    },
+    initialValues: editingItem
   });
 
   const [logo, setLogo] = useState<File | null>(null);
@@ -75,36 +53,30 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled ?? true,
+    editingItem?.menuPageEnabled ?? true
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled ?? false,
+    editingItem?.feedbackPageEnabled ?? false
   );
   const logoRef = useRef<HTMLButtonElement>(null);
   const { isUploading: isBackgroundImageUploading } = useFileUpload(
     backgroundImage,
     "backgroundImage",
-    form,
+    form
   );
   const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
   const { isUploading: isMobileBgUploading } = useFileUpload(
     mobileBackgroundImage,
     "mobileBackgroundImage",
-    form,
+    form
   );
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
-  const imageWidth = useMediaQuery(`(max-width: ${em(750)})`) ? 60 : 127;
-  const imageHeight = useMediaQuery(`(max-width: ${em(750)})`)
-    ? 60
-    : selectedTab === "Mobile"
-    ? 60
-    : 127;
   const fallbackImage = "/images/no_image_template.jpeg";
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId,
+    editingItem?.menuId
   );
 
   useEffect(() => {
@@ -128,7 +100,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleMenuEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -140,7 +112,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleFeedbackEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -149,32 +121,21 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     };
     if (!editingItem?.surveyTeamMapId && !isFeedbackEnabled) {
       showErrorToast(
-        "In order to enable feedback, you must have selected a survey in the settings.",
+        "In order to enable feedback, you must have selected a survey in the settings."
       );
       return;
     }
     menulandingOptionMutation.mutate(checkedValueMenu);
     setIsFeedbackEnabled(event?.currentTarget?.checked);
   };
-  const titleMobile = selectedTab === "Mobile" && {
+  const isMobileTab = selectedTab === "Mobile";
+
+  const titleMobile = isMobileTab && {
     fontSize: form?.values?.titleStyle.fontSize * 0.6,
   };
-  const headerMobile = selectedTab === "Mobile" && {
+  const headerMobile = isMobileTab && {
     fontSize: form?.values?.headerStyle.fontSize * 0.6,
   };
-  let backgroundImageSrc = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/background.jpg`;
-  let mobileBackgroundImageSrc = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/mobileBackground.jpg`;
-
-  if (form?.values?.backgroundImage) {
-    backgroundImageSrc = getFileUrlFromKey(form.values.backgroundImage);
-  }
-
-  if (form?.values?.mobileBackgroundImage) {
-    mobileBackgroundImageSrc = getFileUrlFromKey(
-      form.values.mobileBackgroundImage,
-    );
-  }
-  const isMobileTab = selectedTab === "Mobile";
   const imageKey = isMobileTab ? "mobileBackgroundImage" : "backgroundImage";
   const hasImage = form?.values?.[imageKey];
 
@@ -190,41 +151,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     }.jpg`;
   }
 
-  const renderFeedbackComponent = () => {
-    if (isFeedbackEnabled) {
-      return (
-        <Stack align="center" gap={0}>
-          <Image
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
-            h={"auto"}
-            w={selectedTab == "Mobile" ? "50px" : imageWidth}
-            maw={"100%"}
-            alt="icon of feedbak"
-          />
-          <Text c={"black"}>FEEDBACK</Text>
-        </Stack>
-      );
-    } else {
-      return <Stack h={imageHeight} w={imageWidth}></Stack>;
-    }
-  };
-  const renderMenuComponent = () => {
-    if (isMenuEnabled) {
-      return (
-        <Stack align="center" gap={0}>
-          <Image
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
-            w={selectedTab == "Mobile" ? "50px" : imageWidth}
-            maw={"100%"}
-            alt="icon of menu"
-          />
-          <Text c={"black"}>MENU</Text>
-        </Stack>
-      );
-    } else {
-      return <Stack h={imageHeight} w={imageWidth}></Stack>;
-    }
-  };
   return (
     <Grid>
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
@@ -243,7 +169,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               <div></div>
             </SimpleGrid>
             <Stack
-              px={isMobile ? "xs" : "lg"}
+              px={largeScreen ? "lg" : "xs"}
               pb={"lg"}
               pos={"relative"}
               align="center"
@@ -253,19 +179,26 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 zIndex={1000}
                 overlayProps={{ radius: "sm", blur: 2 }}
               />
-              <PaperLayout p={0} w={selectedTab === "Mobile" && 300}>
-                <BackgroundImage
-                  src={result}
-                  radius="xl"
-                  w={selectedTab === "Mobile" && 300}
-                >
-                  <Group
-                    mih={selectedTab === "Mobile" ? "min(550px,65vh)" : "60vh"}
-                    mah={"700"}
-                    w={"100%"}
+              <PaperLayout p={0} w={isMobileTab ? 300 : "100%"}>
+                <>
+                  <BackgroundImage
+                    src={result}
+                    radius="0px 0px 22px 22px"
+                    w={isMobileTab && 300}
+                    bgsz={"cover"}
+                    bgp={"center"}
+                    mih={300}
                   >
-                    <Stack w={"100%"} justify="center">
-                      <Center>
+                    <Stack
+                      align="center"
+                      justify={!isMobileTab ? "space-around" : "center"}
+                      h={"100%"}
+                      style={{
+                        padding: !isMobileTab ? "0 20px 0 20px" : "0",
+                      }}
+                    >
+                      <div></div>
+                      <Stack align="center" gap={0} px={"50px"}>
                         {isLogoUploading ? (
                           <Skeleton w={50} h={50} />
                         ) : (
@@ -278,107 +211,153 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                             h={50}
                             w={50}
                             maw={50}
+                            mih={50}
                             radius={"md"}
                             fallbackSrc={fallbackImage}
                             alt="image of logo"
                           />
                         )}
-                      </Center>
-                      <Flex
-                        justify="space-between"
-                        px={isMobile || selectedTab == "Mobile" ? "xs" : "xl"}
-                        align={"center"}
-                      >
-                        {selectedTab !== "Mobile" && renderMenuComponent()}
-                        <Stack gap={0}>
+                        <ContainedTextArea
+                          placeholder="Welcome to"
+                          variant="unstyled"
+                          autosize
+                          styles={{
+                            input: {
+                              ...form?.values?.headerStyle,
+                              ...headerMobile,
+                              border: "none",
+                              textAlign: "center",
+                              textTransform: "capitalize",
+                            },
+                          }}
+                          p={0}
+                          {...form.getInputProps("headerText")}
+                        />
+                        <ContainedTextArea
+                          placeholder="HOTEL NAME"
+                          variant="unstyled"
+                          autosize
+                          styles={{
+                            input: {
+                              ...form?.values?.titleStyle,
+                              ...titleMobile,
+                              border: "none",
+                              textAlign: "center",
+                              textTransform: "uppercase",
+                            },
+                          }}
+                          p={0}
+                          {...form.getInputProps("titleText")}
+                        />
+                      </Stack>
+                      <Center p={0} w={!isMobileTab && "100%"}>
+                        <Flex
+                          align={!isMobileTab ? "center" : "start"}
+                          justify={"space-between"}
+                          direction={isMobileTab ? "column" : "row"}
+                          w={"100%"}
+                          px={!isMobileTab && "100"}
+                          pb={"lg"}
+                        >
                           <ContainedTextArea
-                            placeholder="Welcome to"
-                            variant="unstyled"
-                            autosize
-                            styles={{
-                              input: {
-                                ...form?.values?.headerStyle,
-                                ...headerMobile,
-                                border: "none",
-                                textAlign: "center",
-                                textTransform: "capitalize",
-                              },
-                            }}
-                            p={0}
-                            {...form.getInputProps("headerText")}
-                          />
-                          <ContainedTextArea
-                            placeholder="HOTEL NAME"
-                            variant="unstyled"
-                            autosize
-                            styles={{
-                              input: {
-                                ...form?.values?.titleStyle,
-                                ...titleMobile,
-                                border: "none",
-                                textAlign: "center",
-                                textTransform: "uppercase",
-                              },
-                            }}
-                            p={0}
-                            {...form.getInputProps("titleText")}
-                          />
-                          <Flex
-                            c={"black"}
-                            justify={"center"}
-                            align={"center"}
-                            columnGap={4}
-                            direction={
-                              selectedTab === "Mobile" ? "column" : "row"
+                            placeholder="Website Text"
+                            leftSection={
+                              <IconWorld
+                                size={
+                                  isMobileTab
+                                    ? "21px"
+                                    : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                }
+                                color={form?.values?.otherStyle?.color}
+                              />
                             }
-                          >
-                            <ContainedTextArea
-                              placeholder="location"
-                              leftSection={<IconMapPin size={10} />}
-                              variant="unstyled"
-                              autosize
-                              styles={{
-                                input: {
-                                  ...form?.values?.otherStyle,
-                                  border: "none",
-                                },
-                              }}
-                              {...form.getInputProps("locationText")}
-                            />
-                            <ContainedTextArea
-                              placeholder="Website Text"
-                              leftSection={<IconWorld size={10} />}
-                              variant="unstyled"
-                              autosize
-                              styles={{
-                                input: {
-                                  ...form?.values?.otherStyle,
-                                  border: "none",
-                                },
-                              }}
-                              {...form.getInputProps("websiteText")}
-                            />
-                          </Flex>
-                        </Stack>
-                        {selectedTab !== "Mobile" && renderFeedbackComponent()}
-                      </Flex>
-                      {selectedTab == "Mobile" && (
-                        <Stack justify="center">
-                          {renderMenuComponent()}
-                          {renderFeedbackComponent()}
-                        </Stack>
-                      )}
+                            variant="unstyled"
+                            autosize
+                            styles={{
+                              input: {
+                                ...form?.values?.otherStyle,
+                                border: "none",
+                              },
+                            }}
+                            {...form.getInputProps("websiteText")}
+                          />
+                          <ContainedTextArea
+                            placeholder="location"
+                            leftSection={
+                              <IconMapPin
+                                size={
+                                  isMobileTab
+                                    ? "21px"
+                                    : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                }
+                                color={form?.values?.otherStyle?.color}
+                              />
+                            }
+                            variant="unstyled"
+                            autosize
+                            styles={{
+                              input: {
+                                ...form?.values?.otherStyle,
+                                border: "none",
+                              },
+                            }}
+                            tt={"capitalize"}
+                            {...form.getInputProps("locationText")}
+                          />
+                        </Flex>
+                      </Center>
                     </Stack>
-                  </Group>
-                  <Center w="100%">
-                    <Image
-                      src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
-                      h={54}
-                      w={94}
-                      alt="logo company"
-                    />
-                  </Center>
-                </BackgroundImage>
+                  </BackgroundImage>
+                  <Stack
+                    align="center"
+                    justify={"space-between"}
+                    py={"xl"}
+                    h={!isMobileTab && "35vh"}
+                  >
+                    <Center>
+                      <SimpleGrid cols={{ base: 1, md: isMobileTab ? 1 : 2 }}>
+                        <Paper
+                          shadow={isMenuEnabled && "sm"}
+                          radius={"md"}
+                          p={"lg"}
+                          mah={"200px"}
+                          mih={80}
+                          mx={largeScreen ? "lg" : "0"}
+                        >
+                          {isMenuEnabled && MenuButton(!isMobileTab)}
+                        </Paper>
+                        <Paper
+                          shadow={isFeedbackEnabled && "sm"}
+                          radius={"md"}
+                          p={"lg"}
+                          mah={"200px"}
+                          mih={80}
+                          mx={largeScreen ? "lg" : "0"}
+                        >
+                          {isFeedbackEnabled && FeedbackButton(!isMobileTab)}
+                        </Paper>
+                      </SimpleGrid>
+                    </Center>
+                    <Group>
+                      <Text
+                        className={GilroyMedium.className}
+                        fz={
+                          isMobileTab
+                            ? "0.875rem"
+                            : "clamp(0.875rem, 0.607rem + 0.714vw, 1.25rem)"
+                        }
+                      >
+                        powered by
+                      </Text>
+                      <Image
+                        src={"/images/rateup_logo.svg"}
+                        h={54}
+                        w={94}
+                        alt="rate-up logo"
+                      />
+                    </Group>
+                  </Stack>
+                </>
               </PaperLayout>
             </Stack>
           </>

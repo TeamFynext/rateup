@@ -4,13 +4,14 @@ interface TabsCommonProps {
   tabHeading: string[];
 }
 const TabsCommon = (props: TabsProps & TabsCommonProps) => {
-  const { children, tabHeading } = props;
-
+  const { children, tabHeading, ...restData } = props;
   return (
-    <Tabs variant="pills" radius="xs" {...props}>
+    <Tabs variant="pills" radius="xs" {...restData}>
       <Tabs.List>
         {tabHeading?.map((heading: string) => (
-          <Tabs.Tab value={heading} key={heading}>{heading}</Tabs.Tab>
+          <Tabs.Tab value={heading} key={heading}>
+            {heading}
+          </Tabs.Tab>
         ))}
       </Tabs.List>
       {children}

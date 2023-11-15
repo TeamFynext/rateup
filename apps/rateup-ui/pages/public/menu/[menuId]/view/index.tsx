@@ -36,20 +36,20 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
-    fullMenu?.categories,
+    fullMenu?.categories
   );
-  const [categorys, setcategorys] = useState(fullMenu?.categories);
+  const [categorys, setCategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categoryChipLabel[0]?.id,
+    categoryChipLabel[0]?.id
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
 
   function handleCategoryChipClick(categoryId: string) {
-    setcategorys(
+    setCategorys(
       categoryId === "1"
         ? categoryChipLabel.filter((category) => category.id !== categoryId)
-        : categoryChipLabel.filter((category) => category.id === categoryId),
+        : categoryChipLabel.filter((category) => category.id === categoryId)
     );
     setSelectedCategory(categoryId);
   }
@@ -70,8 +70,7 @@ export default function ({ fullMenu }) {
         px={largeScreen ? "10vw" : "1vw"}
         py="3vh"
         style={{
-          // TODO: add blur to background image
-          background: `linear-gradient(111deg, rgba(251, 181, 75, 0.73) -12.96%, rgba(246, 67, 0, 0.73) 57.7%), ${
+          background: `${
             backgroundImage
               ? `url(${encodeURI(getFileUrlFromKey(backgroundImage))})`
               : `url(${backgroundImageFallback})`
@@ -112,7 +111,6 @@ export default function ({ fullMenu }) {
             >
               Welcome To
             </Text>
-            {/* TODO: make this text responsive. (if longer name, smaller font) */}
             <Text
               fz={"clamp(1.75rem, 0.857rem + 2.381vw, 3rem)"}
               tt={"uppercase"}

@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Button, FileButton, Stack, TextInput } from "@mantine/core";
+import {
+  FileButton,
+  LoadingOverlay,
+  Stack,
+  Image
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   useCreateMenuCategoryMutation,
@@ -9,10 +14,8 @@ import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import {
-  RateupButtonOutline,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { Image } from "@mantine/core";
 
 interface CreateMenuCategoryModalProps {
   opened: boolean;
@@ -76,7 +79,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
 
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
@@ -88,7 +91,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
 
   const onSubmit = (values) => {
@@ -122,6 +125,12 @@ export function CreateMenuCategoryModal({
       buttonTitle={editingItem ? "Save Category" : "Create Category"}
     >
       <Stack>
+        <LoadingOverlay
+          visible={createMenuCategoryMutation.isPending || editMenuCategoryMutation.isPending}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+          loaderProps={{ type: "bars" }}
+        />
         <ContainedTextField
           label="Name"
           placeholder="Name"

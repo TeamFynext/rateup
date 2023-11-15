@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import { Group, SimpleGrid, Title, Space, Stack } from "@mantine/core";
-import { useContext, useState } from "react";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
 import { useAllMenus } from "../../../backend/menu/menu.query";
@@ -15,13 +14,14 @@ import {
 import { UserRole } from "../../../utils/enums";
 import { useUser } from "../../../context/UserContext";
 import NothingFound from "../../../components/NothingFound/NothingFound";
+import CenteredSpinner from "../../../components/Loaders/CenteredSpinner";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
   const [sort, setSort] = useState(true);
-  const { user, setUser } = useUser();
+  const { user } = useUser();
 
   function handleEditClick(menu: Menu) {
     setEditingItem(menu);
@@ -35,7 +35,6 @@ export default function MenuPage() {
     setEditingItem(null);
     close();
   }
-  console.log(selectedTeamId);
   return (
     <Stack h={"100%"}>
       <Group justify="space-between">
@@ -73,7 +72,9 @@ export default function MenuPage() {
         cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
         style={{ overflow: "auto" }}
       >
-        <SelectedTeamContext.Provider value={{ selectedTeamId }}>
+        <SelectedTeamContext.Provider
+          value={React.useMemo(() => ({ selectedTeamId }), [selectedTeamId])}
+        >
           {selectedTeamId && (
             <CreateMenuModal
               opened={openCreateModal}
@@ -93,7 +94,7 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
   const { isError, isLoading, data: menus } = useAllMenus();
 
   if (isLoading || isError) {
-    return null;
+    return <CenteredSpinner />;
   }
   // Filter menus based on `selectedTeamId`
   const filteredMenus =

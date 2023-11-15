@@ -114,6 +114,7 @@ const GeneralSettings = ({ editingItem }) => {
             <ContainedTextField
               label="Website URL"
               placeholder="https://paragonHotels.in"
+              type="url"
               {...form.getInputProps("websiteUrl")}
             />
           </SimpleGrid>

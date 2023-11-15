@@ -8,6 +8,7 @@ import {
   Flex,
   Group,
   Image,
+  LoadingOverlay,
   Radio,
   SimpleGrid,
   Stack,
@@ -30,11 +31,11 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 
 interface CreateMenuItemModalProps {
-  opened: boolean;
-  close: () => void;
-  menuId: string;
-  categoryId: string;
-  editingItem?: MenuItem;
+  readonly opened: boolean;
+  readonly close: () => void;
+  readonly menuId: string;
+  readonly categoryId: string;
+  readonly editingItem?: MenuItem;
 }
 
 // If editingItem is passed, then we are editing an existing item
@@ -45,7 +46,6 @@ export function CreateMenuItemModal({
   categoryId,
   editingItem,
 }: CreateMenuItemModalProps) {
-  const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
   const fallbackImage = "/images/no_image_template.jpeg";
   const form = useForm({
@@ -101,7 +101,7 @@ export function CreateMenuItemModal({
     },
   });
   const [selectedImage, setSelectedImage] = useState(
-    form.values.images[0] || "",
+    form.values.images[0] || ""
   );
 
   useEffect(() => {
@@ -121,13 +121,10 @@ export function CreateMenuItemModal({
     menuId,
     () => {
       close();
-      setIsCreating(false);
       form.reset();
       setImageToUpload(null);
     },
-    () => {
-      setIsCreating(false);
-    },
+    () => {}
   );
 
   const updateMenuItemMutation = useUpdateMenuItemMutation(
@@ -135,12 +132,9 @@ export function CreateMenuItemModal({
     menuId,
     () => {
       close();
-      setIsCreating(false);
       form.reset();
     },
-    () => {
-      setIsCreating(false);
-    },
+    () => {}
   );
 
   useEffect(() => {
@@ -167,7 +161,6 @@ export function CreateMenuItemModal({
       return;
     }
 
-    setIsCreating(true);
     if (values.price.type === MenuItemPriceType.FIXED) {
       delete values.price.variants;
     } else {
@@ -203,6 +196,14 @@ export function CreateMenuItemModal({
       size={"lg"}
     >
       <Flex>
+        <LoadingOverlay
+          visible={
+            createMenuItemMutation.isPending || updateMenuItemMutation.isPending
+          }
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+          loaderProps={{ type: "bars" }}
+        />
         <Stack style={{ flex: 1 }}>
           <Group>
             <Text>Add Images (max 3)</Text>
@@ -223,8 +224,8 @@ export function CreateMenuItemModal({
                       form.removeListItem(
                         "images",
                         form?.values?.images?.findIndex(
-                          (image) => image === selectedImage,
-                        ),
+                          (image) => image === selectedImage
+                        )
                       );
                       setSelectedImage(form?.values?.images[0] || "");
                     }}
@@ -297,7 +298,7 @@ export function CreateMenuItemModal({
   );
 }
 
-function PriceSection({ form }: { form: any }) {
+function PriceSection({ form }: { readonly form: any }) {
   return (
     <>
       <Group>
@@ -361,7 +362,7 @@ function PriceSection({ form }: { form: any }) {
                 onClick={() => {
                   const newVariants = form?.values?.price?.variants?.slice(
                     0,
-                    -1,
+                    -1
                   );
                   form.setFieldValue("price.variants", newVariants);
                 }}
