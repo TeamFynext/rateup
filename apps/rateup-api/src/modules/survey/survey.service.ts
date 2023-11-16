@@ -793,10 +793,10 @@ export async function verifySurveyPassword(
     if (survey.isProtected && decryptedPassword === enteredPassword) {
       return "Access granted";
     } else {
-      return "Password Error";
+      throw new Error(`Password Error`);
     }
   } catch (error) {
-    throw new Error(`Internal server error`);
+    throw new Error(error?.message);
   }
 }
 

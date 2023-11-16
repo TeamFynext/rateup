@@ -407,7 +407,7 @@ export async function verifySurveyPasswordHandler(
       reply.code(200).send({ status: "success", data: verifyPassword });
     }
   } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
+    reply.code(500).send({ status: "error", message: e?.message });
   }
 }
 
