@@ -23,6 +23,7 @@ interface CategoryCardProps {
   readonly initialOrder: number;
   readonly lastItemOrder: number;
 }
+
 export function CategoryCard({
   category,
   handleDelete,
@@ -107,7 +108,7 @@ export function CategoryCard({
       MenuItemPriceType={MenuItemPriceType}
       deleteItemMutation={deleteItemMutation}
       handleMenuOrder={handleMenuOrder}
-      lastItemOrder={itemsSearch?.findLast((element) => element)?.itemOrder}
+      lastItemOrder={itemsSearch?.slice(-1)[0]?.itemOrder}
       setEditingItem={setEditingItem}
       initialOrder={itemsSearch[0]?.itemOrder}
       key={item?.id}

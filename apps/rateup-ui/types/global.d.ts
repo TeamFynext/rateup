@@ -314,6 +314,7 @@ declare global {
       }>;
     };
     categoryId: string;
+    itemOrder?: number;
   };
   interface FullCategory extends MenuCategory {
     items: MenuItem[];
