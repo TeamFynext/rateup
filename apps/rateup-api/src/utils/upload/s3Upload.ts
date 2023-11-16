@@ -1,26 +1,47 @@
-import AWS, { S3 } from "aws-sdk";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 
-const s3config = new AWS.S3({
-  accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+const s3 = new S3Client({
   region: process.env.AWS_S3_REGION,
-});
-
+  credentials: {
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+  },
+ });
+ 
 const CLOUDFRONT_DOMAIN = process.env.AWS_CLOUDFRONT_DOMAIN;
 
-export async function uploadFile(params: S3.PutObjectRequest): Promise<string> {
-  return new Promise((resolve, reject) => {
-    s3config.upload(params, (err: any, data: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        const fileUrl = `https://${CLOUDFRONT_DOMAIN}/${params.Key}`; // CloudFront URL for the uploaded file
-        resolve(fileUrl);
-      }
+export async function uploadFile(params) {
+  try {
+    const parallelUploads3 = new Upload({
+      client: s3,
+      params: params,
+
+      tags: [
+        /*...*/
+      ], // optional tags
+      queueSize: 4, // optional concurrency configuration
+      partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
+      leavePartsOnError: false, // optional manually handle dropped parts
     });
-  });
+
+    parallelUploads3.on("httpUploadProgress", (progress) => {
+      console.log(progress);
+    });
+
+    await parallelUploads3.done();
+  } catch (e) {
+    console.log(e);
+  }
 }
 
-export async function deleteFile(params: S3.DeleteObjectRequest) {
-  return await s3config.deleteObject(params).promise();
+export async function deleteFile(params) {
+ const command = new DeleteObjectCommand(params);
+  try {
+    const response = await s3.send(command);
+    console.log(response);
+    return response;
+  } catch (err) {
+    console.error(err);
+  }
 }

@@ -1,13 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { deleteUploadedFileController, uploadController } from "./fileUpload.controller";
 import { $Rref } from "./fileUpload.schema";
-
-const fmp = require('fastify-multipart');
+import FastifyMultipart from '@fastify/multipart';
 
 export async function fileUploadPublicRoutes(server: FastifyInstance) { 
-
-  server.register(fmp);
-
+  server.register(FastifyMultipart);
   server.post(
     "/file",
     {
