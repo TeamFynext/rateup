@@ -65,6 +65,13 @@ export async function getAllMenus({ userId, role, orgId }) {
           orgId,
         },
       },
+      include: {
+        team: {
+          select: {
+            code: true,
+          },
+        },
+      },
     };
   } else {
     const member = await prisma.teamMember.findFirst({
@@ -75,6 +82,13 @@ export async function getAllMenus({ userId, role, orgId }) {
     condition = {
       where: {
         teamId: member?.teamId,
+      },
+      include: {
+        team: {
+          select: {
+            code: true,
+          },
+        },
       },
     };
   }

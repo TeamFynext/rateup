@@ -85,7 +85,7 @@ export function createEmailBody(invite_link : string, email_id : string) {
           }
         </style>
       </head>
-      <body>
+      <body style="max-width: 1000px;">
         <div class="frame">
           <div class="overlap-group">
             <table aria-describedby="email content">
