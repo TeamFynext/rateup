@@ -69,6 +69,7 @@ const fullMenuPublicResponseSchema = z.object({
     .object({
       backgroundImage: z.string().optional().nullable(),
       mobileBackgroundImage: z.string().optional().nullable(),
+      surveyTeamMapId: z.string().optional().nullable(),
     })
     .nullable(),
 });

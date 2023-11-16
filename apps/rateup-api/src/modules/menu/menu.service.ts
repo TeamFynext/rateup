@@ -49,6 +49,7 @@ export async function getFullMenu(menuId: string) {
         select: {
           backgroundImage: true,
           mobileBackgroundImage: true,
+          surveyTeamMapId: true,
         },
       },
     },
