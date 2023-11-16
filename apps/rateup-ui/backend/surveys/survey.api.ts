@@ -1,4 +1,4 @@
-import { axiosClient } from "../apiClient";
+import { axiosClient, axiosClientIP } from "../apiClient";
 
 const SURVEYURL = "/survey";
 const SURVEY_PUBLIC_URL = "/public/survey";
@@ -119,7 +119,7 @@ export async function getSurveyByLandingId(landingid: string) {
 }
 
 export async function getPublicSurvey(surveyId: string) {
-  const res = await axiosClient.get(`${SURVEY_PUBLIC_URL}/${surveyId}`);
+  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`);
   return res.data as Survey;
 }
 

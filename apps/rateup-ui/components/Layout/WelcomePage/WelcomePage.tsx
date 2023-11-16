@@ -1,13 +1,9 @@
 import {
-  Box,
   Title,
-  TextInput,
   Space,
   Text,
   Stack,
   Image,
-  Modal,
-  Group,
   Button,
   Flex,
   BackgroundImage,
@@ -15,7 +11,9 @@ import {
 import React, { useState, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import { notifications } from "@mantine/notifications";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 
 const buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -35,7 +33,7 @@ function WelcomePage({
   const [opened, { open, close }] = useDisclosure(false);
   const [passwordInput, setPasswordInput] = useState("");
 
-  const updateSurveyPassword = useVerifySurveyPwdMutation(
+  const verifySurveyPassword = useVerifySurveyPwdMutation(
     surveyId,
     passwordInput,
     onStart,
@@ -65,34 +63,36 @@ function WelcomePage({
 
   return (
     <>
-      <Modal
+      <FormModalLayout
         opened={opened}
         onClose={close}
-        title="Survey Login"
+        title={"Survey Login"}
         centered
-        size="sm"
+        onSubmit={() => {
+          notifications.show({
+            id: "load-data",
+            loading: true,
+            title: "Verifying Password..",
+            message: `Hold on, your access is getting verified.`,
+            autoClose: false,
+            withCloseButton: false,
+          });
+          verifySurveyPassword.mutate();
+        }}
+        buttonTitle={"Login"}
       >
-        <Text size="sm" c="gray">
+        <Text mt="lg" size="sm" c="gray">
           Hey Welcome , <br /> You need to enter password to continue.
         </Text>
         <Space h="lg" />
-
-        <Box pt={20}>
-          <TextInput
-            required
-            label="Password"
-            placeholder="Enter survey password"
-            onChange={(event) => setPasswordInput(event.target.value)}
-          />
-        </Box>
-        <Group justify="center" pt={40}>
-          <RateupButtonPrimary
-            onClick={() => updateSurveyPassword.mutate()}
-            title={"Login"}
-            // disabled={!isNameValid}
-          />
-        </Group>
-      </Modal>
+        <ContainedPasswordInput
+          required
+          label="Password"
+          placeholder="Enter survey password"
+          onChange={(event) => setPasswordInput(event?.target?.value)}
+          my="lg"
+        />
+      </FormModalLayout>
 
       {/* .........Survey Welcome page.......... */}
 
@@ -114,8 +114,8 @@ function WelcomePage({
             borderRadius: 18,
           }}
           src={
-            surveyThemeData?.bgUrl && surveyThemeData.bgType != "bgcolor"
-              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.bgUrl}`
+            surveyThemeData?.bgUrl && surveyThemeData?.bgType != "bgcolor"
+              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData?.bgUrl}`
               : ""
           }
         >
@@ -129,7 +129,7 @@ function WelcomePage({
             {surveyThemeData?.logoUrl && (
               <Image
                 fit="contain"
-                src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData.logoUrl}`}
+                src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData?.logoUrl}`}
                 alt=" Logoss "
                 style={surveyThemeData?.logoStyles}
               />

@@ -92,6 +92,17 @@ const ValidationRulesEditor = ({
 
   const { values, setFieldValue, setValues, errors } = form;
 
+  function ruleTitle(ruleType: string) {
+    switch (ruleType) {
+      case "length":
+        return "Length";
+      case "wordCount":
+        return "Word Count";
+      case "textType":
+        return "Text Type";
+    }
+  }
+
   useEffect(() => {
     switch (selectedQ?.type) {
       case Q.Text:
@@ -182,7 +193,6 @@ const ValidationRulesEditor = ({
       });
 
       const data = { validationRules: { ...form.values } };
-      // console.log(data)
 
       await questionUpdateMutation.mutateAsync({
         qId: selectedQ.id,
@@ -197,7 +207,7 @@ const ValidationRulesEditor = ({
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Stack>
         <Title order={3}>Validation Editor</Title>
-        <Text color="gray">
+        <Text c="gray">
           {" "}
           Add validation rules to the user input for this question.
         </Text>
@@ -228,7 +238,7 @@ const ValidationRulesEditor = ({
                       order={4}
                       style={{ maxWidth: "100px", minWidth: "100px" }}
                     >
-                      {ruleType}
+                      {ruleTitle(ruleType) || ruleType}
                     </Title>
                     {"min" in ruleData && "max" in ruleData ? (
                       <>

@@ -20,7 +20,7 @@ export const PasswordProtection = ({ surveyId, isProtected }) => {
     if (event.currentTarget.checked) {
       notifications.show({
         id: "load-data",
-        color: "info",
+        color: "blue",
         title: "Set Password",
         message: "Enter Password and Save to complete the process.",
         icon: <IconInfoCircle size="1rem" />,

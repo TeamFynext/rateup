@@ -26,7 +26,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
 import { rem } from "@mantine/core";
-import { showSuccessToast } from "../../utils/notifications";
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export const useSurvey = (surveyId: string) => {
   return useQuery({
@@ -339,22 +339,28 @@ export function useVerifySurveyPwdMutation(
   return useMutation({
     mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
     onSuccess: (response) => {
-      let verified = false;
-      if (response?.data?.data === "Access granted") {
-        onStart();
-        verified = true;
-      }
-      notifications.show({
+      notifications.update({
         id: "load-data",
-        color: verified ? "green" : "red",
-        title: verified ? "Access Verified..." : "Password Error",
-        message: verified ? "Start attending the survey. " : "Please try again",
-        icon: verified ? <IconCheck size="1rem" /> : <IconX size="1rem" />,
+        color: "green",
+        loading: false,
+        title: "Access Verified...",
+        message: "Start attending the survey. ",
+        icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      onStart();
     },
     onError: (error: any) => {
       console.error("Error Survey Login", error.message);
+      notifications.update({
+        id: "load-data",
+        loading: false,
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
     },
   });
 }

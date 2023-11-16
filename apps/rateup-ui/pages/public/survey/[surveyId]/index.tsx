@@ -1,5 +1,4 @@
 import { Center, Select, Title, Stack } from "@mantine/core";
-import { useRouter } from "next/router";
 import { useState } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
@@ -21,7 +20,6 @@ export const getServerSideProps = async (context: {
   return { props: { survey: surveyData, surveyThemeData: surveyThemeData } };
 };
 export default function Page({ survey, surveyThemeData }) {
-  const router = useRouter();
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
   if (!selectedLanguage) {
