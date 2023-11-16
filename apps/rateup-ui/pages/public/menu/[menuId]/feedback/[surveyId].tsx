@@ -1,14 +1,11 @@
 import {
   Center,
-  Container,
-  Grid,
   Group,
   Stack,
   Text,
   Image,
   BackgroundImage,
   Flex,
-  Paper,
   SimpleGrid,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
@@ -20,6 +17,7 @@ import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
 import { GilroyMedium, GilroySemibold } from "../../../../../public/fonts";
+import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 type MenuProp = {
   menuId: string;
@@ -56,7 +54,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     ? getFileUrlFromKey(encodeURI(backgroundImage))
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}${fallbackImageBackround}`;
   return (
-    <Stack gap={0} className={GilroySemibold.className}>
+    <Stack gap={0} className={GilroySemibold.className} maw={largeScreen ? "2440px" : "768px"}>
       <BackgroundImage
         src={bgSrc}
         radius="sm"
@@ -197,26 +195,14 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             {(menuLanding?.menuPageEnabled === true ||
               menuLanding?.menuPageEnabled === undefined) && (
-              <Paper
-                shadow="sm"
-                radius={"md"}
-                p={"xl"}
-                mah={"200px"}
-                mx={largeScreen ? "lg" : "0"}
-              >
+              <PaperLayout p={"xl"} mah={"200px"} hoveractive>
                 {MenuButton(largeScreen)}
-              </Paper>
+              </PaperLayout>
             )}
-            {(menuLanding?.feedbackPageEnabled === true ) && (
-              <Paper
-                shadow="sm"
-                radius={"md"}
-                p={"xl"}
-                mah={"200px"}
-                mx={largeScreen ? "lg" : "0"}
-              >
+            {menuLanding?.feedbackPageEnabled === true && (
+              <PaperLayout p={"xl"} mah={"200px"} hoveractive>
                 {FeedbackButton(largeScreen)}
-              </Paper>
+              </PaperLayout>
             )}
           </SimpleGrid>
         </Center>

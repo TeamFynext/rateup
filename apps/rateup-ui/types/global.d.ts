@@ -287,6 +287,9 @@ declare global {
     logo?: string;
     backgroundImage?: string;
     isPublished?: boolean;
+    team?: {
+      code?: string;
+    };
   };
 
   type MenuCategory = {

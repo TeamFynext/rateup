@@ -27,6 +27,7 @@ const TableRow = ({
   handleMenuOrder,
   lastItemOrder,
   initialOrder,
+  open
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
 
@@ -83,7 +84,8 @@ const TableRow = ({
             c={"var(--tertiary-color)"}
             bg={"white"}
             radius={"md"}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               setEditingItem(item);
               open();
             }}

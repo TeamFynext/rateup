@@ -7,13 +7,13 @@ interface PaperLayoutProps extends PaperProps {
 }
 export default function PaperLayout(props: PaperLayoutProps) {
   const { hovered, ref } = useHover();
-
+  let { hoveractive, ...restProps } = props;
   return (
     <Paper
-      ref={props.hoveractive && ref}
+      ref={hoveractive && ref}
       radius="lg"
       p="md"
-      {...props}
+      {...restProps}
       style={{
         ...props?.style,
         boxSizing: "border-box",
@@ -23,10 +23,10 @@ export default function PaperLayout(props: PaperLayoutProps) {
         width: "100%",
         overflowX: "auto",
         border:
-          hovered && props.hoveractive
+          hovered && hoveractive
             ? "2px solid var(--hover-border-color)"
             : "2px solid var(--primary-color)",
-        cursor: props.hoveractive ? "pointer" : "default",
+        cursor: hoveractive ? "pointer" : "default",
       }}
     />
   );

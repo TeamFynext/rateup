@@ -112,6 +112,7 @@ export function CategoryCard({
       setEditingItem={setEditingItem}
       initialOrder={itemsSearch[0]?.itemOrder}
       key={item?.id}
+      open={open}
     />
   ));
 

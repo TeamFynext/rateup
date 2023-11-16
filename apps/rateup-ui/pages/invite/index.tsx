@@ -96,14 +96,15 @@ const Invite = () => {
           radius="md"
           style={{ background: "#F7F7F7", minHeight: "600px" }}
         >
-          <Link href="/">
-            <Image
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
-              alt="RateUp Logo"
-              w={140}
-              h={36}
-            />
-          </Link>
+          <Center>
+            <Link href="/">
+              <Image
+                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+                alt="RateUp Logo"
+                w={140}
+              />
+            </Link>
+          </Center>
           <Flex
             gap="md"
             justify="center"
@@ -111,12 +112,10 @@ const Invite = () => {
             direction="column"
             wrap="wrap"
           >
-            <Space h="xl" />
-            <Container>
-              <Title mb="xl" order={2} style={{ color: "#000" }}>
+            <Space h="lg" />
+              <Title mb="lg" order={2} style={{ color: "#000" }}>
                 {title} Invitation
               </Title>
-            </Container>
 
             {!type || !token ? (
               <Container>Invite is not valid.</Container>
@@ -178,7 +177,7 @@ const Invite = () => {
                       <RateupButtonPrimary
                         onClick={() => {
                           router.push(
-                            updateInviteMutation.data?.data.data.redirectLink,
+                            updateInviteMutation.data?.data.data.redirectLink
                           );
                         }}
                         title={"Continue"}

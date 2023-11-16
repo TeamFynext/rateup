@@ -1,10 +1,4 @@
-import {
-  Flex,
-  Group,
-  Text,
-  Menu,
-  Box,
-} from "@mantine/core";
+import { Flex, Group, Text, Menu, Box, Badge } from "@mantine/core";
 import {
   IconDots,
   IconMapPinFilled,
@@ -75,6 +69,11 @@ export function MenuCard({
           </Flex>
           <Text size="lg">{menu.displayName}</Text>
         </Box>
+        {menu?.team?.code && (
+          <Badge color="var(--tertiary-color)" variant="outline">
+            {menu?.team?.code}
+          </Badge>
+        )}
         <Flex align={"center"} justify={"space-between"}>
           <Flex>
             <Text size="sm" c="dimmed">
