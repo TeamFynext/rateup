@@ -1,48 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  placeAvatarsOnCircle,
-  playTestimonials,
-  playTestimonialsInterval,
-} from "./utils";
-import styles from "./TestimonialsSection.module.css";
-import commonStyles from "../index/index.module.css";
-import TestimonialNodes from "./TestimonialNodes/TestimonialNodes";
 import { Flex, Text, Title } from "@mantine/core";
-import { useIntersection, useViewportSize } from "@mantine/hooks";
+import { Carousel } from "@mantine/carousel";
+import TestimonialCard from "./TestimonialCard";
+import { testimonials } from "./constants";
+import commonStyles from "../index/index.module.css";
+import styles from "./TestimonialsSection.module.css";
+import carouselStyles from "./CarouselStyles.module.css";
 
 function TestimonialsSection() {
-  const outerDiscRef = useRef(null);
-
-  const [popoversState, setPopoverStates] = useState({ outerDisc_id1: true });
-
-  const { ref: intersectionObserverRef, entry } = useIntersection({
-    threshold: 0.2,
-  });
-
-  const { width } = useViewportSize();
-
-  useEffect(() => {
-    if (entry?.isIntersecting) {
-      playTestimonials(entry.target, setPopoverStates);
-    } else {
-      clearInterval(playTestimonialsInterval);
-      setPopoverStates({ outerDisc_id1: true });
-    }
-  }, [entry]);
-
-  useEffect(() => {
-    if (outerDiscRef.current) {
-      placeAvatarsOnCircle(outerDiscRef.current);
-    }
-  }, [width]);
-
-  useEffect(() => {
-    if (outerDiscRef.current) placeAvatarsOnCircle(outerDiscRef.current);
-    return () => {
-      clearInterval(playTestimonialsInterval);
-    };
-  }, []);
-
   return (
     <Flex className={styles["testimonials-section"]}>
       <Title>
@@ -57,34 +21,25 @@ function TestimonialsSection() {
         </Text>
       </Title>
 
-      <div className={styles["discs-container"]}>
-        <div
-          className={`${styles["outer-disc"]} ${styles["disc"]}`}
-          ref={(node) => {
-            if (node && !outerDiscRef.current) {
-              outerDiscRef.current = node;
-              intersectionObserverRef(node);
-            }
-          }}
+      <Flex className={styles["testimonials-carousel-container"]}>
+        <Carousel
+          align="start"
+          classNames={carouselStyles}
+          slideSize={{ base: "270px", xs: "320px" }}
+          slideGap={{ base: "sm", xs: "sm", sm: "md", md: "lg" }}
+          slidesToScroll={1}
+          loop
+          speed={15}
         >
-          <TestimonialNodes
-            discName="outerDisc"
-            popoversState={popoversState}
-          />
-          <div className={`${styles["inner-disc"]} ${styles["disc"]}`}>
-            <TestimonialNodes
-              discName="innerDisc"
-              popoversState={popoversState}
-            />
-            <div className={`${styles["centre-disc"]} ${styles["disc"]}`}>
-              <TestimonialNodes
-                discName="centreDisc"
-                popoversState={popoversState}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+          {testimonials.map((testimonialObj) => {
+            return (
+              <Carousel.Slide key={testimonialObj.id}>
+                <TestimonialCard testimonialObj={testimonialObj} />
+              </Carousel.Slide>
+            );
+          })}
+        </Carousel>
+      </Flex>
     </Flex>
   );
 }
