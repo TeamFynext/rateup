@@ -1,12 +1,12 @@
 import {
   ActionIcon,
-  Container,
   Group,
   Paper,
   Stack,
   Text,
   Image,
   Flex,
+  BackgroundImage,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -19,7 +19,6 @@ import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemD
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
 import { GilroyBold, GilroyMedium } from "../../../../../public/fonts";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 type MenuViewProp = {
   menuId: string;
@@ -61,27 +60,26 @@ export default function ({ fullMenu }) {
   const backgroundImageFallback = largeScreen
     ? "/images/menu/background.jpg"
     : "/images/menu/mobileBackground.jpg";
-  const router = useRouter();
 
   return (
     <Paper mih={"100vh"}>
-      <Container
-        fluid
+      <BackgroundImage
         px={largeScreen ? "10vw" : "1vw"}
         py="3vh"
+        src={
+          backgroundImage
+            ? encodeURI(getFileUrlFromKey(backgroundImage))
+            : backgroundImageFallback
+        }
         style={{
-          background: `${
-            backgroundImage
-              ? `url(${encodeURI(getFileUrlFromKey(backgroundImage))})`
-              : `url(${backgroundImageFallback})`
-          }`,
-          backgroundColor: "var(--orange-400)",
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-          height: "33vh",
-          color: "white",
           borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+          backgroundColor: "var(--orange-400)",
         }}
+        bgp={"center"}
+        bgsz={"cover"}
+        c={"white"}
+        h={"33vh"}
+        maw={largeScreen ? "2440px" : "768px"}
       >
         <Stack
           align="center"
@@ -121,12 +119,12 @@ export default function ({ fullMenu }) {
             </Text>
           </div>
         </Stack>
-      </Container>
+      </BackgroundImage>
       <Group
-        px="2vw"
+        px="lg"
         m="sm"
         wrap="nowrap"
-        py="md"
+        py="sm"
         pos={"sticky"}
         top={0}
         bg={"white"}
@@ -153,7 +151,7 @@ export default function ({ fullMenu }) {
         </Group>
       </Group>
 
-      <Stack px={largeScreen ? "7vw" : "2vw"}>
+      <Stack px={largeScreen ? "7vw" : "2vw"} mih={"45vh"}>
         {categorys?.map((c) => (
           <CategoryDisplay
             key={c.id}
@@ -175,13 +173,17 @@ export default function ({ fullMenu }) {
         />
       )}
       <Flex
-        justify={"end"}
+        justify={"flex-end"}
         pos={"sticky"}
         bottom={"0"}
-        display={router?.query?.surveyId === undefined && "none"}
+        right={0}
+        display={
+          fullMenu?.menuLanding?.surveyTeamMapId === undefined ? "none" : "flex"
+        }
+        maw={largeScreen ? "2440px" : "768px"}
       >
         <Link
-          href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${router?.query?.surveyId}`}
+          href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`}
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <Stack

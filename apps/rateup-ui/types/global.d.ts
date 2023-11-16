@@ -295,6 +295,7 @@ declare global {
     name: string;
     menuId: string;
     image: string;
+    itemOrder?: number;
   };
 
   type MenuItem = {

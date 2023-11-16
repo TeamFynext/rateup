@@ -158,6 +158,8 @@ export default ({ categories: initialCategories }) => {
                   handleDelete={deleteMutation}
                   handleEdit={handleEditCategory}
                   searchText={searchText}
+                  initialOrder={filteredCategory[0]?.itemOrder}
+                  lastItemOrder={filteredCategory?.findLast((element) => element)?.itemOrder}
                 />
               ))
             )}

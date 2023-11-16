@@ -10,6 +10,8 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
       onClick={() => onClick(categoryId)}
       tt={"capitalize"}
       className={GilroySemibold.className}
+      my={"xs"}
+      mx={4}
       style={{
         border: !selected
           ? "0.5px solid var(--grey-color, #494949)"

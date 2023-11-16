@@ -269,7 +269,7 @@ function MenuButton(largeScreen: boolean) {
   return (
     <Stack align="center" gap={0}>
       <Link
-        href={`/public/menu/${router.query.menuId}/view?feedback=${router.query.surveyId}`}
+        href={`/public/menu/${router.query.menuId}/view`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Stack justify={"center"} align={"center"} gap={0}>

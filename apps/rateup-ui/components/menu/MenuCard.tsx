@@ -47,7 +47,7 @@ export function MenuCard({
       shadow="lg"
       radius="lg"
       mih={"175px"}
-      style={{ cursor: "pointer" }}
+      hoveractive
       onClick={() => {
         router.push(`/dashboard/menu/${menu.id}`);
       }}
