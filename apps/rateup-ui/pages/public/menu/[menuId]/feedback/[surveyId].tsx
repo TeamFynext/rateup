@@ -54,7 +54,11 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     ? getFileUrlFromKey(encodeURI(backgroundImage))
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}${fallbackImageBackround}`;
   return (
-    <Stack gap={0} className={GilroySemibold.className} maw={largeScreen ? "2440px" : "768px"}>
+    <Stack
+      gap={0}
+      className={GilroySemibold.className}
+      maw={largeScreen ? "2440px" : "768px"}
+    >
       <BackgroundImage
         src={bgSrc}
         radius="sm"

@@ -7,7 +7,7 @@ import SurveyFeaturesCarousel from "./SurveyFeaturesCarousel";
 function OurFeaturesSection() {
   return (
     <Stack id="our-features" className={styles["our-features-container"]}>
-      <Title>Our Features</Title>
+      <Title>OUR FEATURES</Title>
       <SurveyFeaturesCarousel />
       <DeepInsightsSection />
       <ApiAndSdkSection />

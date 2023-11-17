@@ -38,15 +38,15 @@ export default ({ categories: initialCategories }) => {
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
-    () => {}
+    () => {},
   );
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null
+    null,
   );
 
   const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu
+    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu,
   );
 
   const {
@@ -61,7 +61,6 @@ export default ({ categories: initialCategories }) => {
     data: categories,
   } = useCategories(menuId, initialCategories);
   let filteredCategory = categories;
-
 
   useEffect(() => {
     if (
@@ -147,7 +146,9 @@ export default ({ categories: initialCategories }) => {
                   handleEdit={handleEditCategory}
                   searchText={searchText}
                   initialOrder={filteredCategory[0]?.itemOrder}
-                  lastItemOrder={filteredCategory?.findLast((element) => element)?.itemOrder}
+                  lastItemOrder={
+                    filteredCategory?.findLast((element) => element)?.itemOrder
+                  }
                 />
               ))
             )}

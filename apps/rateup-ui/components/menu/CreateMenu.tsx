@@ -28,17 +28,17 @@ export function CreateMenuModal({ opened, close, editingItem }) {
   const createMenuMutation = useCreateMenuMutation(
     selectedTeamId,
     close,
-    () => {form.reset()}
+    () => {
+      form.reset();
+    },
   );
   const updateMenuMutation = useUpdateMenuMutation(
     selectedTeamId,
     () => {
       close();
     },
-    () => {}
+    () => {},
   );
-
-  
 
   useEffect(() => {
     if (editingItem) {

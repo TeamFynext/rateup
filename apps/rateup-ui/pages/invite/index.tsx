@@ -113,9 +113,9 @@ const Invite = () => {
             wrap="wrap"
           >
             <Space h="lg" />
-              <Title mb="lg" order={2} style={{ color: "#000" }}>
-                {title} Invitation
-              </Title>
+            <Title mb="lg" order={2} style={{ color: "#000" }}>
+              {title} Invitation
+            </Title>
 
             {!type || !token ? (
               <Container>Invite is not valid.</Container>
@@ -177,7 +177,7 @@ const Invite = () => {
                       <RateupButtonPrimary
                         onClick={() => {
                           router.push(
-                            updateInviteMutation.data?.data.data.redirectLink
+                            updateInviteMutation.data?.data.data.redirectLink,
                           );
                         }}
                         title={"Continue"}

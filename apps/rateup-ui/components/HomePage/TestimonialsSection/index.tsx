@@ -9,16 +9,13 @@ import carouselStyles from "./CarouselStyles.module.css";
 function TestimonialsSection() {
   return (
     <Flex className={styles["testimonials-section"]}>
-      <Title>
-        <Text
-          className={`${styles["line"]} ${commonStyles["gradient-text"]}`}
-          span
-        >
+      <Title className={styles["testimonials-section-heading"]}>
+        <span className={`${styles["line"]} ${commonStyles["gradient-text"]}`}>
           We prioritise your requirements. That is what drives us forward.{" "}
-        </Text>
-        <Text className={styles["line"]} inherit span>
+        </span>
+        <span className={styles["love-from-all-over-span"]}>
           Love from all over the world
-        </Text>
+        </span>
       </Title>
 
       <Flex className={styles["testimonials-carousel-container"]}>

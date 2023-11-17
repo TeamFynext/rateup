@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  FileButton,
-  LoadingOverlay,
-  Stack,
-  Image
-} from "@mantine/core";
+import { FileButton, LoadingOverlay, Stack, Image } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   useCreateMenuCategoryMutation,
@@ -13,9 +8,7 @@ import {
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import {
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
+import { RateupButtonSecondary } from "../Button/RateupButtons";
 
 interface CreateMenuCategoryModalProps {
   opened: boolean;
@@ -79,7 +72,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
 
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
@@ -91,7 +84,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    }
+    },
   );
 
   const onSubmit = (values) => {
@@ -126,7 +119,10 @@ export function CreateMenuCategoryModal({
     >
       <Stack>
         <LoadingOverlay
-          visible={createMenuCategoryMutation.isPending || editMenuCategoryMutation.isPending}
+          visible={
+            createMenuCategoryMutation.isPending ||
+            editMenuCategoryMutation.isPending
+          }
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
           loaderProps={{ type: "bars" }}

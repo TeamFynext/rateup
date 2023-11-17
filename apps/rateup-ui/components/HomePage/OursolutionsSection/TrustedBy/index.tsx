@@ -5,7 +5,7 @@ function TrustedBy() {
   const logosPath = "/images/homepage/our-solutions/companies-logos";
   return (
     <div className={styles["trustedby-companies-container"]}>
-      <Title order={2}>Trusted By Over 25k Businesses</Title>
+      <Title order={1}>TRUSTED BY OVER 25K BUSINESSES</Title>
       <Flex
         className={styles["company-logos-container"]}
         wrap={"wrap"}

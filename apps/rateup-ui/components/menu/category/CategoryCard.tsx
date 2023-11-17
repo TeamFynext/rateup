@@ -52,23 +52,23 @@ export function CategoryCard({
     category.id,
     category.menuId,
     () => {},
-    () => {}
+    () => {},
   );
   const updateMenuItemMutation = useUpdateMenuItemMutation(
     category.id,
     category.menuId,
     () => {},
-    () => {}
+    () => {},
   );
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
     category.menuId,
     () => {},
-    () => {}
+    () => {},
   );
   let itemsSearch = [];
   if (searchText !== "") {
     itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
     );
   } else {
     itemsSearch = items;

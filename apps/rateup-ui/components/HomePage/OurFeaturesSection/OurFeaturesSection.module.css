@@ -6,6 +6,8 @@
 .our-features-container > h1 {
   text-align: center;
   margin-bottom: 1rem;
+  color: var(--grey-color);
+  font-size: 1.625rem;
 }
 
 .line {
