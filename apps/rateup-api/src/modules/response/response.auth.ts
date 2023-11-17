@@ -10,7 +10,9 @@ export async function verifyAccess(
   }>,
   reply: FastifyReply
 ) {
-  const surveyId = await getSurveyIdfromMap(request.params.surveyTeamMapId)
+  const surveyId = request.params.surveyId
+    ? request.params.surveyId
+    : await getSurveyIdfromMap(request.params.surveyTeamMapId);
   const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
 
   if (!hasAccess) {

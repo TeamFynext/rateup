@@ -1,6 +1,17 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { CreateResponseInput, GetResponsesParams, DeleteResponseParamsSchema } from "./response.schema";
-import { createResponse, deleteResponse, getResponses, resetResponsesStats, updateResponse } from "./response.service";
+import {
+  CreateResponseInput,
+  GetResponsesParams,
+  DeleteResponseParamsSchema,
+} from "./response.schema";
+import {
+  createResponse,
+  deleteResponse,
+  getAllResponses,
+  getResponses,
+  resetResponsesStats,
+  updateResponse,
+} from "./response.service";
 import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
 
@@ -14,6 +25,24 @@ export async function getResponsesHandler(
     const surveyTeamMapId = request.params.surveyTeamMapId;
     const responses = await getResponses(surveyTeamMapId);
     reply.send(responses);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
+
+export async function getAllResponsesHandler(
+  request: FastifyRequest<{
+    Params: GetResponsesParams;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const surveyId = request.params.surveyId;
+    const responses = await getAllResponses(surveyId);
+    if (responses.length === 0)
+      reply.code(404).send({ message: "No responses found" });
+    reply.code(200).send(responses);
   } catch (e) {
     console.error(e);
     reply.code(500).send();
@@ -59,7 +88,6 @@ export async function createResponseHandler(
   reply: FastifyReply
 ) {
   const data = request.body;
-  console.log(data)
   try {
     const response = await createResponse(data);
     reply.code(201).send(response);

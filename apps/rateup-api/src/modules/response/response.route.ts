@@ -1,6 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { $Rref } from "./response.schema";
-import { deleteResponseHandler, getResponsesHandler, resetResponsesHandler } from "./response.controller";
+import {
+  deleteResponseHandler,
+  getAllResponsesHandler,
+  getResponsesHandler,
+  resetResponsesHandler,
+} from "./response.controller";
 import { verifyAccess } from "./response.auth";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -19,12 +24,14 @@ export async function responseRoutes(server: FastifyInstance) {
     },
     getResponsesHandler
   );
+  //route dedcicated for getting all responses for a survey including all teams
+  server.get("/all/:surveyId", getAllResponsesHandler);
 
   //to reset survey responses & stats
-  server.delete(  
+  server.delete(
     "/reset/:surveyTeamMapId",
     {
-      preHandler: [ checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         params: $Rref("getResponsesParamsSchema"),
       },
@@ -32,16 +39,15 @@ export async function responseRoutes(server: FastifyInstance) {
     resetResponsesHandler
   );
 
-
-    //to delete single response
-    server.delete(  
-      "/:surveyTeamMapId/delete/:id",
-      {
-        preHandler: [ checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
-        schema: {
-          params: $Rref("deleteResponseParamsSchema"),
-        },
+  //to delete single response
+  server.delete(
+    "/:surveyTeamMapId/delete/:id",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      schema: {
+        params: $Rref("deleteResponseParamsSchema"),
       },
-      deleteResponseHandler
-    );
+    },
+    deleteResponseHandler
+  );
 }
