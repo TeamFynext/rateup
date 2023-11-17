@@ -427,11 +427,9 @@ export default function DashboardHome() {
             >
               <Stack p={"md"}>
                 {createModalContent.map(({ Icon, routerPath, title }) => (
-                  <CardActionButton
+                  <PaperLayout
+                    hoveractive
                     key={routerPath}
-                    sx={{
-                      cursor: "pointer",
-                    }}
                     onClick={() => router.push(routerPath)}
                   >
                     <Group align="center" gap="10">
@@ -450,7 +448,7 @@ export default function DashboardHome() {
                         <IconSquareRoundedPlusFilled fillOpacity={0.4} />
                       </Group>
                     </Group>
-                  </CardActionButton>
+                  </PaperLayout>
                 ))}
               </Stack>
             </FormModalLayout>
@@ -548,19 +546,5 @@ export default function DashboardHome() {
         </Stack>
       )}
     </>
-  );
-}
-
-function CardActionButton({ children, ...props }) {
-  return (
-    <PaperLayout
-      style={{ cursor: "pointer", flex: 1 }}
-      miw="150px"
-      radius="lg"
-      p="md"
-      {...props}
-    >
-      {children}
-    </PaperLayout>
   );
 }

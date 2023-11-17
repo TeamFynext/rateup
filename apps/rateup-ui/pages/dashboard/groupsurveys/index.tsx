@@ -11,7 +11,6 @@ import {
   Space,
   Title,
   Loader,
-  Stack,
 } from "@mantine/core";
 import {
   IconDots,
@@ -37,6 +36,7 @@ import { UserRole } from "../../../utils/enums";
 import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
 import ShareLandingPageModal from "./ShareLandingPageModal";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 export default function LandingPagesList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
@@ -143,7 +143,7 @@ export default function LandingPagesList() {
             title="Create"
             rightIcon={<IconPlus />}
             radius="xl"
-            size="md"
+            size="lg"
             onClick={open}
           />
         )}
@@ -175,11 +175,7 @@ export default function LandingPagesList() {
         </SimpleGrid>
       )}
       {!isLoading && surveyLandingData?.length == 0 && (
-        <Stack style={{ minHeight: "400px" }} justify="center">
-          <Text ta={"center"} fw={600}>
-            No Group Surveys found!
-          </Text>
-        </Stack>
+        <NothingFound text="No grouped surveys" />
       )}
       <CreateSurveyLandingModal
         open={createSurveyOpened}

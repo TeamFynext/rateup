@@ -2,6 +2,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   deleteResponse,
+  getAllResponses,
   getResponses,
   resetResponsesStats,
 } from "./response.api";
@@ -12,6 +13,13 @@ export const useResponses = (surveyTeamMapId: string) =>
     queryKey: ["responses", surveyTeamMapId],
     queryFn: () => getResponses(surveyTeamMapId),
     enabled: !!surveyTeamMapId,
+  });
+
+export const useAllResponses = (surveyId: string) =>
+  useQuery({
+    queryKey: ["allresponses", surveyId],
+    queryFn: () => getAllResponses(surveyId),
+    enabled: !!surveyId,
   });
 
 export function useResetResponsesStats(

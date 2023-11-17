@@ -1,4 +1,9 @@
-import { QuestionType } from "../types/enums";
+import {
+  LDResponse,
+  QuestionType,
+  SmileyResponse,
+  YNResponse,
+} from "../types/enums";
 import dayjs from "dayjs";
 
 export function getResponse(qId: string, response: SurveyResponse) {
@@ -59,5 +64,86 @@ export function filterResponses(
         }),
     );
     return filteredResponses;
+  }
+}
+
+export function getResponseObjectByQuestionType(questionType: QuestionType) {
+  switch (questionType) {
+    case QuestionType.Rating: {
+      return {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+      };
+    }
+    case QuestionType.Opinion: {
+      return {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+      };
+    }
+    case QuestionType.Smiley: {
+      return {
+        [SmileyResponse.VeryHappy]: 0,
+        [SmileyResponse.Happy]: 0,
+        [SmileyResponse.Neutral]: 0,
+        [SmileyResponse.Sad]: 0,
+        [SmileyResponse.VerySad]: 0,
+      };
+    }
+    case QuestionType.YN: {
+      return {
+        [YNResponse.Yes]: 0,
+        [YNResponse.No]: 0,
+      };
+    }
+    case QuestionType.LD: {
+      return {
+        [LDResponse.Like]: 0,
+        [LDResponse.Dislike]: 0,
+      };
+    }
+    default: {
+      return null;
+    }
+  }
+}
+
+export function getResponseArrayByQuestionType(questionType: QuestionType) {
+  switch (questionType) {
+    case QuestionType.Rating: {
+      return [1, 2, 3, 4, 5];
+    }
+    case QuestionType.Opinion: {
+      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    }
+    case QuestionType.Smiley: {
+      return [
+        SmileyResponse.VerySad,
+        SmileyResponse.Sad,
+        SmileyResponse.Neutral,
+        SmileyResponse.Happy,
+        SmileyResponse.VeryHappy,
+      ];
+    }
+    case QuestionType.YN: {
+      return [YNResponse.No, YNResponse.Yes];
+    }
+    case QuestionType.LD: {
+      return [LDResponse.Dislike, LDResponse.Like];
+    }
+    default: {
+      return null;
+    }
   }
 }

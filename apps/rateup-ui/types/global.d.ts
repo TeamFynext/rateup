@@ -69,6 +69,7 @@ declare global {
     name: string;
     surveyStats?: STStats;
     mapId: string;
+    code: string;
   }
 
   interface STStats {

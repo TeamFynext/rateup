@@ -1,20 +1,6 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
-import {
-  Checkbox,
-  Group,
-  Loader,
-  Stack,
-  Tabs,
-  Text,
-  createTheme,
-} from "@mantine/core";
+import { Checkbox, Group, Loader, Stack, Tabs, Text } from "@mantine/core";
 import Responses from "../Response/Responses";
 import SurveyStats from "./SurveyStats";
 import SurveySummary from "./SurveySummary";
@@ -38,6 +24,7 @@ import { useImmer } from "use-immer";
 import { useResponses } from "../../../backend/surveys/response/response.query";
 import { filterResponses } from "../../../utils/response";
 import SurveyContext from "../../../context/SurveyContext";
+import ResultComparison from "./ResultComparison";
 const Result = ({ survey }) => {
   const { surveyTeamMapId } = useContext(SurveyContext);
   //fetching the responses associated with the survey
@@ -51,9 +38,13 @@ const Result = ({ survey }) => {
     OverView = "overview",
     Analytics = "analytics",
     Responses = "responses",
+    Comparison = "comparison",
   }
   const [resultTab, setActiveResultTab] = useState<
-    ResultTab.Analytics | ResultTab.OverView | ResultTab.Responses
+    | ResultTab.Analytics
+    | ResultTab.OverView
+    | ResultTab.Responses
+    | ResultTab.Comparison
   >(ResultTab.OverView);
 
   //this useEffect is used to set the filtered responses to the responses when the responses are fetched
@@ -65,6 +56,7 @@ const Result = ({ survey }) => {
   if (responseFetchError) return <Text>An error has occurred</Text>;
   return (
     <StyledTabs
+      value={resultTab}
       onChange={(value) => setActiveResultTab(value as ResultTab)}
       defaultValue="overview"
       placement="left"
@@ -86,7 +78,7 @@ const Result = ({ survey }) => {
         },
         panel: {
           minWidth: "300px",
-          padding: "10px",
+          padding: 2,
           height: "100%",
           overflow: "scroll",
         },
@@ -97,6 +89,7 @@ const Result = ({ survey }) => {
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
+          <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
         </Tabs.List>
         {resultTab === ResultTab.Responses && (
           <ResultFilter
@@ -115,6 +108,9 @@ const Result = ({ survey }) => {
       </Tabs.Panel>
       <Tabs.Panel value="responses">
         <Responses survey={survey} responses={filteredResponses} />
+      </Tabs.Panel>
+      <Tabs.Panel value="comparison">
+        <ResultComparison />
       </Tabs.Panel>
     </StyledTabs>
   );
