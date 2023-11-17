@@ -61,6 +61,7 @@ const cloneSurveySchema = z.object({
 });
 
 const getSurveyPublicResponseSchema = z.object({
+  id: z.string(),
   title: z.string(),
   languages: z.array(z.string()),
   active: z.boolean(),

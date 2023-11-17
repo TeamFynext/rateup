@@ -23,6 +23,7 @@ const updateMenuInputSchema = z.object({
   backgroundImage: z.string().optional(),
   surveyTeamMapId: z.string().optional(),
   isPublished: z.boolean().optional(),
+  itemOrder: z.string().optional(),
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
@@ -66,8 +67,27 @@ const fullMenuPublicResponseSchema = z.object({
   ),
   menuLanding: z
     .object({
+      headerStyle: z.object({
+        fontSize: z.number().optional().nullable(),
+        fontWeight: z.string().optional().nullable(),
+        fontFamily: z.string().optional().nullable(),
+        color: z.string().optional().nullable(),
+      }).nullable(),
+      titleStyle: z.object({
+        fontSize: z.number().optional().nullable(),
+        fontWeight: z.string().optional().nullable(),
+        fontFamily: z.string().optional().nullable(),
+        color: z.string().optional().nullable(),
+      }).nullable(),
+      otherStyle: z.object({
+        fontFamily: z.string().optional().nullable(),
+        color: z.string().optional().nullable(),
+      }).nullable(),
+      feedbackPageEnabled: z.boolean().optional().nullable(),
+      headerText: z.string().optional().nullable(),
       backgroundImage: z.string().optional().nullable(),
       mobileBackgroundImage: z.string().optional().nullable(),
+      surveyTeamMapId: z.string().optional().nullable(),
     })
     .nullable(),
 });

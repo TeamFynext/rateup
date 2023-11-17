@@ -407,7 +407,7 @@ export async function verifySurveyPasswordHandler(
       reply.code(200).send({ status: "success", data: verifyPassword });
     }
   } catch (e) {
-    reply.code(500).send({ status: "error", message: e });
+    reply.code(500).send({ status: "error", message: e?.message });
   }
 }
 
@@ -417,18 +417,16 @@ export async function visitedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  // try {
-  //   const updateVisited = await updateVisitedSurvey(request.params.id);
-  //   if (!updateVisited) {
-  //     reply.code(404);
-  //   } else {
-  //     reply.code(200).send({ status: "success" });
-  //   }
-  // } catch (e) {
-  //   reply.code(500).send({ status: "error", message: e });
-  // }
-  //TODO verify SURVEYTEAMMAPS
-
+  try {
+    const updateVisited = await updateVisitedSurvey(request.params.id);
+    if (!updateVisited) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
+  }
 }
 
 export async function startedSurveyHandler(
@@ -437,18 +435,16 @@ export async function startedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  // try {
-  //   const updateStarted = await updateStartedSurvey(request.params.id);
-  //   if (!updateStarted) {
-  //     reply.code(404);
-  //   } else {
-  //     reply.code(200).send({ status: "success" });
-  //   }
-  // } catch (e) {
-  //   reply.code(500).send({ status: "error", message: e });
-  // }
-  //TODO verify SURVEYTEAMMAPS
-
+  try {
+    const updateStarted = await updateStartedSurvey(request.params.id);
+    if (!updateStarted) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
+  }
 }
 
 export async function completedSurveyHandler(
@@ -457,18 +453,16 @@ export async function completedSurveyHandler(
   }>,
   reply: FastifyReply
 ) {
-  // try {
-  //   const updateCompleted = await updateCompletedSurvey(request.params.id);
-  //   if (!updateCompleted) {
-  //     reply.code(404);
-  //   } else {
-  //     reply.code(200).send({ status: "success" });
-  //   }
-  // } catch (e) {
-  //   reply.code(500).send({ status: "error", message: e });
-  // }
-  //TODO verify SURVEYTEAMMAPS
-
+  try {
+    const updateCompleted = await updateCompletedSurvey(request.params.id);
+    if (!updateCompleted) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
+  }
 }
 
 export async function updateGoogleLinkHandler(

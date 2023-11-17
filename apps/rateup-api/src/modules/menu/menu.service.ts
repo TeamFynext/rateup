@@ -42,13 +42,26 @@ export async function getFullMenu(menuId: string) {
     include: {
       categories: {
         include: {
-          items: true,
+          items: {
+            orderBy: {
+              itemOrder: "asc",
+            },
+          },
+        },
+        orderBy: {
+          itemOrder: "asc",
         },
       },
       menuLanding: {
         select: {
+          headerStyle:true,
+          titleStyle:true,
+          otherStyle:true,
+          feedbackPageEnabled:true,
+          headerText:true, 
           backgroundImage: true,
           mobileBackgroundImage: true,
+          surveyTeamMapId: true,
         },
       },
     },
@@ -64,6 +77,13 @@ export async function getAllMenus({ userId, role, orgId }) {
           orgId,
         },
       },
+      include: {
+        team: {
+          select: {
+            code: true,
+          },
+        },
+      },
     };
   } else {
     const member = await prisma.teamMember.findFirst({
@@ -74,6 +94,13 @@ export async function getAllMenus({ userId, role, orgId }) {
     condition = {
       where: {
         teamId: member?.teamId,
+      },
+      include: {
+        team: {
+          select: {
+            code: true,
+          },
+        },
       },
     };
   }

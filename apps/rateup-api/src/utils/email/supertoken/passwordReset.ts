@@ -104,7 +104,7 @@ export function createEmailBody(reset_link: string) {
       }
     </style>
   </head>
-  <body>
+  <body style="max-width: 1000px;">
     <div class="frame">
       <div class="overlap-group">
         <table aria-describedby="email content">

@@ -14,6 +14,7 @@ const ByCategoryIdParamsSchema = z.object({
 const UpdateMenuCategoryInputSchema = z.object({
     name: z.string().optional(),
     image: z.string().optional(),
+    itemOrder: z.string().optional()
 })
 
 export const {schemas: menuCategorySchemas, $ref: $MCref} = buildJsonSchemas({
