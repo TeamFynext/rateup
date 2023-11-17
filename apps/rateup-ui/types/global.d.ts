@@ -67,7 +67,16 @@ declare global {
   interface STeam {
     id: string;
     name: string;
+    surveyStats?: STStats;
     mapId: string;
+  }
+
+  interface STStats {
+    id: string;
+    surveyTeamMapId: string;
+    visited: number;
+    started: number;
+    completed: number;
   }
 
   interface SurveySummary {

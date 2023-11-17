@@ -24,19 +24,22 @@ const SurveyStats = ({ survey }) => {
     // TODO: loading ui
     return null;
   }
+  const surveyStats = survey?.teams?.filter(
+    (team: STeam) => team?.mapId === surveyTeamMapId,
+  )[0]?.surveyStats;
   const sortedCount = getSortedLocationCount(responses, locationType);
   const surveyStatsCountArray = [
     {
       label: "Visited",
-      count: survey?.surveyStats?.visited ?? 0,
+      count: surveyStats?.visited ?? 0,
     },
     {
       label: "Started",
-      count: survey?.surveyStats?.started ?? 0,
+      count: surveyStats?.started ?? 0,
     },
     {
       label: "Completed",
-      count: survey?.surveyStats?.completed ?? 0,
+      count: surveyStats?.completed ?? 0,
     },
   ];
   return (
@@ -103,13 +106,13 @@ const SurveyStats = ({ survey }) => {
               >
                 <ZoomControl />
                 {responses &&
-                  responses.map((response) => {
-                    if (!response.location?.coordinates?.latitude) {
+                  responses?.map((response) => {
+                    if (!response?.location?.coordinates?.latitude) {
                       return null;
                     }
                     const [lat, long] = [
-                      response.location.coordinates.latitude,
-                      response.location.coordinates.longitude,
+                      response?.location?.coordinates?.latitude,
+                      response?.location?.coordinates?.longitude,
                     ];
                     return (
                       <Marker
@@ -182,9 +185,9 @@ function getSortedLocationCount(
     [name: string]: number;
   } = {};
   responses?.forEach((response) => {
-    if (response.location?.[locationType]) {
-      count[response.location[locationType]] =
-        (count[response.location[locationType]] || 0) + 1;
+    if (response?.location?.[locationType]) {
+      count[response?.location[locationType]] =
+        (count[response?.location[locationType]] || 0) + 1;
     }
   });
   return Object.entries(count).sort((a, b) => b[1] - a[1]);

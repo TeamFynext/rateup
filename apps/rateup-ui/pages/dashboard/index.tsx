@@ -30,7 +30,6 @@ import {
   IconSquareRoundedPlusFilled,
 } from "@tabler/icons-react";
 import { useSurveysSummary } from "../../backend/surveys/surveys.query";
-import { IconSpeakerphone } from "@tabler/icons-react";
 import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
 import {
   AreaChart,
