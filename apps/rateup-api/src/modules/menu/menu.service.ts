@@ -42,11 +42,23 @@ export async function getFullMenu(menuId: string) {
     include: {
       categories: {
         include: {
-          items: true,
+          items: {
+            orderBy: {
+              itemOrder: "asc",
+            },
+          },
+        },
+        orderBy: {
+          itemOrder: "asc",
         },
       },
       menuLanding: {
         select: {
+          headerStyle:true,
+          titleStyle:true,
+          otherStyle:true,
+          feedbackPageEnabled:true,
+          headerText:true, 
           backgroundImage: true,
           mobileBackgroundImage: true,
           surveyTeamMapId: true,
