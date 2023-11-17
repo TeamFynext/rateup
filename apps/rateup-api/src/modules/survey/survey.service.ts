@@ -201,6 +201,7 @@ export async function getSurveyById(id: string) {
       teams: {
         include: {
           team: true,
+          surveyStats: true,
         },
       },
     },
@@ -211,11 +212,12 @@ export async function getSurveyById(id: string) {
   }
 
   let teams = survey?.teams?.map((team) => {
-    const teamData = { id: team?.team?.id, name: team?.team?.name, mapId: team?.id };
+    const teamData = { id: team?.team?.id, name: team?.team?.name, surveyStats: team?.surveyStats,  mapId: team?.id };
     return teamData;
   });
 
-  return { ...survey, teams: teams };
+ return { ...survey, teams: teams };
+ //return survey;
 }
 
 
