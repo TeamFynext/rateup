@@ -1,4 +1,13 @@
-import { Paper, Text, Stack, Image, Group } from "@mantine/core";
+import {
+  Paper,
+  Text,
+  Image,
+  Group,
+  Center,
+  Select,
+  Title,
+  Stack,
+} from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import {
@@ -9,15 +18,19 @@ import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useMediaQuery } from "@mantine/hooks";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import Link from "next/link";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
+  const { start } = useRouter().query as { start?: boolean };
+
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
-  const { start } = useRouter().query as { start?: boolean };
+
   const [startClicked, setStartClicked] = useState<boolean>(start || false);
   const [questionCount, setQuestionCount] = useState(0);
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState("");
 
   const updateVisited = useUpdateVisitedMutation();
   const updateStarted = useUpdateStartedMutation();
@@ -25,6 +38,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   useEffect(() => {
     if (start === true) setStartClicked(true);
   }, [start]);
+
   useEffect(() => {
     if (survey?.welcomePageEnabled) {
       setStartClicked(false);
@@ -40,6 +54,10 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     surveyId && updateStarted.mutate(surveyId);
     setStartClicked(true);
   };
+
+  if (!selectedLanguage && survey?.languages?.length <= 1) {
+    setSelectedLanguage(survey?.languages[0]);
+  }
 
   return (
     <QuestionCountContext.Provider
@@ -83,6 +101,24 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
         >
           {survey?.isPublished === true && survey?.active === true ? (
             <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
+              {startClicked &&
+              !selectedLanguage &&
+              survey?.languages?.length > 1 ? (
+                <SelectLang
+                  languages={survey?.languages}
+                  selectedLanguage={selectedLanguage}
+                  setSelectedLanguage={setSelectedLanguage}
+                />
+              ) : (
+                selectedLanguage && (
+                  <SelectedLanguageContext.Provider
+                    value={{ selectedLanguage }}
+                  >
+                    {children}
+                  </SelectedLanguageContext.Provider>
+                )
+              )}
+
               {!startClicked && (
                 <WelcomePage
                   surveyThemeData={surveyThemeData}
@@ -92,7 +128,6 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
                   largeScreen={largeScreen}
                 />
               )}
-              {startClicked && <>{children}</>}
             </Paper>
           ) : (
             <Paper
@@ -132,3 +167,24 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     </QuestionCountContext.Provider>
   );
 };
+
+function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  return (
+    <>
+      <Stack pl="7vw" pt="10vh">
+        <Title fw={100}> Choose Your language and</Title>
+        <Title> let's get started!</Title>
+      </Stack>
+
+      <Center style={{ height: isMobile ? "40vh" : "45vh" }}>
+        <Select
+          data={languages}
+          placeholder="Select language"
+          value={selectedLanguage}
+          onChange={setSelectedLanguage}
+        />
+      </Center>
+    </>
+  );
+}
