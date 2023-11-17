@@ -90,6 +90,7 @@ const GeneralSettings = ({ editingItem }) => {
               label="Location URL"
               placeholder="https://goo.gl/maps/xyz1234"
               {...form.getInputProps("locationUrl")}
+              type="url"
             />
           </SimpleGrid>
           <ContainedSelection

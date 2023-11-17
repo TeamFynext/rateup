@@ -12,20 +12,6 @@ import { TeamSelector } from "../input/TeamSelector";
 
 export function CreateMenuModal({ opened, close, editingItem }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-
-  const createMenuMutation = useCreateMenuMutation(
-    selectedTeamId,
-    close,
-    () => {}
-  );
-  const updateMenuMutation = useUpdateMenuMutation(
-    selectedTeamId,
-    () => {
-      close();
-    },
-    () => {}
-  );
-
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -38,6 +24,21 @@ export function CreateMenuModal({ opened, close, editingItem }) {
       teamId: (value) => (value?.trim().length ? null : "select a team"),
     },
   });
+
+  const createMenuMutation = useCreateMenuMutation(
+    selectedTeamId,
+    close,
+    () => {form.reset()}
+  );
+  const updateMenuMutation = useUpdateMenuMutation(
+    selectedTeamId,
+    () => {
+      close();
+    },
+    () => {}
+  );
+
+  
 
   useEffect(() => {
     if (editingItem) {

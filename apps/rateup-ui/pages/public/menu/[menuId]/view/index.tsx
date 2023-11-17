@@ -105,14 +105,28 @@ export default function ({ fullMenu }) {
               ta={"center"}
               tt={"capitalize"}
               className={GilroyMedium.className}
-              fz={"clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"}
+              fz={
+                fullMenu?.menuLanding?.headerStyle?.fontSize
+                  ? `clamp(1.125rem, 0.5rem + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
+                  : "clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"
+              }
+              fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
+              ff={fullMenu?.menuLanding?.headerStyle?.fontFamily}
+              c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
             >
               Welcome To
             </Text>
             <Text
-              fz={"clamp(1.75rem, 0.857rem + 2.381vw, 3rem)"}
               tt={"uppercase"}
               className={GilroyBold.className}
+              fz={
+                fullMenu?.menuLanding?.titleStyle?.fontSize
+                  ? `clamp(1.75rem, 0.857rem + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
+                  : "clamp(1.75rem, 0.857rem + 2.381vw, 3rem))"
+              }
+              fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
+              ff={fullMenu?.menuLanding?.titleStyle?.fontFamily}
+              c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
               ta={"center"}
             >
               {fullMenu?.displayName ?? "Name"}
@@ -178,7 +192,10 @@ export default function ({ fullMenu }) {
         bottom={"0"}
         right={0}
         display={
-          fullMenu?.menuLanding?.surveyTeamMapId === undefined ? "none" : "flex"
+          fullMenu?.menuLanding?.surveyTeamMapId !== undefined &&
+          fullMenu?.menuLanding?.feedbackPageEnabled === true
+            ? "flex"
+            : "none"
         }
         maw={largeScreen ? "2440px" : "768px"}
       >

@@ -14,7 +14,15 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TableRow from "./table/TableRow";
 import { useUpdateMenuCategoryMutation } from "../../../backend/menu/category/mCategory.query";
 
-const tableColumns = ["image", "name", "price", "description", "videoUrl"];
+const tableColumns = [
+  "image",
+  "name",
+  "price",
+  "description",
+  "videoUrl",
+  "Actions",
+  "Ordering",
+];
 interface CategoryCardProps {
   readonly category: MenuCategory;
   readonly handleDelete: any;

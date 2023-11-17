@@ -30,7 +30,6 @@ enum TabEnum {
 }
 
 export default ({ categories: initialCategories }) => {
-  const [selectedTeamId, setSelectedTeamId] = useState("");
   const router = useRouter();
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
@@ -63,11 +62,6 @@ export default ({ categories: initialCategories }) => {
   } = useCategories(menuId, initialCategories);
   let filteredCategory = categories;
 
-  if (selectedTeamId !== "all") {
-    filteredCategory = filteredCategory?.filter(
-      (category) => category?.teamId === selectedTeamId
-    );
-  }
 
   useEffect(() => {
     if (
@@ -139,12 +133,6 @@ export default ({ categories: initialCategories }) => {
                 // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
                 visibility: "hidden",
               }}
-            />
-            <TeamSelector
-              value={selectedTeamId}
-              onChange={(teamId) => setSelectedTeamId(teamId)}
-              enableAll={true}
-              allowDeselect={false}
             />
           </Flex>
           <Stack mt="sm">
