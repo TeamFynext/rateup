@@ -166,6 +166,7 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
           loadFont={loadFont}
           saveLoading={saveLoading}
           setbgImage={setbgImage}
+          setSelectedType={setSelectedType}
         />
       </Paper>
     </Flex>

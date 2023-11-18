@@ -4,10 +4,14 @@ import {
   BackgroundImage,
   Image,
   Tooltip,
+  Box,
+  ActionIcon,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
 import { useEffect, useState } from "react";
+import classes from "./WelcomePage.module.css";
+import { IconEdit } from "@tabler/icons-react";
 
 function WelcomePageView({
   setSelectedType,
@@ -132,9 +136,21 @@ function WelcomePageView({
       }}
     >
       <BackgroundImage
+        className={classes.parentContainer}
         style={{ height: "100%", width: "100%", objectFit: "contain" }}
         src={bgImage && currentStyles.bgType != "bgcolor" ? bgImage : ""}
       >
+        <ActionIcon
+          variant="default"
+          size="md"
+          radius="lg"
+          onClick={(e) => {
+            e.stopPropagation(), handleFocus("background");
+          }}
+          className={classes.actionIcon}
+        >
+          <IconEdit style={{ width: "70%", height: "70%" }} />
+        </ActionIcon>
         <form style={{ width: "100%", height: "100%" }}>
           <Flex
             justify={"center"}
@@ -149,36 +165,64 @@ function WelcomePageView({
               p={5}
             >
               <Tooltip label="Edit Logo">
-                <Image
-                  fit="contain"
-                  src={getLogoUrl()}
-                  alt="Logo"
-                  fallbackSrc="https://www.freeiconspng.com/uploads/no-image-icon-4.png"
-                  style={currentStyles?.logoStyles}
-                />
+                <Box className={classes.parentContainer}>
+                  <ActionIcon
+                    variant="default"
+                    radius="lg"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation(), handleFocus("logo");
+                    }}
+                    className={classes.actionIcon}
+                  >
+                    <IconEdit style={{ width: "70%", height: "70%" }} />
+                  </ActionIcon>
+
+                  <Image
+                    fit="contain"
+                    src={getLogoUrl()}
+                    alt="Logo"
+                    fallbackSrc="https://www.freeiconspng.com/uploads/no-image-icon-4.png"
+                    style={currentStyles?.logoStyles}
+                  />
+                </Box>
               </Tooltip>
             </Flex>
 
             {/* //---------------------------- */}
 
-            <TextInput
-              placeholder={"Welcome"}
-              variant="unstyled"
-              size="xxl"
-              name="headerText"
-              mt={20}
-              onClick={(e) => e.stopPropagation()}
-              onFocus={(e) => {
-                e.stopPropagation(), handleFocus("header");
-              }}
-              styles={{
-                input: currentStyles?.headerStyles,
-              }}
-              value={currentStyles.headerText}
-              onChange={handleChange}
-            />
-
+            <Tooltip label="Edit title">
+              <Box className={classes.titleBox} mt={20}>
+                <ActionIcon
+                  variant="default"
+                  radius="lg"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation(), handleFocus("header");
+                  }}
+                  className={classes.actionIcon}
+                >
+                  <IconEdit style={{ width: "70%", height: "70%" }} />
+                </ActionIcon>
+                <TextInput
+                  placeholder={"Welcome"}
+                  variant="unstyled"
+                  size="xxl"
+                  name="headerText"
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => {
+                    e.stopPropagation(), handleFocus("header");
+                  }}
+                  styles={{
+                    input: currentStyles?.headerStyles,
+                  }}
+                  value={currentStyles.headerText}
+                  onChange={handleChange}
+                />
+              </Box>
+            </Tooltip>
             {/* //--------------------------- */}
+
             <TextInput
               onChange={handleChange}
               value={currentStyles.descText}
@@ -197,38 +241,51 @@ function WelcomePageView({
               ta={"center"}
             />
 
-            <Flex
-              justify={"center"}
-              p={10}
-              mt={"10%"}
-              style={currentStyles.buttonStyles}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <TextInput
-                onChange={handleChange}
-                value={currentStyles.buttonText}
-                placeholder={"Start Survey"}
-                variant="unstyled"
-                name="buttonText"
-                size="xs"
-                onFocus={(e) => {
-                  e.stopPropagation(), handleFocus("button");
-                }}
-                styles={{
-                  input: {
-                    color: "#fff",
-                    fontSize: "18px",
-                    textAlign: "center",
-                    minWidth: "150px",
-                    alignSelf: "center",
-                    fontWeight: 500,
-                    fontFamily: currentStyles?.buttonStyles?.fontFamily
-                      ? currentStyles?.buttonStyles?.fontFamily
-                      : "Montserrat",
-                  },
-                }}
-              />
-            </Flex>
+            <Box className={classes.buttonBox}>
+              <Flex
+                justify={"center"}
+                p={10}
+                mt={"10%"}
+                style={currentStyles.buttonStyles}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ActionIcon
+                  variant="default"
+                  size="sm"
+                  radius="lg"
+                  onClick={(e) => {
+                    e.stopPropagation(), handleFocus("button");
+                  }}
+                  className={classes.actionIcon}
+                >
+                  <IconEdit style={{ width: "70%", height: "70%" }} />
+                </ActionIcon>
+                <TextInput
+                  onChange={handleChange}
+                  value={currentStyles.buttonText}
+                  placeholder={"Start Survey"}
+                  variant="unstyled"
+                  name="buttonText"
+                  size="xs"
+                  onFocus={(e) => {
+                    e.stopPropagation(), handleFocus("button");
+                  }}
+                  styles={{
+                    input: {
+                      color: "#fff",
+                      fontSize: "18px",
+                      textAlign: "center",
+                      minWidth: "150px",
+                      alignSelf: "center",
+                      fontWeight: 500,
+                      fontFamily: currentStyles?.buttonStyles?.fontFamily
+                        ? currentStyles?.buttonStyles?.fontFamily
+                        : "Montserrat",
+                    },
+                  }}
+                />
+              </Flex>
+            </Box>
           </Flex>
         </form>
       </BackgroundImage>

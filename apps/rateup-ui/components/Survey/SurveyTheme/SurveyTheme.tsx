@@ -4,7 +4,9 @@ import {
   Switch,
   LoadingOverlay,
   Group,
-  Tooltip,
+  Badge,
+  Title,
+  Text,
 } from "@mantine/core";
 import React from "react";
 import { useEffect, useState } from "react";
@@ -20,12 +22,15 @@ import WelcomePageView from "./WelcomePageView";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { IconEdit, IconPhotoEdit, IconTextSize } from "@tabler/icons-react";
+import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
   const [IsLoading, setIsLoading] = useState(false);
   const [bgImage, setbgImage] = useState("");
+  const [selectedTab, setSelectedTab] = useState("Web");
+  const isMobileView = selectedTab !== "Web";
+
   const [currentStyles, setCurrentstyles] = useState({
     ...defaultStyles,
     logoUrlNotUploaded: "",
@@ -145,16 +150,19 @@ function SurveyTheme({ survey }) {
       <PaperLayout style={{ flex: 0.7 }}>
         <Stack h="100%">
           <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
-          <Group justify="space-between" p={10}>
-            <Switch
-              label="Enable Welcome page"
-              checked={survey?.welcomePageEnabled}
-              color="var(--tertiary-color)"
-              ml={"md"}
-              mt={"md"}
-              onChange={handleSwitchChange}
-            />
+          <Group justify="space-between" px={10} pb={10}>
             <Group>
+              <Title order={2}>Preview Screen : </Title>
+              <TabsCommon
+                tabHeading={["Web", "Mobile"]}
+                radius={"lg"}
+                value={selectedTab}
+                onChange={(value) => setSelectedTab(value)}
+              >
+                <></>
+              </TabsCommon>
+            </Group>
+            {/* <Group>
               <Tooltip
                 arrowOffset={27}
                 arrowSize={5}
@@ -202,29 +210,57 @@ function SurveyTheme({ survey }) {
                   }}
                 />
               </Tooltip>
+            </Group> */}
+            <Group>
+              <Text>Status: </Text>
+              <Badge color={survey?.welcomePageEnabled ? "green" : "red"}>
+                {survey?.welcomePageEnabled ? "ENABLED" : "DISABLED"}
+              </Badge>
             </Group>
           </Group>
-
-          <WelcomePageView
-            setSelectedType={setSelectedType}
-            selectedType={selectedType}
-            currentStyles={currentStyles}
-            setCurrentstyles={setCurrentstyles}
-            bgImage={bgImage}
-          />
+          <Group justify="center" h="100%">
+            <PaperLayout
+              p={0}
+              h={"100%"}
+              mah={isMobileView ? 650 : 1000}
+              w={isMobileView ? 300 : "100%"}
+            >
+              <WelcomePageView
+                setSelectedType={setSelectedType}
+                selectedType={selectedType}
+                currentStyles={currentStyles}
+                setCurrentstyles={setCurrentstyles}
+                bgImage={bgImage}
+              />
+            </PaperLayout>
+          </Group>
         </Stack>
       </PaperLayout>
-      <PaperLayout style={{ flex: 0.3 }}>
-        <StylesComponent
-          selectedType={selectedType ? selectedType : "header"}
-          saveStyles={saveStyles}
-          currentStyles={currentStyles}
-          setCurrentstyles={setCurrentstyles}
-          loadFont={loadFont}
-          saveLoading={saveLoading}
-          setbgImage={setbgImage}
-        />
-      </PaperLayout>
+      <Stack style={{ flex: 0.3 }} ml="sm">
+        <PaperLayout>
+          <Group justify="center">
+            <Switch
+              label="Enable Welcome page"
+              checked={survey?.welcomePageEnabled}
+              color="var(--tertiary-color)"
+              onChange={handleSwitchChange}
+            />
+          </Group>
+        </PaperLayout>
+
+        <PaperLayout h={"100%"}>
+          <StylesComponent
+            setSelectedType={setSelectedType}
+            selectedType={selectedType ? selectedType : "header"}
+            saveStyles={saveStyles}
+            currentStyles={currentStyles}
+            setCurrentstyles={setCurrentstyles}
+            loadFont={loadFont}
+            saveLoading={saveLoading}
+            setbgImage={setbgImage}
+          />
+        </PaperLayout>
+      </Stack>
     </Flex>
   );
 }

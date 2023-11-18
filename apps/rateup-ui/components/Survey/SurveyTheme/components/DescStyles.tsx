@@ -7,12 +7,16 @@ import {
   NumberInput,
   Button,
   ColorInput,
+  Group,
+  Box,
 } from "@mantine/core";
 
 import React, { useEffect } from "react";
 import { fontList } from "../fontStyleComponents/FontList";
 import { createFormContext } from "@mantine/form";
 import { FontWeights } from "../fontStyleComponents/FontWeights";
+import classes from "../WelcomePage.module.css";
+
 interface FormValues {
   name: string;
   descText?: string;
@@ -69,56 +73,64 @@ function DescStyles({
     <Flex>
       <Stack w={"100%"}>
         <form>
-          <Select
-            label="Font style"
-            searchable
-            nothingFoundMessage="No options"
-            data={fontList}
-            name="fontFamily"
-            {...form.getInputProps("descStyles.fontFamily")}
-          />
-          <Select
-            label="Font weight"
-            data={FontWeights}
-            {...form.getInputProps("descStyles.fontWeight")}
-          />
-          <NumberInput
-            min={10}
-            max={100}
-            defaultValue={18}
-            placeholder="size"
-            label="Font Size"
-            name="fontSize"
-            {...form.getInputProps("descStyles.fontSize")}
-          />
+          <Box className={classes.editorBox}>
+            <Box className={classes.editorSection}>
+              <Select
+                label="Font style"
+                searchable
+                nothingFoundMessage="No options"
+                data={fontList}
+                name="fontFamily"
+                {...form.getInputProps("descStyles.fontFamily")}
+              />
+              <Group mt="xs">
+                <Select
+                  label="Font weight"
+                  data={FontWeights}
+                  style={{ maxWidth: "150px" }}
+                  {...form.getInputProps("descStyles.fontWeight")}
+                />
+                <NumberInput
+                  min={10}
+                  max={100}
+                  defaultValue={18}
+                  placeholder="size"
+                  label="Font Size"
+                  name="fontSize"
+                  style={{ maxWidth: "150px" }}
+                  {...form.getInputProps("descStyles.fontSize")}
+                />
+              </Group>
+              <Text mt={10} fw={500}>
+                Choose text color
+              </Text>
+              <ColorPicker
+                fullWidth
+                format="rgba"
+                {...form.getInputProps("descStyles.color")}
+              />
+              <ColorInput
+                mt="sm"
+                {...form.getInputProps("descStyles.color")}
+                placeholder="Select description color"
+              />
+            </Box>
 
-          <Text mt={10} fw={500}>
-            Choose text color
-          </Text>
-          <ColorPicker
-            fullWidth
-            format="rgba"
-            {...form.getInputProps("descStyles.color")}
-          />
-          <ColorInput
-            mt="sm"
-            {...form.getInputProps("descStyles.color")}
-            placeholder="Select description color"
-          />
-          <Flex justify={"center"}>
-            <Button
-              radius={48}
-              size={"sm"}
-              pl={40}
-              pr={40}
-              mt={30}
-              onClick={onSubmit}
-              loading={saveLoading}
-            >
-              {" "}
-              Save
-            </Button>
-          </Flex>
+            <Flex justify={"center"} className={classes.saveButton}>
+              <Button
+                radius={48}
+                size={"sm"}
+                pl={40}
+                pr={40}
+                mt={12}
+                onClick={onSubmit}
+                loading={saveLoading}
+              >
+                {" "}
+                Save
+              </Button>
+            </Flex>
+          </Box>
         </form>
       </Stack>
     </Flex>

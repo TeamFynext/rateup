@@ -135,7 +135,7 @@ function BackgroundStyles({
               <RateupButtonSecondary
                 onClick={removeBg}
                 title="Remove Image"
-                size="md"
+                size="xs"
                 disabled={
                   currentStyles.bgUrlNotUploaded === "" ||
                   (!currentStyles.bgUrlNotUploaded &&
@@ -150,7 +150,7 @@ function BackgroundStyles({
                 {(props) => (
                   <Button
                     leftSection={<IconUpload size={16} />}
-                    size="md"
+                    size="xs"
                     radius="18px"
                     {...props}
                     loading={isFileLoading}

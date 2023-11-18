@@ -163,7 +163,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 value={selectedTab}
                 onChange={(value) => setSelectedTab(value)}
               >
-                {}
+                <></>
               </TabsCommon>
               <Title order={2}>Preview Screen</Title>
               <div></div>

@@ -90,7 +90,7 @@ function LogoStyles({
             <RateupButtonSecondary
               onClick={removeImage}
               title="Remove Image"
-              size="md"
+              size="xs"
               disabled={
                 form?.values?.logoUrl === "" ||
                 (!currentStyles?.logoUrlNotUploaded &&
@@ -106,7 +106,7 @@ function LogoStyles({
                 <Button
                   leftSection={<IconUpload size={16} />}
                   radius="18px"
-                  size="md"
+                  size="xs"
                   {...props}
                   loading={isFileLoading}
                 >

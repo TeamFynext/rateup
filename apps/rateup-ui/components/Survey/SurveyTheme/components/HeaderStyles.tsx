@@ -7,9 +7,11 @@ import {
   NumberInput,
   Button,
   ColorInput,
+  Group,
+  Box,
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
-
+import classes from "../WelcomePage.module.css";
 import React, { useEffect } from "react";
 import { fontList } from "../fontStyleComponents/FontList";
 import { FontWeights } from "../fontStyleComponents/FontWeights";
@@ -72,60 +74,69 @@ function HeaderStyles({
     <Flex>
       <Stack w={"100%"} justify={"center"}>
         <form style={{ width: "100%", justifyContent: "center" }}>
-          <Select
-            label="Font style"
-            searchable
-            nothingFoundMessage="No options"
-            data={fontList}
-            name="fontFamily"
-            {...form.getInputProps("headerStyles.fontFamily")}
-          />
+          <Box className={classes.editorBox}>
+            <Box className={classes.editorSection}>
+              <Select
+                label="Font style"
+                searchable
+                nothingFoundMessage="No options"
+                data={fontList}
+                name="fontFamily"
+                {...form.getInputProps("headerStyles.fontFamily")}
+              />
 
-          <Select
-            label="Font weight"
-            name="fontWeight"
-            {...form.getInputProps("headerStyles.fontWeight")}
-            data={FontWeights}
-          />
-          {/* TODO : all font weights not working */}
+              <Group mt="xs">
+                <Select
+                  label="Font weight"
+                  name="fontWeight"
+                  {...form.getInputProps("headerStyles.fontWeight")}
+                  data={FontWeights}
+                  style={{ maxWidth: "150px" }}
+                />
+                {/* TODO : all font weights not working */}
 
-          <NumberInput
-            min={10}
-            max={100}
-            defaultValue={18}
-            placeholder="size"
-            label="Font Size"
-            name="fontSize"
-            {...form.getInputProps("headerStyles.fontSize")}
-          />
-          <Text mt={10} fw={500}>
-            Choose text color
-          </Text>
-          <ColorPicker
-            fullWidth
-            format="rgba"
-            {...form.getInputProps("headerStyles.color")}
-          />
-          <ColorInput
-            mt="sm"
-            {...form.getInputProps("headerStyles.color")}
-            placeholder="Select heading color"
-          />
+                <NumberInput
+                  min={10}
+                  max={100}
+                  defaultValue={18}
+                  placeholder="size"
+                  label="Font Size"
+                  name="fontSize"
+                  style={{ maxWidth: "150px" }}
+                  {...form.getInputProps("headerStyles.fontSize")}
+                />
+              </Group>
 
-          <Flex justify={"center"}>
-            <Button
-              radius={48}
-              size={"sm"}
-              pl={40}
-              pr={40}
-              mt={30}
-              onClick={onSubmit}
-              loading={saveLoading}
-            >
-              {" "}
-              Save
-            </Button>
-          </Flex>
+              <Text mt={10} fw={500}>
+                Choose text color
+              </Text>
+              <ColorPicker
+                fullWidth
+                format="rgba"
+                {...form.getInputProps("headerStyles.color")}
+              />
+              <ColorInput
+                mt="sm"
+                {...form.getInputProps("headerStyles.color")}
+                placeholder="Select heading color"
+              />
+            </Box>
+
+            <Flex justify={"center"} className={classes.saveButton}>
+              <Button
+                radius={48}
+                size={"sm"}
+                pl={40}
+                pr={40}
+                mt={12}
+                onClick={onSubmit}
+                loading={saveLoading}
+              >
+                {" "}
+                Save
+              </Button>
+            </Flex>
+          </Box>
         </form>
       </Stack>
     </Flex>
