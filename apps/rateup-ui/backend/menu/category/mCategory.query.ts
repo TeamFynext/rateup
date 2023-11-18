@@ -4,6 +4,7 @@ import {
   deleteMenuCategory,
   getMenuCategoriesByMenuId,
   updateMenuCategory,
+  updateSortOrderMenuCategory,
 } from "./mCategory.api";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
@@ -18,7 +19,7 @@ export const useCategories = (menuId: string, initialData) =>
 export const useCreateMenuCategoryMutation = (
   menuId: string,
   onSuccess = () => {},
-  onError = () => {},
+  onError = () => {}
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -41,7 +42,7 @@ export const useCreateMenuCategoryMutation = (
 export const useUpdateMenuCategoryMutation = (
   menuId: string,
   onSuccess = () => {},
-  onError = () => {},
+  onError = () => {}
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
@@ -64,7 +65,7 @@ export const useUpdateMenuCategoryMutation = (
 export const useDeleteMenuCategoryMutation = (
   menuId: string,
   onSuccess = () => {},
-  onError = () => {},
+  onError = () => {}
 ) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
@@ -82,4 +83,21 @@ export const useDeleteMenuCategoryMutation = (
   });
 
   return deleteMutation;
+};
+
+export const useUpdateSortOrderMenuCategoryMutation = (
+  menuId: string,
+  onSuccess = () => {}
+) => {
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationFn: ({ menuCategory }: { menuCategory: any }) =>
+      updateSortOrderMenuCategory(menuId, menuCategory),
+    onSuccess: () => {
+      showSuccessToast("Menu category updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      onSuccess();
+    },
+  });
+  return updateMutation;
 };

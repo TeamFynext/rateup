@@ -1,8 +1,7 @@
 import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
 import {
-  IconArrowBadgeDownFilled,
-  IconArrowBadgeUpFilled,
   IconEdit,
+  IconMenuOrder,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
@@ -15,18 +14,14 @@ interface CategoryCardHeaderProps {
   readonly handleDelete: any;
   readonly openCreateItem: () => void;
   readonly handleEdit: (category: MenuCategory) => void;
-  readonly lastItemOrder: number;
-  readonly initialOrder: number;
-  readonly handleCategoryOrder: any;
+  readonly toggleSwapOrder: () => void;
 }
 export function CategoryCardHeader({
   category,
   handleDelete,
   openCreateItem,
   handleEdit,
-  lastItemOrder,
-  initialOrder,
-  handleCategoryOrder,
+  toggleSwapOrder,
 }: CategoryCardHeaderProps) {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
 
@@ -71,20 +66,9 @@ export function CategoryCardHeader({
         <ActionIcon c={"red"} bg={"white"} radius={"md"} onClick={toggle}>
           <IconTrash />
         </ActionIcon>
-        <Stack pr={"sm"} gap={"xs"}>
-          <ActionIcon
-            disabled={category?.itemOrder === initialOrder}
-            variant={"white"}
-            onClick={() => handleCategoryOrder("up", category?.id)}
-          >
-            <IconArrowBadgeUpFilled />
-          </ActionIcon>
-          <ActionIcon
-            disabled={category?.itemOrder === lastItemOrder}
-            variant={"white"}
-            onClick={() => handleCategoryOrder("down", category?.id)}
-          >
-            <IconArrowBadgeDownFilled />
+        <Stack pr={"sm"}>
+          <ActionIcon variant={"transparent"} c={"white"} onClick={toggleSwapOrder}>
+            <IconMenuOrder />
           </ActionIcon>
         </Stack>
       </Group>

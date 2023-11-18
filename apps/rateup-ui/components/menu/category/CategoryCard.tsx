@@ -6,6 +6,7 @@ import {
   useDeleteMenuItemMutation,
   useItemsByCategoryId,
   useUpdateMenuItemMutation,
+  useUpdateSortOrderMenuItemMutation,
 } from "../../../backend/menu/item/mItem.query";
 import { CreateMenuItemModal } from "../createMenuItem";
 import { MenuItemPriceType } from "../../../types/enums";
@@ -13,6 +14,7 @@ import { CategoryCardHeader } from "./CategoryCardHeader";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TableRow from "./table/TableRow";
 import { useUpdateMenuCategoryMutation } from "../../../backend/menu/category/mCategory.query";
+import SortDrawer from "./sortDrawer/SortDrawer";
 
 const tableColumns = [
   "image",
@@ -28,8 +30,7 @@ interface CategoryCardProps {
   readonly handleDelete: any;
   readonly handleEdit: (category: MenuCategory) => void;
   readonly searchText: string;
-  readonly initialOrder: number;
-  readonly lastItemOrder: number;
+  readonly headerOrder: any;
 }
 
 export function CategoryCard({
@@ -37,10 +38,15 @@ export function CategoryCard({
   handleDelete,
   handleEdit,
   searchText,
-  initialOrder,
-  lastItemOrder,
+  headerOrder,
 }: CategoryCardProps) {
   const [createMenuItemModalOpened, { close, open }] = useDisclosure(false);
+  const [swapOrderOpened, { close: closeSwapOrder, toggle: toggleSwapOrder }] =
+    useDisclosure(false);
+  const [
+    swapOrderCategoryOpened,
+    { close: closeSwapOrderCategory, toggle: toggleSwapOrderCategory },
+  ] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
 
   const {
@@ -52,23 +58,14 @@ export function CategoryCard({
     category.id,
     category.menuId,
     () => {},
-    () => {},
+    () => {}
   );
-  const updateMenuItemMutation = useUpdateMenuItemMutation(
-    category.id,
-    category.menuId,
-    () => {},
-    () => {},
-  );
-  const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
-    category.menuId,
-    () => {},
-    () => {},
-  );
+
+
   let itemsSearch = [];
   if (searchText !== "") {
     itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())
     );
   } else {
     itemsSearch = items;
@@ -77,22 +74,7 @@ export function CategoryCard({
     setEditingItem(null);
     open();
   };
-  const handleMenuOrder = (direction: string, itemId: string) => {
-    updateMenuItemMutation.mutate({
-      menuItemId: itemId,
-      menuItem: {
-        itemOrder: direction,
-      },
-    });
-  };
-  const handleCategoryOrder = (direction: string, itemId: string) => {
-    editMenuCategoryMutation.mutate({
-      categoryId: itemId,
-      menuCategory: {
-        itemOrder: direction,
-      },
-    });
-  };
+
   if (isLoading || isError) {
     return (
       <Paper>
@@ -101,26 +83,28 @@ export function CategoryCard({
           category={category}
           handleDelete={handleDelete}
           openCreateItem={handleCreateItem}
-          initialOrder={initialOrder}
-          lastItemOrder={lastItemOrder}
-          handleCategoryOrder={handleCategoryOrder}
+          toggleSwapOrder={toggleSwapOrderCategory}
         />
         <CenteredSpinner m="sm" />
       </Paper>
     );
   }
 
+  const filteredMenuItems = itemsSearch?.map(({ id, name, images }) => ({
+    id,
+    name,
+    image: images[0],
+  }));
+
   const rows = itemsSearch?.map((item) => (
     <TableRow
       item={item}
       MenuItemPriceType={MenuItemPriceType}
       deleteItemMutation={deleteItemMutation}
-      handleMenuOrder={handleMenuOrder}
-      lastItemOrder={itemsSearch?.slice(-1)[0]?.itemOrder}
       setEditingItem={setEditingItem}
-      initialOrder={itemsSearch[0]?.itemOrder}
       key={item?.id}
       open={open}
+      toggleSwapOrder={toggleSwapOrder}
     />
   ));
 
@@ -131,9 +115,7 @@ export function CategoryCard({
         category={category}
         handleDelete={handleDelete}
         openCreateItem={handleCreateItem}
-        initialOrder={initialOrder}
-        lastItemOrder={lastItemOrder}
-        handleCategoryOrder={handleCategoryOrder}
+        toggleSwapOrder={toggleSwapOrderCategory}
       />
       <PaperLayout bg={"var(--bg-grey-color)"} p={0}>
         <Table
@@ -175,6 +157,20 @@ export function CategoryCard({
         categoryId={category?.id}
         menuId={category?.menuId}
         editingItem={editingItem}
+      />
+      <SortDrawer
+        close={closeSwapOrder}
+        opened={swapOrderOpened}
+        data={filteredMenuItems}
+        category={{ categoryId: category?.id, menuId: category?.menuId }}
+        categoryOrNot={false}
+      />
+      <SortDrawer
+        close={closeSwapOrderCategory}
+        opened={swapOrderCategoryOpened}
+        data={headerOrder}
+        category={{ categoryId: category?.id, menuId: category?.menuId }}
+        categoryOrNot={true}
       />
     </Paper>
   );

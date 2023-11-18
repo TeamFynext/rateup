@@ -13,24 +13,21 @@ import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import {
   IconEdit,
   IconTrash,
-  IconArrowBadgeUpFilled,
-  IconArrowBadgeDownFilled,
 } from "@tabler/icons-react";
 import DeleteConfirmationBox from "../../dialogBox/DeleteConfirmationBox";
 import { useDisclosure } from "@mantine/hooks";
+import { IconMenuOrder } from "@tabler/icons-react";
 
 const TableRow = ({
   item,
   MenuItemPriceType,
   deleteItemMutation,
   setEditingItem,
-  handleMenuOrder,
-  lastItemOrder,
-  initialOrder,
   open,
+  toggleSwapOrder
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
-
+ 
   return (
     <Table.Tr>
       <Table.Td>
@@ -99,17 +96,8 @@ const TableRow = ({
       </Table.Td>
       <Table.Td>
         <Stack pr={"sm"}>
-          <ActionIcon
-            disabled={item?.itemOrder === initialOrder}
-            onClick={() => handleMenuOrder("up", item?.id)}
-          >
-            <IconArrowBadgeUpFilled />
-          </ActionIcon>
-          <ActionIcon
-            disabled={item?.itemOrder === lastItemOrder}
-            onClick={() => handleMenuOrder("down", item?.id)}
-          >
-            <IconArrowBadgeDownFilled />
+          <ActionIcon variant={"transparent"} onClick={toggleSwapOrder}>
+            <IconMenuOrder />
           </ActionIcon>
         </Stack>
       </Table.Td>

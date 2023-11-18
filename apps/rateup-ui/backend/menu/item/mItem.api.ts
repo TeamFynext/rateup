@@ -6,3 +6,4 @@ export const createMenuItem = async (menuItem: CreateMenuItem) => await axiosCli
 export const getItemsByCategoryId = async (categoryId: string) => (await axiosClient.get(`${MENUITEM_URL}/all/${categoryId}`)).data as MenuItem[];
 export const deleteMenuItem = async (itemId: string) => await axiosClient.delete(`${MENUITEM_URL}/${itemId}`);
 export const updateMenuItem = async (menuId: string, menuItem) => await axiosClient.put(`${MENUITEM_URL}/${menuId}`, menuItem);
+export const updateSortOrderMenuItem = async (categoryId: string,menuItem) => await axiosClient.put(`${MENUITEM_URL}/sort/${categoryId}`, menuItem);
