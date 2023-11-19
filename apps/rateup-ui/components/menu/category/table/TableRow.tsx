@@ -10,10 +10,7 @@ import {
 } from "@mantine/core";
 import React from "react";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
-import {
-  IconEdit,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import DeleteConfirmationBox from "../../dialogBox/DeleteConfirmationBox";
 import { useDisclosure } from "@mantine/hooks";
 import { IconMenuOrder } from "@tabler/icons-react";
@@ -24,10 +21,10 @@ const TableRow = ({
   deleteItemMutation,
   setEditingItem,
   open,
-  toggleSwapOrder
+  toggleSwapOrder,
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
- 
+
   return (
     <Table.Tr>
       <Table.Td>

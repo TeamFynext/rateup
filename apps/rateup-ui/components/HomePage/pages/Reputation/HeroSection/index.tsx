@@ -1,0 +1,40 @@
+import { Flex, Stack, Text, Title } from "@mantine/core";
+import Button from "../../../components/Button";
+import Image from "next/image";
+import styles from "./HeroSection.module.css";
+import commonStyles from "../Reputation.module.css";
+
+const imagePath = `/images/reputation-page/transform-online-presence.png`;
+
+const heroSectionContainerClassName = `${styles["hero-section-container"]} ${commonStyles["section-container"]}`;
+function HeroSection() {
+  return (
+    <Flex className={heroSectionContainerClassName}>
+      <Stack className={styles["text-container"]}>
+        <Title order={1}>
+          Transforming Online Presence and Customer Experiences
+        </Title>
+        <Text>
+          We redefine the dynamics of <span>online reputation management,</span>{" "}
+          providing businesses with a robust platform to not only enhance their{" "}
+          <span>Google reviews</span> but also cultivate{" "}
+          <span>positive brand advocates</span>
+        </Text>
+        <Flex>
+          <Button whiteBackgroundGradientText>Book a Demo</Button>
+        </Flex>
+      </Stack>
+      <Flex className={styles["illustration-image-container"]}>
+        <Image
+          className={`${styles["illustration-image"]}`}
+          src={imagePath}
+          alt="Transorm Online Presence"
+          width={1638}
+          height={1350}
+        />
+      </Flex>
+    </Flex>
+  );
+}
+
+export default HeroSection;

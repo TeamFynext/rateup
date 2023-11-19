@@ -67,7 +67,11 @@ export function CategoryCardHeader({
           <IconTrash />
         </ActionIcon>
         <Stack pr={"sm"}>
-          <ActionIcon variant={"transparent"} c={"white"} onClick={toggleSwapOrder}>
+          <ActionIcon
+            variant={"transparent"}
+            c={"white"}
+            onClick={toggleSwapOrder}
+          >
             <IconMenuOrder />
           </ActionIcon>
         </Stack>

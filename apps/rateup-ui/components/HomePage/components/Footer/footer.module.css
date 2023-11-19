@@ -1,0 +1,24 @@
+.footer-logo {
+  margin-bottom: 1.875rem;
+}
+
+.footer-links-container {
+  justify-content: center;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.875rem;
+  border-bottom: 1px solid white;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 2.1875rem;
+}
+
+.footer-link {
+  color: #e7e7e7;
+  composes: header-footer-link from "../../index/index.module.css";
+  margin-right: 0;
+}
+
+.copyright-para {
+  margin-bottom: 1.875rem;
+  color: #e7e7e7;
+}

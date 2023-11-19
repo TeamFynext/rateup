@@ -1,30 +1,24 @@
-import { Container } from "@mantine/core";
-import Header from "../Header";
-import HeroSection from "../HeroSection";
-import OurSolutionsSection from "../OursolutionsSection";
-import OurFeaturesSection from "../OurFeaturesSection";
-import Banner from "../Banner";
-import TestimonialsSection from "../TestimonialsSection";
-import BookADemoSection from "../BookADemoSection";
-import Footer from "../Footer";
-import styles from "./index.module.css";
+import LandingPageLayout from "../LandingPageLayout";
+import Home from "../pages/Home";
+import { useRouter } from "next/router";
+import Reputation from "../pages/Reputation";
 
-export function HomePage() {
-  return (
-    <div className={styles["home-page-container"]}>
-      <Container
-        className={styles["home-page-mantine-container"]}
-        size={"120rem"}
-      >
-        <Header />
-        <HeroSection />
-        <OurSolutionsSection />
-        <OurFeaturesSection />
-        <Banner />
-        <TestimonialsSection />
-        <BookADemoSection />
-        <Footer />
-      </Container>
-    </div>
-  );
+function HomePage() {
+  const { pathname } = useRouter();
+  let componentToBeRendered: React.ReactNode;
+
+  switch (pathname) {
+    case "/": {
+      componentToBeRendered = <Home />;
+      break;
+    }
+    case "/reputation": {
+      componentToBeRendered = <Reputation />;
+      break;
+    }
+  }
+
+  return <LandingPageLayout>{componentToBeRendered}</LandingPageLayout>;
 }
+
+export default HomePage;

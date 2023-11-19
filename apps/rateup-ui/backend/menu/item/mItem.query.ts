@@ -19,7 +19,7 @@ export const useCreateMenuItemMutation = (
   categoryId: string,
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -43,7 +43,7 @@ export const useDeleteMenuItemMutation = (
   categoryId: string,
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
@@ -67,7 +67,7 @@ export const useUpdateMenuItemMutation = (
   categoryId: string,
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
@@ -96,7 +96,7 @@ export const useUpdateMenuItemMutation = (
 export const useUpdateSortOrderMenuItemMutation = (
   categoryId: string,
   menuId: string,
-  onSuccess = () => {}
+  onSuccess = () => {},
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({

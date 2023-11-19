@@ -1,0 +1,119 @@
+.header-container {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgb(215, 215, 215);
+  position: sticky;
+  top: 0;
+  z-index: 400;
+  background-color: white;
+}
+
+.header-links-container {
+  align-items: center;
+}
+
+.header-link-wrapper {
+  padding: 0.625rem 1rem;
+  align-items: center;
+}
+
+.header-link {
+  composes: header-footer-link from "../../index/index.module.css";
+  composes: gradient-text from "../../index/index.module.css";
+  margin-right: 0;
+}
+
+.header-link:active {
+  color: #00397b;
+}
+
+.login-signup-link {
+  composes: header-footer-link from "../../index/index.module.css";
+  padding: 0.625rem 1.5rem;
+  composes: gradient-image-1 from "../../index/index.module.css";
+  border-radius: 2rem;
+  display: block;
+}
+
+.login-link {
+  composes: login-signup-link;
+  padding: 2px;
+  margin-right: 0;
+}
+
+.login-link-text-span-container {
+  display: block;
+  background-color: white;
+  border-radius: 2rem;
+  padding: 0.4375rem 1.5rem;
+}
+
+.login-link-text-span {
+  display: block;
+  composes: gradient-text from "../../index/index.module.css";
+}
+
+.signup-link {
+  composes: login-signup-link;
+  color: white;
+}
+
+.mobile-nav-burger-btn-container {
+  display: none;
+}
+
+.sublinks-caret-btn {
+  padding: 0;
+  height: auto;
+  background-color: initial;
+  color: var(--shade-of-blue-3);
+  width: 1.5rem;
+  height: 1.5rem;
+  position: relative;
+  top: -3px;
+}
+
+/* Mobile Nav styles */
+.dropdown {
+  padding: 0.625rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);
+}
+
+.item {
+  text-align: center;
+  padding: 0.625rem 3rem;
+  border-bottom: 1px solid rgb(208, 208, 208);
+}
+
+.item:nth-last-child(1) {
+  border: none;
+}
+
+/* media queries */
+@media screen and (max-width: 1024px) {
+  .header-container {
+    gap: 1rem;
+  }
+
+  .header-links-container {
+    display: none;
+  }
+
+  .mobile-nav-burger-btn-container {
+    display: block;
+  }
+
+  .logo-nav-container {
+    gap: 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .login-signup-links-container {
+    display: none;
+  }
+  .logo-nav-container {
+    justify-content: space-between;
+    flex: 1 1 auto;
+  }
+}
