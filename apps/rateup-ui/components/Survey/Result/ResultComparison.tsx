@@ -1,17 +1,7 @@
 //import start
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/router";
-import {
-  Badge,
-  Divider,
-  Flex,
-  Group,
-  MultiSelect,
-  Stack,
-  Tabs,
-  Text,
-} from "@mantine/core";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { Badge, Divider, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -48,19 +38,20 @@ import {
   getResponseArrayByQuestionType,
   getResponseObjectByQuestionType,
 } from "../../../utils/response";
+import SurveyContext from "../../../context/SurveyContext";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 //import end
 //.............................................................................
 // default export component start
 export default function ResultComparison() {
-  const [filterTeams, setFilterTeams] = useState([]);
+  const { filterTeams } = useContext(SurveyContext);
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
   const {
     query: { surveyId },
   } = useRouter();
-  const {
-    data: survey,
-    isLoading: sLoading,
-    error: sError,
-  } = useSurvey(surveyId?.toString());
   const {
     data: questions,
     isLoading: qLoading,
@@ -72,23 +63,13 @@ export default function ResultComparison() {
     error: rError,
   } = useAllResponses(surveyId?.toString());
 
-  const multiSelectOptions = survey?.teams?.map((team) => {
-    return { value: team?.mapId, label: team?.name };
-  });
+  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
+    filterTeams,
+    teamWiseResponses,
+  );
 
-  function getFilteredResponses() {
-    if (filterTeams.length > 0) {
-      return teamWiseResponses?.filter((response) =>
-        filterTeams.includes(response?.id),
-      );
-    } else {
-      return teamWiseResponses;
-    }
-  }
-  const filteredResponses = getFilteredResponses();
-
-  if (sLoading || qLoading || rLoading) return <div>Loading...</div>;
-  if (sError || qError || rError) return <div>Error...</div>;
+  if (qLoading || rLoading) return <div>Loading...</div>;
+  if (qError || rError) return <div>Error...</div>;
   if (teamWiseResponses?.length === 0)
     return <NothingFound text="No responses found for comparison" />;
   return (
@@ -99,58 +80,52 @@ export default function ResultComparison() {
       display={"flex"}
       style={{ flexDirection: "column" }}
     >
-      <>
-        <MultiSelect
-          data={multiSelectOptions}
-          pos={"sticky"}
-          top={0}
-          onChange={setFilterTeams}
-          placeholder={filterTeams.length > 0 ? "" : "All Teams"}
+      <Stack style={{ overflow: "auto", flex: 1 }} mt={"md"} p={10}>
+        <Heading subtitle="Team Response Activity" />
+        <TeamResponseActivitySection
+          teamWiseResponses={filteredResponsesByTeam}
         />
-        <Stack style={{ overflow: "auto", flex: 1 }} mt={"md"} p={10}>
-          <Heading subtitle="Team Response Activity" />
-          <TeamResponseActivitySection
-            teamWiseResponses={getFilteredResponses()}
-          />
-          <Heading subtitle="Team Question Activity" />
-          {questions?.map((q) => {
-            if (questionTypesForComparison.includes(q?.type)) {
-              let questionResponses = [];
-              for (const teamResponse of filteredResponses) {
-                for (const surveyResponse of teamResponse.responses) {
-                  const questionResponse = surveyResponse.responses.find(
-                    (response) => response.questionId === q.id,
-                  );
-                  if (questionResponse) {
-                    questionResponses.push({
-                      team: teamResponse.team,
-                      response:
-                        questionResponse.response[questionResponse.type],
-                    });
-                  }
+        <Heading subtitle="Team Question Activity" />
+        {questions?.map((q, i) => {
+          if (questionTypesForComparison.includes(q?.type)) {
+            let questionResponses = [];
+            for (const teamResponse of filteredResponsesByTeam) {
+              for (const surveyResponse of teamResponse.responses) {
+                const questionResponse = surveyResponse.responses.find(
+                  (response) => response.questionId === q.id,
+                );
+                if (questionResponse) {
+                  questionResponses.push({
+                    team: teamResponse.team,
+                    response: questionResponse.response[questionResponse.type],
+                  });
                 }
               }
-              return (
-                <PaperLayout mih={500}>
-                  <Stack>
-                    <Group justify="space-between">
-                      <Text c="dimmed" fw={900}>
-                        {q.title["English"]}
-                      </Text>
-                      <Badge variant="dot">{q.type}</Badge>
-                    </Group>
-                    <CombinedChart
-                      questionResponses={questionResponses}
-                      question={q}
-                      teams={getFilteredResponses().map(({ team }) => team)}
-                    />
-                  </Stack>
-                </PaperLayout>
-              );
             }
-          })}
-        </Stack>
-      </>
+            return (
+              <PaperLayout mih={500} key={i}>
+                <Stack>
+                  <Group justify="space-between">
+                    <Text c="dimmed" fw={900}>
+                      {
+                        q.title[
+                          selectedLanguage ? selectedLanguage : defaultLanguage
+                        ]
+                      }
+                    </Text>
+                    <Badge variant="dot">{q.type}</Badge>
+                  </Group>
+                  <CombinedChart
+                    questionResponses={questionResponses}
+                    question={q}
+                    teams={filteredResponsesByTeam.map(({ team }) => team)}
+                  />
+                </Stack>
+              </PaperLayout>
+            );
+          }
+        })}
+      </Stack>
     </PaperLayout>
   );
 }
@@ -268,7 +243,6 @@ const CombinedChart = ({
     };
   });
   function returnAlpha(response) {
-    console.log(response);
     const length = getResponseArrayByQuestionType(question.type).length;
     switch (length) {
       case 2: {
@@ -324,7 +298,6 @@ const CombinedChart = ({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          {console.log(getResponseArrayByQuestionType(question.type))}
           {getResponseArrayByQuestionType(question.type).map(
             (response: number | string) => (
               <Bar

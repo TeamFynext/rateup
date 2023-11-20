@@ -19,19 +19,19 @@ const SmileyRating = ({ updateResponse }) => {
     let stringValue;
     switch (value) {
       case 1:
-        stringValue = "VerySad";
+        stringValue = SmileyResponse.VerySad;
         break;
       case 2:
-        stringValue = "Sad";
+        stringValue = SmileyResponse.Sad;
         break;
       case 3:
-        stringValue = "Neutral";
+        stringValue = SmileyResponse.Neutral;
         break;
       case 4:
-        stringValue = "Happy";
+        stringValue = SmileyResponse.Happy;
         break;
       case 5:
-        stringValue = "VeryHappy";
+        stringValue = SmileyResponse.VeryHappy;
         break;
     }
 

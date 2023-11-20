@@ -27,7 +27,10 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useState, useEffect, useContext } from "react";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
 import { updateSurvey } from "../../../backend/surveys/survey.api";
@@ -41,12 +44,19 @@ import {
 } from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
-import SurveyContext from "../../../context/SurveyContext";
 
-const ShareSurvey = ({ survey, setActiveTab }) => {
+const ShareSurvey = ({
+  survey,
+  setActiveTab,
+}: {
+  survey: Survey;
+  setActiveTab: (tab: any) => void;
+}) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
-  const { surveyTeamMapId, selectedTeamName } = useContext(SurveyContext);
+  const [surveyTeamMapId, setSurveyTeamMapId] = useState(
+    survey?.teams[0]?.mapId,
+  );
 
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const queryClient = useQueryClient();
@@ -142,6 +152,11 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
         break;
     }
   }
+
+  const teamSelectData = survey?.teams?.map((team) => ({
+    value: team?.mapId,
+    label: team?.code,
+  }));
 
   return (
     <Stack p={2}>
@@ -253,7 +268,12 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
           <Stack style={{ maxWidth: "450px" }} p="md">
             <Group>
               <Title order={4}>Share Survey</Title>
-              <Text c="dark.0"> (Team : {selectedTeamName})</Text>
+              <ContainedSelection
+                maw={150}
+                value={surveyTeamMapId}
+                data={teamSelectData}
+                onChange={setSurveyTeamMapId}
+              />
             </Group>
             <CopyLinkComponent value={shareUrl} />
           </Stack>

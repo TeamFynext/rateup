@@ -32,6 +32,7 @@ export interface IUserData {
   orgLogo: string;
   orgPhone: string;
   orgAddress: string;
+  teams: Array<string>;
 }
 
 export interface IUserInfoApiResponse {

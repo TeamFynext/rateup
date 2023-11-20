@@ -97,9 +97,16 @@ export default () => {
   // TODO: create reusable survey header (title + tabs + language selector)
   return (
     <MantineProvider theme={whatsappTheme}>
-      <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
+      <SelectedLanguageContext.Provider
+        value={{ selectedLanguage, defaultLanguage: "" }}
+      >
         <SurveyContext.Provider
-          value={{ selectedTeamId, surveyTeamMapId, selectedTeamName }}
+          value={{
+            selectedTeamId,
+            surveyTeamMapId,
+            selectedTeamName,
+            filterTeams: [],
+          }}
         >
           <StyledTabs
             value={activeTab}
@@ -159,7 +166,7 @@ export default () => {
               />
             </Tabs.Panel>
             <Tabs.Panel value={TabEnum.Result}>
-              <Result survey={survey} />
+              <Result survey={survey} setSelectedLanguage={null} />
             </Tabs.Panel>
             <Tabs.Panel value={TabEnum.Share}>
               <ShareSurvey survey={survey} setActiveTab={setActiveTab} />

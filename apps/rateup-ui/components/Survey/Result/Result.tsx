@@ -1,6 +1,17 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
-import { Checkbox, Group, Loader, Stack, Tabs, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Checkbox,
+  Group,
+  Loader,
+  Radio,
+  ScrollAreaAutosize,
+  Stack,
+  Tabs,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import Responses from "../Response/Responses";
 import SurveyStats from "./SurveyStats";
 import SurveySummary from "./SurveySummary";
@@ -19,27 +30,40 @@ import {
   IconMoodSmile,
   IconMoodHappy,
   IconMoodCrazyHappy,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import { useImmer } from "use-immer";
-import { useResponses } from "../../../backend/surveys/response/response.query";
+import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import { filterResponses } from "../../../utils/response";
 import SurveyContext from "../../../context/SurveyContext";
 import ResultComparison from "./ResultComparison";
-const Result = ({ survey }) => {
-  const { surveyTeamMapId } = useContext(SurveyContext);
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import {
+  getFilteredResponsesUsingTeam,
+  mergeResponsesFromTeams,
+} from "../../../utils/team/surveyTeam";
+enum ResultTab {
+  OverView = "overview",
+  Analytics = "analytics",
+  Responses = "responses",
+  Comparison = "comparison",
+}
+const Result = ({ survey, setSelectedLanguage }) => {
+  const { filterTeams } = useContext(SurveyContext);
   //fetching the responses associated with the survey
   const {
-    data: responses,
+    data: teamWiseResponses,
     error: responseFetchError,
     isLoading: isLoading,
-  } = useResponses(surveyTeamMapId);
-  const [filteredResponses, setFilteredResponses] = useState(responses);
-  enum ResultTab {
-    OverView = "overview",
-    Analytics = "analytics",
-    Responses = "responses",
-    Comparison = "comparison",
-  }
+  } = useAllResponses(survey?.id);
+  const [filteredResponses, setFilteredResponses] = useState(null);
+  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
+    filterTeams,
+    teamWiseResponses,
+  );
+  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
+    filteredResponsesByTeam,
+  );
   const [resultTab, setActiveResultTab] = useState<
     | ResultTab.Analytics
     | ResultTab.OverView
@@ -49,8 +73,8 @@ const Result = ({ survey }) => {
 
   //this useEffect is used to set the filtered responses to the responses when the responses are fetched
   useEffect(() => {
-    setFilteredResponses(responses);
-  }, [responses]);
+    setFilteredResponses(mergedResponses);
+  }, [teamWiseResponses, filterTeams]);
 
   if (isLoading) return <Loader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
@@ -84,20 +108,20 @@ const Result = ({ survey }) => {
         },
       }}
     >
-      <Stack pb="sm" maw={200}>
+      <Stack maw={200} p={2}>
         <Tabs.List>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
         </Tabs.List>
-        {resultTab === ResultTab.Responses && (
-          <ResultFilter
-            survey={survey}
-            responses={responses}
-            setFilteredResponses={setFilteredResponses}
-          />
-        )}
+        <ResultFilter
+          activeTab={resultTab}
+          survey={survey}
+          responses={mergedResponses}
+          setFilteredResponses={setFilteredResponses}
+          setSelectedLanguage={setSelectedLanguage}
+        />
       </Stack>
       <Tabs.Panel value="overview">
         <SurveyStats survey={survey} />
@@ -123,11 +147,16 @@ export const ResultFilter = ({
   survey,
   responses,
   setFilteredResponses,
+  setSelectedLanguage,
+  activeTab,
 }: {
   survey: Survey;
   responses: Array<SurveyResponse>;
   setFilteredResponses: (data: Array<SurveyResponse>) => void;
+  setSelectedLanguage: (language: string) => void;
+  activeTab: string;
 }) => {
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const quantitativeQuestionTypes = [
     QuestionType.Rating,
     QuestionType.Smiley,
@@ -135,6 +164,9 @@ export const ResultFilter = ({
     QuestionType.YN,
     QuestionType.Opinion,
   ];
+  const languageSelectionOptions = survey?.languages?.map((language) => {
+    return { value: language, label: language };
+  });
   const {
     isLoading: isQLoading,
     error: QError,
@@ -155,11 +187,13 @@ export const ResultFilter = ({
           (question) => question.question_id === question_id,
         );
         if (question) {
+          console.log(question_id, responses);
           question.responses = responses;
           if (question.responses?.length === 0) {
             draft.splice(draft.indexOf(question), 1);
           }
         } else {
+          console.log(question_id, responses);
           draft.push({
             question_id: question_id,
             responses: responses,
@@ -173,35 +207,79 @@ export const ResultFilter = ({
   useEffect(() => {
     setFilteredResponses(filterResponses(responses, filters));
   }, [filters]);
-  if (quantitativeQuestions?.length !== 0) {
+  if (
+    (languageSelectionOptions?.length > 1 &&
+      activeTab !== ResultTab.Responses) ||
+    (quantitativeQuestions?.length !== 0 && activeTab === ResultTab.Responses)
+  ) {
     return (
-      <PaperLayout style={{ flex: 1 }} ml={2}>
-        <Stack>
-          <Text c={"dimmed"}>Filter By</Text>
-          {quantitativeQuestions?.map((question) => (
-            <ReturnSingleQuestionComponent
-              question={question}
-              handleUpdate={handleUpdate}
-            />
-          ))}
-        </Stack>
+      <PaperLayout style={{ flex: 1 }} p={"sm"}>
+        <ScrollAreaAutosize mah={"100%"} scrollbarSize={5}>
+          <Stack>
+            <Text c={"dimmed"}>Filter By</Text>
+            {languageSelectionOptions?.length > 1 && (
+              <>
+                <Group justify="space-between">
+                  <Text size="xs" c={"dimmed"} fw={"bold"}>
+                    languages
+                  </Text>
+                  <Tooltip
+                    label="The question title will be displayed in the default language only when All options is selected"
+                    position="bottom-start"
+                  >
+                    <ActionIcon variant="subtle">
+                      <IconInfoCircle size={15} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+
+                <Radio.Group
+                  value={selectedLanguage}
+                  onChange={(value) => setSelectedLanguage(value)}
+                >
+                  <Radio label="All" value={""} size="xs" />
+                  {languageSelectionOptions?.map((option, i) => (
+                    <Radio
+                      mt={2}
+                      key={i}
+                      label={option.label}
+                      value={option.value}
+                      size="xs"
+                    />
+                  ))}
+                </Radio.Group>
+              </>
+            )}
+            {quantitativeQuestions?.length > 0 &&
+              activeTab === ResultTab.Responses &&
+              quantitativeQuestions?.map((question, i) => (
+                <ReturnSingleFilterComponent
+                  key={i}
+                  question={question}
+                  handleUpdate={handleUpdate}
+                />
+              ))}
+          </Stack>
+        </ScrollAreaAutosize>
       </PaperLayout>
     );
   }
 };
 
 //simple component based on switch case for returning questions for filter component based on question type
-const ReturnSingleQuestionComponent = ({
+const ReturnSingleFilterComponent = ({
   question,
   handleUpdate,
 }: {
   question: Question;
   handleUpdate: (question_id: string, responses: Array<string>) => void;
 }) => {
-  const [language, setLanguage] = useState("English");
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
   const Question = (
     <Text size="xs" c={"dimmed"} fw={"bold"}>
-      {question.title[language]}
+      {question.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
     </Text>
   );
   switch (question.type) {

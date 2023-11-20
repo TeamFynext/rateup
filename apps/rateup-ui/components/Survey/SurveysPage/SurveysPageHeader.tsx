@@ -27,7 +27,7 @@ export function SurveyHeader({
           <Button
             rightSection={<IconPlus />}
             radius="xl"
-            size="lg"
+            size="sm"
             onClick={openCreateSurvey}
             color={theme.colors[theme.primaryColor][6]} // TODO: find out why primaryColor is not being applied automatically
           >

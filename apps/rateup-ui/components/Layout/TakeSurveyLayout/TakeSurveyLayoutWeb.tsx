@@ -112,7 +112,10 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
               ) : (
                 selectedLanguage && (
                   <SelectedLanguageContext.Provider
-                    value={{ selectedLanguage }}
+                    value={{
+                      selectedLanguage,
+                      defaultLanguage: survey?.languages[0],
+                    }}
                   >
                     {children}
                   </SelectedLanguageContext.Provider>

@@ -1,4 +1,4 @@
-import { Group, Loader, Tabs, Space, Grid } from "@mantine/core";
+import { Loader, Tabs, Space, Grid, MultiSelect } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useRouter } from "next/router";
@@ -15,6 +15,7 @@ import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
 import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
 import SurveyContext from "../../../context/SurveyContext";
+import { UserRole } from "../../../utils/enums";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -29,6 +30,7 @@ export default () => {
   const { surveyId } = router.query;
   const { tab } = router.query;
   const { user } = useUser();
+  console.log(user);
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -39,7 +41,6 @@ export default () => {
     error: surveyError,
     data: survey,
   } = useSurvey(surveyId);
-
   const { isLoading, error, data: questions } = useQuestions(surveyId);
 
   const { update } = useRouteParams();
@@ -48,21 +49,23 @@ export default () => {
   }, [survey?.title]);
 
   const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [defaultLanguage, setdefaultLanguage] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-
-  const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
+  const [activeTab, setActiveTab] = useState<TabEnum | null>(null);
   const [addQnTrigger, setaddQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
+  const [filterTeams, setFilterTeams] = useState([]);
 
   useEffect(() => {
-    user?.role === "MEMBER" &&
-      router.push(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/responses/${surveyTeamMapId}`,
-      );
-  }, [user]);
-
+    if (user?.role === UserRole.MEMBER || survey?.isPublished) {
+      setActiveTab(TabEnum.Result);
+    } else {
+      setActiveTab(survey?.isPublished ? TabEnum.Result : TabEnum.Edit);
+    }
+  }, [survey]);
+  console.log(activeTab);
   useEffect(() => {
     if (tab && Object.values(TabEnum).includes(tab as any)) {
       setActiveTab(tab as any);
@@ -71,18 +74,26 @@ export default () => {
 
   useEffect(() => {
     if (survey) {
-      setSelectedLanguage(survey?.languages?.[0]);
+      if (activeTab !== TabEnum.Result) {
+        setSelectedLanguage(survey?.languages?.[0]);
+      } else {
+        setSelectedLanguage("");
+      }
+      setdefaultLanguage(survey?.languages?.[0]);
       let options = survey?.teams?.map((team) => ({
         value: team?.id,
         label: team?.name,
       }));
       setTeamOptions(options);
     }
-  }, [survey]);
+  }, [survey, activeTab]);
 
   useEffect(() => {
     teamOptions && setSelectedTeamId(teamOptions[0]?.value);
   }, [teamOptions]);
+  const multiSelectOptions = survey?.teams?.map((team) => {
+    return { value: team?.mapId, label: team?.name };
+  });
 
   useEffect(() => {
     if (selectedTeamId) {
@@ -95,16 +106,23 @@ export default () => {
     }
   }, [selectedTeamId]);
 
-  if (isLoading || isSurveyLoading) return <Loader />;
+  if (isLoading || isSurveyLoading || !survey?.isPublished || !activeTab)
+    return <Loader />;
   if (error || surveyError) {
-    console.log(error, surveyError);
     return "An error has occurred";
   }
 
   return (
-    <SelectedLanguageContext.Provider value={{ selectedLanguage }}>
+    <SelectedLanguageContext.Provider
+      value={{ selectedLanguage, defaultLanguage }}
+    >
       <SurveyContext.Provider
-        value={{ selectedTeamId, surveyTeamMapId, selectedTeamName }}
+        value={{
+          selectedTeamId,
+          surveyTeamMapId,
+          selectedTeamName,
+          filterTeams,
+        }}
       >
         <StyledTabs
           value={activeTab}
@@ -115,15 +133,17 @@ export default () => {
               <Heading title={survey?.title} />
             </Grid.Col>
             <Grid.Col span={6}>
-              <Tabs.List>
-                <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-                {survey?.type != "whatsapp" && (
-                  <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
-                )}
-                <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
-                <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
-                <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
-              </Tabs.List>
+              {user?.role !== UserRole.MEMBER && (
+                <Tabs.List>
+                  <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
+                  {survey?.type != "whatsapp" && (
+                    <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
+                  )}
+                  <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+                  <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
+                  <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
+                </Tabs.List>
+              )}
             </Grid.Col>
             <Grid.Col span={2}>
               {activeTab === TabEnum.Edit ? (
@@ -134,16 +154,15 @@ export default () => {
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}
                 />
-              ) : activeTab === TabEnum.Result ||
-                activeTab === TabEnum.Share ? (
-                <Group ml="auto" gap={0} w="fit-content">
-                  <ContainedSelection
-                    maw={130}
-                    data={teamOptions}
-                    value={selectedTeamId}
-                    onChange={setSelectedTeamId}
-                  />
-                </Group>
+              ) : activeTab === TabEnum.Result ? (
+                <MultiSelect
+                  radius={"10px"}
+                  searchable
+                  clearable
+                  data={multiSelectOptions}
+                  onChange={setFilterTeams}
+                  placeholder={filterTeams.length > 0 ? "" : "All Teams"}
+                />
               ) : null}
             </Grid.Col>
           </Grid>
@@ -163,7 +182,7 @@ export default () => {
             <SurveySettings surveyId={surveyId} survey={survey} />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Result}>
-            <Result survey={survey} />
+            <Result survey={survey} setSelectedLanguage={setSelectedLanguage} />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Share}>
             <ShareSurvey survey={survey} setActiveTab={setActiveTab} />

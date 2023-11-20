@@ -28,13 +28,9 @@ export default function ActiveSurveyCard({
       }}
       onClick={(e) => {
         e.stopPropagation(),
-          user?.role === "MEMBER"
-            ? router.push(
-                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/results/${survey?.id}`,
-              )
-            : router.push(
-                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/results/${survey?.id}`,
-              );
+          router.push(
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
+          );
       }}
     >
       <Stack h={"100%"} gap={0}>

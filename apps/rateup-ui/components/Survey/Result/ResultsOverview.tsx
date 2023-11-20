@@ -1,26 +1,38 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import { useResponses } from "../../../backend/surveys/response/response.query";
+import {
+  useAllResponses,
+  useResponses,
+} from "../../../backend/surveys/response/response.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import QuestionPieChart from "./Charts/QuestionPieChart";
 import QuestionBarChart from "./Charts/QuestionBarChart";
 import { QuestionType } from "../../../types/enums";
-import { Divider, Stack, Group } from "@mantine/core";
-import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import { Divider, Stack } from "@mantine/core";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
 import SurveyContext from "../../../context/SurveyContext";
 import NothingFound from "../../NothingFound/NothingFound";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
+import {
+  getFilteredResponsesUsingTeam,
+  mergeResponsesFromTeams,
+} from "../../../utils/team/surveyTeam";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
-  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { filterTeams } = useContext(SurveyContext);
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
   let chartData;
-
-  const { isLoading, error, data: responses } = useResponses(surveyTeamMapId);
+  const {
+    isLoading,
+    error,
+    data: teamWiseResponses,
+  } = useAllResponses(surveyId);
   const {
     isLoading: isQLoading,
     error: QError,
@@ -35,10 +47,8 @@ const ResultsOverview = () => {
         titleMap[question.id] = question.title;
         Object.keys(question.title).forEach((lang) => languageSet.add(lang));
       }
-      setLanguages(Array.from(languageSet));
-      setSelectedLanguage(Array.from(languageSet)[0]);
     }
-  }, [responses, questions]);
+  }, [teamWiseResponses, questions]);
 
   useEffect(() => {
     setIsAllowedQnsPresent(
@@ -52,7 +62,13 @@ const ResultsOverview = () => {
       ),
     );
   }, [chartData]);
-
+  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
+    filterTeams,
+    teamWiseResponses,
+  );
+  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
+    filteredResponsesByTeam,
+  );
   if (isLoading || isQLoading) {
     return <div>Loading...</div>;
   }
@@ -60,9 +76,13 @@ const ResultsOverview = () => {
   if (error || QError) {
     return <div>Error </div>;
   }
-  const prepareData = (questions: any[], responses: any[]) => {
+
+  const prepareData = (
+    questions: any[],
+    surveyResponses: Array<TeamWiseResponses>,
+  ) => {
     return questions?.map((question) => {
-      const responsesForQuestion = responses?.flatMap(
+      const responsesForQuestion = mergedResponses?.flatMap(
         (response) =>
           response?.responses?.filter(
             (item: any) => item?.questionId === question?.id,
@@ -98,15 +118,30 @@ const ResultsOverview = () => {
       const total = promoters + passives + detractors;
       const nps = total ? ((promoters - detractors) / total) * 100 : null;
       let localizedTitle = question?.title?.English;
-      if (question?.title && question?.title[selectedLanguage]) {
-        localizedTitle = question?.title[selectedLanguage];
+      if (
+        question?.title &&
+        question?.title[selectedLanguage ? selectedLanguage : defaultLanguage]
+      ) {
+        localizedTitle =
+          question?.title[
+            selectedLanguage ? selectedLanguage : defaultLanguage
+          ];
       }
       let choices = null;
-      if (question?.choices && question?.choices[selectedLanguage]) {
-        choices = question?.choices[selectedLanguage];
+      if (
+        question?.choices &&
+        question?.choices[selectedLanguage ? selectedLanguage : defaultLanguage]
+      ) {
+        choices =
+          question?.choices[
+            selectedLanguage ? selectedLanguage : defaultLanguage
+          ];
       }
       return {
-        question: question?.title[selectedLanguage],
+        question:
+          question?.title[
+            selectedLanguage ? selectedLanguage : defaultLanguage
+          ],
         choices: choices,
         type: question?.type,
         responses: responsesForQuestion,
@@ -120,20 +155,11 @@ const ResultsOverview = () => {
       };
     });
   };
-  chartData = prepareData(questions, responses);
+  chartData = prepareData(questions, filteredResponsesByTeam);
   return (
     <>
       {isAllowedQnsPresent ? (
         <Stack h={"100%"}>
-          <Group justify={"flex-end"} p="0px">
-            <ContainedSelection
-              data={languages}
-              value={selectedLanguage}
-              onChange={(value) => setSelectedLanguage(value)}
-              label="Select Language"
-              style={{ maxWidth: "200px" }}
-            />
-          </Group>
           <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
             <Stack style={{ marginBottom: "20px" }}>
               {isAllowedQnsPresent && <Heading subtitle="NPS Overview" />}
@@ -152,7 +178,7 @@ const ResultsOverview = () => {
                       <QuestionPieChart
                         no={index + 1}
                         type={item.type}
-                        responseCount={responses?.length}
+                        responseCount={noofResponses}
                         question={item.question}
                         data={item.nps}
                       />

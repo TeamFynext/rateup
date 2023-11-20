@@ -10,6 +10,7 @@ interface User {
   orgLogo: string;
   orgPhone: string;
   orgAddress: string;
+  teams: Array<string>;
 }
 
 interface UserContextProps {

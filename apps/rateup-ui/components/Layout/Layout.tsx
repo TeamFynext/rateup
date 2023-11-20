@@ -36,7 +36,6 @@ export default function Layout({ children }) {
     notifyOnChangeProps: ["data"],
     enabled: !userInfo, // fetch only if there is no data in localStorage
   });
-
   useEffect(() => {
     if (userQueryData?.data) {
       setUserInfo(userQueryData); // update localStorage

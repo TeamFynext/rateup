@@ -10,7 +10,12 @@ import {
   Button,
 } from "@mantine/core";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { IconFileDownload, IconTrashXFilled, IconX } from "@tabler/icons-react";
+import {
+  IconEye,
+  IconFileDownload,
+  IconTrashXFilled,
+  IconX,
+} from "@tabler/icons-react";
 import { useContext } from "react";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
@@ -24,11 +29,17 @@ import { notifications } from "@mantine/notifications";
 import { useUser } from "../../../context/UserContext";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
-import { QuestionType } from "../../../types/enums";
+import {
+  LDResponse,
+  QuestionType,
+  SmileyResponse,
+  YNResponse,
+} from "../../../types/enums";
 import SurveyContext from "../../../context/SurveyContext";
 import NothingFound from "../../NothingFound/NothingFound";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import PreviewModal from "../../Modal/PreviewModal";
 
 const Responses = ({ survey, responses }) => {
   const [responseCount, setResponseCount] = useState(0);
@@ -139,7 +150,7 @@ const Responses = ({ survey, responses }) => {
                             key={q.id}
                             title={getResponse(q.id, response)}
                           >
-                            <BadgeorText
+                            <BadgeorTextorPreview
                               questionType={q.type}
                               response={getResponse(q.id, response)}
                             />
@@ -202,7 +213,9 @@ interface TableHeadProps {
   questions: Array<Question>;
 }
 function TableHead({ questions }: TableHeadProps) {
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
 
   const stickyHeaderStyles: React.CSSProperties = {
     position: "sticky",
@@ -231,13 +244,7 @@ function TableHead({ questions }: TableHeadProps) {
               miw={200}
               maw={200}
             >
-              {q?.title[selectedLanguage] ||
-                q?.title["English"] ||
-                (
-                  q?.description[selectedLanguage] ||
-                  q?.description["English"] ||
-                  ""
-                ).substring(0, 15)}
+              {q?.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
             </Text>
           </Table.Th>
         ))}
@@ -246,20 +253,19 @@ function TableHead({ questions }: TableHeadProps) {
             Delete
           </Text>
         </Table.Th>
-        {/* TODO : above 'English' given as a temporary fix,
-           change default language for page survey/response/id */}
       </Table.Tr>
     </Table.Thead>
   );
 }
 
-function BadgeorText({
+function BadgeorTextorPreview({
   questionType,
   response,
 }: {
   questionType: QuestionType;
   response: string;
 }) {
+  const [previewModalopened, { open, close }] = useDisclosure(false);
   const badgeRequired = [
     QuestionType.Rating,
     QuestionType.Smiley,
@@ -267,26 +273,27 @@ function BadgeorText({
     QuestionType.YN,
     QuestionType.Opinion,
   ];
+  const previewRequired = [QuestionType.Photo];
   function returnBadgeColor() {
     switch (response?.toString()) {
-      case "VeryHappy":
-      case "Like":
-      case "Yes":
+      case SmileyResponse.VeryHappy:
+      case LDResponse.Like:
+      case YNResponse.Yes:
       case "9":
       case "10":
         return "green";
-      case "Happy":
-      case "Neutral":
+      case SmileyResponse.Happy:
+      case SmileyResponse.Neutral:
       case "7":
       case "8":
         return "yellow";
-      case "Sad":
-      case "No":
+      case SmileyResponse.Sad:
       case "5":
       case "6":
         return "orange";
-      case "VerySad":
-      case "Dislike":
+      case SmileyResponse.VerySad:
+      case LDResponse.Dislike:
+      case YNResponse.No:
       case "1":
       case "2":
       case "3":
@@ -296,7 +303,25 @@ function BadgeorText({
         return "dark";
     }
   }
-  if (badgeRequired.includes(questionType)) {
+  if (previewRequired.includes(questionType)) {
+    return (
+      <>
+        <RateupButtonBlue
+          title="Preview"
+          leftIcon={<IconEye />}
+          size="compact-xs"
+          onClick={open}
+          disabled={response === null}
+        />
+        <PreviewModal
+          headerTitle="Preview"
+          onClose={close}
+          imgObject={response}
+          opened={previewModalopened}
+        />
+      </>
+    );
+  } else if (badgeRequired.includes(questionType)) {
     return (
       <Badge
         size="lg"

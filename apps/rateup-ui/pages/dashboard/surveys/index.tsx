@@ -18,7 +18,6 @@ export default function Surveys() {
     console.error(allSurveys, error);
     return <SurveysPageError refetch={refetch} />;
   }
-
   return (
     <SurveysPage
       allSurveys={allSurveys.filter((s) => s.type === "web")}

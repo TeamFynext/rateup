@@ -49,6 +49,7 @@ import { notifications } from "@mantine/notifications";
 import FormModalLayout from "../../components/Modal/FormModalLayout";
 import PaperLayout from "../../components/styled/Layouts/PaperLayout";
 import NothingFound from "../../components/NothingFound/NothingFound";
+import Heading from "../../components/styled/Heading/Heading";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -456,7 +457,7 @@ export default function DashboardHome() {
             <PaperLayout p={"lg"}>
               <Group justify="space-between">
                 <Group align="center">
-                  <Title order={2}>Active Surveys</Title>
+                  <Heading subtitle="Active Surveys" />
                   <Text fz="17px" mt="5px" c="gray">
                     ( {filterParam} )
                   </Text>

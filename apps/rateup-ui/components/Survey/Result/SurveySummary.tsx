@@ -1,29 +1,33 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import { Rating, Text, Group, Chip, Button, Stack, Space } from "@mantine/core";
+import { Rating, Text, Group, Chip, Button, Stack } from "@mantine/core";
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
-import { useResponses } from "../../../backend/surveys/response/response.query";
-import Heading from "../../styled/Heading/Heading";
-import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import SurveyContext from "../../../context/SurveyContext";
 import NothingFound from "../../NothingFound/NothingFound";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { QuestionType } from "../../../types/enums";
+import {
+  getFilteredResponsesUsingTeam,
+  mergeResponsesFromTeams,
+} from "../../../utils/team/surveyTeam";
 
 type ResponseCounts = Record<string, Record<string, number>>;
 
 // count responses
-const countResponses = (surveyResponses: any) => {
+const countResponses = (surveyResponses) => {
   const counts = {};
   const responseTypeMap = {};
 
   const validResponseTypes = [
-    "Rating",
-    "Multiple Choice",
-    "Opinion Scale",
-    "Like or Dislike",
-    "Yes or No",
-    "Multiple Select",
+    QuestionType.Rating,
+    QuestionType.MCQ,
+    QuestionType.Opinion,
+    QuestionType.LD,
+    QuestionType.YN,
+    QuestionType.MSQ,
   ];
 
   for (const response of surveyResponses) {
@@ -70,23 +74,31 @@ const countResponses = (surveyResponses: any) => {
 const SurveySummary = () => {
   const router = useRouter();
   const { surveyId } = router.query;
-  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { filterTeams } = useContext(SurveyContext);
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
   }
-
   const {
-    isLoading,
+    data: teamWiseResponses,
     error,
-    data: responseData,
-  } = useResponses(surveyTeamMapId);
+    isLoading,
+  } = useAllResponses(surveyId);
   const {
     isLoading: isQLoading,
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
-
+  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
+    filterTeams,
+    teamWiseResponses,
+  );
+  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
+    filteredResponsesByTeam,
+  );
   const [responseCounts, setResponseCounts] = useState<ResponseCounts>({});
   const [responseTypeMap, setResponseTypeMap] = useState<
     Record<string, string>
@@ -94,16 +106,14 @@ const SurveySummary = () => {
   const [questionTitleMap, setQuestionTitleMap] = useState<Record<string, any>>(
     {},
   );
-  const [selectedLanguage, setSelectedLanguage] = useState("");
-  const [languages, setLanguages] = useState<string[]>([]);
-
   useEffect(() => {
-    if (responseData) {
-      const { counts, responseTypeMap } = countResponses(responseData);
+    if (teamWiseResponses) {
+      const { counts, responseTypeMap } = countResponses(mergedResponses);
       setResponseCounts(counts);
       setResponseTypeMap(responseTypeMap);
     }
-
+  }, [teamWiseResponses, filterTeams]);
+  useEffect(() => {
     if (questions) {
       const titleMap: Record<string, any> = {};
       const languageSet = new Set<string>();
@@ -112,28 +122,14 @@ const SurveySummary = () => {
         Object.keys(question.title).forEach((lang) => languageSet.add(lang));
       }
       setQuestionTitleMap(titleMap);
-      setLanguages(Array.from(languageSet));
-      setSelectedLanguage(Array.from(languageSet)[0]);
     }
-  }, [responseData, questions]);
+  }, [questions]);
 
   if (isLoading || isQLoading) return <div>Loading...</div>;
   if (error || QError) return <div>Error occurred</div>;
 
   return (
-    <Stack>
-      <Space />
-      <Group justify={"space-between"}>
-        <Heading subtitle="Survey Summary" />
-        <ContainedSelection
-          data={languages}
-          value={selectedLanguage}
-          onChange={(value) => setSelectedLanguage(value)}
-          label="Select Language"
-          mb="lg"
-          style={{ maxWidth: "200px" }}
-        />
-      </Group>
+    <Stack mt={10}>
       {Object.entries(responseCounts).length === 0 && (
         <NothingFound text="No quantitative question responses!" />
       )}
@@ -150,8 +146,10 @@ const SurveySummary = () => {
             >
               <>
                 <Text fw={700} mb="sm" size={"20px"}>
-                  {selectedLanguage &&
-                    questionTitleMap[questionId][selectedLanguage]}
+                  {defaultLanguage &&
+                    questionTitleMap[questionId][
+                      selectedLanguage ? selectedLanguage : defaultLanguage
+                    ]}
                 </Text>
                 {Object.entries(responseCounts).map(([response, count]) => {
                   const percentage = ((count / totalResponses) * 100).toFixed(
@@ -172,7 +170,6 @@ const SurveySummary = () => {
                           </Chip>
                           :
                           <Text pl="sm">
-                            {" "}
                             {count} {voteText} ( {percentage}% )
                           </Text>
                         </Group>
@@ -189,7 +186,6 @@ const SurveySummary = () => {
                           </Chip>
                           :
                           <Text pl="sm">
-                            {" "}
                             {count} {voteText} ( {percentage}% )
                           </Text>
                         </Group>
@@ -209,7 +205,6 @@ const SurveySummary = () => {
                         <Group key={response}>
                           {response === "Like" ? (
                             <Group align="center" mb="sm">
-                              {" "}
                               <Button
                                 color={"teal"}
                                 size="sm"
@@ -224,7 +219,6 @@ const SurveySummary = () => {
                             </Group>
                           ) : (
                             <Group align="center">
-                              {" "}
                               <Button
                                 color={"red"}
                                 size="sm"
@@ -234,8 +228,8 @@ const SurveySummary = () => {
                                 disabled
                               >
                                 Dislike ({count})
-                              </Button>{" "}
-                              {percentage}%{" "}
+                              </Button>
+                              {percentage}%
                             </Group>
                           )}
                         </Group>
@@ -255,7 +249,7 @@ const SurveySummary = () => {
                               >
                                 Yes ({count})
                               </Button>
-                              {percentage}%{" "}
+                              {percentage}%
                             </Group>
                           ) : (
                             <Group align="center">
@@ -268,7 +262,7 @@ const SurveySummary = () => {
                               >
                                 No ({count})
                               </Button>
-                              {percentage}%{" "}
+                              {percentage}%
                             </Group>
                           )}
                         </Group>
@@ -287,7 +281,6 @@ const SurveySummary = () => {
                             </Chip>
                             :
                             <Text pl="sm">
-                              {" "}
                               {count} {voteText} ( {percentage}% )
                             </Text>
                           </Group>

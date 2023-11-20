@@ -1,45 +1,83 @@
 import React, { useContext, useState } from "react";
 import { Group, Text, Badge, Stack, Box, Grid } from "@mantine/core";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
-import { useResponses } from "../../../backend/surveys/response/response.query";
+import {
+  useAllResponses,
+  useResponses,
+} from "../../../backend/surveys/response/response.query";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
+import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 enum LocationType {
   City = "city",
   State = "state",
   Country = "country",
 }
 const SurveyStats = ({ survey }) => {
-  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const {
     data: responses,
     isLoading: isResponsesLoading,
     error: responsesError,
   } = useResponses(surveyTeamMapId);
+  const {
+    data: teamWiseResponses,
+    isLoading: rLoading,
+    error: rError,
+  } = useAllResponses(survey?.id);
   const [zoom, setZoom] = useState(7);
   const [locationType, setLocationType] = useState(LocationType.City);
   if (isResponsesLoading || !responses) {
     // TODO: loading ui
     return null;
   }
-  const surveyStats = survey?.teams?.filter(
-    (team: STeam) => team?.mapId === surveyTeamMapId,
-  )[0]?.surveyStats;
+  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
+    filterTeams,
+    teamWiseResponses,
+  );
+  function returnSurveyStats() {
+    let filteredStats: Array<any>;
+    if (filterTeams?.length > 0) {
+      filteredStats = survey?.teams
+        ?.filter((team: STeam) => filterTeams?.includes(team?.mapId))
+        .map((team: STeam) => team?.surveyStats);
+    } else {
+      filteredStats = survey?.teams?.map((team: STeam) => team?.surveyStats);
+    }
+    return {
+      visited: filteredStats?.reduce(
+        (acc: number, curr: any) => acc + (curr ? curr?.visited : 0),
+        0,
+      ),
+      started: filteredStats?.reduce(
+        (acc: number, curr: any) => acc + (curr ? curr?.started : 0),
+        0,
+      ),
+      completed: filteredStats?.reduce(
+        (acc: number, curr: any) => acc + (curr ? curr?.completed : 0),
+        0,
+      ),
+    };
+  }
+  const responseLength = filteredResponsesByTeam?.reduce(
+    (acc: number, curr: any) => acc + curr?._count["responses"],
+    0,
+  );
   const sortedCount = getSortedLocationCount(responses, locationType);
   const surveyStatsCountArray = [
     {
       label: "Visited",
-      count: surveyStats?.visited ?? 0,
+      count: returnSurveyStats()?.visited ?? 0,
     },
     {
       label: "Started",
-      count: surveyStats?.started ?? 0,
+      count: returnSurveyStats()?.started ?? 0,
     },
     {
       label: "Completed",
-      count: surveyStats?.completed ?? 0,
+      count: returnSurveyStats()?.completed ?? 0,
     },
   ];
   return (
@@ -49,8 +87,8 @@ const SurveyStats = ({ survey }) => {
         <PaperLayout px="lg" py={"lg"}>
           <Group justify="space-between">
             <Text c="var(--tertiary-color" size="28px" fw="700" px="xl">
-              {responses?.length ?? 0} &nbsp;{" "}
-              {responses?.length > 1 ? "Responses" : "Response"}
+              {responseLength ?? 0} &nbsp;{" "}
+              {responseLength > 1 ? "Responses" : "Response"}
             </Text>
             {surveyStatsCountArray?.map(({ count, label }) => (
               <PaperLayout style={{ flex: 1 }} key={label}>

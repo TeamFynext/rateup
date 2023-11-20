@@ -6,8 +6,6 @@ import { getTimeSince } from "../../../utils";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SurveyMenu } from "./SurveyMenu";
 import router from "next/router";
-import { useUser } from "../../../context/UserContext";
-import { UserRole } from "../../../utils/enums";
 
 interface SurveyCardProps {
   survey: Survey;
@@ -27,7 +25,6 @@ export function SurveyCard({
   teamsData,
 }: SurveyCardProps): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
-  const { user } = useUser();
   useEffect(() => {
     setTimeSince(getTimeSince(survey?.createdAt));
     const timeoutID = setInterval(
@@ -47,9 +44,7 @@ export function SurveyCard({
       style={{ cursor: "pointer" }}
       onClick={(e) => {
         e.stopPropagation();
-        user?.role === UserRole.MEMBER
-          ? router.push(`${router.pathname}/responses/${survey?.id}`)
-          : router.push(`${router.pathname}/${survey?.id}`);
+        router.push(`${router.pathname}/${survey?.id}`);
       }}
     >
       <Stack justify="space-between" h={"100%"}>
