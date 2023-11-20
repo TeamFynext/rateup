@@ -5,6 +5,13 @@ export async function getContactGroupById(contactGroupId: string) {
     const contactGroup = await prisma.contactGroup.findUnique({
         where: {
             id: contactGroupId
+        },
+        include:{
+             _count: {
+                select: {
+                    contacts: true
+                }
+             }
         }
     });
     return contactGroup;
@@ -13,6 +20,13 @@ export async function getContactGroupsByTeamId(teamId: string) {
     const contactGroups = await prisma.contactGroup.findMany({
         where: {
             teamId
+        },
+        include: {
+            _count: {
+                select: {
+                    contacts: true
+                }
+            }
         }
     });
     return contactGroups;
@@ -22,6 +36,13 @@ export async function getContactGroupsByOrgId(orgId: string) {
         where: {
             team: {
                 orgId
+            }
+        },
+        include: {
+            _count: {
+                select: {
+                    contacts: true
+                }
             }
         }
     });

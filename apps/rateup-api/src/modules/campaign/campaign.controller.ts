@@ -3,6 +3,7 @@ import { ByCampaignIdParams, CreateCampaignInput, GetCampaignsQuery, UpdateCampa
 import { createCampaign, deleteCampaign, getCampaignById, getCampaignsByOrgId, getCampaignsByTeamId, startCampaign, updateCampaign } from "./campaign.service";
 import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
+import { CampaignStatus } from "../../types/enums";
 
 export async function createCampaignHandler(
     request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -37,6 +38,7 @@ export async function updateCampaignByIdHandler(
     reply: FastifyReply
 ) {
     const campaign = await updateCampaign(request.params.campaignId, request.body);
+    if(request.body.status === CampaignStatus.ACTIVE) await startCampaign(request.params.campaignId)
     return reply.status(200).send(campaign);
 }
 

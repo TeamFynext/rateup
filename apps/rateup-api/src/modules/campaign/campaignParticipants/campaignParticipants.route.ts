@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createCampaignParticipantsFromContactsHandler, createCampaignParticipantsFromGroupHandler, deleteCampaignParticipantByIdHandler, getCampaignParticipantByIdHandler, getCampaignParticipantsByCampaignIdHandler } from "./campaignParticipants.controller";
+import { createCampaignParticipantsFromContactsHandler, createCampaignParticipantsFromGroupHandler, createCampaignParticipantsHandler, deleteCampaignParticipantByIdHandler, getCampaignParticipantByIdHandler, getCampaignParticipantsByCampaignIdHandler } from "./campaignParticipants.controller";
 import { $campaignParticipantsRef } from "./campaignParticipants.schema";
 import { $campaignRef } from "../campaign.schema";
 
@@ -23,6 +23,17 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
         },
         createCampaignParticipantsFromGroupHandler
     )
+    
+    server.post(
+        '/',
+        {
+            schema: {
+                body: $campaignParticipantsRef('createCampaignParticipantsSchema')
+            }
+        },
+        createCampaignParticipantsHandler
+    )
+
     server.delete(
         '/:campaignParticipantId',
         {

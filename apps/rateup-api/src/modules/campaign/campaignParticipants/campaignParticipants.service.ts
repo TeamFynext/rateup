@@ -1,7 +1,7 @@
 import { CampaignParticipant } from "@prisma/client";
 import { CampaignParticipantSource, CampaignParticipantStatus } from "../../../types/enums";
 import prisma from "../../../utils/prisma";
-import { CreateCampaignParticipantsFromContactsInput, CreateCampaignParticipantsFromGroupsInput } from "./campaignParticipants.schema";
+import { CreateCampaignParticipantsFromContactsInput, CreateCampaignParticipantsFromGroupsInput, CreateCampaignParticipantsInput } from "./campaignParticipants.schema";
 
 export async function createCampaignParticipantsFromGroup(campaignId: string, data: CreateCampaignParticipantsFromGroupsInput) {
     const contactGroupMaps = await prisma.contactGroupMap.findMany({
@@ -35,6 +35,12 @@ export async function createCampaignParticipantsFromContacts(campaignId: string,
         }))
     })
     return campaignParticipants;
+}
+
+export async function createCampaignParticipants(campaignId: string, data: CreateCampaignParticipantsInput) {
+   const promise = Promise.all([createCampaignParticipantsFromContacts(campaignId,{contactIds:data.contactIds}),
+                   createCampaignParticipantsFromGroup(campaignId,{groupIds:data.groupIds})]);
+   promise.then((results) =>  results).catch((error) => error)
 }
 
 export async function getCampaignParticipantsByCampaignId(campaignId: string) {

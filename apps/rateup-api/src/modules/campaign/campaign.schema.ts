@@ -18,6 +18,7 @@ const updateCampaignInputSchema = z.object({
     surveyTeamMapId: z.string().optional(),
     waTemplateId: z.string().optional(),
     status: z.nativeEnum(CampaignStatus).optional(),
+    startedAt: z.coerce.date().optional()
 })
 
 const byCampaignIdParamsSchema = z.object({
