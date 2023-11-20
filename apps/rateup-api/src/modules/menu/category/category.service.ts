@@ -1,6 +1,7 @@
 import prisma from "../../../utils/prisma";
 import {
   CreateMenuCategoryInput,
+  SortMenuCategoryInput,
   UpdateMenuCategoryInput,
 } from "./category.schema";
 
@@ -55,44 +56,6 @@ export async function updateMenuCategory(
 ) {
   let { itemOrder, ...newData } = data;
 
-  if (itemOrder === "up" || itemOrder === "down") {
-    const menuCategoryDataOne = await prisma.menuCategory.findUnique({
-      where: { id: categoryId },
-    });
-
-    const menuId = menuCategoryDataOne.menuId;
-
-    const targetOrder: number =
-      itemOrder === "up"
-        ? Number(menuCategoryDataOne?.itemOrder) - 1
-        : Number(menuCategoryDataOne?.itemOrder) + 1;
-
-    if (itemOrder === "up" && targetOrder < 0) return;
-    const menuCategoryDataTwo = await prisma.menuCategory.findFirst({
-      where: {
-        itemOrder: targetOrder,
-        menuId,
-      },
-    });
-
-    if (menuCategoryDataTwo) {
-      const targetOrderTwo: number =
-        itemOrder === "up"
-          ? Number(menuCategoryDataTwo?.itemOrder) + 1
-          : Number(menuCategoryDataTwo?.itemOrder) - 1;
-
-      await prisma.menuCategory.update({
-        where: { id: menuCategoryDataOne.id },
-        data: { itemOrder: targetOrder },
-      });
-
-      await prisma.menuCategory.update({
-        where: { id: menuCategoryDataTwo.id },
-        data: { itemOrder: targetOrderTwo },
-      });
-    }
-    return;
-  }
   const category = await prisma.menuCategory.update({
     where: {
       id: categoryId,
@@ -100,6 +63,32 @@ export async function updateMenuCategory(
     data: newData,
   });
   return category;
+}
+
+export async function sortMenuCategory(
+  menuId: string,
+  data: SortMenuCategoryInput
+) {
+  let index = 0;
+  let { itemOrder = [] } = data;
+
+  for await (const item of itemOrder) {
+    await prisma.menuCategory.updateMany({
+      where: {
+        AND: [
+          { id: item.id },
+          {
+            menuId,
+          },
+        ],
+      },
+      data: {
+        itemOrder: index,
+      },
+    });
+    index++;
+  }
+  return "updated";
 }
 
 export async function deleteMenuCategory(categoryId: string) {

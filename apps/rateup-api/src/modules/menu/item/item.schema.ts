@@ -49,9 +49,11 @@ const ByMenuItemIdParamsSchema = z.object({
 export const { schemas: menuItemSchemas, $ref: $MIref } = buildJsonSchemas({
     createMenuItemInputSchema,
     updateMenuItemInputSchema,
-    ByMenuItemIdParamsSchema
+    ByMenuItemIdParamsSchema,
 },{ $id: 'menuItemSchema' })
 
 export type CreateMenuItemInput = z.infer<typeof createMenuItemInputSchema>
 export type UpdateMenuItemInput = z.infer<typeof updateMenuItemInputSchema>
 export type ByMenuItemIdParams = z.infer<typeof ByMenuItemIdParamsSchema>
+
+

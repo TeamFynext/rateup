@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ByMenuItemIdParams, CreateMenuItemInput, UpdateMenuItemInput } from "./item.schema";
-import { createMenuItem, deleteMenuItem, getMenuItem, getMenuItemByCategory, updateMenuItem } from "./item.service";
-import { ByCategoryIdParams } from "../category/category.schema";
+import { createMenuItem, deleteMenuItem, getMenuItem, getMenuItemByCategory, sortMenuItem, updateMenuItem } from "./item.service";
+import { ByCategoryIdParams, SortMenuCategoryInput } from "../category/category.schema";
 import Session from "supertokens-node/recipe/session";
 import { hasAccessToCategory } from "../category/category.auth";
 
@@ -41,6 +41,23 @@ export async function updateMenuItemHandler(
     reply.send(menuItem);
 }
 
+export async function sortMenuItemHandler(
+    request: FastifyRequest<{
+        Body: SortMenuCategoryInput;
+        Params: ByCategoryIdParams;
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const menuItem = await sortMenuItem(
+        request.params.categoryId,
+        request.body
+      );
+      reply.status(200).send(menuItem);
+    } catch (error) {
+      reply.status(500).send(error);
+    }
+  }
 export async function deleteMenuItemHandler(
     request: FastifyRequest<{ Params: ByMenuItemIdParams}>,
     reply: FastifyReply

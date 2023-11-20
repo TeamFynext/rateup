@@ -17,10 +17,18 @@ const UpdateMenuCategoryInputSchema = z.object({
     itemOrder: z.string().optional()
 })
 
+const SortMenuCategoryInputSchema = z.object({
+    itemOrder: z.array(
+      z.object({
+        id: z.string(),
+      })
+    ),
+  });
 export const {schemas: menuCategorySchemas, $ref: $MCref} = buildJsonSchemas({
     CreateMenuCategorySchema,
     ByCategoryIdParamsSchema,
     UpdateMenuCategoryInputSchema,
+    SortMenuCategoryInputSchema
 }, {
     $id: 'menuCategorySchema'
 });
@@ -28,3 +36,4 @@ export const {schemas: menuCategorySchemas, $ref: $MCref} = buildJsonSchemas({
 export type CreateMenuCategoryInput = z.infer<typeof CreateMenuCategorySchema>
 export type ByCategoryIdParams = z.infer<typeof ByCategoryIdParamsSchema>
 export type UpdateMenuCategoryInput = z.infer<typeof UpdateMenuCategoryInputSchema>
+export type SortMenuCategoryInput = z.infer<typeof SortMenuCategoryInputSchema>

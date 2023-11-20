@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createMenuCategoryHandler, deleteMenuCategoryHandler, getAllMenuCategoriesHandler, getMenuCategoryHandler, updateMenuCategoryHandler } from "./category.controller";
+import { createMenuCategoryHandler, deleteMenuCategoryHandler, getAllMenuCategoriesHandler, getMenuCategoryHandler, sortMenuCategoryHandler, updateMenuCategoryHandler } from "./category.controller";
 import { $MCref } from "./category.schema";
 import { $Mref } from "../menu.schema";
 import { verifyMenuAccess } from "../menu.auth";
@@ -50,6 +50,17 @@ export async function menuCategoryRoutes(server: FastifyInstance) {
             preHandler: verifyMenuCategoryAccess
         },
         updateMenuCategoryHandler
+    )
+    server.put(
+        "/sort/:menuId",
+        {
+            schema: {
+                params: $Mref("ByMenuIdParamsSchema"),
+                body: $MCref("SortMenuCategoryInputSchema")
+            },
+            preHandler: verifyMenuAccess
+        },
+        sortMenuCategoryHandler
     )
 
     server.delete(
