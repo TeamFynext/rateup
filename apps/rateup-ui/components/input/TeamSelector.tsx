@@ -16,7 +16,6 @@ export function TeamSelector({
   enableAll = false,
   ...props
 }: TeamSelectorProps) {
-  // TODO: add allowAll boolean prop to allow selecting all teams
   // TODO: remove some nesting on results of the query?
   const {
     data: teamRes,
@@ -39,7 +38,6 @@ export function TeamSelector({
     return <Text>Something went wrong!</Text>;
   }
   if (teamsLoading) {
-    console.log("teamRes", teamRes);
     return <Loader />;
   }
   const teams = teamRes?.data;
@@ -54,6 +52,7 @@ export function TeamSelector({
 
   return (
     <ContainedSelection
+      allowDeselect={false}
       data={teamOptions}
       defaultValue={teamOptions[0].value}
       onChange={onChange}

@@ -15,6 +15,7 @@ import SurveySettings from "../../../../components/Survey/Settings/SurveySetting
 import { ContainedSelection } from "../../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../../components/styled/Heading/Heading";
 import SurveyContext from "../../../../context/SurveyContext";
+import { getTeamOptionsFromSurvey } from "../../../../utils/team/surveyTeam";
 
 enum TabEnum {
   Edit = "Edit",
@@ -53,7 +54,6 @@ export default () => {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-  const [teamOptions, setTeamOptions] = useState([]);
 
   useEffect(() => {
     if (user?.role === "MEMBER") {
@@ -72,17 +72,8 @@ export default () => {
   useEffect(() => {
     if (survey) {
       setSelectedLanguage(survey?.languages?.[0]);
-      let options = survey?.teams?.map((team) => ({
-        value: team?.id,
-        label: team?.name,
-      }));
-      setTeamOptions(options);
     }
   }, [survey]);
-
-  useEffect(() => {
-    teamOptions && setSelectedTeamId(teamOptions[0]?.value);
-  }, [teamOptions]);
 
   useEffect(() => {
     if (selectedTeamId) {
@@ -95,11 +86,13 @@ export default () => {
     }
   }, [selectedTeamId]);
 
-  if (isLoading || isSurveyLoading) return <Loader />;
   if (error || surveyError) {
     console.log(error, surveyError);
     return "An error has occurred";
   }
+  if (isLoading || isSurveyLoading || !survey) return <Loader />;
+  const teamOptions = getTeamOptionsFromSurvey({ survey });
+  if (!selectedTeamId) setSelectedTeamId(teamOptions[0].value);
 
   // TODO: create reusable survey header (title + tabs + language selector)
   return (
@@ -112,7 +105,6 @@ export default () => {
             value={activeTab}
             onChange={(tab) => setActiveTab(tab as TabEnum)}
           >
-            {" "}
             <Grid columns={10}>
               <Grid.Col span={2}>
                 <Heading title={survey?.title} />
@@ -128,11 +120,21 @@ export default () => {
               <Grid.Col span={2}>
                 {activeTab === TabEnum.Edit ? (
                   <ContainedSelection
+                    allowDeselect={false}
                     ml="auto"
                     maw={150}
                     data={survey?.languages}
                     value={selectedLanguage}
                     onChange={setSelectedLanguage}
+                  />
+                ) : [TabEnum.Result, TabEnum.Share].includes(activeTab) ? (
+                  <ContainedSelection
+                    allowDeselect={false}
+                    ml="auto"
+                    maw={150}
+                    data={teamOptions}
+                    value={selectedTeamId}
+                    onChange={setSelectedTeamId}
                   />
                 ) : null}
               </Grid.Col>
