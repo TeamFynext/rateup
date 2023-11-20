@@ -27,6 +27,7 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
+import { updateStartedSurvey, updateVisitedSurvey } from "../../survey/survey.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -133,6 +134,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
       const dbTemplate = await getDbTemplate(session.templateId);
       if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
         log.trace('User consented to survey')
+        updateStartedSurvey(session.surveyTeamMap.id).catch(e => log.error(e)); // increment started survey count
         if (session.surveyTeamMap.survey.languages.length > 1) {
           updateSession(orgId, from, { currentQuestionId: (session.surveyTeamMap.survey.questions[0] as Question).id })
           await handleLanguageSelection(session);
@@ -171,6 +173,8 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
     surveyTeamMapId,
     orgId
   });
+  updateVisitedSurvey(session.surveyTeamMap.id).catch(e => log.error(e)); // increment visited survey count
+  updateStartedSurvey(session.surveyTeamMap.id).catch(e => log.error(e)); // increment started survey count
 
   if (session.surveyTeamMap.survey.languages.length > 1) {
     updateSession(orgId, from, { currentQuestionId: (session.surveyTeamMap.survey.questions[0] as Question).id })
