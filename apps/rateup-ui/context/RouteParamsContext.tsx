@@ -4,6 +4,7 @@ interface RouteParamsState {
   team_code: string;
   surveyId: string;
   groupId: string;
+  campaignId: string;
 }
 
 interface RouteParamsContextData {
@@ -16,6 +17,7 @@ const RouteParamsContext = createContext<RouteParamsContextData>({
     team_code: "",
     surveyId: "",
     groupId: "",
+    campaignId: "",
   },
   update: () => {},
 });
@@ -39,6 +41,7 @@ export const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({
     team_code: "Team Name",
     surveyId: "Survey Name",
     groupId: "Group Name",
+    campaignId: "Campaign Name",
   });
 
   return (

@@ -49,12 +49,7 @@ export default function Contacts() {
     data: contactGroupData,
     error: errorgroup,
     refetch: refetchgroup,
-  } = useContactGroup() as {
-    isLoading: boolean;
-    data: ContactGroupResponse;
-    error: any;
-    refetch: any;
-  };
+  } = useContactGroup();
 
   useEffect(() => {
     if (!searchTerm.length && contactData?.data && contactGroupData?.data) {
@@ -65,9 +60,7 @@ export default function Contacts() {
         setFilteredContacts(
           contactData?.data?.filter((contact) => {
             return (
-              contact?.name
-                .toLowerCase()
-                .startsWith(searchTerm.toLowerCase()) ||
+              contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
               contact?.phone?.startsWith(searchTerm)
             );
           }),
@@ -78,7 +71,7 @@ export default function Contacts() {
             contactGroupData?.data?.filter((group) => {
               return group?.name
                 .toLowerCase()
-                .startsWith(searchTerm.toLowerCase());
+                .includes(searchTerm.toLowerCase());
             }),
           );
         }

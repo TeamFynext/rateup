@@ -6,6 +6,7 @@ import { useTeamsByUser } from "../../backend/team/team.query";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../Modal/FormModalLayout";
 import EditContactModal from "../../pages/dashboard/campaign/contacts/EditContactModal";
+import dayjs from "dayjs";
 
 interface ContactCardProps {
   contact: ContactsData;
@@ -13,14 +14,6 @@ interface ContactCardProps {
 }
 
 const ContactCard = ({ contact, groupId }: ContactCardProps) => {
-  const createdAt = new Date(contact?.createdAt);
-  const date =
-    createdAt.getDate() +
-    "-" +
-    (createdAt.getMonth() + 1) +
-    "-" +
-    createdAt.getFullYear();
-
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
@@ -47,7 +40,9 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
       <Text c="dimmed">{contact?.email}</Text>
 
       <Group justify="space-between">
-        <Text c="dimmed">created on {date}</Text>
+        <Text c="dimmed">
+          created on {dayjs(contact?.createdAt).format("DD-MM-YYYY")}
+        </Text>
         <Badge color="var(--tertiary-color)" variant="outline" size="lg">
           {teamObj?.name}
         </Badge>

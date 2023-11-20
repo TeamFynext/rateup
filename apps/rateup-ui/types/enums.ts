@@ -67,3 +67,24 @@ export enum SurveyTypeFilters {
   Web = "Web",
   WhatsApp = "WhatsApp",
 }
+
+export enum CampaignStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  COMPLETED = "COMPLETED",
+}
+export enum CampaignType {
+  WHATSAPP = "WHATSAPP",
+  EMAIL = "EMAIL",
+}
+export enum CampaignParticipantSource {
+  GROUP = "GROUP",
+  INDIVIDUAL = "INDIVIDUAL",
+}
+export enum CampaignParticipantStatus {
+  PENDING = "PENDING",
+  SENT = "SENT",
+  RESPONDING = "RESPONDING",
+  FAILED = "FAILED",
+  COMPLETED = "COMPLETED",
+}

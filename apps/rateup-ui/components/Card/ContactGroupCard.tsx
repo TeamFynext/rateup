@@ -2,17 +2,10 @@ import { Avatar, Group, Paper, Stack, Title, Text, Badge } from "@mantine/core";
 import { useRouter } from "next/router";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { useTeamsByUser } from "../../backend/team/team.query";
+import dayjs from "dayjs";
 
 export const ContactGroupCard = ({ group }) => {
   const router = useRouter();
-  const createdAt = new Date(group?.createdAt);
-  const date =
-    createdAt.getDate() +
-    "-" +
-    (createdAt.getMonth() + 1) +
-    "-" +
-    createdAt.getFullYear();
-
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
@@ -51,15 +44,17 @@ export const ContactGroupCard = ({ group }) => {
           ></Avatar>
           <Title order={3}>{group?.name}</Title>
         </Stack>
-        <Stack gap={0}>
+        <Stack gap={0} align="center">
           <Title c="var(--tertiary-color)" order={3}>
-            {group?.contacts?.length}
+            {group?._count.contacts}
           </Title>
           <Text>customers</Text>
         </Stack>
       </Group>
       <Group justify="space-between" mt="md">
-        <Text c="dimmed">created on {date}</Text>
+        <Text c="dimmed">
+          created on {dayjs(group?.createdAt).format("DD-MM-YYYY")}
+        </Text>
         <Badge color="var(--tertiary-color)" variant="outline" size="lg">
           {teamObj?.name}
         </Badge>

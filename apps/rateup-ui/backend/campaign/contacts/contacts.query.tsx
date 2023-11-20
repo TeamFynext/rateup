@@ -18,7 +18,7 @@ export const useCampaignContacts = () => {
 
 export const useCampaignContactsByTeamId = (teamId) => {
   return useQuery({
-    queryKey: ["campaignContactsDataByTeamId"],
+    queryKey: ["campaignContactsDataByTeamId", teamId],
     queryFn: () => getContactListByTeamId(teamId),
   });
 };

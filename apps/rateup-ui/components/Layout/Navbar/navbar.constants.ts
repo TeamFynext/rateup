@@ -96,7 +96,7 @@ export const navTopData: Array<NavbarLinkProps> = [
         {
           Icon: IconSpeakerphone,
           label: "Campaign",
-          href: "",
+          href: "/dashboard/campaign",
           submenus: [
             {
               Icon: IconPhone,

@@ -1,0 +1,12 @@
+.input {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.inputLabel {
+  font-weight: bold;
+  font-size: 14px;
+}
+.badgeLabel {
+  color: rgb(167, 167, 167);
+  text-transform: capitalize;
+}

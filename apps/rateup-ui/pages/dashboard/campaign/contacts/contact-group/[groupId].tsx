@@ -95,9 +95,7 @@ export default function () {
         setFilteredCustomerList(
           groupDetails?.contacts?.filter((contact) => {
             return (
-              contact?.name
-                .toLowerCase()
-                .startsWith(searchTerm.toLowerCase()) ||
+              contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
               contact?.phone?.startsWith(searchTerm)
             );
           }),
