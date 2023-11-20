@@ -36,9 +36,10 @@ import {
   UpdateSurveyPassword,
 } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
-import { Prisma } from '@prisma/client';
+import { Prisma } from "@prisma/client";
 import { getLandingPageById } from "../landingPage/landingpage.service";
 import { BySurveyTeamMapIdParams } from "../team/team.schema";
+import { getTeamIdsByUserId } from "../team/team.service";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -85,7 +86,7 @@ export async function updateSurveyLandingHandler(
   const data = request.body;
 
   try {
-    let landingId = request.params.id
+    let landingId = request.params.id;
 
     const survey = await updateSurveyLanding(landingId, data);
     reply.code(201).send(survey);
@@ -102,7 +103,10 @@ export async function getSurveyByIdHandler(
   reply: FastifyReply
 ) {
   try {
-    const survey = await getSurveyById(request.params.id);
+    let session = await Session.getSession(request, reply);
+    const userId = session.getUserId();
+    const teamIds = await getTeamIdsByUserId(userId);
+    const survey = await getSurveyById(request.params.id, teamIds);
     if (!survey) {
       reply.code(404);
     } else {
@@ -149,8 +153,6 @@ export async function getLandingPageByIdHandler(
     reply.code(500);
   }
 }
-
-
 
 //-----------get survey by landingid------------
 export async function getSurveyBylandingIdhandler(
@@ -316,13 +318,17 @@ export async function deleteSurveyByIdHandler(
     }
   } catch (e) {
     console.log(e);
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2003"
+    ) {
       reply.code(400).send({
-        error: 'Cannot delete Survey because it has associated responses. Cleanup responses and Try Again!'
+        error:
+          "Cannot delete Survey because it has associated responses. Cleanup responses and Try Again!",
       });
     } else {
       reply.code(500).send({
-        error: 'An unknown error occurred.'
+        error: "An unknown error occurred.",
       });
     }
   }
@@ -340,7 +346,9 @@ export async function deleteTeamSurveyHandler(
     if (!response) {
       reply.code(404);
     } else {
-      reply.code(200).send({ message: "Deleted successfully.", info: response });
+      reply
+        .code(200)
+        .send({ message: "Deleted successfully.", info: response });
     }
     //TODO improve response handling
   } catch (e) {

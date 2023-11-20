@@ -1,4 +1,3 @@
-import { Team } from "@prisma/client";
 import prisma from "../../utils/prisma";
 import { CreateResponseInput } from "./response.schema";
 
@@ -11,10 +10,16 @@ export async function getResponses(surveyTeamMapId: string) {
   return responses;
 }
 
-export async function getAllResponses(surveyId: string) {
+export async function getAllResponses(
+  surveyId: string,
+  teamIds: Array<string>
+) {
   const responses = await prisma.surveyTeamMap.findMany({
     where: {
       surveyId: surveyId,
+      teamId: {
+        in: teamIds,
+      },
     },
     select: {
       id: true,
@@ -32,7 +37,7 @@ export async function getAllResponses(surveyId: string) {
       },
       responses: {
         select: {
-          responses:true,
+          responses: true,
         },
       },
     },
