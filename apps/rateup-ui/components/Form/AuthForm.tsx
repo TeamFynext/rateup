@@ -90,7 +90,7 @@ const AuthForm = ({
         <Link href="/">
           <Image
             className={styles["rateup-logo-img"]}
-            src="/images/logo.svg"
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
             alt="RateUp Logo"
           />
         </Link>

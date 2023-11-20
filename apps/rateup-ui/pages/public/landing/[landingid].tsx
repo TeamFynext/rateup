@@ -62,7 +62,7 @@ export default () => {
       <>
         <Image
           pb={30}
-          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
           alt="RateUp Logo"
           w={140}
           h={35}
@@ -89,7 +89,7 @@ export default () => {
           <Text fz="sm">Powered by </Text>
           <Image
             pl={10}
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
             alt="RateUp Logo"
             w={80}
             h={20}

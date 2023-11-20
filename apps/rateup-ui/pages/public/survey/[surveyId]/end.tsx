@@ -26,7 +26,7 @@ import { useRouter } from "next/router";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
-import { GoogleIcon } from "../../../../public/images/icons/GoogleIcon";
+import { GoogleIcon } from "../../../../components/Button/GoogleIcon";
 import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { shuffleArray } from "../../../../utils";
 import { ReviewSuggestion } from "../../../../types/global";
@@ -119,8 +119,8 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           pl={10}
           src={
             enableBody
-              ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`
-              : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo_white.svg`
+              ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`
+              : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo_white.svg`
           }
           alt="RateUp Logo"
           h={35}
@@ -192,7 +192,7 @@ function GoogleReview({ googleLink, reviewSuggestions }) {
     >
       <Box style={{ flexShrink: 1 }}>
         <Image
-          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/RateUsOnGoogle1.png`}
+          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/RateUsOnGoogle1.png`}
           alt="Rate Us On Google"
           height={"auto"}
           maw="min(25vh, 250px)"

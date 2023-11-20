@@ -26,7 +26,7 @@ import Heading from "../../../components/styled/Heading/Heading";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { ReviewSuggestionModal } from "../../../components/reviewSuggestion/ReviewSuggestionModal";
-import { GoogleIcon } from "../../../public/images/icons/GoogleIcon";
+import { GoogleIcon } from "../../../components/Button/GoogleIcon";
 import { useReviewSuggestionsCount } from "../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 
 export interface ITeamData {

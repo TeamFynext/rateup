@@ -26,12 +26,12 @@ const index = () => {
     >
       <>
         {/* <Image pb={30} 
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`} 
+              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`} 
               alt="RateUp Logo" width={140} height={35} /> */}
 
         <Image
           pb={30}
-          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/cs-logo.jpeg`}
+          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/cs-logo.jpeg`}
           alt="Govt Logo"
           w={largeScreen ? 600 : 310}
         />
@@ -52,7 +52,7 @@ const index = () => {
           <Text fz="sm">Powered by </Text>
           <Image
             pl={10}
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
             alt="RateUp Logo"
             w={80}
             h={20}

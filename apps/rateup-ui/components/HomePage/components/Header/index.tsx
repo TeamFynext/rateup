@@ -11,7 +11,7 @@ function Header() {
       <Group gap={"xl"} className={styles["logo-nav-container"]} wrap="nowrap">
         <Link href="/">
           <Image
-            src="/images/logo.svg"
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
             alt="logo"
             w={110}
             h={110}

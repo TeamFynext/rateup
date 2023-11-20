@@ -4,7 +4,7 @@ import styles from "../../../index/index.module.css";
 import Image from "next/image";
 
 function ApiAndSdkSection() {
-  const imagesPath = "/images/homepage/our-features";
+  const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/homepage/our-features`;
 
   return (
     <IllustrationTextLayout>

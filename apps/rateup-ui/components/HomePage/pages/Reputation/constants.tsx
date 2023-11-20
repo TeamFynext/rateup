@@ -17,36 +17,30 @@ export const solutionsList: Solution[] = [
     heading: "Enhanced Brand Credibility",
     description:
       "Track and manage what customers are saying about your business online. Respond to reviews, address concerns, and showcase the best of what your customers love about you.",
-    imageUrl: "/images/reputation-page/why-choose-rateup/why-choose-rateup.png",
+    imageUrl: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/why-choose-rateup.png`,
     listIcons: {
-      enabledIcon:
-        "/images/reputation-page/why-choose-rateup/list-icons/credibility.png",
-      disabledIcon:
-        "/images/reputation-page/why-choose-rateup/list-icons/credibility-disabled.png",
+      enabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/credibility.png`,
+      disabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/credibility-disabled.png`,
     },
   },
   {
     heading: "Data-Driven Decision Making",
     description:
       "Leverage insights from our AI-driven analytics to make informed decisions for business improvement.",
-    imageUrl: "/images/reputation-page/why-choose-rateup/why-choose-rateup.png",
+    imageUrl: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/why-choose-rateup.png`,
     listIcons: {
-      enabledIcon:
-        "/images/reputation-page/why-choose-rateup/list-icons/decision-making.png",
-      disabledIcon:
-        "/images/reputation-page/why-choose-rateup/list-icons/decision-making-disabled.png",
+      enabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/decision-making.png`,
+      disabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/decision-making-disabled.png`,
     },
   },
   {
     heading: "Proactive Issue Resolution",
     description:
       "Identify and resolve customer concerns in real-time, showcasing a commitment to exceptional customer service.",
-    imageUrl: "/images/reputation-page/why-choose-rateup/why-choose-rateup.png",
+    imageUrl: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/why-choose-rateup.png`,
     listIcons: {
-      enabledIcon:
-        "/images/reputation-page/why-choose-rateup/list-icons/issue-resolution.png",
-      disabledIcon:
-        "/images/reputation-page/why-choose-rateup/list-icons/issue-resolution-disabled.png",
+      enabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/issue-resolution.png`,
+      disabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/issue-resolution-disabled.png`,
     },
   },
 ];
@@ -69,7 +63,7 @@ const DescriptionPSpan = ({ text }) => (
   <span className={descriptionPSpanClassName}>{text}</span>
 );
 
-const imagePath = `/images/reputation-page/our-features`;
+const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/our-features`;
 const imageClassName = styles["image-txt-section-image"];
 
 export const features = [

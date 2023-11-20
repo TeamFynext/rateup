@@ -58,8 +58,8 @@ export default function ({ fullMenu }) {
     ? fullMenu?.menuLanding?.backgroundImage
     : fullMenu?.menuLanding?.mobileBackgroundImage;
   const backgroundImageFallback = largeScreen
-    ? "/images/menu/background.jpg"
-    : "/images/menu/mobileBackground.jpg";
+    ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
+    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
 
   return (
     <Paper mih={"100vh"}>
@@ -215,7 +215,7 @@ export default function ({ fullMenu }) {
             gap={0}
           >
             <Image
-              src={"/images/menu/whiteRateUpLogo.png"}
+              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/whiteRateUpLogo.png`}
               w={largeScreen ? "42px" : "26px"}
               h={largeScreen ? "38px" : "26px"}
             />

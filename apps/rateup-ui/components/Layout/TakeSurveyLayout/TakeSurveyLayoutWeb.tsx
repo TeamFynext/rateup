@@ -85,7 +85,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
               src={
                 survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
                   ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
-                  : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
+                  : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
               alt="Logo"
               w={isMobile ? 70 : 80}
@@ -155,7 +155,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
             <Link href="/">
               <Image
                 pl={10}
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`}
+                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
                 alt="RateUp Logo"
                 w={50}
                 h={30}

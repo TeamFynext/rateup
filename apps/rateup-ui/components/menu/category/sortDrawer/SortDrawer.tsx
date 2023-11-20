@@ -44,7 +44,7 @@ const SortDrawer = ({
   categoryOrNot = false,
 }: ISortDrawerProps) => {
   const [state, handlers] = useListState(data);
-  const fallbackImage = "/images/no_image_template.jpeg";
+  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const updateSortOrderMenuItemMutation = useUpdateSortOrderMenuItemMutation(
     category.categoryId,
     category.menuId,

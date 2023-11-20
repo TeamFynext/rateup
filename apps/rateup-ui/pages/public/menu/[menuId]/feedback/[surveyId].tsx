@@ -42,10 +42,10 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         </Text>
       </Stack>
     );
-  const fallbackImage = "/images/no_image_template.jpeg";
+  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const fallbackImageBackround = largeScreen
-    ? "/images/menu/background.jpg"
-    : "/images/menu/mobileBackground.jpg";
+    ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
+    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
   const backgroundImage = largeScreen
     ? menuLanding?.backgroundImage
     : menuLanding?.mobileBackgroundImage;
@@ -218,7 +218,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
             powered by
           </Text>
           <Image
-            src={"/images/rateup_logo.svg"}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
             h={"clamp(46.888px, 30.576px + 2.738vw, 70px)"}
             w={"clamp(82.988px, 56.576px + 4.405vw, 120px)"}
             alt="rate-up logo"
@@ -240,7 +240,7 @@ function FeedbackButton(largeScreen: boolean) {
       >
         <Stack justify={"space-between"} align={"center"} gap={0}>
           <Image
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/feedback.png`}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/feedback.png`}
             w={largeScreen ? "79px" : "40px"}
             maw={"104px"}
             h={"auto"}
@@ -264,7 +264,7 @@ function MenuButton(largeScreen: boolean) {
       >
         <Stack justify={"center"} align={"center"} gap={0}>
           <Image
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/menu.png`}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/menu.png`}
             w={largeScreen ? "104px" : "52px"}
             h={"auto"}
             alt="menu image"

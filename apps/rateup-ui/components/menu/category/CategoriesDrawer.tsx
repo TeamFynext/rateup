@@ -49,7 +49,7 @@ export function CategoriesDrawer({
               src={
                 c.image
                   ? getFileUrlFromKey(c.image)
-                  : "/images/no_image_template.jpeg"
+                  : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`
               }
               width={"100%"}
               maw={"240px"}

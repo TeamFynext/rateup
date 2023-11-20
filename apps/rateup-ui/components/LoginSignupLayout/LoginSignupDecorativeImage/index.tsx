@@ -6,7 +6,7 @@ function LoginSignupDecorativeImage() {
   return (
     <Center className={styles["decorative-image-container"]}>
       <Image
-        src="/images/login-signup-pages/decorative-image.png"
+        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/login-signup-pages/decorative-image.png`}
         alt="decorative image"
         width={400}
         height={400}

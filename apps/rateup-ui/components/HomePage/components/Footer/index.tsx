@@ -11,7 +11,7 @@ function Footer() {
     >
       <Image
         className={styles["footer-logo"]}
-        src="/images/footer-logo.svg"
+        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/footer-logo.svg`}
         alt="rate up logo"
         w={110}
         h={110}

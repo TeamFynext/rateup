@@ -124,7 +124,7 @@ const ResetPasswordForm = ({ mode }) => {
             <Link href="/" className={styles["rateup-logo-link"]}>
               <Image
                 className={styles["rateup-logo-img"]}
-                src="/images/logo.svg"
+                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
                 alt="RateUp Logo"
               />
             </Link>
@@ -211,7 +211,7 @@ const ResetPasswordForm = ({ mode }) => {
             <Link href="/" className={styles["rateup-logo-link"]}>
               <Image
                 className={styles["rateup-logo-img"]}
-                src="/images/logo.svg"
+                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
                 alt="RateUp Logo"
               />
             </Link>
@@ -229,7 +229,7 @@ const ResetPasswordForm = ({ mode }) => {
 
           <Group justify="center" py="xl">
             <Image
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/email.svg`}
+              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email.svg`}
               alt="email"
               w={90}
               h={60}

@@ -72,7 +72,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   );
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
-  const fallbackImage = "/images/no_image_template.jpeg";
+  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
@@ -146,9 +146,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       ? form.values[imageKey]
       : encodeURI(getFileUrlFromKey(form.values[imageKey]));
   } else {
-    result = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/menu/${
-      isMobileTab ? "mobileBackground" : "background"
-    }.jpg`;
+    result = `${
+      process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
+    }/images/menu/${isMobileTab ? "mobileBackground" : "background"}.jpg`;
   }
 
   return (
@@ -350,7 +350,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         powered by
                       </Text>
                       <Image
-                        src={"/images/rateup_logo.svg"}
+                        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
                         h={54}
                         w={94}
                         alt="rate-up logo"

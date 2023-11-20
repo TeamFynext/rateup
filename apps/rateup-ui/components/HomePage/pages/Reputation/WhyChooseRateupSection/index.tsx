@@ -15,7 +15,7 @@ function WhyChooseRateupSection() {
       <InteractiveSolutionDescriptions
         solutions={solutionsList}
         imageContainerAsFirstElement
-        imageContainerImageUrl="/images/reputation-page/why-choose-rateup/why-choose-rateup.png"
+        imageContainerImageUrl={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/why-choose-rateup.png`}
       />
     </Stack>
   );

@@ -4,7 +4,7 @@ import Image from "next/image";
 import styles from "./HeroSection.module.css";
 import commonStyles from "../Reputation.module.css";
 
-const imagePath = `/images/reputation-page/transform-online-presence.png`;
+const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/transform-online-presence.png`;
 
 const heroSectionContainerClassName = `${styles["hero-section-container"]} ${commonStyles["section-container"]}`;
 function HeroSection() {

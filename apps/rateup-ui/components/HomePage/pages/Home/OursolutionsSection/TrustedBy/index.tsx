@@ -2,7 +2,8 @@ import { Flex, Title } from "@mantine/core";
 import styles from "./TrustedBy.module.css";
 
 function TrustedBy() {
-  const logosPath = "/images/homepage/our-solutions/companies-logos";
+  const logosPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/homepage/our-solutions/companies-logos`;
+
   return (
     <div className={styles["trustedby-companies-container"]}>
       <Title order={1}>TRUSTED BY OVER 25K BUSINESSES</Title>

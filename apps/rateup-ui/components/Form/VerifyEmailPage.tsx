@@ -19,7 +19,12 @@ function VerifyEmailPage({ sendEmail }) {
       </Text>
 
       <Group justify="center" py="xl">
-        <Image src="/images/email.svg" alt="email" w={90} h={60} />
+        <Image
+          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email.svg`}
+          alt="email"
+          w={90}
+          h={60}
+        />
       </Group>
 
       <NavLink

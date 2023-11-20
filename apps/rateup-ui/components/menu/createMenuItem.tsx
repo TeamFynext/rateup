@@ -47,7 +47,8 @@ export function CreateMenuItemModal({
   editingItem,
 }: CreateMenuItemModalProps) {
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-  const fallbackImage = "/images/no_image_template.jpeg";
+  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
+
   const form = useForm({
     initialValues: editingItem || {
       name: "",

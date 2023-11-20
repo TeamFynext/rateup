@@ -128,7 +128,7 @@ const ProfileSettings = () => {
   };
 
   const [avatarSrc, setAvatarSrc] = useState(
-    `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`,
+    `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
   );
 
   useEffect(() => {
@@ -148,7 +148,7 @@ const ProfileSettings = () => {
       setAvatarSrc(imgUrl);
     } else {
       setAvatarSrc(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`,
+        `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
       );
     }
   }, [profileData]);

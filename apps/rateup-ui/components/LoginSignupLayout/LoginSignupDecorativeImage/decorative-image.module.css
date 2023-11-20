@@ -1,6 +1,6 @@
 .decorative-image-container {
   flex: 1 1 0;
-  background-image: url("/images/login-signup-pages/abstract-pattern.svg"),
+  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/login-signup-pages/abstract-pattern.svg"),
     linear-gradient(135deg, #2564ae, #00397b);
 }
 

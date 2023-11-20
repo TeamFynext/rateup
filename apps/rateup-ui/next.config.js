@@ -1,10 +1,19 @@
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
 });
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "djd7kjh9uwow0.cloudfront.net",
+        port: "",
+      },
+    ],
   },
 });

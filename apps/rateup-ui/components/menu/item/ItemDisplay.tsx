@@ -8,7 +8,7 @@ interface ItemDisplayProps {
   setSelectedItem: (item: MenuItem) => void;
 }
 export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
-  const fallbackImage = "/images/no_image_template.jpeg";
+  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const smallScreen = useMediaQuery("(max-width: 40em)");
 
   return (

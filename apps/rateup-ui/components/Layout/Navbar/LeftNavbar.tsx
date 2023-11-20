@@ -143,7 +143,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { user } = useUser();
   const [userProfileAvatar, setUserProfileAvatar] = useState(
-    `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user.png`,
+    `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user.png`,
   );
 
   useEffect(() => {
@@ -152,7 +152,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       setUserProfileAvatar(imgUrl);
     } else {
       setUserProfileAvatar(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/profile-photo.png`,
+        `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
       );
     }
   }, [user]);
@@ -211,7 +211,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
               src={
                 user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
                   ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
-                  : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
+                  : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
             />
           </PaperLayout>
@@ -305,8 +305,8 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
         <img
           src={
             opened
-              ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup_logo.svg`
-              : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/icons/rateup_new_logo.svg`
+              ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
+              : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/icons/rateup_new_logo.svg`
           }
           alt=""
           height={opened ? 40 : 20}

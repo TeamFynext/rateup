@@ -58,7 +58,7 @@ const CreateGroupModal = ({
   });
 
   useEffect(() => {
-    const initialImageUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/user-group-icon-t.png`;
+    const initialImageUrl = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`;
     fetch(initialImageUrl)
       .then((response) => response.blob())
       .then((blob) => {

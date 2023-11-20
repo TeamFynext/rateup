@@ -109,7 +109,7 @@ const QuestionTypePreview = ({ type }) => {
   function PhoneForm() {
     const data = [
       {
-        image: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/flag_india.png`,
+        image: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/flag_india.png`,
         label: "+91",
         value: "91",
         description: "India",

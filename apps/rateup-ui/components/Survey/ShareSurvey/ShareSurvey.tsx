@@ -271,7 +271,7 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
               >
                 <Image
                   alt="mail icon"
-                  src={"/images/social-media-icons/mail.svg"}
+                  src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
                   width={40}
                   height={40}
                   style={{ objectFit: "contain" }}
@@ -285,7 +285,7 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
               >
                 <Image
                   alt="whatsapp icon"
-                  src={"/images/social-media-icons/whatsapp.svg"}
+                  src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
                   width={40}
                   height={40}
                   style={{ objectFit: "contain" }}
@@ -299,7 +299,7 @@ const ShareSurvey = ({ survey, setActiveTab }) => {
               >
                 <Image
                   alt="facebook icon"
-                  src={"/images/social-media-icons/facebook.svg"}
+                  src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
                   width={40}
                   height={40}
                   style={{ objectFit: "contain" }}

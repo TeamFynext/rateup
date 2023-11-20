@@ -99,7 +99,7 @@ const Invite = () => {
           <Center>
             <Link href="/">
               <Image
-                src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logo.svg`}
+                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
                 alt="RateUp Logo"
                 w={140}
               />

@@ -33,7 +33,7 @@ const TableRow = ({
           src={
             item?.images?.length > 0
               ? getFileUrlFromKey(item?.images[0])
-              : "/images/no_image_template.jpeg"
+              : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`
           }
           alt={item?.name}
           h={100}
