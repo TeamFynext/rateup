@@ -14,6 +14,8 @@ import {
 } from "./response.service";
 import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
+import Session from "supertokens-node/recipe/session";
+import { getTeamIdsByUserId } from "../team/team.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -38,8 +40,11 @@ export async function getAllResponsesHandler(
   reply: FastifyReply
 ) {
   try {
+    let session = await Session.getSession(request, reply);
+    const userId = session.getUserId();
+    const teamIds = await getTeamIdsByUserId(userId);
     const surveyId = request.params.surveyId;
-    const responses = await getAllResponses(surveyId);
+    const responses = await getAllResponses(surveyId,teamIds);
     if (responses.length === 0)
       reply.code(404).send({ message: "No responses found" });
     reply.code(200).send(responses);

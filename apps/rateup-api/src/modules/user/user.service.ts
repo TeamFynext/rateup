@@ -112,6 +112,11 @@ export async function getLoggedUserInfo(
     select: {
       name: true,
       profilePhoto: true,
+      teamMember: {
+        select: {
+          teamId: true,
+        },
+      },
     },
   });
 
@@ -124,7 +129,7 @@ export async function getLoggedUserInfo(
       phone: true,
     },
   });
-
+  console.log(profile);
   return {
     userId,
     userName: profile?.name,
@@ -136,6 +141,7 @@ export async function getLoggedUserInfo(
     orgLogo: orgData?.logo,
     orgPhone: orgData?.phone,
     orgAddress: orgData?.address,
+    teams: profile?.teamMember?.map((team) => team.teamId),
   };
 }
 

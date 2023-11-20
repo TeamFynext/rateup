@@ -12,6 +12,7 @@ import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessa
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import { CreateResponseInput } from "../../response/response.schema";
 import { QuestionType as Q } from "../../../types/enums";
+import { updateCompletedSurvey, updateVisitedSurvey } from "../../survey/survey.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -250,6 +251,7 @@ async function saveResponses(session: WaSessionWithRelations) {
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);
+  updateCompletedSurvey(session.surveyTeamMapId).catch(e => log.error(e));
   if (session.campaignParticipantId) {
     await updateCampaignParticipant(session.campaignParticipantId, {
       status: CampaignParticipantStatus.COMPLETED,
@@ -298,7 +300,9 @@ export async function sendSurveyToParticipant({
     const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
 
     // TODO: send error if sending template failed
-    return await sendMessage(session.orgId, consentTemplateMessage);
+    await sendMessage(session.orgId, consentTemplateMessage);
+    updateVisitedSurvey(session.surveyTeamMapId);
+    return true
   } catch (e) {
     log.error(e)
     return false
