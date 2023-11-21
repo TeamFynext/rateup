@@ -5,6 +5,7 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { extractVideoId } from "../../../utils/youtube/url";
 import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import classes from "./itemDetailedViewModal.module.css";
+import { GilroyMedium, GilroySemibold } from "../../../public/fonts";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -15,7 +16,7 @@ export function ItemDetailedViewModal({
   onClose,
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0],
+    item?.videoUrl ? item?.videoUrl : item?.images[0]
   );
 
   useEffect(() => {
@@ -39,13 +40,17 @@ export function ItemDetailedViewModal({
       }}
       closeButtonProps={{ iconSize: "22px" }}
     >
-      <Stack align="center">
+      <Stack
+        align="center"
+        c={"var(--grey-color)"}
+        className={GilroyMedium.className}
+      >
         <Box>
           <Box
             style={{
               maxWidth: "400px",
               maxHeight: "300px",
-              minHeight: "230px",
+              minHeight: "180px",
               overflow: "clip",
             }}
           >
@@ -68,7 +73,8 @@ export function ItemDetailedViewModal({
                   style={{
                     aspectRatio: "4 / 3",
                   }}
-                  w={"300px"}
+                  w={"100%"}
+                  maw={"300px"}
                   radius={"lg"}
                   src={
                     selectedMedia
@@ -82,7 +88,7 @@ export function ItemDetailedViewModal({
             }
           </Box>
 
-          <Group justify="center" mt="sm">
+          <Group justify="center" mt="xs">
             {item?.images?.map((imageKey) => (
               <Image
                 key={imageKey}
@@ -111,7 +117,7 @@ export function ItemDetailedViewModal({
                       aspectRatio: "4 / 3",
                     }}
                     src={`http://img.youtube.com/vi/${extractVideoId(
-                      item?.videoUrl,
+                      item?.videoUrl
                     )}/0.jpg`}
                     alt="video of menu"
                   />
@@ -139,31 +145,37 @@ export function ItemDetailedViewModal({
             {item.name}
           </Text>
           <Text
-            c="dimmed"
-            w={"350px"}
+            maw={"350px"}
             h="100px"
+            px={"lg"}
             style={{
               overflowY: "auto",
-              textAlign: "center",
             }}
           >
             {item.description}
           </Text>
         </Box>
-        <Group justify="space-evenly" gap={"sm"}>
+        <Group
+          justify="space-evenly"
+          gap={"sm"}
+          className={GilroySemibold.className}
+        >
           {item.price.variants?.length > 0 ? (
             item.price.variants.map((varient, index) => (
               <Stack align="center" gap={"0px"} key={index}>
-                <Text fz="sm" c="dimmed">
+                <Text
+                  fz={"clamp(0.875rem, 0.429rem + 1.19vw, 1.5rem)"}
+                  tt={"capitalize"}
+                >
                   {varient.name}
                 </Text>
-                <Text fz="xl">
+                <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)">
                   ₹{varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
-            <Text fz="xl" mt={"md"}>
+            <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)" mt={"md"}>
               ₹{item?.price?.price}
             </Text>
           )}

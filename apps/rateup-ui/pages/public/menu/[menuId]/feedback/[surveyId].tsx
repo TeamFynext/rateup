@@ -16,7 +16,7 @@ import classes from "./Feedback.module.css";
 import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
-import { GilroyMedium, GilroySemibold } from "../../../../../public/fonts";
+import { GilroySemibold } from "../../../../../public/fonts";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 type MenuProp = {
@@ -199,7 +199,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
           </Center>
         </Stack>
       </BackgroundImage>
-      <Stack align="center" justify={"space-between"} h={"50vh"} py={"xl"}>
+      <Stack align="center" justify={"space-between"} h={"55vh"} py={"xl"}>
         <Center>
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             {(menuLanding?.menuPageEnabled === true ||
@@ -216,16 +216,9 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
           </SimpleGrid>
         </Center>
         <Group>
-          <Text
-            className={GilroyMedium.className}
-            fz={"clamp(0.875rem, 0.607rem + 0.714vw, 1.25rem)"}
-          >
-            powered by
-          </Text>
           <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
-            h={"clamp(46.888px, 30.576px + 2.738vw, 70px)"}
-            w={"clamp(82.988px, 56.576px + 4.405vw, 120px)"}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/poweredByRateUp.png`}
+            w={"clamp(137px, 4.098rem + 11.905vw, 237px)"}
             alt="rate-up logo"
           />
         </Group>

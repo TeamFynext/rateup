@@ -1,7 +1,7 @@
-import { Flex, Grid, Group, Image, Stack, Text } from "@mantine/core";
+import { Flex, Group, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
-import { GilroyMedium, GilroyRegular } from "../../../public/fonts";
+import { GilroyMedium, GilroySemibold } from "../../../public/fonts";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 interface ItemDisplayProps {
@@ -43,7 +43,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           />
         </Flex>
 
-        <Stack style={{ flex: 1 }}>
+        <Stack style={{ flex: 1 }} c={"var(--grey-color)"} className={GilroySemibold.className}>
           <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
             <Text
               fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
@@ -54,7 +54,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             </Text>
             <Text
               fz="clamp(0.75rem, 0.616rem + 0.357vw, 0.938rem)"
-              c="dimmed"
+              c="var(--grey-color-4)"
               lineClamp={3}
               mih={"50px"}
               className={GilroyMedium.className}
@@ -64,15 +64,13 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             <Group
               justify="space-evenly"
               gap={"sm"}
-              className={GilroyMedium?.className}
             >
               {item?.price?.variants?.length > 0 ? (
                 item?.price?.variants.map((varient, index) => (
                   <Stack align="center" gap={"0px"} key={index}>
                     <Text
                       fz="clamp(0.75rem, 0.616rem + 0.357vw, 0.938rem)"
-                      c="dimmed"
-                      className={GilroyRegular.className}
+                      tt={"capitalize"}
                     >
                       {varient?.name}
                     </Text>

@@ -5,7 +5,6 @@ import {
   Stack,
   Text,
   Image,
-  Flex,
   BackgroundImage,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
@@ -17,8 +16,12 @@ import { CategoryDisplay } from "../../../../../components/menu/category/Categor
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
-import { GilroyBold, GilroyMedium } from "../../../../../public/fonts";
-import Link from "next/link";
+import {
+  GilroyBold,
+  GilroyMedium,
+  GilroySemibold,
+} from "../../../../../public/fonts";
+import { useRouter } from "next/router";
 
 type MenuViewProp = {
   menuId: string;
@@ -33,6 +36,7 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 };
 
 export default function ({ fullMenu }) {
+  const router = useRouter();
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
     fullMenu?.categories
@@ -145,7 +149,7 @@ export default function ({ fullMenu }) {
         style={{ zIndex: 10 }}
       >
         <ActionIcon onClick={open} variant="transparent">
-          <IconMenu2 />
+          <IconMenu2 color="var(--grey-color)" />
         </ActionIcon>
         <Group
           wrap="nowrap"
@@ -187,48 +191,35 @@ export default function ({ fullMenu }) {
           onClose={() => setSelectedItem(null)}
         />
       )}
-      <Flex
-        justify={"flex-end"}
-        pos={"sticky"}
-        bottom={"0"}
-        right={0}
-        display={
-          fullMenu?.menuLanding?.surveyTeamMapId !== undefined &&
-          fullMenu?.menuLanding?.feedbackPageEnabled === true
-            ? "flex"
-            : "none"
-        }
-        maw={largeScreen ? "2440px" : "768px"}
-      >
-        <Link
-          href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`}
-          style={{ textDecoration: "none", color: "inherit" }}
+      <Stack pos={"fixed"} bottom={40} right={30}>
+        <Stack
+          w={largeScreen ? "80px" : "70px"}
+          h={largeScreen ? "80px" : "70px"}
+          bg={"#F8951D"}
+          style={{ borderRadius: "100%" }}
+          justify="center"
+          align="center"
+          gap={0}
+          onClick={() => {
+            router.push(
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`
+            );
+          }}
         >
-          <Stack
-            w={largeScreen ? "80px" : "50px"}
-            h={largeScreen ? "80px" : "50px"}
-            p={"lg"}
-            m={"lg"}
-            bg={"#F8951D"}
-            style={{ borderRadius: "100%" }}
-            justify="center"
-            align="center"
-            gap={0}
+          <Image
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/whiteRateUpLogo.png`}
+            w={largeScreen ? "42px" : "26px"}
+            h={largeScreen ? "38px" : "26px"}
+          />
+          <Text
+            fz={"clamp(0.688rem, 0.509rem + 0.476vw, 0.938rem)"}
+            c={"white"}
+            className={GilroySemibold.className}
           >
-            <Image
-              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/whiteRateUpLogo.png`}
-              w={largeScreen ? "42px" : "26px"}
-              h={largeScreen ? "38px" : "26px"}
-            />
-            <Text
-              fz={"clamp(0.5rem, 0.243rem + 0.685vw, 0.859rem)"}
-              c={"white"}
-            >
-              Feedback
-            </Text>
-          </Stack>
-        </Link>
-      </Flex>
+            Feedback
+          </Text>
+        </Stack>
+      </Stack>
     </Paper>
   );
 }
