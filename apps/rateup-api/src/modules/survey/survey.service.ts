@@ -49,6 +49,7 @@ export async function createSurvey(
       logoStyles: landingData.logoStyles,
       surveyId: survey.id,
       bgUrl: landingData.bgUrl,
+      mobileBgUrl: landingData.mobileBgUrl,
       bgType: landingData.bgType,
     },
   });
@@ -88,6 +89,7 @@ export async function createSurveyLanding(
       logoStyles: landingData.logoStyles,
       landingId: Landing.id,
       bgUrl: landingData.bgUrl,
+      mobileBgUrl: landingData.mobileBgUrl,
       bgType: landingData.bgType,
     },
   });

@@ -47,8 +47,8 @@ const defaultTheme = {
     },
    
     bgType: "bgcolor",
-   
-    bgUrl: ""
+    bgUrl: "",
+    mobileBgUrl: "",
   };
   export default defaultTheme;
   

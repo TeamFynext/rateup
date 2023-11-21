@@ -1,13 +1,31 @@
 import prisma from "../../utils/prisma";
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendSurveyToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
-import { CampaignStatus } from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { log } from "../../utils/logger";
 
 export async function getCampaignById(campaignId: string) {
     const campaign = await prisma.campaign.findUnique({
         where: {
             id: campaignId
+        },
+        include:{
+            team:true,
+            surveyTeamMap: {
+                select: {
+                    survey:true
+                }
+            },
+            waTemplate: {
+                select: {
+                    data:true
+                }
+            },
+            campaignParticipants:{
+                include:{
+                    contact:true
+                }
+            }
         }
     });
     return campaign;
@@ -17,7 +35,18 @@ export async function getCampaignsByTeamId(teamId: string) {
     const campaigns = await prisma.campaign.findMany({
         where: {
             teamId
-        }
+        },
+        include:{
+         _count:{
+            select:{
+                campaignParticipants:{
+                    where:{
+                        status: CampaignParticipantStatus.COMPLETED
+                    }
+                }
+            }
+         }
+        },
     });
     return campaigns;
 }
@@ -62,9 +91,9 @@ export async function deleteCampaign(campaignId: string) {
     })
 }
 
-export async function startCampaign(campaignId: string) {
-    await updateCampaign(campaignId, { status: CampaignStatus.ACTIVE })
+export async function startCampaign(campaignId: string) { 
     log.trace('updated campaign status to active')
     sendSurveyToParticipants(campaignId)
+    await updateCampaign(campaignId, {startedAt: new Date()})
     // add state indicating survey is sent to all participants?
 }

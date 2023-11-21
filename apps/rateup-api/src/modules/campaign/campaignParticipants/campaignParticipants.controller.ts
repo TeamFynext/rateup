@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { CreateCampaignParticipantsFromContactsInput, CreateCampaignParticipantsFromGroupsInput, ByCampaignParticipantIdParams } from "./campaignParticipants.schema";
-import { createCampaignParticipantsFromContacts, createCampaignParticipantsFromGroup, deleteCampaignParticipantById, getCampaignParticipantById, getCampaignParticipantsByCampaignId } from "./campaignParticipants.service";
+import { CreateCampaignParticipantsFromContactsInput, CreateCampaignParticipantsFromGroupsInput, ByCampaignParticipantIdParams, CreateCampaignParticipantsInput } from "./campaignParticipants.schema";
+import { createCampaignParticipants, createCampaignParticipantsFromContacts, createCampaignParticipantsFromGroup, deleteCampaignParticipantById, getCampaignParticipantById, getCampaignParticipantsByCampaignId } from "./campaignParticipants.service";
 import { ByCampaignIdParams } from "../campaign.schema";
 
 export async function createCampaignParticipantsFromContactsHandler(
@@ -22,6 +22,17 @@ export async function createCampaignParticipantsFromGroupHandler(
     reply: FastifyReply
 ) {
     const campaignParticipants = await createCampaignParticipantsFromGroup(request.params.campaignId, request.body);
+    reply.send(campaignParticipants);
+}
+
+export async function createCampaignParticipantsHandler(
+    request: FastifyRequest<{ 
+        Body: CreateCampaignParticipantsInput,
+        Params: ByCampaignIdParams
+     }>,
+    reply: FastifyReply
+) {
+    const campaignParticipants = await createCampaignParticipants(request.params.campaignId, request.body);
     reply.send(campaignParticipants);
 }
 

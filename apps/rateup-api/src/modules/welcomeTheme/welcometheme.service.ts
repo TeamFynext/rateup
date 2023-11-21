@@ -58,6 +58,7 @@ export async function createWelcomeTheme(
       surveyId: input.surveyId,
       // landingId: input.landingId,
       bgUrl: input.bgUrl,
+      mobileBgUrl: input.mobileBgUrl,
       logoUrl: input.logoUrl,
       bgType: input.bgType,
     }
