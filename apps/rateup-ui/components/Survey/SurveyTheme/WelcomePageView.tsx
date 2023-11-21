@@ -18,7 +18,9 @@ function WelcomePageView({
   currentStyles,
   setCurrentstyles,
   bgImage,
+  bgMobileImage,
   selectedType,
+  isMobileView,
 }) {
   const form = useForm({
     initialValues: {
@@ -138,7 +140,13 @@ function WelcomePageView({
       <BackgroundImage
         className={classes.parentContainer}
         style={{ height: "100%", width: "100%", objectFit: "contain" }}
-        src={bgImage && currentStyles.bgType != "bgcolor" ? bgImage : ""}
+        src={
+          (bgImage || bgMobileImage) && currentStyles.bgType != "bgcolor"
+            ? isMobileView
+              ? bgMobileImage
+              : bgImage
+            : ""
+        }
       >
         <ActionIcon
           variant="default"

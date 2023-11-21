@@ -9,6 +9,7 @@ import {
   Tabs,
   SimpleGrid,
   ColorInput,
+  Text,
 } from "@mantine/core";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, useEffect } from "react";
@@ -19,6 +20,7 @@ function BackgroundStyles({
   setCurrentstyles,
   saveLoading,
   setbgImage,
+  setbgMobileImage,
 }) {
   const fileInputRef = useRef(null);
 
@@ -27,6 +29,7 @@ function BackgroundStyles({
     bgType: "bgcolor",
     bgStyles: currentStyles.bgStyles,
     bgUrl: ``,
+    mobileBgUrl: ``,
     borderRadius: 18,
   });
 
@@ -50,8 +53,26 @@ function BackgroundStyles({
     setisFileLoading(false);
   };
 
+  const handleMobileBgFileChange = (value) => {
+    setisFileLoading(true);
+    setCurrentstyles({ ...currentStyles, mobileBgUrlNotUploaded: value });
+    let url = URL.createObjectURL(value);
+
+    setbgMobileImage(url);
+    setisFileLoading(false);
+  };
+
   const removeBg = () => {
     setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: "", bgUrl: "" });
+    setbgImage("");
+  };
+
+  const removeMobileBg = () => {
+    setCurrentstyles({
+      ...currentStyles,
+      mobileBgUrlNotUploaded: "",
+      mobileBgUrl: "",
+    });
     setbgImage("");
   };
 
@@ -64,7 +85,7 @@ function BackgroundStyles({
       <Stack mt={10}>
         {/* //-------------tabs ------------ */}
         <Tabs
-          defaultValue={currentStyles?.bgType}
+          value={currentStyles?.bgType}
           radius="lg"
           onChange={handleTabChange}
         >
@@ -121,45 +142,80 @@ function BackgroundStyles({
 
           {/* //------------BGIMAGE------------ */}
           <Tabs.Panel value="bgimage" pt="xs">
-            <FileInput
-              ref={fileInputRef}
-              mt={10}
-              display={"none"}
-              accept="image/*"
-              placeholder="Choose background image"
-              leftSection={<IconUpload size={14} />} //VERIFY MANTINE
-              onChange={handleFileChange}
-            />
-
-            <SimpleGrid cols={2} mt="lg">
-              <RateupButtonSecondary
-                onClick={removeBg}
-                title="Remove Image"
-                size="xs"
-                disabled={
-                  currentStyles.bgUrlNotUploaded === "" ||
-                  (!currentStyles.bgUrlNotUploaded &&
-                    currentStyles.bgUrl === "")
-                }
-                leftIcon={<IconTrash size={16} />}
-              />
-              <FileButton
+            <Stack mt="xl">
+              <Text>Web Background:</Text>
+              <FileInput
+                ref={fileInputRef}
+                display={"none"}
+                accept="image/*"
+                placeholder="Choose background image"
+                leftSection={<IconUpload size={14} />} //VERIFY MANTINE
                 onChange={handleFileChange}
-                accept="image/png,image/jpeg"
-              >
-                {(props) => (
-                  <Button
-                    leftSection={<IconUpload size={16} />}
-                    size="xs"
-                    radius="18px"
-                    {...props}
-                    loading={isFileLoading}
-                  >
-                    Upload Image
-                  </Button>
-                )}
-              </FileButton>
-            </SimpleGrid>
+              />
+
+              <SimpleGrid cols={2}>
+                <RateupButtonSecondary
+                  onClick={removeBg}
+                  title="Remove Image"
+                  size="xs"
+                  disabled={
+                    currentStyles.bgUrlNotUploaded === "" ||
+                    (!currentStyles.bgUrlNotUploaded &&
+                      currentStyles.bgUrl === "")
+                  }
+                  leftIcon={<IconTrash size={16} />}
+                />
+                <FileButton
+                  onChange={handleFileChange}
+                  accept="image/png,image/jpeg"
+                >
+                  {(props) => (
+                    <Button
+                      leftSection={<IconUpload size={16} />}
+                      size="xs"
+                      radius="18px"
+                      {...props}
+                      loading={isFileLoading}
+                    >
+                      Upload Image
+                    </Button>
+                  )}
+                </FileButton>
+              </SimpleGrid>
+            </Stack>
+
+            <Stack mt="50">
+              <Text>Mobile Background:</Text>
+              <SimpleGrid cols={2}>
+                <RateupButtonSecondary
+                  onClick={removeMobileBg}
+                  title="Remove Image"
+                  size="xs"
+                  disabled={
+                    currentStyles.mobileBgUrlNotUploaded === "" ||
+                    (!currentStyles.mobileBgUrlNotUploaded &&
+                      currentStyles.mobileBgUrl === "")
+                  }
+                  leftIcon={<IconTrash size={16} />}
+                />
+                <FileButton
+                  onChange={handleMobileBgFileChange}
+                  accept="image/png,image/jpeg"
+                >
+                  {(props) => (
+                    <Button
+                      leftSection={<IconUpload size={16} />}
+                      size="xs"
+                      radius="18px"
+                      {...props}
+                      loading={isFileLoading}
+                    >
+                      Upload Image
+                    </Button>
+                  )}
+                </FileButton>
+              </SimpleGrid>
+            </Stack>
           </Tabs.Panel>
         </Tabs>
 
@@ -171,7 +227,7 @@ function BackgroundStyles({
             size={"sm"}
             pl={40}
             pr={40}
-            mt={20}
+            mt={50}
             onClick={onSubmit}
             loading={saveLoading}
           >

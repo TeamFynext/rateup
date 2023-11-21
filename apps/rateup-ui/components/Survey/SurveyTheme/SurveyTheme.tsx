@@ -28,6 +28,8 @@ function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
   const [IsLoading, setIsLoading] = useState(false);
   const [bgImage, setbgImage] = useState("");
+  const [bgMobileImage, setbgMobileImage] = useState("");
+
   const [selectedTab, setSelectedTab] = useState("Web");
   const isMobileView = selectedTab !== "Web";
 
@@ -35,6 +37,7 @@ function SurveyTheme({ survey }) {
     ...defaultStyles,
     logoUrlNotUploaded: "",
     bgUrlNotUploaded: "",
+    mobileBgUrlNotUploaded: "",
   });
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -82,6 +85,7 @@ function SurveyTheme({ survey }) {
       setCurrentstyles(welcomeTheme);
     }
   }, [welcomeTheme]);
+
   useEffect(() => {
     if (welcomeTheme?.bgUrl) {
       setbgImage(
@@ -89,6 +93,14 @@ function SurveyTheme({ survey }) {
       );
     }
   }, [welcomeTheme?.bgUrl]);
+
+  useEffect(() => {
+    if (welcomeTheme?.mobileBgUrl) {
+      setbgMobileImage(
+        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${welcomeTheme?.mobileBgUrl}`,
+      );
+    }
+  }, [welcomeTheme?.mobileBgUrl]);
 
   //----------------upload image file ------------
   const uploadImage = async (value) => {
@@ -110,6 +122,10 @@ function SurveyTheme({ survey }) {
     if (currentStyles?.bgUrlNotUploaded) {
       let logo = await uploadImage(currentStyles?.bgUrlNotUploaded);
       currentStyles.bgUrl = logo;
+    }
+    if (currentStyles?.mobileBgUrlNotUploaded) {
+      let logo = await uploadImage(currentStyles?.mobileBgUrlNotUploaded);
+      currentStyles.mobileBgUrl = logo;
     }
 
     if (currentStyles?.id) {
@@ -162,55 +178,6 @@ function SurveyTheme({ survey }) {
                 <></>
               </TabsCommon>
             </Group>
-            {/* <Group>
-              <Tooltip
-                arrowOffset={27}
-                arrowSize={5}
-                label={"Edit Visual"}
-                withArrow
-                position="top-start"
-              >
-                <IconPhotoEdit
-                  onClick={() => {
-                    selectedType === "background"
-                      ? setSelectedType("logo")
-                      : setSelectedType("background");
-                  }}
-                />
-              </Tooltip>
-
-              <Tooltip
-                arrowOffset={27}
-                arrowSize={5}
-                label={"Edit Text"}
-                withArrow
-                position="top-start"
-                ml="md"
-              >
-                <IconTextSize
-                  onClick={() => {
-                    selectedType === "header"
-                      ? setSelectedType("description")
-                      : setSelectedType("header");
-                  }}
-                />
-              </Tooltip>
-
-              <Tooltip
-                arrowOffset={27}
-                arrowSize={5}
-                label={"Edit Button"}
-                withArrow
-                position="top-start"
-                ml="md"
-              >
-                <IconEdit
-                  onClick={() => {
-                    setSelectedType("button");
-                  }}
-                />
-              </Tooltip>
-            </Group> */}
             <Group>
               <Text>Status: </Text>
               <Badge color={survey?.welcomePageEnabled ? "green" : "red"}>
@@ -231,6 +198,8 @@ function SurveyTheme({ survey }) {
                 currentStyles={currentStyles}
                 setCurrentstyles={setCurrentstyles}
                 bgImage={bgImage}
+                bgMobileImage={bgMobileImage}
+                isMobileView={isMobileView}
               />
             </PaperLayout>
           </Group>
@@ -258,6 +227,7 @@ function SurveyTheme({ survey }) {
             loadFont={loadFont}
             saveLoading={saveLoading}
             setbgImage={setbgImage}
+            setbgMobileImage={setbgMobileImage}
           />
         </PaperLayout>
       </Stack>

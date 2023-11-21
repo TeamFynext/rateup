@@ -106,8 +106,7 @@ export default () => {
     }
   }, [selectedTeamId]);
 
-  if (isLoading || isSurveyLoading || !survey?.isPublished || !activeTab)
-    return <Loader />;
+  if (isLoading || isSurveyLoading || !activeTab) return <Loader />;
   if (error || surveyError) {
     return "An error has occurred";
   }

@@ -102,25 +102,24 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
           {survey?.isPublished === true && survey?.active === true ? (
             <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
               {startClicked &&
-              !selectedLanguage &&
-              survey?.languages?.length > 1 ? (
-                <SelectLang
-                  languages={survey?.languages}
-                  selectedLanguage={selectedLanguage}
-                  setSelectedLanguage={setSelectedLanguage}
-                />
-              ) : (
-                selectedLanguage && (
-                  <SelectedLanguageContext.Provider
-                    value={{
-                      selectedLanguage,
-                      defaultLanguage: survey?.languages[0],
-                    }}
-                  >
-                    {children}
-                  </SelectedLanguageContext.Provider>
-                )
-              )}
+                (!selectedLanguage && survey?.languages?.length > 1 ? (
+                  <SelectLang
+                    languages={survey?.languages}
+                    selectedLanguage={selectedLanguage}
+                    setSelectedLanguage={setSelectedLanguage}
+                  />
+                ) : (
+                  selectedLanguage && (
+                    <SelectedLanguageContext.Provider
+                      value={{
+                        selectedLanguage,
+                        defaultLanguage: survey?.languages[0],
+                      }}
+                    >
+                      {children}
+                    </SelectedLanguageContext.Provider>
+                  )
+                ))}
 
               {!startClicked && (
                 <WelcomePage

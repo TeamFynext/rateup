@@ -20,9 +20,15 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
     ...defaultStyles,
     logoUrlNotUploaded: "",
     bgUrlNotUploaded: "",
+    mobileBgUrlNotUploaded: "",
   });
   const [saveLoading, setSaveLoading] = useState(false);
   const [bgImage, setbgImage] = useState("");
+  const [bgMobileImage, setbgMobileImage] = useState("");
+
+  const [selectedTab, setSelectedTab] = useState("Web");
+  const isMobileView = selectedTab !== "Web";
+
   //--------create welcome theme page-------------
   const createWelcomeThemeMutation = useCreateLandingWelcomeThemeMutation({
     setIsLoading,
@@ -154,6 +160,8 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
           setCurrentstyles={setCurrentstyles}
           bgImage={bgImage}
           selectedType={selectedType}
+          bgMobileImage={bgMobileImage}
+          isMobileView={isMobileView}
         />
       </Paper>
 
@@ -167,6 +175,7 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
           saveLoading={saveLoading}
           setbgImage={setbgImage}
           setSelectedType={setSelectedType}
+          setbgMobileImage={setbgMobileImage}
         />
       </Paper>
     </Flex>

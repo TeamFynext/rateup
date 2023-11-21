@@ -9,7 +9,7 @@ import {
   BackgroundImage,
 } from "@mantine/core";
 import React, { useState, useEffect } from "react";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 import { notifications } from "@mantine/notifications";
 import FormModalLayout from "../../Modal/FormModalLayout";
@@ -32,6 +32,7 @@ function WelcomePage({
 }) {
   const [opened, { open, close }] = useDisclosure(false);
   const [passwordInput, setPasswordInput] = useState("");
+  const isMobile = useMediaQuery("(max-width: 480px)");
 
   const verifySurveyPassword = useVerifySurveyPwdMutation(
     surveyId,
@@ -114,8 +115,13 @@ function WelcomePage({
             borderRadius: 18,
           }}
           src={
-            surveyThemeData?.bgUrl && surveyThemeData?.bgType != "bgcolor"
-              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData?.bgUrl}`
+            (surveyThemeData?.bgUrl || surveyThemeData?.mobileBgUrl) &&
+            surveyThemeData?.bgType != "bgcolor"
+              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${
+                  isMobile && surveyThemeData?.mobileBgUrl
+                    ? surveyThemeData?.mobileBgUrl
+                    : surveyThemeData?.bgUrl
+                }`
               : ""
           }
         >
