@@ -10,6 +10,7 @@ import {
   updateContactGroup,
 } from "./contactGroup.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 export const useContactGroup = () => {
   return useQuery({
@@ -40,10 +41,18 @@ export const useCreateContactGroupMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       }),
-        showSuccessToast("Contact Group created successfully.");
+        showSuccessToast(
+          "Contact Group created successfully.",
+          "contact-group-create",
+          <IconCheck />,
+        );
     },
     onError: (error: any) => {
-      showErrorToast(`Error creating group: ${error?.response?.data?.error}`);
+      showErrorToast(
+        `Error creating group: ${error?.response?.data?.error}`,
+        "contact-group-create",
+        <IconX />,
+      );
     },
   });
 };
@@ -57,10 +66,18 @@ export const useAddNewContactMutation = (groupId: string) => {
         queryKey: ["contactGroupById", groupId],
       }),
         queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
-        showSuccessToast("Added new customer successfully.");
+        showSuccessToast(
+          "Added new customer successfully.",
+          "contact-group-add-customer",
+          <IconCheck />,
+        );
     },
     onError: (error: any) => {
-      showErrorToast(`Error adding customer: ${error?.response?.data?.error}`);
+      showErrorToast(
+        `Error adding customer: ${error?.response?.data?.error}`,
+        "contact-group-add-customer",
+        <IconX />,
+      );
     },
   });
 };
@@ -73,12 +90,18 @@ export const useDeleteGroupMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      showSuccessToast("Contact Group Deleted successfully");
+      showSuccessToast(
+        "Contact Group Deleted successfully",
+        "contact-group-delete",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error deleting contact group: 
         ${error?.response?.data?.error}`,
+        "contact-group-delete",
+        <IconX />,
       );
     },
   });
@@ -95,12 +118,18 @@ export const useEditContactGroupMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
-      showSuccessToast("Contact Group Updated Successfully.");
+      showSuccessToast(
+        "Contact Group Updated Successfully.",
+        "contact-group-update",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error updating contact group:
         ${error?.response?.data?.error}`,
+        "contact-group-update",
+        <IconX />,
       );
     },
   });
@@ -114,11 +143,17 @@ export const useAddExistingContactMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
-      showSuccessToast("Customers added to  group successfully.");
+      showSuccessToast(
+        "Customers added to  group successfully.",
+        "contact-group-add-existing",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error adding customer to group: ${error?.response?.data?.error}`,
+        "contact-group-add-existing",
+        <IconX />,
       );
     },
   });

@@ -19,9 +19,8 @@ type CampaignResponse = {
   id: string;
   name: string;
   surveyTeamMapId: string;
-  type: string;
-  teamId: string;
   waTemplateId: string;
+  teamId: string;
 };
 
 interface CreateCampaignProps {
@@ -61,7 +60,7 @@ const CreateCampaignModal = ({
     };
   });
   const { data: surveys } = useSurveysByTeam(form.values.teamId, true);
-  const waSurveys = surveys?.filter((s) => s.type === "whatsapp");
+  const waSurveys = surveys?.filter((s) => s?.type === "whatsapp");
   const surveyData = waSurveys?.map((s) => {
     return {
       value: s?.surveyTeamMapId,
@@ -102,7 +101,6 @@ const CreateCampaignModal = ({
       });
     }
   };
-
   return (
     <>
       <form onSubmit={form.onSubmit(handleSubmit)}>

@@ -14,6 +14,7 @@ import {
 } from "../../../../components/Button/RateupButtons";
 import { useState } from "react";
 import { useEditContactMutation } from "../../../../backend/campaign/contacts/contacts.query";
+import { IconPlus } from "@tabler/icons-react";
 
 const EditContactModal = ({ contact, closeEditModal, groupId }) => {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -23,11 +24,9 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
     initialValues: contact,
     validate: {
       phone: (value) => {
-        if (contactType.includes("phone") && value?.length) {
-          return /^\d{12}$/g.test(value)
-            ? null
-            : "Invalid phone number: please include country code";
-        } else return null;
+        if (contactType.includes("phone"))
+          return !/^\d+$/.test(value) ? "Invalid number" : null;
+        else return null;
       },
       name: isNotEmpty("Name cannot be blank"),
       email: (value) =>
@@ -80,13 +79,15 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
               </Group>
             </Checkbox.Group>
           </Paper>
+
           {contactType.includes("phone") && (
             <TextInput
               label="Phone Number"
-              placeholder="Enter phone number"
+              placeholder="Enter phone number with country code"
               {...form.getInputProps("phone")}
               size="md"
               radius={"md"}
+              leftSection={<IconPlus size={"1rem"} />}
             />
           )}
           {contactType.includes("email") && (

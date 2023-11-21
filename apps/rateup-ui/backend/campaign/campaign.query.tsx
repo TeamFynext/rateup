@@ -8,6 +8,7 @@ import {
   updateCampaign,
 } from "./campaign.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 export const useCampaignData = () => {
   return useQuery({
@@ -30,11 +31,17 @@ export const useCreateCampaignMutation = (teamId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      showSuccessToast("Campaign created successfully");
+      showSuccessToast(
+        "Campaign created successfully",
+        "campaign-create",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error creating campaign: ${error?.response?.data?.error}`,
+        "campaign-create",
+        <IconX />,
       );
     },
   });
@@ -55,11 +62,17 @@ export const useUpdateCampaignMutation = (campaignId, teamId) => {
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      showSuccessToast("Campaign updated successfully");
+      showSuccessToast(
+        "Campaign updated successfully",
+        "campaign-update",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error updating campaign: ${error?.response?.data?.error}`,
+        "campaign-delete",
+        <IconX />,
       );
     },
   });
@@ -72,10 +85,18 @@ export const useDeleteCampaignMutation = (teamId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      showSuccessToast("Campaign deleted successfully.");
+      showSuccessToast(
+        "Campaign deleted successfully.",
+        "campaign-delete",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
-      showErrorToast(`Error deleting campaign: ${error?.response?.data.error}`);
+      showErrorToast(
+        `Error deleting campaign: ${error?.response?.data.error}`,
+        "campaign-delete",
+        <IconX />,
+      );
     },
   });
 };

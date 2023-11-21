@@ -57,7 +57,7 @@ const OpenCreateModal = ({ close }) => {
         opened={contactOpened}
         onClose={contactClose}
         title="Create customer"
-        size={"lg"}
+        size={"xl"}
       >
         <CreateContactModal
           contactClose={contactClose}

@@ -17,7 +17,7 @@ import {
 } from "../../../../../components/Button/RateupButtons";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
-import { IconSearch } from "@tabler/icons-react";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
@@ -65,17 +65,18 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
       email: "",
       importMethod: importMethod.MANUAL,
       contactType: ["phone", "email"],
+      countryCode: "91",
     },
     validate: {
-      phone: (value) =>
-        form.values.importMethod == importMethod.MANUAL &&
-        addType === contactAddType.NEW &&
-        contactType.includes("phone") &&
-        (value.length < 12
-          ? "Invalid phone number: please include country code"
-          : !/^\d+$/.test(value)
-          ? "Must contain only numbers"
-          : null),
+      phone: (value) => {
+        if (
+          form.values.importMethod == importMethod.MANUAL &&
+          addType === contactAddType.NEW &&
+          contactType.includes("phone")
+        )
+          return !/^\d+$/.test(value) ? "Invalid number" : null;
+        return null;
+      },
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         addType == contactAddType.NEW &&
@@ -146,11 +147,7 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
     if (form.values.importMethod == importMethod.CSV) {
       let isValid: boolean = true;
       csvData?.every(function (contact, index) {
-        if (
-          contactType.includes("phone") &&
-          contact?.phone.length < 12 &&
-          !/^\d+$/.test(contact?.phone)
-        ) {
+        if (contactType.includes("phone") && !/^\d+$/.test(contact?.phone)) {
           showErrorToast("Failed to import: file contain invalid phone number");
           isValid = false;
           return false;
@@ -215,10 +212,11 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
       } else {
         let contactData: IAddCustomer[] = [form.values];
         if (!contactType.includes("email")) {
+          const phone = form.values.countryCode + form.values.phone;
           contactData = [
             {
               name: form.values.name,
-              phone: form.values.phone,
+              phone: phone,
             },
           ];
         }
@@ -375,17 +373,31 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
                     required
                     styles={custominputstyle}
                   />
-                  {contactType.includes("phone") && (
-                    <TextInput
-                      label="Phone Number"
-                      placeholder="Enter phone number"
-                      {...form.getInputProps("phone")}
-                      required
-                      radius={"md"}
-                      size="md"
-                      styles={custominputstyle}
-                    />
-                  )}
+                  <Group>
+                    {contactType.includes("phone") && (
+                      <TextInput
+                        label="code"
+                        {...form.getInputProps("countryCode")}
+                        required
+                        radius={"md"}
+                        size="md"
+                        w={90}
+                        placeholder="code"
+                        leftSection={<IconPlus size={"1rem"} />}
+                      />
+                    )}
+                    {contactType.includes("phone") && (
+                      <TextInput
+                        label="Phone Number"
+                        placeholder="Enter phone number"
+                        {...form.getInputProps("phone")}
+                        required
+                        radius={"md"}
+                        size="md"
+                        styles={custominputstyle}
+                      />
+                    )}
+                  </Group>
                   {contactType.includes("email") && (
                     <TextInput
                       label="Email"

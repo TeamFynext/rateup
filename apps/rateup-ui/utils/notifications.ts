@@ -1,12 +1,17 @@
 import { notifications } from "@mantine/notifications";
 import React from "react";
 
-export function showSuccessToast(message: string, id = undefined) {
+export function showSuccessToast(
+  message: string,
+  id = undefined,
+  icon?: React.ReactNode,
+) {
   notifications.show({
     color: "teal",
     title: "Success",
     message: message,
     autoClose: 2000,
+    icon,
   });
 }
 

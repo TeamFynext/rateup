@@ -52,7 +52,7 @@ export default () => {
     team: campaignData?.team.name,
   };
 
-  const selectedSurvey = campaignData?.surveyTeamMap.survey.id;
+  const selectedSurvey = campaignData?.surveyTeamMap?.survey?.id;
 
   useEffect(() => {
     update({ campaignId: campaignData?.name });
@@ -235,6 +235,14 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
 };
 
 const CampaignInfoCard = ({ campaignInfo, campaign }) => {
+  const campaignEditData = {
+    id: campaign?.id,
+    name: campaign?.name,
+    surveyTeamMapId: campaign?.surveyTeamMapId,
+    waTemplateId: campaign?.waTemplateId,
+    teamId: campaign?.teamId,
+  };
+
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   return (
@@ -293,7 +301,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
           <CreateCampaignModal
             isEdit={true}
             close={closeEditModal}
-            campaign={campaign}
+            campaign={campaignEditData}
             campaignStatus={campaign?.status}
           />
         </Modal>

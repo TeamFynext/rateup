@@ -246,7 +246,7 @@ export default function () {
             onClose={close}
             opened={opened}
             title={`Add customer to ${groupDetails?.name}`}
-            size="lg"
+            size="xl"
           >
             <AddCustomerModal
               groupId={groupDetails?.id}

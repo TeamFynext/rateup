@@ -27,6 +27,7 @@ import { ContainedFileInput } from "../../../../components/input/ContainedInput/
 import Papa from "papaparse";
 import { importMethod } from "../../../../utils/enums";
 import { showErrorToast } from "../../../../utils/notifications";
+import { IconPlus } from "@tabler/icons-react";
 
 export interface ImportContact {
   name: string;
@@ -50,16 +51,18 @@ const CreateContactModal = ({ contactClose, close }) => {
       teamId: null,
       importMethod: importMethod.MANUAL,
       contactType: ["phone", "email"],
+      countryCode: "91",
     },
     validate: {
-      phone: (value) =>
-        form.values.importMethod == importMethod.MANUAL &&
-        contactType.includes("phone") &&
-        (value.length < 12
-          ? "Invalid phone number: please include country code"
-          : !/^\d+$/.test(value)
-          ? "Must contain only numbers"
-          : null),
+      phone: (value) => {
+        if (
+          form.values.importMethod == importMethod.MANUAL &&
+          contactType.includes("phone")
+        ) {
+          return !/^\d+$/.test(value) ? "Invalid number" : null;
+        }
+        return null;
+      },
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         (value.length ? null : "Cannot be empty"),
@@ -111,11 +114,7 @@ const CreateContactModal = ({ contactClose, close }) => {
     if (form.values.importMethod == importMethod.CSV) {
       let isValid: boolean = true;
       csvData?.every(function (contact, index) {
-        if (
-          contactType.includes("phone") &&
-          contact?.phone.length < 12 &&
-          !/^\d+$/.test(contact?.phone)
-        ) {
+        if (contactType.includes("phone") && !/^\d+$/.test(contact?.phone)) {
           showErrorToast("Failed to import: file contain invalid phone number");
           isValid = false;
           return false;
@@ -155,9 +154,10 @@ const CreateContactModal = ({ contactClose, close }) => {
     } else {
       let contactData: ICreateContact = form.values;
       if (!contactType.includes("email")) {
+        const phone = form.values.countryCode + form.values.phone;
         contactData = {
           name: form.values.name,
-          phone: form.values.phone,
+          phone: phone,
           teamId: form.values.teamId,
         };
       }
@@ -168,6 +168,7 @@ const CreateContactModal = ({ contactClose, close }) => {
           teamId: form.values.teamId,
         };
       }
+      console.log("contactData", contactData);
       createContactMutation.mutate(contactData, {
         onSuccess: () => {
           setIsCreating(false);
@@ -226,16 +227,30 @@ const CreateContactModal = ({ contactClose, close }) => {
                 size="md"
                 required
               />
-              {contactType.includes("phone") && (
-                <TextInput
-                  label="Phone Number"
-                  placeholder="Enter phone number"
-                  {...form.getInputProps("phone")}
-                  required
-                  radius={"md"}
-                  size="md"
-                />
-              )}
+              <Group>
+                {contactType.includes("phone") && (
+                  <TextInput
+                    label="code"
+                    {...form.getInputProps("countryCode")}
+                    required
+                    radius={"md"}
+                    size="md"
+                    w={90}
+                    placeholder="code"
+                    leftSection={<IconPlus size={"1rem"} />}
+                  />
+                )}
+                {contactType.includes("phone") && (
+                  <TextInput
+                    label="Phone Number"
+                    placeholder="Enter phone number"
+                    {...form.getInputProps("phone")}
+                    required
+                    radius={"md"}
+                    size="md"
+                  />
+                )}
+              </Group>
               {contactType.includes("email") && (
                 <TextInput
                   label="Email"

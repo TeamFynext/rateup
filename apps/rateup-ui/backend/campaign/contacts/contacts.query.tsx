@@ -8,6 +8,7 @@ import {
   importContacts,
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 export const useCampaignContacts = () => {
   return useQuery({
@@ -29,11 +30,17 @@ export const useCreateContactMutation = () => {
     mutationFn: createContact,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
-        showSuccessToast("Contact created successfully.");
+        showSuccessToast(
+          "Contact created successfully.",
+          "contact-create",
+          <IconCheck />,
+        );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error creating the contact: ${error?.response?.data?.error}`,
+        "contact-create",
+        <IconX />,
       );
     },
   });
@@ -45,11 +52,17 @@ export const useImportContactMutation = () => {
     mutationFn: importContacts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
-      showSuccessToast("Contacts imported successfully");
+      showSuccessToast(
+        "Contacts imported successfully",
+        "contact-create",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error creating the contact: ${error?.response?.data?.error}`,
+        "contact-create",
+        <IconX />,
       );
     },
   });
@@ -64,10 +77,18 @@ export const useContactDeleteMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       }),
-        showSuccessToast("Contact Deleted successfully");
+        showSuccessToast(
+          "Contact Deleted successfully",
+          "contact-delete",
+          <IconCheck />,
+        );
     },
     onError: (error: any) => {
-      showErrorToast(`Error deleting contact: ${error?.response?.data?.error}`);
+      showErrorToast(
+        `Error deleting contact: ${error?.response?.data?.error}`,
+        "contact-delete",
+        <IconX />,
+      );
     },
   });
 };
@@ -81,11 +102,17 @@ export const useEditContactMutation = (groupId) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
-      showSuccessToast("Contact updated successfully.");
+      showSuccessToast(
+        "Contact updated successfully.",
+        "contact-update",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
         `Error updating the contact: ${error?.response?.data?.error}`,
+        "contact-update",
+        <IconX />,
       );
     },
   });
