@@ -1,10 +1,16 @@
 import React, { useContext, useState } from "react";
-import { Group, SimpleGrid, Title, Space, Stack } from "@mantine/core";
+import {
+  Group,
+  SimpleGrid,
+  Title,
+  Space,
+  Stack,
+} from "@mantine/core";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
 import { useAllMenus } from "../../../backend/menu/menu.query";
 import { MenuCard } from "../../../components/menu/MenuCard";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { CreateMenuModal } from "../../../components/menu/CreateMenu";
 import SelectedTeamContext from "../../../context/SelectedTeam";
 import {
@@ -91,9 +97,19 @@ export default function MenuPage() {
 function DisplayMenus({ handleEditClick, sorthandle }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const { isError, isLoading, data: menus } = useAllMenus();
+  const smallScreen = useMediaQuery("(max-width: 40em)");
 
   if (isLoading || isError) {
-    return <CenteredSpinner />;
+    return (
+      <Stack
+        style={{
+          gridArea: smallScreen ? 3 : 12,
+          gridColumn: smallScreen ? 1 : 2,
+        }}
+      >
+        <CenteredSpinner />;
+      </Stack>
+    );
   }
   // Filter menus based on `selectedTeamId`
   const filteredMenus =
@@ -118,7 +134,14 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
           />
         ))
       ) : (
-        <NothingFound text="No menus available." />
+        <Stack
+          style={{
+            gridArea: smallScreen ? 3 : 12,
+            gridColumn: smallScreen ? 1 : 2,
+          }}
+        >
+          <NothingFound text="No menus available." />
+        </Stack>
       )}
     </>
   );

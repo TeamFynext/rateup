@@ -28,7 +28,11 @@ import {
 } from "../../input/ContainedInput/ContainedInput";
 import { fontList } from "../../Survey/SurveyTheme/fontStyleComponents/FontList";
 import { useMediaQuery } from "@mantine/hooks";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import {
+  deleteUploadedFiles,
+  getFileUrlFromKey,
+  uploadFile,
+} from "../../../utils/file-upload/upload";
 import {
   useMenuLandingMutationById,
   useUpdateMenuLandingPageOptionById,
@@ -53,30 +57,19 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled ?? true,
+    editingItem?.menuPageEnabled ?? true
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled ?? false,
+    editingItem?.feedbackPageEnabled ?? false
   );
+  const [updatingLoading, setUpdatingLoading] = useState(false);
   const logoRef = useRef<HTMLButtonElement>(null);
-  const { isUploading: isBackgroundImageUploading } = useFileUpload(
-    backgroundImage,
-    "backgroundImage",
-    form,
-  );
-  const { isUploading: isLogoUploading } = useFileUpload(logo, "logo", form);
-  const { isUploading: isMobileBgUploading } = useFileUpload(
-    mobileBackgroundImage,
-    "mobileBackgroundImage",
-    form,
-  );
-
   const [selectedTab, setSelectedTab] = useState("Tablet");
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId,
+    editingItem?.menuId
   );
 
   useEffect(() => {
@@ -95,12 +88,62 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     }
   }, [form, form.isTouched]);
 
-  const handleSubmit = (data: any) => {
-    menulandingMutation.mutate(data);
+  const handleSubmit = async (data: any) => {
+    try {
+      let imageArray = [];
+      let deleteImageArray = [];
+      setUpdatingLoading(true);
+      backgroundImage && imageArray.push(backgroundImage);
+      editingItem?.backgroundImage &&
+        deleteImageArray.push({ Key: editingItem.backgroundImage });
+
+      mobileBackgroundImage && imageArray.push(mobileBackgroundImage);
+      editingItem?.mobileBackgroundImage &&
+        deleteImageArray.push({ Key: editingItem.mobileBackgroundImage });
+
+      logo && imageArray.push(logo);
+      editingItem?.logo && deleteImageArray.push({ Key: editingItem.logo });
+
+      let errors = [];
+      if (imageArray?.length > 0) {
+        const imageResponse = imageArray.map((data) => uploadFile(data));
+        if (deleteImageArray?.length > 0) {
+          imageResponse.push(
+            deleteUploadedFiles({ fileKeyArray: deleteImageArray })
+          );
+        }
+        const response = await Promise.allSettled(imageResponse);
+        errors = response.filter(
+          (r) => r.status === "rejected"
+        ) as PromiseRejectedResult[];
+        const successes = response
+          .filter(
+            (r): r is PromiseFulfilledResult<string> => r.status === "fulfilled"
+          )
+          .map((r) => r?.value);
+        if (deleteImageArray?.length > 0) {
+          successes.pop();
+        }
+
+        if (logo) data.logo = successes.pop();
+
+        if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
+
+        if (backgroundImage) data.backgroundImage = successes.pop();
+      }
+      menulandingMutation.mutate(data);
+      for (const imageUploadError of errors) {
+        showErrorToast(imageUploadError.reason);
+      }
+    } catch (error) {
+      setUpdatingLoading(false);
+    } finally {
+      setUpdatingLoading(false);
+    }
   };
 
   const handleMenuEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -112,7 +155,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleFeedbackEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const checkedValueMenu = {
       option: {
@@ -121,7 +164,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     };
     if (!editingItem?.surveyTeamMapId && !isFeedbackEnabled) {
       showErrorToast(
-        "In order to enable feedback, you must have selected a survey in the settings.",
+        "In order to enable feedback, you must have selected a survey in the settings."
       );
       return;
     }
@@ -150,7 +193,26 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
     }/images/menu/${isMobileTab ? "mobileBackground" : "background"}.jpg`;
   }
-
+  const onChangePictureBackground = (event: File) => {
+    if (event) {
+      form.setFieldValue("backgroundImage", URL.createObjectURL(event));
+      setBackgroundImage(event);
+      setSelectedTab("Tablet");
+    }
+  };
+  const onChangePictureMobileBackground = (event: File) => {
+    if (event) {
+      form.setFieldValue("mobileBackgroundImage", URL.createObjectURL(event));
+      setMobileBackgroundImage(event);
+      setSelectedTab("Mobile");
+    }
+  };
+  const onChangeLogo = (event: File) => {
+    if (event) {
+      form.setFieldValue("logo", URL.createObjectURL(event));
+      setLogo(event);
+    }
+  };
   return (
     <Grid>
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
@@ -175,9 +237,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               align="center"
             >
               <LoadingOverlay
-                visible={isBackgroundImageUploading || isMobileBgUploading}
+                visible={updatingLoading}
                 zIndex={1000}
                 overlayProps={{ radius: "sm", blur: 2 }}
+                loaderProps={{ type: "bars" }}
               />
               <PaperLayout p={0} w={isMobileTab ? 300 : "100%"}>
                 <>
@@ -199,24 +262,22 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     >
                       <div></div>
                       <Stack align="center" gap={0} px={"50px"}>
-                        {isLogoUploading ? (
-                          <Skeleton w={50} h={50} />
-                        ) : (
-                          <Image
-                            src={
-                              form?.values?.logo &&
-                              getFileUrlFromKey(form?.values?.logo)
-                            }
-                            onClick={() => logoRef?.current?.click()}
-                            h={50}
-                            w={50}
-                            maw={50}
-                            mih={50}
-                            radius={"md"}
-                            fallbackSrc={fallbackImage}
-                            alt="image of logo"
-                          />
-                        )}
+                        <Image
+                          src={
+                            form.values?.logo?.startsWith("blob")
+                              ? form.values?.logo
+                              : getFileUrlFromKey(form?.values?.logo)
+                          }
+                          onClick={() => logoRef?.current?.click()}
+                          h={50}
+                          w={50}
+                          maw={50}
+                          miw={50}
+                          mih={50}
+                          radius={"md"}
+                          fallbackSrc={fallbackImage}
+                          alt="image of logo"
+                        />
                         <ContainedTextArea
                           placeholder="Welcome to"
                           variant="unstyled"
@@ -394,7 +455,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   multiple={false}
                   error={form?.errors?.mobileBackgroundImage}
                   maw={285}
-                  onChange={setMobileBackgroundImage}
+                  onChange={onChangePictureMobileBackground}
                 />
                 <ContainedFileInput
                   mx={"lg"}
@@ -404,7 +465,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   multiple={false}
                   error={form?.errors?.backgroundImage}
                   maw={285}
-                  onChange={setBackgroundImage}
+                  onChange={onChangePictureBackground}
                 />
                 <Text mt={"xs"}>Upload logo</Text>
 
@@ -415,7 +476,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   accept="image/*"
                   multiple={false}
                   error={form?.errors?.logo}
-                  onChange={setLogo}
+                  onChange={onChangeLogo}
                   maw={285}
                   ref={logoRef}
                 />
@@ -535,7 +596,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 <Center>
                   <RateupButtonBlue
                     type="submit"
-                    loading={menulandingMutation?.isPending}
+                    loading={menulandingMutation?.isPending || updatingLoading}
                     title="Save"
                   />
                 </Center>

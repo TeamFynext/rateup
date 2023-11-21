@@ -5,7 +5,11 @@ import {
   useCreateMenuCategoryMutation,
   useUpdateMenuCategoryMutation,
 } from "../../backend/menu/category/mCategory.query";
-import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
+import {
+  deleteUploadedFiles,
+  getFileUrlFromKey,
+  uploadFile,
+} from "../../utils/file-upload/upload";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
@@ -24,7 +28,6 @@ export function CreateMenuCategoryModal({
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
 
   const form = useForm({
@@ -47,22 +50,6 @@ export function CreateMenuCategoryModal({
     }
   }, [editingItem]);
 
-  // upload image when imageToUpload changes
-  useEffect(() => {
-    if (!imageToUpload) return;
-    setIsUploading(true);
-    const uploadAndUpdate = async () => {
-      if (imageToUpload) {
-        const fileKey = await uploadFile(imageToUpload);
-        if (typeof fileKey === "string") {
-          form.setFieldValue("image", fileKey);
-          setIsUploading(false);
-        }
-      }
-    };
-    uploadAndUpdate();
-  }, [imageToUpload]);
-
   const createMenuCategoryMutation = useCreateMenuCategoryMutation(
     menuId,
     () => {
@@ -72,7 +59,7 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
 
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
@@ -84,30 +71,48 @@ export function CreateMenuCategoryModal({
     },
     () => {
       setIsCreating(false);
-    },
+    }
   );
 
-  const onSubmit = (values) => {
+  const onSubmit = async (values) => {
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       return;
     }
     setIsCreating(true);
+    let temp = "";
+    if (imageToUpload) {
+      const fileKey = await uploadFile(imageToUpload);
+      if (typeof fileKey === "string") {
+        temp = fileKey;
+      }
+    }
     if (editingItem) {
+      if (editingItem?.image && editingItem?.image !== values?.image) {
+        await deleteUploadedFiles({
+          fileKeyArray: [{ Key: editingItem?.image }],
+        });
+      }
+      values.image = temp;
       editMenuCategoryMutation.mutate({
         categoryId: editingItem.id,
         menuCategory: values,
       });
     } else {
+      values.image = temp;
       createMenuCategoryMutation.mutate(values);
     }
+    setIsCreating(false);
   };
 
   if (!menuId) {
     return null;
   }
-
+  const onChangePicture = (event: File) => {
+    form.setFieldValue("image", URL.createObjectURL(event));
+    setImageToUpload(event);
+  };
   return (
     <FormModalLayout
       opened={opened}
@@ -121,7 +126,8 @@ export function CreateMenuCategoryModal({
         <LoadingOverlay
           visible={
             createMenuCategoryMutation.isPending ||
-            editMenuCategoryMutation.isPending
+            editMenuCategoryMutation.isPending ||
+            isCreating
           }
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
@@ -135,16 +141,21 @@ export function CreateMenuCategoryModal({
         />
         {form.values.image && (
           <Image
-            width={"200px"}
-            height={100}
+            w={"200px"}
+            h={200}
+            mah={200}
             fallbackSrc={fallbackImage}
-            src={form.values.image ? getFileUrlFromKey(form.values.image) : ""}
+            src={
+              form.values?.image?.startsWith("blob")
+                ? form.values.image
+                : getFileUrlFromKey(form.values?.image)
+            }
           />
         )}
         <FileButton
-          onChange={setImageToUpload}
+          onChange={onChangePicture}
           accept="image/png,image/jpeg"
-          disabled={isUploading}
+          disabled={isCreating}
         >
           {(props) => {
             let buttonText = "";
@@ -157,8 +168,8 @@ export function CreateMenuCategoryModal({
               <RateupButtonSecondary
                 title={buttonText}
                 {...props}
-                loading={isUploading}
-                disabled={isUploading}
+                loading={isCreating}
+                disabled={isCreating}
               />
             );
           }}

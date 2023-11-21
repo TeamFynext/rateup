@@ -50,7 +50,7 @@ const SortDrawer = ({
     category.menuId,
     () => {
       close();
-    },
+    }
   );
   const updateSortOrderMenuCategoryMutation =
     useUpdateSortOrderMenuCategoryMutation(category.menuId, () => {
@@ -72,7 +72,11 @@ const SortDrawer = ({
           <Card shadow="sm" padding="lg" radius="lg" w={"90%"} p={"xs"}>
             <Group>
               <Image
-                src={item?.image}
+                src={
+                  item?.image
+                    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${item?.image}`
+                    : fallbackImage
+                }
                 w={61}
                 h={61}
                 alt="image of item"

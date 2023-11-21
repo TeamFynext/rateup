@@ -42,6 +42,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         </Text>
       </Stack>
     );
+  const backgroundImageBorderRadius = largeScreen ? "47px" : "22px";
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const fallbackImageBackround = largeScreen
     ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
@@ -52,7 +53,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
 
   const bgSrc = backgroundImage
     ? getFileUrlFromKey(encodeURI(backgroundImage))
-    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}${fallbackImageBackround}`;
+    : fallbackImageBackround;
   return (
     <Stack
       gap={0}
@@ -66,6 +67,10 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         maw={largeScreen ? "2440px" : "768px"}
         bgsz={"cover"}
         bgp={"center"}
+        style={{
+          borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+          backgroundColor: "var(--orange-400)",
+        }}
       >
         <Stack
           align="center"

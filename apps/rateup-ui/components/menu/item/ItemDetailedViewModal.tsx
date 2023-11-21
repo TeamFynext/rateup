@@ -68,7 +68,7 @@ export function ItemDetailedViewModal({
                   style={{
                     aspectRatio: "4 / 3",
                   }}
-                  width={"400px"}
+                  w={"400px"}
                   radius={"lg"}
                   src={
                     selectedMedia
@@ -157,13 +157,13 @@ export function ItemDetailedViewModal({
                 <Text fz="sm" c="dimmed">
                   {varient.name}
                 </Text>
-                <Text c="var(--shade-of-brown)" fz="xl">
+                <Text fz="xl">
                   ₹{varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
-            <Text c="var(--shade-of-brown)" fz="xl" mt={"md"}>
+            <Text fz="xl" mt={"md"}>
               ₹{item?.price?.price}
             </Text>
           )}
