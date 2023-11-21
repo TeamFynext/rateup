@@ -19,8 +19,8 @@ export const useAddContactParticipantMutation = (campaignId) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error adding participants",
-        error?.response?.data?.message,
+        `Error adding participants: 
+        ${error?.response?.data?.error}`,
       );
     },
   });
@@ -38,8 +38,8 @@ export const useAddGroupParticipantMutation = (campaignId) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error adding group participants",
-        error?.response?.data?.message,
+        `Error adding group participants: 
+        ${error?.response?.data?.error}`,
       );
     },
   });
@@ -62,8 +62,8 @@ export const useAddCampaignParticipants = (campaignId) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error on adding participants",
-        error?.response?.data.message,
+        `Error on adding participants: 
+        ${error?.response?.data.error}`,
       );
     },
   });

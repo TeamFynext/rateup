@@ -1,8 +1,20 @@
-import { Badge, Group, Paper, Stack, Title, Text } from "@mantine/core";
+import {
+  Badge,
+  Group,
+  Paper,
+  Stack,
+  Title,
+  Text,
+  Menu,
+  ActionIcon,
+} from "@mantine/core";
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
+import { IconDots, IconTrash } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { useDeleteCampaignMutation } from "../../backend/campaign/campaign.query";
 
 const CampaignCard = ({ campaign }) => {
   const router = useRouter();
@@ -25,7 +37,10 @@ const CampaignCard = ({ campaign }) => {
         }}
       >
         <Stack gap={"md"}>
-          <Title order={3}>{campaign?.name}</Title>
+          <Group justify="space-between">
+            <Title order={3}>{campaign?.name}</Title>
+            <CampaignMenu campaign={campaign} />
+          </Group>
           <Group justify={"space-between"}>
             <Group gap={1}>
               <Title order={3} c="#149a8a">
@@ -56,6 +71,50 @@ const CampaignCard = ({ campaign }) => {
         </Stack>
       </Paper>
     </>
+  );
+};
+
+const CampaignMenu = ({ campaign }) => {
+  const deleteCampaignMutation = useDeleteCampaignMutation(campaign?.teamId);
+  const openDeleteModal = () => {
+    modals.openConfirmModal({
+      title: "Delete Campaign",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this campaign? This action is
+          destructive and you will have to contact support to restore your data.
+        </Text>
+      ),
+      labels: { confirm: "Yes", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: () => deleteCampaignMutation.mutate(campaign?.id),
+      onCancel: () => modals.closeAll(),
+    });
+  };
+  return (
+    <Menu shadow="xl" position="bottom-end">
+      <Menu.Target>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <IconDots color="grey" />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+        <Menu.Item
+          color="red"
+          leftSection={<IconTrash />}
+          onClick={openDeleteModal}
+        >
+          Delete campaign
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 };
 

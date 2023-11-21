@@ -24,9 +24,9 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
     validate: {
       phone: (value) => {
         if (contactType.includes("phone") && value?.length) {
-          return /^\d{10}$/g.test(value)
+          return /^\d{12}$/g.test(value)
             ? null
-            : "Must contain 10 numbers and only numbers";
+            : "Invalid phone number: please include country code";
         } else return null;
       },
       name: isNotEmpty("Name cannot be blank"),

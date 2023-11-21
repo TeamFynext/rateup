@@ -55,8 +55,8 @@ const CreateContactModal = ({ contactClose, close }) => {
       phone: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         contactType.includes("phone") &&
-        (value.length !== 10
-          ? "Must contain 10 numbers"
+        (value.length < 12
+          ? "Invalid phone number: please include country code"
           : !/^\d+$/.test(value)
           ? "Must contain only numbers"
           : null),
@@ -76,7 +76,6 @@ const CreateContactModal = ({ contactClose, close }) => {
   });
 
   useEffect(() => {
-    console.log("csvdata", csvfile);
     if (csvfile == null) return;
 
     setIsUpload(true);
@@ -112,10 +111,9 @@ const CreateContactModal = ({ contactClose, close }) => {
     if (form.values.importMethod == importMethod.CSV) {
       let isValid: boolean = true;
       csvData?.every(function (contact, index) {
-        console.log("contact?.phone", contact?.phone);
         if (
           contactType.includes("phone") &&
-          contact?.phone.length != 10 &&
+          contact?.phone.length < 12 &&
           !/^\d+$/.test(contact?.phone)
         ) {
           showErrorToast("Failed to import: file contain invalid phone number");

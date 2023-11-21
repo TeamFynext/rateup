@@ -13,6 +13,7 @@ import {
   IconFileDescription,
   IconLayoutDashboard,
   IconPhone,
+  IconAddressBook,
 } from "@tabler/icons-react";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
@@ -97,13 +98,11 @@ export const navTopData: Array<NavbarLinkProps> = [
           Icon: IconSpeakerphone,
           label: "Campaign",
           href: "/dashboard/campaign",
-          submenus: [
-            {
-              Icon: IconPhone,
-              label: "Contacts",
-              href: "/dashboard/campaign/contacts",
-            },
-          ],
+        },
+        {
+          Icon: IconAddressBook,
+          label: "Contacts",
+          href: "/dashboard/campaign/contacts",
         },
       ]),
 ];

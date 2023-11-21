@@ -10,6 +10,7 @@ import {
   Paper,
   Flex,
   Loader,
+  Box,
 } from "@mantine/core";
 import { IconPlus, IconUser, IconUsers } from "@tabler/icons-react";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
@@ -87,10 +88,10 @@ const AddParticipantModal = ({ close, campaign }) => {
       )
     : contactGroup?.data;
   return (
-    <>
+    <Box p={"lg"}>
       <Stack>
         <Group justify="space-between">
-          <Title order={3}>Add Participants</Title>
+          <Title order={2}>Add Participants</Title>
           <Group>
             <Button
               variant={
@@ -121,8 +122,8 @@ const AddParticipantModal = ({ close, campaign }) => {
           </Group>
         </Group>
         <SimpleGrid cols={2}>
-          <Stack gap={0}>
-            <Group justify="space-between">
+          <Stack gap={1}>
+            <Group justify="space-between" mb={"xs"}>
               <Title order={6}>Select customers</Title>
               <Checkbox
                 label="Select all"
@@ -170,24 +171,28 @@ const AddParticipantModal = ({ close, campaign }) => {
             </ScrollArea>
           </Stack>
           <ScrollArea h={200}>
-            <Paper shadow="xl">
-              {selectedContacts?.map((customer) => (
-                <Individual
-                  customer={customer}
-                  selectedContacts={selectedContacts}
-                  selectedContactsHandlers={selectedContactsHandlers}
-                  key={customer?.id}
-                />
-              ))}
-              {selectedGroups?.map((group) => (
-                <CustomerGroup
-                  group={group}
-                  selectedGroups={selectedGroups}
-                  selectedGroupsHandlers={selectedGroupsHandlers}
-                  key={group?.id}
-                />
-              ))}
-            </Paper>
+            {selectedContacts?.length || selectedGroups?.length ? (
+              <Paper shadow="xl" p={"lg"}>
+                {selectedContacts?.map((customer) => (
+                  <Individual
+                    customer={customer}
+                    selectedContacts={selectedContacts}
+                    selectedContactsHandlers={selectedContactsHandlers}
+                    key={customer?.id}
+                  />
+                ))}
+                {selectedGroups?.map((group) => (
+                  <CustomerGroup
+                    group={group}
+                    selectedGroups={selectedGroups}
+                    selectedGroupsHandlers={selectedGroupsHandlers}
+                    key={group?.id}
+                  />
+                ))}
+              </Paper>
+            ) : (
+              <></>
+            )}
           </ScrollArea>
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
@@ -204,7 +209,7 @@ const AddParticipantModal = ({ close, campaign }) => {
           </Button>
         </Flex>
       </Stack>
-    </>
+    </Box>
   );
 };
 

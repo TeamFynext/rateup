@@ -208,12 +208,6 @@ export default function () {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     w={500}
                   />
-                  <RateupButtonSecondary
-                    leftIcon={<IconEdit></IconEdit>}
-                    title="Edit"
-                    radius="xl"
-                    size={"md"}
-                  ></RateupButtonSecondary>
                   <RateupButtonBlue
                     title="New customer"
                     rightIcon={<IconPlus />}

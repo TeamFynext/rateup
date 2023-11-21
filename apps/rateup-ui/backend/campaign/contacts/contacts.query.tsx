@@ -33,7 +33,7 @@ export const useCreateContactMutation = () => {
     },
     onError: (error: any) => {
       showErrorToast(
-        `Error creating the contact: ${error?.response?.data?.message}`,
+        `Error creating the contact: ${error?.response?.data?.error}`,
       );
     },
   });
@@ -49,7 +49,7 @@ export const useImportContactMutation = () => {
     },
     onError: (error: any) => {
       showErrorToast(
-        `Error creating the contact: ${error?.response?.data?.message}`,
+        `Error creating the contact: ${error?.response?.data?.error}`,
       );
     },
   });
@@ -67,7 +67,7 @@ export const useContactDeleteMutation = (groupId: string) => {
         showSuccessToast("Contact Deleted successfully");
     },
     onError: (error: any) => {
-      showErrorToast("Error deleting contact:", error?.response?.data?.error);
+      showErrorToast(`Error deleting contact: ${error?.response?.data?.error}`);
     },
   });
 };
@@ -85,8 +85,7 @@ export const useEditContactMutation = (groupId) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error on updating contact:",
-        error?.response?.data?.error,
+        `Error updating the contact: ${error?.response?.data?.error}`,
       );
     },
   });

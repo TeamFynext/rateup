@@ -7,7 +7,7 @@ import {
 } from "../../../components/input/ContainedInput/ContainedInput";
 import { DateTimePicker } from "@mantine/dates";
 import style from "./campaign.module.css";
-import { CampaignType } from "../../../types/enums";
+import { CampaignStatus, CampaignType } from "../../../types/enums";
 import { useWaTemplates } from "../../../backend/whatsapp/whatsapp.query";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import {
@@ -28,12 +28,14 @@ interface CreateCampaignProps {
   close: () => void;
   isEdit?: boolean;
   campaign?: CampaignResponse;
+  campaignStatus?: string;
 }
 
 const CreateCampaignModal = ({
   close,
   isEdit,
   campaign,
+  campaignStatus,
 }: CreateCampaignProps) => {
   const form = useForm({
     initialValues: campaign || {
@@ -59,10 +61,11 @@ const CreateCampaignModal = ({
     };
   });
   const { data: surveys } = useSurveysByTeam(form.values.teamId, true);
-  const surveyData = surveys?.map((s) => {
+  const waSurveys = surveys?.filter((s) => s.type === "whatsapp");
+  const surveyData = waSurveys?.map((s) => {
     return {
-      value: s.surveyTeamMapId,
-      label: s.title,
+      value: s?.surveyTeamMapId,
+      label: s?.title,
     };
   });
   const createCampaignMutation = useCreateCampaignMutation(form.values.teamId);
@@ -103,8 +106,10 @@ const CreateCampaignModal = ({
   return (
     <>
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Group justify={"space-between"}>
-          <Title order={2}>Create Campaign</Title>
+        <Group justify={"space-between"} mt={"lg"}>
+          <Title order={2}>
+            {isEdit ? "Edit Campaign" : "Create Campaign"}
+          </Title>
           {!isEdit && (
             <TeamSelector
               placeholder="Select Team"
@@ -127,22 +132,28 @@ const CreateCampaignModal = ({
             {...form.getInputProps("name")}
             classNames={{ label: style.inputLabel }}
           />
-          <ContainedSelection
-            label="Select Survey"
-            withAsterisk
-            placeholder="Select Whatsapp survey to send"
-            classNames={{ label: style.inputLabel }}
-            {...form.getInputProps("surveyTeamMapId")}
-            data={surveyData}
-          />
-          <ContainedSelection
-            label="Choose Template"
-            withAsterisk
-            placeholder="Select Template"
-            classNames={{ label: style.inputLabel }}
-            {...form.getInputProps("waTemplateId")}
-            data={templatesData}
-          />
+          {isEdit && campaignStatus === CampaignStatus.ACTIVE ? (
+            <></>
+          ) : (
+            <>
+              <ContainedSelection
+                label="Select Survey"
+                withAsterisk
+                placeholder="Select Whatsapp survey to send"
+                classNames={{ label: style.inputLabel }}
+                {...form.getInputProps("surveyTeamMapId")}
+                data={surveyData}
+              />
+              <ContainedSelection
+                label="Choose Template"
+                withAsterisk
+                placeholder="Select Template"
+                classNames={{ label: style.inputLabel }}
+                {...form.getInputProps("waTemplateId")}
+                data={templatesData}
+              />{" "}
+            </>
+          )}
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
           <Button variant="outline" radius={"xl"} onClick={close}>

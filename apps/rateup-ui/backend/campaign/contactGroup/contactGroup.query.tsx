@@ -43,7 +43,7 @@ export const useCreateContactGroupMutation = () => {
         showSuccessToast("Contact Group created successfully.");
     },
     onError: (error: any) => {
-      showErrorToast("Error creating group", error?.response?.data?.message);
+      showErrorToast(`Error creating group: ${error?.response?.data?.error}`);
     },
   });
 };
@@ -60,7 +60,7 @@ export const useAddNewContactMutation = (groupId: string) => {
         showSuccessToast("Added new customer successfully.");
     },
     onError: (error: any) => {
-      showErrorToast("Error adding customer", error?.response?.data?.message);
+      showErrorToast(`Error adding customer: ${error?.response?.data?.error}`);
     },
   });
 };
@@ -77,8 +77,8 @@ export const useDeleteGroupMutation = () => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error deleting contact group",
-        error?.response?.data?.message,
+        `Error deleting contact group: 
+        ${error?.response?.data?.error}`,
       );
     },
   });
@@ -99,8 +99,8 @@ export const useEditContactGroupMutation = (groupId: string) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error updating contact group",
-        error?.response?.data?.message,
+        `Error updating contact group:
+        ${error?.response?.data?.error}`,
       );
     },
   });
@@ -118,8 +118,7 @@ export const useAddExistingContactMutation = (groupId: string) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        "Error adding customer to group",
-        error?.response?.data?.message,
+        `Error adding customer to group: ${error?.response?.data?.error}`,
       );
     },
   });

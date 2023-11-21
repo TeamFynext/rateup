@@ -24,3 +24,8 @@ export const updateCampaign = async ({ data, campaignId }) => {
   let res = await axiosClient.put(`/campaign/${campaignId}`, data);
   return res;
 };
+
+export const deleteCampaign = async (campaignId) => {
+  let res = await axiosClient.delete(`/campaign/${campaignId}`);
+  return res;
+};

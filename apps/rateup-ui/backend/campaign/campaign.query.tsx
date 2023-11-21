@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createCampaign,
+  deleteCampaign,
   getCampaignById,
   getCampaigns,
   getCampaignsByTeam,
@@ -32,7 +33,9 @@ export const useCreateCampaignMutation = (teamId) => {
       showSuccessToast("Campaign created successfully");
     },
     onError: (error: any) => {
-      showErrorToast("Error creating campaign", error?.response?.data?.message);
+      showErrorToast(
+        `Error creating campaign: ${error?.response?.data?.error}`,
+      );
     },
   });
 };
@@ -55,7 +58,24 @@ export const useUpdateCampaignMutation = (campaignId, teamId) => {
       showSuccessToast("Campaign updated successfully");
     },
     onError: (error: any) => {
-      showErrorToast("Error updating campaign", error?.response?.data?.message);
+      showErrorToast(
+        `Error updating campaign: ${error?.response?.data?.error}`,
+      );
+    },
+  });
+};
+
+export const useDeleteCampaignMutation = (teamId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      showSuccessToast("Campaign deleted successfully.");
+    },
+    onError: (error: any) => {
+      showErrorToast(`Error deleting campaign: ${error?.response?.data.error}`);
     },
   });
 };

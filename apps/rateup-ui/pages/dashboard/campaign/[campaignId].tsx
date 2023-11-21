@@ -52,7 +52,7 @@ export default () => {
     team: campaignData?.team.name,
   };
 
-  console.log("campaignData", campaignData);
+  const selectedSurvey = campaignData?.surveyTeamMap.survey.id;
 
   useEffect(() => {
     update({ campaignId: campaignData?.name });
@@ -85,7 +85,7 @@ export default () => {
             />
             <CampaignInfoCard
               campaignInfo={campaignInfo}
-              campaign={campaignData?.data}
+              campaign={campaignData}
             />
           </SimpleGrid>
           <Group justify="center" gap={"xl"} mt={"lg"}>
@@ -103,7 +103,10 @@ export default () => {
             >
               Add Participants
             </Button>
-            <Anchor size="xl">
+            <Anchor
+              size="xl"
+              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/surveys/${selectedSurvey}?tab=Result`}
+            >
               <Title order={3}>Results</Title>
             </Anchor>
           </Group>
@@ -184,8 +187,8 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
   return (
     <>
       <Paper shadow="xl" p={"lg"} radius={"md"}>
-        <Stack>
-          <Flex justify={"center"}>
+        <Stack gap={"xl"}>
+          <Flex justify={"center"} mb={"lg"}>
             <Switch
               checked={startCampaign}
               label={startCampaign ? "End Campaign" : "Start Campaign"}
@@ -210,6 +213,8 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
               <Badge
                 variant={renderBadge(campaign?.status).variant}
                 color={renderBadge(campaign?.status).color}
+                size="lg"
+                radius={"md"}
               >
                 {campaign?.status}
               </Badge>
@@ -235,8 +240,8 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
   return (
     <>
       <Paper shadow="xl" p="lg" radius={"md"}>
-        <Stack>
-          <Group justify="space-between">
+        <Stack gap={"xl"}>
+          <Group justify="space-between" mb={"lg"}>
             <Group>
               <Title order={3}>Campaign Info</Title>
               <Button
@@ -253,24 +258,26 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
             </Badge>
           </Group>
           <Group justify="space-between">
-            <Stack gap={0}>
+            <Stack gap={"xs"}>
               <Title order={6}>Selected Survey</Title>
               <Badge
                 variant="default"
                 classNames={{ root: style.input, label: style.badgeLabel }}
                 size={"xl"}
                 radius={"md"}
+                miw={200}
               >
                 {campaignInfo?.survey}
               </Badge>
             </Stack>
-            <Stack gap={0}>
+            <Stack gap={"xs"}>
               <Title order={6}>Selected Template</Title>
               <Badge
                 variant="default"
                 classNames={{ root: style.input, label: style.badgeLabel }}
                 size={"xl"}
                 radius={"md"}
+                miw={200}
               >
                 {campaignInfo?.template}
               </Badge>
@@ -287,6 +294,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
             isEdit={true}
             close={closeEditModal}
             campaign={campaign}
+            campaignStatus={campaign?.status}
           />
         </Modal>
       </Paper>
