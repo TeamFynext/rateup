@@ -7,7 +7,7 @@ export async function uploadController(
   reply: FastifyReply
 ) {
   const data = await req.file();
-  const { filename, file} = data;
+  const { filename, file } = data;
   const uniqueFilename = `${Date.now()}-${filename}`;
 
   const params = {
@@ -33,10 +33,12 @@ export async function deleteUploadedFileController(
   req: FastifyRequest<{ Body: fileDeleteInput }>,
   reply: FastifyReply
 ) {
-  let { fileKey } = req.body;
+  let { fileKeyArray } = req.body;
   const params = {
     Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
-    Key: fileKey,
+    Delete: {
+      Objects: fileKeyArray,
+    },
   };
   try {
     await deleteFile(params);

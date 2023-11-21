@@ -1,9 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { deleteUploadedFileController, uploadController } from "./fileUpload.controller";
+import {
+  deleteUploadedFileController,
+  uploadController,
+} from "./fileUpload.controller";
 import { $Rref } from "./fileUpload.schema";
-import FastifyMultipart from '@fastify/multipart';
+import FastifyMultipart from "@fastify/multipart";
 
-export async function fileUploadPublicRoutes(server: FastifyInstance) { 
+export async function fileUploadPublicRoutes(server: FastifyInstance) {
   server.register(FastifyMultipart);
   server.post(
     "/file",
@@ -15,10 +18,14 @@ export async function fileUploadPublicRoutes(server: FastifyInstance) {
     //TODO - fix schema for file upload
     },
     uploadController
-  )
-  server.delete("/file", {
+  );
+  server.put(
+    "/file/delete",
+    {
       schema: {
         body: $Rref("fileDeleteInputSchema"),
-      }
-    },deleteUploadedFileController)
+      },
+    },
+    deleteUploadedFileController
+  );
 }

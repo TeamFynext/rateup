@@ -1,4 +1,4 @@
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
 const s3 = new S3Client({
@@ -7,8 +7,8 @@ const s3 = new S3Client({
     accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_S3_SECRET_KEY,
   },
- });
- 
+});
+
 const CLOUDFRONT_DOMAIN = process.env.AWS_CLOUDFRONT_DOMAIN;
 
 export async function uploadFile(params) {
@@ -36,12 +36,11 @@ export async function uploadFile(params) {
 }
 
 export async function deleteFile(params) {
- const command = new DeleteObjectCommand(params);
+  const command = new DeleteObjectsCommand(params);
   try {
     const response = await s3.send(command);
-    console.log(response);
     return response;
   } catch (err) {
-    console.error(err);
+    return err;
   }
 }
