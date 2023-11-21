@@ -1,4 +1,4 @@
-import { Grid, Group, Image, Stack, Text } from "@mantine/core";
+import { Flex, Grid, Group, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
 import { GilroyMedium, GilroyRegular } from "../../../public/fonts";
@@ -23,11 +23,11 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       hoveractive={true}
       onClick={() => setSelectedItem(item)}
     >
-      <Grid>
-        <Grid.Col span={5.5}>
+      <Flex h={"100%"}>
+        <Flex style={{ flex: 0.8 }}>
           <Image
             w={"100%"}
-            h={"clamp(156px, 8.366rem + 3.69vw, 187px)"}
+            h={"100%"}
             maw={"300px"}
             src={
               item?.images?.length > 0
@@ -41,8 +41,9 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             fallbackSrc={fallbackImage}
             alt="image of menu item"
           />
-        </Grid.Col>
-        <Grid.Col span={6.5}>
+        </Flex>
+
+        <Stack style={{ flex: 1 }}>
           <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
             <Text
               fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
@@ -55,7 +56,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
               fz="clamp(0.75rem, 0.616rem + 0.357vw, 0.938rem)"
               c="dimmed"
               lineClamp={3}
-              mih={"65px"}
+              mih={"50px"}
               className={GilroyMedium.className}
             >
               {item?.description}
@@ -90,8 +91,8 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
               )}
             </Group>
           </Stack>
-        </Grid.Col>
-      </Grid>
+        </Stack>
+      </Flex>
     </PaperLayout>
   );
 }

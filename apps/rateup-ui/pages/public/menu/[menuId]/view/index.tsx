@@ -35,11 +35,11 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 export default function ({ fullMenu }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
-    fullMenu?.categories,
+    fullMenu?.categories
   );
   const [categorys, setCategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categoryChipLabel[0]?.id,
+    categoryChipLabel[0]?.id
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
@@ -48,7 +48,7 @@ export default function ({ fullMenu }) {
     setCategorys(
       categoryId === "1"
         ? categoryChipLabel.filter((category) => category.id !== categoryId)
-        : categoryChipLabel.filter((category) => category.id === categoryId),
+        : categoryChipLabel.filter((category) => category.id === categoryId)
     );
     setSelectedCategory(categoryId);
   }
@@ -152,6 +152,7 @@ export default function ({ fullMenu }) {
           style={{
             overflowX: "scroll",
           }}
+          gap={largeScreen ? "sm" : 0}
         >
           {categoryChipLabel?.map((c) => (
             <CategoryChip
@@ -165,7 +166,7 @@ export default function ({ fullMenu }) {
         </Group>
       </Group>
 
-      <Stack px={largeScreen ? "7vw" : "2vw"} mih={"45vh"}>
+      <Stack px={"5.8vw"} mih={"45vh"}>
         {categorys?.map((c) => (
           <CategoryDisplay
             key={c.id}

@@ -68,7 +68,7 @@ export function ItemDetailedViewModal({
                   style={{
                     aspectRatio: "4 / 3",
                   }}
-                  w={"400px"}
+                  w={"300px"}
                   radius={"lg"}
                   src={
                     selectedMedia

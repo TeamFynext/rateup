@@ -11,6 +11,7 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
       tt={"capitalize"}
       className={GilroySemibold.className}
       my={"xs"}
+      fz={"clamp(0.75rem, 0.393rem + 0.952vw, 1.25rem)"}
       mx={4}
       style={{
         border: !selected
