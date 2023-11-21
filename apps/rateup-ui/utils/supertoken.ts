@@ -5,8 +5,6 @@ export async function getUserEmail() {
   if (await Session.doesSessionExist()) {
     let accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
     email = accessTokenPayload.email;
-
-    // console.log("session....................."+ email)
   }
   return email;
 }

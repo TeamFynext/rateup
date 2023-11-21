@@ -1,10 +1,14 @@
-import { Button, Group, Title, useMantineTheme } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
 import { useUser } from "../../../context/UserContext";
 import { UserRole } from "../../../utils/enums";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+} from "../../Button/RateupButtons";
 import { TeamSelector } from "../../input/TeamSelector";
 import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
+import Heading from "../../styled/Heading/Heading";
 
 export function SurveyHeader({
   selectedTeamId,
@@ -16,23 +20,22 @@ export function SurveyHeader({
   sort,
   setSort,
   surveyCount,
+  surveyType,
 }) {
   const { user } = useUser();
-  const theme = useMantineTheme();
   return (
     <Group gap="md" justify="space-between">
       <Group gap="md" justify="flex-start">
-        <Title order={1}>All Surveys</Title>
+        <Heading
+          title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
+          titleprops={{ w: "fit-content" }}
+        />
         {user?.role !== UserRole.MEMBER && (
-          <Button
-            rightSection={<IconPlus />}
-            radius="xl"
-            size="sm"
+          <RateupButtonBlue
+            rightIcon={<IconPlus />}
+            title="Create Survey"
             onClick={openCreateSurvey}
-            color={theme.colors[theme.primaryColor][6]} // TODO: find out why primaryColor is not being applied automatically
-          >
-            Create Survey
-          </Button>
+          />
         )}
       </Group>
 

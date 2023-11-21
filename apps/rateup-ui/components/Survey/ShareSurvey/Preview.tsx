@@ -74,7 +74,6 @@ const Preview = ({
   //   }else{
   //     const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${bgImage}`;
   //     setBgImgUrl(imgUrl);
-  //     console.log(imgUrl)
   //   }
   // }, [bgImage])
 

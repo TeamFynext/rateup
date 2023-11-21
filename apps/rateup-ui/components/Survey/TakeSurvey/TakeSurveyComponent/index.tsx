@@ -258,13 +258,6 @@ function TakeSurvey() {
         break;
       }
     }
-
-    // if (shouldShowGoogleReview) {
-    //     console.log("Show Google Review");
-    // } else {
-    //     console.log("Don't show Google Review");
-    // }
-
     submitSurvey({
       surveyTeamMapId: surveyId,
       responses,
@@ -1104,7 +1097,6 @@ function ImageForm() {
       if (file) {
         const fileKey = await uploadFile(file);
         updateResponse(fileKey);
-        //console.log("File Name:...." + JSON.stringify("https://d2uj946b0i8y27.cloudfront.net/"+fileKey));
       }
     };
     uploadAndUpdate();

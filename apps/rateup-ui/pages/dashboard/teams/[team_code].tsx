@@ -186,8 +186,6 @@ const TeamDetails = () => {
               <RateupButtonBlue
                 title="Add Member"
                 rightIcon={<IconPlus />}
-                radius="xl"
-                size="lg"
                 onClick={open}
               />
             </Tabs.Panel>

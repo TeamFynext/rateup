@@ -101,6 +101,7 @@ export function SurveysPage({
         sort={sort}
         setSort={setSort}
         surveyCount={surveyidArray.length}
+        surveyType={surveyType}
       />
       <Space h="lg" />
       {surveys?.length > 0 ? (

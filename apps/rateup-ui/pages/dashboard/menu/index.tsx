@@ -15,6 +15,7 @@ import { UserRole } from "../../../utils/enums";
 import { useUser } from "../../../context/UserContext";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import CenteredSpinner from "../../../components/Loaders/CenteredSpinner";
+import Heading from "../../../components/styled/Heading/Heading";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -39,13 +40,11 @@ export default function MenuPage() {
     <Stack h={"100%"}>
       <Group justify="space-between">
         <Group>
-          <Title size="calc(2rem * var(--mantine-scale))">All Menus</Title>
+          <Heading title="Menus" titleprops={{ w: "fit-content" }} />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
-              title="Add Menu"
+              title="Create Menu"
               rightIcon={<IconPlus />}
-              radius="xl"
-              size="lg"
               onClick={handleCreateClick}
             />
           )}

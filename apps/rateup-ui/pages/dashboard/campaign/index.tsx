@@ -24,6 +24,8 @@ import {
   useCampaignDataByTeam,
 } from "../../../backend/campaign/campaign.query";
 import { whatsappTheme } from "../../../config/mantineTheme";
+import Heading from "../../../components/styled/Heading/Heading";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 
 export default function () {
   const [searchText, setSearchText] = useState("");
@@ -49,15 +51,12 @@ export default function () {
         <Stack gap={"lg"}>
           <Flex justify={"space-between"}>
             <Group>
-              <Title order={1}>Campaign</Title>
-              <Button
-                size="lg"
-                radius={"xl"}
-                rightSection={<IconPlus />}
+              <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
+              <RateupButtonBlue
+                title="Create Campaign"
+                rightIcon={<IconPlus />}
                 onClick={open}
-              >
-                Create Campaign
-              </Button>
+              />
             </Group>
             <TeamSelector value={selectedTeam} onChange={setSelectedTeam} />
           </Flex>

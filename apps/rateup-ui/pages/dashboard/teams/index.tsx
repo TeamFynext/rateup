@@ -29,6 +29,7 @@ import TeamCard from "./TeamCard";
 import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
+import Heading from "../../../components/styled/Heading/Heading";
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -127,13 +128,11 @@ export default function Teams() {
       </FormModalLayout>
       <Group gap="md" justify="space-between">
         <Group gap={"md"}>
-          <Title order={1}>Teams</Title>
+          <Heading title="Teams" titleprops={{ w: "fit-content" }} />
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
-              title="Add Team"
+              title="Create Team"
               rightIcon={<IconPlus />}
-              radius="xl"
-              size="lg"
               onClick={open}
             />
           )}

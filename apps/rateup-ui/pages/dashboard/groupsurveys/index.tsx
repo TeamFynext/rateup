@@ -37,6 +37,7 @@ import { useUser } from "../../../context/UserContext";
 import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
 import ShareLandingPageModal from "./ShareLandingPageModal";
 import NothingFound from "../../../components/NothingFound/NothingFound";
+import Heading from "../../../components/styled/Heading/Heading";
 export default function LandingPagesList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
@@ -134,16 +135,11 @@ export default function LandingPagesList() {
   return (
     <>
       <Group gap="md" justify="flex-start">
-        <Title order={1} mr="md">
-          All Grouped Surveys
-        </Title>
-
+        <Heading title="Grouped Surveys" titleprops={{ w: "fit-content" }} />
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
-            title="Create"
+            title="Create Group"
             rightIcon={<IconPlus />}
-            radius="xl"
-            size="lg"
             onClick={open}
           />
         )}

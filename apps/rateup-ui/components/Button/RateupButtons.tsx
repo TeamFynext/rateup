@@ -9,7 +9,7 @@ interface Props {
   variant?: string;
   size?: string;
   type?: any;
-  radius?: string;
+  radius?: string | number;
   sx?: any;
   loading?: boolean;
   fullWidth?: boolean;

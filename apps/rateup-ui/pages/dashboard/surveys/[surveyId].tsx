@@ -30,7 +30,6 @@ export default () => {
   const { surveyId } = router.query;
   const { tab } = router.query;
   const { user } = useUser();
-  console.log(user);
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -53,19 +52,16 @@ export default () => {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-  const [activeTab, setActiveTab] = useState<TabEnum | null>(null);
+  const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
   const [addQnTrigger, setaddQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
-
+  console.log(process.env.NODE_ENV);
   useEffect(() => {
-    if (user?.role === UserRole.MEMBER || survey?.isPublished) {
+    if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
-    } else {
-      setActiveTab(survey?.isPublished ? TabEnum.Result : TabEnum.Edit);
     }
   }, [survey]);
-  console.log(activeTab);
   useEffect(() => {
     if (tab && Object.values(TabEnum).includes(tab as any)) {
       setActiveTab(tab as any);

@@ -56,7 +56,6 @@ const GoogleReviewEditor = ({
 
   const updateGoogleReview = (googleReview: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, googleReview });
-    //selectedQ &&  console.log({ ...selectedQ, googleReview})
   };
 
   useEffect(() => {

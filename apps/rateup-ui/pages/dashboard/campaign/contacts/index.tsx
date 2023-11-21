@@ -23,6 +23,7 @@ import { useDisclosure } from "@mantine/hooks";
 import OpenCreateModal from "./OpenCreateModal";
 import { useCampaignContacts } from "../../../../backend/campaign/contacts/contacts.query";
 import { useContactGroup } from "../../../../backend/campaign/contactGroup/contactGroup.query";
+import Heading from "../../../../components/styled/Heading/Heading";
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,14 +109,12 @@ export default function Contacts() {
         px="xl"
       >
         <Group gap={"md"}>
-          <Title order={1}>Contacts</Title>
+          <Heading title="Contacts" titleprops={{ w: "fit-content" }} />
           <RateupButtonBlue
-            title="Create"
+            title="Create Contact"
             rightIcon={<IconPlus />}
-            radius="xl"
-            size="lg"
             onClick={open}
-          ></RateupButtonBlue>
+          />
           <FormModalLayout
             centered
             opened={opened}

@@ -1,4 +1,4 @@
-import { Stack, Group, Avatar, Badge, Text } from "@mantine/core";
+import { Stack, Group, Avatar, Badge, Text, Button } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -6,6 +6,7 @@ import { getTimeSince } from "../../../utils";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SurveyMenu } from "./SurveyMenu";
 import router from "next/router";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
 
 interface SurveyCardProps {
   survey: Survey;
@@ -44,7 +45,11 @@ export function SurveyCard({
       style={{ cursor: "pointer" }}
       onClick={(e) => {
         e.stopPropagation();
-        router.push(`${router.pathname}/${survey?.id}`);
+        router.push(
+          `${router.pathname}/${survey?.id}${
+            survey?.isPublished ? `?tab=Result` : ""
+          }`,
+        );
       }}
     >
       <Stack justify="space-between" h={"100%"}>
@@ -85,22 +90,22 @@ export function SurveyCard({
           <Group justify={"space-between"} align={"center"}>
             {/* <Text>Total Responses : #</Text> */}
             {/* //TODO */}
-            <PaperLayout p={2} radius={5}>
-              <Link
-                href={`${router.pathname}/${survey?.id}?tab=Responses`}
-                style={{
-                  color: "var(--tertiary-color)",
-                  textDecoration: "none",
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <Group gap="4px">
-                  <IconChartBar size={15} />
-                  <Text fw={500}>Responses</Text>
-                </Group>
-              </Link>
+            <PaperLayout
+              p={0}
+              radius={5}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`${router.pathname}/${survey?.id}?tab=Result`);
+              }}
+            >
+              <RateupButtonBlue
+                leftIcon={<IconChartBar size={15} />}
+                title="Responses"
+                variant="subtle"
+                size="xs"
+                radius={5}
+                fullWidth
+              />
             </PaperLayout>
           </Group>
         </Group>
