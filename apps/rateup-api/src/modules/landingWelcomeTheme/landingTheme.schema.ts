@@ -11,8 +11,8 @@ const LandingThemeCore = {
   bgStyles: z.any(),
   logoStyles: z.any(),
   landingId: z.string().optional(),
-
   bgUrl: z.string().optional(),
+  mobileBgUrl: z.string().optional(),
   logoUrl: z.string().optional(),
   bgType: z.string().optional(),
 };
@@ -35,8 +35,8 @@ const createLandingThemesurveySchema = z.object({
   bgStyles: z.any(),
   logoStyles: z.any(),
   landingId: z.string().optional(),
-
   bgUrl: z.string().optional(),
+  mobileBgUrl: z.string().optional(),
   logoUrl: z.string().optional(),
   bgType: z.string().optional(),
 });

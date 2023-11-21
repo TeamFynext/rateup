@@ -13,6 +13,7 @@ const WelcomeThemeCore = {
   surveyId: z.string().optional(),
 
   bgUrl: z.string().optional(),
+  mobileBgUrl: z.string().optional(),
   logoUrl: z.string().optional(),
   bgType: z.string().optional(),
 };
@@ -35,6 +36,7 @@ const createWelcomeThemesurveySchema = z.object({
   surveyId: z.string().optional(),
 
   bgUrl: z.string().optional(),
+  mobileBgUrl: z.string().optional(),
   logoUrl: z.string().optional(),
   bgType: z.string().optional(),
 });

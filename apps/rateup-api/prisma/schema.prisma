@@ -167,6 +167,7 @@ model Survey {
   welcomePageEnabled Boolean         @default(true)
   tags               String[]        @default([])
   skipPreview        Boolean         @default(false)
+  WelcomeTheme       WelcomeTheme?
 }
 
 model SurveyTeamMap {
@@ -332,7 +333,8 @@ model WelcomeTheme {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
   landingId    String?   @db.Uuid
-  surveyId     String?   @db.Uuid
+  surveyId     String?   @unique @db.Uuid
+  survey       Survey?   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   headerText   String    @default("")
   descText     String    @default("")
   buttonText   String    @default("")
@@ -343,6 +345,7 @@ model WelcomeTheme {
   logoStyles   Json
   logoUrl      String?
   bgUrl        String?
+  mobileBgUrl  String?
   bgType       String?   @default("bgcolor")
 }
 
@@ -367,7 +370,7 @@ model MenuCategory {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime   @default(now())
   name      String
-  itemOrder    Int            @default(0)
+  itemOrder Int        @default(0)
   menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId    String     @db.Uuid
   items     MenuItem[]
@@ -382,7 +385,7 @@ model MenuItem {
   images      String[]
   videoUrl    String?
   price       Json
-  itemOrder    Int            @default(0)
+  itemOrder   Int          @default(0)
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId  String       @db.Uuid
 }
@@ -433,7 +436,7 @@ model MenuLanding {
   menu                  Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId                String         @unique @db.Uuid
   surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId          String?        @db.Uuid
+  surveyTeamMapId       String?        @db.Uuid
   // Survey                Survey?       @relation(fields: [surveyId], references: [id])
   // surveyId              String?       @db.Uuid
 }
