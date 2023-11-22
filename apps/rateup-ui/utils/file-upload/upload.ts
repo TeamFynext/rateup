@@ -11,7 +11,7 @@ export const uploadFile = async (file) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response?.data?.data?.key as string;
   } catch (error) {
@@ -29,7 +29,7 @@ export const deleteUploadedFiles = async (data) => {
         headers: {
           Accept: "application/json",
         },
-      }
+      },
     );
     return response?.data;
   } catch (error) {

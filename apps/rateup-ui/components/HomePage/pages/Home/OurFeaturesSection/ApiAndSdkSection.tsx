@@ -9,10 +9,10 @@ function ApiAndSdkSection() {
   return (
     <IllustrationTextLayout>
       <>
-        <Title order={1} className={styles["image-txt-section-heading"]}>
+        <Title order={1} className={styles["illustration-txt-section-heading"]}>
           API and SDK Support
         </Title>
-        <Text className={styles["image-txt-section-text-para"]}>
+        <Text className={styles["illustration-txt-section-text-para"]}>
           Seamlessly integrate
           <Text className={styles["bold-span"]} component="span" inherit>
             {" "}
@@ -29,7 +29,7 @@ function ApiAndSdkSection() {
       <>
         <Image
           className={`${styles["api-and-sdk-text-section-image"]}
-            ${styles["image-txt-section-image"]}`}
+            ${styles["illustration-txt-section-video"]}`}
           src={`${imagesPath}/api-and-sdk-support.png`}
           alt="api and sdk support illustration"
           width={1982}

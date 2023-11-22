@@ -1,55 +1,74 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Flex, Tabs, Title } from "@mantine/core";
 import { Carousel, Embla } from "@mantine/carousel";
 import styles from "./SurveyFeaturesCarousel.module.css";
 import carouselStyles from "./ImageCarousel.module.css";
 import tabsStyles from "./SurveyTypeTabs.module.css";
-import Image from "next/image";
-
-enum SurveyType {
-  WebSurvey = "web-survey",
-  WhatsappSurvey = "whatsapp-survey",
-  GroupSurvey = "group-survey",
-}
-
-const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/homepage/our-features`;
-
-const imageCarouselSlides = [
-  {
-    id: 1,
-    src: `${imagesPath}/web-survey.png`,
-    name: "Web Survey Illustration",
-  },
-  {
-    id: 2,
-    src: `${imagesPath}/whatsapp-survey.png`,
-    name: "Whatsapp Survey Illustration",
-  },
-  {
-    id: 3,
-    src: `${imagesPath}/group-survey.png`,
-    name: "Group Survey Illustration",
-  },
-];
+import {
+  SurveyType,
+  imageCarouselSlides,
+  getTabIndexFromSurveyTypeStr,
+} from "./constants";
+import { useIntersection } from "@mantine/hooks";
 
 function SurveyFeaturesCarousel() {
   const [activeTab, setActiveTab] = useState<SurveyType>(SurveyType.WebSurvey);
+
+  const activeTabIndex = getTabIndexFromSurveyTypeStr(activeTab);
+  const prevActiveTabIndex = useRef<number>(0);
+
   const [imageCarouselEmblaInstance, setImageCarouselEmblaInstance] =
     useState<Embla | null>(null);
 
+  const videoElementsRef = useRef([]);
+
+  const { ref: intersectionRef, entry } = useIntersection({
+    threshold: 0.5,
+  });
+
+  useEffect(() => {
+    if (entry) {
+      const activeVideoEle = videoElementsRef.current[activeTabIndex];
+      const prevActiveVideoEle =
+        videoElementsRef.current[prevActiveTabIndex.current];
+      if (prevActiveVideoEle) {
+        prevActiveVideoEle.pause();
+        prevActiveVideoEle.currentTime = 0;
+      }
+      switch (entry.isIntersecting) {
+        case true: {
+          activeVideoEle?.play();
+          break;
+        }
+        case false: {
+          if (activeVideoEle) {
+            activeVideoEle.pause();
+            activeVideoEle.currentTime = 0;
+          }
+          break;
+        }
+      }
+    }
+  }, [entry, activeTab]);
+
   useEffect(() => {
     if (imageCarouselEmblaInstance) {
-      const activeTabIndex = Object.values(SurveyType)?.findIndex(
-        (value) => value === activeTab,
-      );
       if (activeTabIndex !== -1)
         imageCarouselEmblaInstance.scrollTo(activeTabIndex);
     }
   }, [imageCarouselEmblaInstance, activeTab]);
 
+  const updateActiveTabState = useCallback(
+    (activeTab) => {
+      prevActiveTabIndex.current = activeTabIndex;
+      setActiveTab(activeTab);
+    },
+    [activeTab],
+  );
+
   const handleActiveTabChange = useCallback(
     (activeTab: SurveyType) => {
-      setActiveTab(activeTab);
+      updateActiveTabState(activeTab);
     },
     [activeTab],
   );
@@ -58,7 +77,7 @@ function SurveyFeaturesCarousel() {
     (slideIndex) => {
       const surveyTypesArray = Object.values(SurveyType);
       const activeSurveyType = surveyTypesArray[slideIndex];
-      setActiveTab(activeSurveyType);
+      updateActiveTabState(activeSurveyType);
     },
     [activeTab],
   );
@@ -104,7 +123,7 @@ function SurveyFeaturesCarousel() {
           </Tabs.Panel>
         </Tabs>
       </Flex>
-      <Flex className={styles["illustrative-images-carousel-container"]}>
+      <Flex className={styles["illustrative-videos-carousel-container"]}>
         <Carousel
           classNames={carouselStyles}
           getEmblaApi={setImageCarouselEmblaInstance}
@@ -113,17 +132,22 @@ function SurveyFeaturesCarousel() {
           withIndicators
           onSlideChange={handleImageCarouselSlideChange}
           speed={10}
+          ref={intersectionRef}
         >
-          {imageCarouselSlides.map(({ id, src, name }) => {
+          {imageCarouselSlides.map(({ id, srcsArray, name }, index) => {
             return (
               <Carousel.Slide key={id}>
-                <Image
-                  className={styles["feature-illustration-img"]}
-                  src={src}
-                  alt={name}
-                  width={2820}
-                  height={2052}
-                />
+                <video
+                  className={`${styles["illustration-txt-section-video"]}`}
+                  muted
+                  ref={(element) => {
+                    videoElementsRef.current[index] = element;
+                  }}
+                >
+                  {srcsArray.map(({ type, src }) => {
+                    return <source key={type} src={src} type={type}></source>;
+                  })}
+                </video>
               </Carousel.Slide>
             );
           })}

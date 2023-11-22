@@ -1,11 +1,5 @@
 import React, { useContext, useState } from "react";
-import {
-  Group,
-  SimpleGrid,
-  Title,
-  Space,
-  Stack,
-} from "@mantine/core";
+import { Group, SimpleGrid, Title, Space, Stack } from "@mantine/core";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
 import { useAllMenus } from "../../../backend/menu/menu.query";

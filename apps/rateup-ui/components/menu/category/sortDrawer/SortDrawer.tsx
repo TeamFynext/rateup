@@ -50,7 +50,7 @@ const SortDrawer = ({
     category.menuId,
     () => {
       close();
-    }
+    },
   );
   const updateSortOrderMenuCategoryMutation =
     useUpdateSortOrderMenuCategoryMutation(category.menuId, () => {

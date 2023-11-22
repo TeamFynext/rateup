@@ -21,58 +21,59 @@
 }
 
 /* Common Styles for sections where we have an Illustration and descriptive text side by side*/
-.image-txt-section {
+.illustration-txt-section {
   align-items: center;
   margin-bottom: 1.5rem;
+  gap: 1rem;
 }
 
-.image-txt-section:nth-last-child(1) {
+.illustration-txt-section:nth-last-child(1) {
   margin-bottom: 0;
 }
 
-.image-container-as-first-element .image-txt-section-text-container {
+.illustration-container-as-first-element
+  .illustration-txt-section-text-container {
   order: 1;
 }
 
-.image-txt-section-image-container {
+.illustration-txt-section-video-container {
   flex: 1.2 1 0;
 }
 
-.image-txt-section-image {
+.illustration-txt-section-video {
   width: 100%;
   height: 37vw;
   max-height: 800px;
 }
 
-.image-txt-section-text-container {
+.illustration-txt-section-text-container {
   flex: 0.8 1 0;
-  padding: 1.5rem;
 }
 
-.image-txt-section-heading {
+.illustration-txt-section-heading {
   font-size: 2rem;
   color: var(--grey-color);
 }
 
-.image-txt-section-text-para {
+.illustration-txt-section-text-para {
   font-size: 1.25rem;
   color: var(--grey-color-2);
 }
 
-.image-txt-section-text-para span.bold-span {
+.illustration-txt-section-text-para span.bold-span {
   color: var(--grey-color);
   font-weight: bold;
 }
 
 /* Media Queries */
 @media screen and (max-width: 1024px) {
-  .image-txt-section {
+  .illustration-txt-section {
     flex-direction: column;
   }
-  .image-txt-section-image {
+  .illustration-txt-section-video {
     height: 70vw;
   }
-  .image-txt-section-image-container {
+  .illustration-txt-section-video-container {
     order: 1;
   }
 }

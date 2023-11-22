@@ -45,8 +45,8 @@ export const solutionsList: Solution[] = [
   },
 ];
 
-const featuresH1ClassName = styles["image-txt-section-heading"];
-const descriptionPClassName = styles["image-txt-section-text-para"];
+const featuresH1ClassName = styles["illustration-txt-section-heading"];
+const descriptionPClassName = styles["illustration-txt-section-text-para"];
 const descriptionPSpanClassName = styles["bold-span"];
 
 const Heading = ({ children }) => (
@@ -64,7 +64,7 @@ const DescriptionPSpan = ({ text }) => (
 );
 
 const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/our-features`;
-const imageClassName = styles["image-txt-section-image"];
+const videoClassName = styles["illustration-txt-section-video"];
 
 export const features = [
   {
@@ -84,7 +84,7 @@ export const features = [
     ),
     image: (
       <Image
-        className={imageClassName}
+        className={videoClassName}
         src={`${imagePath}/google-review-enhancement.png`}
         width={662}
         height={482}
@@ -112,7 +112,7 @@ export const features = [
     ),
     image: (
       <Image
-        className={imageClassName}
+        className={videoClassName}
         src={`${imagePath}/ai-based-algorithm.png`}
         width={1982}
         height={1443}
@@ -139,7 +139,7 @@ export const features = [
     ),
     image: (
       <Image
-        className={imageClassName}
+        className={videoClassName}
         src={`${imagePath}/customer-feedback-insights.png`}
         width={1982}
         height={1443}
@@ -167,7 +167,7 @@ export const features = [
     ),
     image: (
       <Image
-        className={imageClassName}
+        className={videoClassName}
         src={`${imagePath}/escalation-mechanism.png`}
         width={1982}
         height={1443}

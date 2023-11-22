@@ -16,7 +16,7 @@ export function ItemDetailedViewModal({
   onClose,
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0]
+    item?.videoUrl ? item?.videoUrl : item?.images[0],
   );
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function ItemDetailedViewModal({
                       aspectRatio: "4 / 3",
                     }}
                     src={`http://img.youtube.com/vi/${extractVideoId(
-                      item?.videoUrl
+                      item?.videoUrl,
                     )}/0.jpg`}
                     alt="video of menu"
                   />

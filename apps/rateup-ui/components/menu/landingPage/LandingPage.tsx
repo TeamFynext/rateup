@@ -57,10 +57,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
   const [isMenuEnabled, setIsMenuEnabled] = useState<boolean>(
-    editingItem?.menuPageEnabled ?? true
+    editingItem?.menuPageEnabled ?? true,
   );
   const [isFeedbackEnabled, setIsFeedbackEnabled] = useState<boolean>(
-    editingItem?.feedbackPageEnabled ?? false
+    editingItem?.feedbackPageEnabled ?? false,
   );
   const [updatingLoading, setUpdatingLoading] = useState(false);
   const logoRef = useRef<HTMLButtonElement>(null);
@@ -69,7 +69,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [tabState, setTabState] = useState<string>("title");
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
-    editingItem?.menuId
+    editingItem?.menuId,
   );
 
   useEffect(() => {
@@ -109,16 +109,17 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         const imageResponse = imageArray.map((data) => uploadFile(data));
         if (deleteImageArray?.length > 0) {
           imageResponse.push(
-            deleteUploadedFiles({ fileKeyArray: deleteImageArray })
+            deleteUploadedFiles({ fileKeyArray: deleteImageArray }),
           );
         }
         const response = await Promise.allSettled(imageResponse);
         errors = response.filter(
-          (r) => r.status === "rejected"
+          (r) => r.status === "rejected",
         ) as PromiseRejectedResult[];
         const successes = response
           .filter(
-            (r): r is PromiseFulfilledResult<string> => r.status === "fulfilled"
+            (r): r is PromiseFulfilledResult<string> =>
+              r.status === "fulfilled",
           )
           .map((r) => r?.value);
         if (deleteImageArray?.length > 0) {
@@ -143,7 +144,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleMenuEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const checkedValueMenu = {
       option: {
@@ -155,7 +156,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   };
 
   const handleFeedbackEnabledChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const checkedValueMenu = {
       option: {
@@ -164,7 +165,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     };
     if (!editingItem?.surveyTeamMapId && !isFeedbackEnabled) {
       showErrorToast(
-        "In order to enable feedback, you must have selected a survey in the settings."
+        "In order to enable feedback, you must have selected a survey in the settings.",
       );
       return;
     }

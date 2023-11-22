@@ -43,7 +43,11 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           />
         </Flex>
 
-        <Stack style={{ flex: 1 }} c={"var(--grey-color)"} className={GilroySemibold.className}>
+        <Stack
+          style={{ flex: 1 }}
+          c={"var(--grey-color)"}
+          className={GilroySemibold.className}
+        >
           <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
             <Text
               fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
@@ -61,10 +65,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             >
               {item?.description}
             </Text>
-            <Group
-              justify="space-evenly"
-              gap={"sm"}
-            >
+            <Group justify="space-evenly" gap={"sm"}>
               {item?.price?.variants?.length > 0 ? (
                 item?.price?.variants.map((varient, index) => (
                   <Stack align="center" gap={"0px"} key={index}>

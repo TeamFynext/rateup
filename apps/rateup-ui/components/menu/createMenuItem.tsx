@@ -110,7 +110,7 @@ export function CreateMenuItemModal({
     },
   });
   const [selectedImage, setSelectedImage] = useState(
-    form.values.images[0] || ""
+    form.values.images[0] || "",
   );
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export function CreateMenuItemModal({
       close();
       form.reset();
     },
-    () => {}
+    () => {},
   );
 
   const updateMenuItemMutation = useUpdateMenuItemMutation(
@@ -141,7 +141,7 @@ export function CreateMenuItemModal({
       close();
       form.reset();
     },
-    () => {}
+    () => {},
   );
 
   useEffect(() => {
@@ -181,12 +181,12 @@ export function CreateMenuItemModal({
           const imageResponse = newImages?.map((data) => uploadFile(data));
           const response = await Promise.allSettled(imageResponse);
           errors = response.filter(
-            (r) => r.status === "rejected"
+            (r) => r.status === "rejected",
           ) as PromiseRejectedResult[];
           const successes = response
             .filter(
               (r): r is PromiseFulfilledResult<string> =>
-                r.status === "fulfilled"
+                r.status === "fulfilled",
             )
             .map((r) => r?.value);
           let i = 0;
@@ -208,11 +208,12 @@ export function CreateMenuItemModal({
         const imageResponse = imageArray?.map((data) => uploadFile(data));
         const response = await Promise.allSettled(imageResponse);
         errors = response?.filter(
-          (r) => r.status === "rejected"
+          (r) => r.status === "rejected",
         ) as PromiseRejectedResult[];
         const successes = response
           .filter(
-            (r): r is PromiseFulfilledResult<string> => r.status === "fulfilled"
+            (r): r is PromiseFulfilledResult<string> =>
+              r.status === "fulfilled",
           )
           .map((r) => r?.value);
 
@@ -293,7 +294,7 @@ export function CreateMenuItemModal({
                           ...prev,
                           {
                             Key: form?.values?.images?.find(
-                              (image) => image === selectedImage
+                              (image) => image === selectedImage,
                             ),
                           },
                         ]);
@@ -301,8 +302,8 @@ export function CreateMenuItemModal({
                       form.removeListItem(
                         "images",
                         form?.values?.images?.findIndex(
-                          (image) => image === selectedImage
-                        )
+                          (image) => image === selectedImage,
+                        ),
                       );
                     }}
                   >
@@ -444,7 +445,7 @@ function PriceSection({ form }: { readonly form: any }) {
                 onClick={() => {
                   const newVariants = form?.values?.price?.variants?.slice(
                     0,
-                    -1
+                    -1,
                   );
                   form.setFieldValue("price.variants", newVariants);
                 }}
