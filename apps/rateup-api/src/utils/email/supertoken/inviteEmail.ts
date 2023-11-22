@@ -99,7 +99,7 @@ export function createEmailBody(invite_link : string, email_id : string) {
                   <td>
                     <img
                       class="email-icon"
-                      src="https://${process.env.AWS_CLOUDFRONT_DOMAIN}/1699439363489-invite-icon.png"
+                      src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/inviteIcon.png"
                       alt="Email Invite Logo"
                       width="111"
                       height="111"
@@ -112,6 +112,9 @@ export function createEmailBody(invite_link : string, email_id : string) {
                       You are invited to join a team in “RateUp App”
                     </p>
                   </td>
+                </tr>
+                <tr>
+                  <td></td>
                 </tr>
                 <tr>
                   <td>
@@ -130,7 +133,7 @@ export function createEmailBody(invite_link : string, email_id : string) {
                   <td>
                     <img
                       class="rateup-logo"
-                      src="https://${process.env.AWS_CLOUDFRONT_DOMAIN}/1699439481211-rateup-logo.png"
+                      src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
                       alt="Rateup Logo"
                       width="134"
                       height="76"
@@ -143,5 +146,5 @@ export function createEmailBody(invite_link : string, email_id : string) {
         </div>
       </body>
     </html>
-    `
+    `;
 }
