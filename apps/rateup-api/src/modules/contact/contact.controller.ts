@@ -4,7 +4,7 @@ import { log } from "../../utils/logger";
 import { createContact, createMultipleContacts, deleteContactById, getContactById, getContactsByOrgId, getContactsByTeamId, updateContactById } from "./contact.service";
 import { ByTeamIdParams } from "../team/team.schema";
 import { verifyRole } from "../../utils/auth";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 export async function createContactHandler(
     request: FastifyRequest<{ Body: CreateContactInput }>,
@@ -15,7 +15,13 @@ export async function createContactHandler(
         reply.code(201).send(contact);
     } catch (error) {
         log.error(error);
-        reply.code(500).send({ error: "Something went wrong" });
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                reply.code(500).send({ error: "Contact already exist" });
+              }
+        }else {
+            reply.code(500).send({ error: "Something went wrong" });
+        }
     }
 }
 
@@ -79,6 +85,12 @@ export async function updateContactByIdHandler(
         return reply.code(200).send(contact);
     } catch (error) {
         log.error(error);
-        reply.code(500).send({ error: "Something went wrong" });
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                reply.code(500).send({ error: "Contact already exist" });
+              }
+        }else {
+            reply.code(500).send({ error: "Something went wrong" });
+        }
     }
 }

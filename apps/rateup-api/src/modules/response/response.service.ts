@@ -37,6 +37,7 @@ export async function getAllResponses(
       },
       responses: {
         select: {
+          language: true,
           responses: true,
         },
       },

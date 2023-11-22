@@ -26,7 +26,13 @@ export const uploadFileSchema = z.object({
 });
 
 const fileDeleteInputSchema = z.object({
-  fileKey: z.string().trim().min(1),
+  fileKeyArray: z
+    .array(
+      z.object({
+        Key: z.string().trim().min(1),
+      })
+    )
+    .min(1),
 });
 
 export const { schemas: uploadSchemas, $ref: $Rref } = buildJsonSchemas(
