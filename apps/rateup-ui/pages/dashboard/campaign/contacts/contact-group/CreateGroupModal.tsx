@@ -58,19 +58,6 @@ const CreateGroupModal = ({
   });
 
   useEffect(() => {
-    const initialImageUrl = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`;
-    fetch(initialImageUrl)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const initialFile = new File([blob], "user-group-icon-t.png", {
-          type: "image/png",
-        });
-        setFile(initialFile);
-      })
-      .catch((error) => showErrorToast("Something went wrong"));
-  }, []);
-
-  useEffect(() => {
     if (groupDetails) {
       form.setValues(groupDetails);
       form.setFieldValue("teamId", groupDetails.teamId);
@@ -179,7 +166,11 @@ const CreateGroupModal = ({
           </Stack>
           <Avatar
             radius={"xl"}
-            src={form?.values?.icon && getFileUrlFromKey(form.values.icon)}
+            src={
+              form?.values?.icon
+                ? getFileUrlFromKey(form.values.icon)
+                : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`
+            }
             size={"xl"}
           ></Avatar>
         </SimpleGrid>

@@ -16,10 +16,7 @@ import {
 } from "@mantine/core";
 import ContactCard from "../../../../../components/Card/ContactCard";
 import { IconEdit, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../../../components/Button/RateupButtons";
+import { RateupButtonBlue } from "../../../../../components/Button/RateupButtons";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../../../components/Modal/FormModalLayout";
 import AddCustomerModal from "./AddCustomerModal";
@@ -43,7 +40,6 @@ export default function () {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const { update } = useRouteParams();
-  const [filteredCustomerList, setFilteredCustomerList] = useState([]);
 
   const {
     isLoading: isLoading,
@@ -87,23 +83,6 @@ export default function () {
     update({ groupId: groupDetails?.name });
   }, [groupDetails?.name]);
 
-  useEffect(() => {
-    if (groupDetails?.contacts && !searchTerm.length) {
-      setFilteredCustomerList(groupDetails?.contacts);
-    } else {
-      if (groupDetails?.contacts) {
-        setFilteredCustomerList(
-          groupDetails?.contacts?.filter((contact) => {
-            return (
-              contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              contact?.phone?.startsWith(searchTerm)
-            );
-          }),
-        );
-      }
-    }
-  }, [searchTerm, groupDetails?.contacts]);
-
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
@@ -119,6 +98,15 @@ export default function () {
   const teamObj = teamsData?.data?.find((team) => {
     return team?.id === groupDetails?.teamId;
   });
+
+  const filteredCustomerList = searchTerm
+    ? groupDetails?.contacts?.filter((contact) => {
+        return (
+          contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contact?.phone?.startsWith(searchTerm)
+        );
+      })
+    : groupDetails?.contacts;
 
   return (
     <>
@@ -136,7 +124,7 @@ export default function () {
                     src={
                       groupDetails?.icon
                         ? getFileUrlFromKey(groupDetails?.icon)
-                        : null
+                        : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`
                     }
                     size={"xl"}
                   ></Avatar>
