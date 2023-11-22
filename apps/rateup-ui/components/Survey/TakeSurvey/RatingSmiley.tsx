@@ -14,7 +14,7 @@ import {
   getIconStyle,
 } from "../Question/Previews/SmileyRatingPreview";
 
-const SmileyRating = ({ updateResponse }) => {
+const SmileyRating = ({ updateResponse, response }) => {
   const updateStringResponse = (value) => {
     let stringValue;
     switch (value) {
@@ -38,12 +38,32 @@ const SmileyRating = ({ updateResponse }) => {
     updateResponse(stringValue);
   };
 
+  const getNumericValue = (stringValue) => {
+    switch (stringValue) {
+      case SmileyResponse.VerySad:
+        return 1;
+      case SmileyResponse.Sad:
+        return 2;
+      case SmileyResponse.Neutral:
+        return 3;
+      case SmileyResponse.Happy:
+        return 4;
+      case SmileyResponse.VeryHappy:
+        return 5;
+      default:
+        return -1;
+    }
+  };
+
   return (
     <Rating
+      value={getNumericValue(response)}
       emptySymbol={getEmptyIcon}
       fullSymbol={getFullIcon}
       highlightSelectedOnly
-      onChange={(value) => updateStringResponse(value)}
+      onChange={(value) => {
+        updateStringResponse(value);
+      }}
     />
   );
 };

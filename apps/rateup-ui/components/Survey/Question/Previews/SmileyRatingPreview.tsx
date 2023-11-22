@@ -25,9 +25,11 @@ export const getIconStyle = (color?: string, iconType?: string) => {
     }
   }
   return {
-    width: rem(50),
-    height: rem(50),
+    width: iconType === "full" ? rem(60) : rem(50),
+    height: iconType === "full" ? rem(60) : rem(50),
     color: colorString,
+    marginTop: iconType === "full" ? "-8px" : "0px",
+    paddingBottom: iconType === "full" ? "0px" : "4px",
   };
 };
 

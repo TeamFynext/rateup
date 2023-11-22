@@ -1083,7 +1083,7 @@ function SmileyForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
     <Group>
-      <SmileyRating updateResponse={updateResponse} />
+      <SmileyRating updateResponse={updateResponse} response={response} />
     </Group>
   );
 }

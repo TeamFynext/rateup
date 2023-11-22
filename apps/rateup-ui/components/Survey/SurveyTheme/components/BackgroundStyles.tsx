@@ -3,15 +3,16 @@ import {
   Flex,
   ColorPicker,
   Radio,
-  FileInput,
   Button,
   FileButton,
   Tabs,
   SimpleGrid,
   ColorInput,
   Text,
+  Group,
+  ActionIcon,
 } from "@mantine/core";
-import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, useEffect } from "react";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 function BackgroundStyles({
@@ -21,8 +22,15 @@ function BackgroundStyles({
   saveLoading,
   setbgImage,
   setbgMobileImage,
+  setSelectedTab,
+  selectedTab,
 }) {
-  const fileInputRef = useRef(null);
+  const isMobileView = selectedTab !== "Web";
+  const resetBgRef = useRef<() => void>(null);
+  const resetMobileBgRef = useRef<() => void>(null);
+
+  const [bgFileName, setBgFileName] = useState(null);
+  const [mobileBgFileName, setMobileBgFileName] = useState(null);
 
   const [backgroundStyles, setbackgroundStyles] = useState({
     name: "background",
@@ -48,8 +56,9 @@ function BackgroundStyles({
     setisFileLoading(true);
     setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: value });
     let url = URL.createObjectURL(value);
-
+    setSelectedTab("Web");
     setbgImage(url);
+    setBgFileName(value.name);
     setisFileLoading(false);
   };
 
@@ -57,14 +66,18 @@ function BackgroundStyles({
     setisFileLoading(true);
     setCurrentstyles({ ...currentStyles, mobileBgUrlNotUploaded: value });
     let url = URL.createObjectURL(value);
-
+    setSelectedTab("Mobile");
     setbgMobileImage(url);
+    setMobileBgFileName(value.name);
     setisFileLoading(false);
   };
 
   const removeBg = () => {
     setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: "", bgUrl: "" });
+    setSelectedTab("Web");
     setbgImage("");
+    setBgFileName("");
+    resetBgRef.current?.();
   };
 
   const removeMobileBg = () => {
@@ -73,12 +86,30 @@ function BackgroundStyles({
       mobileBgUrlNotUploaded: "",
       mobileBgUrl: "",
     });
-    setbgImage("");
+    setSelectedTab("Mobile");
+    setbgMobileImage("");
+    setMobileBgFileName("");
+    resetMobileBgRef.current?.();
   };
 
   const handleTabChange = (newValue) => {
     setCurrentstyles({ ...currentStyles, bgType: newValue });
   };
+
+  const handleMouseOverBg = () => {
+    isMobileView && setSelectedTab("Web");
+  };
+
+  const handleMouseOverMobileBg = () => {
+    !isMobileView && setSelectedTab("Mobile");
+  };
+
+  function getFileName(url: string, isNewFile: boolean) {
+    if (isNewFile) return url;
+    const pattern = /^[^-]+-/;
+    const name = url?.replace(pattern, "");
+    return name;
+  }
 
   return (
     <Stack>
@@ -142,17 +173,25 @@ function BackgroundStyles({
 
           {/* //------------BGIMAGE------------ */}
           <Tabs.Panel value="bgimage" pt="xs">
-            <Stack mt="xl">
-              <Text>Web Background:</Text>
-              <FileInput
-                ref={fileInputRef}
-                display={"none"}
-                accept="image/*"
-                placeholder="Choose background image"
-                leftSection={<IconUpload size={14} />} //VERIFY MANTINE
-                onChange={handleFileChange}
-              />
-
+            <Stack mt="xl" onMouseOver={handleMouseOverBg}>
+              <Group>
+                <ActionIcon
+                  variant={isMobileView ? "light" : "filled"}
+                  aria-label="Settings"
+                >
+                  <IconEye
+                    style={{ width: "70%", height: "70%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+                <Text fw={600}>Web Background : </Text>
+                <Text ml="md">
+                  {getFileName(
+                    currentStyles?.bgUrl || bgFileName,
+                    !currentStyles?.bgUrl,
+                  )}
+                </Text>
+              </Group>
               <SimpleGrid cols={2}>
                 <RateupButtonSecondary
                   onClick={removeBg}
@@ -166,6 +205,7 @@ function BackgroundStyles({
                   leftIcon={<IconTrash size={16} />}
                 />
                 <FileButton
+                  resetRef={resetBgRef}
                   onChange={handleFileChange}
                   accept="image/png,image/jpeg"
                 >
@@ -184,8 +224,25 @@ function BackgroundStyles({
               </SimpleGrid>
             </Stack>
 
-            <Stack mt="50">
-              <Text>Mobile Background:</Text>
+            <Stack mt="50" onMouseOver={handleMouseOverMobileBg}>
+              <Group>
+                <ActionIcon
+                  variant={!isMobileView ? "light" : "filled"}
+                  aria-label="Settings"
+                >
+                  <IconEye
+                    style={{ width: "70%", height: "70%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+                <Text fw={600}>Mobile Background : </Text>
+                <Text ml="md">
+                  {getFileName(
+                    currentStyles?.mobileBgUrl || mobileBgFileName,
+                    !currentStyles?.mobileBgUrl,
+                  )}
+                </Text>
+              </Group>
               <SimpleGrid cols={2}>
                 <RateupButtonSecondary
                   onClick={removeMobileBg}
@@ -199,6 +256,7 @@ function BackgroundStyles({
                   leftIcon={<IconTrash size={16} />}
                 />
                 <FileButton
+                  resetRef={resetMobileBgRef}
                   onChange={handleMobileBgFileChange}
                   accept="image/png,image/jpeg"
                 >

@@ -174,8 +174,9 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
           loadFont={loadFont}
           saveLoading={saveLoading}
           setbgImage={setbgImage}
-          setSelectedType={setSelectedType}
           setbgMobileImage={setbgMobileImage}
+          setSelectedTab={setSelectedTab}
+          selectedTab={selectedTab}
         />
       </Paper>
     </Flex>

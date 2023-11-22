@@ -219,7 +219,6 @@ function SurveyTheme({ survey }) {
 
         <PaperLayout h={"100%"}>
           <StylesComponent
-            setSelectedType={setSelectedType}
             selectedType={selectedType ? selectedType : "header"}
             saveStyles={saveStyles}
             currentStyles={currentStyles}
@@ -228,6 +227,8 @@ function SurveyTheme({ survey }) {
             saveLoading={saveLoading}
             setbgImage={setbgImage}
             setbgMobileImage={setbgMobileImage}
+            setSelectedTab={setSelectedTab}
+            selectedTab={selectedTab}
           />
         </PaperLayout>
       </Stack>

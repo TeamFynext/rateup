@@ -15,8 +15,9 @@ function StylesComponent({
   loadFont,
   saveLoading,
   setbgImage,
-  setSelectedType,
   setbgMobileImage,
+  setSelectedTab,
+  selectedTab,
 }) {
   const [tabState, setTabState] = useState<string>("Bg");
 
@@ -82,6 +83,8 @@ function StylesComponent({
             saveLoading={saveLoading}
             setbgImage={setbgImage}
             setbgMobileImage={setbgMobileImage}
+            setSelectedTab={setSelectedTab}
+            selectedTab={selectedTab}
           />
         </Tabs.Panel>
 
