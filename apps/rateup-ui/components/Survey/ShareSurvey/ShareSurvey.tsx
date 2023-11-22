@@ -15,12 +15,9 @@ import {
   Image,
 } from "@mantine/core";
 import {
-  IconBrandFacebook,
-  IconBrandWhatsapp,
   IconCheck,
   IconChevronLeft,
   IconCopy,
-  IconMail,
   IconPlayerPause,
   IconPlayerPlay,
   IconX,
@@ -266,9 +263,11 @@ const ShareSurvey = ({
       <PaperLayout p="md" shadow="lg">
         <SimpleGrid cols={2} spacing="xl">
           <Stack style={{ maxWidth: "450px" }} p="md">
+            <Title order={4}>Share Survey</Title>
             <Group>
-              <Title order={4}>Share Survey</Title>
               <ContainedSelection
+                label="Select Team"
+                allowDeselect={false}
                 maw={150}
                 value={surveyTeamMapId}
                 data={teamSelectData}

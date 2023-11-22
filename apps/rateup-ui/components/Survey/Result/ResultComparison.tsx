@@ -91,6 +91,12 @@ export default function ResultComparison() {
             let questionResponses = [];
             for (const teamResponse of filteredResponsesByTeam) {
               for (const surveyResponse of teamResponse.responses) {
+                if (
+                  selectedLanguage &&
+                  surveyResponse.language !== selectedLanguage
+                ) {
+                  continue;
+                }
                 const questionResponse = surveyResponse.responses.find(
                   (response) => response.questionId === q.id,
                 );

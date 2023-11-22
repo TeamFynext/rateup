@@ -34,7 +34,10 @@ import {
 } from "@tabler/icons-react";
 import { useImmer } from "use-immer";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
-import { filterResponses } from "../../../utils/response";
+import {
+  filterResponses,
+  getfilteredResponseUsingLanguage,
+} from "../../../utils/response";
 import SurveyContext from "../../../context/SurveyContext";
 import ResultComparison from "./ResultComparison";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -50,6 +53,7 @@ enum ResultTab {
 }
 const Result = ({ survey, setSelectedLanguage }) => {
   const { filterTeams } = useContext(SurveyContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   //fetching the responses associated with the survey
   const {
     data: teamWiseResponses,
@@ -64,6 +68,10 @@ const Result = ({ survey, setSelectedLanguage }) => {
   const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
     filteredResponsesByTeam,
   );
+  const { filteredResponsesByLanguage } = getfilteredResponseUsingLanguage(
+    mergedResponses,
+    selectedLanguage,
+  );
   const [resultTab, setActiveResultTab] = useState<
     | ResultTab.Analytics
     | ResultTab.OverView
@@ -73,8 +81,8 @@ const Result = ({ survey, setSelectedLanguage }) => {
 
   //this useEffect is used to set the filtered responses to the responses when the responses are fetched
   useEffect(() => {
-    setFilteredResponses(mergedResponses);
-  }, [teamWiseResponses, filterTeams]);
+    setFilteredResponses(filteredResponsesByLanguage);
+  }, [teamWiseResponses, filterTeams, selectedLanguage]);
 
   if (isLoading) return <Loader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
@@ -118,7 +126,7 @@ const Result = ({ survey, setSelectedLanguage }) => {
         <ResultFilter
           activeTab={resultTab}
           survey={survey}
-          responses={mergedResponses}
+          responses={filteredResponsesByLanguage}
           setFilteredResponses={setFilteredResponses}
           setSelectedLanguage={setSelectedLanguage}
         />
@@ -187,13 +195,11 @@ export const ResultFilter = ({
           (question) => question.question_id === question_id,
         );
         if (question) {
-          console.log(question_id, responses);
           question.responses = responses;
           if (question.responses?.length === 0) {
             draft.splice(draft.indexOf(question), 1);
           }
         } else {
-          console.log(question_id, responses);
           draft.push({
             question_id: question_id,
             responses: responses,

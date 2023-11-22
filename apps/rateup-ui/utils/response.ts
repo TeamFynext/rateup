@@ -1,3 +1,4 @@
+import { TeamWiseResponses } from "../backend/surveys/response/response.api";
 import {
   LDResponse,
   QuestionType,
@@ -146,4 +147,16 @@ export function getResponseArrayByQuestionType(questionType: QuestionType) {
       return null;
     }
   }
+}
+
+export function getfilteredResponseUsingLanguage(
+  responses: SurveyResponse[],
+  language: string,
+) {
+  let filteredResponsesByLanguage = responses;
+  if (language)
+    filteredResponsesByLanguage = responses?.filter(
+      (response) => response.language === language,
+    );
+  return { filteredResponsesByLanguage };
 }

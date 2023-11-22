@@ -56,7 +56,6 @@ export default () => {
   const [addQnTrigger, setaddQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
-  console.log(process.env.NODE_ENV);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);

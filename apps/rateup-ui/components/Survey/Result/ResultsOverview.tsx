@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import {
-  useAllResponses,
-  useResponses,
-} from "../../../backend/surveys/response/response.query";
+import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import QuestionPieChart from "./Charts/QuestionPieChart";
 import QuestionBarChart from "./Charts/QuestionBarChart";
@@ -19,6 +16,7 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
+import { getfilteredResponseUsingLanguage } from "../../../utils/response";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -69,6 +67,10 @@ const ResultsOverview = () => {
   const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
     filteredResponsesByTeam,
   );
+  const { filteredResponsesByLanguage } = getfilteredResponseUsingLanguage(
+    mergedResponses,
+    selectedLanguage,
+  );
   if (isLoading || isQLoading) {
     return <div>Loading...</div>;
   }
@@ -82,7 +84,7 @@ const ResultsOverview = () => {
     surveyResponses: Array<TeamWiseResponses>,
   ) => {
     return questions?.map((question) => {
-      const responsesForQuestion = mergedResponses?.flatMap(
+      const responsesForQuestion = filteredResponsesByLanguage?.flatMap(
         (response) =>
           response?.responses?.filter(
             (item: any) => item?.questionId === question?.id,

@@ -10,6 +10,7 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 enum LocationType {
   City = "city",
   State = "state",
@@ -17,6 +18,7 @@ enum LocationType {
 }
 const SurveyStats = ({ survey }) => {
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const {
     data: responses,
     isLoading: isResponsesLoading,

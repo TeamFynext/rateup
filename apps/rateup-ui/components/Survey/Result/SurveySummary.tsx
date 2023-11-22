@@ -13,6 +13,7 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
+import { getfilteredResponseUsingLanguage } from "../../../utils/response";
 
 type ResponseCounts = Record<string, Record<string, number>>;
 
@@ -99,6 +100,11 @@ const SurveySummary = () => {
   const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
     filteredResponsesByTeam,
   );
+  useEffect(() => {}, [selectedLanguage]);
+  const { filteredResponsesByLanguage } = getfilteredResponseUsingLanguage(
+    mergedResponses,
+    selectedLanguage,
+  );
   const [responseCounts, setResponseCounts] = useState<ResponseCounts>({});
   const [responseTypeMap, setResponseTypeMap] = useState<
     Record<string, string>
@@ -108,11 +114,13 @@ const SurveySummary = () => {
   );
   useEffect(() => {
     if (teamWiseResponses) {
-      const { counts, responseTypeMap } = countResponses(mergedResponses);
+      const { counts, responseTypeMap } = countResponses(
+        filteredResponsesByLanguage,
+      );
       setResponseCounts(counts);
       setResponseTypeMap(responseTypeMap);
     }
-  }, [teamWiseResponses, filterTeams]);
+  }, [teamWiseResponses, filterTeams, selectedLanguage]);
   useEffect(() => {
     if (questions) {
       const titleMap: Record<string, any> = {};
