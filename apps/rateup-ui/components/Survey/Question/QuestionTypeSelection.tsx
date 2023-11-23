@@ -37,6 +37,7 @@ import {
   QuestionTypesGroup,
   WaSurveyQuestionTypes,
 } from "../../../utils/constants";
+import { getQuestionTypeLabel } from "../../../utils/enums";
 
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
@@ -87,7 +88,7 @@ export function QuestionTypeSelection({
                           handleTypeSelection(type as QuestionType)
                         }
                       >
-                        <Text>{type}</Text>
+                        <Text>{getQuestionTypeLabel(type)}</Text>
                       </Button>
                     );
                   })}
