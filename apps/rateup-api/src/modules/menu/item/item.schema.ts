@@ -7,7 +7,7 @@ const CreateMenuItemInput = {
     description: z.string(),
     price: z.union([
         z.object({
-            price: z.string().nonempty(),
+            price: z.string(),
             type: z.nativeEnum(MenuItemPriceType)
         }),
         z.object({
@@ -17,7 +17,7 @@ const CreateMenuItemInput = {
                 price: z.string(),
             }))
         })
-    ]),
+    ]).optional(),
     images: z.array(z.string()),
     categoryId: z.string(),
     videoUrl: z.string().optional(),
@@ -29,12 +29,12 @@ const updateMenuItemInputSchema = z.object({
     description: z.string().optional(),
     price: z.union([
         z.object({
-            price: z.number(),
+            price: z.string(),
         }),
         z.object({
             variants: z.array(z.object({
                 name: z.string(),
-                price: z.number(),
+                price: z.string(),
             }))
         })
     ]).optional(),
