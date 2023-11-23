@@ -1,11 +1,11 @@
 import {
+  Badge,
+  Box,
   Button,
   Center,
   Flex,
   Grid,
-  GridCol,
   ScrollArea,
-  SimpleGrid,
   Stack,
   Title,
 } from "@mantine/core";
@@ -30,7 +30,7 @@ import {
   IconCaretUpDown,
 } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { createBlankQuestion } from "../../../utils/questions";
 import { QuestionTabsEnum } from "../EditSurvey";
@@ -40,6 +40,9 @@ import {
   QuestionTypesGroup,
   WaSurveyQuestionTypes,
 } from "../../../utils/constants";
+import { useHover } from "@mantine/hooks";
+import { GoogleIcon } from "../../Button/GoogleIcon";
+import { googleReviewSupportedTypes } from "../../../utils/data";
 
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
@@ -62,8 +65,61 @@ export function QuestionTypeSelection({
   const filteredQuestionTypes = isWaSurvey
     ? WaSurveyQuestionTypes
     : QuestionTypesGroup;
+
+  const [IsGoogleReviewSupported, setIsGoogleReviewSupported] = useState(false);
+  const QuestionButton = ({ type }) => {
+    const { hovered, ref } = useHover();
+    const Icon = questionIcons[type];
+    return (
+      <div ref={ref}>
+        <Button
+          key={type}
+          size="lg"
+          leftSection={<Icon size={"1rem"} />}
+          variant={hovered ? "outline" : "default"}
+          styles={{
+            root: {
+              boxShadow: hovered ? "3px 3px 10px rgba(0, 0, 0, 0.1)" : "none",
+            },
+          }}
+          p={15}
+          onClick={() => handleTypeSelection(type as QuestionType)}
+          onMouseOver={() => {
+            if (googleReviewSupportedTypes.includes(type))
+              setIsGoogleReviewSupported(true);
+            else setIsGoogleReviewSupported(false);
+          }}
+          onMouseLeave={() => {
+            setIsGoogleReviewSupported(false);
+          }}
+        >
+          <Text fz={14}>{type}</Text>
+        </Button>
+      </div>
+    );
+  };
   return (
     <ScrollArea>
+      <Flex justify={"flex-end"}>
+        {IsGoogleReviewSupported ? (
+          <Badge
+            leftSection={<GoogleIcon width={"1.3rem"} height={"1.3rem"} />}
+            radius={"md"}
+            color="var(--bg-grey-color)"
+            c="grey"
+            size={"xl"}
+            styles={{
+              label: {
+                textTransform: "capitalize",
+              },
+            }}
+          >
+            Review Supported
+          </Badge>
+        ) : (
+          <Box h={"xl"}></Box>
+        )}
+      </Flex>
       <Center style={{ height: "100%" }}>
         <Stack gap={"md"}>
           {filteredQuestionTypes?.map((qtype) => {
@@ -72,27 +128,11 @@ export function QuestionTypeSelection({
                 <Title order={4} c="dimmed">
                   {qtype?.title}
                 </Title>
-                <Grid pr={"lg"}>
+                <Grid px={"lg"}>
                   {qtype?.questionTypes?.map((type) => {
-                    const Icon = questionIcons[type];
                     return (
                       <Grid.Col span="content">
-                        <Button
-                          key={type}
-                          size="md"
-                          leftSection={<Icon />}
-                          variant="default"
-                          styles={{
-                            root: {
-                              boxShadow: "3px 3px 10px rgba(0, 0, 0, 0.1)",
-                            },
-                          }}
-                          onClick={() =>
-                            handleTypeSelection(type as QuestionType)
-                          }
-                        >
-                          <Text>{type}</Text>
-                        </Button>
+                        <QuestionButton type={type} />
                       </Grid.Col>
                     );
                   })}
