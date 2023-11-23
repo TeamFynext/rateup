@@ -62,6 +62,15 @@ function DescStyles({
       });
   }, [form.values]);
 
+  useEffect(() => {
+    if (!form.isDirty()) {
+      form.setValues({
+        name: "description",
+        descStyles: currentStyles.descStyles,
+      });
+    }
+  }, [currentStyles]);
+
   //----------onsubmit form -------------
   const onSubmit = (e) => {
     e.preventDefault();
