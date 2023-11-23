@@ -40,33 +40,33 @@ function DescStyles({
     initialValues: {
       name: "description",
 
-      descStyles: currentStyles.descStyles,
+      descStyles: currentStyles?.descStyles,
     },
   });
 
   //----------font loading--------
   useEffect(() => {
     if (
-      currentStyles.descStyles.fontFamily !== form.values.descStyles.fontFamily
+      currentStyles?.descStyles?.fontFamily !== form?.values?.descStyles?.fontFamily
     ) {
-      loadFont(form.values.descStyles.fontFamily, () =>
+      loadFont(form?.values?.descStyles?.fontFamily, () =>
         setCurrentstyles({
           ...currentStyles,
-          descStyles: form.values.descStyles,
+          descStyles: form?.values?.descStyles,
         }),
       );
     } else
       setCurrentstyles({
         ...currentStyles,
-        descStyles: form.values.descStyles,
+        descStyles: form?.values?.descStyles,
       });
-  }, [form.values]);
+  }, [form?.values]);
 
   useEffect(() => {
     if (!form.isDirty()) {
       form.setValues({
         name: "description",
-        descStyles: currentStyles.descStyles,
+        descStyles: currentStyles?.descStyles,
       });
     }
   }, [currentStyles]);
@@ -75,7 +75,7 @@ function DescStyles({
   const onSubmit = (e) => {
     e.preventDefault();
 
-    saveStyles(form.values);
+    saveStyles(form?.values);
   };
 
   return (

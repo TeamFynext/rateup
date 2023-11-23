@@ -10,9 +10,10 @@ import {
   Group,
   Box,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { fontList } from "../fontStyleComponents/FontList";
 import classes from "../WelcomePage.module.css";
+import { useForm } from "@mantine/form";
 
 function ButtonStyles({
   saveStyles,
@@ -21,48 +22,46 @@ function ButtonStyles({
   loadFont,
   saveLoading,
 }) {
-  const [buttonStyle, setButtonStyle] = useState({
-    name: "button",
-    buttonStyles: currentStyles.buttonStyles,
-  });
+  const form = useForm({
+    initialValues: {
+      name: "button",
 
+      buttonStyles: currentStyles?.buttonStyles,
+    },
+  });
   //----------onsubmit form -------------
   const onSubmit = (e) => {
     e.preventDefault();
 
-    saveStyles(buttonStyle);
+    saveStyles(form?.values);
   };
 
   //----------font loading--------
   useEffect(() => {
     if (
-      currentStyles.buttonStyles.fontFamily !==
-      buttonStyle.buttonStyles.fontFamily
+      currentStyles?.buttonStyles?.fontFamily !==
+      form?.values?.buttonStyles?.fontFamily
     ) {
-      loadFont(buttonStyle.buttonStyles.fontFamily, () =>
+      loadFont(form?.values?.buttonStyles?.fontFamily, () =>
         setCurrentstyles({
           ...currentStyles,
-          buttonStyles: buttonStyle.buttonStyles,
-        }),
+          buttonStyles: form?.values?.buttonStyles,
+        })
       );
     } else
       setCurrentstyles({
         ...currentStyles,
-        buttonStyles: buttonStyle.buttonStyles,
+        buttonStyles: form?.values?.buttonStyles,
       });
-  }, [buttonStyle]);
+  }, [form?.values]);
 
-  const handleChange = (name, value) => {
-    setButtonStyle((prevState) => ({
-      ...prevState,
-      buttonStyles: { ...buttonStyle.buttonStyles, [name]: value },
-    }));
-  };
   useEffect(() => {
-    setButtonStyle({
-      name: "button",
-      buttonStyles: currentStyles.buttonStyles,
-    });
+    if (!form.isDirty()) {
+      form.setValues({
+        name: "button",
+        buttonStyles: currentStyles?.buttonStyles,
+      });
+    }
   }, [currentStyles]);
   return (
     <Flex>
@@ -75,8 +74,8 @@ function ButtonStyles({
                 searchable
                 nothingFoundMessage="No options" //TODO VERIFY MANTINE
                 data={fontList}
-                value={buttonStyle?.buttonStyles?.fontFamily}
-                onChange={(value) => handleChange("fontFamily", value)}
+                name="fontFamily"
+                {...form.getInputProps("buttonStyles.fontFamily")}
                 style={{ maxWidth: "200px" }}
               />
               <NumberInput
@@ -86,7 +85,8 @@ function ButtonStyles({
                 defaultValue={18}
                 placeholder="radius"
                 label="Border Radius"
-                onChange={(value) => handleChange("borderRadius", value)}
+                name="borderRadius"
+                {...form.getInputProps("buttonStyles.borderRadius")}
                 style={{ maxWidth: "100px" }}
               />
             </Group>
@@ -97,13 +97,11 @@ function ButtonStyles({
             <ColorPicker
               fullWidth
               format="rgba"
-              onChange={(value) => handleChange("backgroundColor", value)}
-              value={buttonStyle?.buttonStyles.backgroundColor}
+              {...form.getInputProps("buttonStyles.backgroundColor")}
             />
             <ColorInput
               mt="sm"
-              onChange={(value) => handleChange("backgroundColor", value)}
-              value={buttonStyle?.buttonStyles.backgroundColor}
+              {...form.getInputProps("buttonStyles.backgroundColor")}
               placeholder="Select description color"
             />
           </Box>

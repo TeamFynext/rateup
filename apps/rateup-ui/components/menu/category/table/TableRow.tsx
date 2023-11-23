@@ -43,7 +43,7 @@ const TableRow = ({
       <Table.Td tt={"capitalize"}>{item?.name}</Table.Td>
       <Table.Td>
         {item?.price?.type === MenuItemPriceType.FIXED ? (
-          <Text>₹{item?.price?.price}</Text>
+          <Text>{item?.price?.price}</Text>
         ) : (
           <Stack>
             {item?.price?.variants?.map((element) => (
@@ -51,7 +51,7 @@ const TableRow = ({
                 <Text c="dimmed" fz="md">
                   {element?.name}
                 </Text>
-                <Text>₹{element?.price}</Text>
+                <Text>{element?.price}</Text>
               </Box>
             ))}
           </Stack>

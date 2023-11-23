@@ -9,7 +9,6 @@ import {
   LoadingOverlay,
   Paper,
   SimpleGrid,
-  Skeleton,
   Stack,
   Switch,
   Tabs,
@@ -17,7 +16,6 @@ import {
   Title,
 } from "@mantine/core";
 import { IconMapPin, IconWorld } from "@tabler/icons-react";
-import { useFileUpload } from "../hook/fileUpload";
 import { useForm } from "@mantine/form";
 import {
   ContainedColorInput,
@@ -38,7 +36,7 @@ import {
   useUpdateMenuLandingPageOptionById,
 } from "../../../backend/menu/LandingPage/landingpage.query";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
+import { FontWeightsMenu } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "./Tabs/TabsCommon";
 import { showErrorToast } from "../../../utils/notifications";
@@ -509,7 +507,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         label=""
                         placeholder="font weight"
                         required
-                        data={FontWeights}
+                        data={FontWeightsMenu}
                         {...form.getInputProps("headerStyle.fontWeight")}
                       />
                       <ContainedNumberInput
@@ -550,7 +548,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         allowDeselect={false}
                         placeholder="font weight"
                         required
-                        data={FontWeights}
+                        data={FontWeightsMenu}
                         {...form.getInputProps("titleStyle.fontWeight")}
                       />
                       <ContainedNumberInput

@@ -76,7 +76,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                       {varient?.name}
                     </Text>
                     <Text fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)">
-                      ₹{varient?.price}
+                      {varient?.price}
                     </Text>
                   </Stack>
                 ))
@@ -85,7 +85,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                   fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)"
                   mt={"md"}
                 >
-                  ₹{item?.price?.price}
+                  {item?.price?.price}
                 </Text>
               )}
             </Group>

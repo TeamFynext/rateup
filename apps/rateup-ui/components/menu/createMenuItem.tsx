@@ -78,35 +78,6 @@ export function CreateMenuItemModal({
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
       description: (value) => (value.length ? null : "Cannot be empty"),
-      price: {
-        price: (value) => {
-          if (form.values.price.type !== MenuItemPriceType.FIXED) return null;
-          if (!value.length) return "Price can't be empty";
-          if (isNaN(value)) return "Price must be a number";
-          if (value <= 0) return "Price must not be negative";
-          return null;
-        },
-
-        variants: {
-          name: (value) => {
-            if (form.values.price.type !== MenuItemPriceType.VARIANT)
-              return null;
-            if (!value.length) {
-              showErrorToast("Name can't be empty");
-              return " ";
-            }
-            return null;
-          },
-          price: (value) => {
-            if (form.values.price.type !== MenuItemPriceType.VARIANT)
-              return null;
-            if (!value.length) return "Price can't be empty";
-            if (isNaN(value)) return "Price must be a number";
-            if (value <= 0) return "Price must not be negative";
-            return null;
-          },
-        },
-      },
     },
   });
   const [selectedImage, setSelectedImage] = useState(
@@ -395,7 +366,7 @@ function PriceSection({ form }: { readonly form: any }) {
       </Group>
       {form?.values?.price?.type === MenuItemPriceType.FIXED ? (
         <ContainedTextField
-          placeholder="399"
+          placeholder="$ 399"
           {...form.getInputProps("price.price")}
         />
       ) : (
@@ -403,7 +374,7 @@ function PriceSection({ form }: { readonly form: any }) {
           {form?.values?.price?.variants?.map((_variant, index) => {
             return (
               <Box
-                w="80px"
+                w="82px"
                 p={"xs"}
                 key={_variant}
                 style={{
@@ -421,7 +392,7 @@ function PriceSection({ form }: { readonly form: any }) {
                   {...form.getInputProps(`price.variants.${index}.name`)}
                 />
                 <TextInput
-                  placeholder="399"
+                  placeholder="$ 399"
                   radius={"100px"}
                   {...form.getInputProps(`price.variants.${index}.price`)}
                 />

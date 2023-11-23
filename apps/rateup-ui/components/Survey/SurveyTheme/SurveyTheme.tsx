@@ -23,6 +23,7 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
+import { GilroyBold } from "../../../public/fonts";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -213,6 +214,7 @@ function SurveyTheme({ survey }) {
               checked={survey?.welcomePageEnabled}
               color="var(--tertiary-color)"
               onChange={handleSwitchChange}
+              style={GilroyBold.style}
             />
           </Group>
         </PaperLayout>

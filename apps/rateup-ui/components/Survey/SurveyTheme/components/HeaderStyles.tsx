@@ -40,34 +40,34 @@ function HeaderStyles({
   const form = useForm({
     initialValues: {
       name: "header",
-      headerStyles: currentStyles.headerStyles,
+      headerStyles: currentStyles?.headerStyles,
     },
   });
 
   //----------font loading--------
   useEffect(() => {
     if (
-      currentStyles.headerStyles.fontFamily !==
-      form.values.headerStyles.fontFamily
+      currentStyles?.headerStyles?.fontFamily !==
+      form?.values?.headerStyles?.fontFamily
     ) {
-      loadFont(form.values.headerStyles.fontFamily, () =>
+      loadFont(form?.values?.headerStyles?.fontFamily, () =>
         setCurrentstyles({
           ...currentStyles,
-          headerStyles: form.values.headerStyles,
-        }),
+          headerStyles: form?.values?.headerStyles,
+        })
       );
     } else
       setCurrentstyles({
         ...currentStyles,
-        headerStyles: form.values.headerStyles,
+        headerStyles: form?.values?.headerStyles,
       });
-  }, [form.values]);
+  }, [form?.values]);
 
   useEffect(() => {
-    if (!form.isDirty()) {
-      form.setValues({
+    if (!form?.isDirty()) {
+      form?.setValues({
         name: "header",
-        headerStyles: currentStyles.headerStyles,
+        headerStyles: currentStyles?.headerStyles,
       });
     }
   }, [currentStyles]);
@@ -97,9 +97,9 @@ function HeaderStyles({
                 <Select
                   label="Font weight"
                   name="fontWeight"
-                  {...form.getInputProps("headerStyles.fontWeight")}
                   data={FontWeights}
                   style={{ maxWidth: "150px" }}
+                  {...form.getInputProps("headerStyles.fontWeight")}
                 />
                 {/* TODO : all font weights not working */}
 

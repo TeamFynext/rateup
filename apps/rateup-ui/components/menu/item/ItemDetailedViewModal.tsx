@@ -170,13 +170,13 @@ export function ItemDetailedViewModal({
                   {varient.name}
                 </Text>
                 <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)">
-                  ₹{varient.price}
+                  {varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
             <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)" mt={"md"}>
-              ₹{item?.price?.price}
+              {item?.price?.price}
             </Text>
           )}
         </Group>
