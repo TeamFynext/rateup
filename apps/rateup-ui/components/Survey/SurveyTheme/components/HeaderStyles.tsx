@@ -54,7 +54,7 @@ function HeaderStyles({
         setCurrentstyles({
           ...currentStyles,
           headerStyles: form.values.headerStyles,
-        })
+        }),
       );
     } else
       setCurrentstyles({

@@ -76,23 +76,24 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
         justify="space-between"
       >
         {/* .........Survey Header Section.......... */}
-
-        <Group justify="center">
-          <Stack
-            style={{ maxHeight: isMobile ? "65" : "100px", maxWidth: "30%" }}
-          >
-            <Image
-              src={
-                survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
-                  ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
-                  : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-              }
-              alt="Logo"
-              w={isMobile ? 70 : 80}
-              h={isMobile ? 70 : 80}
-            />
-          </Stack>
-        </Group>
+        {survey?.isPublished == true && (
+          <Group justify="center">
+            <Stack
+              style={{ maxHeight: isMobile ? "65" : "100px", maxWidth: "30%" }}
+            >
+              <Image
+                src={
+                  survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
+                    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
+                    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
+                }
+                alt="Logo"
+                w={isMobile ? 70 : 80}
+                h={isMobile ? 70 : 80}
+              />
+            </Stack>
+          </Group>
+        )}
 
         <Paper
           pt="-50px"
@@ -132,22 +133,22 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
               )}
             </Paper>
           ) : (
-            <Paper
-              radius="lg"
-              bg={"#fff"}
-              p="30px"
-              style={{
-                minHeight: "70vh",
-              }}
-            >
-              <Stack align="center" h="50vh" justify="space-around">
-                <Text size="xl" c="red" fw="600">
-                  {survey?.isPublished !== true
-                    ? "Survey is not available..!"
-                    : "Survey is not available..!"}
-                </Text>
-              </Stack>
-            </Paper>
+            <Center h={"80vh"}>
+              {survey?.isPublished !== true && (
+                <Group align="center" justify="center">
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
+                    alt="Logo"
+                    w={isMobile ? 70 : 80}
+                    h={isMobile ? 70 : 80}
+                    fit={"contain"}
+                  />
+                  <Text c="#CDCDCD" fw={"bold"} fz={28}>
+                    Survey is not available..!
+                  </Text>
+                </Group>
+              )}
+            </Center>
           )}
         </Paper>
 

@@ -62,7 +62,7 @@ function ButtonStyles({
     setButtonStyle({
       name: "button",
       buttonStyles: currentStyles.buttonStyles,
-    })
+    });
   }, [currentStyles]);
   return (
     <Flex>
