@@ -128,7 +128,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
           defaultValue="text"
         >
           <Group>
-            <Stack justify="flex-start" style={{ minWidth: "65%" }} mb="xl">
+            <Stack justify="flex-start" mb="xl">
               {/*..... QR Editor Tab titles........ */}
               <Group>
                 <Tabs.List className={styles["sharqr-tab-list"]}>
@@ -187,54 +187,73 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
                   Modify Text
                 </Title>
 
-                <Group>
-                  <Stack style={{ minWidth: "40%" }} mr="lg">
-                    <TextInput
-                      placeholder="Enter Title Here"
-                      label="Title"
-                      withAsterisk
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
-                    <Textarea
-                      mt="xl"
-                      pt="xl"
-                      placeholder="Enter description here"
-                      label="Description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      withAsterisk
-                    />
-                  </Stack>
+                <Group grow>
+                  <Stack gap={"1.5rem"}>
+                    <Group grow>
+                      <Group
+                        style={{ padding: "1rem", maxWidth: "300px" }}
+                        grow
+                      >
+                        <TextInput
+                          placeholder="Enter Title Here"
+                          label="Title"
+                          withAsterisk
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                        />
+                      </Group>
 
-                  <Stack style={{ minWidth: "20%" }} ml="xl">
-                    <Stack>
-                      <Text>Title Color</Text>
-                      <CustomColorPicker
-                        value={textColor}
-                        onChange={setTextColor}
-                      />
-                    </Stack>
-                    <Stack>
-                      <Text>Title Color</Text>
-                      <Slider value={textSize} onChange={setTextSize} />
-                    </Stack>
+                      <Stack
+                        style={{ padding: "1rem", minWidth: "fit-content" }}
+                      >
+                        <Stack>
+                          <Text>Title Color</Text>
+                          <CustomColorPicker
+                            value={textColor}
+                            onChange={setTextColor}
+                          />
+                        </Stack>
+                        <Stack>
+                          <Text>Title Size</Text>
+                          <Slider value={textSize} onChange={setTextSize} />
+                        </Stack>
+                      </Stack>
+                    </Group>
 
-                    <Stack pt="xl">
-                      <Text>Description color</Text>
-                      <CustomColorPicker
-                        value={descriptionColor}
-                        onChange={setDescriptionColor}
-                      />
-                    </Stack>
+                    <Group grow>
+                      <Group
+                        style={{ padding: "1rem", maxWidth: "300px" }}
+                        grow
+                      >
+                        <Textarea
+                          placeholder="Enter description here"
+                          label="Description"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          withAsterisk
+                        />
+                      </Group>
 
-                    <Stack>
-                      <Text>Description color</Text>
-                      <Slider
-                        value={descriptionSize}
-                        onChange={setDescriptionSize}
-                      />
-                    </Stack>
+                      <Stack
+                        style={{ padding: "1rem", minWidth: "fit-content" }}
+                      >
+                        <Stack>
+                          <Text>Description color</Text>
+                          <CustomColorPicker
+                            value={descriptionColor}
+                            onChange={setDescriptionColor}
+                          />
+                        </Stack>
+
+                        <Stack>
+                          <Text>Description Size</Text>
+                          <Slider
+                            value={descriptionSize}
+                            onChange={setDescriptionSize}
+                          />
+                        </Stack>
+                      </Stack>
+                    </Group>
                   </Stack>
                 </Group>
               </Tabs.Panel>

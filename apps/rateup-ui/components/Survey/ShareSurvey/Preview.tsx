@@ -115,7 +115,7 @@ const Preview = ({
   }, [url, logo, logoFilter, qrBgColor, qrSize, logoFillType]);
 
   return (
-    <Stack align="center" ml="lg">
+    <Stack align="center" ml="2.5rem">
       <Title order={3}> Preview </Title>
       <div ref={printRef}>
         <Paper

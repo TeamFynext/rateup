@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Loader,
   Table,
@@ -22,7 +22,7 @@ import { useRouter } from "next/router";
 import dayjs from "dayjs";
 import { getResponse } from "../../../utils/response";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { useDownloadExcel } from "react-export-table-to-excel";
+import { useDownloadExcel, downloadExcel } from "react-export-table-to-excel";
 import { useDeleteResponse } from "../../../backend/surveys/response/response.query";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -75,11 +75,36 @@ const Responses = ({ survey, responses }) => {
     setResponseCount(responses?.length);
   }, [responses]);
 
-  const { onDownload } = useDownloadExcel({
-    currentTableRef: tableRef.current,
-    filename: survey?.title,
-    sheet: "Responses",
-  });
+  const handleExcelDownload = useCallback(() => {
+    if (questions && responses) {
+      const headerArray = questions.map((question) => question.title.English);
+      const bodyArray = responses.map((responseDescObj) => {
+        return responseDescObj.responses.map((responseObj, index) => {
+          let responseValue = responseObj.response[questions[index].type];
+
+          if (questions[index].type === "Photo") {
+            responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+          }
+          if (questions[index].type === "DateTime") {
+            responseValue = dayjs(responseValue).format("DD-MM-YYYY");
+          }
+          if (typeof responseValue === "object") {
+            responseValue = Object.values(responseValue).join(", ");
+          }
+          return responseValue;
+        });
+      });
+
+      downloadExcel({
+        fileName: survey?.title,
+        sheet: "Responses",
+        tablePayload: {
+          header: headerArray,
+          body: bodyArray,
+        },
+      });
+    }
+  }, [questions, responses]);
 
   useEffect(() => {
     setVerifyEmail("");
@@ -118,7 +143,7 @@ const Responses = ({ survey, responses }) => {
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <RateupButtonBlue
-            onClick={onDownload}
+            onClick={handleExcelDownload}
             title={"Download"}
             size="md"
             radius={"lg"}
