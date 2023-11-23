@@ -1,15 +1,7 @@
 export const fontList = [
-  "Arial",
-  "Arial Black",
-  "Brush Script MT",
-  "Comic Sans MS",
-  "Consolas",
+  "Helvetica",
   "Courier",
   "Georgia",
-  "Impact",
   "Roboto",
-  "Tahoma",
   "Times New Roman",
-  "Trebuchet MS",
-  "Verdana",
 ];
