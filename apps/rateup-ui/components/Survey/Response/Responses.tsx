@@ -82,10 +82,10 @@ const Responses = ({ survey, responses }) => {
         return responseDescObj.responses.map((responseObj, index) => {
           let responseValue = responseObj.response[questions[index].type];
 
-          if (questions[index].type === "Photo") {
+          if (questions[index].type === QuestionType.Photo) {
             responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
           }
-          if (questions[index].type === "DateTime") {
+          if (questions[index].type === QuestionType.DateTime) {
             responseValue = dayjs(responseValue).format("DD-MM-YYYY");
           }
           if (typeof responseValue === "object") {
