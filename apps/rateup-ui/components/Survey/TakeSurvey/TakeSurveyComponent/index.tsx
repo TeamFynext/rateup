@@ -27,6 +27,7 @@ import {
   InputBase,
   useCombobox,
   Flex,
+  ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -52,6 +53,7 @@ import {
   IconMail,
   IconThumbDownFilled,
   IconThumbUpFilled,
+  IconX,
 } from "@tabler/icons-react";
 import { DateInput } from "@mantine/dates";
 import { useListState } from "@mantine/hooks";
@@ -72,6 +74,7 @@ import { validateQuestion } from "../../../../utils/validation";
 import SmileyRating, { mapSmileyIcon } from "../RatingSmiley";
 import { GilroySemibold } from "../../../../public/fonts";
 import Flag from "react-world-flags";
+import { getFileName } from "../../SurveyTheme/components/BackgroundStyles";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -331,7 +334,7 @@ function TakeSurvey() {
                     );
                     return (
                       <Stack key={question.id}>
-                        <Title pt="sm" order={4}>
+                        <Title pt="sm" order={5}>
                           {question.title[selectedLanguage]}
                         </Title>
                         {response ? (
@@ -352,16 +355,21 @@ function TakeSurvey() {
                                     Object.values(response?.response)[0],
                                   );
                                 case Q.Photo:
-                                  const imgUrl = `${
-                                    process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
-                                  }${Object.values(response?.response)[0]}`;
-                                  return (
+                                  const img = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${img}`;
+                                  return img ? (
                                     <Image
                                       radius="md"
                                       maw={240}
                                       mx="0px"
                                       src={imgUrl}
                                     />
+                                  ) : (
+                                    <Text pb="sm" c="dark.0" fz="xs">
+                                      ... not answered...{" "}
+                                    </Text>
                                   );
                                 case Q.MSQ:
                                 case Q.DDMS:
@@ -657,9 +665,9 @@ function NextPrev({ prev, next, num, total }) {
   }
 
   if (isLoading || isError) return null;
-  const isFirstQuestion = survey.questions.indexOf(selectedQ) === 0;
+  const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
   const isLastQuestion =
-    survey.questions.indexOf(selectedQ) === survey.questions.length - 1;
+    survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
     <Stack
       pt={40}
@@ -1089,9 +1097,10 @@ function SmileyForm() {
 }
 
 function ImageForm() {
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(response || null);
+
   useEffect(() => {
     const uploadAndUpdate = async () => {
       if (file) {
@@ -1113,6 +1122,12 @@ function ImageForm() {
     }
   }, [file]);
 
+  function removeImg() {
+    setFile(null);
+    setPreviewUrl(null);
+    updateResponse(null);
+  }
+
   return (
     <Stack>
       <Box w={300}>
@@ -1132,19 +1147,35 @@ function ImageForm() {
       </Box>
 
       <Stack mt="lg">
+        {(file || response) && (
+          <Group justify="flex-end">
+            <ActionIcon
+              onClick={removeImg}
+              variant="filled"
+              color="gray"
+              radius="lg"
+            >
+              <IconX style={{ width: "70%", height: "70%" }} stroke={1.5} />
+            </ActionIcon>
+          </Group>
+        )}
+
         <Center>
-          {previewUrl && (
+          {(previewUrl || response) && (
             <Image
-              src={previewUrl}
+              src={
+                previewUrl ||
+                `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`
+              }
               alt="Preview"
               style={{ maxWidth: "100px", height: "auto", maxHeight: "100px" }}
             />
           )}
         </Center>
 
-        {file && (
+        {(file || response) && (
           <Text size="sm" style={{ textAlign: "center" }} mt="sm">
-            Picked file: {file.name}
+            Picked file: {file?.name || getFileName(response, false)}
           </Text>
         )}
       </Stack>
