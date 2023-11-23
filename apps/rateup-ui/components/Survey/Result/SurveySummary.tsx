@@ -182,7 +182,7 @@ const SurveySummary = () => {
                           </Text>
                         </Group>
                       );
-                    case "Multiple Choice":
+                    case "Single Select":
                       return (
                         <Group key={response} pb="sm">
                           <Chip

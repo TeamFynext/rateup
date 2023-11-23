@@ -635,7 +635,7 @@ function NextPrev({ prev, next, num, total }) {
       response &&
       (selectedQ?.type === "Number" ||
         selectedQ?.type === "Text" ||
-        selectedQ?.type === "TextArea")
+        selectedQ?.type === "Large Text")
     ) {
       let error = validateQuestion(selectedQ, response);
       if (error?.length > 0) {

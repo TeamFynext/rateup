@@ -66,7 +66,7 @@ export function QuestionTypeSelection({
           {filteredQuestionTypes?.map((qtype) => {
             return (
               <Stack gap={"md"}>
-                <Title order={3} c="dimmed">
+                <Title order={4} c="dimmed">
                   {qtype?.title}
                 </Title>
                 <SimpleGrid cols={3}>
@@ -75,11 +75,10 @@ export function QuestionTypeSelection({
                     return (
                       <Button
                         key={type}
-                        size="lg"
+                        size="sm"
                         leftSection={<Icon />}
                         variant="default"
                         styles={{
-                          inner: { justifyContent: "flex-start" },
                           root: {
                             boxShadow: "3px 3px 10px rgba(0, 0, 0, 0.1)",
                           },

@@ -7,7 +7,7 @@ export enum QuestionType {
   YN = "Yes or No",
   Opinion = "Opinion Scale",
   Email = "Email",
-  MCQ = "Multiple Choice",
+  MCQ = "Single Select",
   MSQ = "Multiple Select",
   DDSS = "Dropdown SingleSelect",
   DDMS = "Dropdown MultiSelect",
@@ -15,7 +15,7 @@ export enum QuestionType {
   Photo = "Photo",
   Testimonial = "Testimonial",
   Text = "Text",
-  TextArea = "TextArea",
+  TextArea = "Large Text",
   Number = "Number",
   DateTime = "DateTime",
 

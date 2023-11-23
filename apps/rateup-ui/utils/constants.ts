@@ -1,10 +1,6 @@
 import { QuestionType } from "../types/enums";
 
-export const ContactQuestions = [
-  QuestionType.TextArea,
-  QuestionType.Email,
-  QuestionType.Phone,
-];
+export const ContactQuestions = [QuestionType.Email, QuestionType.Phone];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
 
@@ -25,6 +21,7 @@ export const WaNPSQuestions = [
 
 export const OtherQuestions = [
   QuestionType.Text,
+  QuestionType.TextArea,
   QuestionType.DDMS,
   QuestionType.Number,
   QuestionType.Testimonial,
