@@ -1,4 +1,11 @@
-import { Button, Center, SimpleGrid } from "@mantine/core";
+import {
+  Button,
+  Center,
+  ScrollArea,
+  SimpleGrid,
+  Stack,
+  Title,
+} from "@mantine/core";
 import { Text } from "@mantine/core";
 import {
   Icon123,
@@ -26,16 +33,22 @@ import { createBlankQuestion } from "../../../utils/questions";
 import { QuestionTabsEnum } from "../EditSurvey";
 import { IconPhoneFilled } from "@tabler/icons-react";
 import { IconScaleOutline } from "@tabler/icons";
+import {
+  QuestionTypesGroup,
+  WaSurveyQuestionTypes,
+} from "../../../utils/constants";
 
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
   types: QuestionType[];
+  isWaSurvey?: boolean;
 }
 export function QuestionTypeSelection({
   setSelectedQ,
   setActiveTab,
   types,
+  isWaSurvey,
 }: QuestionTypeSelectionProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const handleTypeSelection = (type: QuestionType) => {
@@ -43,30 +56,49 @@ export function QuestionTypeSelection({
     setSelectedQ(newQ);
     setActiveTab(QuestionTabsEnum.Edit);
   };
-
+  const filteredQuestionTypes = isWaSurvey
+    ? WaSurveyQuestionTypes
+    : QuestionTypesGroup;
   return (
-    <Center style={{ height: "100%" }}>
-      <SimpleGrid cols={3}>
-        {types.map((type) => {
-          const Icon = questionIcons[type];
-          return (
-            <Button
-              key={type}
-              size="lg"
-              leftSection={<Icon />}
-              variant="default"
-              styles={{
-                inner: { justifyContent: "flex-start" },
-                root: { boxShadow: "3px 3px 10px rgba(0, 0, 0, 0.1)" },
-              }}
-              onClick={() => handleTypeSelection(type as QuestionType)}
-            >
-              <Text>{type}</Text>
-            </Button>
-          );
-        })}
-      </SimpleGrid>
-    </Center>
+    <ScrollArea>
+      <Center style={{ height: "100%" }}>
+        <Stack gap={"md"}>
+          {filteredQuestionTypes?.map((qtype) => {
+            return (
+              <Stack gap={"md"}>
+                <Title order={3} c="dimmed">
+                  {qtype?.title}
+                </Title>
+                <SimpleGrid cols={3}>
+                  {qtype?.questionTypes?.map((type) => {
+                    const Icon = questionIcons[type];
+                    return (
+                      <Button
+                        key={type}
+                        size="lg"
+                        leftSection={<Icon />}
+                        variant="default"
+                        styles={{
+                          inner: { justifyContent: "flex-start" },
+                          root: {
+                            boxShadow: "3px 3px 10px rgba(0, 0, 0, 0.1)",
+                          },
+                        }}
+                        onClick={() =>
+                          handleTypeSelection(type as QuestionType)
+                        }
+                      >
+                        <Text>{type}</Text>
+                      </Button>
+                    );
+                  })}
+                </SimpleGrid>
+              </Stack>
+            );
+          })}
+        </Stack>
+      </Center>
+    </ScrollArea>
   );
 }
 

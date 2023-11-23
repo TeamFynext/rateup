@@ -85,6 +85,7 @@ export function EditWhatsappSurvey({
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
               types={WA_QUESTION_TYPES}
+              isWaSurvey={true}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
