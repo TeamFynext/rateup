@@ -1,6 +1,9 @@
 import {
   Button,
   Center,
+  Flex,
+  Grid,
+  GridCol,
   ScrollArea,
   SimpleGrid,
   Stack,
@@ -69,29 +72,31 @@ export function QuestionTypeSelection({
                 <Title order={4} c="dimmed">
                   {qtype?.title}
                 </Title>
-                <SimpleGrid cols={3}>
+                <Grid pr={"lg"}>
                   {qtype?.questionTypes?.map((type) => {
                     const Icon = questionIcons[type];
                     return (
-                      <Button
-                        key={type}
-                        size="sm"
-                        leftSection={<Icon />}
-                        variant="default"
-                        styles={{
-                          root: {
-                            boxShadow: "3px 3px 10px rgba(0, 0, 0, 0.1)",
-                          },
-                        }}
-                        onClick={() =>
-                          handleTypeSelection(type as QuestionType)
-                        }
-                      >
-                        <Text>{type}</Text>
-                      </Button>
+                      <Grid.Col span="content">
+                        <Button
+                          key={type}
+                          size="md"
+                          leftSection={<Icon />}
+                          variant="default"
+                          styles={{
+                            root: {
+                              boxShadow: "3px 3px 10px rgba(0, 0, 0, 0.1)",
+                            },
+                          }}
+                          onClick={() =>
+                            handleTypeSelection(type as QuestionType)
+                          }
+                        >
+                          <Text>{type}</Text>
+                        </Button>
+                      </Grid.Col>
                     );
                   })}
-                </SimpleGrid>
+                </Grid>
               </Stack>
             );
           })}

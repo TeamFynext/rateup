@@ -139,11 +139,11 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
                   <Image
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
                     alt="Logo"
-                    w={isMobile ? 50 : 60}
-                    h={isMobile ? 50 : 60}
+                    w={isMobile ? 70 : 80}
+                    h={isMobile ? 70 : 80}
                     fit={"contain"}
                   />
-                  <Text c="#CDCDCD" fw={"bold"} fz={20}>
+                  <Text c="#CDCDCD" fw={"bold"} fz={28}>
                     Survey is not available..!
                   </Text>
                 </Group>
