@@ -118,7 +118,7 @@ export function createEmailBody(reset_link: string) {
               <td>
                 <img
                   class="email-icon"
-                  src="https://${process.env.AWS_CLOUDFRONT_DOMAIN}/1699439415146-resetpassword-icon.png"
+                  src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/resetPasswordIcon.png"
                   alt="Email Logo"
                   width="111"
                   height="111"
@@ -126,11 +126,14 @@ export function createEmailBody(reset_link: string) {
               </td>
             </tr>
             <tr>
-              <td>
-                <p class="email-body">
+              <td center>
+                <p class="email-body" style="max-width: 500px; text-align: center; margin: 0 auto;">
                   A password reset request for your account has been recieved
                 </p>
               </td>
+            </tr>
+            <tr>
+              <td></td>
             </tr>
             <tr>
               <td>
@@ -149,7 +152,7 @@ export function createEmailBody(reset_link: string) {
               <td>
                 <img
                   class="rateup-logo"
-                  src="https://${process.env.AWS_CLOUDFRONT_DOMAIN}/1699439481211-rateup-logo.png"
+                  src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
                   alt="Rateup Logo"
                   width="134"
                   height="76"
