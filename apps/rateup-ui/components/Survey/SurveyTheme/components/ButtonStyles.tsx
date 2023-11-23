@@ -58,6 +58,12 @@ function ButtonStyles({
       buttonStyles: { ...buttonStyle.buttonStyles, [name]: value },
     }));
   };
+  useEffect(() => {
+    setButtonStyle({
+      name: "button",
+      buttonStyles: currentStyles.buttonStyles,
+    });
+  }, [currentStyles]);
   return (
     <Flex>
       <Stack w={"100%"} justify={"center"} h="100%">

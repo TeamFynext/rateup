@@ -43,6 +43,7 @@ function HeaderStyles({
       headerStyles: currentStyles.headerStyles,
     },
   });
+
   //----------font loading--------
   useEffect(() => {
     if (
@@ -62,7 +63,14 @@ function HeaderStyles({
       });
   }, [form.values]);
 
-  useEffect(() => {}, [form.values]);
+  useEffect(() => {
+    if (!form.isDirty()) {
+      form.setValues({
+        name: "header",
+        headerStyles: currentStyles.headerStyles,
+      });
+    }
+  }, [currentStyles]);
 
   //----------onsubmit form -------------
   const onSubmit = (e) => {

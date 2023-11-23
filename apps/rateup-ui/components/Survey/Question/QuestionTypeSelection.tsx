@@ -43,6 +43,7 @@ import {
 import { useHover } from "@mantine/hooks";
 import { GoogleIcon } from "../../Button/GoogleIcon";
 import { googleReviewSupportedTypes } from "../../../utils/data";
+import { getQuestionTypeLabel } from "../../../utils/enums";
 
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
@@ -93,7 +94,7 @@ export function QuestionTypeSelection({
             setIsGoogleReviewSupported(false);
           }}
         >
-          <Text fz={14}>{type}</Text>
+          <Text fz={14}>{getQuestionTypeLabel(type)}</Text>
         </Button>
       </div>
     );

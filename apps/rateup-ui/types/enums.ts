@@ -1,5 +1,6 @@
 // Any modification to this file should be reflected in the frontend
 
+// to get label use utils/enums -> getQuestionTypeLabel(type: QuestionType)
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",
@@ -7,7 +8,7 @@ export enum QuestionType {
   YN = "Yes or No",
   Opinion = "Opinion Scale",
   Email = "Email",
-  MCQ = "Single Select",
+  MCQ = "Multiple Choice",
   MSQ = "Multiple Select",
   DDSS = "Dropdown SingleSelect",
   DDMS = "Dropdown MultiSelect",
@@ -15,7 +16,7 @@ export enum QuestionType {
   Photo = "Photo",
   Testimonial = "Testimonial",
   Text = "Text",
-  TextArea = "Large Text",
+  TextArea = "TextArea",
   Number = "Number",
   DateTime = "DateTime",
 

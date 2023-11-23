@@ -599,12 +599,12 @@ function NextPrev({ prev, next, num, total }) {
 
   useEffect(() => {
     // TODO: check if rebase was done correctly
-    if (selectedQ?.required && response && selectedQ?.type === "Email") {
+    if (selectedQ?.required && response && selectedQ?.type === Q.Email) {
       setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
       if (!/^\S+@\S+$/.test(response)) {
         setIsErrorInput(false);
       }
-    } else if (selectedQ?.required && response && selectedQ?.type === "Phone") {
+    } else if (selectedQ?.required && response && selectedQ?.type === Q.Phone) {
       setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone");
       if (!/^\d{10}$/.test(response)) {
         setIsErrorInput(false);
@@ -612,7 +612,7 @@ function NextPrev({ prev, next, num, total }) {
     } else if (
       selectedQ?.required &&
       response &&
-      selectedQ?.type === "Testimonial"
+      selectedQ?.type === Q.Testimonial
     ) {
       const { name, testimonial } = response;
       if (name?.length < 3 || testimonial?.length < 5) {
@@ -633,9 +633,9 @@ function NextPrev({ prev, next, num, total }) {
     if (
       selectedQ?.validationRules &&
       response &&
-      (selectedQ?.type === "Number" ||
-        selectedQ?.type === "Text" ||
-        selectedQ?.type === "Large Text")
+      (selectedQ?.type === Q.Number ||
+        selectedQ?.type === Q.Text ||
+        selectedQ?.type === Q.TextArea)
     ) {
       let error = validateQuestion(selectedQ, response);
       if (error?.length > 0) {
@@ -650,9 +650,9 @@ function NextPrev({ prev, next, num, total }) {
 
   function handleNextClick() {
     if (
-      selectedQ?.type === "Email" ||
-      selectedQ?.type === "Phone" ||
-      selectedQ?.type === "Testimonial"
+      selectedQ?.type === Q.Email ||
+      selectedQ?.type === Q.Phone ||
+      selectedQ?.type === Q.Testimonial
     ) {
       if (!errorMsg) {
         next();
