@@ -151,16 +151,19 @@ function WelcomePage({
             >
               {surveyThemeData?.headerText}
             </Title>
+
             <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
               {surveyThemeData?.descText}
             </Text>
+
             <Button
               mt={20}
-              style={{ ...surveyThemeData?.buttonStyles, ...buttonStyles }} //VERIFY MANTINE
-              // className={classes.ButtonStyles}
+              style={
+                surveyThemeData?.buttonStyles
+                  ? { ...surveyThemeData.buttonStyles }
+                  : { ...buttonStyles }
+              }
               onClick={isProtected ? open : onStart}
-              // size="xl"
-              // w={150}
               miw={150}
             >
               {surveyThemeData?.buttonText}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Stack,
   Flex,
@@ -6,10 +6,14 @@ import {
   Button,
   FileButton,
   SimpleGrid,
+  ActionIcon,
+  Group,
+  Text,
 } from "@mantine/core";
 import { createFormContext } from "@mantine/form";
-import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
+import { getFileName } from "./BackgroundStyles";
 
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 interface FormValues {
@@ -36,6 +40,8 @@ function LogoStyles({
   });
 
   const [isFileLoading, setisFileLoading] = useState(false);
+  const [logoFileName, setLogoFileName] = useState(null);
+  const resetLogoRef = useRef<() => void>(null);
 
   useEffect(() => {
     setCurrentstyles({
@@ -51,13 +57,15 @@ function LogoStyles({
 
   const handleFileChange = (value) => {
     setisFileLoading(true);
-
+    setLogoFileName(value?.name);
     setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: value });
     setisFileLoading(false);
   };
 
   const removeImage = () => {
+    setLogoFileName("");
     setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: "", logoUrl: "" });
+    resetLogoRef.current?.();
     // form.setValues({ logoUrl: ""})
 
     //TODO : removed logo not able re-upload as the next
@@ -86,21 +94,31 @@ function LogoStyles({
             {...form.getInputProps("logoStyles.width")}
           />
 
+          <Group mt="xl">
+            <ActionIcon variant="filled" aria-label="Settings">
+              <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
+            </ActionIcon>
+            <Text fw={600}>Logo : </Text>
+            <Text ml="md">
+              {getFileName(
+                currentStyles?.logoUrl || logoFileName,
+                !currentStyles?.logoUrl,
+              )}
+            </Text>
+          </Group>
+
           <SimpleGrid cols={2} mt="lg">
             <RateupButtonSecondary
               onClick={removeImage}
               title="Remove Image"
               size="xs"
-              disabled={
-                form?.values?.logoUrl === "" ||
-                (!currentStyles?.logoUrlNotUploaded &&
-                  currentStyles?.logoUrl === "")
-              }
+              disabled={!currentStyles?.logoUrl && !logoFileName}
               leftIcon={<IconTrash size={16} />}
             />
             <FileButton
               onChange={handleFileChange}
               accept="image/png,image/jpeg"
+              resetRef={resetLogoRef}
             >
               {(props) => (
                 <Button

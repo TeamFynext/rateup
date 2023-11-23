@@ -301,8 +301,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
           <CreateCampaignModal
             isEdit={true}
             close={closeEditModal}
-            campaign={campaignEditData}
-            campaignStatus={campaign?.status}
+            campaign={campaign}
           />
         </Modal>
       </Paper>

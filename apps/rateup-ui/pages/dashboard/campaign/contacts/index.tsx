@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ContactCard from "../../../../components/Card/ContactCard";
 import { IconSearch } from "@tabler/icons";
 import styles from "./contacts.module.css";
@@ -30,8 +30,6 @@ export default function Contacts() {
   const [activeTab, setActiveTab] = useState<string | null>("customers");
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
-  const [filteredContacts, setFilteredContacts] = useState([]);
-  const [filteredGroups, setFilteredGroups] = useState([]);
 
   const {
     isLoading: isLoadingContacts,
@@ -52,50 +50,32 @@ export default function Contacts() {
     refetch: refetchgroup,
   } = useContactGroup();
 
-  useEffect(() => {
-    if (!searchTerm.length && contactData?.data && contactGroupData?.data) {
-      setFilteredContacts(contactData?.data);
-      setFilteredGroups(contactGroupData?.data);
-    } else {
-      if (activeTab == "customers" && contactData?.data) {
-        setFilteredContacts(
-          contactData?.data?.filter((contact) => {
-            return (
-              contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              contact?.phone?.startsWith(searchTerm)
-            );
-          }),
+  const contacts =
+    selectedTeamID == "all" || !selectedTeamID
+      ? contactData?.data
+      : contactData?.data?.filter(
+          (contact) => contact?.teamId === selectedTeamID,
         );
-      } else {
-        if (contactGroupData?.data) {
-          setFilteredGroups(
-            contactGroupData?.data?.filter((group) => {
-              return group?.name
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase());
-            }),
-          );
-        }
-      }
-    }
-  }, [searchTerm, contactData?.data, contactGroupData?.data]);
+  const filteredContacts = searchTerm
+    ? contacts.filter((contact) => {
+        return (
+          contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contact?.phone?.startsWith(searchTerm)
+        );
+      })
+    : contacts;
 
-  useEffect(() => {
-    if (contactData?.data) {
-      setFilteredContacts(
-        contactData?.data?.filter((contact) => {
-          return contact?.teamId === selectedTeamID;
-        }),
-      );
-    }
-    if (contactGroupData?.data) {
-      setFilteredGroups(
-        contactGroupData?.data?.filter((group) => {
-          return group?.teamId === selectedTeamID;
-        }),
-      );
-    }
-  }, [selectedTeamID, contactData?.data, contactGroupData?.data]);
+  const contactGroups =
+    selectedTeamID == "all" || !selectedTeamID
+      ? contactGroupData?.data
+      : contactGroupData?.data?.filter(
+          (group) => group?.teamId === selectedTeamID,
+        );
+  const filteredGroups = searchTerm
+    ? contactGroups.filter((group) => {
+        return group?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      })
+    : contactGroups;
 
   return (
     <>
@@ -127,6 +107,7 @@ export default function Contacts() {
         <TeamSelector
           value={selectedTeamID}
           onChange={setSelectedTeamID}
+          enableAll={true}
         ></TeamSelector>
       </Flex>
       <Tabs

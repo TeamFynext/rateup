@@ -104,13 +104,6 @@ function BackgroundStyles({
     !isMobileView && setSelectedTab("Mobile");
   };
 
-  function getFileName(url: string, isNewFile: boolean) {
-    if (isNewFile) return url;
-    const pattern = /^[^-]+-/;
-    const name = url?.replace(pattern, "");
-    return name;
-  }
-
   return (
     <Stack>
       <Stack mt={10}>
@@ -298,3 +291,10 @@ function BackgroundStyles({
 }
 
 export default BackgroundStyles;
+
+export function getFileName(url: string, isNewFile: boolean) {
+  if (isNewFile) return url;
+  const pattern = /^[^-]+-/;
+  const name = url?.replace(pattern, "");
+  return name;
+}

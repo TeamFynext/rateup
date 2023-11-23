@@ -31,19 +31,30 @@ export default function () {
   const [searchText, setSearchText] = useState("");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
+  const enabled = !!selectedTeam && selectedTeam != "all";
   const {
     data: campaignDataByTeam,
     isLoading,
     isError,
     refetch,
-  } = useCampaignDataByTeam(selectedTeam);
+  } = useCampaignDataByTeam(selectedTeam, enabled);
 
+  const {
+    data: campaignData,
+    isLoading: isAllCampaignLoading,
+    isError: isAllCampaignError,
+  } = useCampaignData();
+
+  const filteredCampaignsdata =
+    selectedTeam == "all" || !selectedTeam
+      ? campaignData?.data
+      : campaignDataByTeam?.data;
   const filteredCampaigns = searchText
-    ? campaignDataByTeam?.data?.filter(
+    ? filteredCampaignsdata.filter(
         (campaign) =>
           campaign?.name.toLowerCase().includes(searchText.toLowerCase()),
       )
-    : campaignDataByTeam?.data;
+    : filteredCampaignsdata;
 
   return (
     <>
@@ -58,7 +69,11 @@ export default function () {
                 onClick={open}
               />
             </Group>
-            <TeamSelector value={selectedTeam} onChange={setSelectedTeam} />
+            <TeamSelector
+              value={selectedTeam}
+              onChange={setSelectedTeam}
+              enableAll={true}
+            />
           </Flex>
           <Flex justify={"center"}>
             <SearchInput
@@ -68,8 +83,8 @@ export default function () {
             />
           </Flex>
           <Center>
-            {isLoading && <Loader />}
-            {isError && (
+            {isLoading && isAllCampaignLoading ? <Loader /> : <></>}
+            {isError && isAllCampaignError ? (
               <Stack>
                 <Text>Something went wrong</Text>
                 <Button
@@ -80,6 +95,8 @@ export default function () {
                   Retry
                 </Button>
               </Stack>
+            ) : (
+              <></>
             )}
           </Center>
 

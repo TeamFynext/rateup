@@ -15,34 +15,24 @@ import {
   useUpdateCampaignMutation,
 } from "../../../backend/campaign/campaign.query";
 
-type CampaignResponse = {
-  id: string;
-  name: string;
-  surveyTeamMapId: string;
-  waTemplateId: string;
-  teamId: string;
-};
-
 interface CreateCampaignProps {
   close: () => void;
   isEdit?: boolean;
-  campaign?: CampaignResponse;
-  campaignStatus?: string;
+  campaign?;
 }
 
 const CreateCampaignModal = ({
   close,
   isEdit,
   campaign,
-  campaignStatus,
 }: CreateCampaignProps) => {
   const form = useForm({
-    initialValues: campaign || {
-      name: "",
-      type: CampaignType.WHATSAPP,
-      teamId: "",
-      surveyTeamMapId: "",
-      waTemplateId: "",
+    initialValues: {
+      name: campaign?.name || "",
+      type: campaign?.type || CampaignType.WHATSAPP,
+      teamId: campaign?.teamId || "",
+      surveyTeamMapId: campaign?.surveyTeamMapId || "",
+      waTemplateId: campaign?.waTemplateId || "",
     },
     validate: {
       name: isNotEmpty("Name cannot be empty"),
@@ -130,7 +120,7 @@ const CreateCampaignModal = ({
             {...form.getInputProps("name")}
             classNames={{ label: style.inputLabel }}
           />
-          {isEdit && campaignStatus === CampaignStatus.ACTIVE ? (
+          {isEdit && campaign?.status === CampaignStatus.ACTIVE ? (
             <></>
           ) : (
             <>

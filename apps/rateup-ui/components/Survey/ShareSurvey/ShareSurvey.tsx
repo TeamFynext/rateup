@@ -215,7 +215,7 @@ const ShareSurvey = ({
         opened={opened}
         title="Survey contains errors"
       >
-        <ScrollArea h={400} mb="xl">
+        <ScrollArea.Autosize mah={400} mb="xl">
           <Box my="xl">
             {Array.isArray(errors) ? (
               errors?.map((item, index) => (
@@ -247,7 +247,7 @@ const ShareSurvey = ({
               </Box>
             )}
           </Box>
-        </ScrollArea>
+        </ScrollArea.Autosize>
 
         <Center>
           <RateupButtonBlue

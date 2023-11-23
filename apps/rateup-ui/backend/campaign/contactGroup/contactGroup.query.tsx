@@ -23,6 +23,7 @@ export const useContactGroupById = (groupId: string) => {
   return useQuery({
     queryKey: ["contactGroupById", groupId],
     queryFn: () => getContactGroupById(groupId),
+    enabled: !!groupId,
   });
 };
 

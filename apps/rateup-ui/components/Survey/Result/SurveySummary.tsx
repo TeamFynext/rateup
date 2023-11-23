@@ -43,7 +43,7 @@ const countResponses = (surveyResponses) => {
         counts[questionId] = {};
       }
 
-      if (responseType === "Multiple Select") {
+      if (responseType === QuestionType.MSQ) {
         if (typeof responseValue === "string") {
           responseValue = responseValue.split(",");
         } else if (Array.isArray(responseValue)) {
@@ -166,7 +166,7 @@ const SurveySummary = () => {
                   const voteText = count > 1 ? "votes" : "vote";
 
                   switch (responseTypeMap[questionId]) {
-                    case "Opinion Scale":
+                    case QuestionType.Opinion:
                       return (
                         <Group key={response} pb="sm">
                           <Chip
@@ -182,7 +182,7 @@ const SurveySummary = () => {
                           </Text>
                         </Group>
                       );
-                    case "Multiple Choice":
+                    case QuestionType.MCQ:
                       return (
                         <Group key={response} pb="sm">
                           <Chip
@@ -198,7 +198,7 @@ const SurveySummary = () => {
                           </Text>
                         </Group>
                       );
-                    case "Rating":
+                    case QuestionType.Rating:
                       return (
                         <Group key={response}>
                           <Rating value={parseInt(response)} readOnly />
@@ -208,7 +208,7 @@ const SurveySummary = () => {
                         </Group>
                       );
 
-                    case "Like or Dislike":
+                    case QuestionType.LD:
                       return (
                         <Group key={response}>
                           {response === "Like" ? (
@@ -243,7 +243,7 @@ const SurveySummary = () => {
                         </Group>
                       );
 
-                    case "Yes or No":
+                    case QuestionType.YN:
                       return (
                         <Group key={response}>
                           {response === "Yes" ? (
@@ -276,7 +276,7 @@ const SurveySummary = () => {
                         </Group>
                       );
 
-                    case "Multiple Select":
+                    case QuestionType.MSQ:
                       return (
                         <span key={response}>
                           <Group pb="sm">

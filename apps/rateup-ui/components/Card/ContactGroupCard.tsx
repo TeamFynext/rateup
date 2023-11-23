@@ -37,7 +37,11 @@ export const ContactGroupCard = ({ group }) => {
       <Group justify="space-between">
         <Stack gap={"sm"} justify={"center"} align={"center"}>
           <Avatar
-            src={group?.icon ? getFileUrlFromKey(group?.icon) : null}
+            src={
+              group?.icon
+                ? getFileUrlFromKey(group?.icon)
+                : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`
+            }
             alt="profile pic"
             radius="xl"
             size={60}

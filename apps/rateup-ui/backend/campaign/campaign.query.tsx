@@ -17,10 +17,11 @@ export const useCampaignData = () => {
   });
 };
 
-export const useCampaignDataByTeam = (teamId: string) => {
+export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
   return useQuery({
     queryKey: ["campaignsbyTeam", teamId],
     queryFn: () => getCampaignsByTeam(teamId),
+    enabled: enabled,
   });
 };
 
@@ -51,6 +52,7 @@ export const useCampaignById = (campaignId) => {
   return useQuery({
     queryKey: ["campaignById", campaignId],
     queryFn: () => getCampaignById(campaignId),
+    enabled: !!campaignId,
   });
 };
 

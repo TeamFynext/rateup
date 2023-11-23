@@ -301,8 +301,8 @@ const ProfileSettings = () => {
                 <Title size="lg" fw={500}>
                   Change Password
                 </Title>
-                <Text color="dark.1">
-                  Enter your current password to change yout new password.
+                <Text c="dark.1">
+                  Enter your current password to change your new password.
                 </Text>
               </Stack>
               <Flex gap={"md"} wrap="wrap" direction={"column"}>
