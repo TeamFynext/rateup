@@ -112,9 +112,9 @@ const TeamDetails = () => {
 
   const handleSubmit = async (e) => {
     const validationErrors = validateNameAndEmail(name, email);
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      return;
     } else {
       notifications.show({
         id: "load-data",
@@ -156,7 +156,7 @@ const TeamDetails = () => {
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-          {errors.name && <Text color="red">*{errors.name}</Text>}
+          {errors.name && <Text c="red">*{errors.name}</Text>}
           <Space h="lg" />
           <ContainedTextField
             required
