@@ -52,20 +52,17 @@ const TeamMemberCard = ({
             {member?.status === "PENDING" ? (
               <TeamMemberMenu status={member?.status} inviteId={member.id} />
             ) : (
-              <Group gap={0}>
-                <Text size="xs">Edit</Text>
-                <Button
-                  size="compact-sm"
-                  ml={5}
-                  disabled={
-                    user.role !== "SUPER_ADMIN" || member.id === user.userId
-                  }
-                  variant="subtle"
-                  onClick={() => setMemberModalOpenedId(member.id)}
-                >
-                  <IconPencilMinus size={15} />
-                </Button>
-              </Group>
+              <Button
+                size="compact-sm"
+                ml={5}
+                disabled={
+                  user.role !== "SUPER_ADMIN" || member.id === user.userId
+                }
+                variant="subtle"
+                onClick={() => setMemberModalOpenedId(member.id)}
+              >
+                <IconPencilMinus size={15} />
+              </Button>
             )}
           </Flex>
           <Flex align={"center"} justify={"space-between"}>
