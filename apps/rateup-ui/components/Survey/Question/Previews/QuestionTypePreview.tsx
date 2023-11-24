@@ -1,10 +1,14 @@
 import React from "react";
 import { QuestionType as Q } from "../../../../types/enums";
 import {
+  DDMSForm,
+  DDSSForm,
   DateForm,
   EmailForm,
   ImageForm,
   LDForm,
+  MCQForm,
+  MSQForm,
   NumberForm,
   OpinionScaleForm,
   PhoneForm,
@@ -16,7 +20,7 @@ import {
   YNForm,
 } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms";
 
-const QuestionTypePreview = ({ type }) => {
+const QuestionTypePreview = ({ type, choices }) => {
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -41,13 +45,13 @@ const QuestionTypePreview = ({ type }) => {
     case Q.Photo:
       return <ImageForm />;
     case Q.MCQ:
-      return null;
+      return <MCQForm previewChoices={choices} />;
     case Q.MSQ:
-      return null;
+      return <MSQForm previewChoices={choices} />;
     case Q.DDSS:
-      return null;
+      return <DDSSForm previewChoices={choices} />;
     case Q.DDMS:
-      return null;
+      return <DDMSForm previewChoices={choices} />;
     case Q.Testimonial:
       return <TestimonialForm />;
     case Q.DateTime:

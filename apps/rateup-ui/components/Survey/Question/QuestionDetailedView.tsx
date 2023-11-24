@@ -70,7 +70,7 @@ export function QuestionDetailedView({
   const [titleFontSize, setTitleFontSize] = useState("2rem");
   const textInputRef = useRef(null);
 
-  const [currentResponse, updateResponse] = useState(null); //temp state for preview
+  const [currentResponse, updateResponse] = useState(null || []); //temp state for preview
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({
@@ -218,7 +218,10 @@ export function QuestionDetailedView({
               <CurrentResponsesContext.Provider
                 value={{ response: currentResponse, updateResponse }}
               >
-                <QuestionTypePreview type={question?.type} />
+                <QuestionTypePreview
+                  type={question?.type}
+                  choices={form.values.choices}
+                />
               </CurrentResponsesContext.Provider>
             </Center>
           </Stack>
