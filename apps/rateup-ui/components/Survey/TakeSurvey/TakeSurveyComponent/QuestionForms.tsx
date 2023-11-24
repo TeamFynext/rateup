@@ -44,6 +44,10 @@ import { useMediaQuery } from "@mantine/hooks";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 
+interface MCQFormProps {
+  previewChoices?: Record<string, Array<string>>;
+}
+
 export function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
@@ -492,53 +496,89 @@ export function ImageForm() {
   );
 }
 
-export function MCQForm() {
+export function MCQForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ.choices[selectedLanguage];
+  const choices = selectedQ?.choices[selectedLanguage];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const sampleChoices = ["option1", "option2", "option3", "option4"];
 
   return (
     <Stack>
-      {choices.map((choice) => (
-        <Checkbox
-          checked={response === choice}
-          onChange={() => updateResponse(choice)}
-          key={choice}
-          label={choice}
-        />
-      ))}
+      {selectedQ
+        ? choices?.map((choice) => (
+            <Checkbox
+              checked={response === choice}
+              onChange={() => updateResponse(choice)}
+              key={choice}
+              label={choice}
+            />
+          ))
+        : previewChoices
+        ? previewChoices?.[selectedLanguage]?.map((choice) => (
+            <Checkbox
+              checked={response === choice}
+              onChange={() => updateResponse(choice)}
+              key={choice}
+              label={choice}
+            />
+          ))
+        : sampleChoices?.map((choice) => (
+            <Checkbox
+              checked={response === choice}
+              onChange={() => updateResponse(choice)}
+              key={choice}
+              label={choice}
+            />
+          ))}
     </Stack>
   );
 }
 
-export function MSQForm() {
+export function MSQForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ.choices[selectedLanguage];
+  const choices = selectedQ?.choices[selectedLanguage];
+  const sampleChoices = ["option1", "option2", "option3", "option4"];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   return (
     <Checkbox.Group value={response} onChange={updateResponse}>
       <Stack>
-        {choices.map((choice) => (
-          <Checkbox value={choice} key={choice} label={choice} />
-        ))}
+        {selectedQ
+          ? choices?.map((choice) => (
+              <Checkbox value={choice} key={choice} label={choice} />
+            ))
+          : previewChoices
+          ? previewChoices?.[selectedLanguage]?.map((choice) => (
+              <Checkbox value={choice} key={choice} label={choice} />
+            ))
+          : sampleChoices?.map((choice) => (
+              <Checkbox value={choice} key={choice} label={choice} />
+            ))}
       </Stack>
     </Checkbox.Group>
   );
 }
 
-export function DDSSForm() {
+export function DDSSForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ.choices[selectedLanguage];
+  const choices = selectedQ?.choices[selectedLanguage];
+  const sampleChoices = ["option1", "option2", "option3", "option4"];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const data = choices.map((choice) => ({ value: choice, label: choice }));
+  const data = selectedQ
+    ? choices?.map((choice) => ({ value: choice, label: choice }))
+    : previewChoices
+    ? previewChoices?.[selectedLanguage]?.map((choice) => ({
+        value: choice,
+        label: choice,
+      }))
+    : sampleChoices?.map((choice) => ({ value: choice, label: choice }));
 
   return (
     <Select
@@ -552,14 +592,22 @@ export function DDSSForm() {
   );
 }
 
-export function DDMSForm() {
+export function DDMSForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ.choices[selectedLanguage];
+  const choices = selectedQ?.choices[selectedLanguage];
+  const sampleChoices = ["option1", "option2", "option3", "option4"];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const data = choices.map((choice) => ({ value: choice, label: choice }));
+  const data = selectedQ
+    ? choices?.map((choice) => ({ value: choice, label: choice }))
+    : previewChoices
+    ? previewChoices?.[selectedLanguage]?.map((choice) => ({
+        value: choice,
+        label: choice,
+      }))
+    : sampleChoices?.map((choice) => ({ value: choice, label: choice }));
 
   return (
     <MultiSelect
