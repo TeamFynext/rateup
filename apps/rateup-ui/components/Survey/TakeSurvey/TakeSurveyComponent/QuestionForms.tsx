@@ -574,7 +574,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const data = selectedQ
     ? choices?.map((choice) => ({ value: choice, label: choice }))
     : previewChoices
-    ? previewChoices?.[selectedLanguage].map((choice) => ({
+    ? previewChoices?.[selectedLanguage]?.map((choice) => ({
         value: choice,
         label: choice,
       }))
@@ -603,7 +603,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const data = selectedQ
     ? choices?.map((choice) => ({ value: choice, label: choice }))
     : previewChoices
-    ? previewChoices?.[selectedLanguage].map((choice) => ({
+    ? previewChoices?.[selectedLanguage]?.map((choice) => ({
         value: choice,
         label: choice,
       }))
