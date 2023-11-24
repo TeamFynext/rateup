@@ -6,7 +6,7 @@ import { getTimeSince } from "../../../utils";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SurveyMenu } from "./SurveyMenu";
 import router from "next/router";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
 
 interface SurveyCardProps {
   survey: Survey;
@@ -98,7 +98,7 @@ export function SurveyCard({
                 router.push(`${router.pathname}/${survey?.id}?tab=Result`);
               }}
             >
-              <RateupButtonBlue
+              <RateupButtonSecondary
                 leftIcon={<IconChartBar size={15} />}
                 title="Responses"
                 variant="subtle"
