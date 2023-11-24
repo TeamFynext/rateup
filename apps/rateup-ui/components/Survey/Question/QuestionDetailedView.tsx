@@ -179,7 +179,7 @@ export function QuestionDetailedView({
                   {...form.getInputProps(`title.${selectedLanguage}`)}
                   value={form.values.title[selectedLanguage]}
                 />
-                <TextInput
+                <Textarea
                   variant="unstyled"
                   placeholder="Enter question description here"
                   {...form.getInputProps(`description.${selectedLanguage}`)}
