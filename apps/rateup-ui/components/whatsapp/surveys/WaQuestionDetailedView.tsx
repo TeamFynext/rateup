@@ -1,6 +1,5 @@
 import {
   Stack,
-  TextInput,
   Divider,
   Group,
   Checkbox,
@@ -61,14 +60,14 @@ export function WaQuestionDetailedView({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [previewOpened, setPreviewOpened] = useState(false);
   const [enableTitle, setEnableTitle] = useState(
-    !!question?.title?.[selectedLanguage],
+    !!question?.title?.[selectedLanguage]
   );
 
   useEffect(() => {
     if (!enableTitle) {
       form.setFieldValue(
         "title",
-        getInitialQuestionValues(question, surveyLanguages, "whatsapp").title,
+        getInitialQuestionValues(question, surveyLanguages, "whatsapp").title
       );
     }
   }, [enableTitle]);
@@ -86,7 +85,7 @@ export function WaQuestionDetailedView({
     initialValues: getInitialQuestionValues(
       question,
       surveyLanguages,
-      "whatsapp",
+      "whatsapp"
     ),
     validate: {
       description: (desc) => {
@@ -130,7 +129,7 @@ export function WaQuestionDetailedView({
     } else {
       const missingLangs = validateAllLanguagesArePopulated(
         surveyLanguages,
-        form.values.description,
+        form.values.description
       );
 
       if (missingLangs.length > 0) {
@@ -196,13 +195,17 @@ export function WaQuestionDetailedView({
           }}
         />
         {enableTitle && (
-          <TextInput
+          <Textarea
             fw={800}
             maw={"95%"}
+            autosize
+            maxRows={2}
             variant="unstyled"
             mx="sm"
-            style={{
-              fontSize: "28px",
+            styles={{
+              input: {
+                fontSize: "26px",
+              },
             }}
             placeholder="Enter message header here"
             rightSection={
@@ -222,8 +225,10 @@ export function WaQuestionDetailedView({
           maxRows={4}
           variant="unstyled"
           placeholder="Enter message body here *"
-          style={{
-            fontSize: "22px",
+          styles={{
+            input: {
+              fontSize: "24px",
+            },
           }}
           rightSection={
             <LengthTracker
