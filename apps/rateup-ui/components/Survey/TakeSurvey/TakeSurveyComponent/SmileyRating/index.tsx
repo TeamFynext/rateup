@@ -1,4 +1,4 @@
-import { Rating, rem } from "@mantine/core";
+import { Rating } from "@mantine/core";
 import {
   IconMoodCry,
   IconMoodSad,
@@ -6,13 +6,9 @@ import {
   IconMoodCrazyHappy,
   IconMoodSmileBeam,
 } from "@tabler/icons-react";
-import { SmileyResponse } from "../../../types/enums";
+import { SmileyResponse } from "../../../../../types/enums";
 
-import {
-  getEmptyIcon,
-  getFullIcon,
-  getIconStyle,
-} from "../Question/Previews/SmileyRatingPreview";
+import { getEmptyIcon, getFullIcon, getIconStyle } from "./SmileyRatingStyling";
 
 const SmileyRating = ({ updateResponse, response }) => {
   const updateStringResponse = (value) => {

@@ -22,7 +22,7 @@ import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
-import { mapSmileyIcon } from "../TakeSurvey/RatingSmiley";
+import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
 interface IProps {

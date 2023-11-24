@@ -45,6 +45,7 @@ import {
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { CurrentResponsesContext } from "../../../context/ResponseContext";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -67,6 +68,8 @@ export function QuestionDetailedView({
   const [isSaving, setIsSaving] = useState(false);
   const [titleFontSize, setTitleFontSize] = useState("2rem");
   const textInputRef = useRef(null);
+
+  const [currentResponse, updateResponse] = useState(null); //temp state for preview
 
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({
@@ -210,7 +213,11 @@ export function QuestionDetailedView({
               }
             />
             <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
-              <QuestionTypePreview type={question?.type} />
+              <CurrentResponsesContext.Provider
+                value={{ response: currentResponse, updateResponse }}
+              >
+                <QuestionTypePreview type={question?.type} />
+              </CurrentResponsesContext.Provider>
             </Center>
           </Stack>
         </ScrollArea>

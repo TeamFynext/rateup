@@ -1,4 +1,4 @@
-import { Rating, rem } from "@mantine/core";
+import { rem } from "@mantine/core";
 import {
   IconMoodCry,
   IconMoodSad,
@@ -68,15 +68,3 @@ export const getFullIcon = (value: number) => {
       return null;
   }
 };
-
-const SmileyRatingPreview = () => {
-  return (
-    <Rating
-      emptySymbol={getEmptyIcon}
-      fullSymbol={getFullIcon}
-      highlightSelectedOnly
-    />
-  );
-};
-
-export default SmileyRatingPreview;
