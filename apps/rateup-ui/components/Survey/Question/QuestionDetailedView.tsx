@@ -12,6 +12,7 @@ import {
   Divider,
   Box,
   Badge,
+  Textarea,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
@@ -158,7 +159,7 @@ export function QuestionDetailedView({
           <Stack>
             <Group justify="space-between" p={2} gap={2}>
               <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
-                <TextInput
+                <Textarea
                   fw={800}
                   fz="lg"
                   ref={textInputRef}
@@ -172,7 +173,8 @@ export function QuestionDetailedView({
                     marginBottom: "20px", // add 30px bottom margin
                   }}
                   variant="unstyled"
-                  size="xl"
+                  autosize
+                  maxRows={3}
                   placeholder="Enter question title here *"
                   {...form.getInputProps(`title.${selectedLanguage}`)}
                   value={form.values.title[selectedLanguage]}

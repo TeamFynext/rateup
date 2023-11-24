@@ -50,6 +50,7 @@ export function transformData(inputData: any) {
       menuPageEnabled: inputData?.menuPageEnabled,
       feedbackPageEnabled: inputData?.feedbackPageEnabled,
       surveyTeamMapId: inputData?.surveyTeamMapId,
+      mobileBackgroundImage: inputData?.mobileBackgroundImage || "",
     };
   } else {
     return {
