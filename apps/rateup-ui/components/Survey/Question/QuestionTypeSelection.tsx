@@ -62,6 +62,7 @@ export function QuestionTypeSelection({
     const newQ = createBlankQuestion(type, selectedLanguage);
     setSelectedQ(newQ);
     setActiveTab(QuestionTabsEnum.Edit);
+    setIsGoogleReviewSupported(false);
   };
   const filteredQuestionTypes = isWaSurvey
     ? WaSurveyQuestionTypes
