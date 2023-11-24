@@ -266,7 +266,9 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
         <PillsInput
           radius="md"
           error={errors ? errors : false}
-          label="Languages"
+          label="Select Languages"
+          description={"*Type to add new languages"}
+          styles={{ description: { color: "var(--tertiary-color)" } }}
           withAsterisk
           onClick={() => combobox.openDropdown()}
         >

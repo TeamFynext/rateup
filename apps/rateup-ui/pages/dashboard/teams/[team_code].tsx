@@ -112,6 +112,7 @@ const TeamDetails = () => {
 
   const handleSubmit = async (e) => {
     const validationErrors = validateNameAndEmail(name, email);
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
