@@ -57,6 +57,7 @@
     "react-papaparse": "^4.1.0",
     "react-world-flags": "^1.6.0",
     "recharts": "^2.7.3",
+    "sharp": "^0.32.6",
     "supertokens-auth-react": "^0.34.2",
     "supertokens-node": "^15.2.0",
     "supertokens-web-js": "^0.7.3",
