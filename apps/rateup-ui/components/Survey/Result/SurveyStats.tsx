@@ -84,27 +84,29 @@ const SurveyStats = ({ survey }) => {
   ];
   return (
     <Stack>
-      <Heading subtitle="User Stats" />
       <Stack mih="400px" gap={10}>
         <PaperLayout px="lg" py={"lg"}>
-          <Group justify="space-between">
-            <Text c="var(--tertiary-color" size="28px" fw="700" px="xl">
-              {responseLength ?? 0} &nbsp;{" "}
-              {responseLength > 1 ? "Responses" : "Response"}
-            </Text>
-            {surveyStatsCountArray?.map(({ count, label }) => (
-              <PaperLayout style={{ flex: 1 }} key={label}>
-                <Stack align={"center"}>
-                  <Text fs={"20px"} fw="900" size={"30px"}>
-                    {count}
-                  </Text>
-                  <Badge color="blue" variant="light">
-                    {label}
-                  </Badge>
-                </Stack>
-              </PaperLayout>
-            ))}
-          </Group>
+          <Stack gap={0}>
+            <Heading subtitle="User Stats" />
+            <Group justify="space-between">
+              <Text c="var(--tertiary-color" size="28px" fw="700" px="xl">
+                {responseLength ?? 0} &nbsp;{" "}
+                {responseLength > 1 ? "Responses" : "Response"}
+              </Text>
+              {surveyStatsCountArray?.map(({ count, label }) => (
+                <PaperLayout style={{ flex: 1 }} key={label}>
+                  <Stack align={"center"}>
+                    <Text fs={"20px"} fw="900" size={"30px"}>
+                      {count}
+                    </Text>
+                    <Badge color="blue" variant="light">
+                      {label}
+                    </Badge>
+                  </Stack>
+                </PaperLayout>
+              ))}
+            </Group>
+          </Stack>
         </PaperLayout>
         <Grid columns={10} p={2}>
           {/* Location-wise response frequency */}

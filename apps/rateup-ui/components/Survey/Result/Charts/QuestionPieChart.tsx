@@ -9,6 +9,7 @@ import {
 import { Stack, Text, Group, Paper, Badge } from "@mantine/core";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
+import { stringToColour } from "../../../../utils/essential";
 
 interface DataItem {
   name: string;
@@ -111,7 +112,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
   return (
     <Stack miw={300}>
       <Group justify="space-between">
-        <Text size="xl" fw={800} maw={300} truncate>
+        <Text size="xl" fw={800} maw={300} truncate c={"dark.3"}>
           {no}. {question}
         </Text>
         <Badge variant="dot">{type}</Badge>

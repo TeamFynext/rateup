@@ -28,6 +28,7 @@ import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { useUpdateActiveStatusMutation } from "../../../backend/user/user.query";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { lexend400 } from "../../../utils/fonts";
 
 const Members = () => {
   const router = useRouter();
@@ -212,7 +213,7 @@ const LongMemberCard = ({
   return (
     <>
       <Group justify="space-between">
-        <Stack gap={0} miw={250}>
+        <Stack miw={250} gap={5}>
           <Group>
             <Text size="xl" fw={900}>
               {member?.name}
@@ -231,24 +232,29 @@ const LongMemberCard = ({
               {member?.role}
             </Badge>
           </Group>
-          <Text size="xs" fw={"bolder"} c={"dimmed"}>
+          <Text size="xs" c={"dimmed"}>
             {member?.email}
           </Text>
         </Stack>
-        <ScrollArea
-          style={{ flex: 1 }}
-          scrollbarSize={1}
-          offsetScrollbars={"x"}
-          miw={250}
-        >
-          <Group style={{ flex: 1 }} justify="flex-start" wrap="nowrap">
-            {teams.map(({ team_code, team_id, team_name }) => (
-              <Badge key={team_id} variant="outline">
-                {team_code}
-              </Badge>
-            ))}
-          </Group>
-        </ScrollArea>
+        <Stack style={{ flex: 1 }} gap={5}>
+          <Text size="xs" c={"dimmed"} className={lexend400.className}>
+            Teams joined :
+          </Text>
+          <ScrollArea
+            style={{ flex: 1 }}
+            scrollbarSize={1}
+            offsetScrollbars={"x"}
+            miw={250}
+          >
+            <Group style={{ flex: 1 }} justify="flex-start" wrap="nowrap">
+              {teams.map(({ team_code, team_id, team_name }) => (
+                <Badge key={team_id} variant="outline">
+                  {team_code}
+                </Badge>
+              ))}
+            </Group>
+          </ScrollArea>
+        </Stack>
         <Group>
           <Button
             size="compact-md"

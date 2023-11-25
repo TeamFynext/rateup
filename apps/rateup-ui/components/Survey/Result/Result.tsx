@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import {
   ActionIcon,
+  Badge,
   Checkbox,
   Group,
   Loader,
@@ -37,6 +38,7 @@ import { useImmer } from "use-immer";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import {
   filterResponses,
+  getResponseArrayByQuestionType,
   getfilteredResponseUsingLanguage,
 } from "../../../utils/response";
 import SurveyContext from "../../../context/SurveyContext";
@@ -224,11 +226,13 @@ export const ResultFilter = ({
       <PaperLayout p={"xs"} style={{ flex: 1 }}>
         <ScrollArea scrollbarSize={5} h={"100%"}>
           <Stack>
-            <Text c={"dimmed"}>Filter By</Text>
+            <Text c={"dark"} fw={900}>
+              Filter By
+            </Text>
             {languageSelectionOptions?.length > 1 && (
               <>
                 <Group justify="space-between">
-                  <Text size="xs" c={"dimmed"} fw={"bold"} maw={130} truncate>
+                  <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
                     Languages
                   </Text>
                   <Tooltip
@@ -286,7 +290,7 @@ const ReturnSingleFilterComponent = ({
     SelectedLanguageContext,
   );
   const Question = (
-    <Text size="xs" c={"dimmed"} fw={"bold"} maw={130} truncate>
+    <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
       {question.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
     </Text>
   );
@@ -318,27 +322,72 @@ const ReturnSingleFilterComponent = ({
             <Group>
               <Checkbox
                 value={SmileyResponse.VerySad}
-                label={<IconMoodCry size={18} />}
+                label={
+                  <IconMoodCry
+                    size={18}
+                    color={
+                      getResponseArrayByQuestionType(QuestionType.Smiley)?.find(
+                        (res) => res.value === SmileyResponse.VerySad,
+                      )?.color
+                    }
+                  />
+                }
                 size="xs"
               />
               <Checkbox
                 value={SmileyResponse.Sad}
-                label={<IconMoodSad size={18} />}
+                label={
+                  <IconMoodSad
+                    size={18}
+                    color={
+                      getResponseArrayByQuestionType(QuestionType.Smiley)?.find(
+                        (res) => res.value === SmileyResponse.Sad,
+                      )?.color
+                    }
+                  />
+                }
                 size="xs"
               />
               <Checkbox
                 value={SmileyResponse.Neutral}
-                label={<IconMoodSmile size={18} />}
+                label={
+                  <IconMoodSmile
+                    size={18}
+                    color={
+                      getResponseArrayByQuestionType(QuestionType.Smiley)?.find(
+                        (res) => res.value === SmileyResponse.Neutral,
+                      )?.color
+                    }
+                  />
+                }
                 size="xs"
               />
               <Checkbox
                 value={SmileyResponse.Happy}
-                label={<IconMoodHappy size={18} />}
+                label={
+                  <IconMoodHappy
+                    size={18}
+                    color={
+                      getResponseArrayByQuestionType(QuestionType.Smiley)?.find(
+                        (res) => res.value === SmileyResponse.Happy,
+                      )?.color
+                    }
+                  />
+                }
                 size="xs"
               />
               <Checkbox
                 value={SmileyResponse.VeryHappy}
-                label={<IconMoodCrazyHappy size={18} />}
+                label={
+                  <IconMoodCrazyHappy
+                    size={18}
+                    color={
+                      getResponseArrayByQuestionType(QuestionType.Smiley)?.find(
+                        (res) => res.value === SmileyResponse.VeryHappy,
+                      )?.color
+                    }
+                  />
+                }
                 size="xs"
               />
             </Group>

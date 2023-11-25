@@ -22,6 +22,7 @@ interface iProps {
   bgImage: string;
   bgTransparency: number;
   activeBgStyle: string;
+  disabled: boolean;
 }
 const Preview = ({
   url,
@@ -41,6 +42,7 @@ const Preview = ({
   bgTransparency,
   bgImage,
   activeBgStyle,
+  disabled,
 }: iProps) => {
   const printRef = useRef();
   const qartCanvasContainerRef = useRef(null);
@@ -177,6 +179,7 @@ const Preview = ({
         title="Download QR Code"
         onClick={downloadQrCode}
         rightIcon={<IconDownload />}
+        disabled={disabled}
       />
     </Stack>
   );

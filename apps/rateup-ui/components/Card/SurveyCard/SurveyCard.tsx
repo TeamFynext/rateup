@@ -81,9 +81,8 @@ export function SurveyCard({
           <Group>
             <StatusBadge active={survey?.active} />
             <Badge
-              color={
-                survey?.type == "web" ? "var(--tertiary-color)" : "#149a8a"
-              }
+              variant="outline"
+              color={survey?.type == "web" ? "blue" : "#149a8a"}
             >
               {survey?.type}
             </Badge>
@@ -117,7 +116,7 @@ export function SurveyCard({
 
 function StatusBadge({ active }) {
   return (
-    <Badge color={active ? "green" : "yellow"}>
+    <Badge color={active ? "green" : "yellow"} variant="light">
       {active ? "Active" : "Paused"}
     </Badge>
   );

@@ -107,7 +107,7 @@ export default function ResultComparison() {
               <PaperLayout mih={500} key={i}>
                 <Stack>
                   <Group justify="space-between">
-                    <Text c="dimmed" fw={900}>
+                    <Text c="dark.3" fw={900}>
                       {
                         q.title[
                           selectedLanguage ? selectedLanguage : defaultLanguage

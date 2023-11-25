@@ -153,7 +153,7 @@ const SurveySummary = () => {
               style={{ marginBottom: "20px", marginLeft: 2, marginRight: 2 }}
             >
               <>
-                <Text fw={700} mb="sm" size={"20px"}>
+                <Text fw={700} mb="sm" size={"20px"} c="dark.3">
                   {defaultLanguage &&
                     questionTitleMap[questionId][
                       selectedLanguage ? selectedLanguage : defaultLanguage

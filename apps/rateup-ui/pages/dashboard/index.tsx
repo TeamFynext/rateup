@@ -49,6 +49,7 @@ import FormModalLayout from "../../components/Modal/FormModalLayout";
 import PaperLayout from "../../components/styled/Layouts/PaperLayout";
 import NothingFound from "../../components/NothingFound/NothingFound";
 import Heading from "../../components/styled/Heading/Heading";
+import { lexend400, lexend500 } from "../../utils/fonts";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -241,12 +242,13 @@ export default function DashboardHome() {
                   leftIcon={<IconPlus size="2.2rem" />}
                   size="xl"
                   py="xl"
+                  className={lexend400.className}
                   styles={{
                     root: {
                       height: "130px",
                     },
                     label: {
-                      fontSize: "31px",
+                      fontSize: "32px",
                       paddingLeft: "5px",
                       paddingBottom: "4px",
                       display: "flex",
@@ -275,7 +277,7 @@ export default function DashboardHome() {
                       </Title>
                       <Text
                         style={{ textAlign: "center" }}
-                        fw={700}
+                        className={lexend400.className}
                         fz="xl"
                         c="#595959"
                       >
@@ -297,9 +299,18 @@ export default function DashboardHome() {
                   <Stack>
                     <Group justify="space-between">
                       <Group>
-                        <Title order={3} c="gray">
-                          Overall Responses
-                        </Title>
+                        <Stack align="center" gap={0}>
+                          <Text fw={700} fz={32} c="#595959">
+                            {total}
+                          </Text>
+                          <Text
+                            className={lexend400.className}
+                            fz="xl"
+                            c="dimmed"
+                          >
+                            Overall Responses
+                          </Text>
+                        </Stack>
                         <MantineTooltip label="Refresh data">
                           <ActionIcon
                             variant="light"
@@ -346,19 +357,6 @@ export default function DashboardHome() {
                           title="Monthly"
                         />
                       </Group>
-                    </Group>
-
-                    <Group justify="flex-start">
-                      <Text
-                        mb="md"
-                        mt="-15px"
-                        ml="md"
-                        fw={700}
-                        fz="xl"
-                        c="#595959"
-                      >
-                        {total}
-                      </Text>
                     </Group>
                   </Stack>
                   <ResponsiveContainer width="100%" height={380}>

@@ -21,6 +21,7 @@ import {
 } from "../../../Button/RateupButtons";
 import cx from "clsx";
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
+import ConfirmationModal from "../../../Modal/ConfirmationModal";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -53,41 +54,21 @@ export function DraggableQuestionCard({
     e.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
-
+  console.log(question);
   return (
     <>
-      <Dialog
+      <ConfirmationModal
+        forDeleteFunctionality
+        confirmLabel="Delete"
+        headerLabel="Are you sure to delete this question?"
+        headerTitle="Delete question?"
         opened={dialogOpened}
-        withCloseButton
         onClose={closeDialog}
-        size="lg"
-        radius="md"
-        position={{ top: "0", left: "40vw" }}
-      >
-        <Text size="md" mb="xs" fw={500}>
-          Are you sure to delete this question?
-        </Text>
-
-        <Group align="center" pt="lg">
-          <RateupButtonSecondary
-            onClick={closeDialog}
-            loading={isLoading}
-            size="md"
-            title="Cancel"
-          />
-
-          <RateupButtonBlue
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(e, question.id);
-            }}
-            loading={isLoading}
-            size="md"
-            title="Yes, Delete"
-          />
-        </Group>
-      </Dialog>
-
+        onConfirm={(e) => {
+          e.stopPropagation();
+          handleDelete(e, question.id);
+        }}
+      />
       <Draggable key={question.id} index={index} draggableId={question.id}>
         {(provided, snapshot) => (
           <div ref={hoverRef}>
@@ -114,7 +95,7 @@ export function DraggableQuestionCard({
                 {index + 1}
               </Badge>
               {/* TODO: add truncate and make height fixed*/}
-              <Text pl="xs" fw={500} px="md">
+              <Text pl="xs" fw={500} px="md" maw={200} truncate>
                 {question.title[selectedLanguage] ||
                   question.description[selectedLanguage]}
               </Text>

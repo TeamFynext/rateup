@@ -21,7 +21,10 @@ import { useContext } from "react";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
-import { getResponse } from "../../../utils/response";
+import {
+  getResponse,
+  getResponseArrayByQuestionType,
+} from "../../../utils/response";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useDownloadExcel, downloadExcel } from "react-export-table-to-excel";
 import { useDeleteResponse } from "../../../backend/surveys/response/response.query";
@@ -156,14 +159,8 @@ const Responses = ({ survey, responses }) => {
       {responseCount > 0 ? (
         <PaperLayout style={{ flex: 1 }}>
           <>
-            <ScrollAreaAutosize h={"100%"} maw={"100%"}>
-              <Table
-                ref={tableRef}
-                withRowBorders
-                w={"100%"}
-                // bg={"red"}
-                h={"100%"}
-              >
+            <ScrollArea h={"100%"} maw={"100%"}>
+              <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
                 <TableHead questions={questions} />
                 <Table.Tbody>
                   {responses?.map((response) => (
@@ -203,7 +200,7 @@ const Responses = ({ survey, responses }) => {
                   ))}
                 </Table.Tbody>
               </Table>
-            </ScrollAreaAutosize>
+            </ScrollArea>
             <FormModalLayout
               opened={opened}
               onClose={close}
@@ -260,26 +257,26 @@ function TableHead({ questions }: TableHeadProps) {
     <Table.Thead style={stickyHeaderStyles}>
       <Table.Tr mih={50}>
         <Table.Th>
-          <Text fz="lg" c="dark.5" fw="600" p={10}>
+          <Text fz="lg" fw="600" p={10} c="dark.3">
             Date
           </Text>
         </Table.Th>
         {questions?.map((q) => (
           <Table.Th key={q?.id}>
             <Text
-              c="dark.5"
               fz="lg"
               fw="600"
               truncate="end"
               miw={200}
               maw={200}
+              c="dark.3"
             >
               {q?.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
             </Text>
           </Table.Th>
         ))}
         <Table.Th>
-          <Text fz="lg" c="dark.5" fw="600" p={10}>
+          <Text fz="lg" fw="600" p={10} c="dark.3">
             Delete
           </Text>
         </Table.Th>
@@ -304,35 +301,6 @@ function BadgeorTextorPreview({
     QuestionType.Opinion,
   ];
   const previewRequired = [QuestionType.Photo];
-  function returnBadgeColor() {
-    switch (response?.toString()) {
-      case SmileyResponse.VeryHappy:
-      case LDResponse.Like:
-      case YNResponse.Yes:
-      case "9":
-      case "10":
-        return "green";
-      case SmileyResponse.Happy:
-      case SmileyResponse.Neutral:
-      case "7":
-      case "8":
-        return "yellow";
-      case SmileyResponse.Sad:
-      case "5":
-      case "6":
-        return "orange";
-      case SmileyResponse.VerySad:
-      case LDResponse.Dislike:
-      case YNResponse.No:
-      case "1":
-      case "2":
-      case "3":
-      case "4":
-        return "red";
-      default:
-        return "dark";
-    }
-  }
   if (previewRequired.includes(questionType)) {
     return (
       <>
@@ -357,7 +325,12 @@ function BadgeorTextorPreview({
         size="lg"
         fw={600}
         radius={10}
-        color={returnBadgeColor()}
+        color={
+          getResponseArrayByQuestionType(questionType)?.find(
+            (res) => res.value === response,
+          )?.color
+        }
+        miw={100}
         variant="light"
       >
         {response}

@@ -41,6 +41,7 @@ import {
 } from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
+import { lexend400, lexend500 } from "../../../utils/fonts";
 
 const ShareSurvey = ({
   survey,
@@ -166,6 +167,7 @@ const ShareSurvey = ({
       >
         <Group justify="space-between">
           <Switch
+            className={lexend500.className}
             size="lg"
             checked={isPublished}
             onChange={(event) => {
@@ -182,12 +184,6 @@ const ShareSurvey = ({
               });
             }}
             label="Publish Survey"
-            style={{
-              root: {
-                fontSize: "30px",
-              },
-              label: { fontSize: "20px", fontWeight: "bold" },
-            }}
           />
           <Group>
             <Text>Current Status: </Text>
@@ -231,10 +227,9 @@ const ShareSurvey = ({
                   <ul>
                     {item?.errors?.map((error, index) => (
                       <li>
-                        {" "}
                         <Text key={index} c="#fa5252">
                           {error}
-                        </Text>{" "}
+                        </Text>
                       </li>
                     ))}
                   </ul>
@@ -259,12 +254,13 @@ const ShareSurvey = ({
           />
         </Center>
       </FormModalLayout>
-      <PaperLayout p="md" shadow="lg">
+      <PaperLayout p="md" shadow="lg" opacity={!isPublished ? 0.5 : 1}>
         <SimpleGrid cols={2} spacing="xl">
           <Stack style={{ maxWidth: "450px" }} p="md">
             <Title order={4}>Share Survey</Title>
             <Group>
               <ContainedSelection
+                disabled={!isPublished}
                 label="Select Team"
                 allowDeselect={false}
                 maw={150}
@@ -273,7 +269,7 @@ const ShareSurvey = ({
                 onChange={setSurveyTeamMapId}
               />
             </Group>
-            <CopyLinkComponent value={shareUrl} />
+            <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
           </Stack>
 
           <Stack style={{ maxWidth: "400px" }} p="md">
@@ -282,12 +278,14 @@ const ShareSurvey = ({
             </Title>
             <Group justify="center">
               <ActionIcon
+                disabled={!isPublished}
                 size="xl"
                 variant="light"
                 onClick={() => shareButtonAction("mail")}
                 style={{ background: "none" }}
               >
                 <Image
+                  opacity={isPublished ? 1 : 0.5}
                   alt="mail icon"
                   src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
                   width={40}
@@ -296,12 +294,14 @@ const ShareSurvey = ({
                 />
               </ActionIcon>
               <ActionIcon
+                disabled={!isPublished}
                 size="xl"
                 variant="light"
                 onClick={() => shareButtonAction("whatsapp")}
                 style={{ background: "none" }}
               >
                 <Image
+                  opacity={isPublished ? 1 : 0.5}
                   alt="whatsapp icon"
                   src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
                   width={40}
@@ -310,12 +310,14 @@ const ShareSurvey = ({
                 />
               </ActionIcon>
               <ActionIcon
+                disabled={!isPublished}
                 size="xl"
                 variant="light"
                 onClick={() => shareButtonAction("fb")}
                 style={{ background: "none" }}
               >
                 <Image
+                  opacity={isPublished ? 1 : 0.5}
                   alt="facebook icon"
                   src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
                   width={40}
@@ -327,7 +329,11 @@ const ShareSurvey = ({
           </Stack>
         </SimpleGrid>
       </PaperLayout>
-      <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
+      <ShareQR
+        url={shareUrl}
+        sx={{ borderRadius: "0.5rem" }}
+        disable={!isPublished}
+      />
     </Stack>
   );
 };

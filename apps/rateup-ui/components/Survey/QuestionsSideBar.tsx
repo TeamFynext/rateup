@@ -12,6 +12,7 @@ import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { IconPlus } from "@tabler/icons-react";
 import { RateupButtonBlue } from "../Button/RateupButtons";
+import { lexend400 } from "../../utils/fonts";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -84,6 +85,7 @@ export function QuestionsSideBar({
       {questionsState?.length > 0 && (
         <Stack>
           <RateupButtonBlue
+            className={lexend400.className}
             onClick={handleAddQn}
             title={"Add Question"}
             rightIcon={<IconPlus size="1rem" />}

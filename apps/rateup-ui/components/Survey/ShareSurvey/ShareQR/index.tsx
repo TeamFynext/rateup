@@ -25,9 +25,10 @@ import styles from "./ShareQR.module.css";
 interface ShareQRProps {
   url: string;
   sx?: any;
+  disable?: boolean;
 }
 
-const ShareQR = ({ url, sx }: ShareQRProps) => {
+const ShareQR = ({ url, sx, disable }: ShareQRProps) => {
   const [activeTab, setActiveTab] = useState<string | null>("text");
 
   const [title, setTitle] = useState("QR Code");
@@ -297,6 +298,7 @@ const ShareQR = ({ url, sx }: ShareQRProps) => {
 
             {url && (
               <Preview
+                disabled={disable}
                 title={title}
                 description={description}
                 url={url}

@@ -72,7 +72,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [tabState, setTabState] = useState<string>("title");
   const [mainTabState, setMainTabState] = useState<string>("bg");
   const [catalogue, setCatalogue] = useState(
-    editingItem?.catalogue ? "catalogue" : "menu"
+    editingItem?.catalogue ? "catalogue" : "menu",
   );
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
@@ -238,7 +238,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               >
                 <></>
               </TabsCommon>
-              <Title order={2}>Preview Screen</Title>
+              <Title order={2} c={"dimmed"}>
+                Preview Screen
+              </Title>
               <div></div>
             </SimpleGrid>
             <Stack
@@ -532,7 +534,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           mobileBackgroundImage
                             ? mobileBackgroundImage?.name
                             : form?.values?.mobileBackgroundImage,
-                          !!mobileBackgroundImage
+                          !!mobileBackgroundImage,
                         )}
                       </Text>
                       <FileButton
@@ -555,7 +557,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           backgroundImage
                             ? backgroundImage?.name
                             : form?.values?.backgroundImage,
-                          !!backgroundImage
+                          !!backgroundImage,
                         )}
                       </Text>
                       <FileButton
@@ -583,7 +585,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       <Text>
                         {getFileNameFromUrl(
                           logo ? logo?.name : form?.values?.logo,
-                          !!logo
+                          !!logo,
                         )}
                       </Text>
                       <FileButton

@@ -23,6 +23,7 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
+import { lexend400 } from "../../../utils/fonts";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -168,7 +169,9 @@ function SurveyTheme({ survey }) {
           <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
           <Group justify="space-between" px={10} pb={10}>
             <Group>
-              <Title order={2}>Preview Screen : </Title>
+              <Title order={2} c={"dimmed"}>
+                Preview
+              </Title>
               <TabsCommon
                 tabHeading={["Web", "Mobile"]}
                 radius={"lg"}
@@ -206,9 +209,11 @@ function SurveyTheme({ survey }) {
         </Stack>
       </PaperLayout>
       <Stack style={{ flex: 0.3 }} ml="sm">
-        <PaperLayout>
+        <PaperLayout p={"xl"}>
           <Group justify="center">
             <Switch
+              className={lexend400.className}
+              size="lg"
               label="Enable Welcome page"
               checked={survey?.welcomePageEnabled}
               color="var(--tertiary-color)"

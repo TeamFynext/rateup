@@ -73,7 +73,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   return (
     <Stack miw={300}>
       <Group justify="space-between">
-        <Text size="xl" fw={800} maw={300} truncate>
+        <Text size="xl" fw={800} maw={300} truncate c={"dark.3"}>
           {no}. {question}
         </Text>
         <Badge variant="dot">{questionType}</Badge>
