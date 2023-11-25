@@ -403,8 +403,9 @@ export interface Data {
   feedbackPageEnabled?: boolean;
   menuId?: string;
   menu: Menu;
-  landingData: boolean;
-  surveyId: string;
+  landingData?: boolean;
+  surveyId?: string;
+  catalogue?: boolean;
 }
 
 export interface Style {

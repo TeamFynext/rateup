@@ -40,6 +40,7 @@ const ShareMenu = ({
                     });
                   }}
                   label={isPublished ? "Published" : "Not Published"}
+                  fw={"600"}
                 />
               </PaperLayout>
             </Grid.Col>

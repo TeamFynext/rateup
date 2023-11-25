@@ -18,7 +18,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       radius="lg"
       mx={smallScreen ? "auto" : "sm"}
       w={"clamp(300px,  14.286rem + 11.905vw, 400px)"}
-      h={"clamp(156px, 8.232rem + 4.048vw, 190px)"}
+      h={"clamp(165px, 9.196rem + 2.976vw, 190px)"}
       hoveractive={true}
       onClick={() => setSelectedItem(item)}
     >
@@ -28,6 +28,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             w={"100%"}
             h={"100%"}
             maw={"300px"}
+            miw={smallScreen&&"109px"}
             src={
               item?.images?.length > 0
                 ? getFileUrlFromKey(item?.images[0])
@@ -42,11 +43,16 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           />
         </Flex>
 
-        <Stack style={{ flex: 1 }} c={"var(--grey-color)"}>
+        <Stack
+          style={{ flex: 1 }}
+          c={"var(--grey-color)"}
+          fw={"600"}
+          miw={smallScreen&&"134px"}
+        >
           <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
             <Text
               fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
-              truncate
+              lineClamp={2}
               tt={"capitalize"}
             >
               {item?.name}
@@ -77,7 +83,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
               ) : (
                 <Text
                   fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)"
-                  mt={"md"}
+                  mt={"sm"}
                 >
                   {item?.price?.price}
                 </Text>

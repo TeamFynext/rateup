@@ -1,0 +1,10 @@
+.actionIcon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--grey-color-4);
+}
+.parentContainer {
+  position: relative;
+  padding-top: 10px;
+}

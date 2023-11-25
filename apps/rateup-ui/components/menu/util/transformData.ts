@@ -51,6 +51,7 @@ export function transformData(inputData: any) {
       feedbackPageEnabled: inputData?.feedbackPageEnabled,
       surveyTeamMapId: inputData?.surveyTeamMapId,
       mobileBackgroundImage: inputData?.mobileBackgroundImage || "",
+      catalogue: inputData?.catalogue || false,
     };
   } else {
     return {
@@ -60,6 +61,7 @@ export function transformData(inputData: any) {
       menuPageEnabled: inputData?.menu?.menuPageEnabled,
       feedbackPageEnabled: inputData?.menu?.feedbackPageEnabled,
       surveyTeamMapId: inputData?.surveyTeamMapId,
+      catalogue: inputData?.catalogue || false,
     };
   }
 }

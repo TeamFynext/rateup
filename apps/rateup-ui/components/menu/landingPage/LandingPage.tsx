@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   BackgroundImage,
+  Button,
   Center,
+  Divider,
+  FileButton,
   Flex,
   Grid,
   Group,
   Image,
   LoadingOverlay,
-  Paper,
   SimpleGrid,
   Stack,
   Switch,
@@ -15,16 +17,15 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconMapPin, IconWorld } from "@tabler/icons-react";
+import { IconMapPin, IconUpload, IconWorld } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import {
   ContainedColorInput,
-  ContainedFileInput,
   ContainedNumberInput,
   ContainedSelection,
   ContainedTextArea,
 } from "../../input/ContainedInput/ContainedInput";
-import { fontList } from "../../Survey/SurveyTheme/fontStyleComponents/FontList";
+import { fontListMenu } from "../../Survey/SurveyTheme/fontStyleComponents/FontList";
 import { useMediaQuery } from "@mantine/hooks";
 import {
   deleteUploadedFiles,
@@ -40,8 +41,13 @@ import { FontWeightsMenu } from "../../Survey/SurveyTheme/fontStyleComponents/Fo
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "./Tabs/TabsCommon";
 import { showErrorToast } from "../../../utils/notifications";
-import { FeedbackButton, MenuButton } from "./Button/LandingButtons";
-
+import {
+  CatalogueButton,
+  FeedbackButton,
+  LogoSelectCard,
+  MenuButton,
+} from "./Button/LandingButtons";
+import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
@@ -64,6 +70,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const [selectedTab, setSelectedTab] = useState("Tablet");
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [tabState, setTabState] = useState<string>("title");
+  const [mainTabState, setMainTabState] = useState<string>("bg");
+  const [catalogue, setCatalogue] = useState(
+    editingItem?.catalogue ? "catalogue" : "menu"
+  );
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
     editingItem?.menuId,
@@ -72,14 +82,17 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   useEffect(() => {
     if (form.isTouched("headerText")) {
       setTabState("header");
+      setMainTabState("text");
       form.setTouched({ headerText: false });
     }
     if (form.isTouched("titleText")) {
       setTabState("title");
+      setMainTabState("text");
       form.setTouched({ titleText: false });
     }
     if (form.isTouched("websiteText") || form.isTouched("locationText")) {
       setTabState("other");
+      setMainTabState("text");
       form.setTouched({ websiteText: false });
       form.setTouched({ locationText: false });
     }
@@ -250,6 +263,14 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     bgp={"center"}
                     mih={300}
                   >
+                    <TooltipWithEditIcon
+                      tooltipLabel="Edit Background Image"
+                      handleEditIcon={(e) => {
+                        e.stopPropagation(), setMainTabState("bg");
+                      }}
+                    >
+                      <></>
+                    </TooltipWithEditIcon>
                     <Stack
                       align="center"
                       justify={!isMobileTab ? "space-around" : "center"}
@@ -260,56 +281,80 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     >
                       <div></div>
                       <Stack align="center" gap={0} px={"50px"}>
-                        <Image
-                          src={
-                            form?.values?.logo
-                              ? form?.values?.logo?.startsWith("blob")
-                                ? form.values?.logo
-                                : getFileUrlFromKey(form?.values?.logo)
-                              : fallbackImage
-                          }
-                          onClick={() => logoRef?.current?.click()}
-                          h={50}
-                          w={50}
-                          maw={50}
-                          miw={50}
-                          mih={50}
-                          radius={"md"}
-                          fallbackSrc={fallbackImage}
-                          alt="image of logo"
-                        />
-                        <ContainedTextArea
-                          placeholder="Welcome to"
-                          variant="unstyled"
-                          autosize
-                          styles={{
-                            input: {
-                              ...form?.values?.headerStyle,
-                              ...headerMobile,
-                              border: "none",
-                              textAlign: "center",
-                              textTransform: "capitalize",
-                            },
+                        <TooltipWithEditIcon
+                          tooltipLabel="change logo"
+                          handleEditIcon={(e) => {
+                            e.stopPropagation(), setMainTabState("logo");
                           }}
-                          p={0}
-                          {...form.getInputProps("headerText")}
-                        />
-                        <ContainedTextArea
-                          placeholder="HOTEL NAME"
-                          variant="unstyled"
-                          autosize
-                          styles={{
-                            input: {
-                              ...form?.values?.titleStyle,
-                              ...titleMobile,
-                              border: "none",
-                              textAlign: "center",
-                              textTransform: "uppercase",
-                            },
+                        >
+                          <Image
+                            src={
+                              form?.values?.logo
+                                ? form?.values?.logo?.startsWith("blob")
+                                  ? form.values?.logo
+                                  : getFileUrlFromKey(form?.values?.logo)
+                                : fallbackImage
+                            }
+                            onClick={() => {
+                              logoRef?.current?.click();
+                              setMainTabState("logo");
+                            }}
+                            h={50}
+                            w={50}
+                            maw={50}
+                            miw={50}
+                            mih={50}
+                            radius={"md"}
+                            fallbackSrc={fallbackImage}
+                            alt="image of logo"
+                          />
+                        </TooltipWithEditIcon>
+                        <TooltipWithEditIcon
+                          tooltipLabel="Edit Header"
+                          handleEditIcon={(e) => {
+                            e.stopPropagation(), setMainTabState("text");
                           }}
-                          p={0}
-                          {...form.getInputProps("titleText")}
-                        />
+                        >
+                          <ContainedTextArea
+                            placeholder="Welcome to"
+                            variant="unstyled"
+                            autosize
+                            styles={{
+                              input: {
+                                ...form?.values?.headerStyle,
+                                ...headerMobile,
+                                border: "none",
+                                textAlign: "center",
+                                textTransform: "capitalize",
+                              },
+                            }}
+                            p={0}
+                            {...form.getInputProps("headerText")}
+                          />
+                        </TooltipWithEditIcon>
+                        <TooltipWithEditIcon
+                          tooltipLabel="Edit Title"
+                          handleEditIcon={(e) => {
+                            e.stopPropagation(), setMainTabState("text");
+                          }}
+                        >
+                          <ContainedTextArea
+                            placeholder="HOTEL NAME"
+                            variant="unstyled"
+                            autosize
+                            styles={{
+                              input: {
+                                ...form?.values?.titleStyle,
+                                ...titleMobile,
+                                border: "none",
+                                textAlign: "center",
+                                textTransform: "uppercase",
+                              },
+                            }}
+                            p={0}
+                            {...form.getInputProps("titleText")}
+                          />
+                        </TooltipWithEditIcon>
                       </Stack>
                       <Center p={0} w={!isMobileTab && "100%"}>
                         <Flex
@@ -320,51 +365,65 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           px={!isMobileTab && "100"}
                           pb={"lg"}
                         >
-                          <ContainedTextArea
-                            placeholder="Website Text"
-                            leftSection={
-                              <IconWorld
-                                size={
-                                  isMobileTab
-                                    ? "21px"
-                                    : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
-                                }
-                                color={form?.values?.otherStyle?.color}
-                              />
-                            }
-                            variant="unstyled"
-                            autosize
-                            styles={{
-                              input: {
-                                ...form?.values?.otherStyle,
-                                border: "none",
-                              },
+                          <TooltipWithEditIcon
+                            tooltipLabel="Edit Website Text"
+                            handleEditIcon={(e) => {
+                              e.stopPropagation(), setMainTabState("text");
                             }}
-                            {...form.getInputProps("websiteText")}
-                          />
-                          <ContainedTextArea
-                            placeholder="location"
-                            leftSection={
-                              <IconMapPin
-                                size={
-                                  isMobileTab
-                                    ? "21px"
-                                    : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
-                                }
-                                color={form?.values?.otherStyle?.color}
-                              />
-                            }
-                            variant="unstyled"
-                            autosize
-                            styles={{
-                              input: {
-                                ...form?.values?.otherStyle,
-                                border: "none",
-                              },
+                          >
+                            <ContainedTextArea
+                              placeholder="Website Name"
+                              leftSection={
+                                <IconWorld
+                                  size={
+                                    isMobileTab
+                                      ? "21px"
+                                      : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                  }
+                                  color={form?.values?.otherStyle?.color}
+                                />
+                              }
+                              variant="unstyled"
+                              autosize
+                              styles={{
+                                input: {
+                                  ...form?.values?.otherStyle,
+                                  border: "none",
+                                },
+                              }}
+                              {...form.getInputProps("websiteText")}
+                            />
+                          </TooltipWithEditIcon>
+                          <TooltipWithEditIcon
+                            tooltipLabel="Edit Location Name"
+                            handleEditIcon={(e) => {
+                              e.stopPropagation(), setMainTabState("text");
                             }}
-                            tt={"capitalize"}
-                            {...form.getInputProps("locationText")}
-                          />
+                          >
+                            <ContainedTextArea
+                              placeholder="location"
+                              leftSection={
+                                <IconMapPin
+                                  size={
+                                    isMobileTab
+                                      ? "21px"
+                                      : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                  }
+                                  color={form?.values?.otherStyle?.color}
+                                />
+                              }
+                              variant="unstyled"
+                              autosize
+                              styles={{
+                                input: {
+                                  ...form?.values?.otherStyle,
+                                  border: "none",
+                                },
+                              }}
+                              tt={"capitalize"}
+                              {...form.getInputProps("locationText")}
+                            />
+                          </TooltipWithEditIcon>
                         </Flex>
                       </Center>
                     </Stack>
@@ -377,26 +436,30 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                   >
                     <Center>
                       <SimpleGrid cols={{ base: 1, md: isMobileTab ? 1 : 2 }}>
-                        <Paper
+                        <PaperLayout
                           shadow={isMenuEnabled && "sm"}
                           radius={"md"}
                           p={"lg"}
-                          mah={"200px"}
+                          h={"120px"}
+                          w={"120px"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
+                          selected={isMenuEnabled}
                         >
-                          {isMenuEnabled && MenuButton(!isMobileTab)}
-                        </Paper>
-                        <Paper
-                          shadow={isFeedbackEnabled && "sm"}
+                          {isMenuEnabled && catalogue === "catalogue"
+                            ? CatalogueButton(!isMobileTab)
+                            : MenuButton(!isMobileTab)}
+                        </PaperLayout>
+                        <PaperLayout
                           radius={"md"}
                           p={"lg"}
-                          mah={"200px"}
+                          h={"120px"}
+                          w={"120px"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
                         >
                           {isFeedbackEnabled && FeedbackButton(!isMobileTab)}
-                        </Paper>
+                        </PaperLayout>
                       </SimpleGrid>
                     </Center>
                     <Group>
@@ -431,164 +494,249 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 size="xs"
                 checked={isMenuEnabled}
                 label="Menu Page"
+                fw={"600"}
                 onChange={handleMenuEnabledChange}
               />
               <Switch
                 size="xs"
                 checked={isFeedbackEnabled}
                 label="Feedback Page"
+                fw={"600"}
                 onChange={handleFeedbackEnabledChange}
               />
             </Group>
           </PaperLayout>
           <PaperLayout h="100%">
             <form onSubmit={form.onSubmit(handleSubmit)}>
-              <Title order={2}>Background Settings</Title>
               <Stack gap={"5"} mx="xs">
-                <Text mt={"xs"}>Upload background image</Text>
-                <ContainedFileInput
-                  mx={"lg"}
-                  label=""
-                  placeholder="Upload Mobile Image"
-                  accept="image/*"
-                  multiple={false}
-                  error={form?.errors?.mobileBackgroundImage}
-                  maw={285}
-                  onChange={onChangePictureMobileBackground}
-                />
-                <ContainedFileInput
-                  mx={"lg"}
-                  label=""
-                  placeholder="Upload Tablet Images"
-                  accept="image/*"
-                  multiple={false}
-                  error={form?.errors?.backgroundImage}
-                  maw={285}
-                  onChange={onChangePictureBackground}
-                />
-                <Text mt={"xs"}>Upload logo</Text>
-
-                <ContainedFileInput
-                  mx={"lg"}
-                  label=""
-                  placeholder="Click here to upload"
-                  accept="image/*"
-                  multiple={false}
-                  error={form?.errors?.logo}
-                  onChange={onChangeLogo}
-                  maw={285}
-                  ref={logoRef}
-                />
-
-                <Text mt={"xs"}>Text Settings</Text>
                 <TabsCommon
-                  tabHeading={["header", "title", "other"]}
-                  value={tabState}
+                  tabHeading={["bg", "logo", "icon", "text"]}
+                  value={mainTabState}
                   radius={"xl"}
-                  onChange={(value: string) => setTabState(value)}
+                  onChange={(value: string) => setMainTabState(value)}
                 >
-                  <Tabs.Panel value="header">
-                    <ContainedSelection
-                      mx={"lg"}
-                      mt={"xs"}
-                      withAsterisk
-                      allowDeselect={false}
-                      label=""
-                      placeholder="Select font family"
-                      required
-                      data={fontList || []}
-                      {...form.getInputProps("headerStyle.fontFamily")}
-                    />
-                    <SimpleGrid mx={"lg"} cols={2}>
-                      <ContainedSelection
-                        mt={"lg"}
-                        withAsterisk
-                        allowDeselect={false}
-                        label=""
-                        placeholder="font weight"
-                        required
-                        data={FontWeightsMenu}
-                        {...form.getInputProps("headerStyle.fontWeight")}
-                      />
-                      <ContainedNumberInput
-                        withAsterisk
-                        label="Enter between 0 to 70"
-                        placeholder="font size"
-                        required
-                        clampBehavior="strict"
-                        min={0}
-                        max={70}
-                        {...form.getInputProps("headerStyle.fontSize")}
-                      />
-                      <ContainedColorInput
-                        withEyeDropper={false}
-                        placeholder="Pick color"
-                        label="Your favorite color"
-                        {...form.getInputProps("headerStyle.color")}
-                      />
-                    </SimpleGrid>
+                  <Divider
+                    label={`${mainTabState} Settings`}
+                    labelPosition="center"
+                    tt={"capitalize"}
+                    mt="sm"
+                    mb="md"
+                  />
+                  <Tabs.Panel value="bg">
+                    <Text mb={"sm"} fz={"lg"} fw={"500"}>
+                      Upload background image
+                    </Text>
+                    <Stack mx={"lg"} mb={"lg"}>
+                      <Text>
+                        {getFileNameFromUrl(
+                          mobileBackgroundImage
+                            ? mobileBackgroundImage?.name
+                            : form?.values?.mobileBackgroundImage,
+                          !!mobileBackgroundImage
+                        )}
+                      </Text>
+                      <FileButton
+                        onChange={onChangePictureMobileBackground}
+                        accept="image/png,image/jpeg"
+                      >
+                        {(props) => (
+                          <Button
+                            leftSection={<IconUpload size={16} />}
+                            size="xs"
+                            radius="18px"
+                            {...props}
+                          >
+                            Upload Mobile Image
+                          </Button>
+                        )}
+                      </FileButton>
+                      <Text>
+                        {getFileNameFromUrl(
+                          backgroundImage
+                            ? backgroundImage?.name
+                            : form?.values?.backgroundImage,
+                          !!backgroundImage
+                        )}
+                      </Text>
+                      <FileButton
+                        onChange={onChangePictureBackground}
+                        accept="image/png,image/jpeg"
+                      >
+                        {(props) => (
+                          <Button
+                            leftSection={<IconUpload size={16} />}
+                            size="xs"
+                            radius="18px"
+                            {...props}
+                          >
+                            Upload Tablet Image
+                          </Button>
+                        )}
+                      </FileButton>
+                    </Stack>
                   </Tabs.Panel>
-                  <Tabs.Panel value="title">
-                    <ContainedSelection
-                      mx={"lg"}
-                      mt={"xs"}
-                      withAsterisk
-                      label=""
-                      allowDeselect={false}
-                      placeholder="Select font family"
-                      required
-                      data={fontList || []}
-                      {...form.getInputProps("titleStyle.fontFamily")}
-                    />
-                    <SimpleGrid mx={"lg"} cols={2}>
-                      <ContainedSelection
-                        mt={"lg"}
-                        withAsterisk
-                        label=""
-                        allowDeselect={false}
-                        placeholder="font weight"
-                        required
-                        data={FontWeightsMenu}
-                        {...form.getInputProps("titleStyle.fontWeight")}
-                      />
-                      <ContainedNumberInput
-                        withAsterisk
-                        label="Enter between 0 to 70"
-                        placeholder="font size"
-                        required
-                        clampBehavior="strict"
-                        min={0}
-                        max={70}
-                        {...form.getInputProps("titleStyle.fontSize")}
-                      />
-                      <ContainedColorInput
-                        withEyeDropper={false}
-                        placeholder="Pick color"
-                        label="Your favorite color"
-                        {...form.getInputProps("titleStyle.color")}
-                      />
-                    </SimpleGrid>
+                  <Tabs.Panel value="logo">
+                    <Text mb={"sm"} fz={"lg"} fw={"500"}>
+                      Upload logo
+                    </Text>
+                    <Stack mx={"lg"} mb={"lg"}>
+                      <Text>
+                        {getFileNameFromUrl(
+                          logo ? logo?.name : form?.values?.logo,
+                          !!logo
+                        )}
+                      </Text>
+                      <FileButton
+                        onChange={onChangeLogo}
+                        accept="image/png,image/jpeg"
+                      >
+                        {(props) => (
+                          <Button
+                            leftSection={<IconUpload size={16} />}
+                            size="xs"
+                            radius="18px"
+                            ref={logoRef}
+                            {...props}
+                          >
+                            Upload logo
+                          </Button>
+                        )}
+                      </FileButton>
+                    </Stack>
                   </Tabs.Panel>
-                  <Tabs.Panel value="other">
-                    <ContainedSelection
-                      mx={"lg"}
-                      mt={"xs"}
-                      withAsterisk
-                      label=""
-                      allowDeselect={false}
-                      placeholder="Select font family"
-                      required
-                      data={fontList || []}
-                      {...form.getInputProps("otherStyle.fontFamily")}
-                    />
-                    <SimpleGrid mx={"lg"} cols={2}>
-                      <ContainedColorInput
-                        withEyeDropper={false}
-                        placeholder="Pick color"
-                        label="Your favorite color"
-                        {...form.getInputProps("otherStyle.color")}
+                  <Tabs.Panel value="icon">
+                    <Text mb={"sm"} fz={"lg"} fw={"500"}>
+                      Select Your Icon
+                    </Text>
+                    <Stack align="center" mb={"lg"}>
+                      <LogoSelectCard
+                        catalogue={catalogue}
+                        setCatalogue={setCatalogue}
+                        form={form}
+                        type={false}
                       />
-                    </SimpleGrid>
+                      <LogoSelectCard
+                        catalogue={catalogue}
+                        setCatalogue={setCatalogue}
+                        form={form}
+                        type={true}
+                      />
+                    </Stack>
+                  </Tabs.Panel>
+                  <Tabs.Panel value="text">
+                    <Text mb={"sm"} fz={"lg"} fw={"500"}>
+                      Text Settings
+                    </Text>
+                    <TabsCommon
+                      tabHeading={["header", "title", "other"]}
+                      value={tabState}
+                      radius={"xl"}
+                      onChange={(value: string) => setTabState(value)}
+                    >
+                      <Tabs.Panel value="header">
+                        <ContainedSelection
+                          mx={"lg"}
+                          mt={"xs"}
+                          withAsterisk
+                          allowDeselect={false}
+                          label=""
+                          placeholder="Select font family"
+                          required
+                          data={fontListMenu || []}
+                          {...form.getInputProps("headerStyle.fontFamily")}
+                        />
+                        <SimpleGrid mx={"lg"} cols={2}>
+                          <ContainedSelection
+                            mt={"lg"}
+                            withAsterisk
+                            allowDeselect={false}
+                            label=""
+                            placeholder="font weight"
+                            required
+                            data={FontWeightsMenu}
+                            {...form.getInputProps("headerStyle.fontWeight")}
+                          />
+                          <ContainedNumberInput
+                            withAsterisk
+                            label="Enter between 0 to 70"
+                            placeholder="font size"
+                            required
+                            clampBehavior="strict"
+                            min={0}
+                            max={70}
+                            {...form.getInputProps("headerStyle.fontSize")}
+                          />
+                          <ContainedColorInput
+                            withEyeDropper={false}
+                            placeholder="Pick color"
+                            label="Your favorite color"
+                            {...form.getInputProps("headerStyle.color")}
+                          />
+                        </SimpleGrid>
+                      </Tabs.Panel>
+                      <Tabs.Panel value="title">
+                        <ContainedSelection
+                          mx={"lg"}
+                          mt={"xs"}
+                          withAsterisk
+                          label=""
+                          allowDeselect={false}
+                          placeholder="Select font family"
+                          required
+                          data={fontListMenu || []}
+                          {...form.getInputProps("titleStyle.fontFamily")}
+                        />
+                        <SimpleGrid mx={"lg"} cols={2}>
+                          <ContainedSelection
+                            mt={"lg"}
+                            withAsterisk
+                            label=""
+                            allowDeselect={false}
+                            placeholder="font weight"
+                            required
+                            data={FontWeightsMenu}
+                            {...form.getInputProps("titleStyle.fontWeight")}
+                          />
+                          <ContainedNumberInput
+                            withAsterisk
+                            label="Enter between 0 to 70"
+                            placeholder="font size"
+                            required
+                            clampBehavior="strict"
+                            min={0}
+                            max={70}
+                            {...form.getInputProps("titleStyle.fontSize")}
+                          />
+                          <ContainedColorInput
+                            withEyeDropper={false}
+                            placeholder="Pick color"
+                            label="Your favorite color"
+                            {...form.getInputProps("titleStyle.color")}
+                          />
+                        </SimpleGrid>
+                      </Tabs.Panel>
+                      <Tabs.Panel value="other">
+                        <ContainedSelection
+                          mx={"lg"}
+                          mt={"xs"}
+                          withAsterisk
+                          label=""
+                          allowDeselect={false}
+                          placeholder="Select font family"
+                          required
+                          data={fontListMenu || []}
+                          {...form.getInputProps("otherStyle.fontFamily")}
+                        />
+                        <SimpleGrid mx={"lg"} cols={2}>
+                          <ContainedColorInput
+                            withEyeDropper={false}
+                            placeholder="Pick color"
+                            label="Your favorite color"
+                            {...form.getInputProps("otherStyle.color")}
+                          />
+                        </SimpleGrid>
+                      </Tabs.Panel>
+                    </TabsCommon>
                   </Tabs.Panel>
                 </TabsCommon>
 
@@ -609,3 +757,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
 };
 
 export default LandingPage;
+
+export function getFileNameFromUrl(url: any, isNewFile: boolean) {
+  if (isNewFile) return url;
+  const pattern = /^[^-]+-/;
+  const name = url?.replace(pattern, "");
+  return name;
+}

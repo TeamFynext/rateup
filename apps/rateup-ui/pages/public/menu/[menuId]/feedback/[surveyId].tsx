@@ -151,7 +151,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                       miw={!largeScreen && 188}
                       tt={"capitalize"}
                       ta={largeScreen ? "center" : "start"}
-                      fz={"clamp(0.625rem, 0.179rem + 1.19vw, 1.25rem)"}
+                      fz={"clamp(0.813rem, 0.5rem + 0.833vw, 1.25rem)"}
                     >
                       {menuLanding?.menu?.websiteText}
                     </Text>
@@ -183,7 +183,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                       miw={!largeScreen && 188}
                       tt={"capitalize"}
                       ta={largeScreen ? "center" : "start"}
-                      fz={"clamp(0.625rem, 0.179rem + 1.19vw, 1.25rem)"}
+                      fz={"clamp(0.813rem, 0.5rem + 0.833vw, 1.25rem)"}
                     >
                       {menuLanding?.menu?.locationText}
                     </Text>
@@ -200,12 +200,12 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
             {(menuLanding?.menuPageEnabled === true ||
               menuLanding?.menuPageEnabled === undefined) && (
               <PaperLayout p={"xl"} mah={"200px"} hoveractive>
-                {MenuButton(largeScreen)}
+                {MenuButton(largeScreen, menuLanding?.catalogue)}
               </PaperLayout>
             )}
             {menuLanding?.feedbackPageEnabled === true && (
               <PaperLayout p={"xl"} mah={"200px"} hoveractive>
-                {FeedbackButton(largeScreen)}
+                {FeedbackButton(largeScreen,menuLanding?.catalogue)}
               </PaperLayout>
             )}
           </SimpleGrid>
@@ -222,7 +222,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
   );
 }
 
-function FeedbackButton(largeScreen: boolean) {
+function FeedbackButton(largeScreen: boolean,catalogue: boolean) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   return (
@@ -239,16 +239,18 @@ function FeedbackButton(largeScreen: boolean) {
             h={"auto"}
             alt="feedback image"
           />
-          <Text>Feedback</Text>
+          <Text fw={"600"} mt={catalogue?"20px":"0"}>Feedback</Text>
         </Stack>
       </Link>
     </Stack>
   );
 }
 
-function MenuButton(largeScreen: boolean) {
+function MenuButton(largeScreen: boolean, catalogue: boolean) {
   const router = useRouter();
-
+  let imageSrc = catalogue
+    ? "/images/menu/catalogue.png"
+    : "/images/menu/menu.png";
   return (
     <Stack align="center" gap={0}>
       <Link
@@ -257,12 +259,15 @@ function MenuButton(largeScreen: boolean) {
       >
         <Stack justify={"center"} align={"center"} gap={0}>
           <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/menu.png`}
-            w={largeScreen ? "104px" : "52px"}
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}${imageSrc}`}
+            w={largeScreen ? (catalogue ? "100%" : "104px") : "52px"}
             h={"auto"}
+            mah={"80px"}
             alt="menu image"
           />
-          <Text mt={largeScreen && 18}>Menu</Text>
+          <Text fw={"600"} mt={largeScreen && 18}>
+            {catalogue ? "Catalogue" : "Menu"}
+          </Text>
         </Stack>
       </Link>
     </Stack>
