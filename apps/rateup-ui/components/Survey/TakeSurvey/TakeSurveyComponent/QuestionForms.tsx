@@ -73,7 +73,7 @@ export function TextAreaForm() {
     <Paper shadow="sm" className={classes.inputBox}>
       <Textarea
         placeholder="Enter your answer"
-        value={response ? response.replace(", ", "\n") : ""}
+        value={response?.length > 0 ? response?.replace(", ", "\n") : ""}
         onChange={(e) => {
           const replacedValue = e.currentTarget.value.replace(/\n/g, ", ");
           updateResponse(replacedValue);
