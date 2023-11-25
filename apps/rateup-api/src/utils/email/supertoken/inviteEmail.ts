@@ -124,6 +124,9 @@ export function createEmailBody(invite_link : string, email_id : string) {
                   </td>
                 </tr>
                 <tr>
+                  <td></td>
+                </tr>
+                <tr>
                   <td class="thanks">
                     Thanks,<br />
                     Rateup Team

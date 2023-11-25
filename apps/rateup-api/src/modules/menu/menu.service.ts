@@ -54,11 +54,11 @@ export async function getFullMenu(menuId: string) {
       },
       menuLanding: {
         select: {
-          headerStyle:true,
-          titleStyle:true,
-          otherStyle:true,
-          feedbackPageEnabled:true,
-          headerText:true, 
+          headerStyle: true,
+          titleStyle: true,
+          otherStyle: true,
+          feedbackPageEnabled: true,
+          headerText: true,
           backgroundImage: true,
           mobileBackgroundImage: true,
           surveyTeamMapId: true,
@@ -215,6 +215,7 @@ export async function updateMenuLanding(
     otherStyle: body.otherStyle,
     backgroundImage: body.backgroundImage,
     mobileBackgroundImage: body.mobileBackgroundImage,
+    catalogue: body.catalogue,
     menu: { connect: { id: id } },
   };
   const menuLanding = await prisma.menuLanding.findFirst({

@@ -67,22 +67,28 @@ const fullMenuPublicResponseSchema = z.object({
   ),
   menuLanding: z
     .object({
-      headerStyle: z.object({
-        fontSize: z.number().optional().nullable(),
-        fontWeight: z.string().optional().nullable(),
-        fontFamily: z.string().optional().nullable(),
-        color: z.string().optional().nullable(),
-      }).nullable(),
-      titleStyle: z.object({
-        fontSize: z.number().optional().nullable(),
-        fontWeight: z.string().optional().nullable(),
-        fontFamily: z.string().optional().nullable(),
-        color: z.string().optional().nullable(),
-      }).nullable(),
-      otherStyle: z.object({
-        fontFamily: z.string().optional().nullable(),
-        color: z.string().optional().nullable(),
-      }).nullable(),
+      headerStyle: z
+        .object({
+          fontSize: z.number().optional().nullable(),
+          fontWeight: z.string().optional().nullable(),
+          fontFamily: z.string().optional().nullable(),
+          color: z.string().optional().nullable(),
+        })
+        .nullable(),
+      titleStyle: z
+        .object({
+          fontSize: z.number().optional().nullable(),
+          fontWeight: z.string().optional().nullable(),
+          fontFamily: z.string().optional().nullable(),
+          color: z.string().optional().nullable(),
+        })
+        .nullable(),
+      otherStyle: z
+        .object({
+          fontFamily: z.string().optional().nullable(),
+          color: z.string().optional().nullable(),
+        })
+        .nullable(),
       feedbackPageEnabled: z.boolean().optional().nullable(),
       headerText: z.string().optional().nullable(),
       backgroundImage: z.string().optional().nullable(),
@@ -115,6 +121,7 @@ const updateMenuLandingInputSchema = z.object({
   logo: z.string().optional(),
   backgroundImage: z.string().optional(),
   mobileBackgroundImage: z.string().optional(),
+  catalogue: z.boolean().optional(),
 });
 
 const atLeastOneDefined = (obj: Record<string, unknown>) =>
