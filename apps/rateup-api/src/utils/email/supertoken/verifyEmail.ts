@@ -143,6 +143,9 @@ export function createEmailBody(verify_link : string) {
               </td>
             </tr>
             <tr>
+              <td></td>
+            </tr>
+            <tr>
               <td class="thanks">
                 Thanks,<br />
                 Rateup Team

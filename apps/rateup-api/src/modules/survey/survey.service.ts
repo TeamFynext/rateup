@@ -431,70 +431,79 @@ export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
 
 export async function getActiveSurveysSummmaryByUserId(userId: string) {
   const teamIds = await getTeamIdsByUserId(userId);
-
-  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+  const allSurveys = await prisma.survey.count({
     where: {
-      teamId: {
-        in: teamIds,
-      },
-    },
-    include: {
-      survey: true,
-      responses: {
-        select: {
-          id: true,
-          createdAt: true,
-        },
-      },
-      surveyStats: true,
-      team: {
-        select: {
-          name: true,
+      teams: {
+        some: {
+          teamId: {
+            in: teamIds,
+          },
         },
       },
     },
   });
-
-  const allSurveys = surveyTeamMaps?.map((surveyTeamMap) => {
+  const activeSurveys = await prisma.survey.findMany({
+    where: {
+      teams: {
+        some: {
+          teamId: {
+            in: teamIds,
+          },
+        },
+      },
+      active: true,
+    },
+    include: {
+      teams: {
+        select: {
+          id: true,
+          responses: {
+            select: {
+              id: true,
+              createdAt: true,
+            },
+          },
+          surveyStats: {
+            select: {
+              started: true,
+              completed: true,
+              visited: true,
+            },
+          },
+          team: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  const data = activeSurveys?.map((survey) => {
     const surveys = {
-      ...surveyTeamMap.survey,
-      teamId: surveyTeamMap.teamId,
-      responses: surveyTeamMap.responses,
-      surveyStats: surveyTeamMap.surveyStats,
-      team: surveyTeamMap.team.name,
+      ...survey,
+      teamMapIds: survey.teams.map((team) => ({
+        teamMapId: team.id,
+        teamName: team.team.name,
+        teamId: team.team.id,
+      })),
+      teams: survey.teams.map((team) => ({
+        id: team.team.id,
+        mapId: team.id,
+        teamName: team.team.name,
+        responses: team.responses,
+        surveyStats: team.surveyStats,
+      })),
     };
     return surveys;
   });
 
-  const activeSurveys = allSurveys
-    .filter((survey) => survey?.active === true)
-    .map(
-      ({
-        id,
-        title,
-        active,
-        createdAt,
-        type,
-        surveyStats,
-        responses,
-        team,
-      }) => ({
-        id,
-        title,
-        active,
-        createdAt,
-        type,
-        surveyStats,
-        responses,
-        team,
-      })
-    );
-
   let summaryData = {
     totalTeamsCount: teamIds?.length,
-    totalSurveysCount: allSurveys?.length,
+    totalSurveysCount: allSurveys,
     activeSurveysCount: activeSurveys?.length,
-    surveys: activeSurveys,
+    surveys: data,
   };
 
   return summaryData;
