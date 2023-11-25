@@ -214,7 +214,7 @@ const GoogleReviewEditor = ({
                                   key={value}
                                   variant={
                                     selectedSmileys.includes(value)
-                                      ? "gradient"
+                                      ? "light"
                                       : "default"
                                   }
                                   gradient={{ from: "#62CBE6", to: "#3F5BA9" }}

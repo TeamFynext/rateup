@@ -334,7 +334,8 @@ async function handleSurveyPwd(id, passwordProtect, password) {
 export function useVerifySurveyPwdMutation(
   surveyId: string,
   password: string,
-  onStart,
+  close: any,
+  setIsPasswordVerified: any,
 ) {
   return useMutation({
     mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
@@ -348,7 +349,8 @@ export function useVerifySurveyPwdMutation(
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      onStart();
+      setIsPasswordVerified(true);
+      close();
     },
     onError: (error: any) => {
       console.error("Error Survey Login", error.message);

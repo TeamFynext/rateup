@@ -1,6 +1,5 @@
 import {
   Title,
-  Space,
   Text,
   Stack,
   Image,
@@ -8,12 +7,8 @@ import {
   Flex,
   BackgroundImage,
 } from "@mantine/core";
-import React, { useState, useEffect } from "react";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { useVerifySurveyPwdMutation } from "../../../backend/surveys/surveys.query";
-import { notifications } from "@mantine/notifications";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
+import React, { useEffect } from "react";
+import { useMediaQuery } from "@mantine/hooks";
 
 const buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -23,22 +18,8 @@ const buttonStyles = {
   paddingRight: "20px",
 };
 
-function WelcomePage({
-  surveyThemeData,
-  onStart,
-  isProtected,
-  surveyId,
-  largeScreen,
-}) {
-  const [opened, { open, close }] = useDisclosure(false);
-  const [passwordInput, setPasswordInput] = useState("");
+function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
   const isMobile = useMediaQuery("(max-width: 480px)");
-
-  const verifySurveyPassword = useVerifySurveyPwdMutation(
-    surveyId,
-    passwordInput,
-    onStart,
-  );
 
   useEffect(() => {
     const loadFont = async (fontFamily) => {
@@ -64,37 +45,6 @@ function WelcomePage({
 
   return (
     <>
-      <FormModalLayout
-        opened={opened}
-        onClose={close}
-        title={"Survey Login"}
-        centered
-        onSubmit={() => {
-          notifications.show({
-            id: "load-data",
-            loading: true,
-            title: "Verifying Password..",
-            message: `Hold on, your access is getting verified.`,
-            autoClose: false,
-            withCloseButton: false,
-          });
-          verifySurveyPassword.mutate();
-        }}
-        buttonTitle={"Login"}
-      >
-        <Text mt="lg" size="sm" c="gray">
-          Hey Welcome , <br /> You need to enter password to continue.
-        </Text>
-        <Space h="lg" />
-        <ContainedPasswordInput
-          required
-          label="Password"
-          placeholder="Enter survey password"
-          onChange={(event) => setPasswordInput(event?.target?.value)}
-          my="lg"
-        />
-      </FormModalLayout>
-
       {/* .........Survey Welcome page.......... */}
 
       <Stack
@@ -163,7 +113,7 @@ function WelcomePage({
                   ? { ...surveyThemeData.buttonStyles }
                   : { ...buttonStyles }
               }
-              onClick={isProtected ? open : onStart}
+              onClick={onStart}
               miw={150}
             >
               {surveyThemeData?.buttonText}

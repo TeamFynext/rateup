@@ -43,7 +43,7 @@ const QuestionTypePreview = ({ type, choices }) => {
     case Q.Smiley:
       return <SmileyForm />;
     case Q.Photo:
-      return <ImageForm />;
+      return <ImageForm isPreview={true} />;
     case Q.MCQ:
       return <MCQForm previewChoices={choices} />;
     case Q.MSQ:

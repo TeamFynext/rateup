@@ -7,18 +7,23 @@ import {
   Select,
   Title,
   Stack,
+  Space,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
+  useVerifySurveyPwdMutation,
 } from "../../../backend/surveys/surveys.query";
 import QuestionCountContext from "../../../context/QuestionCountContext";
-import { useMediaQuery } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import Link from "next/link";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { notifications } from "@mantine/notifications";
+import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -34,6 +39,14 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
 
   const updateVisited = useUpdateVisitedMutation();
   const updateStarted = useUpdateStartedMutation();
+
+  const [opened, { open, close }] = useDisclosure(survey?.isProtected);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false);
+
+  useEffect(() => {
+    if (!opened) if (survey?.isProtected && !isPasswordVerified) open();
+  }, [opened]);
 
   useEffect(() => {
     if (start === true) setStartClicked(true);
@@ -55,6 +68,13 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     setStartClicked(true);
   };
 
+  const verifySurveyPassword = useVerifySurveyPwdMutation(
+    survey?.id,
+    passwordInput,
+    close,
+    setIsPasswordVerified,
+  );
+
   if (!selectedLanguage && survey?.languages?.length <= 1) {
     setSelectedLanguage(survey?.languages[0]);
   }
@@ -68,6 +88,37 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
         setCurrentQuestionNo,
       }}
     >
+      <FormModalLayout
+        opened={opened}
+        onClose={close}
+        title={"Survey Login"}
+        centered
+        onSubmit={() => {
+          notifications.show({
+            id: "load-data",
+            loading: true,
+            title: "Verifying Password..",
+            message: `Hold on, your access is getting verified.`,
+            autoClose: false,
+            withCloseButton: false,
+          });
+          verifySurveyPassword.mutate();
+        }}
+        buttonTitle={"Login"}
+      >
+        <Text mt="lg" size="sm" c="gray">
+          Hey Welcome , <br /> You need to enter password to continue.
+        </Text>
+        <Space h="lg" />
+        <ContainedPasswordInput
+          required
+          label="Password"
+          placeholder="Enter survey password"
+          onChange={(event) => setPasswordInput(event?.target?.value)}
+          my="lg"
+        />
+      </FormModalLayout>
+
       <Stack
         px={largeScreen ? "10vw" : "4vw"}
         py="3vh"
@@ -101,37 +152,37 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
           style={{ padding: 0, margin: 0, minHeight: "75vh" }}
         >
           {survey?.isPublished === true && survey?.active === true ? (
-            <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
-              {startClicked &&
-                (!selectedLanguage && survey?.languages?.length > 1 ? (
-                  <SelectLang
-                    languages={survey?.languages}
-                    selectedLanguage={selectedLanguage}
-                    setSelectedLanguage={setSelectedLanguage}
-                  />
-                ) : (
-                  selectedLanguage && (
-                    <SelectedLanguageContext.Provider
-                      value={{
-                        selectedLanguage,
-                        defaultLanguage: survey?.languages[0],
-                      }}
-                    >
-                      {children}
-                    </SelectedLanguageContext.Provider>
-                  )
-                ))}
+            survey?.isProtected && isPasswordVerified === false ? null : (
+              <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
+                {startClicked &&
+                  (!selectedLanguage && survey?.languages?.length > 1 ? (
+                    <SelectLang
+                      languages={survey?.languages}
+                      selectedLanguage={selectedLanguage}
+                      setSelectedLanguage={setSelectedLanguage}
+                    />
+                  ) : (
+                    selectedLanguage && (
+                      <SelectedLanguageContext.Provider
+                        value={{
+                          selectedLanguage,
+                          defaultLanguage: survey?.languages[0],
+                        }}
+                      >
+                        {children}
+                      </SelectedLanguageContext.Provider>
+                    )
+                  ))}
 
-              {!startClicked && (
-                <WelcomePage
-                  surveyThemeData={surveyThemeData}
-                  onStart={handleStartClick}
-                  surveyId={survey?.id}
-                  isProtected={survey?.isProtected}
-                  largeScreen={largeScreen}
-                />
-              )}
-            </Paper>
+                {!startClicked && (
+                  <WelcomePage
+                    surveyThemeData={surveyThemeData}
+                    onStart={handleStartClick}
+                    largeScreen={largeScreen}
+                  />
+                )}
+              </Paper>
+            )
           ) : (
             <Center h={"80vh"}>
               {survey?.isPublished !== true && (

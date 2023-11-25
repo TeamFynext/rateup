@@ -37,7 +37,7 @@ import { getFileName } from "../../SurveyTheme/components/BackgroundStyles";
 import SmileyRating from "./SmileyRating";
 import { uploadFile } from "../../../../utils/file-upload/upload";
 import { DateInput } from "@mantine/dates";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import classes from "./TakeSurvey.module.css";
 import { useMediaQuery } from "@mantine/hooks";
@@ -409,10 +409,13 @@ export function SmileyForm() {
   );
 }
 
-export function ImageForm() {
+export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(response || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    isPreview ? null : response || null,
+  );
+  const resetRef = useRef<() => void>(null);
 
   useEffect(() => {
     const uploadAndUpdate = async () => {
@@ -437,6 +440,7 @@ export function ImageForm() {
 
   function removeImg() {
     setFile(null);
+    resetRef.current?.();
     setPreviewUrl(null);
     updateResponse(null);
   }
@@ -444,7 +448,11 @@ export function ImageForm() {
   return (
     <Stack>
       <Box w={300}>
-        <FileButton onChange={setFile} accept="image/png,image/jpeg">
+        <FileButton
+          resetRef={resetRef}
+          onChange={setFile}
+          accept="image/png,image/jpeg"
+        >
           {(props) => (
             <Button
               fullWidth
@@ -460,7 +468,7 @@ export function ImageForm() {
       </Box>
 
       <Stack mt="lg">
-        {(file || response) && (
+        {(file || response?.length > 0) && (
           <Group justify="flex-end">
             <ActionIcon
               onClick={removeImg}
@@ -474,7 +482,7 @@ export function ImageForm() {
         )}
 
         <Center>
-          {(previewUrl || response) && (
+          {(previewUrl || response?.length > 0) && (
             <Image
               src={
                 previewUrl ||
@@ -486,9 +494,10 @@ export function ImageForm() {
           )}
         </Center>
 
-        {(file || response) && (
+        {(file || response?.length > 0) && (
           <Text size="sm" style={{ textAlign: "center" }} mt="sm">
-            Picked file: {file?.name || getFileName(response, false)}
+            Picked file:{" "}
+            {file?.name || getFileName(response, isPreview || false)}
           </Text>
         )}
       </Stack>
