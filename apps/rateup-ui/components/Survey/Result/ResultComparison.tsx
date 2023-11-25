@@ -27,12 +27,7 @@ import {
   IconChartPieFilled,
   IconChartRadar,
 } from "@tabler/icons-react";
-import {
-  LDResponse,
-  QuestionType,
-  SmileyResponse,
-  YNResponse,
-} from "../../../types/enums";
+import { QuestionType } from "../../../types/enums";
 import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
 import {
   getResponseArrayByQuestionType,
@@ -90,20 +85,20 @@ export default function ResultComparison() {
           if (questionTypesForComparison.includes(q?.type)) {
             let questionResponses = [];
             for (const teamResponse of filteredResponsesByTeam) {
-              for (const surveyResponse of teamResponse.responses) {
+              for (const surveyResponse of teamResponse?.responses) {
                 if (
                   selectedLanguage &&
                   surveyResponse.language !== selectedLanguage
                 ) {
                   continue;
                 }
-                const questionResponse = surveyResponse.responses.find(
+                const questionResponse = surveyResponse?.responses?.find(
                   (response) => response.questionId === q.id,
                 );
                 if (questionResponse) {
                   questionResponses.push({
                     team: teamResponse.team,
-                    response: questionResponse.response[questionResponse.type],
+                    response: questionResponse?.response[questionResponse.type],
                   });
                 }
               }
@@ -124,7 +119,7 @@ export default function ResultComparison() {
                   <CombinedChart
                     questionResponses={questionResponses}
                     question={q}
-                    teams={filteredResponsesByTeam.map(({ team }) => team)}
+                    teams={filteredResponsesByTeam?.map(({ team }) => team)}
                   />
                 </Stack>
               </PaperLayout>
@@ -148,7 +143,9 @@ const TeamResponseActivitySection = ({
     Pie = "pie",
   }
   const [activePlot, setActivePlot] = useState<ActivePlot>(ActivePlot.Bar);
-  if (teamWiseResponses?.every((response) => response._count.responses === 0)) {
+  if (
+    teamWiseResponses?.every((response) => response?._count.responses === 0)
+  ) {
     return (
       <Stack mih={400}>
         <NothingFound text="No response activity yet" />
@@ -179,7 +176,7 @@ const TeamResponseActivitySection = ({
               <YAxis />
               <Bar
                 dataKey="_count.responses"
-                fill="var(--tertiary-color)"
+                fill="#52ba66"
                 maxBarSize={50}
                 radius={10}
               />
@@ -194,7 +191,7 @@ const TeamResponseActivitySection = ({
                 dataKey="_count.responses"
                 cx="50%"
                 cy="50%"
-                fill="var(--tertiary-color)"
+                fill="#52ba66"
                 label={(entry) => entry.team.code}
               />
             </PieChart>
@@ -208,8 +205,7 @@ const TeamResponseActivitySection = ({
               <Radar
                 name="Responses"
                 dataKey="_count.responses"
-                fill="var(--tertiary-color)"
-                fillOpacity={0.7}
+                fill="#52ba66"
               />
             </RadarChart>
           </ResponsiveContainer>
@@ -241,57 +237,14 @@ const CombinedChart = ({
   const data = teams.map(({ code, id }) => {
     const responses = getResponseObjectByQuestionType(question.type);
     questionResponses
-      .filter((response) => response.team.id === id)
-      .map(({ response }) => (responses[response] = responses[response] + 1));
+      ?.filter((response) => response.team.id === id)
+      ?.map(({ response }) => (responses[response] = responses[response] + 1));
     return {
       name: code,
       responses,
     };
   });
-  function returnAlpha(response) {
-    const length = getResponseArrayByQuestionType(question.type).length;
-    switch (length) {
-      case 2: {
-        switch (response) {
-          case LDResponse.Like: {
-            return 1;
-          }
-          case YNResponse.Yes: {
-            return 1;
-          }
-          default: {
-            return 0.5;
-          }
-        }
-      }
-      case 5: {
-        switch (response) {
-          case SmileyResponse.VerySad: {
-            return 0.2;
-          }
-          case SmileyResponse.Sad: {
-            return 0.4;
-          }
-          case SmileyResponse.Neutral: {
-            return 0.6;
-          }
-          case SmileyResponse.Happy: {
-            return 0.8;
-          }
-          case SmileyResponse.VeryHappy: {
-            return 1;
-          }
-          default: {
-            return response * 0.2;
-          }
-        }
-      }
-      case 10: {
-        return response * 0.1;
-      }
-    }
-  }
-  if (data.every((d) => Object.values(d.responses).every((r) => r === 0))) {
+  if (data?.every((d) => Object.values(d.responses)?.every((r) => r === 0))) {
     return (
       <Stack h={400}>
         <NothingFound text="No response activity for this question yet" />
@@ -300,18 +253,25 @@ const CombinedChart = ({
   } else {
     return (
       <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={data} margin={{ top: 20 }}>
+        <BarChart
+          data={data}
+          margin={{ top: 20 }}
+          barGap={5}
+          barCategoryGap={20}
+          style={{ stroke: "#fff", strokeWidth: 1.5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          {getResponseArrayByQuestionType(question.type).map(
-            (response: number | string) => (
+          {getResponseArrayByQuestionType(question.type)?.map(
+            ({ color, value }) => (
               <Bar
-                dataKey={`responses['${response}']`}
-                fill={`rgba(28, 81, 142,${returnAlpha(response)})`}
+                dataKey={`responses['${value}']`}
+                stackId={"a"}
+                fill={color}
                 maxBarSize={50}
                 radius={10}
-                style={{ zIndex: 999 }}
+                style={{ zIndex: 999, marginTop: 10, gap: 10 }}
               />
             ),
           )}

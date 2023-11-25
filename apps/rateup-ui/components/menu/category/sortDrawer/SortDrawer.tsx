@@ -13,7 +13,6 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { GilroySemibold } from "../../../../public/fonts";
 import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
 import { useUpdateSortOrderMenuCategoryMutation } from "../../../../backend/menu/category/mCategory.query";
 
@@ -83,12 +82,7 @@ const SortDrawer = ({
                 fallbackSrc={fallbackImage}
                 radius={"md"}
               />
-              <Text
-                fz={24}
-                className={GilroySemibold.className}
-                c={"var(--tertiary-color)"}
-                tt={"capitalize"}
-              >
+              <Text fz={24} c={"var(--tertiary-color)"} tt={"capitalize"}>
                 {item?.name}
               </Text>
             </Group>

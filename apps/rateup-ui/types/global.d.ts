@@ -86,20 +86,21 @@ declare global {
     active: boolean;
     createdAt: string;
     type: string;
-    responses: {
+    teams: {
       id: string;
-      createdAt: string;
-    }[];
-    surveyStats: {
-      id: string;
-      surveyId: string;
-      visited: number;
-      started: number;
-      completed: number;
-    };
-    team: {
+      mapId: string;
+      teamName: string;
+      responses: {
+        id: string;
+        createdAt: string;
+      }[];
+      surveyStats: {
+        visited: number;
+        started: number;
+        completed: number;
+      };
       name: string;
-    };
+    }[];
   }
 
   type dataError = {

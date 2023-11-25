@@ -6,6 +6,7 @@ import {
   Group,
   Loader,
   Radio,
+  ScrollArea,
   ScrollAreaAutosize,
   Stack,
   Tabs,
@@ -107,6 +108,7 @@ const Result = ({ survey, setSelectedLanguage }) => {
           height: "fit-content",
           minWidth: 200,
           border: "1px solid var(--mantine-color-gray-3)",
+          minHeight: "fit-content",
         },
         panel: {
           minWidth: "300px",
@@ -116,7 +118,7 @@ const Result = ({ survey, setSelectedLanguage }) => {
         },
       }}
     >
-      <Stack maw={200} p={2}>
+      <Stack maw={200} p={2} h={"100%"}>
         <Tabs.List>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
@@ -219,15 +221,15 @@ export const ResultFilter = ({
     (quantitativeQuestions?.length !== 0 && activeTab === ResultTab.Responses)
   ) {
     return (
-      <PaperLayout style={{ flex: 1 }} p={"sm"}>
-        <ScrollAreaAutosize mah={"100%"} scrollbarSize={5}>
+      <PaperLayout p={"xs"} style={{ flex: 1 }}>
+        <ScrollArea scrollbarSize={5} h={"100%"}>
           <Stack>
             <Text c={"dimmed"}>Filter By</Text>
             {languageSelectionOptions?.length > 1 && (
               <>
                 <Group justify="space-between">
-                  <Text size="xs" c={"dimmed"} fw={"bold"}>
-                    languages
+                  <Text size="xs" c={"dimmed"} fw={"bold"} maw={130} truncate>
+                    Languages
                   </Text>
                   <Tooltip
                     label="The question title will be displayed in the default language only when All options is selected"
@@ -266,7 +268,7 @@ export const ResultFilter = ({
                 />
               ))}
           </Stack>
-        </ScrollAreaAutosize>
+        </ScrollArea>
       </PaperLayout>
     );
   }
@@ -284,7 +286,7 @@ const ReturnSingleFilterComponent = ({
     SelectedLanguageContext,
   );
   const Question = (
-    <Text size="xs" c={"dimmed"} fw={"bold"}>
+    <Text size="xs" c={"dimmed"} fw={"bold"} maw={130} truncate>
       {question.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
     </Text>
   );

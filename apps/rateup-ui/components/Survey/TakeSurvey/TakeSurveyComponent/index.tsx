@@ -46,7 +46,6 @@ import { useMediaQuery } from "@mantine/hooks";
 import { parseLogicAction } from "../../../../utils";
 import { validateQuestion } from "../../../../utils/validation";
 import { mapSmileyIcon } from "./SmileyRating";
-import { GilroySemibold } from "../../../../public/fonts";
 import {
   DDMSForm,
   DDSSForm,
@@ -496,10 +495,7 @@ function QuestionTitle({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text
-      ff={GilroySemibold.style.fontFamily}
-      size={largeScreen ? "30px" : "18px"}
-    >
+    <Text size={largeScreen ? "30px" : "18px"}>
       {selectedQ.title[selectedLanguage]}
     </Text>
   );

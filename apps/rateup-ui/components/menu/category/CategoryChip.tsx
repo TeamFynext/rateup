@@ -1,5 +1,4 @@
 import { Button } from "@mantine/core";
-import { GilroySemibold } from "../../../public/fonts";
 
 export function CategoryChip({ categoryId, name, selected, onClick }) {
   return (
@@ -9,7 +8,6 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
       radius={"md"}
       onClick={() => onClick(categoryId)}
       tt={"capitalize"}
-      className={GilroySemibold.className}
       my={"xs"}
       fz={"clamp(0.75rem, 0.393rem + 0.952vw, 1.25rem)"}
       mx={4}

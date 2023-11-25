@@ -8,6 +8,7 @@ import {
   ScrollArea,
   Badge,
   Button,
+  ScrollAreaAutosize,
 } from "@mantine/core";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import {
@@ -138,7 +139,7 @@ const Responses = ({ survey, responses }) => {
   if (QError) return <Text>An error has occurred</Text>;
 
   return (
-    <Stack h="100%" style={{ flex: 1 }}>
+    <Stack h="100%">
       <PaperLayout style={{ cursor: "pointer" }}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
@@ -155,50 +156,54 @@ const Responses = ({ survey, responses }) => {
       {responseCount > 0 ? (
         <PaperLayout style={{ flex: 1 }}>
           <>
-            <ScrollArea h={"100%"}>
-              <Stack h={"100%"}>
-                <Table ref={tableRef} withRowBorders>
-                  <TableHead questions={questions} />
-                  <Table.Tbody>
-                    {responses?.map((response) => (
-                      <Table.Tr
-                        key={response.id}
-                        style={{ alignItems: "center" }}
-                      >
-                        <Table.Td>
-                          <Text c="dark.3" p={10} miw={200}>
-                            {dayjs(response.createdAt).format("DD-MM-YYYY")}
-                          </Text>
+            <ScrollAreaAutosize h={"100%"} maw={"100%"}>
+              <Table
+                ref={tableRef}
+                withRowBorders
+                w={"100%"}
+                // bg={"red"}
+                h={"100%"}
+              >
+                <TableHead questions={questions} />
+                <Table.Tbody>
+                  {responses?.map((response) => (
+                    <Table.Tr
+                      key={response?.id}
+                      style={{ alignItems: "center" }}
+                    >
+                      <Table.Td>
+                        <Text c="dark.3" p={10} miw={200}>
+                          {dayjs(response?.createdAt).format("DD-MM-YYYY")}
+                        </Text>
+                      </Table.Td>
+                      {questions?.map((q) => (
+                        <Table.Td
+                          key={q?.id}
+                          title={getResponse(q?.id, response)}
+                        >
+                          <BadgeorTextorPreview
+                            questionType={q?.type}
+                            response={getResponse(q?.id, response)}
+                          />
                         </Table.Td>
-                        {questions?.map((q) => (
-                          <Table.Td
-                            key={q.id}
-                            title={getResponse(q.id, response)}
-                          >
-                            <BadgeorTextorPreview
-                              questionType={q.type}
-                              response={getResponse(q.id, response)}
-                            />
-                          </Table.Td>
-                        ))}
-                        <Table.Td p={10} miw={50}>
-                          <Button
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                              setSelectedRowId(response?.id);
-                              open();
-                            }}
-                          >
-                            <IconTrashXFilled />
-                          </Button>
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </Stack>
-            </ScrollArea>
+                      ))}
+                      <Table.Td p={10} miw={50}>
+                        <Button
+                          variant="subtle"
+                          color="red"
+                          onClick={() => {
+                            setSelectedRowId(response?.id);
+                            open();
+                          }}
+                        >
+                          <IconTrashXFilled />
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </ScrollAreaAutosize>
             <FormModalLayout
               opened={opened}
               onClose={close}

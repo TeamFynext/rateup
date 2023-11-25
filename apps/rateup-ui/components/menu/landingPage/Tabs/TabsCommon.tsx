@@ -1,6 +1,5 @@
 import React from "react";
 import { Tabs, TabsProps } from "@mantine/core";
-import { GilroyBold } from "../../../../public/fonts";
 interface TabsCommonProps {
   tabHeading: string[];
 }
@@ -10,12 +9,7 @@ const TabsCommon = (props: TabsProps & TabsCommonProps) => {
     <Tabs variant="pills" radius="xs" {...restData}>
       <Tabs.List>
         {tabHeading?.map((heading: string) => (
-          <Tabs.Tab
-            value={heading}
-            key={heading}
-            style={GilroyBold.style}
-            tt={"capitalize"}
-          >
+          <Tabs.Tab value={heading} key={heading} tt={"capitalize"}>
             {heading}
           </Tabs.Tab>
         ))}

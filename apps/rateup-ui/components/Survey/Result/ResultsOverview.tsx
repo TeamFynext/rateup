@@ -4,7 +4,12 @@ import { useAllResponses } from "../../../backend/surveys/response/response.quer
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import QuestionPieChart from "./Charts/QuestionPieChart";
 import QuestionBarChart from "./Charts/QuestionBarChart";
-import { QuestionType } from "../../../types/enums";
+import {
+  LDResponse,
+  QuestionType,
+  SmileyResponse,
+  YNResponse,
+} from "../../../types/enums";
 import { Divider, Stack } from "@mantine/core";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
@@ -17,6 +22,7 @@ import {
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
 import { getfilteredResponseUsingLanguage } from "../../../utils/response";
+import { stringToColour } from "../../../utils/essential";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -97,22 +103,29 @@ const ResultsOverview = () => {
         const rating = response?.response[response?.type];
         switch (response?.type) {
           case QuestionType.Rating:
+            if (rating >= 4) promoters++;
+            else if (rating == 3) passives++;
+            else detractors++;
+            break;
           case QuestionType.Opinion:
             if (rating >= 9) promoters++;
             else if (rating >= 7) passives++;
             else detractors++;
             break;
           case QuestionType.Smiley:
-            if (["VeryHappy", "Happy"].includes(rating)) promoters++;
-            else if (rating === "Neutral") passives++;
+            if (
+              [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(rating)
+            )
+              promoters++;
+            else if (rating === SmileyResponse.Neutral) passives++;
             else detractors++;
             break;
           case QuestionType.LD:
-            if (rating === "Like") promoters++;
+            if (rating === LDResponse.Like) promoters++;
             else detractors++;
             break;
           case QuestionType.YN:
-            if (rating === "Yes") promoters++;
+            if (rating === YNResponse.Yes) promoters++;
             else detractors++;
             break;
         }
@@ -160,69 +173,73 @@ const ResultsOverview = () => {
   chartData = prepareData(questions, filteredResponsesByTeam);
   return (
     <>
-      {isAllowedQnsPresent ? (
-        <Stack h={"100%"}>
-          <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
-            <Stack style={{ marginBottom: "20px" }}>
-              {isAllowedQnsPresent && <Heading subtitle="NPS Overview" />}
-              <PaperLayout style={{ marginBottom: "20px" }}>
-                {chartData
-                  ?.filter(
-                    (item) =>
-                      item.type === QuestionType.Rating ||
-                      item.type === QuestionType.Smiley ||
-                      item.type === QuestionType.LD ||
-                      item.type === QuestionType.YN ||
-                      item.type === QuestionType.Opinion,
-                  )
-                  ?.map((item, index, filteredArray) => (
-                    <React.Fragment key={index}>
-                      <QuestionPieChart
-                        no={index + 1}
-                        type={item.type}
-                        responseCount={noofResponses}
-                        question={item.question}
-                        data={item.nps}
-                      />
-                      {index < filteredArray?.length - 1 && <Divider my="md" />}
-                    </React.Fragment>
-                  ))}
-              </PaperLayout>
-              <Heading subtitle="Question Wise Overview" />
-              <PaperLayout style={{ marginBottom: "20px" }}>
-                {chartData
-                  ?.filter(
-                    (item) =>
-                      item.type === QuestionType.Rating ||
-                      item.type === QuestionType.Smiley ||
-                      item.type === QuestionType.LD ||
-                      item.type === QuestionType.YN ||
-                      item.type === QuestionType.Opinion ||
-                      item.type === QuestionType.MCQ ||
-                      item.type === QuestionType.MSQ ||
-                      item.type === QuestionType.DDSS ||
-                      item.type === QuestionType.DDMS,
-                  )
-                  ?.map((item, index) => (
-                    <React.Fragment key={index}>
-                      <QuestionBarChart
-                        key={index}
-                        question={item?.question}
-                        no={index + 1}
-                        choices={item?.choices}
-                        data={item?.responses}
-                        questionType={item?.type}
-                      />
-                      {index < chartData?.length - 1 && <Divider my="md" />}
-                    </React.Fragment>
-                  ))}
-              </PaperLayout>
-            </Stack>
+      <Stack h={"100%"}>
+        <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
+          <Stack>
+            {isAllowedQnsPresent && (
+              <>
+                <Heading subtitle="NPS Overview" />
+                <PaperLayout p={"xl"}>
+                  {chartData
+                    ?.filter(
+                      (item) =>
+                        item.type === QuestionType.Rating ||
+                        item.type === QuestionType.Smiley ||
+                        item.type === QuestionType.LD ||
+                        item.type === QuestionType.YN ||
+                        item.type === QuestionType.Opinion,
+                    )
+                    ?.map((item, index, filteredArray) => (
+                      <React.Fragment key={index}>
+                        <QuestionPieChart
+                          no={index + 1}
+                          type={item.type}
+                          responseCount={noofResponses}
+                          question={item.question}
+                          data={item.nps}
+                        />
+                        {index < filteredArray?.length - 1 && (
+                          <Divider my="md" />
+                        )}
+                      </React.Fragment>
+                    ))}
+                </PaperLayout>
+              </>
+            )}
+            <Heading subtitle="Question Wise Overview" />
+            <PaperLayout p={"xl"}>
+              {chartData
+                ?.filter(
+                  (item) =>
+                    item.type === QuestionType.Rating ||
+                    item.type === QuestionType.Smiley ||
+                    item.type === QuestionType.LD ||
+                    item.type === QuestionType.YN ||
+                    item.type === QuestionType.Opinion ||
+                    item.type === QuestionType.MCQ ||
+                    item.type === QuestionType.MSQ ||
+                    item.type === QuestionType.DDSS ||
+                    item.type === QuestionType.DDMS,
+                )
+                ?.map((item, index) => (
+                  <React.Fragment key={index}>
+                    <QuestionBarChart
+                      key={index}
+                      question={item?.question}
+                      no={index + 1}
+                      choices={item?.choices?.map((choice: string) => {
+                        return { value: choice, color: stringToColour(choice) };
+                      })}
+                      data={item?.responses}
+                      questionType={item?.type}
+                    />
+                    {index < chartData?.length - 1 && <Divider my="md" />}
+                  </React.Fragment>
+                ))}
+            </PaperLayout>
           </Stack>
         </Stack>
-      ) : (
-        <NothingFound text="No quantitative question responses!" />
-      )}
+      </Stack>
     </>
   );
 };

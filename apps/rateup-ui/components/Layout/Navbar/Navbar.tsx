@@ -4,7 +4,6 @@ import Link from "next/link";
 import classes from "./Navbar.module.css";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { IconChevronRight, IconHome } from "@tabler/icons";
-import { GilroyBlack, GilroyMedium } from "../../../public/fonts";
 export const Navbar = () => {
   const router = useRouter();
   const { pathname, query } = router;
@@ -31,7 +30,6 @@ export const Navbar = () => {
           >
             <Text
               c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
-              ff={GilroyMedium.style.fontFamily}
               size={"14px"}
             >
               {part.charAt(0).toUpperCase() + part.slice(1)}

@@ -5,7 +5,6 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { GilroySemibold } from "../../../public/fonts";
 interface HeadingPropsInterface {
   title?: string;
   subtitle?: string;
@@ -19,13 +18,6 @@ const titleStyle: MantineStyleProp = {
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  fontFamily: GilroySemibold.style.fontFamily,
-};
-const subTitleStyle: MantineStyleProp = {
-  fontFamily: GilroySemibold.style.fontFamily,
-};
-const labelStyle: MantineStyleProp = {
-  fontFamily: GilroySemibold.style.fontFamily,
 };
 export default function Heading({
   label,

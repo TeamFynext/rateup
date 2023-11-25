@@ -8,7 +8,7 @@ interface ConfirmationModalProps {
   headerTitle: string;
   headerLabel: string;
   confirmLabel: string;
-  onConfirm: () => void;
+  onConfirm: (e?: any) => void;
 }
 export default function ConfirmationModal({
   opened,

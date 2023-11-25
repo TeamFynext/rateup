@@ -3,7 +3,6 @@ import {
   Menu,
   Stack,
   Group,
-  Dialog,
   ActionIcon,
   Text,
   Radio,
@@ -30,12 +29,9 @@ import {
   updateSurvey,
 } from "../../../backend/surveys/survey.api";
 import { useCloneSurveyMutation } from "../../../backend/surveys/surveys.query";
-import {
-  RateupButtonSecondary,
-  RateupButtonPrimary,
-} from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
 import FormModalLayout from "../../Modal/FormModalLayout";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 
 interface SurveyMenuProps {
   survey: Survey;
@@ -53,7 +49,6 @@ export function SurveyMenu({
 
   const [opened, { close, open }] = useDisclosure(false);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const allTeams = teamsData?.map((team) => team?.id);
@@ -180,12 +175,13 @@ export function SurveyMenu({
         centered
         onSubmit={cloneForm.onSubmit(onSubmit)}
         buttonTitle={"Submit"}
+        includeCancelButton
       >
         <Stack>
-          <Text pr="xl" c="dark.2">
+          <Text c="dimmed">
             Select the team/teams in which the survey copy to be created.
           </Text>
-          <Group mt="md" style={{ minHeight: "200px" }}>
+          <Group>
             <Radio.Group
               value={teamChoice}
               onChange={setTeamChoice}
@@ -214,58 +210,31 @@ export function SurveyMenu({
           </Group>
         </Stack>
       </FormModalLayout>
-
-      <Dialog
+      <ConfirmationModal
+        forDeleteFunctionality
         opened={dialogOpened}
-        withCloseButton
         onClose={closeDialog}
-        size="lg"
-        radius="md"
-        position={{ top: "0", left: "40vw" }}
-        onClick={(e) => {
+        headerLabel="Are you sure to delete this Survey?"
+        headerTitle="Delete Survey?"
+        confirmLabel="Delete"
+        onConfirm={(e) => {
           e.stopPropagation();
+          notifications.show({
+            id: "delete-data",
+            loading: true,
+            title: "Deleting survey..",
+            message: `Hold on, survey is getting deleted...`,
+            autoClose: false,
+            withCloseButton: false,
+          });
+          selectedTeamId && selectedTeamId !== "all"
+            ? surveyDeleteMutation.mutate({
+                id: survey?.id,
+                teamId: selectedTeamId,
+              })
+            : surveyDeleteMutation.mutate({ id: survey?.id });
         }}
-      >
-        <Text size="md" mb="xs" fw={500}>
-          Are you sure to delete this Survey?
-        </Text>
-
-        <Group align="center" pt="lg">
-          <RateupButtonSecondary
-            onClick={(e) => {
-              e.stopPropagation();
-              closeDialog();
-            }}
-            loading={isLoading}
-            size="md"
-            title="Cancel"
-          />
-
-          <RateupButtonPrimary
-            onClick={(e) => {
-              e.stopPropagation();
-              notifications.show({
-                id: "delete-data",
-                loading: true,
-                title: "Deleting survey..",
-                message: `Hold on, survey is getting deleted...`,
-                autoClose: false,
-                withCloseButton: false,
-              });
-              selectedTeamId && selectedTeamId !== "all"
-                ? surveyDeleteMutation.mutate({
-                    id: survey?.id,
-                    teamId: selectedTeamId,
-                  })
-                : surveyDeleteMutation.mutate({ id: survey?.id });
-            }}
-            loading={isLoading}
-            size="md"
-            title="Yes, Delete"
-          />
-        </Group>
-      </Dialog>
-
+      />
       <Menu.Target>
         <ActionIcon
           variant="subtle"

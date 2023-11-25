@@ -16,11 +16,6 @@ import { CategoryDisplay } from "../../../../../components/menu/category/Categor
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
-import {
-  GilroyBold,
-  GilroyMedium,
-  GilroySemibold,
-} from "../../../../../public/fonts";
 import { useRouter } from "next/router";
 
 type MenuViewProp = {
@@ -108,7 +103,6 @@ export default function ({ fullMenu }) {
             <Text
               ta={"center"}
               tt={"capitalize"}
-              className={GilroyMedium.className}
               fz={
                 fullMenu?.menuLanding?.headerStyle?.fontSize
                   ? `clamp(1.125rem, 0.5rem + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
@@ -122,7 +116,6 @@ export default function ({ fullMenu }) {
             </Text>
             <Text
               tt={"uppercase"}
-              className={GilroyBold.className}
               fz={
                 fullMenu?.menuLanding?.titleStyle?.fontSize
                   ? `clamp(1.75rem, 0.857rem + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
@@ -214,7 +207,6 @@ export default function ({ fullMenu }) {
           <Text
             fz={"clamp(0.688rem, 0.509rem + 0.476vw, 0.938rem)"}
             c={"white"}
-            className={GilroySemibold.className}
           >
             Feedback
           </Text>

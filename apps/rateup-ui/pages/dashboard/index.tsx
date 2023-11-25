@@ -10,7 +10,6 @@ import {
   Container,
   Stack,
   SimpleGrid,
-  Button,
   ActionIcon,
 } from "@mantine/core";
 import { Tooltip as MantineTooltip } from "@mantine/core";
@@ -80,7 +79,6 @@ export default function DashboardHome() {
     isInitialLoading: boolean;
     isRefetchError: boolean;
   };
-
   useEffect(() => {
     if (!isInitialLoading)
       notifications.show({
@@ -100,13 +98,15 @@ export default function DashboardHome() {
   function prepareData(surveysSummary: SurveySummaryData) {
     let dateResponseCount = {};
     surveysSummary?.surveys?.forEach((survey) => {
-      survey?.responses?.forEach((response) => {
-        let date = new Date(response?.createdAt).toISOString().split("T")[0];
-        if (dateResponseCount[date]) {
-          dateResponseCount[date]++;
-        } else {
-          dateResponseCount[date] = 1;
-        }
+      survey?.teams?.forEach((team) => {
+        team?.responses?.forEach((response) => {
+          let date = new Date(response?.createdAt).toISOString().split("T")[0];
+          if (dateResponseCount[date]) {
+            dateResponseCount[date]++;
+          } else {
+            dateResponseCount[date] = 1;
+          }
+        });
       });
     });
     let data = Object.keys(dateResponseCount)?.map((date) => ({
@@ -319,34 +319,32 @@ export default function DashboardHome() {
                       </Group>
 
                       <Group justify="flex-end">
-                        <Button
+                        <RateupButtonBlue
                           variant={timePeriod === "daily" ? "filled" : "subtle"}
                           radius="lg"
-                          color={timePeriod === "daily" ? "dark" : "gray"}
+                          color={timePeriod !== "daily" && "gray"}
                           onClick={() => setTimePeriod("daily")}
-                        >
-                          Daily
-                        </Button>
-                        <Button
+                          title="Daily"
+                        />
+
+                        <RateupButtonBlue
                           variant={
                             timePeriod === "weekly" ? "filled" : "subtle"
                           }
                           radius="lg"
-                          color={timePeriod === "weekly" ? "dark" : "gray"}
+                          color={timePeriod !== "weekly" && "gray"}
                           onClick={() => setTimePeriod("weekly")}
-                        >
-                          Weekly
-                        </Button>
-                        <Button
+                          title="Weekly"
+                        />
+                        <RateupButtonBlue
                           variant={
                             timePeriod === "monthly" ? "filled" : "subtle"
                           }
                           radius="lg"
-                          color={timePeriod === "monthly" ? "dark" : "gray"}
+                          color={timePeriod !== "monthly" && "gray"}
                           onClick={() => setTimePeriod("monthly")}
-                        >
-                          Monthly
-                        </Button>
+                          title="Monthly"
+                        />
                       </Group>
                     </Group>
 
@@ -369,31 +367,6 @@ export default function DashboardHome() {
                         data={filteredData}
                         margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                       >
-                        <defs>
-                          <linearGradient
-                            id="colorCount"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="#3F5BA9"
-                              stopOpacity={0.7}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="#62CBE6"
-                              stopOpacity={0.8}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#FFFFFF"
-                              stopOpacity={0.8}
-                            />
-                          </linearGradient>
-                        </defs>
                         <XAxis
                           dataKey="date"
                           tickFormatter={(str) => dayjs(str).format("MMM DD")}
@@ -405,9 +378,8 @@ export default function DashboardHome() {
                         <Area
                           type="monotone"
                           dataKey="responses"
-                          stroke="#3F5BA9"
-                          fillOpacity={1}
-                          fill="url(#colorCount)"
+                          fillOpacity={0.7}
+                          fill="var(--tertiary-color)"
                         />
                       </AreaChart>
                     ) : (
@@ -419,7 +391,6 @@ export default function DashboardHome() {
                 </>
               </PaperLayout>
             </Group>
-
             <FormModalLayout
               centered
               opened={opened}

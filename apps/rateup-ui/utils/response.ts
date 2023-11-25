@@ -120,28 +120,56 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
   }
 }
 
-export function getResponseArrayByQuestionType(questionType: QuestionType) {
+export function getResponseArrayByQuestionType(
+  questionType: QuestionType,
+): Array<{
+  value: string | number;
+  color: string;
+}> {
   switch (questionType) {
     case QuestionType.Rating: {
-      return [1, 2, 3, 4, 5];
+      return [
+        { value: 1, color: "#ff5c55" },
+        { value: 2, color: "#feb75c" },
+        { value: 3, color: "#fedc4e" },
+        { value: 4, color: "#a6e346" },
+        { value: 5, color: "#52ba66" },
+      ];
     }
     case QuestionType.Opinion: {
-      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      return [
+        { value: 1, color: "#ff5c55" },
+        { value: 2, color: "#ff8580" },
+        { value: 3, color: "#FEB75C" },
+        { value: 4, color: "#FEC985" },
+        { value: 5, color: "#FEDC4E" },
+        { value: 6, color: "#FEE57A" },
+        { value: 7, color: "#BCEA74" },
+        { value: 8, color: "#A6E346" },
+        { value: 9, color: "#7DCB8C" },
+        { value: 10, color: "#52BA66" },
+      ];
     }
     case QuestionType.Smiley: {
       return [
-        SmileyResponse.VerySad,
-        SmileyResponse.Sad,
-        SmileyResponse.Neutral,
-        SmileyResponse.Happy,
-        SmileyResponse.VeryHappy,
+        { value: SmileyResponse.VerySad, color: "#ff5c55" },
+        { value: SmileyResponse.Sad, color: "#feb75c" },
+        { value: SmileyResponse.Neutral, color: "#fedc4e" },
+        { value: SmileyResponse.Happy, color: "#a6e346" },
+        { value: SmileyResponse.VeryHappy, color: "#52ba66" },
       ];
     }
     case QuestionType.YN: {
-      return [YNResponse.No, YNResponse.Yes];
+      return [
+        { value: YNResponse.No, color: "#ff5c55" },
+        { value: YNResponse.Yes, color: "#52ba66" },
+      ];
     }
     case QuestionType.LD: {
-      return [LDResponse.Dislike, LDResponse.Like];
+      return [
+        { value: LDResponse.Dislike, color: "#ff5c55" },
+        { value: LDResponse.Like, color: "#52ba66" },
+      ];
     }
     default: {
       return null;

@@ -41,7 +41,6 @@ import {
 } from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
-import { GilroyBold } from "../../../public/fonts";
 
 const ShareSurvey = ({
   survey,
@@ -53,14 +52,14 @@ const ShareSurvey = ({
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(
-    survey?.teams[0]?.mapId
+    survey?.teams[0]?.mapId,
   );
 
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -69,12 +68,12 @@ const ShareSurvey = ({
       // TODO: get phone number from phone id (add phone number field)
       setShareUrl(
         `https://wa.me/7907137774?text=${encodeURIComponent(
-          "/start " + surveyTeamMapId //TODO verify  id:    use survey.id if required
-        )}`
+          "/start " + surveyTeamMapId, //TODO verify  id:    use survey.id if required
+        )}`,
       );
     } else {
       setShareUrl(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}`
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}`,
       );
     }
   }, [surveyId, surveyTeamMapId]);
@@ -140,7 +139,7 @@ const ShareSurvey = ({
         break;
       case "mail":
         window.open(
-          `mailto:?subject=Survey&body=Take minute to complete the survey: \n ${survey?.title} \n${shareUrl} \n\n`
+          `mailto:?subject=Survey&body=Take minute to complete the survey: \n ${survey?.title} \n${shareUrl} \n\n`,
         );
         break;
       case "whatsapp":
@@ -184,7 +183,6 @@ const ShareSurvey = ({
             }}
             label="Publish Survey"
             style={{
-              ...GilroyBold.style,
               root: {
                 fontSize: "30px",
               },

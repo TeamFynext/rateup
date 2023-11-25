@@ -1,10 +1,9 @@
-import { Flex, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Flex, Stack, Text } from "@mantine/core";
 import { ItemDisplay } from "../item/ItemDisplay";
-import { GilroySemibold } from "../../../public/fonts";
 
 export function CategoryDisplay({ category, setSelectedItem }) {
   return (
-    <Stack id={category?.id} className={GilroySemibold.className}>
+    <Stack id={category?.id}>
       <Text
         c="var(--grey-color)"
         fz="clamp(1.25rem, 0.714rem + 1.429vw, 2rem)"

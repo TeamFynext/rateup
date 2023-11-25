@@ -8,16 +8,11 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import {
-  Paper,
-  Text,
-  Group,
-  Stack,
-  Title,
-  useMantineTheme,
-} from "@mantine/core";
+import { Paper, Text, Group, Stack, Title, Badge } from "@mantine/core";
 import { QuestionType } from "../../../../types/enums";
-
+import { getResponseArrayByQuestionType } from "../../../../utils/response";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import Heading from "../../../styled/Heading/Heading";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
@@ -25,21 +20,16 @@ interface QuestionBarChartProps {
   questionType: QuestionType;
   no: number;
 }
-
 interface CustomTooltipProps {
   active?: boolean;
   payload?: any[];
   label?: any;
 }
-
 export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   active,
   payload,
   label,
 }) => {
-  const theme = useMantineTheme();
-  //const transparentWhite = theme.fn.rgba(theme.white, 0.9); //VERIFY MANTINE
-
   if (active && payload && payload.length) {
     return (
       <Paper
@@ -49,12 +39,11 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       >
         <Stack>
           <Title order={5}> {label} </Title>
-          <Text>Count: {payload[0].value}</Text>
+          <Text>Count: {payload[0]?.value}</Text>
         </Stack>
       </Paper>
     );
   }
-
   return null;
 };
 
@@ -65,88 +54,67 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   questionType,
   no,
 }) => {
-  const COLORS = ["#64D29D", "#CB4754", "#F7B583", "#118AB2", "#4160AB"];
-
   let choicesToUse = choices;
-
   if (!choicesToUse) {
-    if (questionType === QuestionType.LD) {
-      choicesToUse = ["Like", "Dislike"];
-    } else if (questionType === QuestionType.YN) {
-      choicesToUse = ["Yes", "No"];
-    } else if (questionType === QuestionType.Rating) {
-      choicesToUse = [1, 2, 3, 4, 5];
-    } else if (questionType === QuestionType.Smiley) {
-      choicesToUse = ["Happy", "VeryHappy", "Sad", "Neutral", "VerySad"];
-    } else if (questionType === QuestionType.Opinion) {
-      choicesToUse = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    } else {
-      if (questionType === QuestionType.MSQ) {
-        choicesToUse = Array.from(
-          new Set(data?.flatMap((item) => item.response[QuestionType.MSQ])),
-        );
-      } else if (questionType === QuestionType.DDSS) {
-        choicesToUse = Array.from(
-          new Set(data?.flatMap((item) => item.response[QuestionType.DDSS])),
-        );
-      } else if (questionType === QuestionType.DDMS) {
-        choicesToUse = Array.from(
-          new Set(data?.flatMap((item) => item.response[QuestionType.DDMS])),
-        );
-      }
+    if (getResponseArrayByQuestionType(questionType)) {
+      choicesToUse = getResponseArrayByQuestionType(questionType);
     }
   }
-
-  const choiceCounts = choicesToUse?.map((choice, index) => ({
-    name: choice,
+  const choiceCounts = choicesToUse?.map((choice) => ({
+    name: choice?.value,
     count: data?.filter((item) => {
-      const response = item.response[questionType];
+      const response = item?.response[questionType];
       return Array.isArray(response)
-        ? response.includes(choice)
-        : response === choice;
-    }).length,
-    fill: COLORS[index % COLORS.length],
+        ? response.includes(choice?.value)
+        : response === choice?.value;
+    })?.length,
+    fill: choice?.color,
   }));
-
   return (
-    <Group>
-      <Stack ml="xl" style={{ minWidth: "350px", maxWidth: "350px" }}>
-        <Text size="md">
+    <Stack miw={300}>
+      <Group justify="space-between">
+        <Text size="xl" fw={800} maw={300} truncate>
           {no}. {question}
         </Text>
-
-        <Stack ml="xl" pt="sm">
-          <Text size="md" color="gray" mt="md">
-            {" "}
-            {questionType}
-          </Text>
-          <Text size="md" color="gray">
-            {data?.length} responses
-          </Text>
+        <Badge variant="dot">{questionType}</Badge>
+      </Group>
+      <Stack>
+        <Group justify="center">
+          <PaperLayout maw={150}>
+            <Stack align="center" gap={10}>
+              <Heading
+                title={`${data?.length}`}
+                titleprops={{ w: "fit-content" }}
+              />
+              <Text c={"dimmed"} fw={900} size="sm">
+                Responses
+              </Text>
+            </Stack>
+          </PaperLayout>
+        </Group>
+        <Stack miw={300} align="center" style={{ flex: 1 }}>
+          <BarChart
+            width={500}
+            height={300}
+            data={choiceCounts}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+            maxBarSize={50}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            <Bar dataKey="count" fill="#fff" radius={10} isAnimationActive />
+          </BarChart>
         </Stack>
       </Stack>
-
-      <Stack style={{ minWidth: "500px" }}>
-        <BarChart
-          width={500}
-          height={300}
-          data={choiceCounts}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          <Bar dataKey="count" fill="#fff" />
-        </BarChart>
-      </Stack>
-    </Group>
+    </Stack>
   );
 };
 

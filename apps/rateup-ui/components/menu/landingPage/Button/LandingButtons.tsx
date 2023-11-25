@@ -1,5 +1,4 @@
 import { Image, Stack, Text } from "@mantine/core";
-import { GilroySemibold } from "../../../../public/fonts";
 
 export function FeedbackButton(largeScreen: boolean) {
   return (
@@ -11,7 +10,7 @@ export function FeedbackButton(largeScreen: boolean) {
         h={"auto"}
         alt="feedback image"
       />
-      <Text className={GilroySemibold.className}>Feedback</Text>
+      <Text>Feedback</Text>
     </Stack>
   );
 }
@@ -25,9 +24,7 @@ export function MenuButton(largeScreen: boolean) {
         h={"auto"}
         alt="menu image"
       />
-      <Text className={GilroySemibold.className} mt={largeScreen && 8}>
-        Menu
-      </Text>
+      <Text mt={largeScreen && 8}>Menu</Text>
     </Stack>
   );
 }

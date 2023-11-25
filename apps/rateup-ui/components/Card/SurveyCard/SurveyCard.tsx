@@ -39,6 +39,7 @@ export function SurveyCard({
     <PaperLayout
       hoveractive
       mah={200}
+      mih={200}
       p="md"
       shadow="lg"
       radius="lg"

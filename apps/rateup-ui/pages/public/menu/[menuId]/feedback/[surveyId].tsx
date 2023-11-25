@@ -16,7 +16,6 @@ import classes from "./Feedback.module.css";
 import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
-import { GilroySemibold } from "../../../../../public/fonts";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 type MenuProp = {
@@ -55,11 +54,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     ? getFileUrlFromKey(encodeURI(backgroundImage))
     : fallbackImageBackround;
   return (
-    <Stack
-      gap={0}
-      className={GilroySemibold.className}
-      maw={largeScreen ? "2440px" : "768px"}
-    >
+    <Stack gap={0} maw={largeScreen ? "2440px" : "768px"}>
       <BackgroundImage
         src={bgSrc}
         radius="sm"
@@ -244,7 +239,7 @@ function FeedbackButton(largeScreen: boolean) {
             h={"auto"}
             alt="feedback image"
           />
-          <Text className={GilroySemibold.className}>Feedback</Text>
+          <Text>Feedback</Text>
         </Stack>
       </Link>
     </Stack>
@@ -267,9 +262,7 @@ function MenuButton(largeScreen: boolean) {
             h={"auto"}
             alt="menu image"
           />
-          <Text className={GilroySemibold.className} mt={largeScreen && 18}>
-            Menu
-          </Text>
+          <Text mt={largeScreen && 18}>Menu</Text>
         </Stack>
       </Link>
     </Stack>

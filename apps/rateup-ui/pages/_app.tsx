@@ -27,7 +27,6 @@ import "@mantine/notifications/styles.css";
 import "@mantine/carousel/styles.css";
 import "@mantine/nprogress/styles.css";
 import "../styles/global.css";
-import { GilroyRegular } from "../public/fonts";
 import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/Layout/Layout";
@@ -155,38 +154,38 @@ export default function App({
       </Head>
       {/* <SuperTokensWrapper> */}
       {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
-      <main className={GilroyRegular.className}>
-        <MantineProvider theme={theme}>
-          <ModalsProvider>
-            <Notifications />
-            <QueryClientProvider client={queryClient}>
-              <HydrationBoundary state={pageProps.dehydratedState}>
-                <UserProvider>
-                  <LayoutComponent>
-                    <AnimatePresence>
-                      <motion.div
-                        style={{ height: "100%" }}
-                        key={appProps.router.pathname}
-                        // initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Component {...pageProps} />
-                      </motion.div>
-                    </AnimatePresence>
-                  </LayoutComponent>
-                </UserProvider>
-                <ReactQueryDevtools
-                  initialIsOpen={false}
-                  buttonPosition="top-right"
-                />
-              </HydrationBoundary>
-            </QueryClientProvider>
-            <Notifications />
-          </ModalsProvider>
-        </MantineProvider>
-        {/* </SuperTokensWrapper> */}
-      </main>
+      {/* <main className={lexend.className}> */}
+      <MantineProvider theme={theme}>
+        <ModalsProvider>
+          <Notifications />
+          <QueryClientProvider client={queryClient}>
+            <HydrationBoundary state={pageProps.dehydratedState}>
+              <UserProvider>
+                <LayoutComponent>
+                  <AnimatePresence>
+                    <motion.div
+                      style={{ height: "100%" }}
+                      key={appProps.router.pathname}
+                      // initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Component {...pageProps} />
+                    </motion.div>
+                  </AnimatePresence>
+                </LayoutComponent>
+              </UserProvider>
+              <ReactQueryDevtools
+                initialIsOpen={false}
+                buttonPosition="top-right"
+              />
+            </HydrationBoundary>
+          </QueryClientProvider>
+          <Notifications />
+        </ModalsProvider>
+      </MantineProvider>
+      {/* </SuperTokensWrapper> */}
+      {/* </main> */}
     </>
   );
 }

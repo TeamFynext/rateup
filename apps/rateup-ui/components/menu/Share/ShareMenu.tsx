@@ -4,7 +4,6 @@ import ShareQR from "../../Survey/ShareSurvey/ShareQR";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { CopyLinkComponent } from "../../Survey/ShareSurvey/ShareSurvey";
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
-import { GilroyBold } from "../../../public/fonts";
 
 type ShareMenuProps = {
   menu: {
@@ -41,7 +40,6 @@ const ShareMenu = ({
                     });
                   }}
                   label={isPublished ? "Published" : "Not Published"}
-                  style={GilroyBold.style}
                 />
               </PaperLayout>
             </Grid.Col>

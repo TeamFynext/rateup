@@ -5,7 +5,6 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { extractVideoId } from "../../../utils/youtube/url";
 import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import classes from "./itemDetailedViewModal.module.css";
-import { GilroyMedium, GilroySemibold } from "../../../public/fonts";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -40,11 +39,7 @@ export function ItemDetailedViewModal({
       }}
       closeButtonProps={{ iconSize: "22px" }}
     >
-      <Stack
-        align="center"
-        c={"var(--grey-color)"}
-        className={GilroyMedium.className}
-      >
+      <Stack align="center" c={"var(--grey-color)"}>
         <Box>
           <Box
             style={{
@@ -155,11 +150,7 @@ export function ItemDetailedViewModal({
             {item.description}
           </Text>
         </Box>
-        <Group
-          justify="space-evenly"
-          gap={"sm"}
-          className={GilroySemibold.className}
-        >
+        <Group justify="space-evenly" gap={"sm"}>
           {item.price.variants?.length > 0 ? (
             item.price.variants.map((varient, index) => (
               <Stack align="center" gap={"0px"} key={index}>
