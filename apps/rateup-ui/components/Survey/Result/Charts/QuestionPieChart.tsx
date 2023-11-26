@@ -34,7 +34,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 }) => {
   if (active && payload && payload?.length) {
     const data = payload[0]?.payload;
-    const percentage = ((data?.value / total) * 100).toFixed(2);
+    const percentage = ((data?.value / total) * 100)?.toFixed(2);
     return (
       <Paper
         px="sm"
@@ -72,7 +72,7 @@ const CustomLegend: React.FC<CustomTooltipProps> = ({
               {myPayload?.value}
             </Text>
             <Text c={returnColor(myPayload?.name)} fw={900}>
-              ( {((myPayload?.value / total) * 100).toFixed(1)}% )
+              ( {((myPayload?.value / total) * 100)?.toFixed(1)}% )
             </Text>
             <Text size="xs" fw={"bolder"}>
               {myPayload?.name}
@@ -133,7 +133,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
           <PaperLayout maw={150}>
             <Stack align="center">
               <Heading
-                title={`${data?.score.toFixed(2)}`}
+                title={`${data?.score?.toFixed(2)}`}
                 titleprops={{ w: "fit-content" }}
               />
               <Text c={"dimmed"} fw={900} size="sm">

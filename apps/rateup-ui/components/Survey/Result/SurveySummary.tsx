@@ -132,7 +132,12 @@ const SurveySummary = () => {
       setQuestionTitleMap(titleMap);
     }
   }, [questions]);
-
+  function getPropertyValue(obj, prop) {
+    if (obj.hasOwnProperty(prop)) {
+      return obj[prop];
+    }
+    return null;
+  }
   if (isLoading || isQLoading) return <div>Loading...</div>;
   if (error || QError) return <div>Error occurred</div>;
 
@@ -154,13 +159,15 @@ const SurveySummary = () => {
             >
               <>
                 <Text fw={700} mb="sm" size={"20px"} c="dark.3">
-                  {defaultLanguage &&
-                    questionTitleMap[questionId][
-                      selectedLanguage ? selectedLanguage : defaultLanguage
-                    ]}
+                  {getPropertyValue(
+                    questionTitleMap[questionId]
+                      ? questionTitleMap
+                      : new Object(),
+                    selectedLanguage ? selectedLanguage : defaultLanguage,
+                  )}
                 </Text>
                 {Object.entries(responseCounts)?.map(([response, count]) => {
-                  const percentage = ((count / totalResponses) * 100).toFixed(
+                  const percentage = ((count / totalResponses) * 100)?.toFixed(
                     2,
                   );
                   const voteText = count > 1 ? "votes" : "vote";
