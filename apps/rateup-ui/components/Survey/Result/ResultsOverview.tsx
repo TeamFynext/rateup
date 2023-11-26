@@ -132,7 +132,7 @@ const ResultsOverview = () => {
       });
       const total = promoters + passives + detractors;
       const nps = total ? ((promoters - detractors) / total) * 100 : null;
-      let localizedTitle = question?.title?.English;
+      let localizedTitle = question?.title[defaultLanguage];
       if (
         question?.title &&
         question?.title[selectedLanguage ? selectedLanguage : defaultLanguage]

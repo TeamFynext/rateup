@@ -142,7 +142,7 @@ const SurveySummary = () => {
         <NothingFound text="No quantitative question responses!" />
       )}
       <Stack>
-        {Object.entries(responseCounts).map(([questionId, responseCounts]) => {
+        {Object.entries(responseCounts)?.map(([questionId, responseCounts]) => {
           const totalResponses = Object.values(responseCounts).reduce(
             (a, b) => a + b,
             0,
@@ -159,7 +159,7 @@ const SurveySummary = () => {
                       selectedLanguage ? selectedLanguage : defaultLanguage
                     ]}
                 </Text>
-                {Object.entries(responseCounts).map(([response, count]) => {
+                {Object.entries(responseCounts)?.map(([response, count]) => {
                   const percentage = ((count / totalResponses) * 100).toFixed(
                     2,
                   );
