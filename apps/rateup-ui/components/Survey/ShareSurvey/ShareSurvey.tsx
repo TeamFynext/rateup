@@ -13,6 +13,7 @@ import {
   ScrollArea,
   Center,
   Image,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconCheck,
@@ -41,6 +42,7 @@ import {
 } from "../../Button/RateupButtons";
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
+import IFrameModal from "./IFrameModal";
 import { lexend400, lexend500 } from "../../../utils/fonts";
 
 const ShareSurvey = ({
@@ -59,6 +61,8 @@ const ShareSurvey = ({
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
+  const [openedIframe, { open: openIframe, close: closeIframe }] =
+    useDisclosure(false);
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
     null,
   );
@@ -140,11 +144,14 @@ const ShareSurvey = ({
         break;
       case "mail":
         window.open(
-          `mailto:?subject=Survey&body=Take minute to complete the survey: \n ${survey?.title} \n${shareUrl} \n\n`,
+          `mailto:?subject=Survey&body=Take a minute to complete the survey: \n ${survey?.title} \n${shareUrl} \n\n`,
         );
         break;
       case "whatsapp":
-        // TODO: add whatsapp share
+        const waShareUrl = encodeURIComponent(shareUrl);
+        window.open(
+          `https://web.whatsapp.com/send?text=Take a minute to complete the survey: \n${waShareUrl}`,
+        );
         break;
       default:
         break;
@@ -276,7 +283,7 @@ const ShareSurvey = ({
             <Title order={4} style={{ textAlign: "center" }}>
               How would you like to survey people?
             </Title>
-            <Group justify="center">
+            <Group justify="center" gap="xl">
               <ActionIcon
                 disabled={!isPublished}
                 size="xl"
@@ -284,14 +291,22 @@ const ShareSurvey = ({
                 onClick={() => shareButtonAction("mail")}
                 style={{ background: "none" }}
               >
-                <Image
-                  opacity={isPublished ? 1 : 0.5}
-                  alt="mail icon"
-                  src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
-                  width={40}
-                  height={40}
-                  style={{ objectFit: "contain" }}
-                />
+                <Tooltip
+                  label="Share via Email"
+                  withArrow
+                  color="var(--light-grey-color)"
+                  position="bottom"
+                  styles={{ tooltip: { color: "grey" } }}
+                >
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
+                    alt="mail icon"
+                    src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
+                </Tooltip>
               </ActionIcon>
               <ActionIcon
                 disabled={!isPublished}
@@ -300,14 +315,22 @@ const ShareSurvey = ({
                 onClick={() => shareButtonAction("whatsapp")}
                 style={{ background: "none" }}
               >
-                <Image
-                  opacity={isPublished ? 1 : 0.5}
-                  alt="whatsapp icon"
-                  src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
-                  width={40}
-                  height={40}
-                  style={{ objectFit: "contain" }}
-                />
+                <Tooltip
+                  label="Share via WhatsApp"
+                  withArrow
+                  color="var(--light-grey-color)"
+                  position="bottom"
+                  styles={{ tooltip: { color: "grey" } }}
+                >
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
+                    alt="whatsapp icon"
+                    src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
+                </Tooltip>
               </ActionIcon>
               <ActionIcon
                 disabled={!isPublished}
@@ -316,24 +339,66 @@ const ShareSurvey = ({
                 onClick={() => shareButtonAction("fb")}
                 style={{ background: "none" }}
               >
-                <Image
-                  opacity={isPublished ? 1 : 0.5}
-                  alt="facebook icon"
-                  src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
-                  width={40}
-                  height={40}
-                  style={{ objectFit: "contain" }}
-                />
+                <Tooltip
+                  label="Share via Facebook"
+                  withArrow
+                  color="var(--light-grey-color)"
+                  position="bottom"
+                  styles={{ tooltip: { color: "grey" } }}
+                >
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
+                    alt="facebook icon"
+                    src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
+                </Tooltip>
+              </ActionIcon>
+              <ActionIcon
+                disabled={!isPublished}
+                size="xl"
+                variant="light"
+                onClick={openIframe}
+                style={{ background: "none" }}
+              >
+                <Tooltip
+                  label="Embed as iframe"
+                  withArrow
+                  color="var(--light-grey-color)"
+                  position="bottom"
+                  styles={{ tooltip: { color: "grey" } }}
+                >
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
+                    alt="iframe icon"
+                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
+                </Tooltip>
               </ActionIcon>
             </Group>
           </Stack>
         </SimpleGrid>
       </PaperLayout>
+      <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
         disable={!isPublished}
       />
+      <FormModalLayout
+        title="Generate IFrame"
+        opened={openedIframe}
+        onClose={closeIframe}
+        size="lg"
+        centered
+      >
+        <IFrameModal close={closeIframe} shareUrl={shareUrl} />
+      </FormModalLayout>
     </Stack>
   );
 };
