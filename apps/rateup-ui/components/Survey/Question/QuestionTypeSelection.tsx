@@ -124,16 +124,16 @@ export function QuestionTypeSelection({
       </Flex>
       <Center style={{ height: "100%" }}>
         <Stack gap={"md"}>
-          {filteredQuestionTypes?.map((qtype) => {
+          {filteredQuestionTypes?.map((qtype, i) => {
             return (
-              <Stack gap={"md"}>
+              <Stack gap={"md"} key={i}>
                 <Title order={4} c="dimmed">
                   {qtype?.title}
                 </Title>
                 <Grid px={"lg"}>
-                  {qtype?.questionTypes?.map((type) => {
+                  {qtype?.questionTypes?.map((type, index) => {
                     return (
-                      <Grid.Col span="content">
+                      <Grid.Col span="content" key={index}>
                         <QuestionButton type={type} />
                       </Grid.Col>
                     );

@@ -54,7 +54,6 @@ export function DraggableQuestionCard({
     e.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
-  console.log(question);
   return (
     <>
       <ConfirmationModal
