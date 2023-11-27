@@ -32,6 +32,7 @@ import { shuffleArray } from "../../../../utils";
 import { ReviewSuggestion } from "../../../../types/global";
 import { getPublicSurveyGoogleLink } from "../../../../backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
+import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 
 export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -108,28 +109,13 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           )}
         </Stack>
       )}
-      <Center
-        pt={10}
-        pb={20}
-        style={{
-          justifySelf: "flex-end",
-        }}
-        bg={enableBody ? "whitesmoke" : "inherit"}
-        c={enableBody ? "dark" : "white"}
-      >
-        <Text fz="sm">Powered by </Text>
-        <Image
-          pl={10}
-          src={
-            enableBody
-              ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`
-              : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo_white.svg`
-          }
-          alt="RateUp Logo"
-          h={35}
-          w="auto"
-        />
-      </Center>
+      <RateupRedirectCard
+        alternateLogo={
+          !enableBody &&
+          `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo_white.svg`
+        }
+        color={!enableBody ? "white" : "dark"}
+      />
     </Flex>
   );
 }

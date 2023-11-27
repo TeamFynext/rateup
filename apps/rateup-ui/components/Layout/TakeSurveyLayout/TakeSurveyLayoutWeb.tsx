@@ -24,6 +24,7 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { notifications } from "@mantine/notifications";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
+import RateupRedirectCard from "../../Card/RateupRedirectCard";
 
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -211,20 +212,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
             </Center>
           )}
         </Paper>
-        <Stack>
-          <Group justify="center">
-            <Text fz="sm">Powered by </Text>
-            <Link href="/">
-              <Image
-                pl={10}
-                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
-                alt="RateUp Logo"
-                w={50}
-                h={30}
-              />
-            </Link>
-          </Group>
-        </Stack>
+        <RateupRedirectCard />
       </Stack>
     </QuestionCountContext.Provider>
   );

@@ -18,6 +18,7 @@ import {
   usePublicLandingPageSurveys,
 } from "../../../backend/LandingPage/landingpage.query";
 import LandingWelcomePage from "./LandingWelcomePage";
+import RateupRedirectCard from "../../../components/Card/RateupRedirectCard";
 
 export default () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
@@ -84,17 +85,7 @@ export default () => {
             />
           )}
         </Paper>
-
-        <Center mt={20}>
-          <Text fz="sm">Powered by </Text>
-          <Image
-            pl={10}
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
-            alt="RateUp Logo"
-            w={80}
-            h={20}
-          />
-        </Center>
+        <RateupRedirectCard />
       </Paper>
     </Container>
   );

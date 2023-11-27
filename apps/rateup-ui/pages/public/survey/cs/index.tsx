@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
+import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 
 const index = () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
@@ -47,17 +48,7 @@ const index = () => {
             />
           )}
         </Container>
-
-        <Center>
-          <Text fz="sm">Powered by </Text>
-          <Image
-            pl={10}
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
-            alt="RateUp Logo"
-            w={80}
-            h={20}
-          />
-        </Center>
+        <RateupRedirectCard />
       </Paper>
     </Container>
   );
