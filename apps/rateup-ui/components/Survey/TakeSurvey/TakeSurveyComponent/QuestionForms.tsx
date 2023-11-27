@@ -94,7 +94,7 @@ export function NumberForm() {
       <NumberInput
         size="sm"
         placeholder="Enter number input"
-        value={response || undefined}
+        value={parseInt(response) || null}
         onChange={(value) => updateResponse(value)}
         variant="unstyled"
       />
@@ -214,7 +214,7 @@ export function PhoneForm() {
             max={9999999999}
             placeholder="Enter 10 digit phone number"
             hideControls
-            value={response || ""}
+            value={parseInt(response) || null}
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             variant="unstyled"
