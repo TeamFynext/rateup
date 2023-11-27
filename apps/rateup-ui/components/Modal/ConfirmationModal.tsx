@@ -26,6 +26,7 @@ export default function ConfirmationModal({
       opened={opened}
       onClose={onClose}
       radius={"lg"}
+      onClick={(e) => e.stopPropagation()}
       styles={{
         title: {
           fontSize: 20,
@@ -36,7 +37,7 @@ export default function ConfirmationModal({
       <Modal.Body>
         <Stack>
           <Text fw={500}>{headerLabel}</Text>
-          <Group justify="flex-end">
+          <Group justify="flex-end" mt="md">
             <RateupButtonBlue title={"Cancel"} onClick={onClose} />
             <RateupButtonBlue
               title={confirmLabel ?? "Submit"}

@@ -138,9 +138,9 @@ export function SurveyMenu({
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
     onError: (error: any) => {
-      console.error("Error deleting Survey:", error.message);
+      //console.error("Error deleting Survey:", error.message);
       notifications.update({
-        id: "load-data",
+        id: "delete-data",
         loading: false,
         color: "red",
         title: "Delete Failed..!",

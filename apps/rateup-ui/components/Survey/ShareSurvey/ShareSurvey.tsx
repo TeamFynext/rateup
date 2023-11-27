@@ -384,7 +384,6 @@ const ShareSurvey = ({
           </Stack>
         </SimpleGrid>
       </PaperLayout>
-      <ShareQR url={shareUrl} sx={{ borderRadius: "0.5rem" }} />
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
