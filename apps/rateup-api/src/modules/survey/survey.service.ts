@@ -120,10 +120,13 @@ export async function cloneSurvey(
     where: {
       id: surveyId,
     },
+    include: {
+      WelcomeTheme: true,
+    },
   });
 
   if (survey) {
-    const { id, ...surveyWithoutId } = survey;
+    const { id, WelcomeTheme, ...surveyWithoutId } = survey;
 
     const existingSurveys = await prisma.survey.findMany({
       where: {
@@ -132,14 +135,7 @@ export async function cloneSurvey(
             title: {
               startsWith: survey.title,
             },
-          },
-          // {
-          //   surveyTeamMaps: {
-          //     some: {
-          //       teamId: survey.teamId,
-          //     },
-          //   },
-          // },
+          }
         ],
       },
       orderBy: {
@@ -177,11 +173,31 @@ export async function cloneSurvey(
       },
     };
 
-    const newSurvey = await prisma.survey.create({
+    const newClonedSurvey = await prisma.survey.create({
       data: clonedSurvey,
     });
 
-    return newSurvey;
+    let themeData = survey?.WelcomeTheme;
+
+    let addThemeToClonedSurvey = await prisma.welcomeTheme.create({
+      data: {
+        headerText: themeData.headerText,
+        descText: themeData.descText,
+        buttonText: themeData.buttonText,
+        headerStyles: themeData.headerStyles,
+        descStyles: themeData.descStyles,
+        buttonStyles: themeData.buttonStyles,
+        bgStyles: themeData.bgStyles,
+        logoStyles: themeData.logoStyles,
+        surveyId: newClonedSurvey.id,
+        bgUrl: themeData.bgUrl,
+        mobileBgUrl: themeData.mobileBgUrl,
+        bgType: themeData.bgType,
+        logoUrl: themeData.logoUrl,
+      },
+    });
+
+    return newClonedSurvey;
   } else {
     return "Survey not found to duplicate";
   }
