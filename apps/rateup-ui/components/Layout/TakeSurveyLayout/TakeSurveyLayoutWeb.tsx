@@ -122,15 +122,17 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
       <Stack
         px={largeScreen ? "10vw" : "4vw"}
         py="3vh"
-        style={{ width: "100%", minHeight: "100vh" }}
-        h={"100%"}
+        style={{ width: "100%", minHeight: "100dvh" }}
         justify="space-between"
       >
         {/* .........Survey Header Section.......... */}
         {survey?.isPublished == true && (
           <Group justify="center">
             <Stack
-              style={{ maxHeight: isMobile ? "65" : "100px", maxWidth: "30%" }}
+              style={{
+                maxHeight: isMobile ? "65px" : "100px",
+                maxWidth: "30%",
+              }}
             >
               <Image
                 src={
@@ -149,11 +151,18 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
         <Paper
           pt="-50px"
           radius="lg"
-          style={{ padding: 0, margin: 0, minHeight: "75vh" }}
+          style={{ padding: 0, margin: 0, flex: 1 }}
+          display={"flex"}
         >
           {survey?.isPublished === true && survey?.active === true ? (
             survey?.isProtected && isPasswordVerified === false ? null : (
-              <Paper radius="lg" bg={"#fff"} pb={startClicked && "xl"}>
+              <Paper
+                radius="lg"
+                bg={"#fff"}
+                pb={startClicked && "xl"}
+                style={{ flex: 1 }}
+                w={"100%"}
+              >
                 {startClicked &&
                   (!selectedLanguage && survey?.languages?.length > 1 ? (
                     <SelectLang
@@ -184,7 +193,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
               </Paper>
             )
           ) : (
-            <Center h={"80vh"}>
+            <Center style={{ flex: 1 }}>
               {survey?.isPublished !== true && (
                 <Group align="center" justify="center">
                   <Image
@@ -202,7 +211,6 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
             </Center>
           )}
         </Paper>
-
         <Stack>
           <Group justify="center">
             <Text fz="sm">Powered by </Text>

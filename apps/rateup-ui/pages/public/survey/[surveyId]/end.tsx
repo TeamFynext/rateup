@@ -59,18 +59,21 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   return (
     <Flex
       style={{
-        height: "100vh",
+        height: "100dvh",
         backgroundColor: theme.colors[theme.primaryColor][6],
       }}
       direction={"column"}
+      justify={"center"}
     >
       <Stack
         c="white"
         align="center"
         justify="center"
         p="md"
+        m={"auto"}
+        h={"100%"}
         style={{
-          height: enableGoogleReview ? "min(30vh, 300px)" : "100vh",
+          flex: 0.3,
         }}
       >
         {<IconCircleCheck size={"3rem"} />}
@@ -84,7 +87,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           justify="center"
           gap="xl"
           style={{
-            height: "90vh",
+            flex: 1,
             borderRadius: "28px 28px 0px 0px",
             backgroundColor: "whitesmoke",
           }}
