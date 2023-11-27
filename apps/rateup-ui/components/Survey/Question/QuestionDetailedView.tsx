@@ -13,6 +13,7 @@ import {
   Box,
   Badge,
   Textarea,
+  Image,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { QuestionType } from "../../../types/enums";
@@ -21,7 +22,6 @@ import {
   IconEdit,
   IconEye,
   IconPlus,
-  IconStar,
   IconTrash,
 } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
@@ -47,6 +47,7 @@ import {
 } from "../../../utils/questions";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
+import { IconBrandGoogle } from "@tabler/icons";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -242,7 +243,14 @@ export function QuestionDetailedView({
               {logicSupportedTypes.includes(question?.type) && (
                 <RateupButtonSecondary
                   title={"Logic Jump"}
-                  leftIcon={<IconEdit />}
+                  leftIcon={
+                    <Image
+                      src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                      height={30}
+                      width={30}
+                      fit="contain"
+                    />
+                  }
                   size="sm"
                   onClick={() => {
                     let save = handleSave();
@@ -254,7 +262,7 @@ export function QuestionDetailedView({
               {googleReviewSupportedTypes.includes(question?.type) && (
                 <RateupButtonSecondary
                   title={"Google Review"}
-                  leftIcon={<IconStar />}
+                  leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
                   size="sm"
                   onClick={() => {
                     let save = handleSave();

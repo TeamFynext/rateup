@@ -6,9 +6,14 @@ import {
   useMantineTheme,
   Dialog,
   Group,
+  Image,
 } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
-import { IconGripVertical, IconTrash } from "@tabler/icons-react";
+import {
+  IconBrandGoogle,
+  IconGripVertical,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useContext, useState } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
@@ -98,19 +103,39 @@ export function DraggableQuestionCard({
                 {question.title[selectedLanguage] ||
                   question.description[selectedLanguage]}
               </Text>
-              {true ? (
-                <ActionIcon
-                  onClick={() => {
-                    closeDialog();
-                    toggle();
-                  }}
-                  variant="subtle"
-                  color="gray"
-                  style={{ position: "absolute", right: "5px" }}
-                >
-                  <IconTrash />
-                </ActionIcon>
-              ) : null}
+              <Group
+                justify={"flex-end"}
+                gap={"xs"}
+                style={{ position: "absolute", right: "5px" }}
+              >
+                {question.logic && (
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                    width={30}
+                    height={30}
+                    fit="contain"
+                  />
+                )}
+                {question.googleReview && (
+                  <IconBrandGoogle
+                    color="var(--tertiary-color)"
+                    stroke={4}
+                    size={"1rem"}
+                  />
+                )}
+                {true ? (
+                  <ActionIcon
+                    onClick={() => {
+                      closeDialog();
+                      toggle();
+                    }}
+                    variant="subtle"
+                    color="gray"
+                  >
+                    <IconTrash />
+                  </ActionIcon>
+                ) : null}
+              </Group>
             </Box>
           </div>
         )}
