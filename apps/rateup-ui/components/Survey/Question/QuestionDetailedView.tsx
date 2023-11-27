@@ -423,10 +423,11 @@ const LanguageCompletionView = ({
   return (
     <PaperLayout w={"fit-content"} p={10} radius={"md"}>
       <Stack gap={5}>
-        {languages.map((language) => {
+        {languages.map((language, i) => {
           const { hovered, ref } = useHover();
           return (
             <Badge
+              key={i}
               id={language}
               ref={ref}
               style={{ cursor: "pointer" }}
