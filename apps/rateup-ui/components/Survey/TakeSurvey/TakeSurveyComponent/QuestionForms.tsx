@@ -57,10 +57,13 @@ export function TextForm() {
         placeholder="Enter your answer"
         value={response || ""}
         onChange={(e) => updateResponse(e.currentTarget.value)}
-        style={{ maxWidth: "400px" }}
         variant="unstyled"
         radius="xl"
         size="sm"
+        classNames={{
+          input: classes.input,
+        }}
+        style={{ maxWidth: "400px" }}
       />
     </Paper>
   );
@@ -81,6 +84,9 @@ export function TextAreaForm() {
         style={{ maxWidth: "400px" }}
         variant="unstyled"
         size="sm"
+        classNames={{
+          input: classes.input,
+        }}
       />
     </Paper>
   );
@@ -97,6 +103,9 @@ export function NumberForm() {
         value={parseInt(response) || null}
         onChange={(value) => updateResponse(value)}
         variant="unstyled"
+        classNames={{
+          input: classes.input,
+        }}
       />
     </Paper>
   );
@@ -219,6 +228,9 @@ export function PhoneForm() {
             onBlur={handleInputBlur}
             variant="unstyled"
             style={{ minWidth: "185px" }}
+            classNames={{
+              input: classes.input,
+            }}
           />
         </Group>
       </Paper>
@@ -265,6 +277,9 @@ export function EmailForm() {
         error={emailError && !isFocused ? "Invalid email" : null}
         leftSection={<IconMail size="1.2rem" color="black" />}
         variant="unstyled"
+        classNames={{
+          input: classes.input,
+        }}
       />
     </Paper>
   );
@@ -522,6 +537,9 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
               onChange={() => updateResponse(choice)}
               key={choice}
               label={choice}
+              classNames={{
+                label: classes.input,
+              }}
             />
           ))
         : previewChoices
@@ -531,6 +549,9 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
               onChange={() => updateResponse(choice)}
               key={choice}
               label={choice}
+              classNames={{
+                label: classes.input,
+              }}
             />
           ))
         : sampleChoices?.map((choice) => (
@@ -539,6 +560,9 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
               onChange={() => updateResponse(choice)}
               key={choice}
               label={choice}
+              classNames={{
+                label: classes.input,
+              }}
             />
           ))}
     </Stack>
@@ -558,14 +582,35 @@ export function MSQForm({ previewChoices }: MCQFormProps) {
       <Stack>
         {selectedQ
           ? choices?.map((choice) => (
-              <Checkbox value={choice} key={choice} label={choice} />
+              <Checkbox
+                value={choice}
+                key={choice}
+                label={choice}
+                classNames={{
+                  label: classes.input,
+                }}
+              />
             ))
           : previewChoices
           ? previewChoices?.[selectedLanguage]?.map((choice) => (
-              <Checkbox value={choice} key={choice} label={choice} />
+              <Checkbox
+                value={choice}
+                key={choice}
+                label={choice}
+                classNames={{
+                  label: classes.input,
+                }}
+              />
             ))
           : sampleChoices?.map((choice) => (
-              <Checkbox value={choice} key={choice} label={choice} />
+              <Checkbox
+                value={choice}
+                key={choice}
+                label={choice}
+                classNames={{
+                  label: classes.input,
+                }}
+              />
             ))}
       </Stack>
     </Checkbox.Group>
@@ -597,6 +642,9 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
       data={data}
       value={response}
       onChange={(e) => updateResponse(e)}
+      classNames={{
+        input: classes.input,
+      }}
     />
   );
 }
@@ -626,6 +674,10 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       onChange={updateResponse}
       label="Select one or more options"
       placeholder="Pick one or more"
+      classNames={{
+        input: classes.input,
+        root: classes.input,
+      }}
     />
   );
 }
@@ -642,6 +694,9 @@ export function DateForm() {
         mx="auto"
         variant="unstyled"
         leftSection={<IconCalendarEvent size="1.2rem" color="black" />}
+        classNames={{
+          input: classes.input,
+        }}
       />
     </Paper>
   );
@@ -672,6 +727,9 @@ export function TestimonialForm() {
           onChange={handleNameChange}
           style={{ maxWidth: "400px" }}
           variant="unstyled"
+          classNames={{
+            input: classes.input,
+          }}
         />
       </Paper>
       <Paper shadow="sm" className={classes.inputBox}>
@@ -681,6 +739,9 @@ export function TestimonialForm() {
           onChange={handleTestimonialChange}
           style={{ maxWidth: "400px" }}
           variant="unstyled"
+          classNames={{
+            input: classes.input,
+          }}
         />
       </Paper>
       {/* Will be brought back once image storing setup is  */}

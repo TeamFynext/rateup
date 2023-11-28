@@ -87,22 +87,6 @@ export function QuestionDetailedView({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
 
-  //font resize on lengthy title
-  useEffect(() => {
-    const textLength = textInputRef?.current?.value?.length;
-    resizeFont(textLength);
-  }, [textInputRef?.current?.value, question?.title[selectedLanguage]]);
-
-  function resizeFont(textLength) {
-    if (textLength > 50) {
-      setTitleFontSize("1rem");
-    } else if (textLength > 25) {
-      setTitleFontSize("1.5rem");
-    } else {
-      setTitleFontSize("2rem");
-    }
-  }
-
   const handleSave = () => {
     setIsSaving(true);
     if (
@@ -407,7 +391,7 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.MSQ:
     case QuestionType.DDSS:
     case QuestionType.DDMS:
-      return <ChoicesCreator qId={question.id} form={form} />;
+      return <ChoicesCreator qId={question?.id} form={form} />;
     default:
       return null;
   }
@@ -431,7 +415,7 @@ const LanguageCompletionView = ({
   return (
     <PaperLayout w={"fit-content"} p={10} radius={"md"}>
       <Stack gap={5}>
-        {languages.map((language, i) => {
+        {languages?.map((language, i) => {
           const { hovered, ref } = useHover();
           return (
             <Badge

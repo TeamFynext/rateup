@@ -5,40 +5,40 @@ export const ContactQuestions = [QuestionType.Email, QuestionType.Phone];
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
 
 export const NPSQuestions = [
-  QuestionType.LD,
-  QuestionType.YN,
   QuestionType.Rating,
   QuestionType.Smiley,
+  QuestionType.LD,
+  QuestionType.YN,
   QuestionType.Opinion,
 ];
 
 export const WaNPSQuestions = [
+  QuestionType.Smiley,
   QuestionType.LD,
   QuestionType.YN,
-  QuestionType.Smiley,
   QuestionType.Opinion,
 ];
 
 export const OtherQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
-  QuestionType.DDMS,
   QuestionType.Number,
-  QuestionType.Testimonial,
-  QuestionType.DDSS,
-  QuestionType.Photo,
   QuestionType.DateTime,
+  QuestionType.Photo,
+  QuestionType.Testimonial,
   QuestionType.MCQ,
   QuestionType.MSQ,
+  QuestionType.DDSS,
+  QuestionType.DDMS,
 ];
 
 export const WaOtherQuestions = [
   QuestionType.Text,
   QuestionType.Number,
-  QuestionType.Testimonial,
-  QuestionType.Photo,
-  QuestionType.DateTime,
   QuestionType.MCQ,
+  QuestionType.DateTime,
+  QuestionType.Photo,
+  QuestionType.Testimonial,
 ];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];

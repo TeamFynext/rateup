@@ -11,6 +11,10 @@
   border-style: solid;
 }
 
+.input {
+  font-size: 16px;
+}
+
 .inputBox:focus-within {
   border-color: var(--input-focus-color, var(--tertiary-color));
 }
