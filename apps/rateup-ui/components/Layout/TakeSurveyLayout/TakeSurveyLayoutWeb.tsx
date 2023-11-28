@@ -4,10 +4,10 @@ import {
   Image,
   Group,
   Center,
-  Select,
   Title,
   Stack,
   Space,
+  SegmentedControl,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
@@ -25,6 +25,7 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import { notifications } from "@mantine/notifications";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import RateupRedirectCard from "../../Card/RateupRedirectCard";
+import { lexend400 } from "../../../utils/fonts";
 
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -127,7 +128,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
         justify="space-between"
       >
         {/* .........Survey Header Section.......... */}
-        {survey?.isPublished == true && (
+        {survey?.isPublished == true && !!startClicked && (
           <Group justify="center">
             <Stack
               style={{
@@ -212,7 +213,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
             </Center>
           )}
         </Paper>
-        <RateupRedirectCard />
+        {!!startClicked && <RateupRedirectCard />}
       </Stack>
     </QuestionCountContext.Provider>
   );
@@ -223,17 +224,33 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
   return (
     <>
       <Stack pl="7vw" pt="10vh">
-        <Title fw={100}> Choose Your language and</Title>
-        <Title> let's get started!</Title>
+        <Title order={isMobile ? 2 : 1} fw={100}>
+          {" "}
+          Choose Your language and
+        </Title>
+        <Title order={isMobile ? 2 : 1}> let's get started!</Title>
       </Stack>
 
       <Center style={{ height: isMobile ? "40vh" : "45vh" }}>
-        <Select
-          data={languages}
-          placeholder="Select language"
-          value={selectedLanguage}
-          onChange={setSelectedLanguage}
-        />
+        <Stack>
+          <Text size="md" className={lexend400.className} mt={3}>
+            Select language :
+          </Text>
+          <SegmentedControl
+            data={languages}
+            placeholder="Select language"
+            value={selectedLanguage}
+            onChange={setSelectedLanguage}
+            orientation={isMobile ? "vertical" : "horizontal"}
+            color="var(--tertiary-color)"
+            size="md"
+            style={{
+              label: {
+                fontSize: "16px",
+              },
+            }}
+          />
+        </Stack>
       </Center>
     </>
   );

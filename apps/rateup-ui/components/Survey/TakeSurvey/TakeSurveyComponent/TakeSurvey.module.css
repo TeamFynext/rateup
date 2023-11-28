@@ -53,3 +53,11 @@
     border-radius: 16px;
   }
 }
+
+.questionTitle {
+  line-height: 1.2;
+}
+
+.questionDesc {
+  line-height: 1.2;
+}

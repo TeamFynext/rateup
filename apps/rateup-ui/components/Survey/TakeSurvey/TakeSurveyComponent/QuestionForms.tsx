@@ -716,7 +716,7 @@ export function TestimonialForm() {
     updateResponse({ ...response, testimonial: e.currentTarget.value });
   };
   //TODO: image storage
-  console.error("Image storage not implemented");
+  //console.error("Image storage not implemented");
 
   return (
     <Stack>

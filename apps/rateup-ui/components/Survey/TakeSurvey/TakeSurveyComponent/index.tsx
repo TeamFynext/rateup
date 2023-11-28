@@ -14,6 +14,7 @@ import {
   Title,
   Divider,
   Flex,
+  RingProgress,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -438,7 +439,6 @@ function TakeSurvey() {
 
           <Stack>
             <Stack style={{ minHeight: "45vh" }} justify="center">
-              <QuestionNo num={QnNo} />
               <QuestionTitle largeScreen={largeScreen} />
               <QuestionDesc largeScreen={largeScreen} />
               <QuestionForm />
@@ -486,17 +486,14 @@ function submitSurvey({
     });
 }
 
-function QuestionNo({ num }) {
-  const isMobile = useMediaQuery("(max-width: 480px)");
-
-  return <Text size={isMobile ? "12px" : "15px"}>Question: {num} </Text>;
-}
-
 function QuestionTitle({ largeScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text size={largeScreen ? "30px" : "16px"} className={lexend400.className}>
+    <Text
+      size={largeScreen ? "30px" : "20px"}
+      className={`${lexend400.className} ${classes.questionTitle}`}
+    >
       {selectedQ.title[selectedLanguage]}
     </Text>
   );
@@ -506,10 +503,10 @@ function QuestionDesc({ largeScreen }) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
     <Text
-      size={largeScreen ? "15px" : "14px"}
+      size={largeScreen ? "15px" : "16px"}
       c="dimmed"
       pb={largeScreen ? 20 : 10}
-      className={lexend400.className}
+      className={classes.questionTitle}
     >
       {selectedQ.description[selectedLanguage]}
     </Text>
@@ -652,6 +649,11 @@ function NextPrev({ prev, next, num, total }) {
     }
   }
 
+  function getCompletionRate(num, total) {
+    const completionPercentage = ((num / total) * 100).toFixed(0);
+    return completionPercentage;
+  }
+
   if (isLoading || isError) return null;
   const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
   const isLastQuestion =
@@ -683,9 +685,26 @@ function NextPrev({ prev, next, num, total }) {
           color="dark"
         />
         <Center>
-          <Text mt={!isMobile && "xs"} fz="sm" fw={600}>
-            {num} / {total}
-          </Text>
+          <RingProgress
+            sections={[
+              {
+                value: parseInt(getCompletionRate(num, total)),
+                color: "dark.2",
+              },
+            ]}
+            size={isMobile ? 55 : 80}
+            thickness={isMobile ? 4 : 8}
+            label={
+              <Text
+                c="dark.2"
+                fw={700}
+                ta="center"
+                size={isMobile ? "xs" : "sm"}
+              >
+                {getCompletionRate(num, total)}%
+              </Text>
+            }
+          />
         </Center>
         {isLastQuestion ? (
           <Button
