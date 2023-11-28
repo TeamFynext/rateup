@@ -7,8 +7,9 @@ import {
   Flex,
   BackgroundImage,
 } from "@mantine/core";
-import React, { useEffect } from "react";
+import React from "react";
 import { useMediaQuery } from "@mantine/hooks";
+import { lexend } from "../../../utils/fonts";
 
 const buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -21,28 +22,6 @@ const buttonStyles = {
 function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
   const isMobile = useMediaQuery("(max-width: 480px)");
 
-  useEffect(() => {
-    const loadFont = async (fontFamily) => {
-      const WebFont = await import("webfontloader");
-
-      WebFont.load({
-        google: {
-          families: [fontFamily],
-        },
-      });
-    };
-
-    if (surveyThemeData?.descStyles?.fontFamily) {
-      loadFont(surveyThemeData?.descStyles?.fontFamily);
-    }
-    if (surveyThemeData?.headerStyles?.fontFamily) {
-      loadFont(surveyThemeData?.headerStyles?.fontFamily);
-    }
-    if (surveyThemeData?.buttonStyles?.fontFamily) {
-      loadFont(surveyThemeData?.buttonStyles?.fontFamily);
-    }
-  }, [surveyThemeData]);
-
   return (
     <Stack
       align="center"
@@ -53,6 +32,7 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
         borderRadius: 18,
         ...surveyThemeData?.bgStyles,
       }}
+        ff={lexend.style.fontFamily}
     >
       <BackgroundImage
         h={"100%"}
@@ -96,13 +76,14 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
             }}
             tt={"capitalize"}
             mt={25}
+            ff={"inherit"}
           >
             {surveyThemeData?.headerText}
           </Title>
 
-          <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
-            {surveyThemeData?.descText}
-          </Text>
+            <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
+              {surveyThemeData?.descText}
+            </Text>
 
           <Button
             mt={20}
@@ -113,6 +94,7 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
             }
             onClick={onStart}
             miw={150}
+            ff={"inherit"}
           >
             {surveyThemeData?.buttonText}
           </Button>

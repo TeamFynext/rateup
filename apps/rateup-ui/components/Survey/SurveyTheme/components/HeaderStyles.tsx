@@ -13,7 +13,6 @@ import {
 import { createFormContext } from "@mantine/form";
 import classes from "../WelcomePage.module.css";
 import React, { useEffect } from "react";
-import { fontList } from "../fontStyleComponents/FontList";
 import { FontWeights } from "../fontStyleComponents/FontWeights";
 
 interface FormValues {
@@ -34,7 +33,6 @@ function HeaderStyles({
   saveStyles,
   currentStyles,
   setCurrentstyles,
-  loadFont,
   saveLoading,
 }) {
   const form = useForm({
@@ -47,21 +45,14 @@ function HeaderStyles({
   //----------font loading--------
   useEffect(() => {
     if (
-      currentStyles?.headerStyles?.fontFamily !==
-      form?.values?.headerStyles?.fontFamily
+      JSON.stringify(form?.values?.headerStyles) !== JSON.stringify(currentStyles?.headerStyles)
     ) {
-      loadFont(form?.values?.headerStyles?.fontFamily, () =>
-        setCurrentstyles({
-          ...currentStyles,
-          headerStyles: form?.values?.headerStyles,
-        })
-      );
-    } else
       setCurrentstyles({
         ...currentStyles,
         headerStyles: form?.values?.headerStyles,
       });
-  }, [form?.values]);
+    }
+  }, [form?.values, currentStyles]);
 
   useEffect(() => {
     if (!form?.isDirty()) {
@@ -84,15 +75,6 @@ function HeaderStyles({
         <form style={{ width: "100%", justifyContent: "center" }}>
           <Box className={classes.editorBox}>
             <Box className={classes.editorSection}>
-              <Select
-                label="Font style"
-                searchable
-                nothingFoundMessage="No options"
-                data={fontList}
-                name="fontFamily"
-                {...form.getInputProps("headerStyles.fontFamily")}
-              />
-
               <Group mt="xs">
                 <Select
                   label="Font weight"

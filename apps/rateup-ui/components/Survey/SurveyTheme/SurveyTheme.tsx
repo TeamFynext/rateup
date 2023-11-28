@@ -54,32 +54,7 @@ function SurveyTheme({ survey }) {
   //---------get saved styled by survey id -----------
   const { data: welcomeTheme } = useWelcomeThemeBySurveyId(survey?.id);
 
-  let WebFont = undefined;
-  useEffect(() => {
-    (async () => {
-      if (window) {
-        WebFont = await import("webfontloader");
-      }
-    })();
-  }, [window]);
 
-  async function loadFont(fontFamily, callback) {
-    if (window) {
-      WebFont = await import("webfontloader");
-      // Code that depends on the window object
-      if (fontFamily) {
-        await WebFont.load({
-          google: {
-            families: [fontFamily],
-          },
-          active: () => {
-            callback();
-          },
-          inactive: () => {},
-        });
-      }
-    }
-  }
 
   useEffect(() => {
     if (welcomeTheme) {
@@ -228,7 +203,6 @@ function SurveyTheme({ survey }) {
             saveStyles={saveStyles}
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
-            loadFont={loadFont}
             saveLoading={saveLoading}
             setbgImage={setbgImage}
             setbgMobileImage={setbgMobileImage}

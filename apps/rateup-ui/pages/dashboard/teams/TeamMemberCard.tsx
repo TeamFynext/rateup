@@ -14,6 +14,7 @@ import {
   IconCheck,
   IconDots,
   IconPencilMinus,
+  IconSend,
   IconTrash,
 } from "@tabler/icons-react";
 import { deleteInviteById } from "../../../backend/team/team.api";
@@ -23,6 +24,7 @@ import { useUser } from "../../../context/UserContext";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { MemberEditFormModal } from "../members";
 import { UserRole } from "../../../utils/enums";
+import { userResendInviteTeamMutation } from "../../../backend/team/team.query";
 
 const TeamMemberCard = ({
   member,
@@ -112,7 +114,7 @@ export default TeamMemberCard;
 function TeamMemberMenu({ status, inviteId }) {
   const [deleteInviteId, setDeleteInviteId] = useState("");
   const queryClient = useQueryClient();
-
+  const { mutate, isPending } = userResendInviteTeamMutation();
   useEffect(() => {
     deleteInviteId && deleteInviteMutation.mutate();
     if (deleteInviteId) {
@@ -127,6 +129,16 @@ function TeamMemberMenu({ status, inviteId }) {
     }
   }, [deleteInviteId]);
 
+  if (isPending) {
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Resending Invitation..",
+      message: "Hold on, Team Invitation Resending.",
+      autoClose: false,
+      withCloseButton: false,
+    });
+  }
   const handleDeleteInvite = async () => {
     return deleteInviteById(deleteInviteId);
   };
@@ -171,6 +183,7 @@ function TeamMemberMenu({ status, inviteId }) {
           onClick={(e) => {
             e.stopPropagation();
           }}
+          variant={"transparent"}
         >
           <IconDots />
         </ActionIcon>
@@ -180,6 +193,18 @@ function TeamMemberMenu({ status, inviteId }) {
           e.stopPropagation();
         }}
       >
+        {status === "PENDING" && (
+          <Menu.Item
+            leftSection={<IconSend />}
+            onClick={(e) => {
+              e.stopPropagation();
+              // setDeleteInviteId(inviteId);
+              mutate(inviteId);
+            }}
+          >
+            Resend Invite
+          </Menu.Item>
+        )}
         {status === "PENDING" && (
           <Menu.Item
             leftSection={<IconTrash />}

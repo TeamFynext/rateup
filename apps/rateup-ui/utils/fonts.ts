@@ -44,3 +44,8 @@ export const lexend900 = Lexend({
   style: ["normal"],
   preload: false,
 });
+
+export const lexend = Lexend({
+  style: ["normal"],
+  preload: false,
+});

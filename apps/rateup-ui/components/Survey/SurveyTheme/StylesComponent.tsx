@@ -12,7 +12,6 @@ function StylesComponent({
   saveStyles,
   currentStyles,
   setCurrentstyles,
-  loadFont,
   saveLoading,
   setbgImage,
   setbgMobileImage,
@@ -102,7 +101,6 @@ function StylesComponent({
             saveStyles={saveStyles}
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
-            loadFont={loadFont}
             saveLoading={saveLoading}
           />
         </Tabs.Panel>
@@ -112,7 +110,6 @@ function StylesComponent({
             saveStyles={saveStyles}
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
-            loadFont={loadFont}
             saveLoading={saveLoading}
           />
         </Tabs.Panel>
@@ -122,7 +119,6 @@ function StylesComponent({
             saveStyles={saveStyles}
             currentStyles={currentStyles}
             setCurrentstyles={setCurrentstyles}
-            loadFont={loadFont}
             saveLoading={saveLoading}
           />
         </Tabs.Panel>

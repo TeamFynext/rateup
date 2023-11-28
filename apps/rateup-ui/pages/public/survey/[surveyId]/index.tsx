@@ -13,6 +13,7 @@ export const getServerSideProps = async (context: {
   const params = context.params;
   const surveyData = await getPublicSurvey(params.surveyId);
   const surveyThemeData = await getPublicwelcomeTheme(params.surveyId);
+  
   return { props: { survey: surveyData, surveyThemeData: surveyThemeData } };
 };
 

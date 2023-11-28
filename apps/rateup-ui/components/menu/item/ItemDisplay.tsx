@@ -28,7 +28,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             w={"100%"}
             h={"100%"}
             maw={"300px"}
-            miw={smallScreen&&"109px"}
+            miw={smallScreen && "109px"}
             src={
               item?.images?.length > 0
                 ? getFileUrlFromKey(item?.images[0])
@@ -47,13 +47,14 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           style={{ flex: 1 }}
           c={"var(--grey-color)"}
           fw={"600"}
-          miw={smallScreen&&"134px"}
+          miw={smallScreen && "134px"}
         >
           <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
             <Text
               fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
               lineClamp={2}
               tt={"capitalize"}
+              fw={500}
             >
               {item?.name}
             </Text>
@@ -75,7 +76,10 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                     >
                       {varient?.name}
                     </Text>
-                    <Text fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)">
+                    <Text
+                      fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)"
+                      fw={500}
+                    >
                       {varient?.price}
                     </Text>
                   </Stack>
@@ -84,6 +88,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                 <Text
                   fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)"
                   mt={"sm"}
+                  fw={500}
                 >
                   {item?.price?.price}
                 </Text>

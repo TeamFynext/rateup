@@ -5,6 +5,7 @@ import {
   editTeam,
   getTeamMembersFromInvitation,
   getTeamsByUser,
+  resendInviteTeamMember,
 } from "./team.api";
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import { IconCheck } from "@tabler/icons-react";
@@ -27,7 +28,7 @@ export function useTeamMembersFromInvitation(teamId: string) {
 export function useCreateTeamMutation(
   close: () => void,
   createTeamForm: any,
-  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -140,4 +141,23 @@ async function handleCreateTeam(values) {
     whatsappAccessToken: values.whatsappAccessToken,
   };
   return createTeam(data);
+}
+
+export function userResendInviteTeamMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => resendInviteTeamMember(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
+        notifications.update({
+          id: "load-data",
+          color: "teal",
+          loading: false,
+          title: "Resend Invitation Success",
+          message: "Team Invitation Resend successfully.",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+    },
+  });
 }

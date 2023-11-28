@@ -17,6 +17,7 @@ import { CategoriesDrawer } from "../../../../../components/menu/category/Catego
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
 import { useRouter } from "next/router";
+import { lexend } from "../../../../../utils/fonts";
 
 type MenuViewProp = {
   menuId: string;
@@ -34,11 +35,11 @@ export default function ({ fullMenu }) {
   const router = useRouter();
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
-    fullMenu?.categories,
+    fullMenu?.categories
   );
   const [categorys, setCategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categoryChipLabel[0]?.id,
+    categoryChipLabel[0]?.id
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
@@ -47,7 +48,7 @@ export default function ({ fullMenu }) {
     setCategorys(
       categoryId === "1"
         ? categoryChipLabel.filter((category) => category.id !== categoryId)
-        : categoryChipLabel.filter((category) => category.id === categoryId),
+        : categoryChipLabel.filter((category) => category.id === categoryId)
     );
     setSelectedCategory(categoryId);
   }
@@ -61,7 +62,7 @@ export default function ({ fullMenu }) {
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
 
   return (
-    <Paper mih={"100vh"}>
+    <Paper mih={"100vh"} ff={lexend.style.fontFamily}>
       <BackgroundImage
         px={largeScreen ? "10vw" : "1vw"}
         py="3vh"
@@ -109,7 +110,6 @@ export default function ({ fullMenu }) {
                   : "clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"
               }
               fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
-              ff={fullMenu?.menuLanding?.headerStyle?.fontFamily}
               c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
             >
               Welcome To
@@ -122,7 +122,6 @@ export default function ({ fullMenu }) {
                   : "clamp(1.75rem, 0.857rem + 2.381vw, 3rem))"
               }
               fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
-              ff={fullMenu?.menuLanding?.titleStyle?.fontFamily}
               c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
               ta={"center"}
             >
@@ -186,8 +185,8 @@ export default function ({ fullMenu }) {
       )}
       <Stack pos={"fixed"} bottom={40} right={30}>
         <Stack
-          w={largeScreen ? "80px" : "70px"}
-          h={largeScreen ? "80px" : "70px"}
+          w={largeScreen ? "90px" : "70px"}
+          h={largeScreen ? "90px" : "70px"}
           bg={"#F8951D"}
           style={{ borderRadius: "100%" }}
           justify="center"
@@ -195,7 +194,7 @@ export default function ({ fullMenu }) {
           gap={0}
           onClick={() => {
             router.push(
-              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`,
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`
             );
           }}
         >
@@ -207,6 +206,7 @@ export default function ({ fullMenu }) {
           <Text
             fz={"clamp(0.688rem, 0.509rem + 0.476vw, 0.938rem)"}
             c={"white"}
+            fw={500}
           >
             Feedback
           </Text>

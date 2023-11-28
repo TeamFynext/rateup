@@ -12,6 +12,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import classes from "./WelcomePage.module.css";
 import { IconEdit } from "@tabler/icons-react";
+import { lexend } from "../../../utils/fonts";
 
 function WelcomePageView({
   setSelectedType,
@@ -29,43 +30,7 @@ function WelcomePageView({
       buttonText: currentStyles.buttonText,
     },
   });
-
-  useEffect(() => {
-    loadFont(currentStyles?.descStyles?.fontFamily);
-  }, [currentStyles?.descStyles?.fontFamily]);
-  useEffect(() => {
-    loadFont(currentStyles?.headerStyles?.fontFamily);
-  }, [currentStyles?.headerStyles?.fontFamily]);
-  useEffect(() => {
-    loadFont(currentStyles?.buttonStyles?.fontFamily);
-  }, [currentStyles?.buttonStyles?.fontFamily]);
   // //---------font laoding ---------------
-  let WebFont = undefined;
-  useEffect(() => {
-    (async () => {
-      if (window) {
-        WebFont = await import("webfontloader");
-      }
-    })();
-  }, [window]);
-
-  async function loadFont(fontFamily) {
-    if (window) {
-      WebFont = await import("webfontloader");
-      // Code that depends on the window object
-      if (fontFamily) {
-        await WebFont.load({
-          google: {
-            families: [fontFamily],
-          },
-          active: () => {
-            // callback();
-          },
-          inactive: () => {},
-        });
-      }
-    }
-  }
 
   useEffect(() => {
     setCurrentstyles({
@@ -136,6 +101,7 @@ function WelcomePageView({
       onClick={(e) => {
         e.stopPropagation(), handleFocus("background");
       }}
+      ff={lexend.style.fontFamily}
     >
       <BackgroundImage
         className={classes.parentContainer}
@@ -222,7 +188,10 @@ function WelcomePageView({
                     e.stopPropagation(), handleFocus("header");
                   }}
                   styles={{
-                    input: currentStyles?.headerStyles,
+                    input: {
+                      ...currentStyles?.headerStyles,
+                      fontFamily: "inherit",
+                    },
                   }}
                   value={currentStyles.headerText}
                   onChange={handleChange}
@@ -242,7 +211,10 @@ function WelcomePageView({
               }}
               name="descText"
               styles={{
-                input: currentStyles?.descStyles,
+                input: {
+                  ...currentStyles?.descStyles,
+                  fontFamily: "inherit",
+                },
               }}
               mt="lg"
               w={"80%"}
@@ -286,9 +258,7 @@ function WelcomePageView({
                       minWidth: "150px",
                       alignSelf: "center",
                       fontWeight: 500,
-                      fontFamily: currentStyles?.buttonStyles?.fontFamily
-                        ? currentStyles?.buttonStyles?.fontFamily
-                        : "Montserrat",
+                      fontFamily: "inherit",
                     },
                   }}
                 />

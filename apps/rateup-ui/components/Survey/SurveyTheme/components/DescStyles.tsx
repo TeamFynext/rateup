@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 
 import React, { useEffect } from "react";
-import { fontList } from "../fontStyleComponents/FontList";
 import { createFormContext } from "@mantine/form";
 import { FontWeights } from "../fontStyleComponents/FontWeights";
 import classes from "../WelcomePage.module.css";
@@ -24,7 +23,6 @@ interface FormValues {
     color: string;
     fontSize: number;
     fontWeight: number;
-    fontFamily: string;
     textAlign: string;
   };
 }
@@ -33,7 +31,6 @@ function DescStyles({
   saveStyles,
   currentStyles,
   setCurrentstyles,
-  loadFont,
   saveLoading,
 }) {
   const form = useForm({
@@ -46,21 +43,13 @@ function DescStyles({
 
   //----------font loading--------
   useEffect(() => {
-    if (
-      currentStyles?.descStyles?.fontFamily !== form?.values?.descStyles?.fontFamily
-    ) {
-      loadFont(form?.values?.descStyles?.fontFamily, () =>
-        setCurrentstyles({
-          ...currentStyles,
-          descStyles: form?.values?.descStyles,
-        }),
-      );
-    } else
+    if (JSON.stringify(form?.values?.descStyles) !== JSON.stringify(currentStyles?.descStyles)) {
       setCurrentstyles({
         ...currentStyles,
         descStyles: form?.values?.descStyles,
       });
-  }, [form?.values]);
+    }
+  }, [form?.values, currentStyles]);
 
   useEffect(() => {
     if (!form.isDirty()) {
@@ -84,14 +73,6 @@ function DescStyles({
         <form>
           <Box className={classes.editorBox}>
             <Box className={classes.editorSection}>
-              <Select
-                label="Font style"
-                searchable
-                nothingFoundMessage="No options"
-                data={fontList}
-                name="fontFamily"
-                {...form.getInputProps("descStyles.fontFamily")}
-              />
               <Group mt="xs">
                 <Select
                   label="Font weight"

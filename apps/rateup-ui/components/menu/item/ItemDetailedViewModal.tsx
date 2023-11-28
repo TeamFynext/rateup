@@ -5,6 +5,8 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { extractVideoId } from "../../../utils/youtube/url";
 import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import classes from "./itemDetailedViewModal.module.css";
+import { useMediaQuery } from "@mantine/hooks";
+import { lexend } from "../../../utils/fonts";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -15,8 +17,9 @@ export function ItemDetailedViewModal({
   onClose,
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0],
+    item?.videoUrl ? item?.videoUrl : item?.images[0]
   );
+  const smallScreen = useMediaQuery("(max-width: 30em)");
 
   useEffect(() => {
     if (item.videoUrl) {
@@ -38,6 +41,7 @@ export function ItemDetailedViewModal({
         close: classes.close,
       }}
       closeButtonProps={{ iconSize: "22px" }}
+      ff={lexend.style.fontFamily}
     >
       <Stack align="center" c={"var(--grey-color)"}>
         <Box>
@@ -57,10 +61,13 @@ export function ItemDetailedViewModal({
                 <YoutubeEmbed
                   embedId={extractVideoId(item?.videoUrl)}
                   sx={{
-                    width: "400px",
+                    width: smallScreen
+                      ? "80vw"
+                      : "clamp(13.75rem, 10.2289rem + 15.0235vw, 23.75rem)",
                     aspectRatio: "4 / 3",
                     borderRadius: "12px",
                     border: "unset",
+                    maxHeight: smallScreen ? "228px" : "278px",
                   }}
                 />
               ) : (
@@ -68,8 +75,12 @@ export function ItemDetailedViewModal({
                   style={{
                     aspectRatio: "4 / 3",
                   }}
-                  w={"100%"}
-                  maw={"300px"}
+                  w={
+                    smallScreen
+                      ? "80vw"
+                      : "clamp(13.75rem, 10.2289rem + 15.0235vw, 23.75rem)"
+                  }
+                  maw={"400px"}
                   radius={"lg"}
                   src={
                     selectedMedia
@@ -112,7 +123,7 @@ export function ItemDetailedViewModal({
                       aspectRatio: "4 / 3",
                     }}
                     src={`http://img.youtube.com/vi/${extractVideoId(
-                      item?.videoUrl,
+                      item?.videoUrl
                     )}/0.jpg`}
                     alt="video of menu"
                   />
@@ -157,16 +168,21 @@ export function ItemDetailedViewModal({
                 <Text
                   fz={"clamp(0.875rem, 0.429rem + 1.19vw, 1.5rem)"}
                   tt={"capitalize"}
+                  fw={500}
                 >
                   {varient.name}
                 </Text>
-                <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)">
+                <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)" fw={500}>
                   {varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
-            <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)" mt={"md"}>
+            <Text
+              fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)"
+              mt={"md"}
+              fw={500}
+            >
               {item?.price?.price}
             </Text>
           )}

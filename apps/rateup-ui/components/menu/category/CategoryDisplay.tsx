@@ -1,19 +1,21 @@
 import { Flex, Stack, Text } from "@mantine/core";
 import { ItemDisplay } from "../item/ItemDisplay";
+import { lexend } from "../../../utils/fonts";
 
 export function CategoryDisplay({ category, setSelectedItem }) {
   return (
-    <Stack id={category?.id}>
+    <Stack id={category?.id} ff={lexend.style.fontFamily}>
       <Text
         c="var(--grey-color)"
         fz="clamp(1.25rem, 0.714rem + 1.429vw, 2rem)"
         tt={"capitalize"}
+        fw={500}
       >
         {category?.name}
       </Text>
       <Flex wrap="wrap" rowGap={"sm"}>
         {category?.items?.length === 0 ? (
-          <Text ml={"sm"} size="sm" pb={"lg"}>
+          <Text ml={"sm"} size="sm" pb={"lg"} fw={500}>
             No Data Found
           </Text>
         ) : (

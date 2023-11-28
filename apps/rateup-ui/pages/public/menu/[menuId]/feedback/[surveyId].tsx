@@ -17,6 +17,7 @@ import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
+import { lexend } from "../../../../../utils/fonts";
 
 type MenuProp = {
   menuId: string;
@@ -54,7 +55,11 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     ? getFileUrlFromKey(encodeURI(backgroundImage))
     : fallbackImageBackround;
   return (
-    <Stack gap={0} maw={largeScreen ? "2440px" : "768px"}>
+    <Stack
+      gap={0}
+      maw={largeScreen ? "2440px" : "768px"}
+      ff={lexend.style.fontFamily}
+    >
       <BackgroundImage
         src={bgSrc}
         radius="sm"
@@ -94,7 +99,6 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   : "clamp(0.938rem, 0.313rem + 1.667vw, 1.813rem)"
               }
               fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
-              ff={menuLanding?.headerStyle?.fontFamily}
               c={menuLanding?.headerStyle?.color ?? "inherit"}
               tt={"capitalize"}
               truncate
@@ -109,7 +113,6 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   : "clamp(1.688rem, -0.679rem + 6.31vw,52px )"
               }
               fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
-              ff={menuLanding?.titleStyle?.fontFamily}
               c={menuLanding?.titleStyle?.color ?? "inherit"}
               ta={"center"}
               tt={"uppercase"}
@@ -199,13 +202,13 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             {(menuLanding?.menuPageEnabled === true ||
               menuLanding?.menuPageEnabled === undefined) && (
-              <PaperLayout p={"xl"} mah={"200px"} hoveractive>
+              <PaperLayout p={"xl"} mah={"200px"} hoveractive c={"var(--grey-color-3)"}>
                 {MenuButton(largeScreen, menuLanding?.catalogue)}
               </PaperLayout>
             )}
             {menuLanding?.feedbackPageEnabled === true && (
-              <PaperLayout p={"xl"} mah={"200px"} hoveractive>
-                {FeedbackButton(largeScreen,menuLanding?.catalogue)}
+              <PaperLayout p={"xl"} mah={"200px"} hoveractive c={"var(--grey-color-3)"}>
+                {FeedbackButton(largeScreen, menuLanding?.catalogue)}
               </PaperLayout>
             )}
           </SimpleGrid>
@@ -222,7 +225,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
   );
 }
 
-function FeedbackButton(largeScreen: boolean,catalogue: boolean) {
+function FeedbackButton(largeScreen: boolean, catalogue: boolean) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   return (
@@ -239,7 +242,9 @@ function FeedbackButton(largeScreen: boolean,catalogue: boolean) {
             h={"auto"}
             alt="feedback image"
           />
-          <Text fw={"600"} mt={catalogue?"20px":"0"}>Feedback</Text>
+          <Text fw={"600"} mt={catalogue ? "20px" : "0"}>
+            Feedback
+          </Text>
         </Stack>
       </Link>
     </Stack>

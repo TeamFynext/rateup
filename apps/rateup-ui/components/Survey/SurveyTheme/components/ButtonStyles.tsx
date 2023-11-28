@@ -1,5 +1,4 @@
 import {
-  Select,
   Stack,
   Flex,
   Text,
@@ -11,7 +10,6 @@ import {
   Box,
 } from "@mantine/core";
 import React, { useEffect } from "react";
-import { fontList } from "../fontStyleComponents/FontList";
 import classes from "../WelcomePage.module.css";
 import { useForm } from "@mantine/form";
 
@@ -19,7 +17,6 @@ function ButtonStyles({
   saveStyles,
   currentStyles,
   setCurrentstyles,
-  loadFont,
   saveLoading,
 }) {
   const form = useForm({
@@ -38,22 +35,13 @@ function ButtonStyles({
 
   //----------font loading--------
   useEffect(() => {
-    if (
-      currentStyles?.buttonStyles?.fontFamily !==
-      form?.values?.buttonStyles?.fontFamily
-    ) {
-      loadFont(form?.values?.buttonStyles?.fontFamily, () =>
-        setCurrentstyles({
-          ...currentStyles,
-          buttonStyles: form?.values?.buttonStyles,
-        })
-      );
-    } else
+    if (JSON.stringify(form?.values?.buttonStyles) !== JSON.stringify(currentStyles?.buttonStyles)) {
       setCurrentstyles({
         ...currentStyles,
         buttonStyles: form?.values?.buttonStyles,
       });
-  }, [form?.values]);
+    }
+  }, [form?.values, currentStyles]);
 
   useEffect(() => {
     if (!form.isDirty()) {
@@ -69,15 +57,6 @@ function ButtonStyles({
         <Box className={classes.editorBox}>
           <Box className={classes.editorSection}>
             <Group mt="xs">
-              <Select
-                label="Font style"
-                searchable
-                nothingFoundMessage="No options" //TODO VERIFY MANTINE
-                data={fontList}
-                name="fontFamily"
-                {...form.getInputProps("buttonStyles.fontFamily")}
-                style={{ maxWidth: "200px" }}
-              />
               <NumberInput
                 min={0}
                 max={50}

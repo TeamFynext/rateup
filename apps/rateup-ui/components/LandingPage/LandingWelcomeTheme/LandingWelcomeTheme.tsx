@@ -41,32 +41,7 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
   //---------get saved styled by survey id -----------
   const { data: welocmeTheme } = uselandingWelcomeThemeByLandingId(LandingId);
 
-  let WebFont = undefined;
-  useEffect(() => {
-    (async () => {
-      if (window) {
-        WebFont = await import("webfontloader");
-      }
-    })();
-  }, [window]);
 
-  async function loadFont(fontFamily, callback) {
-    if (window) {
-      WebFont = await import("webfontloader");
-      // Code that depends on the window object
-      if (fontFamily) {
-        await WebFont.load({
-          google: {
-            families: [fontFamily],
-          },
-          active: () => {
-            callback();
-          },
-          inactive: () => {},
-        });
-      }
-    }
-  }
 
   useEffect(() => {
     if (welocmeTheme) {
@@ -171,7 +146,6 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
           saveStyles={saveStyles}
           currentStyles={currentStyles}
           setCurrentstyles={setCurrentstyles}
-          loadFont={loadFont}
           saveLoading={saveLoading}
           setbgImage={setbgImage}
           setbgMobileImage={setbgMobileImage}

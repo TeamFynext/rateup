@@ -19,44 +19,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen, landingid }) {
     data: LandingWelcomeData,
   } = usePublicWelcomeThemeByLandingId(landingid);
 
-  useEffect(() => {
-    if (LandingWelcomeData?.descStyles?.fontFamily) {
-      loadFont(LandingWelcomeData?.descStyles?.fontFamily);
-    }
-    if (LandingWelcomeData?.headerStyles?.fontFamily) {
-      loadFont(LandingWelcomeData?.headerStyles?.fontFamily);
-    }
-    if (LandingWelcomeData?.buttonStyles?.fontFamily) {
-      loadFont(LandingWelcomeData?.buttonStyles?.fontFamily);
-    }
-  }, [LandingWelcomeData]);
 
-  let WebFont = undefined;
-  useEffect(() => {
-    (async () => {
-      if (window) {
-        WebFont = await import("webfontloader");
-      }
-    })();
-  }, []);
-
-  async function loadFont(fontFamily) {
-    if (window) {
-      WebFont = await import("webfontloader");
-      // Code that depends on the window object
-      if (fontFamily) {
-        await WebFont.load({
-          google: {
-            families: [fontFamily],
-          },
-          active: () => {
-            // callback();
-          },
-          inactive: () => {},
-        });
-      }
-    }
-  }
 
   return (
     <>
