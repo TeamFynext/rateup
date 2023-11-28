@@ -228,6 +228,31 @@ export async function inviteTeamMember(input: InviteMemberInput) {
   }
 }
 
+/**
+ * Resend team member invite email
+ * @param id
+ * @returns
+ */
+export async function resendInviteTeamMember(id: string) {
+  const existingInvitation = await prisma.invitation.findFirst({
+    where: {
+      id,
+    },
+  });
+  if (existingInvitation && existingInvitation.status === "PENDING") {
+    const msg = {
+      to: existingInvitation?.email,
+      subject: "Invitation to Join Team - RateUp.app",
+      text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
+      html: createEmailBody(
+        `${process.env.FRONTEND_URL}/invite?type=team&token=${existingInvitation?.id}`,
+        existingInvitation?.email
+      ),
+    };
+    sendAWSEmail(msg);
+  }
+}
+
 //Complete Email invite
 export async function completeInvite(token: string) {
   const invitation = await prisma.invitation.findUnique({
@@ -502,7 +527,7 @@ export async function getTeamsByUserId(userId: string) {
             select: {
               members: true,
             },
-          }
+          },
         },
       },
     },
@@ -523,7 +548,6 @@ export async function getTeamIdsByUserId(userId: string) {
 
   return teams.map(({ teamId }) => teamId);
 }
-
 
 export async function editTeam(
   { name, code, googleLink }: EditTeamInput,

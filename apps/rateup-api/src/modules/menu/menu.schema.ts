@@ -98,7 +98,7 @@ const fullMenuPublicResponseSchema = z.object({
     .nullable(),
 });
 const StyleSchema = z.object({
-  fontFamily: z.string(),
+  fontFamily: z.string().optional(),
   fontWeight: z.string(),
   fontSize: z.number(),
   color: z.string(),
@@ -111,7 +111,7 @@ const updateMenuLandingInputSchema = z.object({
     })
   ),
   otherStyle: z.object({
-    fontFamily: z.string(),
+    fontFamily: z.string().optional(),
     color: z.string(),
   }),
   headerText: z.string(),
