@@ -54,8 +54,6 @@ function SurveyTheme({ survey }) {
   //---------get saved styled by survey id -----------
   const { data: welcomeTheme } = useWelcomeThemeBySurveyId(survey?.id);
 
-
-
   useEffect(() => {
     if (welcomeTheme) {
       setCurrentstyles(welcomeTheme);

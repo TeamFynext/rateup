@@ -45,7 +45,8 @@ function HeaderStyles({
   //----------font loading--------
   useEffect(() => {
     if (
-      JSON.stringify(form?.values?.headerStyles) !== JSON.stringify(currentStyles?.headerStyles)
+      JSON.stringify(form?.values?.headerStyles) !==
+      JSON.stringify(currentStyles?.headerStyles)
     ) {
       setCurrentstyles({
         ...currentStyles,

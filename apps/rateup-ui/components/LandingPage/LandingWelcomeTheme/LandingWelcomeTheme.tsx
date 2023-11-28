@@ -41,8 +41,6 @@ function LandingWelcomeTheme({ LandingPageData, LandingId }) {
   //---------get saved styled by survey id -----------
   const { data: welocmeTheme } = uselandingWelcomeThemeByLandingId(LandingId);
 
-
-
   useEffect(() => {
     if (welocmeTheme) {
       setCurrentstyles(welocmeTheme);

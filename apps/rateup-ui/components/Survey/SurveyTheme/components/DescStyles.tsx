@@ -43,7 +43,10 @@ function DescStyles({
 
   //----------font loading--------
   useEffect(() => {
-    if (JSON.stringify(form?.values?.descStyles) !== JSON.stringify(currentStyles?.descStyles)) {
+    if (
+      JSON.stringify(form?.values?.descStyles) !==
+      JSON.stringify(currentStyles?.descStyles)
+    ) {
       setCurrentstyles({
         ...currentStyles,
         descStyles: form?.values?.descStyles,

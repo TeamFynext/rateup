@@ -142,6 +142,9 @@ export function QuestionDetailedView({
       <Stack justify="space-between" style={{ height: "100%" }}>
         <ScrollArea style={{ height: "80%" }}>
           <Stack>
+            <Badge variant="outline" size="lg">
+              {question.type}
+            </Badge>
             <Group justify="space-between" p={2} gap={2}>
               <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
                 <Textarea

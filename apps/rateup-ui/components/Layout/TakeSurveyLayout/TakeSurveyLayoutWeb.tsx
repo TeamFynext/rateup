@@ -74,7 +74,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     survey?.id,
     passwordInput,
     close,
-    setIsPasswordVerified
+    setIsPasswordVerified,
   );
 
   if (!selectedLanguage && survey?.languages?.length <= 1) {

@@ -28,7 +28,7 @@ export function useTeamMembersFromInvitation(teamId: string) {
 export function useCreateTeamMutation(
   close: () => void,
   createTeamForm: any,
-  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({

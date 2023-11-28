@@ -202,12 +202,22 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             {(menuLanding?.menuPageEnabled === true ||
               menuLanding?.menuPageEnabled === undefined) && (
-              <PaperLayout p={"xl"} mah={"200px"} hoveractive c={"var(--grey-color-3)"}>
+              <PaperLayout
+                p={"xl"}
+                mah={"200px"}
+                hoveractive
+                c={"var(--grey-color-3)"}
+              >
                 {MenuButton(largeScreen, menuLanding?.catalogue)}
               </PaperLayout>
             )}
             {menuLanding?.feedbackPageEnabled === true && (
-              <PaperLayout p={"xl"} mah={"200px"} hoveractive c={"var(--grey-color-3)"}>
+              <PaperLayout
+                p={"xl"}
+                mah={"200px"}
+                hoveractive
+                c={"var(--grey-color-3)"}
+              >
                 {FeedbackButton(largeScreen, menuLanding?.catalogue)}
               </PaperLayout>
             )}

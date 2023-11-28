@@ -35,11 +35,11 @@ export default function ({ fullMenu }) {
   const router = useRouter();
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
-    fullMenu?.categories
+    fullMenu?.categories,
   );
   const [categorys, setCategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categoryChipLabel[0]?.id
+    categoryChipLabel[0]?.id,
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
@@ -48,7 +48,7 @@ export default function ({ fullMenu }) {
     setCategorys(
       categoryId === "1"
         ? categoryChipLabel.filter((category) => category.id !== categoryId)
-        : categoryChipLabel.filter((category) => category.id === categoryId)
+        : categoryChipLabel.filter((category) => category.id === categoryId),
     );
     setSelectedCategory(categoryId);
   }
@@ -194,7 +194,7 @@ export default function ({ fullMenu }) {
           gap={0}
           onClick={() => {
             router.push(
-              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`,
             );
           }}
         >

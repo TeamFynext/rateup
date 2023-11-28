@@ -123,18 +123,16 @@ export function DraggableQuestionCard({
                     size={"1rem"}
                   />
                 )}
-                {true ? (
-                  <ActionIcon
-                    onClick={() => {
-                      closeDialog();
-                      toggle();
-                    }}
-                    variant="subtle"
-                    color="gray"
-                  >
-                    <IconTrash />
-                  </ActionIcon>
-                ) : null}
+                <ActionIcon
+                  onClick={() => {
+                    closeDialog();
+                    toggle();
+                  }}
+                  variant="subtle"
+                  color="gray"
+                >
+                  <IconTrash />
+                </ActionIcon>
               </Group>
             </Box>
           </div>

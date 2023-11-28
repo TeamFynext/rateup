@@ -44,6 +44,8 @@ import { useHover } from "@mantine/hooks";
 import { GoogleIcon } from "../../Button/GoogleIcon";
 import { googleReviewSupportedTypes } from "../../../utils/data";
 import { getQuestionTypeLabel } from "../../../utils/enums";
+import { useRouter } from "next/router";
+import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
 
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
@@ -58,11 +60,22 @@ export function QuestionTypeSelection({
   isWaSurvey,
 }: QuestionTypeSelectionProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const router = useRouter();
+  const { surveyId } = router.query as { surveyId: string };
+  const [isSaving, setIsSaving] = useState(false);
+  const questionCreateMutation = useQuestionCreateMutation({
+    surveyId,
+    setIsSaving,
+  });
   const handleTypeSelection = (type: QuestionType) => {
     const newQ = createBlankQuestion(type, selectedLanguage);
-    setSelectedQ(newQ);
-    setActiveTab(QuestionTabsEnum.Edit);
-    setIsGoogleReviewSupported(false);
+    const { id, ...restData } = newQ;
+    const saveQ = { ...restData };
+    questionCreateMutation.mutateAsync(saveQ).then((r) => {
+      setSelectedQ(r.data);
+      setActiveTab(QuestionTabsEnum.Edit);
+      setIsGoogleReviewSupported(false);
+    });
   };
   const filteredQuestionTypes = isWaSurvey
     ? WaSurveyQuestionTypes

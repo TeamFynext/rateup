@@ -66,7 +66,13 @@ export function CategoriesDrawer({
                 transform: "translate(-50%, 0)",
               }}
             >
-              <Text c="white" w={"100%"} fw={600} ta={"center"} tt={"capitalize"}>
+              <Text
+                c="white"
+                w={"100%"}
+                fw={600}
+                ta={"center"}
+                tt={"capitalize"}
+              >
                 {c.name}
               </Text>
             </Box>

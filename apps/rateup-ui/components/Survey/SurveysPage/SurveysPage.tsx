@@ -142,7 +142,7 @@ export function SurveysPage({
         close={closeCreateSurvey}
         surveyType={surveyType}
         onCreate={(s) => {
-          router.push(`${router.pathname}/${s.id}`);
+          router.push(`${router.pathname}/${s?.id}`);
         }}
         teamsData={teamRes?.data}
       />

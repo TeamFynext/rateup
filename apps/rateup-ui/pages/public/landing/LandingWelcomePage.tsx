@@ -19,8 +19,6 @@ function LandingWelcomePage({ setStartClicked, largeScreen, landingid }) {
     data: LandingWelcomeData,
   } = usePublicWelcomeThemeByLandingId(landingid);
 
-
-
   return (
     <>
       {/* .........Survey Welcome page.......... */}

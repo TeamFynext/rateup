@@ -290,7 +290,7 @@ export function SurveyCard({
         {/* <Text>Total Responses : #</Text> */}
         {/* //TODO */}
         <Link
-          href={`/dashboard/surveys/${survey.id}?tab=Responses`}
+          href={`/dashboard/surveys/${survey?.id}?tab=Responses`}
           style={{ color: "var(--tertiary-color)" }}
           onClick={(e) => {
             e.stopPropagation();

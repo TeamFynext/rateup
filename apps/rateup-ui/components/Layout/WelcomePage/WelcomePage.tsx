@@ -32,7 +32,7 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
         borderRadius: 18,
         ...surveyThemeData?.bgStyles,
       }}
-        ff={lexend.style.fontFamily}
+      ff={lexend.style.fontFamily}
     >
       <BackgroundImage
         h={"100%"}
@@ -81,9 +81,9 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
             {surveyThemeData?.headerText}
           </Title>
 
-            <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
-              {surveyThemeData?.descText}
-            </Text>
+          <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
+            {surveyThemeData?.descText}
+          </Text>
 
           <Button
             mt={20}

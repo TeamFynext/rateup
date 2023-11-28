@@ -36,7 +36,7 @@ export const useQuestionCreateMutation = ({
       notifications.show({
         message: "Question created",
       });
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       setIsSaving(false);
     },
     onError: (e) => {
@@ -69,7 +69,7 @@ export const useQuestionUpdateMutation = ({
         autoClose: 1000,
         // icon: <IconCheck />,
       });
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       setIsSaving(false);
     },
     onError: (err) => {

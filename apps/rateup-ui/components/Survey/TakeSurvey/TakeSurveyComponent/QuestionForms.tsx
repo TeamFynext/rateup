@@ -1,6 +1,7 @@
 import {
   IconCalendarEvent,
   IconMail,
+  IconPlus,
   IconThumbDownFilled,
   IconThumbUpFilled,
   IconX,
@@ -26,13 +27,9 @@ import {
   NumberInput,
   Select,
   MultiSelect,
-  Combobox,
-  InputBase,
-  useCombobox,
   Flex,
   ActionIcon,
 } from "@mantine/core";
-import Flag from "react-world-flags";
 import { getFileName } from "../../SurveyTheme/components/BackgroundStyles";
 import SmileyRating from "./SmileyRating";
 import { uploadFile } from "../../../../utils/file-upload/upload";
@@ -113,133 +110,52 @@ export function NumberForm() {
 
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [phoneError, setPhoneError] = useState(null);
-  const [isFocused, setIsFocused] = useState(false);
-
-  const countries = [
-    {
-      name: "India",
-      code: "+91",
-      flag: "IN",
-    },
-    // {
-    //   name: 'USA',
-    //   code: '+1',
-    //   flag: 'US',
-    // },
-    // {
-    //   name: 'UAE',
-    //   code: '+971',
-    //   flag: 'AE',
-    // },
-    // Add more countries...
-  ];
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-  });
-
-  const [value, setValue] = useState<string | null>(countries[0].code);
-
-  const options = countries?.map((country) => {
-    return (
-      <Combobox.Option
-        style={{ minWidth: "150px" }}
-        value={country?.code}
-        key={country?.code}
-      >
-        <Group>
-          <Flag code={country?.flag} height="16" />
-          {/* <Text>{`${country.name} `}</Text> */}
-        </Group>
-      </Combobox.Option>
-    );
-  });
-
-  //TODO : save with 91 in db if required
-
-  useEffect(() => {
-    if (response)
-      setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
-  }, [response]);
-
-  const handleInputBlur = () => {
-    if (phoneError) {
-    }
-    setIsFocused(false);
+  const [countryCode, setCountryCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const handleCountryCode = (e) => {
+    setCountryCode(e.currentTarget.value);
   };
-  const handleInputChange = (value: number) => {
-    setIsFocused(true);
-    const phone = value;
-    updateResponse(phone);
-    setPhoneError(/^\d{10}$/.test(response) ? null : "Invalid phone number");
+  const handlePhoneNumber = (e) => {
+    setPhoneNumber(e.currentTarget.value);
   };
-
+  let error = "";
+  if (!/^\d+$/.test(countryCode) || !/^\d+$/.test(phoneNumber))
+    error = "* Invalid Phone Number";
+  else {
+    error = "";
+    updateResponse(countryCode + phoneNumber);
+  }
   return (
-    <Stack>
-      <Paper
-        shadow="sm"
-        className={classes.inputBox}
-        style={{ maxWidth: "300px" }}
-      >
-        <Group align="flex-start">
-          <Combobox
-            store={combobox}
-            withinPortal={false}
-            onOptionSubmit={(val) => {
-              setValue(val);
-              combobox.closeDropdown();
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                onClick={() => combobox.toggleDropdown()}
-                rightSectionPointerEvents="none"
-                variant="unstyled"
-              >
-                {(
-                  <Stack>
-                    <Flag
-                      code={
-                        countries?.find((country) => country?.code === value)
-                          ?.flag
-                      }
-                      height="15"
-                    />
-                  </Stack>
-                ) || <Input.Placeholder>Select a country</Input.Placeholder>}
-              </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown>
-              <Combobox.Options>{options}</Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
-          <NumberInput
-            size="sm"
-            max={9999999999}
-            placeholder="Enter 10 digit phone number"
-            hideControls
-            value={parseInt(response) || null}
-            onChange={handleInputChange}
-            onBlur={handleInputBlur}
-            variant="unstyled"
-            style={{ minWidth: "185px" }}
-            classNames={{
-              input: classes.input,
-            }}
+    <Paper
+      shadow="sm"
+      className={classes.inputBox}
+      style={{ maxWidth: "300px" }}
+    >
+      <Stack gap={0}>
+        <Group gap={0} align="flex-start">
+          <TextInput
+            label="C. Code"
+            value={countryCode}
+            onChange={handleCountryCode}
+            leftSection={<IconPlus size={"1rem"} />}
+            maw={70}
+            maxLength={3}
+            placeholder="code"
+          />
+          <TextInput
+            label="Phone Number"
+            value={phoneNumber}
+            onChange={handlePhoneNumber}
+            maxLength={12}
+            placeholder="Enter phone number"
+            miw={200}
           />
         </Group>
-      </Paper>
-
-      <Text c="red" fz="xs" ml="sm">
-        {" "}
-        {phoneError && !isFocused ? "* Invalid phone number" : null}
-      </Text>
-    </Stack>
+        <Text c="red" fz="xs">
+          {error}
+        </Text>
+      </Stack>
+    </Paper>
   );
 }
 

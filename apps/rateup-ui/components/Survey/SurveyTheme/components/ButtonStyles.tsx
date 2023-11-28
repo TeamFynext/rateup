@@ -35,7 +35,10 @@ function ButtonStyles({
 
   //----------font loading--------
   useEffect(() => {
-    if (JSON.stringify(form?.values?.buttonStyles) !== JSON.stringify(currentStyles?.buttonStyles)) {
+    if (
+      JSON.stringify(form?.values?.buttonStyles) !==
+      JSON.stringify(currentStyles?.buttonStyles)
+    ) {
       setCurrentstyles({
         ...currentStyles,
         buttonStyles: form?.values?.buttonStyles,

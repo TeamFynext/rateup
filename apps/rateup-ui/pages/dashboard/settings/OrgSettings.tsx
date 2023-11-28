@@ -30,6 +30,7 @@ import {
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
 import { useForm } from "@mantine/form";
+import { IconPlus } from "@tabler/icons-react";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -54,12 +55,6 @@ const OrgSettings = () => {
         const regex = /^[0-9]+$/;
         if (!regex.test(value)) {
           return "Only numbers allowed";
-        }
-        if (value.length < 10) {
-          return "Min 10 digits long";
-        }
-        if (value.length > 10) {
-          return "Invalid phone (10 digits only allowed)";
         }
         return null;
       },
@@ -196,9 +191,11 @@ const OrgSettings = () => {
               <Grid.Col span={{ xs: 10, lg: 4 }}>
                 <ContainedTextField
                   withAsterisk
-                  label="Phone"
+                  label="Phone with country code"
                   placeholder="Enter your organization phone number"
                   {...orgForm?.getInputProps("phone")}
+                  leftSection={<IconPlus size={"1rem"} color="#373A40" />}
+                  maxLength={15}
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 6 }}>
