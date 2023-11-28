@@ -7,7 +7,6 @@ const defaultTheme = {
     buttonText: "Go to survey",
   
     headerStyles: {
-      fontFamily: "Roboto",
       fontWeight: 600,
       fontSize: 30,
       textAlign: "center",
@@ -15,14 +14,12 @@ const defaultTheme = {
     },
     
     descStyles: {
-      fontFamily: "Roboto",
       fontWeight: 400,
       fontSize: 14,
       textAlign: "center",
       color: "#000000",
     },
     buttonStyles: {
-      fontFamily: "Roboto",
       fontWeight: 600,
       fontSize: 15,
       textAlign: "center",
@@ -31,7 +28,6 @@ const defaultTheme = {
       backgroundColor:"#1c518e"
     },
     bgStyles: {
-      fontFamily: "Roboto",
       fontWeight: 600,
       fontSize: 15,
       textAlign: "center",

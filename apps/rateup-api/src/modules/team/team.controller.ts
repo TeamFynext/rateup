@@ -10,6 +10,7 @@ import {
   deleteMemberInvite,
   editTeam,
   getTeamMembersAndFromInvitation,
+  resendInviteTeamMember,
 } from "./team.service";
 import {
   CreateTeamInput,
@@ -119,6 +120,19 @@ export async function inviteMemberHandler(
   }
 }
 
+export async function resendInviteMemberHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    await resendInviteTeamMember(request.params.id);
+    return reply.code(204).send("invite resended");
+  } catch (e: any) {
+    return reply.code(500).send({ success: false, message: e.message });
+  }
+}
 export async function completeInviteHandler(
   request: FastifyRequest<{
     Params: InviteCompleteInput;
