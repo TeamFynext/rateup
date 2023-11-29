@@ -16,7 +16,7 @@ export function transformData(inputData: any) {
   };
 
   const defaultTexts = {
-    headerText: inputData?.titleText ?? "Welcome To",
+    headerText: inputData?.headerText ?? "Welcome To",
     titleText: inputData?.menu?.displayName || "HOTEL NAME",
     locationText: inputData?.menu?.locationText || "",
     websiteText: inputData?.menu?.websiteText || "",

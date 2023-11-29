@@ -252,7 +252,7 @@ function WelcomePageView({
                   }}
                   styles={{
                     input: {
-                      color: "#fff",
+                      color:"inherit",
                       fontSize: "18px",
                       textAlign: "center",
                       minWidth: "150px",

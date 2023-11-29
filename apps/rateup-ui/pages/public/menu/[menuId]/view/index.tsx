@@ -27,7 +27,7 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
   const params = context.params;
 
   const fullMenu = await getFullMenuById(params.menuId);
-
+  
   return { props: { fullMenu: fullMenu } };
 };
 
@@ -103,7 +103,6 @@ export default function ({ fullMenu }) {
           <div>
             <Text
               ta={"center"}
-              tt={"capitalize"}
               fz={
                 fullMenu?.menuLanding?.headerStyle?.fontSize
                   ? `clamp(1.125rem, 0.5rem + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
@@ -112,10 +111,9 @@ export default function ({ fullMenu }) {
               fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
               c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
             >
-              Welcome To
+              {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
             </Text>
             <Text
-              tt={"uppercase"}
               fz={
                 fullMenu?.menuLanding?.titleStyle?.fontSize
                   ? `clamp(1.75rem, 0.857rem + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`

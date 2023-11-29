@@ -86,6 +86,20 @@ function ButtonStyles({
               {...form.getInputProps("buttonStyles.backgroundColor")}
               placeholder="Select description color"
             />
+
+            <Text mt={10} fw={500}>
+              Choose text color
+            </Text>
+            <ColorPicker
+              fullWidth
+              format="rgba"
+              {...form.getInputProps("buttonStyles.color")}
+            />
+            <ColorInput
+              mt="sm"
+              {...form.getInputProps("buttonStyles.color")}
+              placeholder="Select text color"
+            />
           </Box>
           <Flex justify={"center"}>
             <Button

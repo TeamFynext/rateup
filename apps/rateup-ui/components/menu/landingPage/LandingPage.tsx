@@ -327,7 +327,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                                 ...headerMobile,
                                 border: "none",
                                 textAlign: "center",
-                                textTransform: "capitalize",
                                 fontFamily: "inherit",
                               },
                             }}
@@ -351,7 +350,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                                 ...titleMobile,
                                 border: "none",
                                 textAlign: "center",
-                                textTransform: "uppercase",
                                 fontFamily: "inherit",
                               },
                             }}
@@ -655,20 +653,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         /> */}
                         <SimpleGrid mx={"lg"} cols={2}>
                           <ContainedSelection
-                            mt={"lg"}
-                            withAsterisk
                             allowDeselect={false}
-                            label=""
+                            label=" "
                             placeholder="font weight"
-                            required
                             data={FontWeights}
                             {...form.getInputProps("headerStyle.fontWeight")}
                           />
                           <ContainedNumberInput
-                            withAsterisk
                             label="Enter between 0 to 70"
                             placeholder="font size"
-                            required
                             clampBehavior="strict"
                             min={0}
                             max={70}
@@ -685,20 +678,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       <Tabs.Panel value="title">
                         <SimpleGrid mx={"lg"} cols={2}>
                           <ContainedSelection
-                            mt={"lg"}
-                            withAsterisk
-                            label=""
+                            label=" "
                             allowDeselect={false}
                             placeholder="font weight"
-                            required
                             data={FontWeights}
                             {...form.getInputProps("titleStyle.fontWeight")}
                           />
                           <ContainedNumberInput
-                            withAsterisk
                             label="Enter between 0 to 70"
                             placeholder="font size"
-                            required
                             clampBehavior="strict"
                             min={0}
                             max={70}

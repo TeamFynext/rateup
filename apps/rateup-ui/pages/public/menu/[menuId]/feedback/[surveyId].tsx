@@ -100,7 +100,6 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
               }
               fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
               c={menuLanding?.headerStyle?.color ?? "inherit"}
-              tt={"capitalize"}
               truncate
               mt={10}
             >
@@ -115,7 +114,6 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
               fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
               c={menuLanding?.titleStyle?.color ?? "inherit"}
               ta={"center"}
-              tt={"uppercase"}
             >
               {menuLanding?.menu?.displayName}
             </Text>
