@@ -56,6 +56,7 @@ export function EditWhatsappSurvey({
           setSelectedQ={setSelectedQ}
           setActiveTab={setActiveTab}
           addQnTrigger={addQnTrigger}
+          isWaSurvey={true}
         />
       </PaperLayout>
       <PaperLayout p={"md"} style={{ flex: 3 }}>

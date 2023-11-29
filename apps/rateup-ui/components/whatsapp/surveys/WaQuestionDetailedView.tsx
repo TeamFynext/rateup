@@ -9,9 +9,17 @@ import {
   Box,
   useMantineTheme,
   Switch,
+  Badge,
+  Image,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
-import { IconX, IconEdit, IconEye, IconStar } from "@tabler/icons-react";
+import {
+  IconX,
+  IconEdit,
+  IconEye,
+  IconStar,
+  IconBrandGoogle,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -25,8 +33,8 @@ import {
   logicSupportedTypes,
 } from "../../../utils/data";
 import {
-  RateupButtonOutline,
   RateupButtonPrimary,
+  RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import { QuestionTabsEnum } from "./WaEditSurvey";
 import { LengthTracker } from "../../input/LengthTracker";
@@ -174,6 +182,9 @@ export function WaQuestionDetailedView({
       }}
       gap={"xs"}
     >
+      <Badge variant="outline" size="lg" mb={"sm"}>
+        {question.type}
+      </Badge>
       <Stack
         style={{
           height: "100%",
@@ -253,13 +264,22 @@ export function WaQuestionDetailedView({
             <Checkbox
               label="Required"
               fw={600}
+              mr="100px"
               {...form.getInputProps("required", { type: "checkbox" })}
             />
             {logicSupportedTypes.includes(question?.type) && (
-              <RateupButtonOutline
+              <RateupButtonSecondary
                 title={"Logic Jump"}
-                leftIcon={<IconEdit />}
+                leftIcon={
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
+                    width={30}
+                    height={30}
+                    fit="contain"
+                  />
+                }
                 size="sm"
+                color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&
@@ -269,10 +289,11 @@ export function WaQuestionDetailedView({
             )}
             {/* TODO: Implement Custom Validation*/}
             {googleReviewSupportedTypes.includes(question?.type) && (
-              <RateupButtonOutline
+              <RateupButtonSecondary
                 title={"Google Review"}
-                leftIcon={<IconStar />}
+                leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
+                color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&

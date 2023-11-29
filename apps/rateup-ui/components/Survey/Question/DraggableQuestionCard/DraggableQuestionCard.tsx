@@ -34,6 +34,7 @@ interface DraggableQuestionCardProps {
   handleOpenQuestion: (Q: Question) => void;
   selected: boolean;
   onDelete: (questionId: string) => void;
+  isWaSurvey?: boolean;
 }
 
 export function DraggableQuestionCard({
@@ -42,6 +43,7 @@ export function DraggableQuestionCard({
   selected,
   handleOpenQuestion,
   onDelete,
+  isWaSurvey,
 }: DraggableQuestionCardProps) {
   // TODO: ref lost when card is dragged to new place
   const { hovered, ref: hoverRef } = useHover();
@@ -50,6 +52,7 @@ export function DraggableQuestionCard({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isLoading, setIsLoading] = useState(false);
+  const theme = useMantineTheme();
 
   const questionDeleteMutation = useQuestionDeleteMutation(surveyId, (qId) => {
     onDelete(qId);
@@ -110,7 +113,11 @@ export function DraggableQuestionCard({
               >
                 {question.logic && (
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                    src={
+                      isWaSurvey == true
+                        ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
+                        : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`
+                    }
                     width={30}
                     height={30}
                     fit="contain"
@@ -118,7 +125,11 @@ export function DraggableQuestionCard({
                 )}
                 {question.googleReview && (
                   <IconBrandGoogle
-                    color="var(--tertiary-color)"
+                    color={
+                      isWaSurvey == true
+                        ? theme.colors["whatsapp-green"][6]
+                        : "var(--tertiary-color)"
+                    }
                     stroke={4}
                     size={"1rem"}
                   />

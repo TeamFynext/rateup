@@ -110,7 +110,7 @@ export function NumberForm() {
 
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [countryCode, setCountryCode] = useState("");
+  const [countryCode, setCountryCode] = useState("91");
   const [phoneNumber, setPhoneNumber] = useState("");
   const handleCountryCode = (e) => {
     setCountryCode(e.currentTarget.value);

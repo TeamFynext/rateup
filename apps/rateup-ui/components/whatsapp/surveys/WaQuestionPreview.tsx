@@ -49,6 +49,7 @@ export function WaQuestionPreview({
         <WaResponseMessage
           header={title}
           body={description}
+          footer="Please enter phone number with country code: 91XXXXXXXXXX"
           quickReplyButtons={["Use this number"]}
         />
       );

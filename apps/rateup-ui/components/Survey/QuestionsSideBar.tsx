@@ -20,6 +20,7 @@ interface QuestionsSideBarProps {
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
   addQnTrigger?: number;
+  isWaSurvey?: boolean;
 }
 export function QuestionsSideBar({
   questions,
@@ -27,6 +28,7 @@ export function QuestionsSideBar({
   selectedQ,
   setSelectedQ,
   addQnTrigger,
+  isWaSurvey,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -65,6 +67,7 @@ export function QuestionsSideBar({
       index={index}
       handleOpenQuestion={handleOpenQuestion}
       onDelete={onDelete}
+      isWaSurvey={isWaSurvey}
     />
   ));
 
