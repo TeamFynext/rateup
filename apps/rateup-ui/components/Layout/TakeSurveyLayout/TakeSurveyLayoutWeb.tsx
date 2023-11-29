@@ -8,6 +8,7 @@ import {
   Stack,
   Space,
   SegmentedControl,
+  Button,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
@@ -19,13 +20,13 @@ import {
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import WelcomePage from "../WelcomePage/WelcomePage";
-import Link from "next/link";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { notifications } from "@mantine/notifications";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import RateupRedirectCard from "../../Card/RateupRedirectCard";
 import { lexend400 } from "../../../utils/fonts";
+import { IconChevronRight } from "@tabler/icons-react";
 
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -221,6 +222,9 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
 
 function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  const [lang, setLang] = useState(languages[0]);
+
   return (
     <>
       <Stack pl="7vw" pt="10vh">
@@ -239,8 +243,8 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
           <SegmentedControl
             data={languages}
             placeholder="Select language"
-            value={selectedLanguage}
-            onChange={setSelectedLanguage}
+            value={lang}
+            onChange={setLang}
             orientation={isMobile ? "vertical" : "horizontal"}
             color="var(--tertiary-color)"
             size="md"
@@ -252,6 +256,18 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
           />
         </Stack>
       </Center>
+
+      <Group justify="flex-end">
+        <Button
+          radius={"xl"}
+          onClick={() => setSelectedLanguage(lang)}
+          size={isMobile ? "sm" : "lg"}
+          color="dark"
+          rightSection={<IconChevronRight />}
+        >
+          Continue
+        </Button>
+      </Group>
     </>
   );
 }

@@ -124,7 +124,7 @@ export async function getPublicSurvey(surveyId: string) {
 }
 
 export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
-  const res = await axiosClient.get(
+  const res = await axiosClientIP.get(
     `${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`,
   );
   return res.data as string;

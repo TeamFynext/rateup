@@ -1,5 +1,5 @@
 import { ReviewSuggestion } from "../../../types/global";
-import { axiosClient } from "../../apiClient";
+import { axiosClient, axiosClientIP } from "../../apiClient";
 
 const REVIEW_SUGGESTION_URL = "/reviewSuggestion";
 
@@ -11,7 +11,9 @@ export async function getPublicReviewsBySurveyTeamMapId(
   surveyTeamMapId: string,
 ) {
   return (
-    await axiosClient.get(`${REVIEW_SUGGESTION_URL}/public/${surveyTeamMapId}`)
+    await axiosClientIP.get(
+      `${REVIEW_SUGGESTION_URL}/public/${surveyTeamMapId}`,
+    )
   ).data as Array<ReviewSuggestion>;
 }
 export async function getReviewsCountByTeamId(teamId: string) {

@@ -34,6 +34,25 @@ import { getPublicSurveyGoogleLink } from "../../../../backend/surveys/survey.ap
 import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 
+export async function getServerSideProps(context) {
+  const { surveyId } = context.params;
+  const { msg } = context.query;
+
+  let propsToPass: any = { enableGoogleReview: false };
+  if (msg == "thanks") {
+    const [googleLink, reviews] = await Promise.all([
+      getPublicSurveyGoogleLink(surveyId),
+      getPublicReviewsBySurveyTeamMapId(surveyId),
+    ]);
+    propsToPass.googleLink = googleLink;
+    propsToPass.reviews = reviews;
+    if (googleLink) propsToPass.enableGoogleReview = true;
+  }
+  return {
+    props: propsToPass,
+  };
+}
+
 export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const router = useRouter();
@@ -42,7 +61,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
 
   useEffect(() => {
     //kioskMode redirect
-    if (k === "y" || k === "cs") {
+    if ((k === "y" || k === "cs") && !!!enableGoogleReview) {
       const timeoutId = setTimeout(() => {
         k === "cs"
           ? router.push(`/public/survey/cs`)
@@ -109,13 +128,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           )}
         </Stack>
       )}
-      <RateupRedirectCard
-        alternateLogo={
-          !enableBody &&
-          `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo_white.svg`
-        }
-        color={!enableBody ? "white" : "dark"}
-      />
+      <RateupRedirectCard alternateLogo={true} />
     </Flex>
   );
 }
@@ -277,23 +290,4 @@ function GoogleReview({ googleLink, reviewSuggestions }) {
       </Link>
     </Stack>
   );
-}
-
-export async function getServerSideProps(context) {
-  const { surveyId } = context.params;
-  const { msg } = context.query;
-
-  let propsToPass: any = { enableGoogleReview: false };
-  if (msg == "thanks") {
-    const [googleLink, reviews] = await Promise.all([
-      getPublicSurveyGoogleLink(surveyId),
-      getPublicReviewsBySurveyTeamMapId(surveyId),
-    ]);
-    propsToPass.googleLink = googleLink;
-    propsToPass.reviews = reviews;
-    if (googleLink) propsToPass.enableGoogleReview = true;
-  }
-  return {
-    props: propsToPass,
-  };
 }
