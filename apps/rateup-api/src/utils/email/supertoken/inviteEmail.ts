@@ -7,11 +7,21 @@ export function createEmailBody(invite_link : string, email_id : string) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>email</title>
         <style>
+          @media screen {
+            @font-face {
+              font-family: "Lexend";
+              font-style: normal;
+              font-weight: 400;
+              font-display: swap;
+              src: url(https://fonts.gstatic.com/s/lexend/v19/wlptgwvFAVdoq2_F94zlCfv0bz1WCzsWzLdneg.woff2)
+                format("woff2");
+            }
+          }
           body {
+            font-family: "Lexend";
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: serif;
           }
     
           .frame {
@@ -85,7 +95,7 @@ export function createEmailBody(invite_link : string, email_id : string) {
           }
         </style>
       </head>
-      <body style="max-width: 1000px;">
+      <body style="max-width: 1000px;font-family: 'Lexend', sans-serif;">
         <div class="frame">
           <div class="overlap-group">
             <table aria-describedby="email content">
