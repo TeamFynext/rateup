@@ -1,5 +1,6 @@
 .options-preview-container {
   flex-wrap: nowrap;
+  gap: 3rem;
 }
 
 .heading {

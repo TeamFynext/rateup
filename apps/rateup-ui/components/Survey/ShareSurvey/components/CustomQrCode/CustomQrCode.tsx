@@ -55,7 +55,7 @@ function CustomQRCode({
       const findingPatternModuleTransform = `translate(${x} ${y})`;
       const dataModuleTransform = `translate(${x + width / 4} ${
         y + height / 4
-      }) scale(0.5)`;
+      }) scale(0.7)`;
       const isFindingPatternModule = checkIsFindingPatternModule(i);
 
       const rect = (
