@@ -7,6 +7,7 @@ import {
   IUpdateProfile,
   IUpdateProfilePhoto,
   changeUserPassword,
+  checkEmailExist,
   createGoogleUser,
   fetchUserProfile,
   updateActiveStatus,
@@ -190,5 +191,10 @@ export function useUpdateActiveStatusMutation() {
         autoClose: 3000,
       });
     },
+  });
+}
+export function useCheckEmailExistMutation() {
+  return useMutation({
+    mutationFn: (data: { email: string }) => checkEmailExist(data),
   });
 }

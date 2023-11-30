@@ -63,7 +63,9 @@ export const resendInviteTeamMember = (id: string) =>
   axiosClient({
     url: `/team/invite/resend/${id}`,
     method: "PUT",
+    data:{}
   });
+  
 export const completeInvite = (inviteToken: String) =>
   axiosClient({
     url: `/team/complete-invite/${inviteToken}`,

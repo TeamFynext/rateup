@@ -39,6 +39,7 @@ export interface IUserInfoApiResponse {
   message: string;
   data: UserData;
 }
+const PUBLICUSER_URL = "/public/user/";
 
 export const fetchUserInfo = async (): Promise<IUserInfoApiResponse> => {
   const response = await axiosClient({
@@ -88,3 +89,12 @@ export const updateActiveStatus = (userId: string) =>
     url: `/user/update-active-status/${userId}`,
     method: "PUT",
   });
+
+export const checkEmailExist = async (data: { email: string }) => {
+  const response = await axiosClient({
+    url: `${PUBLICUSER_URL}check-email`,
+    method: "POST",
+    data,
+  });
+  return response?.data as { success: boolean };
+};

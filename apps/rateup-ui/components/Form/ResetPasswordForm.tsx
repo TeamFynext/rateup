@@ -3,18 +3,15 @@ import {
   IconSend,
   IconArrowAutofitLeft,
   IconChevronRight,
-  IconChevronLeft,
   IconArrowLeft,
+  IconX,
 } from "@tabler/icons-react";
 import {
-  Container,
   Title,
-  Space,
   Text,
   TextInput,
   PasswordInput,
   Anchor,
-  Paper,
   Group,
   Image,
   NavLink,
@@ -30,12 +27,14 @@ import {
 import { ResetSteps } from "../../utils/enums";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import styles from "./AuthForm.module.css";
+import { useCheckEmailExistMutation } from "../../backend/user/user.query";
+import { showNotification } from "../../utils/auth";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
   const [page, setPage] = useState(
-    token && rid === "emailpassword" ? ResetSteps.STEP_THREE : mode,
+    token && rid === "emailpassword" ? ResetSteps.STEP_THREE : mode
   );
 
   useEffect(() => {
@@ -76,7 +75,7 @@ const ResetPasswordForm = ({ mode }) => {
           return "Password should be at least 5 characters long";
         }
         if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return "Password should contain at least one letter and one number";
+          return "Password should contain at least one letter and one number!";
         }
         if (values.confirmPassword && value !== values.confirmPassword) {
           return "Passwords do not match";
@@ -97,16 +96,34 @@ const ResetPasswordForm = ({ mode }) => {
 
   const sendResetEmail = useSendResetEmail();
   const setNewPassword = useSetNewPassword();
-
+  const checkEmailMutaion = useCheckEmailExistMutation();
   const isEmailPage = page === ResetSteps.STEP_ONE;
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = isEmailPage
-    ? (values) => {
-        setIsLoading(true);
-        sendResetEmail(values.email).finally(() => {
+    ? async (values) => {
+        try {
+          const user = await checkEmailMutaion.mutateAsync({
+            email: values.email,
+          });
+          if (!user?.success) {
+            emailForm.setFieldError("email","User with this email does not exist!")
+            showNotification(
+              "error",
+              "red",
+              "Error",
+              "User with this email does not exist!",
+              <IconX size="1rem" />
+            );
+            return;
+          }
+          setIsLoading(true);
+          sendResetEmail(values.email).finally(() => {
+            setIsLoading(false);
+          });
+        } catch (error) {
           setIsLoading(false);
-        });
+        }
       }
     : (values) => {
         setIsLoading(true);
@@ -186,7 +203,7 @@ const ResetPasswordForm = ({ mode }) => {
               size="md"
               fullWidth={true}
               type="submit"
-              loading={isLoading}
+              loading={isLoading || checkEmailMutaion?.isPending}
               title={isEmailPage ? "Email Reset Link" : "Change Password"}
             />
             <Group justify="center" mt="xl" pt="xl">
@@ -223,7 +240,6 @@ const ResetPasswordForm = ({ mode }) => {
             <Text span c="blue" inherit>
               {emailTo}
             </Text>{" "}
-            . If it exists in our system.{" "}
           </Text>
 
           <Group justify="center" py="xl">
