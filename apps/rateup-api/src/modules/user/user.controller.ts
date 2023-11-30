@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  checkEmailExist,
   createUserSignup,
   getLoggedUserInfo,
   getLoggedUserProfile,
@@ -12,6 +13,7 @@ import {
   CreateUserGoogleSchema,
   UpdateProfilePhotoSchema,
   UpdateProfileSchema,
+  userEmailCheckSchemaInput,
 } from "./user.schema";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import Session from "supertokens-node/recipe/session";
@@ -220,4 +222,18 @@ export async function updateUserActiveStatusHandler(
   }
 
   reply.code(201).send({ success: true, data: "User deleted successfully..!" });
+}
+// controller to check if email is already exist or not
+export async function checkEmailExistHandler(
+  request: FastifyRequest<{
+    Body: userEmailCheckSchemaInput;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const user = await checkEmailExist(request.body.email);
+    return reply.code(200).send({ success: !!user });
+  } catch (e: any) {
+    return reply.code(500).send({ success: false, message: e.message });
+  }
 }

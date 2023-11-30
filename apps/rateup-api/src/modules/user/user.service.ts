@@ -243,3 +243,12 @@ export async function updateUserActiveStatus(userId: string) {
   });
   return user;
 }
+
+export async function checkEmailExist(email: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      email,
+    },
+  });
+  return user;
+}
