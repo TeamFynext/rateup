@@ -42,6 +42,7 @@ import { campaignSchemas } from "./modules/campaign/campaign.schema";
 import { campaignRoutes } from "./modules/campaign/campaign.route";
 import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSuggestion.schema";
 import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route";
+import { userPublicRoutes } from "./modules/user/user.public.routes";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -78,6 +79,7 @@ export function registerRoutes(server: FastifyInstance): void {
   });
   server.register(questionRoutes, { prefix: "api/question/:surveyId" });
   server.register(userRoutes, { prefix: "api/user" });
+  server.register(userPublicRoutes, { prefix: "api/public/user" });
   server.register(orgRoutes, { prefix: "api/org" });
   server.register(teamRoutes, { prefix: "api/team" });
   server.register(responseRoutes, { prefix: "api/response" });

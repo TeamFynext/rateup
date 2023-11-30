@@ -45,13 +45,18 @@ const updateProfilePhotoSchema = z.object({
     }),
 })
 
+const userEmailCheckSchema = z.object({
+  email: z.string().email(),
+});
+
 export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
   {
     createUserSignupSchema,
     createUserGoogleSchema,
     changeUserPasswordSchema,
     updateProfileSchema,
-    updateProfilePhotoSchema
+    updateProfilePhotoSchema,
+    userEmailCheckSchema
   },
   { $id: "userSchema" }
 );
@@ -63,7 +68,6 @@ export type CreateUserGoogleSchema = z.infer<typeof createUserGoogleSchema>;
 export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
-
-
+export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;
 
 
