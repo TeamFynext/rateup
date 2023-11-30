@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getFullMenuByIdHandler, getMenuByIdHandler } from "./menu.controller";
+import { getFullMenuByIdHandler, getMenuByIdHandler, visitedMenuLandingHandler } from "./menu.controller";
 import { $Mref } from "./menu.schema";
 
 export async function menuPublicRoutes(server: FastifyInstance) {
@@ -23,5 +23,14 @@ export async function menuPublicRoutes(server: FastifyInstance) {
                 }
             },
             getFullMenuByIdHandler
-        )
+        ),
+        server.post(
+            "/:menuId/visited",
+            {
+              schema: {
+                params: $Mref("ByMenuIdParamsSchema"),
+            },
+            },
+            visitedMenuLandingHandler
+          );
 }

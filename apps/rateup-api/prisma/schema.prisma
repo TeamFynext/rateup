@@ -434,12 +434,11 @@ model MenuLanding {
   menuPageEnabled       Boolean        @default(true)
   feedbackPageEnabled   Boolean        @default(false)
   catalogue             Boolean        @default(false)
+  visited               Int            @default(0)
   menu                  Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId                String         @unique @db.Uuid
   surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId       String?        @db.Uuid
-  // Survey                Survey?       @relation(fields: [surveyId], references: [id])
-  // surveyId              String?       @db.Uuid
 }
 
 model ReviewSuggestion {

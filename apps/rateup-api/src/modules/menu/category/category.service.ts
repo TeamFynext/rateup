@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma";
+import { deleteFile } from "../../../utils/upload/s3Upload";
 import {
   CreateMenuCategoryInput,
   SortMenuCategoryInput,
@@ -92,6 +93,34 @@ export async function sortMenuCategory(
 }
 
 export async function deleteMenuCategory(categoryId: string) {
+  const categoryData = await prisma.menuCategory.findFirst({
+    where: { id: categoryId },
+    select: {
+      image: true,
+      id: true,
+    },
+  });
+  if (categoryData) {
+    const items = await prisma.menuItem.findMany({
+      where: {
+        categoryId,
+      },
+      select: {
+        images: true,
+      },
+    });
+    let fileKeyArray = items?.flatMap((item) =>
+      item?.images?.map((image) => ({ Key: image }))
+    );
+    if (categoryData?.image) fileKeyArray.push({ Key: categoryData?.image });
+    const params = {
+      Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
+      Delete: {
+        Objects: fileKeyArray,
+      },
+    };
+    if (fileKeyArray?.length > 0) await deleteFile(params);
+  }
   const category = await prisma.menuCategory.delete({
     where: {
       id: categoryId,
