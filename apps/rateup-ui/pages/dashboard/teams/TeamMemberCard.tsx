@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Flex,
   Text,
@@ -8,27 +8,27 @@ import {
   Stack,
   Title,
   Button,
-  Group,
 } from "@mantine/core";
 import {
-  IconCheck,
   IconDots,
   IconPencilMinus,
   IconSend,
   IconTrash,
 } from "@tabler/icons-react";
-import { deleteInviteById } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "../../../context/UserContext";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { MemberEditFormModal } from "../members";
 import { UserRole } from "../../../utils/enums";
-import { userResendInviteTeamMutation } from "../../../backend/team/team.query";
+import {
+  useDeleteInviteMutation,
+  userResendInviteTeamMutation,
+} from "../../../backend/team/team.query";
 import { showErrorToast } from "../../../utils/notifications";
 
 const TeamMemberCard = ({
   member,
+  teamID,
 }: {
   member: {
     id: string;
@@ -38,6 +38,7 @@ const TeamMemberCard = ({
     status?: string;
     active?: boolean;
   };
+  teamID?: string;
 }) => {
   const { user } = useUser();
   const [memberModalOpenId, setMemberModalOpenedId] = useState("");
@@ -53,7 +54,11 @@ const TeamMemberCard = ({
               </Text>
             </Stack>
             {member?.status === "PENDING" ? (
-              <TeamMemberMenu status={member?.status} inviteId={member.id} />
+              <TeamMemberMenu
+                status={member?.status}
+                inviteId={member.id}
+                teamID={teamID}
+              />
             ) : (
               <Button
                 size="compact-sm"
@@ -112,73 +117,33 @@ const TeamMemberCard = ({
 
 export default TeamMemberCard;
 
-function TeamMemberMenu({ status, inviteId }) {
-  const [deleteInviteId, setDeleteInviteId] = useState("");
-  const queryClient = useQueryClient();
+function TeamMemberMenu({ status, inviteId, teamID }) {
   const { mutate, isPending, isError } = userResendInviteTeamMutation();
-  useEffect(() => {
-    deleteInviteId && deleteInviteMutation.mutate();
-    if (deleteInviteId) {
-      notifications.show({
-        id: "load-data",
-        loading: true,
-        title: "Deleting Invite..",
-        message: `Hold on, Member invite is getting deleted.`,
-        autoClose: false,
-        withCloseButton: false,
-      });
-    }
-  }, [deleteInviteId]);
-
-  if (isPending) {
+  const deleteInviteMutation = useDeleteInviteMutation(teamID);
+  if (deleteInviteMutation?.isPending || isPending) {
     notifications.show({
-      id: "load-data-invitaion",
+      id: deleteInviteMutation?.isPending
+        ? "load-data-deleting"
+        : "load-data-invitaion",
       loading: true,
-      title: "Resending Invitation..",
-      message: "Hold on, Team Invitation Resending.",
+      title: deleteInviteMutation?.isPending
+        ? "Deleting Invite.."
+        : "Resending Invitation..",
+      message: deleteInviteMutation?.isPending
+        ? "Hold on, Member invite is getting deleted."
+        : "Hold on, Team Invitation Resending.",
       autoClose: false,
       withCloseButton: false,
     });
   }
-  if (isError){
-    showErrorToast("Team Invitation Failed","load-data-invitaion")
+  if (isError || deleteInviteMutation?.isError) {
+    showErrorToast(
+      isError
+        ? "Team Invitation Resend Failed"
+        : "Team Invitation Deletion Failed",
+      isError ? "load-data-invitaion" : "load-data-deleting"
+    );
   }
-    const handleDeleteInvite = async () => {
-      return deleteInviteById(deleteInviteId);
-    };
-
-  const deleteInviteMutation = useMutation({
-    mutationFn: () => handleDeleteInvite(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }), //update team list on delete
-        notifications.update({
-          id: "load-data",
-          color: "teal",
-          title: "Success",
-          loading: false,
-          message: "Invite deleted successfully.",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
-      close();
-      setDeleteInviteId("");
-    },
-
-    onError: (error: Error) => {
-      console.error("Error :", error.message);
-      notifications.update({
-        id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-      setDeleteInviteId("");
-    },
-  });
-
   return (
     <Menu width={200}>
       <Menu.Target>
@@ -214,7 +179,7 @@ function TeamMemberMenu({ status, inviteId }) {
             leftSection={<IconTrash />}
             onClick={(e) => {
               e.stopPropagation();
-              setDeleteInviteId(inviteId);
+              deleteInviteMutation?.mutate(inviteId);
             }}
           >
             Delete Invite

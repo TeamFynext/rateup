@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IEditTeam,
   createTeam,
+  deleteInviteById,
   editTeam,
   getTeamMembersFromInvitation,
   getTeamsByUser,
@@ -158,6 +159,26 @@ export function userResendInviteTeamMutation() {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
+    },
+  });
+}
+export function useDeleteInviteMutation(teamId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteInviteById(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }),
+      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers",teamId] }),
+      notifications.update({
+        id: "load-data-deleting",
+        color: "teal",
+        title: "Success",
+        loading: false,
+        message: "Invite deleted successfully.",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    close();
     },
   });
 }
