@@ -406,6 +406,11 @@ export interface Data {
   landingData?: boolean;
   surveyId?: string;
   catalogue?: boolean;
+  surveyTeamMapId?: string;
+  visited?: number;
+  surveyTeamMap?: {
+    surveyId?: string;
+  };
 }
 
 export interface Style {

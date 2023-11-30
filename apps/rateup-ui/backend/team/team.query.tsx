@@ -150,7 +150,7 @@ export function userResendInviteTeamMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
         notifications.update({
-          id: "load-data",
+          id: "load-data-invitaion",
           color: "teal",
           loading: false,
           title: "Resend Invitation Success",

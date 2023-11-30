@@ -187,3 +187,8 @@ export async function updateSurveyCompleted(surveyTeamMapId: string) {
     `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/completed`,
   );
 }
+
+export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
+  const res = await axiosClient.get(`${SURVEYURL}/surveyStats/${surveyTeamMapId}`);
+  return res.data as STStats;
+}

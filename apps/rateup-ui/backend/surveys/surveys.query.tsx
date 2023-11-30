@@ -21,6 +21,7 @@ import {
   updateSurveyLandingPage,
   getActiveSurveysSummary,
   deleteSurvey,
+  getSurveyStatsBySurveyTeamMapId,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -472,3 +473,11 @@ export function useUpdateSurveyMutation() {
   });
   return surveyUpdateMutation;
 }
+
+export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
+  return useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: ["surveyStats", surveyTeamMapId],
+    queryFn: () => getSurveyStatsBySurveyTeamMapId(surveyTeamMapId),
+  });
+};

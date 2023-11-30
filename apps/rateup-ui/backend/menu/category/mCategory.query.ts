@@ -71,13 +71,13 @@ export const useDeleteMenuCategoryMutation = (
   const deleteMutation = useMutation({
     mutationFn: deleteMenuCategory,
     onSuccess: () => {
-      showSuccessToast("Menu category deleted successfully");
+      showSuccessToast("Menu category deleted successfully","delete-data-menu-category");
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
 
       onSuccess();
     },
     onError: () => {
-      showErrorToast("Error deleting menu category");
+      showErrorToast("Error deleting menu category","delete-data-menu-category");
       onError();
     },
   });

@@ -25,6 +25,7 @@ import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { MemberEditFormModal } from "../members";
 import { UserRole } from "../../../utils/enums";
 import { userResendInviteTeamMutation } from "../../../backend/team/team.query";
+import { showErrorToast } from "../../../utils/notifications";
 
 const TeamMemberCard = ({
   member,
@@ -114,7 +115,7 @@ export default TeamMemberCard;
 function TeamMemberMenu({ status, inviteId }) {
   const [deleteInviteId, setDeleteInviteId] = useState("");
   const queryClient = useQueryClient();
-  const { mutate, isPending } = userResendInviteTeamMutation();
+  const { mutate, isPending, isError } = userResendInviteTeamMutation();
   useEffect(() => {
     deleteInviteId && deleteInviteMutation.mutate();
     if (deleteInviteId) {
@@ -131,7 +132,7 @@ function TeamMemberMenu({ status, inviteId }) {
 
   if (isPending) {
     notifications.show({
-      id: "load-data",
+      id: "load-data-invitaion",
       loading: true,
       title: "Resending Invitation..",
       message: "Hold on, Team Invitation Resending.",
@@ -139,9 +140,12 @@ function TeamMemberMenu({ status, inviteId }) {
       withCloseButton: false,
     });
   }
-  const handleDeleteInvite = async () => {
-    return deleteInviteById(deleteInviteId);
-  };
+  if (isError){
+    showErrorToast("Team Invitation Failed","load-data-invitaion")
+  }
+    const handleDeleteInvite = async () => {
+      return deleteInviteById(deleteInviteId);
+    };
 
   const deleteInviteMutation = useMutation({
     mutationFn: () => handleDeleteInvite(),

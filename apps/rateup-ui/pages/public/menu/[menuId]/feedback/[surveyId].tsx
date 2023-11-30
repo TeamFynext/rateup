@@ -13,7 +13,10 @@ import { useRouter } from "next/router";
 import { IconMapPin, IconWorld } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
 import classes from "./Feedback.module.css";
-import { getMenuPublicById } from "../../../../../backend/menu/menu.api";
+import {
+  getMenuPublicById,
+  updateMenuVisitedMutation,
+} from "../../../../../backend/menu/menu.api";
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
@@ -28,6 +31,7 @@ export const getServerSideProps = async (context: { params: MenuProp }) => {
   const params = context.params;
 
   const menuLanding = await getMenuPublicById(params.menuId);
+  await updateMenuVisitedMutation(params.menuId);
 
   return { props: { menuLanding: menuLanding } };
 };

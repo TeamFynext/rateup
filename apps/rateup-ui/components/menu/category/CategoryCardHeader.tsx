@@ -6,8 +6,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import React from "react";
-import DeleteConfirmationBox from "../dialogBox/DeleteConfirmationBox";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 
 interface CategoryCardHeaderProps {
   readonly category: MenuCategory;
@@ -39,12 +40,26 @@ export function CategoryCardHeader({
         {category.name}
       </Text>
       <Group>
-        <DeleteConfirmationBox
-          closeDialog={closeDialog}
-          dialogOpened={dialogOpened}
-          data={category?.id}
-          mutation={handleDelete}
-          text={"Are you sure to delete this Menu Category?"}
+        <ConfirmationModal
+          forDeleteFunctionality
+          opened={dialogOpened}
+          onClose={closeDialog}
+          headerLabel="Are you sure to delete this category?"
+          headerTitle="Delete Category?"
+          confirmLabel="Delete"
+          onConfirm={(e) => {
+            e.stopPropagation();
+            notifications.show({
+              id: "delete-data-menu-category",
+              loading: true,
+              title: "Deleting category..",
+              message: `Hold on, category is getting deleted...`,
+              autoClose: false,
+              withCloseButton: false,
+            });
+            handleDelete.mutate(category?.id);
+            closeDialog();
+          }}
         />
         <Button
           c={"var(--tertiary-color)"}

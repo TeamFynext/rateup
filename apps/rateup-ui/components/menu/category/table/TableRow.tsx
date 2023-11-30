@@ -11,9 +11,10 @@ import {
 import React from "react";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
-import DeleteConfirmationBox from "../../dialogBox/DeleteConfirmationBox";
 import { useDisclosure } from "@mantine/hooks";
 import { IconMenuOrder } from "@tabler/icons-react";
+import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import { notifications } from "@mantine/notifications";
 
 const TableRow = ({
   item,
@@ -67,12 +68,26 @@ const TableRow = ({
       </Table.Td>
       <Table.Td>
         <Group maw="100px" h="100px" align="center">
-          <DeleteConfirmationBox
-            closeDialog={close}
-            dialogOpened={dialogOpened}
-            data={item?.id}
-            mutation={deleteItemMutation}
-            text={"Are you sure to delete this Menu Item?"}
+          <ConfirmationModal
+            forDeleteFunctionality
+            opened={dialogOpened}
+            onClose={close}
+            headerLabel="Are you sure to delete this Menu Item?"
+            headerTitle="Delete Menu Item?"
+            confirmLabel="Delete"
+            onConfirm={(e) => {
+              e.stopPropagation();
+              notifications.show({
+                id: "delete-data-menu-item",
+                loading: true,
+                title: "Deleting menu item..",
+                message: `Hold on, menu item is getting deleted...`,
+                autoClose: false,
+                withCloseButton: false,
+              });
+              deleteItemMutation.mutate(item?.id)
+              close()
+            }}
           />
           <ActionIcon
             c={"var(--tertiary-color)"}

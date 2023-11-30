@@ -37,3 +37,7 @@ export const getFullMenuPublicById = async (menuId: string) => {
     return null;
   }
 };
+
+export async function updateMenuVisitedMutation(menuId: string) {
+  return await axiosClient.post(`${PUBLIC_MENU_URL}/${menuId}/visited`, {});
+}

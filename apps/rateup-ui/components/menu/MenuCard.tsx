@@ -13,8 +13,8 @@ import { getTimeSince } from "../../utils";
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
-import { updateSuccessToast } from "../../utils/notifications";
-import DeleteConfirmationBox from "./dialogBox/DeleteConfirmationBox";
+import ConfirmationModal from "../Modal/ConfirmationModal";
+import { notifications } from "@mantine/notifications";
 
 export function MenuCard({
   menu,
@@ -30,7 +30,7 @@ export function MenuCard({
     setTimeSince(getTimeSince(menu.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(menu.createdAt)),
-      5000,
+      5000
     );
     return () => clearInterval(timeoutID);
   }, [menu?.createdAt]);
@@ -96,20 +96,32 @@ function MenuCardMenu({ menuId, teamId, close }) {
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
-    () => {},
+    () => {}
   );
   const router = useRouter();
 
-  if (deleteMutation.isPending)
-    updateSuccessToast("Hold on, Menu is getting deleted", "menu-delete");
   return (
     <Menu offset={0} withArrow>
-      <DeleteConfirmationBox
-        closeDialog={closeDialog}
-        dialogOpened={dialogOpened}
-        data={menuId}
-        mutation={deleteMutation}
-        text={"Are you sure to delete this Menu?"}
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={dialogOpened}
+        onClose={closeDialog}
+        headerLabel="Are you sure to delete this Menu?"
+        headerTitle="Delete Menu?"
+        confirmLabel="Delete"
+        onConfirm={(e) => {
+          e.stopPropagation();
+          notifications.show({
+            id: "delete-data-menu",
+            loading: true,
+            title: "Deleting menu..",
+            message: `Hold on, menu is getting deleted...`,
+            autoClose: false,
+            withCloseButton: false,
+          });
+          deleteMutation.mutate(menuId);
+          closeDialog();
+        }}
       />
       <Menu.Target>
         <Group

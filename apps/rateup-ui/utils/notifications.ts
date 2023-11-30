@@ -6,11 +6,13 @@ export function showSuccessToast(
   id = undefined,
   icon?: React.ReactNode,
 ) {
-  notifications.show({
+  notifications.update({
+    id:id,
     color: "teal",
     title: "Success",
     message: message,
     autoClose: 2000,
+    loading:false,
     icon,
   });
 }
@@ -20,11 +22,13 @@ export function showErrorToast(
   id?: string,
   icon?: React.ReactNode,
 ) {
-  notifications.show({
+  notifications.update({
+    id:id,
     color: "red",
     title: "Error",
     message: message,
     autoClose: 2000,
+    loading:false,
     icon,
   });
 }

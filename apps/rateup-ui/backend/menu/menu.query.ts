@@ -8,6 +8,7 @@ import {
   getMenuPublicById,
   getMenusByTeamId,
   updateMenu,
+  updateMenuVisitedMutation,
 } from "./menu.api";
 import { showSuccessToast, showErrorToast } from "../../utils/notifications";
 
@@ -92,15 +93,21 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   const deleteMutation = useMutation({
     mutationFn: deleteMenu,
     onSuccess: () => {
-      showSuccessToast("Menu deleted successfully", "menu-delete");
+      showSuccessToast("Menu deleted successfully", "delete-data-menu");
       queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       onSuccess();
     },
     onError: () => {
-      showErrorToast("Error deleting menu");
+      showErrorToast("Error deleting menu","delete-data-menu");
       onError();
     },
   });
 
   return deleteMutation;
 };
+
+export function useUpdateMenuVisitedMutation() {
+  return useMutation({
+    mutationFn: (id: string) => updateMenuVisitedMutation(id),
+  });
+}
