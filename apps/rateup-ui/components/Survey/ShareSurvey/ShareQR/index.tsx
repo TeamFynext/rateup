@@ -25,8 +25,8 @@ import styles from "./ShareQR.module.css";
 interface ShareQRProps {
   url: string;
   sx?: any;
-  surveyTitle: string;
-  isSurveyPublished: boolean;
+  surveyTitle?: string;
+  isSurveyPublished?: boolean;
 }
 
 const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
