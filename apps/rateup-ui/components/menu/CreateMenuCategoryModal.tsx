@@ -154,7 +154,7 @@ export function CreateMenuCategoryModal({
         )}
         <FileButton
           onChange={onChangePicture}
-          accept="image/png,image/jpeg"
+          accept="image/png,image/jpeg,image/svg+xml,image/webp"
           disabled={isCreating}
         >
           {(props) => {

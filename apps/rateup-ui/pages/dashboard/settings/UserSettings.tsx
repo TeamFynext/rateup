@@ -213,7 +213,10 @@ const ProfileSettings = () => {
               color="var(--tertiary-color)"
               onClick={removePhoto}
             />
-            <FileButton onChange={setFile} accept="image/png,image/jpeg">
+            <FileButton
+              onChange={setFile}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            >
               {(props) => (
                 <RateupButtonBlue
                   title="Change Image"

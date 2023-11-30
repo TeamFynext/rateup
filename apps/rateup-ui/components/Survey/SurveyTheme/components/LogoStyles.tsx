@@ -117,7 +117,7 @@ function LogoStyles({
             />
             <FileButton
               onChange={handleFileChange}
-              accept="image/png,image/jpeg"
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
               resetRef={resetLogoRef}
             >
               {(props) => (

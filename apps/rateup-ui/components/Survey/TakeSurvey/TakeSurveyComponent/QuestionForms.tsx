@@ -6,7 +6,6 @@ import {
   IconThumbUpFilled,
   IconX,
 } from "@tabler/icons-react";
-
 import { LDResponse, YNResponse } from "../../../../types/enums";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import {
@@ -29,6 +28,8 @@ import {
   MultiSelect,
   Flex,
   ActionIcon,
+  SegmentedControl,
+  ScrollArea,
 } from "@mantine/core";
 import { getFileName } from "../../SurveyTheme/components/BackgroundStyles";
 import SmileyRating from "./SmileyRating";
@@ -260,17 +261,36 @@ export function OpinionScaleForm() {
   const renderButtons = () => {
     const oneToFive = [];
     const fiveToTen = [];
+    const colorMapping = {
+      1: "rgba(255, 92, 85, 1)",
+      2: "rgba(255, 133, 128, 1)",
+      3: "rgba(254, 183, 92, 1)",
+      4: "rgba(254, 201, 133, 1)",
+      5: "rgba(254, 220, 78, 1)",
+      6: "rgba(254, 229, 122, 1)",
+      7: "rgba(188, 234, 116, 1)",
+      8: "rgba(166, 227, 70, 1)",
+      9: "rgba(125, 203, 140, 1)",
+      10: "rgba(82, 186, 102, 1)",
+    };
+
     for (let i = 1; i <= 10; i++) {
+      const color = colorMapping[i];
       const button = (
         <Button
           className={classes["opinion-scale-interval-btn"]}
           key={i}
-          radius="md"
+          radius="xs"
           onClick={() => updateResponse(i)}
           color={"var(--tertiary-color)"}
           variant={response === i ? "filled" : "outline"}
           styles={{
-            root: { backgroundColor: response !== i && "#EBEFF7" },
+            root: {
+              backgroundColor: response !== i ? "white" : color,
+              borderColor: response !== i && color,
+              borderWidth: "2px",
+              color: response !== i ? color : "white",
+            },
           }}
         >
           {i}
@@ -382,7 +402,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
         <FileButton
           resetRef={resetRef}
           onChange={setFile}
-          accept="image/png,image/jpeg"
+          accept="image/png,image/jpeg,image/svg+xml,image/webp"
         >
           {(props) => (
             <Button
@@ -440,47 +460,73 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const sampleChoices = ["option1", "option2", "option3", "option4"];
 
   return (
     <Stack>
-      {selectedQ
-        ? choices?.map((choice) => (
-            <Checkbox
-              checked={response === choice}
-              onChange={() => updateResponse(choice)}
-              key={choice}
-              label={choice}
-              classNames={{
-                label: classes.input,
+      {selectedQ ? (
+        <ScrollArea w={"90vw"} h={"100%"} style={{ minHeight: "30vh" }}>
+          <Stack ml="lg">
+            <SegmentedControl
+              data={choices}
+              value={response ? response : ""}
+              onChange={updateResponse}
+              orientation={isMobile ? "vertical" : "horizontal"}
+              color="var(--tertiary-color)"
+              size="md"
+              style={{
+                root: {
+                  maxWidth: "60vw",
+                },
+                label: {
+                  fontSize: "16px",
+                },
               }}
             />
-          ))
-        : previewChoices
-        ? previewChoices?.[selectedLanguage]?.map((choice) => (
-            <Checkbox
-              checked={response === choice}
-              onChange={() => updateResponse(choice)}
-              key={choice}
-              label={choice}
-              classNames={{
-                label: classes.input,
-              }}
-            />
-          ))
-        : sampleChoices?.map((choice) => (
-            <Checkbox
-              checked={response === choice}
-              onChange={() => updateResponse(choice)}
-              key={choice}
-              label={choice}
-              classNames={{
-                label: classes.input,
-              }}
-            />
-          ))}
+          </Stack>
+        </ScrollArea>
+      ) : previewChoices ? (
+        <Stack ml="lg">
+          <SegmentedControl
+            data={previewChoices?.[selectedLanguage]}
+            value={response ? response : ""}
+            onChange={updateResponse}
+            orientation={isMobile ? "vertical" : "horizontal"}
+            color="var(--tertiary-color)"
+            size="md"
+            style={{
+              root: {
+                maxWidth: "60vw",
+              },
+              label: {
+                fontSize: "16px",
+              },
+            }}
+          />
+        </Stack>
+      ) : (
+        <Stack ml="lg">
+          <SegmentedControl
+            data={sampleChoices}
+            value={response ? response : ""}
+            onChange={updateResponse}
+            orientation={isMobile ? "vertical" : "horizontal"}
+            color="var(--tertiary-color)"
+            size="md"
+            style={{
+              root: {
+                maxWidth: "60vw",
+              },
+              label: {
+                fontSize: "16px",
+              },
+            }}
+          />
+        </Stack>
+      )}
     </Stack>
   );
 }
@@ -551,17 +597,19 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     : sampleChoices?.map((choice) => ({ value: choice, label: choice }));
 
   return (
-    <Select
-      style={{ minWidth: "300px", maxWidth: "500px" }}
-      label="Select one option"
-      placeholder="Pick one"
-      data={data}
-      value={response}
-      onChange={(e) => updateResponse(e)}
-      classNames={{
-        input: classes.input,
-      }}
-    />
+    <Paper shadow="sm" className={classes.inputBox}>
+      <Select
+        style={{ minWidth: "300px", maxWidth: "500px" }}
+        placeholder="Select one"
+        data={data}
+        value={response}
+        onChange={(e) => updateResponse(e)}
+        classNames={{
+          input: classes.selectBox,
+          root: classes.input,
+        }}
+      />
+    </Paper>
   );
 }
 
@@ -583,18 +631,19 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
     : sampleChoices?.map((choice) => ({ value: choice, label: choice }));
 
   return (
-    <MultiSelect
-      style={{ minWidth: "300px", maxWidth: "500px" }}
-      data={data}
-      value={response}
-      onChange={updateResponse}
-      label="Select one or more options"
-      placeholder="Pick one or more"
-      classNames={{
-        input: classes.input,
-        root: classes.input,
-      }}
-    />
+    <Paper shadow="sm" className={classes.inputBox}>
+      <MultiSelect
+        style={{ minWidth: "300px", maxWidth: "500px" }}
+        data={data}
+        value={response}
+        onChange={updateResponse}
+        placeholder="Select one or more"
+        classNames={{
+          input: classes.selectBox,
+          root: classes.input,
+        }}
+      />
+    </Paper>
   );
 }
 

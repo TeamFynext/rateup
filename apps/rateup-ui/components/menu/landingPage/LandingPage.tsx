@@ -542,7 +542,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       </Text>
                       <FileButton
                         onChange={onChangePictureMobileBackground}
-                        accept="image/png,image/jpeg"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       >
                         {(props) => (
                           <Button
@@ -565,7 +565,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       </Text>
                       <FileButton
                         onChange={onChangePictureBackground}
-                        accept="image/png,image/jpeg"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       >
                         {(props) => (
                           <Button
@@ -593,7 +593,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       </Text>
                       <FileButton
                         onChange={onChangeLogo}
-                        accept="image/png,image/jpeg"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       >
                         {(props) => (
                           <Button

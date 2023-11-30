@@ -144,7 +144,10 @@ const OrgSettings = () => {
               onClick={removePhoto}
               color="var(--tertiary-color)"
             />
-            <FileButton onChange={setFile} accept="image/png,image/jpeg">
+            <FileButton
+              onChange={setFile}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            >
               {(props) => (
                 <RateupButtonBlue
                   title="Change Image"

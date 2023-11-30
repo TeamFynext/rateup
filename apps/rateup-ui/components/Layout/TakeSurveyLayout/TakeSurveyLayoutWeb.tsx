@@ -222,42 +222,40 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
 
 function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
   const isMobile = useMediaQuery("(max-width: 768px)");
-
   const [lang, setLang] = useState(languages[0]);
 
   return (
-    <>
-      <Stack pl="7vw" pt="10vh">
+    <Stack
+      justify="space-between"
+      align="center"
+      style={{ height: isMobile ? "60vh" : "65vh" }}
+    >
+      <Stack align="center">
+        <Title order={isMobile ? 2 : 1}> let's begin!</Title>
         <Title order={isMobile ? 2 : 1} fw={100}>
-          {" "}
-          Choose Your language and
+          Select a language
         </Title>
-        <Title order={isMobile ? 2 : 1}> let's get started!</Title>
       </Stack>
 
-      <Center style={{ height: isMobile ? "40vh" : "45vh" }}>
-        <Stack>
-          <Text size="md" className={lexend400.className} mt={3}>
-            Select language :
-          </Text>
-          <SegmentedControl
-            data={languages}
-            placeholder="Select language"
-            value={lang}
-            onChange={setLang}
-            orientation={isMobile ? "vertical" : "horizontal"}
-            color="var(--tertiary-color)"
-            size="md"
-            style={{
-              label: {
-                fontSize: "16px",
-              },
-            }}
-          />
-        </Stack>
-      </Center>
+      <SegmentedControl
+        data={languages}
+        placeholder="Select language"
+        value={lang}
+        onChange={setLang}
+        orientation={isMobile ? "vertical" : "horizontal"}
+        color="var(--tertiary-color)"
+        size="md"
+        style={{
+          root: {
+            maxWidth: "60vw",
+          },
+          label: {
+            fontSize: "16px",
+          },
+        }}
+      />
 
-      <Group justify="flex-end">
+      <Group justify="center" mt="xl">
         <Button
           radius={"xl"}
           onClick={() => setSelectedLanguage(lang)}
@@ -265,9 +263,9 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
           color="dark"
           rightSection={<IconChevronRight />}
         >
-          Continue
+          Start Survey
         </Button>
       </Group>
-    </>
+    </Stack>
   );
 }

@@ -311,7 +311,7 @@ export function CreateMenuItemModal({
             {form?.values?.images?.length < 3 && (
               <FileButton
                 onChange={onChangePicture}
-                accept="image/png,image/jpeg"
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 key={form?.values?.images?.length}
               >
                 {(props) => (

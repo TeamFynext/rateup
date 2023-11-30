@@ -155,7 +155,10 @@ const StyleTab = ({
         </Tabs.Panel>
         <Tabs.Panel value="Image" style={{ minHeight: "70px" }}>
           <Stack justify="center" style={{ maxWidth: "200px" }}>
-            <FileButton onChange={setFile} accept="image/png,image/jpeg">
+            <FileButton
+              onChange={setFile}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            >
               {(props) => (
                 <Button fullWidth size="lg" radius="lg" {...props}>
                   Upload Image
@@ -191,6 +194,7 @@ const StyleTab = ({
           QR Styles
         </Title>
         <Radio.Group name="background" withAsterisk mt="md" ml="xl">
+          <></>
           {/* <Group mt="xs">
                   <Radio value="Color" label="Color" />
                   <Radio value="Gradient" label="Gradient" />

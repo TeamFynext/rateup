@@ -200,7 +200,7 @@ function BackgroundStyles({
                 <FileButton
                   resetRef={resetBgRef}
                   onChange={handleFileChange}
-                  accept="image/png,image/jpeg"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 >
                   {(props) => (
                     <Button
@@ -251,7 +251,7 @@ function BackgroundStyles({
                 <FileButton
                   resetRef={resetMobileBgRef}
                   onChange={handleMobileBgFileChange}
-                  accept="image/png,image/jpeg"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 >
                   {(props) => (
                     <Button
