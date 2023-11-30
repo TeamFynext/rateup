@@ -11,6 +11,7 @@ import {
   getSurveyById,
   getSurveyBylandingId,
   getSurveyLandingByUserId,
+  getSurveyStatsBySurveyTeamMapId,
   getSurveysByTeam,
   getSurveysByUserId,
   getWebSurveysByUserId,
@@ -231,7 +232,24 @@ export async function getSurveyByTeamHandler(
     reply.code(500);
   }
 }
-
+//
+export async function getSurveyStatsBySurveyTeamMapIdHandler(
+  request: FastifyRequest<{
+    Params: { surveyTeamMapId: string };
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const survey = await getSurveyStatsBySurveyTeamMapId(request.params.surveyTeamMapId);
+    if (!survey) {
+      reply.code(404);
+    } else {
+      reply.send(survey);
+    }
+  } catch (e) {
+    reply.code(500);
+  }
+}
 export async function getSurveysHandler(
   request: FastifyRequest,
   reply: FastifyReply

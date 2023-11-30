@@ -135,7 +135,7 @@ export async function cloneSurvey(
             title: {
               startsWith: survey.title,
             },
-          }
+          },
         ],
       },
       orderBy: {
@@ -430,6 +430,14 @@ export async function getSurveysByTeam(teamId: string) {
   return surveysWithoutQuestions;
 }
 
+export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
+  const surveyStats = await prisma.surveyStats.findUnique({
+    where: {
+      surveyTeamMapId,
+    },
+  });
+  return surveyStats;
+}
 export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
   const teamMap = await prisma.surveyTeamMap.findUnique({
     where: {

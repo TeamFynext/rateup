@@ -18,10 +18,12 @@ import {
   getActiveSurveysSummaryHandler,
   getWebSurveysHandler,
   deleteTeamSurveyHandler,
+  getSurveyStatsBySurveyTeamMapIdHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
 import { checkSession } from "../../utils/checkSession";
+import { $Rref } from "../response/response.schema";
 
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -70,8 +72,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.get("/web", getWebSurveysHandler);
 
   // get all active surveys summary from user
-  server.get(
-    "/summary/active", getActiveSurveysSummaryHandler);
+  server.get("/summary/active", getActiveSurveysSummaryHandler);
 
   // get all surveys from user
   server.get("/surveylandings", getSurveysLandingHandler);
@@ -137,6 +138,16 @@ export async function surveyRoutes(server: FastifyInstance) {
       },
     },
     getSurveyByTeamHandler
+  );
+  // get surveyStats by surveyTeamMapId
+  server.get(
+    "/surveyStats/:surveyTeamMapId",
+    {
+      schema: {
+        params: $Rref("getResponsesParamsSchema"),
+      },
+    },
+    getSurveyStatsBySurveyTeamMapIdHandler
   );
 
   // delete survey by id

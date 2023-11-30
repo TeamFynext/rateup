@@ -1,4 +1,5 @@
 import prisma from "../../utils/prisma";
+import { deleteFile } from "../../utils/upload/s3Upload";
 import {
   CreateMenuInput,
   UpdateMenuInput,
@@ -147,6 +148,45 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
 }
 
 export async function deleteMenu(id: string) {
+  const categoryData = await prisma.menuCategory.findMany({
+    where: { menuId: id },
+    select: {
+      image: true,
+      id: true,
+    },
+  });
+  let fileKeyArray = [];
+  if (categoryData?.length > 0) {
+    for await (const category of categoryData) {
+      const items = await prisma.menuItem.findMany({
+        where: {
+          categoryId: category.id,
+        },
+        select: {
+          images: true,
+          id: true,
+        },
+      });
+
+      items?.flatMap((item) =>
+        item.images?.map((image) => {
+          fileKeyArray.push({ Key: image });
+        })
+      );
+    }
+
+    categoryData?.map(({ image }) => {
+      if (image) fileKeyArray.push({ Key: image });
+    });
+    const params = {
+      Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
+      Delete: {
+        Objects: fileKeyArray,
+      },
+    };
+    if (fileKeyArray?.length > 0) await deleteFile(params);
+  }
+
   const menu = await prisma.menu.delete({
     where: {
       id,
@@ -164,6 +204,11 @@ export async function getMenuLanding(id: string) {
     },
     include: {
       menu: true,
+      surveyTeamMap: {
+        select: {
+          surveyId: true,
+        },
+      },
     },
   });
   if (!menu) {
@@ -259,4 +304,21 @@ export async function updateLandingPage(
     update: data?.option,
   });
   return menuLanding;
+}
+
+export async function updateVisitedMenuLanding(id: string) {
+  const createMenuLandingData = {
+    menu: { connect: { id: id } },
+  };
+  const menuLandingVisited = await prisma.menuLanding.upsert({
+    where: {
+      menuId: id,
+    },
+    create: {
+      ...createMenuLandingData,
+      ...{ visited: 1 },
+    },
+    update: { visited: { increment: 1 } },
+  });
+  return menuLandingVisited;
 }

@@ -11,15 +11,14 @@ import {
   deleteMenu,
   getAllMenus,
   getFullMenu,
-  getMenu,
   getMenuLanding,
   getMenus,
   updateLandingPage,
   updateMenu,
   updateMenuLanding,
+  updateVisitedMenuLanding,
 } from "./menu.service";
 import { ByTeamIdParams } from "../team/team.schema";
-import Session from "supertokens-node/recipe/session";
 import { hasAccessToTeam } from "../../utils/auth";
 import { getLoggedUserInfo } from "../user/user.service";
 
@@ -127,5 +126,23 @@ export async function updateLandingPageOptionHandler(
     reply.code(200).send("landing page options updated");
   } catch (error) {
     reply.code(500).send(error);
+  }
+}
+
+export async function visitedMenuLandingHandler(
+  request: FastifyRequest<{
+    Params: ByMenuIdParams ;
+  }>,
+  reply: FastifyReply
+) {
+  try {
+    const updateVisited = await updateVisitedMenuLanding(request.params.menuId);
+    if (!updateVisited) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
   }
 }
