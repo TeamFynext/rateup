@@ -31,6 +31,7 @@ import {
 } from "../../../components/input/ContainedInput/ContainedInput";
 import { mergeNames, retrieveRole } from "../../../utils/essential";
 import { passwordValidation } from "../../../utils/validation";
+import { IconPlus } from "@tabler/icons-react";
 
 const ProfileSettings = () => {
   const {
@@ -63,15 +64,9 @@ const ProfileSettings = () => {
         return null; // Validation passed
       },
       phone: (value) => {
-        const regex = /^[0-9]+$/;
+        const regex = /^\d{4,15}$/;
         if (!regex.test(value)) {
-          return "Only numbers allowed";
-        }
-        if (value.length < 10) {
-          return "Min 10 digits long";
-        }
-        if (value.length > 10) {
-          return "Invalid phone (10 digits only allowed)";
+          return "Invalid phone";
         }
         return null;
       },
@@ -287,6 +282,8 @@ const ProfileSettings = () => {
                   label="Phone"
                   placeholder="Enter your phone number"
                   {...profileForm?.getInputProps("phone")}
+                  leftSection={<IconPlus size={"1rem"} color="#373A40" />}
+                  maxLength={15}
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 6 }}>

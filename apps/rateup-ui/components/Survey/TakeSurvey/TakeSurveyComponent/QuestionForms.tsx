@@ -111,21 +111,20 @@ export function NumberForm() {
 
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [countryCode, setCountryCode] = useState("91");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const handleCountryCode = (e) => {
-    setCountryCode(e.currentTarget.value);
-  };
+  const [isFocused, setIsFocused] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (response)
+      setError(/^\d{4,}$/.test(response) ? null : "* Invalid Phone Number");
+  }, [response]);
+
   const handlePhoneNumber = (e) => {
-    setPhoneNumber(e.currentTarget.value);
+    setIsFocused(true);
+    let phone = e.target.value;
+    updateResponse(phone);
   };
-  let error = "";
-  if (!/^\d+$/.test(countryCode) || !/^\d+$/.test(phoneNumber))
-    error = "* Invalid Phone Number";
-  else {
-    error = "";
-    updateResponse(countryCode + phoneNumber);
-  }
+
   return (
     <Paper
       shadow="sm"
@@ -135,26 +134,16 @@ export function PhoneForm() {
       <Stack gap={0}>
         <Group gap={0} align="flex-start">
           <TextInput
-            label="C. Code"
-            value={countryCode}
-            onChange={handleCountryCode}
-            leftSection={<IconPlus size={"1rem"} />}
-            maw={70}
-            maxLength={3}
-            placeholder="code"
-          />
-          <TextInput
-            label="Phone Number"
-            value={phoneNumber}
+            label="Enter Phone number with country code"
+            value={response}
             onChange={handlePhoneNumber}
-            maxLength={12}
-            placeholder="Enter phone number"
-            miw={200}
+            maxLength={15}
+            placeholder="Enter Phone number with c. code"
+            leftSection={<IconPlus size={"1rem"} color="black" />}
+            onBlur={() => setIsFocused(false)}
+            error={!isFocused ? error : null}
           />
         </Group>
-        <Text c="red" fz="xs">
-          {error}
-        </Text>
       </Stack>
     </Paper>
   );

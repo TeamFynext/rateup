@@ -590,8 +590,8 @@ function NextPrev({ prev, next, num, total }) {
         setIsErrorInput(false);
       }
     } else if (selectedQ?.required && response && selectedQ?.type === Q.Phone) {
-      setErrorMsg(/^\d{10}$/.test(response) ? null : "Invalid Phone");
-      if (!/^\d{10}$/.test(response)) {
+      setErrorMsg(/^\d{4,15}$/.test(response) ? null : "Invalid Phone");
+      if (!/^\d{4,15}$/.test(response)) {
         setIsErrorInput(false);
       }
     } else if (
