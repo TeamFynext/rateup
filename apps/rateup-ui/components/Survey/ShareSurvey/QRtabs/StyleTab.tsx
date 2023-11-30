@@ -207,9 +207,9 @@ const StyleTab = ({
           label={(value) => value}
           value={qrSize}
           onChange={setQRSize}
-          defaultValue={195}
-          min={195}
-          max={250}
+          defaultValue={250}
+          min={250}
+          max={350}
         />
         <Stack>
           <Text>QR Background Color</Text>

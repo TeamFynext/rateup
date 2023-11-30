@@ -7,12 +7,12 @@ export function showSuccessToast(
   icon?: React.ReactNode,
 ) {
   notifications.update({
-    id:id,
+    id: id,
     color: "teal",
     title: "Success",
     message: message,
     autoClose: 2000,
-    loading:false,
+    loading: false,
     icon,
   });
 }
@@ -23,12 +23,12 @@ export function showErrorToast(
   icon?: React.ReactNode,
 ) {
   notifications.update({
-    id:id,
+    id: id,
     color: "red",
     title: "Error",
     message: message,
     autoClose: 2000,
-    loading:false,
+    loading: false,
     icon,
   });
 }

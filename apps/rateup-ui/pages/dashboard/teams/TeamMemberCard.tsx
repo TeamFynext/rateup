@@ -141,7 +141,7 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
       isError
         ? "Team Invitation Resend Failed"
         : "Team Invitation Deletion Failed",
-      isError ? "load-data-invitaion" : "load-data-deleting"
+      isError ? "load-data-invitaion" : "load-data-deleting",
     );
   }
   return (

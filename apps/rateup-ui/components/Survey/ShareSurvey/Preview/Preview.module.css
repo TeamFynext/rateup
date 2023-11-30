@@ -1,0 +1,41 @@
+.preview-download-btn-container {
+  align-items: center;
+}
+
+.preview-container {
+  width: 300px;
+  height: 300px;
+}
+
+.qr-svg-bg-img-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.qr-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.qr-bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.qr-download-btn {
+  height: auto;
+  padding: 0.625rem;
+  font-size: 1rem;
+}
+
+@media screen and (max-width: 1024px) {
+  .preview-download-btn-container {
+    flex: 1;
+  }
+}

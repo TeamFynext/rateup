@@ -44,17 +44,17 @@ const SortDrawer = ({
 }: ISortDrawerProps) => {
   const [state, handlers] = useListState(data);
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
- 
+
   useEffect(() => {
     handlers.setState(data);
   }, [data]);
-  
+
   const updateSortOrderMenuItemMutation = useUpdateSortOrderMenuItemMutation(
     category.categoryId,
     category.menuId,
     () => {
       close();
-    }
+    },
   );
   const updateSortOrderMenuCategoryMutation =
     useUpdateSortOrderMenuCategoryMutation(category.menuId, () => {

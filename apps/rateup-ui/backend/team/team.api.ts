@@ -60,7 +60,7 @@ export const inviteTeamMember = (data: IInviteMember) =>
   });
 
 export const resendInviteTeamMember = async (id: string) => {
-  const Response = await axiosClient.put(`/team/invite/resend/${id}`,{});
+  const Response = await axiosClient.put(`/team/invite/resend/${id}`, {});
   return Response?.data;
 };
 

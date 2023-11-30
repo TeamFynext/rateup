@@ -85,8 +85,8 @@ const TableRow = ({
                 autoClose: false,
                 withCloseButton: false,
               });
-              deleteItemMutation.mutate(item?.id)
-              close()
+              deleteItemMutation.mutate(item?.id);
+              close();
             }}
           />
           <ActionIcon

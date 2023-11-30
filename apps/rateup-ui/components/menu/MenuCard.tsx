@@ -30,7 +30,7 @@ export function MenuCard({
     setTimeSince(getTimeSince(menu.createdAt));
     const timeoutID = setInterval(
       () => setTimeSince(getTimeSince(menu.createdAt)),
-      5000
+      5000,
     );
     return () => clearInterval(timeoutID);
   }, [menu?.createdAt]);
@@ -96,7 +96,7 @@ function MenuCardMenu({ menuId, teamId, close }) {
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
-    () => {}
+    () => {},
   );
   const router = useRouter();
 

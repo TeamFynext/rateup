@@ -27,7 +27,7 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
   const params = context.params;
 
   const fullMenu = await getFullMenuById(params.menuId);
-  
+
   return { props: { fullMenu: fullMenu } };
 };
 

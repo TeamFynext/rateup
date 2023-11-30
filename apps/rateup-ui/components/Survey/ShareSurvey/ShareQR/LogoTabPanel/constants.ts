@@ -11,11 +11,11 @@ export const logoFilters = [
 
 export const logoFillTypes = [
   {
-    label: "Fill",
-    value: "fill",
+    label: "Contain",
+    value: "contain",
   },
   {
-    label: "Scale To Fit",
-    value: "scale_to_fit",
+    label: "Cover",
+    value: "cover",
   },
 ];

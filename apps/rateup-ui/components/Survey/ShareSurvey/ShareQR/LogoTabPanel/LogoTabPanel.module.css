@@ -1,9 +1,10 @@
 .logo-tab-options-container {
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .panel-heading {
-  margin: 1.25rem 0;
+  margin: 0;
 }
 
 .option-heading {
@@ -12,9 +13,7 @@
 
 .option-container {
   flex-direction: column;
-  width: 200px;
-  flex: 1 1 auto;
-  padding: 1rem;
+  min-width: 20.9375rem;
 }
 
 .upload-qr-background-logo-form {
@@ -45,4 +44,15 @@
   display: block;
   padding: 0.625rem 1.5rem;
   height: auto;
+}
+
+@media screen and (max-width: 1200px) {
+  .panel-container {
+    max-width: 100%;
+  }
+
+  .option-container {
+    flex-direction: column;
+    min-width: 14.875rem;
+  }
 }

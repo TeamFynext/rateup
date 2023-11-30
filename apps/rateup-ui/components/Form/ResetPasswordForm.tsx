@@ -34,7 +34,7 @@ const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
   const [page, setPage] = useState(
-    token && rid === "emailpassword" ? ResetSteps.STEP_THREE : mode
+    token && rid === "emailpassword" ? ResetSteps.STEP_THREE : mode,
   );
 
   useEffect(() => {
@@ -107,13 +107,16 @@ const ResetPasswordForm = ({ mode }) => {
             email: values.email,
           });
           if (!user?.success) {
-            emailForm.setFieldError("email","User with this email does not exist!")
+            emailForm.setFieldError(
+              "email",
+              "User with this email does not exist!",
+            );
             showNotification(
               "error",
               "red",
               "Error",
               "User with this email does not exist!",
-              <IconX size="1rem" />
+              <IconX size="1rem" />,
             );
             return;
           }

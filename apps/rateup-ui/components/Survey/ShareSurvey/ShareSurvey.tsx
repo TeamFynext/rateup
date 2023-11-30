@@ -387,7 +387,8 @@ const ShareSurvey = ({
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
-        disable={!isPublished}
+        surveyTitle={survey.title}
+        isSurveyPublished={isPublished}
       />
       <FormModalLayout
         title="Generate IFrame"

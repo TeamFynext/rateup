@@ -27,7 +27,9 @@ export function MenuButton(largeScreen: boolean) {
         mih={largeScreen ? "30px" : "15px"}
         alt="menu image"
       />
-      <Text fw={"600"} mt={largeScreen && 8}>Menu</Text>
+      <Text fw={"600"} mt={largeScreen && 8}>
+        Menu
+      </Text>
     </Stack>
   );
 }

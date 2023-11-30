@@ -1,12 +1,14 @@
 import { Flex, ColorPicker, Button, Popover, Text } from "@mantine/core";
 import { IconColorPicker } from "@tabler/icons-react";
-import { useEyeDropper } from "@mantine/hooks";
+import { useEyeDropper, useMediaQuery } from "@mantine/hooks";
 import styles from "./CustomColorPicker.module.css";
+import buttonStyles from "./MantineButtonStyles.module.css";
 import { useCallback, useState } from "react";
 
 function CustomColorPicker({ value, onChange }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
+  const viewport1200px = useMediaQuery("(min-width: 1200px)");
 
   const handleBlur = useCallback(
     (e) => {
@@ -65,8 +67,9 @@ function CustomColorPicker({ value, onChange }) {
               className={styles["eye-dropper-btn"]}
               leftSection={<IconColorPicker />}
               onClick={pickEyeDropperColor}
+              classNames={buttonStyles}
             >
-              Eye Dropper
+              {viewport1200px ? "Eye Dropper" : null}
             </Button>
           )}
         </Flex>

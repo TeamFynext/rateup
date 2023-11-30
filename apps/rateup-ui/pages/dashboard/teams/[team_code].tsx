@@ -201,7 +201,7 @@ const TeamDetails = () => {
           >
             {teamsMembersData?.invitations?.length > 0 &&
               teamsMembersData?.invitations?.map((member, i) => (
-                <TeamMemberCard key={i} member={member} teamID={teamID}/>
+                <TeamMemberCard key={i} member={member} teamID={teamID} />
               ))}
             {teamsMembersData?.members?.length > 0 ? (
               Array.isArray(teamsMembersData?.members) ? (

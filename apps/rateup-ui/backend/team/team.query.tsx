@@ -168,17 +168,19 @@ export function useDeleteInviteMutation(teamId) {
     mutationFn: (id: string) => deleteInviteById(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }),
-      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers",teamId] }),
-      notifications.update({
-        id: "load-data-deleting",
-        color: "teal",
-        title: "Success",
-        loading: false,
-        message: "Invite deleted successfully.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-    close();
+        queryClient.invalidateQueries({
+          queryKey: ["invitedTeamMembers", teamId],
+        }),
+        notifications.update({
+          id: "load-data-deleting",
+          color: "teal",
+          title: "Success",
+          loading: false,
+          message: "Invite deleted successfully.",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+      close();
     },
   });
 }

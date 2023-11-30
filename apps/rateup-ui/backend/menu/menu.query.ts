@@ -98,7 +98,7 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
       onSuccess();
     },
     onError: () => {
-      showErrorToast("Error deleting menu","delete-data-menu");
+      showErrorToast("Error deleting menu", "delete-data-menu");
       onError();
     },
   });

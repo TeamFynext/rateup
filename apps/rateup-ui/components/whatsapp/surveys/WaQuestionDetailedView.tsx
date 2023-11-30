@@ -68,14 +68,14 @@ export function WaQuestionDetailedView({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [previewOpened, setPreviewOpened] = useState(false);
   const [enableTitle, setEnableTitle] = useState(
-    !!question?.title?.[selectedLanguage]
+    !!question?.title?.[selectedLanguage],
   );
 
   useEffect(() => {
     if (!enableTitle) {
       form.setFieldValue(
         "title",
-        getInitialQuestionValues(question, surveyLanguages, "whatsapp").title
+        getInitialQuestionValues(question, surveyLanguages, "whatsapp").title,
       );
     }
   }, [enableTitle]);
@@ -93,7 +93,7 @@ export function WaQuestionDetailedView({
     initialValues: getInitialQuestionValues(
       question,
       surveyLanguages,
-      "whatsapp"
+      "whatsapp",
     ),
     validate: {
       description: (desc) => {
@@ -137,7 +137,7 @@ export function WaQuestionDetailedView({
     } else {
       const missingLangs = validateAllLanguagesArePopulated(
         surveyLanguages,
-        form.values.description
+        form.values.description,
       );
 
       if (missingLangs.length > 0) {

@@ -82,23 +82,41 @@ const Responses = ({ survey, responses }) => {
   const handleExcelDownload = useCallback(() => {
     if (questions && responses) {
       const headerArray = questions.map((question) => question.title.English);
-      const bodyArray = responses.map((responseDescObj) => {
-        return responseDescObj.responses.map((responseObj, index) => {
-          let responseValue = responseObj.response[questions[index].type];
+      const englishResponses = responses.filter(
+        (languageObj) => languageObj.language.toLowerCase() === "english",
+      );
+      const bodyArray = englishResponses.map(() => []);
 
-          if (questions[index].type === QuestionType.Photo) {
-            responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+      questions.forEach((question) => {
+        const questionId = question.id;
+        englishResponses.forEach((response, answerIndex) => {
+          const responses = response.responses;
+          const responseObj = responses.find(
+            (answerObj) => answerObj.questionId === questionId,
+          );
+          let responseValue;
+          if (responseObj) {
+            responseValue = responseObj.response[question.type];
+            const responseType = responseObj.type;
+            switch (responseType) {
+              case QuestionType.Photo: {
+                responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+                break;
+              }
+              case QuestionType.DateTime: {
+                responseValue = dayjs(responseValue).format("DD-MM-YYYY");
+                break;
+              }
+            }
+            if (typeof responseValue === "object") {
+              responseValue = Object.values(responseValue).join(", ");
+            }
+          } else {
+            responseValue = "Not Answered";
           }
-          if (questions[index].type === QuestionType.DateTime) {
-            responseValue = dayjs(responseValue).format("DD-MM-YYYY");
-          }
-          if (typeof responseValue === "object") {
-            responseValue = Object.values(responseValue).join(", ");
-          }
-          return responseValue;
+          bodyArray[answerIndex].push(responseValue);
         });
       });
-
       downloadExcel({
         fileName: survey?.title,
         sheet: "Responses",
