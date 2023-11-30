@@ -45,6 +45,15 @@
   width: 50px;
 }
 
+.sglabel {
+  text-align: left;
+  min-width: 300px;
+  max-width: 500px;
+  height: auto;
+  white-space: normal;
+  font-size: "16px";
+}
+
 @media (max-width: 480px) {
   .rating svg {
     height: 50px;
@@ -56,6 +65,15 @@
     height: 40px;
     padding: 0;
     border-radius: 12px;
+  }
+
+  .sglabel {
+    text-align: left;
+    min-width: 250px;
+    max-width: 300px;
+    height: auto;
+    white-space: normal;
+    font-size: "16px";
   }
 }
 
