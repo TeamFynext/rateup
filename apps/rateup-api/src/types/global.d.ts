@@ -60,6 +60,10 @@ declare global {
         name?: string;
         photo?: string;
       };
+      [QuestionType.EmailPhone]?: {
+        email: string;
+        phone: string;
+      };
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
       [QuestionType.Rating]?: number;
