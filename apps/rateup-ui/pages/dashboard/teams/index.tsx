@@ -3,22 +3,13 @@
   RateupButtonOutline,
   RateupButtonPrimary,
 } from "../../../components/Button/RateupButtons";
-import {
-  Title,
-  Loader,
-  Space,
-  Grid,
-  Center,
-  SimpleGrid,
-  Group,
-} from "@mantine/core";
+import { Loader, Space, Grid, Center, Group } from "@mantine/core";
 import { Box } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconReload, IconSelector } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import CardButton from "../../../components/Card";
 import { useUser } from "../../../context/UserContext";
 import { useForm } from "@mantine/form";
 import {
@@ -144,62 +135,43 @@ export default function Teams() {
           rightIcon={<IconSelector size="1rem" />}
         />
       </Group>
-
       <Space h="lg" />
-
-      {user?.role === "ADMIN" || user?.role === "MEMBER" ? (
-        <SimpleGrid
-          spacing={"lg"}
-          cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
-        >
-          {teamsData?.data
-            ? teamsData?.data?.map((team, i: number) => (
-                <CardButton key={i} title={team?.name}></CardButton>
-              ))
-            : "No teams found."}
-        </SimpleGrid>
+      {isLoadingTeamsUser ? (
+        <Loader />
       ) : (
-        //TODO optimize
-        //For Super Admin
         <>
-          {isLoadingTeamsUser ? (
-            <Loader />
-          ) : (
-            <>
-              <Grid columns={9} p={10} h="100%" style={{ overflow: "auto" }}>
-                {teamsData?.data?.length > 0 ? (
-                  (sort
-                    ? [...teamsData?.data]?.sort((a, b) =>
-                        b.name.localeCompare(a.name),
-                      )
-                    : [...teamsData?.data]?.sort((a, b) =>
-                        a.name.localeCompare(b.name),
-                      )
-                  ).map((team, key) => (
-                    <Grid.Col span={{ xs: 9, md: 4.5, lg: 3 }} key={key}>
-                      <TeamCard key={team.id} team={team} />
-                    </Grid.Col>
-                  ))
+          <Grid columns={9} p={10} h="100%" style={{ overflow: "auto" }}>
+            {teamsData?.data?.length > 0 ? (
+              (sort
+                ? [...teamsData?.data]?.sort((a, b) =>
+                    b.name.localeCompare(a.name),
+                  )
+                : [...teamsData?.data]?.sort((a, b) =>
+                    a.name.localeCompare(b.name),
+                  )
+              ).map((team, key) => (
+                <Grid.Col span={{ base: 9, md: 4.5, lg: 3 }} key={key}>
+                  <TeamCard key={team.id} team={team} />
+                </Grid.Col>
+              ))
+            ) : (
+              <Center>
+                {teamsData?.message ? (
+                  teamsData?.message
                 ) : (
-                  <Center>
-                    {teamsData?.message ? (
-                      teamsData?.message
-                    ) : (
-                      <>
-                        Error... Try Refreshing...
-                        <RateupButtonOutline
-                          onClick={reftchTeams}
-                          rightIcon={<IconReload size="1rem" />}
-                          title="Refresh"
-                          size="xs"
-                        />
-                      </>
-                    )}
-                  </Center>
+                  <>
+                    Error... Try Refreshing...
+                    <RateupButtonOutline
+                      onClick={reftchTeams}
+                      rightIcon={<IconReload size="1rem" />}
+                      title="Refresh"
+                      size="xs"
+                    />
+                  </>
                 )}
-              </Grid>
-            </>
-          )}
+              </Center>
+            )}
+          </Grid>
         </>
       )}
     </>
