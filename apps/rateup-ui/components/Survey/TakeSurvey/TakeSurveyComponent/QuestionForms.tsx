@@ -650,6 +650,47 @@ export function DateForm() {
   );
 }
 
+export function EmailPhoneForm() {
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateResponse({ ...response, email: e.currentTarget.value });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateResponse({ ...response, phone: e.currentTarget.value });
+  };
+
+  return (
+    <Stack>
+      <Paper shadow="sm" className={classes.inputBox}>
+        <TextInput
+          placeholder="Enter your email"
+          value={response?.email}
+          onChange={handleEmailChange}
+          style={{ maxWidth: "400px" }}
+          variant="unstyled"
+          classNames={{
+            input: classes.input,
+          }}
+        />
+      </Paper>
+      <Paper shadow="sm" className={classes.inputBox}>
+        <TextInput
+          placeholder="Enter your phone"
+          value={response?.phone}
+          onChange={handlePhoneChange}
+          style={{ maxWidth: "400px" }}
+          variant="unstyled"
+          classNames={{
+            input: classes.input,
+          }}
+        />
+      </Paper>
+    </Stack>
+  );
+}
+
 export function TestimonialForm() {
   // TODO: show some disclaimer about the image & testimonial being being displayed in public
   const { response, updateResponse } = useContext(CurrentResponsesContext);

@@ -1,6 +1,10 @@
 import { QuestionType } from "../types/enums";
 
-export const ContactQuestions = [QuestionType.Email, QuestionType.Phone];
+export const ContactQuestions = [
+  QuestionType.Email,
+  QuestionType.Phone,
+  QuestionType.EmailPhone,
+];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
 

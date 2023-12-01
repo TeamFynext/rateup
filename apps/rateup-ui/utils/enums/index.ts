@@ -60,6 +60,8 @@ export function getQuestionTypeLabel(type: QuestionType) {
       return "Photo";
     case QuestionType.Testimonial:
       return "Testimonial";
+    case QuestionType.EmailPhone:
+      return "Email & Phone";
     case QuestionType.Text:
       return "Text";
     case QuestionType.TextArea:
