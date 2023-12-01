@@ -1,6 +1,7 @@
 import {
   IconCalendarEvent,
   IconMail,
+  IconPhone,
   IconPlus,
   IconThumbDownFilled,
   IconThumbUpFilled,
@@ -188,6 +189,67 @@ export function EmailForm() {
         }}
       />
     </Paper>
+  );
+}
+
+export function EmailPhoneForm() {
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateResponse({ ...response, email: e.currentTarget.value });
+  };
+
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+
+  return (
+    <Stack>
+      <Paper
+        shadow="sm"
+        className={classes.inputBox}
+        onClick={() => emailRef.current.focus()}
+      >
+        <Group>
+          <IconMail size="1.2rem" color="gray" />
+          <TextInput
+            placeholder="Enter your email"
+            ref={emailRef}
+            value={response?.email}
+            onChange={handleEmailChange}
+            style={{ maxWidth: "400px" }}
+            variant="unstyled"
+            classNames={{
+              input: classes.input,
+              root: classes.textRoot,
+            }}
+          />
+        </Group>
+      </Paper>
+      <Paper
+        shadow="sm"
+        className={classes.inputBox}
+        onClick={() => phoneRef.current.focus()}
+      >
+        <Group>
+          <IconPhone size="1.2rem" color="gray" />
+          <Text>+</Text>
+          <NumberInput
+            ref={phoneRef}
+            hideControls
+            //error="Invalid phone"
+            size="sm"
+            placeholder="Enter your phone with country code"
+            value={parseInt(response?.phone) || null}
+            onChange={(value) => updateResponse({ ...response, phone: value })}
+            variant="unstyled"
+            classNames={{
+              input: classes.input,
+              wrapper: classes.numRoot,
+            }}
+          />
+        </Group>
+      </Paper>
+    </Stack>
   );
 }
 
@@ -647,47 +709,6 @@ export function DateForm() {
         }}
       />
     </Paper>
-  );
-}
-
-export function EmailPhoneForm() {
-  const { response, updateResponse } = useContext(CurrentResponsesContext);
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateResponse({ ...response, email: e.currentTarget.value });
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateResponse({ ...response, phone: e.currentTarget.value });
-  };
-
-  return (
-    <Stack>
-      <Paper shadow="sm" className={classes.inputBox}>
-        <TextInput
-          placeholder="Enter your email"
-          value={response?.email}
-          onChange={handleEmailChange}
-          style={{ maxWidth: "400px" }}
-          variant="unstyled"
-          classNames={{
-            input: classes.input,
-          }}
-        />
-      </Paper>
-      <Paper shadow="sm" className={classes.inputBox}>
-        <TextInput
-          placeholder="Enter your phone"
-          value={response?.phone}
-          onChange={handlePhoneChange}
-          style={{ maxWidth: "400px" }}
-          variant="unstyled"
-          classNames={{
-            input: classes.input,
-          }}
-        />
-      </Paper>
-    </Stack>
   );
 }
 
