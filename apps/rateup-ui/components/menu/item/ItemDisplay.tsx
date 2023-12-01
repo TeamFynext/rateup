@@ -60,7 +60,6 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             </Text>
             <Text
               fz="clamp(0.75rem, 0.616rem + 0.357vw, 0.938rem)"
-              c="var(--grey-color-4)"
               lineClamp={3}
               mih={"50px"}
             >

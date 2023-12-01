@@ -38,10 +38,11 @@ const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
 
   const [qrColor, setQRColor] = useState("#000000");
 
+  const [logoSize, setLogoSize] = useState(75);
+
   const [logoFillType, setLogoFillType] = useState<string>("contain");
 
-  const [qrBgBrightness, setQRBgBrightness] = useState(1);
-  const [qrBgContrast, setQRBgContrast] = useState(1);
+  const [logoBorderRadius, setlogoBorderRadius] = useState("50");
 
   const [logoSrc, setLogoSrc] = useState("/images/rateup-star.svg");
 
@@ -73,14 +74,9 @@ const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
     [logoSrc],
   );
 
-  const handleLogoInputFormReset = useCallback(() => {
-    removeLogo();
-  }, [removeLogo]);
-
   const handleLogoInputChange = useCallback(
-    (e) => {
-      const filesArray = e.target.files;
-      if (filesArray.length) {
+    (file) => {
+      if (file) {
         const reader = new FileReader();
         reader.addEventListener(
           "load",
@@ -90,7 +86,7 @@ const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
           },
           false,
         );
-        reader.readAsDataURL(filesArray[0]);
+        reader.readAsDataURL(file);
       } else {
         removeLogo();
       }
@@ -115,18 +111,16 @@ const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
           <Group className={styles["options-preview-container"]}>
             <LogoTabpanel
               handleLogoInputChange={handleLogoInputChange}
-              handleLogoInputFormReset={handleLogoInputFormReset}
-              removeLogo={removeLogo}
-              qrBgBrightness={qrBgBrightness}
-              setQRBgBrightness={setQRBgBrightness}
-              qrBgContrast={qrBgContrast}
-              setQRBgContrast={setQRBgContrast}
               logoFillType={logoFillType}
               setLogoFillType={setLogoFillType}
               qrBgColor={qrBgColor}
               setQRBgColor={setQRBgColor}
               qrColor={qrColor}
               setQRColor={setQRColor}
+              logoSize={logoSize}
+              setLogoSize={setLogoSize}
+              borderRadius={logoBorderRadius}
+              setBorderRadius={setlogoBorderRadius}
             />
 
             {/*..... QR Editor - Preview ........ */}
@@ -138,11 +132,11 @@ const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
                 qrBgImgFillType={logoFillType}
                 qrSize={qrSize}
                 qrBgColor={qrBgColor}
-                qrBgBrightness={qrBgBrightness}
-                qrBgContrast={qrBgContrast}
                 qrColor={qrColor}
                 surveyTitle={surveyTitle}
                 isSurveyPublished={isSurveyPublished}
+                logoSize={logoSize}
+                logoBorderRadius={logoBorderRadius}
               />
             )}
           </Group>

@@ -8,7 +8,6 @@ import { useCallback, useState } from "react";
 function CustomColorPicker({ value, onChange }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
-  const viewport1200px = useMediaQuery("(min-width: 1200px)");
 
   const handleBlur = useCallback(
     (e) => {
@@ -69,7 +68,7 @@ function CustomColorPicker({ value, onChange }) {
               onClick={pickEyeDropperColor}
               classNames={buttonStyles}
             >
-              {viewport1200px ? "Eye Dropper" : null}
+              {"Eye Dropper"}
             </Button>
           )}
         </Flex>

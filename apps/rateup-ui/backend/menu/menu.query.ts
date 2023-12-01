@@ -93,12 +93,17 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   const deleteMutation = useMutation({
     mutationFn: deleteMenu,
     onSuccess: () => {
-      showSuccessToast("Menu deleted successfully", "delete-data-menu");
+      showSuccessToast(
+        "Menu deleted successfully",
+        "delete-data-menu",
+        "",
+        true
+      );
       queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       onSuccess();
     },
     onError: () => {
-      showErrorToast("Error deleting menu", "delete-data-menu");
+      showErrorToast("Error deleting menu", "delete-data-menu", "", true);
       onError();
     },
   });

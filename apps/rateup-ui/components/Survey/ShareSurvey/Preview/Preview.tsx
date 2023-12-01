@@ -12,11 +12,11 @@ function Preview({
   qrBgImgFillType,
   qrSize,
   qrBgColor,
-  qrBgBrightness,
-  qrBgContrast,
   qrColor,
   surveyTitle,
   isSurveyPublished,
+  logoSize,
+  logoBorderRadius,
 }) {
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
     useState(false);
@@ -52,6 +52,7 @@ function Preview({
           style={{
             width: "100%",
             height: "100%",
+            backgroundColor: `${qrBgColor}`,
           }}
         >
           <Image
@@ -59,9 +60,12 @@ function Preview({
             src={qrBgImgLogo}
             alt="bg-image"
             style={{
+              width: logoSize,
+              height: logoSize,
+              top: `calc(50% - ${logoSize / 2}px)`,
+              left: `calc(50% - ${logoSize / 2}px)`,
               objectFit: qrBgImgFillType,
-              backgroundColor: qrBgColor,
-              filter: `contrast(${qrBgContrast}) brightness(${qrBgBrightness})`,
+              borderRadius: `${logoBorderRadius}%`,
             }}
           />
           {
