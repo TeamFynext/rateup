@@ -102,13 +102,14 @@ export function DraggableQuestionCard({
                 {index + 1}
               </Badge>
               {/* TODO: add truncate and make height fixed*/}
-              <Text pl="xs" fw={500} px="md" maw={200} truncate>
+              <Text pl="xs" fw={500} px="md" maw={150} truncate>
                 {question.title[selectedLanguage] ||
                   question.description[selectedLanguage]}
               </Text>
               <Group
                 justify={"flex-end"}
                 gap={"xs"}
+                ml={"xs"}
                 style={{ position: "absolute", right: "5px" }}
               >
                 {question.logic && (
@@ -124,15 +125,17 @@ export function DraggableQuestionCard({
                   />
                 )}
                 {question.googleReview && (
-                  <IconBrandGoogle
-                    color={
-                      isWaSurvey == true
-                        ? theme.colors["whatsapp-green"][6]
-                        : "var(--tertiary-color)"
-                    }
-                    stroke={4}
-                    size={"1rem"}
-                  />
+                  <Box mr={"6px"}>
+                    <IconBrandGoogle
+                      color={
+                        isWaSurvey == true
+                          ? theme.colors["whatsapp-green"][6]
+                          : "var(--tertiary-color)"
+                      }
+                      stroke={4}
+                      size={"1rem"}
+                    />
+                  </Box>
                 )}
                 <ActionIcon
                   onClick={() => {
