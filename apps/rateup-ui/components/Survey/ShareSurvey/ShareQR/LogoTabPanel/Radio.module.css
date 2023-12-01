@@ -1,0 +1,8 @@
+.label,
+.radio {
+  cursor: pointer;
+}
+
+.label {
+  font-size: 1rem;
+}

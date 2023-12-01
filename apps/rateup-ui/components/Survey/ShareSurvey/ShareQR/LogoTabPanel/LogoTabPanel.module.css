@@ -1,5 +1,5 @@
 .logo-tab-options-container {
-  gap: 1rem;
+  gap: 2rem;
   flex-wrap: wrap;
 }
 
@@ -8,12 +8,13 @@
 }
 
 .option-heading {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .option-container {
   flex-direction: column;
-  min-width: 20.9375rem;
+  width: 20.9375rem;
+  max-width: 20.9375rem;
 }
 
 .upload-qr-background-logo-form {
