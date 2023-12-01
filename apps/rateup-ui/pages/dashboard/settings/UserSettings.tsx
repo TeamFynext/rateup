@@ -279,8 +279,8 @@ const ProfileSettings = () => {
               <Grid.Col span={{ xs: 10, lg: 4 }}>
                 <ContainedTextField
                   withAsterisk
-                  label="Phone"
-                  placeholder="Enter your phone number"
+                  label="Phone with coutry code"
+                  placeholder="Enter your phone number with country code"
                   {...profileForm?.getInputProps("phone")}
                   leftSection={<IconPlus size={"1rem"} color="#373A40" />}
                   maxLength={15}
