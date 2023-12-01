@@ -66,7 +66,6 @@ export default () => {
       setActiveTab(tab as any);
     }
   }, [tab]);
-
   useEffect(() => {
     if (survey) {
       if (activeTab !== TabEnum.Result) {
