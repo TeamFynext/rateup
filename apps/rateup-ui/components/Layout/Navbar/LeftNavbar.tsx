@@ -40,12 +40,10 @@ function _NavbarLink({
   setActive,
 }: _NavbarLinkProps) {
   const router = useRouter();
-  const roleArray = [UserRole.SUPADM, UserRole.ADM, UserRole.MEMBER];
   return (
     <>
       {data.map(({ Icon, label, href, role, submenus }, parentIndex) => {
-        if (role && currentRole !== role && !roleArray.includes(role))
-          return null;
+        if (role && currentRole !== role) return null;
         return (
           <Tooltip
             label={!opened ? label : ""}
@@ -87,12 +85,7 @@ function _NavbarLink({
               children={
                 submenus?.length > 0
                   ? submenus.map(({ Icon, label, href, role }, index) => {
-                      if (
-                        role &&
-                        currentRole !== role &&
-                        !roleArray.includes(role)
-                      )
-                        return null;
+                      if (role && currentRole !== role) return null;
                       return (
                         <React.Fragment key={index}>
                           <Tooltip
@@ -169,13 +162,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   } = {
     name: user?.userName,
     email: user?.email,
-    role: !user?.role
-      ? "...error..."
-      : user?.role === "SUPER_ADMIN"
-      ? "Super Admin"
-      : user?.role === "ADMIN"
-      ? "Admin"
-      : "Team Member",
+    role: !user?.role ? "...error..." : user?.role,
     image: userProfileAvatar,
   };
   return (
