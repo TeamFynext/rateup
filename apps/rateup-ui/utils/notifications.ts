@@ -5,32 +5,58 @@ export function showSuccessToast(
   message: string,
   id = undefined,
   icon?: React.ReactNode,
+  updateNotification = false
 ) {
-  notifications.update({
-    id: id,
-    color: "teal",
-    title: "Success",
-    message: message,
-    autoClose: 2000,
-    loading: false,
-    icon,
-  });
+  if (updateNotification) {
+    notifications.update({
+      id: id,
+      color: "teal",
+      title: "Success",
+      message: message,
+      autoClose: 2000,
+      loading: false,
+      icon,
+    });
+  } else {
+    notifications.show({
+      id: id,
+      color: "teal",
+      title: "Success",
+      message: message,
+      autoClose: 2000,
+      loading: false,
+      icon,
+    });
+  }
 }
 
 export function showErrorToast(
   message: string,
   id?: string,
   icon?: React.ReactNode,
+  updateNotification = false
 ) {
-  notifications.update({
-    id: id,
-    color: "red",
-    title: "Error",
-    message: message,
-    autoClose: 2000,
-    loading: false,
-    icon,
-  });
+  if (updateNotification) {
+    notifications.update({
+      id: id,
+      color: "red",
+      title: "Error",
+      message: message,
+      autoClose: 2000,
+      loading: false,
+      icon,
+    });
+  } else {
+    notifications.show({
+      id: id,
+      color: "red",
+      title: "Error",
+      message: message,
+      autoClose: 2000,
+      loading: false,
+      icon,
+    });
+  }
 }
 
 export function showWarnToast(message: string, id = undefined) {
@@ -47,7 +73,7 @@ export function showLoadingToast(
   id: string | undefined = undefined,
   loading: boolean,
   title: string,
-  color: string = "teal",
+  color: string = "teal"
 ) {
   notifications.show({
     id: id,
