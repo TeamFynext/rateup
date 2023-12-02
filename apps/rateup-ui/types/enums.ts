@@ -15,6 +15,7 @@ export enum QuestionType {
   Phone = "Phone",
   Photo = "Photo",
   Testimonial = "Testimonial",
+  EmailPhone = "Email & Phone",
   Text = "Text",
   TextArea = "TextArea",
   Number = "Number",

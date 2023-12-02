@@ -52,6 +52,7 @@ import {
   DDSSForm,
   DateForm,
   EmailForm,
+  EmailPhoneForm,
   ImageForm,
   LDForm,
   MCQForm,
@@ -399,6 +400,25 @@ function TakeSurvey() {
                                     </Stack>
                                   );
 
+                                case Q.EmailPhone:
+                                  const contact = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  return (
+                                    <Stack>
+                                      <Group>
+                                        {" "}
+                                        <Text fw="400">Email: </Text>{" "}
+                                        <Text fw="300">{contact.email}</Text>{" "}
+                                      </Group>
+                                      <Group mt="-10px">
+                                        {" "}
+                                        <Text fw="400">Phone: </Text>{" "}
+                                        <Text fw="300">{contact.phone}</Text>{" "}
+                                      </Group>
+                                    </Stack>
+                                  );
+
                                 default:
                                   return JSON.stringify(
                                     Object.values(response?.response)[0],
@@ -565,6 +585,8 @@ function getQuestionForm(type) {
       return <DDMSForm />;
     case Q.Testimonial:
       return <TestimonialForm />;
+    case Q.EmailPhone:
+      return <EmailPhoneForm />;
     case Q.DateTime:
       return <DateForm />;
     default:

@@ -5,6 +5,7 @@ import {
   DDSSForm,
   DateForm,
   EmailForm,
+  EmailPhoneForm,
   ImageForm,
   LDForm,
   MCQForm,
@@ -54,6 +55,8 @@ const QuestionTypePreview = ({ type, choices }) => {
       return <DDMSForm previewChoices={choices} />;
     case Q.Testimonial:
       return <TestimonialForm />;
+    case Q.EmailPhone:
+      return <EmailPhoneForm />;
     case Q.DateTime:
       return <DateForm />;
     default:

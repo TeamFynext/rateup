@@ -28,6 +28,7 @@ import {
   IconListDetails,
   IconCaretDownFilled,
   IconCaretUpDown,
+  IconAddressBook,
 } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
 import { useContext, useState } from "react";
@@ -178,6 +179,7 @@ const questionIcons = {
   [QuestionType.MCQ]: IconListCheck,
   [QuestionType.MSQ]: IconListDetails,
   [QuestionType.Testimonial]: IconMessageChatbot,
+  [QuestionType.EmailPhone]: IconAddressBook,
   [QuestionType.DDSS]: IconCaretDownFilled,
   [QuestionType.DDMS]: IconCaretUpDown,
   [QuestionType.WaList]: IconList,
