@@ -1,8 +1,8 @@
 import { createTheme } from "@mantine/core";
-import { lexend300 } from "../utils/fonts";
+import { lexend } from "../utils/fonts";
 // Add global theme overrides here. (used by app & storybook)
 export const theme = createTheme({
-  fontFamily: lexend300.style.fontFamily,
+  fontFamily: lexend.style.fontFamily,
   primaryColor: "rateup-blue",
   colors: {
     "rateup-blue": [

@@ -12,7 +12,10 @@ const navLinks = [
     href: "#our-solutions",
     linkText: "Solutions",
     hasSublinks: true,
-    sublinks: [{ link: "/reputation", label: "Reputation" }],
+    sublinks: [
+      { link: "/reputation", label: "Reputation" },
+      { link: "/menus", label: "Menus" },
+    ],
   },
   {
     href: "#our-features",

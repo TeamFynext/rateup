@@ -6,10 +6,9 @@ import commonStyles from "../Reputation.module.css";
 
 const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/transform-online-presence.png`;
 
-const heroSectionContainerClassName = `${styles["hero-section-container"]} ${commonStyles["section-container"]}`;
 function HeroSection() {
   return (
-    <Flex className={heroSectionContainerClassName}>
+    <Flex className={styles["hero-section-container"]}>
       <Stack className={styles["text-container"]}>
         <Title order={1}>
           Transforming Online Presence and Customer Experiences

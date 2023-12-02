@@ -2,6 +2,7 @@ import LandingPageLayout from "../LandingPageLayout";
 import Home from "../pages/Home";
 import { useRouter } from "next/router";
 import Reputation from "../pages/Reputation";
+import Menus from "../pages/Menus";
 
 function HomePage() {
   const { pathname } = useRouter();
@@ -14,6 +15,10 @@ function HomePage() {
     }
     case "/reputation": {
       componentToBeRendered = <Reputation />;
+      break;
+    }
+    case "/menus": {
+      componentToBeRendered = <Menus />;
       break;
     }
   }
