@@ -19,6 +19,7 @@ import classes from "./Navbar.module.css";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { NavbarLinkProps, navBottomData, navTopData } from "./navbar.constants";
 import { UserRole } from "../../../utils/enums";
+import { IconChevronLeft } from "@tabler/icons-react";
 interface _NavbarLinkProps {
   data: Array<NavbarLinkProps>;
   opened: boolean;
@@ -40,12 +41,10 @@ function _NavbarLink({
   setActive,
 }: _NavbarLinkProps) {
   const router = useRouter();
-  const roleArray = [UserRole.SUPADM, UserRole.ADM, UserRole.MEMBER];
   return (
     <>
       {data.map(({ Icon, label, href, role, submenus }, parentIndex) => {
-        if (role && currentRole !== role && !roleArray.includes(role))
-          return null;
+        if (role && currentRole !== role) return null;
         return (
           <Tooltip
             label={!opened ? label : ""}
@@ -60,10 +59,36 @@ function _NavbarLink({
                 root: {
                   borderRadius: 5,
                 },
+                label: {
+                  color:
+                    !(
+                      (submenus?.length > 0 && active === parentIndex) ||
+                      router.pathname === href
+                    ) && "gray",
+                },
+                chevron: {
+                  color:
+                    !(
+                      (submenus?.length > 0 && active === parentIndex) ||
+                      router.pathname === href
+                    ) && "gray",
+                },
               }}
               p={5}
               label={opened && label}
-              leftSection={<Icon size={18} />}
+              leftSection={
+                <Icon
+                  size={21}
+                  color={
+                    !(
+                      (submenus?.length > 0 && active === parentIndex) ||
+                      router.pathname === href
+                    )
+                      ? "grey"
+                      : "var(--tertiary-color)"
+                  }
+                />
+              }
               rightSection={!opened && <Burger opened={opened} size={0} />}
               active={
                 submenus?.length > 0
@@ -87,12 +112,7 @@ function _NavbarLink({
               children={
                 submenus?.length > 0
                   ? submenus.map(({ Icon, label, href, role }, index) => {
-                      if (
-                        role &&
-                        currentRole !== role &&
-                        !roleArray.includes(role)
-                      )
-                        return null;
+                      if (role && currentRole !== role) return null;
                       return (
                         <React.Fragment key={index}>
                           <Tooltip
@@ -106,10 +126,22 @@ function _NavbarLink({
                                 root: {
                                   borderRadius: 5,
                                 },
+                                label: {
+                                  color: router.pathname !== href && "gray",
+                                },
                               }}
                               p={5}
                               label={opened && label}
-                              leftSection={<Icon size={18} />}
+                              leftSection={
+                                <Icon
+                                  size={18}
+                                  color={
+                                    router.pathname !== href
+                                      ? "grey"
+                                      : "var(--tertiary-color)"
+                                  }
+                                />
+                              }
                               onClick={() => {
                                 href && router.push(href);
                                 setActive(parentIndex);
@@ -169,13 +201,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   } = {
     name: user?.userName,
     email: user?.email,
-    role: !user?.role
-      ? "...error..."
-      : user?.role === "SUPER_ADMIN"
-      ? "Super Admin"
-      : user?.role === "ADMIN"
-      ? "Admin"
-      : "Team Member",
+    role: !user?.role ? "...error..." : user?.role,
     image: userProfileAvatar,
   };
   return (
@@ -190,7 +216,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       maw={opened ? (isMobile ? 360 : 250) : 70}
     >
       {opened ? (
-        <Stack align="center" gap={0}>
+        <Stack align="center" gap={0} pos={"relative"}>
           {isMobile && (
             <Burger
               opened={opened}
@@ -202,7 +228,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
               color={theme.colors.gray[6]}
             />
           )}
-          <PaperLayout w="fit-content" p={5}>
+          <Group justify="space-between" w={"100%"}>
             <Image
               radius={10}
               onClick={() => router.replace("/dashboard")}
@@ -214,9 +240,28 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
             />
-          </PaperLayout>
+            <PaperLayout
+              w={"fit-content"}
+              p={2}
+              hoveractive
+              radius={"md"}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                display: "flex",
+              }}
+            >
+              <IconChevronLeft
+                size={20}
+                onClick={() => {
+                  setOpened((o) => !o);
+                }}
+                style={{ cursor: "pointer" }}
+              />
+            </PaperLayout>
+          </Group>
           <PaperLayout mt={10} w="100%">
-            <Group gap={5} justify="space-between">
+            <Group gap={10} justify="flex-start">
               <Avatar
                 onClick={() => {
                   setOpened((o) => !o);
@@ -234,16 +279,6 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   {userInfo.role}
                 </Text>
               </Stack>
-              {!isMobile && (
-                <Burger
-                  opened={opened}
-                  onClick={() => {
-                    setOpened((o) => !o);
-                  }}
-                  size="xs"
-                  color={theme.colors.gray[6]}
-                />
-              )}
             </Group>
           </PaperLayout>
         </Stack>
@@ -272,7 +307,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       )}
 
       <ScrollArea
-        mt={40}
+        mt={"sm"}
         mb={20}
         p={1}
         h={"100%"}

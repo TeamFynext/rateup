@@ -2,22 +2,27 @@ import { Flex, Stack, Text, Badge } from "@mantine/core";
 import { useRouter } from "next/router";
 import React from "react";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useUser } from "../../../context/UserContext";
+import { UserRole } from "../../../utils/enums";
 
 interface TeamCardProps {
   team: TeamData;
 }
 const TeamCard = ({ team }: TeamCardProps) => {
+  const { user } = useUser();
   const router = useRouter();
   return (
     <PaperLayout
+      hoveractive={user?.role === UserRole.SUPADM}
       p="md"
       shadow="md"
       radius="lg"
       style={{ cursor: "pointer", minWidth: "300px", height: "140px" }}
       onClick={() => {
-        router.push(`teams/${team.code}`);
+        user.role === UserRole.SUPADM
+          ? router.push(`teams/${team.code}`)
+          : null;
       }}
-      hoveractive
     >
       <Flex justify={"space-between"} align={"center"} h={"100%"}>
         <Stack gap={0}>

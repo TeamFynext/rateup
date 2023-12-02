@@ -15,6 +15,7 @@ import {
   IconPhone,
   IconAddressBook,
 } from "@tabler/icons-react";
+import { UserRole } from "../../../utils/enums";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -43,7 +44,7 @@ export const navTopData: Array<NavbarLinkProps> = [
         Icon: IconUsers,
         label: "Members",
         href: "/dashboard/members",
-        role: "SUPER_ADMIN",
+        role: UserRole.SUPADM,
       },
     ],
   },

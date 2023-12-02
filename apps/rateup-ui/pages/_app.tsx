@@ -1,13 +1,10 @@
-import React, { ReactElement, ReactNode, useCallback, useEffect } from "react";
+import React, { ReactElement, ReactNode, useEffect } from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
 import { MantineProvider } from "@mantine/core";
-import { nprogress, NavigationProgress } from "@mantine/nprogress";
+import { nprogress } from "@mantine/nprogress";
 import { Notifications } from "@mantine/notifications";
-import SuperTokensReact, {
-  redirectToAuth,
-  SuperTokensWrapper,
-} from "supertokens-auth-react";
+import { redirectToAuth } from "supertokens-auth-react";
 import { frontendConfig } from "../config/frontendConfig";
 import Session from "supertokens-web-js/recipe/session";
 import {
@@ -18,7 +15,7 @@ import {
 import { NextPage } from "next";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { UserProvider } from "../context/UserContext";
-import { HydrationBoundary, keepPreviousData } from "@tanstack/react-query";
+import { HydrationBoundary } from "@tanstack/react-query";
 
 import SuperTokens from "supertokens-web-js";
 import "@mantine/core/styles.css";
@@ -153,8 +150,6 @@ export default function App({
         />
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
-      {/* <SuperTokensWrapper> */}
-      {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
       <main className={lexend.className}>
         <MantineProvider theme={theme}>
           <ModalsProvider>
@@ -167,7 +162,12 @@ export default function App({
                       <motion.div
                         style={{ height: "100%" }}
                         key={appProps.router.pathname}
-                        // initial={{ opacity: 0 }}
+                        initial={
+                          !(
+                            appProps.router.pathname.includes("login") ||
+                            appProps.router.pathname.includes("signup")
+                          ) && { opacity: 0 }
+                        }
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
                       >
@@ -185,7 +185,6 @@ export default function App({
             <Notifications />
           </ModalsProvider>
         </MantineProvider>
-        {/* </SuperTokensWrapper> */}
       </main>
     </>
   );
