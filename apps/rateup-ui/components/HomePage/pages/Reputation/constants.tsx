@@ -1,6 +1,11 @@
 import Image from "next/image";
-import styles from "../../index/index.module.css";
-import { Text, Title } from "@mantine/core";
+import {
+  Heading,
+  DescriptionP,
+  DescriptionPSpan,
+  imagePath,
+  videoClassName,
+} from "../constants";
 
 export type Solution = {
   heading: string;
@@ -45,27 +50,6 @@ export const solutionsList: Solution[] = [
   },
 ];
 
-const featuresH1ClassName = styles["illustration-txt-section-heading"];
-const descriptionPClassName = styles["illustration-txt-section-text-para"];
-const descriptionPSpanClassName = styles["bold-span"];
-
-const Heading = ({ children }) => (
-  <Title order={1} className={featuresH1ClassName}>
-    {children}
-  </Title>
-);
-
-const DescriptionP = ({ children }) => (
-  <Text className={descriptionPClassName}>{children}</Text>
-);
-
-const DescriptionPSpan = ({ text }) => (
-  <span className={descriptionPSpanClassName}>{text}</span>
-);
-
-const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/our-features`;
-const videoClassName = styles["illustration-txt-section-video"];
-
 export const features = [
   {
     id: 10245,
@@ -85,7 +69,7 @@ export const features = [
     image: (
       <Image
         className={videoClassName}
-        src={`${imagePath}/google-review-enhancement.png`}
+        src={`${imagePath}/reputation-page/our-features/google-review-enhancement.png`}
         width={662}
         height={482}
         alt="Google Review Enhancement"
@@ -113,7 +97,7 @@ export const features = [
     image: (
       <Image
         className={videoClassName}
-        src={`${imagePath}/ai-based-algorithm.png`}
+        src={`${imagePath}/reputation-page/our-features/ai-based-algorithm.png`}
         width={1982}
         height={1443}
         alt="AI-Based Algorithm"
@@ -140,7 +124,7 @@ export const features = [
     image: (
       <Image
         className={videoClassName}
-        src={`${imagePath}/customer-feedback-insights.png`}
+        src={`${imagePath}/reputation-page/our-features/customer-feedback-insights.png`}
         width={1982}
         height={1443}
         alt="Customer Feedback Insights"
@@ -168,7 +152,7 @@ export const features = [
     image: (
       <Image
         className={videoClassName}
-        src={`${imagePath}/escalation-mechanism.png`}
+        src={`${imagePath}/reputation-page/our-features/escalation-mechanism.png`}
         width={1982}
         height={1443}
         alt="Escalation Mechanism"
