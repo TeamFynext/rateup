@@ -42,6 +42,7 @@ import classes from "./TakeSurvey.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
+import { resolve } from "path";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<string>>;
@@ -194,6 +195,29 @@ export function EmailForm() {
 
 export function EmailPhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const [emailError, setEmailError] = useState(null);
+  const [phoneError, setPhoneError] = useState(null);
+
+  useEffect(() => {
+    if (response?.email?.length > 0)
+      setEmailError(
+        /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(response.email)
+          ? null
+          : "* Enter valid email",
+      );
+    else setEmailError(null);
+
+    if (response?.phone.toString()?.length > 0) {
+      const cleanedNumber = response?.phone?.toString()?.replace(/\D/g, ""); // Remove any non-digit characters
+
+      const internationalPattern = /^(?:\d{1,4})?(\d{10,14})$/;
+      setPhoneError(
+        internationalPattern.test(cleanedNumber) ? null : "* Invalid Phone",
+      );
+    } else {
+      setPhoneError(null);
+    }
+  }, [response]);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, email: e.currentTarget.value });
@@ -225,7 +249,12 @@ export function EmailPhoneForm() {
           />
         </Group>
       </Paper>
+      <Text c="red" ml="sm">
+        {emailError}
+      </Text>
+
       <Paper
+        mt="lg"
         shadow="sm"
         className={classes.inputBox}
         onClick={() => phoneRef.current.focus()}
@@ -246,9 +275,13 @@ export function EmailPhoneForm() {
               input: classes.input,
               wrapper: classes.numRoot,
             }}
+            style={{ flex: 1 }}
           />
         </Group>
       </Paper>
+      <Text c="red" ml="sm">
+        {phoneError}
+      </Text>
     </Stack>
   );
 }
