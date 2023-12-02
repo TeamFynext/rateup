@@ -31,11 +31,12 @@
 .inputs-conainer {
   margin-bottom: 2rem;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 /* Media Queries */
 @media screen and (max-width: 768px) {
-  .inputs-conainer {
+  /* .inputs-conainer {
     flex-direction: column;
-  }
+  } */
 }

@@ -4,10 +4,7 @@ import Head from "next/head";
 import { MantineProvider } from "@mantine/core";
 import { nprogress } from "@mantine/nprogress";
 import { Notifications } from "@mantine/notifications";
-import SuperTokensReact, {
-  redirectToAuth,
-  SuperTokensWrapper,
-} from "supertokens-auth-react";
+import { redirectToAuth } from "supertokens-auth-react";
 import { frontendConfig } from "../config/frontendConfig";
 import Session from "supertokens-web-js/recipe/session";
 import {
@@ -33,6 +30,7 @@ import Layout from "../components/Layout/Layout";
 import axios from "axios";
 import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
+import { lexend } from "../utils/fonts";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -152,43 +150,42 @@ export default function App({
         />
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
-      {/* <SuperTokensWrapper> */}
-      {/* <MantineProvider withGlobalStyles --- VERIFY MANTINE---- withNormalizeCSS theme={styleOverride}> */}
-      <MantineProvider theme={theme}>
-        <ModalsProvider>
-          <Notifications />
-          <QueryClientProvider client={queryClient}>
-            <HydrationBoundary state={pageProps.dehydratedState}>
-              <UserProvider>
-                <LayoutComponent>
-                  <AnimatePresence>
-                    <motion.div
-                      style={{ height: "100%" }}
-                      key={appProps.router.pathname}
-                      initial={
-                        !(
-                          appProps.router.pathname.includes("login") ||
-                          appProps.router.pathname.includes("signup")
-                        ) && { opacity: 0 }
-                      }
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Component {...pageProps} />
-                    </motion.div>
-                  </AnimatePresence>
-                </LayoutComponent>
-              </UserProvider>
-              <ReactQueryDevtools
-                initialIsOpen={false}
-                buttonPosition="top-right"
-              />
-            </HydrationBoundary>
-          </QueryClientProvider>
-          <Notifications />
-        </ModalsProvider>
-      </MantineProvider>
-      {/* </SuperTokensWrapper> */}
+      <main className={lexend.className}>
+        <MantineProvider theme={theme}>
+          <ModalsProvider>
+            <Notifications />
+            <QueryClientProvider client={queryClient}>
+              <HydrationBoundary state={pageProps.dehydratedState}>
+                <UserProvider>
+                  <LayoutComponent>
+                    <AnimatePresence>
+                      <motion.div
+                        style={{ height: "100%" }}
+                        key={appProps.router.pathname}
+                        initial={
+                          !(
+                            appProps.router.pathname.includes("login") ||
+                            appProps.router.pathname.includes("signup")
+                          ) && { opacity: 0 }
+                        }
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Component {...pageProps} />
+                      </motion.div>
+                    </AnimatePresence>
+                  </LayoutComponent>
+                </UserProvider>
+                <ReactQueryDevtools
+                  initialIsOpen={false}
+                  buttonPosition="top-right"
+                />
+              </HydrationBoundary>
+            </QueryClientProvider>
+            <Notifications />
+          </ModalsProvider>
+        </MantineProvider>
+      </main>
     </>
   );
 }

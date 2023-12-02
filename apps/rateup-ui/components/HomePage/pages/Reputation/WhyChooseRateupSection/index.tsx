@@ -2,7 +2,7 @@ import { Stack, Title } from "@mantine/core";
 import InteractiveSolutionDescriptions from "../../../components/InteractiveSolutionDescriptions";
 import { solutionsList } from "../constants";
 import styles from "./WhyChooseRateupSection.module.css";
-import commonStyles from "../Reputation.module.css";
+import commonStyles from "../../../index/index.module.css";
 
 const sectionClassName = `${styles["why-choose-rateup-container"]}`;
 

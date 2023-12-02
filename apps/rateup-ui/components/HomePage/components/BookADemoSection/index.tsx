@@ -1,4 +1,11 @@
-import { Center, Flex, TextInput, Title } from "@mantine/core";
+import {
+  Center,
+  Flex,
+  Grid,
+  NumberInput,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import Button from "../Button";
 import styles from "./BookADemoSection.module.css";
 import commonStyles from "../../index/index.module.css";
@@ -9,11 +16,16 @@ function BookADemoSection() {
     initialValues: {
       fullName: "",
       email: "",
+      phone: "",
     },
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
       fullName: (value) =>
         /^[a-zA-Z ]+$/.test(value) ? null : "Invalid full name",
+      phone: (value) =>
+        /^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$/.test(value)
+          ? null
+          : "Invalid phone number",
     },
   });
 
@@ -27,23 +39,37 @@ function BookADemoSection() {
           console.log(values);
         })}
       >
-        <Flex className={styles["inputs-conainer"]}>
-          <TextInput
-            classNames={styles}
-            withAsterisk
-            label="Full Name"
-            placeholder="Enter your Full Name"
-            {...form.getInputProps("fullName")}
-          />
+        <Grid className={styles["inputs-conainer"]}>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              classNames={styles}
+              withAsterisk
+              label="Full Name"
+              placeholder="Enter your Full Name"
+              {...form.getInputProps("fullName")}
+            />
+          </Grid.Col>
 
-          <TextInput
-            classNames={styles}
-            withAsterisk
-            label="Email"
-            placeholder="Enter your Email"
-            {...form.getInputProps("email")}
-          />
-        </Flex>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              classNames={styles}
+              withAsterisk
+              label="Email"
+              placeholder="Enter your Email"
+              {...form.getInputProps("email")}
+            />
+          </Grid.Col>
+
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              classNames={styles}
+              withAsterisk
+              label="Phone"
+              placeholder="Enter your Phone number"
+              {...form.getInputProps("phone")}
+            />
+          </Grid.Col>
+        </Grid>
         <Center>
           <Button type="submit">Book a Demo</Button>
         </Center>

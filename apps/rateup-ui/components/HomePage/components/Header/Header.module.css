@@ -5,6 +5,7 @@
   top: 0;
   z-index: 400;
   background-color: white;
+  align-items: center;
 }
 
 .header-links-container {
@@ -112,6 +113,10 @@
   .login-signup-links-container {
     display: none;
   }
+  .join-now-btn-container {
+    display: none;
+  }
+
   .logo-nav-container {
     justify-content: space-between;
     flex: 1 1 auto;

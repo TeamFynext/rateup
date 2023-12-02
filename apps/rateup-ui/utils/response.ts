@@ -14,6 +14,10 @@ export function getResponse(qId: string, response: SurveyResponse) {
 
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
+  } else if (type === QuestionType.EmailPhone) {
+    return (
+      qResponse.response[type].email + " , " + qResponse.response[type].phone
+    );
   } else if (type === QuestionType.DateTime) {
     const dateTimeValue = qResponse.response.DateTime;
     const date = dayjs(dateTimeValue);

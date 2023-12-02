@@ -2,13 +2,11 @@ import { Stack, Title } from "@mantine/core";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
 import { features } from "../constants";
 import styles from "./our-features.module.css";
-import commonStyles from "../Reputation.module.css";
-
-const sectionClassName = `${styles["our-features-container"]} ${commonStyles["section-container"]}`;
+import commonStyles from "../../../index/index.module.css";
 
 function OurFeatures() {
   return (
-    <Stack id="our-features" className={sectionClassName}>
+    <Stack id="our-features" className={styles["our-features-container"]}>
       <Title order={1} className={commonStyles["section-heading"]}>
         OUR FEATURES
       </Title>

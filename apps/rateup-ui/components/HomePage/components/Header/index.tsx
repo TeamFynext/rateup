@@ -4,8 +4,13 @@ import { getNavLinksArray } from "../../constants";
 import LoginSignupLinks from "./LoginSignupLinks";
 import MobileNav from "./MobileNav";
 import Link from "next/link";
+import Button from "../Button";
+import { useRouter } from "next/router";
 
 function Header() {
+  const router = useRouter();
+  const currentRoutePath = router.pathname;
+
   return (
     <Flex justify="space-between" className={styles["header-container"]}>
       <Group gap={"xl"} className={styles["logo-nav-container"]} wrap="nowrap">
@@ -25,7 +30,13 @@ function Header() {
           <MobileNav />
         </nav>
       </Group>
-      <LoginSignupLinks />
+      {!(currentRoutePath === "/menus") ? (
+        <LoginSignupLinks />
+      ) : (
+        <Flex className={styles["join-now-btn-container"]}>
+          <Button>Join Now</Button>
+        </Flex>
+      )}
     </Flex>
   );
 }
