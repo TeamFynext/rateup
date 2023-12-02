@@ -254,7 +254,7 @@ export function EmailPhoneForm() {
       </Text>
 
       <Paper
-        mt="lg"
+        mt="xs"
         shadow="sm"
         className={classes.inputBox}
         onClick={() => phoneRef.current.focus()}
@@ -265,7 +265,6 @@ export function EmailPhoneForm() {
           <NumberInput
             ref={phoneRef}
             hideControls
-            //error="Invalid phone"
             size="sm"
             placeholder="Enter your phone with country code"
             value={parseInt(response?.phone) || null}
