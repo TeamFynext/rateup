@@ -23,7 +23,6 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
-import { lexend400 } from "../../../utils/fonts";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -185,7 +184,7 @@ function SurveyTheme({ survey }) {
         <PaperLayout p={"xl"}>
           <Group justify="center">
             <Switch
-              className={lexend400.className}
+              fw={400}
               size="lg"
               label="Enable Welcome page"
               checked={survey?.welcomePageEnabled}

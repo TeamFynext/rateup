@@ -3,7 +3,6 @@ import { Text, Title, Badge, Group, Stack } from "@mantine/core";
 import { useRouter } from "next/router";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { lexend400 } from "../../utils/fonts";
 interface SurveyCardProps {
   survey: SurveySummary;
 }
@@ -66,7 +65,7 @@ export default function ActiveSurveyCard({
                   textAlign: "center",
                 }}
                 mt="-15px"
-                className={lexend400.className}
+                fw={"400"}
                 fz="lg"
                 c="dimmed"
               >

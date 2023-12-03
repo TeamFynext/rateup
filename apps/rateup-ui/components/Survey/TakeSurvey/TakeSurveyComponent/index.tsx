@@ -67,7 +67,6 @@ import {
   TextForm,
   YNForm,
 } from "./QuestionForms";
-import { lexend400 } from "../../../../utils/fonts";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -511,8 +510,9 @@ function QuestionTitle({ largeScreen }) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
     <Text
+      fw={400}
       size={largeScreen ? "30px" : "20px"}
-      className={`${lexend400.className} ${classes.questionTitle}`}
+      className={classes.questionTitle}
     >
       {selectedQ.title[selectedLanguage]}
     </Text>

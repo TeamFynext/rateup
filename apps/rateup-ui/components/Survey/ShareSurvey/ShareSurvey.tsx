@@ -43,7 +43,6 @@ import {
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
-import { lexend400, lexend500 } from "../../../utils/fonts";
 
 const ShareSurvey = ({
   survey,
@@ -174,7 +173,7 @@ const ShareSurvey = ({
       >
         <Group justify="space-between">
           <Switch
-            className={lexend500.className}
+            fw={500}
             size="lg"
             checked={isPublished}
             onChange={(event) => {

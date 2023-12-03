@@ -25,7 +25,6 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import { notifications } from "@mantine/notifications";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import RateupRedirectCard from "../../Card/RateupRedirectCard";
-import { lexend400 } from "../../../utils/fonts";
 import { IconChevronRight } from "@tabler/icons-react";
 
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {

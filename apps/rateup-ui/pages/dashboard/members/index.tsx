@@ -28,7 +28,6 @@ import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { useUpdateActiveStatusMutation } from "../../../backend/user/user.query";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import { lexend400 } from "../../../utils/fonts";
 
 const Members = () => {
   const router = useRouter();
@@ -237,7 +236,7 @@ const LongMemberCard = ({
           </Text>
         </Stack>
         <Stack style={{ flex: 1 }} gap={5}>
-          <Text size="xs" c={"dimmed"} className={lexend400.className}>
+          <Text size="xs" fw={400} c={"dimmed"}>
             Teams joined :
           </Text>
           <ScrollArea

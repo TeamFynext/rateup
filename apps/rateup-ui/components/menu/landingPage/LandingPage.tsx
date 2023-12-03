@@ -47,7 +47,7 @@ import {
   MenuButton,
 } from "./Button/LandingButtons";
 import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
-import { lexend, lexend900 } from "../../../utils/fonts";
+import { lexend } from "../../../utils/fonts";
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 

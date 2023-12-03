@@ -85,7 +85,7 @@ export const RateupButtonBlue = ({
       size={size}
       style={sx}
       loading={loading}
-      fw={300}
+      fw={400}
       {...other}
     >
       {title}
