@@ -1,4 +1,4 @@
-import { QuestionType } from "../../types/enums";
+import { QuestionType, SentimentClass } from "../../types/enums";
 
 export const AuthMode = {
   VERIFY: "VERIFY",
@@ -76,5 +76,18 @@ export function getQuestionTypeLabel(type: QuestionType) {
       return "WhatsApp Buttons";
     default:
       throw new Error("Invalid Question Type");
+  }
+}
+
+export function getSentimentTypeLabel(sentiment: SentimentClass) {
+  switch (sentiment) {
+    case SentimentClass.POSITIVE:
+      return "Positive";
+    case SentimentClass.NEGATIVE:
+      return "Negative";
+    case SentimentClass.NEUTRAL:
+      return "Neutral";
+    default:
+      throw new Error("Invalid Sentiment Type");
   }
 }

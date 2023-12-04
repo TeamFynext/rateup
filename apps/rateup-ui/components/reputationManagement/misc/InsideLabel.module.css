@@ -1,0 +1,19 @@
+.root {
+  position: relative;
+}
+
+.input {
+  height: rem(54px);
+  padding-top: 18px;
+  font-size: 12px;
+  cursor: pointer !important;
+}
+
+.label {
+  position: absolute;
+  pointer-events: none;
+  font-size: 10px;
+  padding-left: var(--mantine-spacing-sm);
+  padding-top: 4px;
+  z-index: 1;
+}

@@ -106,6 +106,15 @@ export const navTopData: Array<NavbarLinkProps> = [
           href: "/dashboard/campaign/contacts",
         },
       ]),
+  ...(hiddenModules.includes("reputation_management")
+    ? []
+    : [
+        {
+          Icon: IconSpeakerphone,
+          label: "Reputation Management",
+          href: "/dashboard/rm",
+        },
+      ]),
 ];
 
 //data Array consisting of NavbarBottomData

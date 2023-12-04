@@ -387,6 +387,20 @@ declare global {
   interface ContactGroupwithContacts extends ContactGroup {
     contacts: ContactsData[];
   }
+  interface RM_Topic {
+    id: string;
+    name: string;
+    keywords: string[];
+    teamId: string;
+  }
+  interface ReviewsFilter {
+    sentiment: {
+      [key in SentimentClass]: boolean;
+    };
+    rating: {
+      [key: number]: boolean;
+    };
+  }
 }
 
 export interface MenuLanding {

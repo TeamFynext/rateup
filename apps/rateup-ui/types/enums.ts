@@ -90,3 +90,17 @@ export enum CampaignParticipantStatus {
   FAILED = "FAILED",
   COMPLETED = "COMPLETED",
 }
+
+export enum SentimentClass {
+  POSITIVE = "positive",
+  NEGATIVE = "negative",
+  NEUTRAL = "neutral",
+}
+export enum ReviewPlatform {
+  GOOGLE = "gb",
+  FACEBOOK = "fp",
+}
+export enum SortType {
+  ASC = "asc",
+  DESC = "desc",
+}

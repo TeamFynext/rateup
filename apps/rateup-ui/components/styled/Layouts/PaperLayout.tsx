@@ -3,7 +3,7 @@ import { useHover } from "@mantine/hooks";
 interface PaperLayoutProps extends PaperProps {
   hoveractive?: boolean;
   selected?: boolean;
-  children?: JSX.Element;
+  children?: JSX.Element | JSX.Element[];
   onClick?: (e?: any) => void;
 }
 export default function PaperLayout(props: PaperLayoutProps) {
