@@ -76,7 +76,7 @@ const GeneralSettings = ({ editingItem }) => {
           />
           <ContainedTextField
             label="Display Name"
-            placeholder="Paragon Restaurant"
+            placeholder="Hotel Name"
             withAsterisk
             {...form.getInputProps("displayName")}
           />
@@ -109,12 +109,12 @@ const GeneralSettings = ({ editingItem }) => {
           <SimpleGrid cols={2} spacing="md">
             <ContainedTextField
               label="Website Label"
-              placeholder="paragonHotels.in"
+              placeholder="hotelname.in"
               {...form.getInputProps("websiteText")}
             />
             <ContainedTextField
               label="Website URL"
-              placeholder="https://paragonHotels.in"
+              placeholder="https://hotelname.in"
               type="url"
               {...form.getInputProps("websiteUrl")}
             />

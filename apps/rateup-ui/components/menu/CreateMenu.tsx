@@ -98,7 +98,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
         />
         <ContainedTextField
           label="Display Name"
-          placeholder="Paragon Restaurant"
+          placeholder="Hotel Name"
           withAsterisk
           {...form.getInputProps("displayName")}
         />

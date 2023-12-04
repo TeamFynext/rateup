@@ -12,11 +12,12 @@ import {
   MultiSelect,
 } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { useForm } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import { z } from "zod";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules }) => {
@@ -30,7 +31,16 @@ const GeneralSettings = ({ survey, enabledModules }) => {
     value: team?.id,
     label: team?.name,
   }));
-
+  const schema = z.object({
+    title: z.string().trim().min(1, { message: "Cannot be empty" }),
+    languages: z
+      .array(z.string())
+      .min(1, { message: "Must contain atleast one language" }),
+    teams: z
+      .array(z.string())
+      .min(1, { message: "Must contain atleast one team" }),
+    email: z.string().trim().email({ message: "Invalid email" }),
+  });
   const surveyForm = useForm({
     initialValues: {
       title: "",
@@ -38,14 +48,10 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       teams: [],
       skipPreview: false,
       getLocation: false,
+      sendSurveyResponse: false,
+      email: "",
     },
-    validate: {
-      title: (value) => (value.length ? null : "Cannot be empty"),
-      languages: (values) =>
-        values.length ? null : "Must contain atleast one language",
-      teams: (values) =>
-        values.length ? null : "Must contain atleast one team",
-    },
+    validate: zodResolver(schema),
   });
   useEffect(() => {
     surveyForm.setValues({
@@ -54,6 +60,8 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       teams: survey?.teams?.map((team) => team?.id) || [],
       skipPreview: survey?.skipPreview || false,
       getLocation: survey?.getLocation || false,
+      sendSurveyResponse: survey?.sendSurveyResponse || false,
+      email: survey?.email || "",
     });
     setKioskMode(survey?.kioskMode);
     setLanguages(survey?.languages);
@@ -75,6 +83,8 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       skipPreview: values?.skipPreview,
       kioskMode: kioskMode,
       getLocation: values?.getLocation,
+      sendSurveyResponse: values?.sendSurveyResponse,
+      email: values?.email,
     };
     editSurvey.mutate(data);
   };
@@ -176,6 +186,37 @@ const GeneralSettings = ({ survey, enabledModules }) => {
             </Grid.Col>
           </Grid>
         )}
+        {enabledModules.includes("sendSurveyResponse") && (
+          <Grid align="center" mt="md">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Send Survey Response To Email:</Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Switch
+                size={"md"}
+                {...surveyForm.getInputProps("sendSurveyResponse", {
+                  type: "checkbox",
+                })}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+        {enabledModules.includes("email") && (
+          <Grid align="center">
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Text size={"md"}>Survey Response Recipient: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <ContainedTextField
+                withAsterisk
+                placeholder="Enter Survey name"
+                required
+                mt="md"
+                {...surveyForm.getInputProps("email")}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
         <Grid justify="flex-end" mt={"md"}>
           <Grid.Col span={2}>
             <RateupButtonPrimary
@@ -222,7 +263,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
       setValue((current) =>
         current.includes(val)
           ? current.filter((v) => v !== val)
-          : [...current, val],
+          : [...current, val]
       );
     }
   };
