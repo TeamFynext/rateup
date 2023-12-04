@@ -1,7 +1,6 @@
 import {
   IconCalendarEvent,
   IconMail,
-  IconPhone,
   IconPlus,
   IconThumbDownFilled,
   IconThumbUpFilled,
@@ -42,7 +41,8 @@ import classes from "./TakeSurvey.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
-import { resolve } from "path";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<string>>;
@@ -113,83 +113,69 @@ export function NumberForm() {
 
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [isFocused, setIsFocused] = useState(false);
-  const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState(null);
 
   useEffect(() => {
-    if (response)
-      setError(/^\d{4,}$/.test(response) ? null : "* Invalid Phone Number");
+    response &&
+      (isValidPhoneNumber(String(response))
+        ? setPhoneError(null)
+        : setPhoneError("* Enter valid phone number"));
   }, [response]);
 
-  const handlePhoneNumber = (e) => {
-    setIsFocused(true);
-    let phone = e.target.value;
-    updateResponse(phone);
-  };
-
   return (
-    <Paper
-      shadow="sm"
-      className={classes.inputBox}
-      style={{ maxWidth: "300px" }}
-    >
-      <Stack gap={0}>
-        <Group gap={0} align="flex-start">
-          <TextInput
-            label="Enter Phone number with country code"
-            value={response}
-            onChange={handlePhoneNumber}
-            maxLength={15}
-            placeholder="Enter Phone number with c. code"
-            leftSection={<IconPlus size={"1rem"} color="black" />}
-            onBlur={() => setIsFocused(false)}
-            error={!isFocused ? error : null}
-          />
-        </Group>
-      </Stack>
-    </Paper>
+    <Stack>
+      <Paper mt="xs" shadow="sm" className={classes.inputBox}>
+        <PhoneInput
+          defaultCountry="IN"
+          international
+          countryCallingCodeEditable={false}
+          placeholder="Enter phone number"
+          value={response?.length > 0 ? response : ""}
+          onChange={updateResponse}
+          className={classes.inputPhone}
+        />
+      </Paper>
+
+      <Text c="red" ml="sm">
+        {phoneError}
+      </Text>
+    </Stack>
   );
 }
 
 export function EmailForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [emailError, setEmailError] = useState(null);
-  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
-    if (response)
-      setEmailError(/^\S+@\S+$/.test(response) ? null : "Invalid email");
+    if (response?.length > 0) {
+      setEmailError(
+        /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(response)
+          ? null
+          : "* Enter valid email",
+      );
+    } else setEmailError(null);
   }, [response]);
 
-  const handleInputBlur = () => {
-    if (emailError) {
-      // console.log("Invalid email");
-    }
-    setIsFocused(false);
-  };
-  const handleInputChange = (e) => {
-    setIsFocused(true);
-    const email = e.target.value;
-    updateResponse(email);
-    setEmailError(/^\S+@\S+$/.test(email) ? null : "Invalid email");
-  };
-
   return (
-    <Paper shadow="sm" className={classes.inputBox}>
-      <TextInput
-        placeholder="Enter email address"
-        value={response || ""}
-        onChange={handleInputChange}
-        onBlur={handleInputBlur}
-        style={{ maxWidth: "400px" }}
-        error={emailError && !isFocused ? "Invalid email" : null}
-        leftSection={<IconMail size="1.2rem" color="black" />}
-        variant="unstyled"
-        classNames={{
-          input: classes.input,
-        }}
-      />
-    </Paper>
+    <Stack>
+      <Paper shadow="sm" className={classes.inputBox}>
+        <TextInput
+          placeholder="Enter email address"
+          value={response || ""}
+          onChange={(e) => updateResponse(e.currentTarget.value)}
+          style={{ maxWidth: "400px" }}
+          leftSection={<IconMail size="1.2rem" color="gray" />}
+          variant="unstyled"
+          classNames={{
+            input: classes.input,
+          }}
+        />
+      </Paper>
+      <Text c="red" ml="sm">
+        {emailError}
+      </Text>
+    </Stack>
   );
 }
 
@@ -207,16 +193,10 @@ export function EmailPhoneForm() {
       );
     else setEmailError(null);
 
-    if (response?.phone.toString()?.length > 0) {
-      const cleanedNumber = response?.phone?.toString()?.replace(/\D/g, ""); // Remove any non-digit characters
-
-      const internationalPattern = /^(?:\d{1,4})?(\d{10,14})$/;
-      setPhoneError(
-        internationalPattern.test(cleanedNumber) ? null : "* Invalid Phone",
-      );
-    } else {
-      setPhoneError(null);
-    }
+    response?.phone &&
+      (isValidPhoneNumber(response?.phone)
+        ? setPhoneError(null)
+        : setPhoneError("* Enter valid phone number"));
   }, [response]);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,7 +204,6 @@ export function EmailPhoneForm() {
   };
 
   const emailRef = useRef(null);
-  const phoneRef = useRef(null);
 
   return (
     <Stack>
@@ -234,7 +213,6 @@ export function EmailPhoneForm() {
         onClick={() => emailRef.current.focus()}
       >
         <Group>
-          <IconMail size="1.2rem" color="gray" />
           <TextInput
             placeholder="Enter your email"
             ref={emailRef}
@@ -246,6 +224,7 @@ export function EmailPhoneForm() {
               input: classes.input,
               root: classes.textRoot,
             }}
+            leftSection={<IconMail size="1.2rem" color="gray" />}
           />
         </Group>
       </Paper>
@@ -253,31 +232,18 @@ export function EmailPhoneForm() {
         {emailError}
       </Text>
 
-      <Paper
-        mt="xs"
-        shadow="sm"
-        className={classes.inputBox}
-        onClick={() => phoneRef.current.focus()}
-      >
-        <Group>
-          <IconPhone size="1.2rem" color="gray" />
-          <Text>+</Text>
-          <NumberInput
-            ref={phoneRef}
-            hideControls
-            size="sm"
-            placeholder="Enter your phone with country code"
-            value={parseInt(response?.phone) || null}
-            onChange={(value) => updateResponse({ ...response, phone: value })}
-            variant="unstyled"
-            classNames={{
-              input: classes.input,
-              wrapper: classes.numRoot,
-            }}
-            style={{ flex: 1 }}
-          />
-        </Group>
+      <Paper mt="xs" shadow="sm" className={classes.inputBox}>
+        <PhoneInput
+          defaultCountry="IN"
+          international
+          countryCallingCodeEditable={false}
+          placeholder="Enter phone number"
+          value={response?.phone || null}
+          onChange={(value) => updateResponse({ ...response, phone: value })}
+          className={classes.inputPhone}
+        />
       </Paper>
+
       <Text c="red" ml="sm">
         {phoneError}
       </Text>

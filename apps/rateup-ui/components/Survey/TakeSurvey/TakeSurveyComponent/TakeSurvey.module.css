@@ -15,16 +15,21 @@
   font-size: 16px;
 }
 
-.numRoot {
-  width: 100%;
-}
-
 .textRoot {
   width: 100%;
 }
 
 .inputBox:focus-within {
   border-color: var(--input-focus-color, var(--tertiary-color));
+}
+
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
+}
+.inputPhone {
+  margin: 5px;
 }
 
 .selectBox {
