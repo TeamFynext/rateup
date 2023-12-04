@@ -89,15 +89,19 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
         c="white"
         align="center"
         justify="center"
-        p="md"
+        p="sm"
         m={"auto"}
         h={"100%"}
         style={{
-          flex: 0.3,
+          flex: 0,
         }}
       >
         {<IconCircleCheck size={"3rem"} />}
-        <Title order={1} style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}>
+        <Title
+          order={1}
+          fw={400}
+          style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}
+        >
           Thank you for your feedback!
         </Title>
       </Stack>
@@ -128,7 +132,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           )}
         </Stack>
       )}
-      <RateupRedirectCard alternateLogo={true} />
+      <RateupRedirectCard alternateLogo={!enableGoogleReview} />
     </Flex>
   );
 }
