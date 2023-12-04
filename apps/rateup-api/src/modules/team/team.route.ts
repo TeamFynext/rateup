@@ -97,6 +97,9 @@ export async function teamRoutes(server: FastifyInstance) {
     "/invite/resend/:id",
     {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: $Tref("idParamRequestSchema"),
+      },
     },
     resendInviteMemberHandler
   );

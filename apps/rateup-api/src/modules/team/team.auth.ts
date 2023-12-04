@@ -31,8 +31,8 @@ export async function verifyTeamAdminAccess(
  */
 export async function verifyTeamAccess(
     request: FastifyRequest<{
-        Params: { teamId?: string };
-        Body: { teamId?: string };
+        Params?: { teamId?: string };
+        Body?: { teamId?: string };
     }>,
     reply: FastifyReply
 ) {

@@ -43,6 +43,7 @@ import { campaignRoutes } from "./modules/campaign/campaign.route";
 import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSuggestion.schema";
 import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route";
 import { userPublicRoutes } from "./modules/user/user.public.routes";
+import { reputationManagementRoutes } from "./modules/reputation_management/registerRMRoutes";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -97,4 +98,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(contactRoutes, { prefix: "api/contact" })
   server.register(campaignRoutes, { prefix: "api/campaign" })
   server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" })
+  server.register(reputationManagementRoutes, { prefix: "api/rm" })
 }

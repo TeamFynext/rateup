@@ -32,7 +32,6 @@ export function createEmailBody(invite_link : string, email_id : string) {
     
           .overlap-group {
             border-radius: 23px;
-            border: 3px solid #1c518e;
           }
     
           .email-title {
@@ -41,7 +40,7 @@ export function createEmailBody(invite_link : string, email_id : string) {
             font-style: normal;
             font-weight: 400;
             line-height: normal;
-            padding-top: 60px;
+            padding-top: 40px;
           }
     
           .email-body {
@@ -101,6 +100,17 @@ export function createEmailBody(invite_link : string, email_id : string) {
             <table aria-describedby="email content">
               <thead>
                 <tr>
+                  <th>
+                    <img
+                      class="rateup-logo"
+                        src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+                        alt="Rateup Logo"
+                        width="134"
+                        height="76"
+                      />
+                  </th>
+                </tr>
+                <tr>
                   <th class="email-title">Invite Request</th>
                 </tr>
               </thead>
@@ -140,17 +150,6 @@ export function createEmailBody(invite_link : string, email_id : string) {
                   <td class="thanks">
                     Thanks,<br />
                     Rateup Team
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <img
-                      class="rateup-logo"
-                      src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
-                      alt="Rateup Logo"
-                      width="134"
-                      height="76"
-                    />
                   </td>
                 </tr>
               </tbody>

@@ -249,8 +249,9 @@ export async function resendInviteTeamMember(id: string) {
         existingInvitation?.email
       ),
     };
-    sendAWSEmail(msg);
+    await sendAWSEmail(msg);
   }
+  return "sent"
 }
 
 //Complete Email invite

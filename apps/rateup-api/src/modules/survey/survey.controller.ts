@@ -50,7 +50,7 @@ export async function createSurveyHandler(
 ) {
   const data = request.body;
   try {
-    const survey = await createSurvey(data, request.userId);
+    const survey = await createSurvey(data, request.userId,request.user.email);
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);

@@ -33,7 +33,10 @@ const questionCore = {
   description: z.record(z.string(), z.string()),
   required: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
-  choices: z.record(z.string(), z.array(z.string())).optional(),
+  choices: z.record(z.string(), z.array(z.object({
+    value: z.string(),
+    weightage: z.string()
+  }))).optional(),
   sections: z.record(z.string(), z.array(
     z.object({
       title: z.string(),

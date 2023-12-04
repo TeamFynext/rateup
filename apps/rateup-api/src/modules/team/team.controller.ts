@@ -128,7 +128,7 @@ export async function resendInviteMemberHandler(
 ) {
   try {
     await resendInviteTeamMember(request.params.id);
-    return reply.code(204).send("invite resended");
+    return reply.code(200).send("invite resended");
   } catch (e: any) {
     return reply.code(500).send({ success: false, message: e.message });
   }

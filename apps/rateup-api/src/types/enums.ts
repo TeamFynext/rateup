@@ -14,10 +14,12 @@ export enum QuestionType {
   Phone = "Phone",
   Photo = "Photo",
   Testimonial = "Testimonial",
+  EmailPhone = "Email & Phone",
   Text = "Text",
   TextArea = "TextArea",
   Number = "Number",
   DateTime = "DateTime",
+  CustomNPS = "Custom NPS",
 
   // WhatsApp exclusive
   WaList = 'Wa_List', // Interactive > List
@@ -101,4 +103,14 @@ export enum CampaignParticipantStatus {
   RESPONDING = "RESPONDING",
   FAILED = "FAILED",
   COMPLETED = "COMPLETED",
+}
+
+export enum NPSWeightage {
+  PROMOTER = "PROMOTER",
+  PASSIVE = "PASSIVE",
+  DETRACTOR = "DETRACTOR"
+}
+export enum ReviewPlatform {
+  GOOGLE = "gb",
+  FACEBOOK = "fp",
 }

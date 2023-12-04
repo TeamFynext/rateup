@@ -1,3 +1,5 @@
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail";
 import prisma from "../../utils/prisma";
 import { CreateResponseInput } from "./response.schema";
 
@@ -108,4 +110,32 @@ export async function updateResponse(
     },
   });
   return response;
+}
+
+export async function sendEmailOnResponseCreation(id: string) {
+  const response = await prisma.surveyTeamMap.findFirst({
+    where: { id },
+    include: {
+      survey: {
+        select: {
+          notificationEmail: true,
+          enableNotificationEmail: true,
+          id:true
+        },
+      },
+    },
+  });
+  const { survey } = response ?? {};
+
+  if (survey?.enableNotificationEmail && survey.notificationEmail) {
+    const { notificationEmail } = survey;
+    const msg = {
+      to: notificationEmail,
+      subject: "survay response - RateUp.app",
+      text: "survay response.",
+      html: createEmailBodySurveyResponse(`${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,),
+    };
+    await sendAWSEmail(msg);
+  }
+  return "response";
 }
