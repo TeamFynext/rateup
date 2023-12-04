@@ -2,23 +2,17 @@ export interface AnnotatedTextResult {
     sentences:            RawSentence[];
     tokens:               any[];
     entities:             RawEntity[];
-    categories:           RawCategory[];
-    moderationCategories: RawCategory[];
     documentSentiment:    RawSentiment;
     language:             string;
 }
 
-export interface RawCategory {
-    name:       string;
-    confidence: number;
-}
 
-export interface RawSentiment {
+interface RawSentiment {
     magnitude: number;
     score:     number;
 }
 
-export interface RawEntity {
+interface RawEntity {
     mentions:  Mention[];
     metadata:  Metadata;
     name:      string;
@@ -36,7 +30,7 @@ export interface Sentence {
     score: number,
 }
 
-export interface Mention {
+interface Mention {
     text:      Text;
     type:      Type;
     sentiment: RawSentiment;

@@ -8,7 +8,7 @@ import fs from "fs";
 
 
 
-fs.writeFileSync("./nlp_auth.json", process.env.NLP_AUTH)
+fs.writeFileSync("./nlp_auth.json", process.env.NLP_AUTH || "")
 
 // Instantiates a client
 const nlp_client = new nlp.v1beta2.LanguageServiceClient();
@@ -20,12 +20,11 @@ export async function annotateText(text: string) {
             content: text
         },
         features: {
-            // TODO: check if requesting more features increases cost
             extractDocumentSentiment: true,
             extractEntities: true,
             extractEntitySentiment: true,
             classifyText: false,
-            moderateText: true,
+            moderateText: false,
         }
     }, {
 
