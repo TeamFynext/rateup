@@ -12,7 +12,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import classes from "./WelcomePage.module.css";
 import { IconEdit } from "@tabler/icons-react";
-import { lexend } from "../../../utils/fonts";
+import { lexend, lexend300 } from "../../../utils/fonts";
 
 function WelcomePageView({
   setSelectedType,
@@ -101,7 +101,7 @@ function WelcomePageView({
       onClick={(e) => {
         e.stopPropagation(), handleFocus("background");
       }}
-      ff={lexend.style.fontFamily}
+      ff={lexend300.style.fontFamily}
     >
       <BackgroundImage
         className={classes.parentContainer}
@@ -179,6 +179,7 @@ function WelcomePageView({
                   <IconEdit style={{ width: "70%", height: "70%" }} />
                 </ActionIcon>
                 <TextInput
+                  className={lexend.className}
                   placeholder={"Welcome"}
                   variant="unstyled"
                   size="xxl"
@@ -201,6 +202,7 @@ function WelcomePageView({
             {/* //--------------------------- */}
 
             <TextInput
+              className={lexend.className}
               onChange={handleChange}
               value={currentStyles.descText}
               placeholder={"Please fill the survey"}

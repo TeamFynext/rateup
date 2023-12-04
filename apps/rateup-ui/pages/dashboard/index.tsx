@@ -49,6 +49,7 @@ import FormModalLayout from "../../components/Modal/FormModalLayout";
 import PaperLayout from "../../components/styled/Layouts/PaperLayout";
 import NothingFound from "../../components/NothingFound/NothingFound";
 import Heading from "../../components/styled/Heading/Heading";
+import { lexend400, lexend500 } from "../../utils/fonts";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -241,6 +242,7 @@ export default function DashboardHome() {
                   leftIcon={<IconPlus size="2.2rem" />}
                   size="xl"
                   py="xl"
+                  className={lexend500.className}
                   styles={{
                     root: {
                       height: "130px",
@@ -251,7 +253,6 @@ export default function DashboardHome() {
                       paddingBottom: "4px",
                       display: "flex",
                       alignItems: "center",
-                      fontWeight: 400,
                     },
                     leftIcon: {
                       display: "flex",
@@ -275,7 +276,7 @@ export default function DashboardHome() {
                         {summaryvalue ? summaryvalue : 0}
                       </Title>
                       <Text
-                        fw={400}
+                        className={lexend400.className}
                         style={{ textAlign: "center" }}
                         fz="xl"
                         c="#595959"
@@ -299,10 +300,14 @@ export default function DashboardHome() {
                     <Group justify="space-between">
                       <Group>
                         <Stack align="center" gap={0}>
-                          <Text fw={700} fz={32} c="#595959">
+                          <Text fz={32} c="#595959">
                             {total}
                           </Text>
-                          <Text fw={400} fz="xl" c="dimmed">
+                          <Text
+                            className={lexend400.className}
+                            fz="xl"
+                            c="dimmed"
+                          >
                             Overall Responses
                           </Text>
                         </Stack>
@@ -404,7 +409,7 @@ export default function DashboardHome() {
                       <Text
                         style={{ textAlign: "center" }}
                         size="20px"
-                        fw={700}
+                        className={lexend400.className}
                         c="#595959"
                       >
                         {title}

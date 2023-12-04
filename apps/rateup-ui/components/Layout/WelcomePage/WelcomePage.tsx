@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import React from "react";
 import { useMediaQuery } from "@mantine/hooks";
-import { lexend } from "../../../utils/fonts";
+import { lexend300 } from "../../../utils/fonts";
 
 const buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -32,7 +32,7 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
         borderRadius: 18,
         ...surveyThemeData?.bgStyles,
       }}
-      ff={lexend.style.fontFamily}
+      ff={lexend300.style.fontFamily}
     >
       <BackgroundImage
         h={"100%"}
@@ -58,7 +58,6 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
           align={"center"}
           h={"100%"}
           direction={"column"}
-          // bg={"red"}
         >
           {surveyThemeData?.logoUrl && (
             <Image

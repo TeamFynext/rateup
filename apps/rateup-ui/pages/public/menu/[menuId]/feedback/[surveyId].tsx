@@ -20,7 +20,7 @@ import {
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
-import { lexend } from "../../../../../utils/fonts";
+import { lexend300 } from "../../../../../utils/fonts";
 
 type MenuProp = {
   menuId: string;
@@ -62,7 +62,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     <Stack
       gap={0}
       maw={largeScreen ? "2440px" : "768px"}
-      ff={lexend.style.fontFamily}
+      ff={lexend300.style.fontFamily}
     >
       <BackgroundImage
         src={bgSrc}

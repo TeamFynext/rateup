@@ -30,7 +30,7 @@ import Layout from "../components/Layout/Layout";
 import axios from "axios";
 import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
-import { lexend } from "../utils/fonts";
+import { lexend300 } from "../utils/fonts";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -150,7 +150,7 @@ export default function App({
         />
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
-      <main className={lexend.className}>
+      <main className={lexend300.className}>
         <MantineProvider theme={theme}>
           <ModalsProvider>
             <Notifications />

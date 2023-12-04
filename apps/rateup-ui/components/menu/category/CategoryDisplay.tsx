@@ -1,10 +1,10 @@
 import { Flex, Stack, Text } from "@mantine/core";
 import { ItemDisplay } from "../item/ItemDisplay";
-import { lexend } from "../../../utils/fonts";
+import { lexend300 } from "../../../utils/fonts";
 
 export function CategoryDisplay({ category, setSelectedItem }) {
   return (
-    <Stack id={category?.id} ff={lexend.style.fontFamily}>
+    <Stack id={category?.id} ff={lexend300.style.fontFamily}>
       <Text
         c="var(--grey-color)"
         fz="clamp(1.25rem, 0.714rem + 1.429vw, 2rem)"

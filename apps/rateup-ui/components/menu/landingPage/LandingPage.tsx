@@ -225,7 +225,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     }
   };
   return (
-    <Grid ff={lexend.style.fontFamily}>
+    <Grid ff={lexend.style.fontFamily} fw={300}>
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
         <PaperLayout>
           <>
@@ -238,6 +238,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               >
                 <></>
               </TabsCommon>
+
               <Title order={2} c={"dimmed"}>
                 Preview Screen
               </Title>
