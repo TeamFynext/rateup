@@ -13,8 +13,8 @@ const defaultEnabledModules = [
   "teams",
   "preview",
   "location",
-  "sendSurveyResponse",
-  "email"
+  "enableNotificationEmail",
+  "notificationEmail"
 ];
 const SurveySettings = ({
   surveyId,

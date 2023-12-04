@@ -39,7 +39,12 @@ const GeneralSettings = ({ survey, enabledModules }) => {
     teams: z
       .array(z.string())
       .min(1, { message: "Must contain atleast one team" }),
-    email: z.string().trim().email({ message: "Invalid email" }),
+    notificationEmail:z
+      .string()
+      .trim()
+      .email({ message: "Invalid email" })
+      .optional()
+      .or(z.literal("")),
   });
   const surveyForm = useForm({
     initialValues: {
@@ -48,8 +53,8 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       teams: [],
       skipPreview: false,
       getLocation: false,
-      sendSurveyResponse: false,
-      email: "",
+      enableNotificationEmail: false,
+      notificationEmail: "",
     },
     validate: zodResolver(schema),
   });
@@ -60,8 +65,8 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       teams: survey?.teams?.map((team) => team?.id) || [],
       skipPreview: survey?.skipPreview || false,
       getLocation: survey?.getLocation || false,
-      sendSurveyResponse: survey?.sendSurveyResponse || false,
-      email: survey?.email || "",
+      enableNotificationEmail: survey?.enableNotificationEmail || false,
+      notificationEmail: survey?.notificationEmail || "",
     });
     setKioskMode(survey?.kioskMode);
     setLanguages(survey?.languages);
@@ -83,8 +88,10 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       skipPreview: values?.skipPreview,
       kioskMode: kioskMode,
       getLocation: values?.getLocation,
-      sendSurveyResponse: values?.sendSurveyResponse,
-      email: values?.email,
+      enableNotificationEmail: values?.enableNotificationEmail,
+      ...(values?.enableNotificationEmail && {
+        notificationEmail: values?.notificationEmail,
+      }),
     };
     editSurvey.mutate(data);
   };
@@ -186,7 +193,7 @@ const GeneralSettings = ({ survey, enabledModules }) => {
             </Grid.Col>
           </Grid>
         )}
-        {enabledModules.includes("sendSurveyResponse") && (
+        {enabledModules.includes("enableNotificationEmail") && (
           <Grid align="center" mt="md">
             <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
               <Text size={"md"}>Send Survey Response To Email:</Text>
@@ -194,29 +201,32 @@ const GeneralSettings = ({ survey, enabledModules }) => {
             <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
               <Switch
                 size={"md"}
-                {...surveyForm.getInputProps("sendSurveyResponse", {
+                {...surveyForm.getInputProps("enableNotificationEmail", {
                   type: "checkbox",
                 })}
               />
             </Grid.Col>
           </Grid>
         )}
-        {enabledModules.includes("email") && (
-          <Grid align="center">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Survey Response Recipient: </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <ContainedTextField
-                withAsterisk
-                placeholder="Enter Survey name"
-                required
-                mt="md"
-                {...surveyForm.getInputProps("email")}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
+        {enabledModules.includes("notificationEmail") &&
+          surveyForm?.getInputProps("enableNotificationEmail")?.value && (
+            <Grid align="center">
+              <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+                <Text size={"md"}>Survey Response Recipient: </Text>
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+                <ContainedTextField
+                  withAsterisk
+                  placeholder="Enter an email for receiving notification"
+                  required={
+                    surveyForm.getInputProps("enableNotificationEmail")?.value
+                  }
+                  mt="md"
+                  {...surveyForm.getInputProps("notificationEmail")}
+                />
+              </Grid.Col>
+            </Grid>
+          )}
         <Grid justify="flex-end" mt={"md"}>
           <Grid.Col span={2}>
             <RateupButtonPrimary
