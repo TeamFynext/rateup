@@ -130,3 +130,4 @@ dist
 .pnp.*
 
 .idea
+nlp_auth.json

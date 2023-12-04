@@ -103,3 +103,7 @@ export enum CampaignParticipantStatus {
   FAILED = "FAILED",
   COMPLETED = "COMPLETED",
 }
+export enum ReviewPlatform {
+  GOOGLE = "gb",
+  FACEBOOK = "fp",
+}

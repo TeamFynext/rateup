@@ -116,6 +116,8 @@ model Team {
   menu              Menu[]
   campaigns         Campaign[]
   reviewSuggestions ReviewSuggestion[]
+  Review            Review[]
+  RM_Topic          RM_Topic[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -446,4 +448,36 @@ model ReviewSuggestion {
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId String @db.Uuid
   review String
+}
+
+model Review {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewedAt     DateTime        @default(now())
+  review         String?
+  title          String?
+  rating         Int?
+  platform       String
+  team           Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId         String          @db.Uuid
+  meta           Json?
+  ReviewAnalysis ReviewAnalysis?
+}
+
+// result of sentiment analysis
+model ReviewAnalysis {
+  review    Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId  String @unique @db.Uuid
+  entities  Json[] // {name: string, score: number}[]
+  sentences Json[] // {text: string, sentiment: number}[]
+  sentiment Float
+}
+
+model RM_Topic {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  keywords String[]
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId   String   @db.Uuid
+
+  @@unique([name, teamId], name: "rm_topic_name_team_id_unique")
 }

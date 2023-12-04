@@ -4,12 +4,12 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import supertokens from "supertokens-node";
 import { plugin } from "supertokens-node/framework/fastify";
-import { logOptions } from "./utils/logger";
 import { errorHandler } from "supertokens-node/framework/fastify";
 import { SuperTokensConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
 import formDataPlugin from "@fastify/formbody";
 import { parseArrayString } from "./utils/array";
+
 
 const server = Fastify({
   // logger: logOptions,
