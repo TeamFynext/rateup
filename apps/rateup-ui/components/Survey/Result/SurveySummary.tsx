@@ -62,7 +62,7 @@ const countResponses = (surveyResponses) => {
         }
 
         for (const option of responseValue) {
-          const trimmedOption = option.value.trim();
+          const trimmedOption = option.value?.trim();
           counts[questionId][trimmedOption] =
             (counts[questionId][trimmedOption] || 0) + 1;
         }

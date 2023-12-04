@@ -24,7 +24,7 @@ export function mergeNames(first: string, last: string) {
 
 export var stringToColour = function (str: string) {
   var hash = 0;
-  for (var i = 0; i < str.length; i++) {
+  for (var i = 0; i < str?.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   var colour = "#";

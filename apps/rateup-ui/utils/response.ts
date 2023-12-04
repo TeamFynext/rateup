@@ -34,7 +34,7 @@ export function getResponse(qId: string, response: SurveyResponse) {
     let formattedValue = "";
     if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
       formattedValue = responseValue
-        ?.map((item) => item?.value.trim())
+        ?.map((item) => item?.value?.trim())
         .join(", ");
     } else {
       formattedValue = responseValue?.value;

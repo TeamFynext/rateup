@@ -228,7 +228,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
               color={theme.colors.gray[6]}
             />
           )}
-          <Group justify="space-between" w={"100%"}>
+          <Group w={"100%"} className={classes["icon-and-chevraon-container"]}>
             <Image
               radius={10}
               onClick={() => router.replace("/dashboard")}
@@ -250,6 +250,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                 justifyContent: "center",
                 display: "flex",
               }}
+              className={classes["chevron-container"]}
             >
               <IconChevronLeft
                 size={20}

@@ -71,7 +71,11 @@ export default function Layout({ children }) {
               />
             )}
           </Transition>
-          <Flex direction={"column"} w={"100%"} gap="15px">
+          <Flex
+            className={styles["content-container"]}
+            direction={"column"}
+            gap="15px"
+          >
             <Transition mounted={!focus} transition="slide-down">
               {(transitionStyle) => (
                 <HeaderTabs opened={opened} style={transitionStyle} />

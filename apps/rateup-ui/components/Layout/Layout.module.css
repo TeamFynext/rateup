@@ -9,3 +9,7 @@
   max-width: 2000px;
   transition: all 300ms;
 }
+.content-container {
+  flex: 1 1 auto;
+  overflow: hidden;
+}

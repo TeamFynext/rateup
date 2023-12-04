@@ -10,3 +10,13 @@
     rgba(0, 0, 0, 0.12) 0px 1px 3px,
     rgba(0, 0, 0, 0.24) 0px 1px 2px;
 }
+
+.icon-and-chevraon-container {
+  justify-content: center;
+  position: relative;
+}
+
+.chevron-container {
+  position: absolute;
+  right: 0;
+}
