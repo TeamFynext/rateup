@@ -14,9 +14,11 @@ import {
   Badge,
   Textarea,
   Image,
+  Select,
+  Text,
 } from "@mantine/core";
 import { useRouter } from "next/router";
-import { QuestionType } from "../../../types/enums";
+import { NPSWeightage, QuestionType } from "../../../types/enums";
 import {
   IconDeviceSdCard,
   IconEdit,
@@ -48,6 +50,7 @@ import {
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { IconBrandGoogle } from "@tabler/icons";
+import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -136,7 +139,6 @@ export function QuestionDetailedView({
 
     return "saved";
   };
-  // TODO: show question type somewhere
   return (
     <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
       <Stack justify="space-between" style={{ height: "100%" }}>
@@ -294,9 +296,13 @@ interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
   qId: string;
 }
+
 function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
   const [newChoice, setNewChoice] = useState<string>("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
+  const [choiceWeightage, setChoiceWeightage] = useState<string>(
+    NPSWeightage.PROMOTER,
+  );
 
   const choices = form.values.choices?.[selectedLanguage] || [];
 
@@ -304,13 +310,19 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
 
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
-    if (choices.includes(newChoice)) return;
-
+    if (choiceWeightage.trim().length === 0) return;
+    if (choices.filter((c) => c.value == newChoice).length != 0) return;
+    let choiceObj = {
+      value: newChoice,
+      weightage:
+        form.values.type === QuestionType.CustomNPS ? choiceWeightage : "",
+    };
     form.setFieldValue("choices", {
       ...form.values.choices,
-      [selectedLanguage]: [...choices, newChoice],
+      [selectedLanguage]: [...choices, choiceObj],
     });
     setNewChoice("");
+    setChoiceWeightage(NPSWeightage.PROMOTER);
   };
 
   const handleRemoveChoice = (choice) => {
@@ -331,12 +343,16 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
 
   return (
     <>
-      <Stack py="xs" gap={"xs"}>
+      <Stack
+        py="xs"
+        gap={form.values.type == QuestionType.CustomNPS ? "lg" : "xs"}
+      >
         {choices.map((choice, i) => (
           <Choice
-            key={choice}
+            key={i}
             choice={choice}
             onDelete={() => handleRemoveChoice(choice)}
+            qtype={form.values.type}
           />
         ))}
       </Stack>
@@ -348,6 +364,19 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
           onChange={(e) => setNewChoice(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
         />
+        {form?.values?.type === QuestionType.CustomNPS && (
+          <Select
+            data={Object.values(NPSWeightage)}
+            value={choiceWeightage}
+            onChange={setChoiceWeightage}
+            maw={140}
+            styles={{
+              input: { outline: `1px solid ${getNpsColor(choiceWeightage)}` },
+            }}
+            radius={"md"}
+            allowDeselect={false}
+          />
+        )}
         <RateupButtonSecondary
           title={"Add choice"}
           size="sm"
@@ -362,26 +391,69 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
 }
 
 interface ChoiceProps {
-  choice: string;
+  choice: ChoiceObjType;
   onDelete: () => void;
+  qtype: string;
 }
-function Choice({ choice, onDelete }: ChoiceProps) {
+function Choice({ choice, onDelete, qtype }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
+  const [newWeightage, setNewWeightage] = useState(choice.weightage);
+  useEffect(() => {
+    choice.weightage = newWeightage;
+  }, [newWeightage]);
   return (
-    <Group ref={ref} style={{ height: "30px" }}>
-      <Checkbox label={choice} checked={false} readOnly />
-      {hovered && (
-        <ActionIcon
-          variant="transparent"
-          color="red"
-          onClick={onDelete}
-          size={"sm"}
-        >
-          <IconTrash />
-        </ActionIcon>
-      )}
-    </Group>
+    <>
+      <Group ref={ref} style={{ height: "30px" }}>
+        {qtype == QuestionType.CustomNPS ? (
+          <>
+            <Badge color={getNpsColor(choice.weightage)}></Badge>
+            <Text w={149} truncate>
+              {choice.value}
+            </Text>
+          </>
+        ) : (
+          <Checkbox label={choice.value} checked={false} readOnly />
+        )}
+
+        {qtype === QuestionType.CustomNPS && (
+          <Select
+            data={Object.values(NPSWeightage)}
+            value={newWeightage}
+            onChange={setNewWeightage}
+            maw={140}
+            styles={{
+              input: { outline: `1px solid ${getNpsColor(newWeightage)}` },
+            }}
+            radius={"md"}
+            allowDeselect={false}
+          />
+        )}
+        {hovered && (
+          <ActionIcon
+            variant="transparent"
+            color="red"
+            onClick={onDelete}
+            size={"sm"}
+          >
+            <IconTrash />
+          </ActionIcon>
+        )}
+      </Group>
+    </>
   );
+}
+
+export function getNpsColor(npstype) {
+  switch (npstype) {
+    case NPSWeightage.PROMOTER:
+      return "green";
+    case NPSWeightage.PASSIVE:
+      return "yellow";
+    case NPSWeightage.DETRACTOR:
+      return "red";
+    default:
+      return "var(--tertiary-color)";
+  }
 }
 
 interface ExtraPropsProps {
@@ -394,6 +466,7 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.MSQ:
     case QuestionType.DDSS:
     case QuestionType.DDMS:
+    case QuestionType.CustomNPS:
       return <ChoicesCreator qId={question?.id} form={form} />;
     default:
       return null;

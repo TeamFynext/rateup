@@ -29,6 +29,9 @@ const countResponses = (surveyResponses) => {
     QuestionType.LD,
     QuestionType.YN,
     QuestionType.MSQ,
+    QuestionType.DDSS,
+    QuestionType.DDMS,
+    QuestionType.CustomNPS,
   ];
 
   for (const response of surveyResponses) {
@@ -43,7 +46,10 @@ const countResponses = (surveyResponses) => {
         counts[questionId] = {};
       }
 
-      if (responseType === QuestionType.MSQ) {
+      if (
+        responseType === QuestionType.MSQ ||
+        responseType === QuestionType.DDMS
+      ) {
         if (typeof responseValue === "string") {
           responseValue = responseValue.split(",");
         } else if (Array.isArray(responseValue)) {
@@ -56,10 +62,17 @@ const countResponses = (surveyResponses) => {
         }
 
         for (const option of responseValue) {
-          const trimmedOption = option.trim();
+          const trimmedOption = option.value.trim();
           counts[questionId][trimmedOption] =
             (counts[questionId][trimmedOption] || 0) + 1;
         }
+      } else if (
+        responseType === QuestionType.MCQ ||
+        responseType === QuestionType.CustomNPS ||
+        responseType === QuestionType.DDSS
+      ) {
+        counts[questionId][responseValue.value] =
+          (counts[questionId][responseValue.value] || 0) + 1;
       } else {
         counts[questionId][responseValue] =
           (counts[questionId][responseValue] || 0) + 1;
@@ -161,7 +174,7 @@ const SurveySummary = () => {
                 <Text fw={700} mb="sm" size={"20px"} c="dark.3">
                   {getPropertyValue(
                     questionTitleMap[questionId]
-                      ? questionTitleMap
+                      ? questionTitleMap[questionId]
                       : new Object(),
                     selectedLanguage ? selectedLanguage : defaultLanguage,
                   )}
@@ -190,6 +203,8 @@ const SurveySummary = () => {
                         </Group>
                       );
                     case QuestionType.MCQ:
+                    case QuestionType.DDSS:
+                    case QuestionType.CustomNPS:
                       return (
                         <Group key={response} pb="sm">
                           <Chip
@@ -284,6 +299,7 @@ const SurveySummary = () => {
                       );
 
                     case QuestionType.MSQ:
+                    case QuestionType.DDMS:
                       return (
                         <span key={response}>
                           <Group pb="sm">

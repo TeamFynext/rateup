@@ -20,6 +20,7 @@ export enum QuestionType {
   TextArea = "TextArea",
   Number = "Number",
   DateTime = "DateTime",
+  CustomNPS = "Custom NPS",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
@@ -89,6 +90,12 @@ export enum CampaignParticipantStatus {
   RESPONDING = "RESPONDING",
   FAILED = "FAILED",
   COMPLETED = "COMPLETED",
+}
+
+export enum NPSWeightage {
+  PROMOTER = "PROMOTER",
+  PASSIVE = "PASSIVE",
+  DETRACTOR = "DETRACTOR",
 }
 
 export enum SentimentClass {

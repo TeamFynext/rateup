@@ -525,51 +525,47 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const [selectedOp, setSelectedOp] = useState("");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const sampleChoices = ["option1", "option2", "option3", "option4"];
+  const sampleChoices = [
+    { value: "option1", weightage: "" },
+    { value: "option2", weightage: "" },
+    { value: "option3", weightage: "" },
+    { value: "option4", weightage: "" },
+  ];
+  const options = selectedQ
+    ? choices
+    : previewChoices?.[selectedLanguage]
+    ? previewChoices?.[selectedLanguage]
+    : sampleChoices;
+
+  const data = options?.map((op) => op?.value);
+
+  useEffect(() => {
+    if (selectedOp) {
+      const res = options?.find((op) => op?.value === selectedOp);
+      updateResponse(res);
+    } else {
+      updateResponse(response);
+    }
+  }, [selectedOp, response]);
 
   return (
     <Stack>
-      {selectedQ ? (
-        <ScrollArea w={"90vw"} h={"100%"} style={{ minHeight: "30vh" }}>
-          <Stack ml="sm">
-            <SegmentedControl
-              data={choices}
-              value={response ? response : ""}
-              onChange={updateResponse}
-              orientation={"vertical"}
-              color="var(--tertiary-color)"
-              size="md"
-              classNames={{ label: classes.sglabel }}
-            />
-          </Stack>
-        </ScrollArea>
-      ) : previewChoices ? (
-        <Stack ml="xs">
+      <ScrollArea.Autosize mah={"30vh"} maw={"90vh"}>
+        <Stack ml="sm">
           <SegmentedControl
-            data={previewChoices?.[selectedLanguage]}
-            value={response ? response : ""}
-            onChange={updateResponse}
+            data={data}
+            value={response ? response?.value : selectedOp}
+            onChange={setSelectedOp}
             orientation={"vertical"}
             color="var(--tertiary-color)"
             size="md"
             classNames={{ label: classes.sglabel }}
           />
         </Stack>
-      ) : (
-        <Stack ml="xs">
-          <SegmentedControl
-            data={sampleChoices}
-            value={response ? response : ""}
-            onChange={updateResponse}
-            orientation={"vertical"}
-            color="var(--tertiary-color)"
-            size="md"
-            classNames={{ label: classes.sglabel }}
-          />
-        </Stack>
-      )}
+      </ScrollArea.Autosize>
     </Stack>
   );
 }
@@ -578,45 +574,48 @@ export function MSQForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
-  const sampleChoices = ["option1", "option2", "option3", "option4"];
+  const [selectedOp, setSelectedOp] = useState([]);
+  const sampleChoices = [
+    { value: "option1", weightage: "" },
+    { value: "option2", weightage: "" },
+    { value: "option3", weightage: "" },
+    { value: "option4", weightage: "" },
+  ];
+  const options = selectedQ
+    ? choices
+    : previewChoices?.[selectedLanguage]
+    ? previewChoices?.[selectedLanguage]
+    : sampleChoices;
 
+  const data = options?.map((op) => op?.value);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  useEffect(() => {
+    if (selectedOp.length) {
+      const res = selectedOp?.map((s) => {
+        return options.find((op) => op?.value === s);
+      });
+      updateResponse(res);
+    }
+  }, [selectedOp]);
+  useEffect(() => {
+    if (response) {
+      setSelectedOp(response?.map((r) => r?.value));
+    }
+  }, []);
 
   return (
-    <Checkbox.Group value={response} onChange={updateResponse}>
+    <Checkbox.Group value={selectedOp} onChange={setSelectedOp}>
       <Stack>
-        {selectedQ
-          ? choices?.map((choice) => (
-              <Checkbox
-                value={choice}
-                key={choice}
-                label={choice}
-                classNames={{
-                  label: classes.input,
-                }}
-              />
-            ))
-          : previewChoices
-          ? previewChoices?.[selectedLanguage]?.map((choice) => (
-              <Checkbox
-                value={choice}
-                key={choice}
-                label={choice}
-                classNames={{
-                  label: classes.input,
-                }}
-              />
-            ))
-          : sampleChoices?.map((choice) => (
-              <Checkbox
-                value={choice}
-                key={choice}
-                label={choice}
-                classNames={{
-                  label: classes.input,
-                }}
-              />
-            ))}
+        {data?.map((choice) => (
+          <Checkbox
+            value={choice}
+            key={choice}
+            label={choice}
+            classNames={{
+              label: classes.input,
+            }}
+          />
+        ))}
       </Stack>
     </Checkbox.Group>
   );
@@ -626,18 +625,32 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
-  const sampleChoices = ["option1", "option2", "option3", "option4"];
+  const [selectedOp, setSelectedOp] = useState("");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const data = selectedQ
-    ? choices?.map((choice) => ({ value: choice, label: choice }))
-    : previewChoices
-    ? previewChoices?.[selectedLanguage]?.map((choice) => ({
-        value: choice,
-        label: choice,
-      }))
-    : sampleChoices?.map((choice) => ({ value: choice, label: choice }));
+  const sampleChoices = [
+    { value: "option1", weightage: "" },
+    { value: "option2", weightage: "" },
+    { value: "option3", weightage: "" },
+    { value: "option4", weightage: "" },
+  ];
+  const options = selectedQ
+    ? choices
+    : previewChoices?.[selectedLanguage]
+    ? previewChoices?.[selectedLanguage]
+    : sampleChoices;
+
+  const data = options?.map((op) => op?.value);
+
+  useEffect(() => {
+    if (selectedOp) {
+      const res = options?.find((op) => op?.value === selectedOp);
+      updateResponse(res);
+    } else {
+      updateResponse(response);
+    }
+  }, [selectedOp, response]);
 
   return (
     <Paper shadow="sm" className={classes.inputBox}>
@@ -645,8 +658,8 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
         style={{ minWidth: "300px", maxWidth: "500px" }}
         placeholder="Select one"
         data={data}
-        value={response}
-        onChange={(e) => updateResponse(e)}
+        value={response ? response?.value : selectedOp}
+        onChange={setSelectedOp}
         classNames={{
           input: classes.selectBox,
           root: classes.input,
@@ -660,26 +673,45 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
-  const sampleChoices = ["option1", "option2", "option3", "option4"];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const data = selectedQ
-    ? choices?.map((choice) => ({ value: choice, label: choice }))
-    : previewChoices
-    ? previewChoices?.[selectedLanguage]?.map((choice) => ({
-        value: choice,
-        label: choice,
-      }))
-    : sampleChoices?.map((choice) => ({ value: choice, label: choice }));
+  const [selectedOp, setSelectedOp] = useState([]);
+  const sampleChoices = [
+    { value: "option1", weightage: "" },
+    { value: "option2", weightage: "" },
+    { value: "option3", weightage: "" },
+    { value: "option4", weightage: "" },
+  ];
+  const options = selectedQ
+    ? choices
+    : previewChoices?.[selectedLanguage]
+    ? previewChoices?.[selectedLanguage]
+    : sampleChoices;
 
+  const data = options?.map((op) => op?.value);
+
+  useEffect(() => {
+    if (selectedOp.length) {
+      const res = selectedOp?.map((s) => {
+        return options.find((op) => op?.value === s);
+      });
+      updateResponse(res);
+    }
+  }, [selectedOp]);
+
+  useEffect(() => {
+    if (response) {
+      setSelectedOp(response?.map((r) => r?.value));
+    }
+  }, []);
   return (
     <Paper shadow="sm" className={classes.inputBox}>
       <MultiSelect
         style={{ minWidth: "300px", maxWidth: "500px" }}
         data={data}
-        value={response}
-        onChange={updateResponse}
+        value={selectedOp}
+        onChange={setSelectedOp}
         placeholder="Select one or more"
         classNames={{
           input: classes.selectBox,
@@ -762,6 +794,51 @@ export function TestimonialForm() {
           Picked file: {file.name}
         </Text>
       )} */}
+    </Stack>
+  );
+}
+
+export function CustomNPSForm({ previewChoices }: MCQFormProps) {
+  const { selectedQ } = useContext(SelectedQContext);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const choices = selectedQ?.choices[selectedLanguage];
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [selectedOp, setSelectedOp] = useState("");
+
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const sampleChoices = [
+    { value: "option1", weightage: "" },
+    { value: "option2", weightage: "" },
+    { value: "option3", weightage: "" },
+    { value: "option4", weightage: "" },
+  ];
+  const options = selectedQ
+    ? choices
+    : previewChoices?.[selectedLanguage]
+    ? previewChoices?.[selectedLanguage]
+    : sampleChoices;
+  const data = options?.map((op) => op?.value);
+  useEffect(() => {
+    if (selectedOp) {
+      const res = options?.find((op) => op?.value === selectedOp);
+      updateResponse(res);
+    } else {
+      updateResponse(response);
+    }
+  }, [selectedOp, response]);
+  return (
+    <Stack ml="sm">
+      <ScrollArea.Autosize mah={"30vh"} maw={"90vh"}>
+        <SegmentedControl
+          data={data}
+          value={response ? response?.value : selectedOp}
+          onChange={setSelectedOp}
+          orientation={"vertical"}
+          color={"var(--tertiary-color)"}
+          size="md"
+          classNames={{ label: classes.sglabel }}
+        />
+      </ScrollArea.Autosize>
     </Stack>
   );
 }

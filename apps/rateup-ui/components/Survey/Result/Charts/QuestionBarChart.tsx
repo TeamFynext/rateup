@@ -13,6 +13,7 @@ import { QuestionType } from "../../../../types/enums";
 import { getResponseArrayByQuestionType } from "../../../../utils/response";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
+import { ChoiceTypeQuestions } from "../../../../utils/constants";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
@@ -64,9 +65,15 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     name: choice?.value,
     count: data?.filter((item) => {
       const response = item?.response[questionType];
-      return Array.isArray(response)
-        ? response.includes(choice?.value)
-        : response === choice?.value;
+      if (ChoiceTypeQuestions.includes(questionType)) {
+        return Array.isArray(response)
+          ? response?.some((r) => r.value === choice?.value)
+          : response?.value === choice?.value;
+      } else {
+        return Array.isArray(response)
+          ? response.includes(choice?.value)
+          : response === choice?.value;
+      }
     })?.length,
     fill: choice?.color,
   }));

@@ -1,11 +1,13 @@
 import { TeamWiseResponses } from "../backend/surveys/response/response.api";
 import {
   LDResponse,
+  NPSWeightage,
   QuestionType,
   SmileyResponse,
   YNResponse,
 } from "../types/enums";
 import dayjs from "dayjs";
+import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
@@ -27,9 +29,16 @@ export function getResponse(qId: string, response: SurveyResponse) {
     // return `${formattedDate}, ${formattedTime}`;
 
     return `${formattedDate}`;
-  } else if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
-    const value = responseType[type];
-    const formattedValue = value?.map((item) => item.trim()).join(", ");
+  } else if (ChoiceTypeQuestions.includes(type)) {
+    const responseValue = responseType[type];
+    let formattedValue = "";
+    if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
+      formattedValue = responseValue
+        ?.map((item) => item?.value.trim())
+        .join(", ");
+    } else {
+      formattedValue = responseValue?.value;
+    }
     return formattedValue || ""; // Return blank if undefined
   } else if (type === QuestionType.WaList) {
     const { title, description } = qResponse.response[QuestionType.WaList];
@@ -118,6 +127,13 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
         [LDResponse.Dislike]: 0,
       };
     }
+    case QuestionType.CustomNPS: {
+      return {
+        [NPSWeightage.PROMOTER]: 0,
+        [NPSWeightage.PASSIVE]: 0,
+        [NPSWeightage.DETRACTOR]: 0,
+      };
+    }
     default: {
       return null;
     }
@@ -173,6 +189,13 @@ export function getResponseArrayByQuestionType(
       return [
         { value: LDResponse.Dislike, color: "#ff5c55" },
         { value: LDResponse.Like, color: "#52ba66" },
+      ];
+    }
+    case QuestionType.CustomNPS: {
+      return [
+        { value: NPSWeightage.DETRACTOR, color: "#ff5c55" },
+        { value: NPSWeightage.PASSIVE, color: "#fedc4e" },
+        { value: NPSWeightage.PROMOTER, color: "#52ba66" },
       ];
     }
     default: {

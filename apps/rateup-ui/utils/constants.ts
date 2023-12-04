@@ -14,6 +14,7 @@ export const NPSQuestions = [
   QuestionType.LD,
   QuestionType.YN,
   QuestionType.Opinion,
+  QuestionType.CustomNPS,
 ];
 
 export const WaNPSQuestions = [
@@ -58,4 +59,12 @@ export const WaSurveyQuestionTypes = [
   { title: "NPS Questions", questionTypes: WaNPSQuestions },
   { title: "Other Questions", questionTypes: WaOtherQuestions },
   { title: "WhatsApp Exclusive Questions", questionTypes: WaExclusive },
+];
+
+export const ChoiceTypeQuestions = [
+  QuestionType.MCQ,
+  QuestionType.MSQ,
+  QuestionType.DDMS,
+  QuestionType.DDSS,
+  QuestionType.CustomNPS,
 ];

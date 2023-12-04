@@ -140,7 +140,10 @@ declare global {
       country?: string;
     };
   };
-
+  type ChoiceObjType = {
+    value: string;
+    weightage: string;
+  };
   type QuestionResponse = {
     questionId: string;
     type: QuestionType;
@@ -163,13 +166,14 @@ declare global {
       [QuestionType.Rating]?: number;
       [QuestionType.Smiley]?: SmileyResponse;
       [QuestionType.Opinion]?: number;
-      [QuestionType.MCQ]?: string;
-      [QuestionType.MSQ]?: Array<string>;
-      [QuestionType.DDSS]?: string;
-      [QuestionType.DDMS]?: Array<string>;
+      [QuestionType.MCQ]?: ChoiceObjType;
+      [QuestionType.MSQ]?: Array<ChoiceObjType>;
+      [QuestionType.DDSS]?: ChoiceObjType;
+      [QuestionType.DDMS]?: Array<ChoiceObjType>;
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
+      [QuestionType.CustomNPS]?: ChoiceObjType;
       [QuestionType.WaList]?: { title: string; description?: string };
     };
   };

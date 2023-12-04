@@ -70,6 +70,8 @@ export function getQuestionTypeLabel(type: QuestionType) {
       return "Number";
     case QuestionType.DateTime:
       return "DateTime";
+    case QuestionType.CustomNPS:
+      return "Custom NPS";
     case QuestionType.WaList:
       return "WhatsApp List";
     case QuestionType.WaButtons:

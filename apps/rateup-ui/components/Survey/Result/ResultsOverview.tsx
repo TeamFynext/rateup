@@ -6,6 +6,7 @@ import QuestionPieChart from "./Charts/QuestionPieChart";
 import QuestionBarChart from "./Charts/QuestionBarChart";
 import {
   LDResponse,
+  NPSWeightage,
   QuestionType,
   SmileyResponse,
   YNResponse,
@@ -62,7 +63,8 @@ const ResultsOverview = () => {
           item.type === QuestionType.Smiley ||
           item.type === QuestionType.LD ||
           item.type === QuestionType.YN ||
-          item.type === QuestionType.Opinion,
+          item.type === QuestionType.Opinion ||
+          item.type === QuestionType.CustomNPS,
       ),
     );
   }, [chartData]);
@@ -128,6 +130,11 @@ const ResultsOverview = () => {
             if (rating === YNResponse.Yes) promoters++;
             else detractors++;
             break;
+          case QuestionType.CustomNPS:
+            if (rating.weightage == NPSWeightage.PROMOTER) promoters++;
+            if (rating.weightage == NPSWeightage.PASSIVE) passives++;
+            if (rating.weightage == NPSWeightage.DETRACTOR) detractors++;
+            break;
         }
       });
       const total = promoters + passives + detractors;
@@ -187,7 +194,8 @@ const ResultsOverview = () => {
                         item.type === QuestionType.Smiley ||
                         item.type === QuestionType.LD ||
                         item.type === QuestionType.YN ||
-                        item.type === QuestionType.Opinion,
+                        item.type === QuestionType.Opinion ||
+                        item.type === QuestionType.CustomNPS,
                     )
                     ?.map((item, index, filteredArray) => (
                       <React.Fragment key={index}>
@@ -219,7 +227,8 @@ const ResultsOverview = () => {
                     item.type === QuestionType.MCQ ||
                     item.type === QuestionType.MSQ ||
                     item.type === QuestionType.DDSS ||
-                    item.type === QuestionType.DDMS,
+                    item.type === QuestionType.DDMS ||
+                    item.type === QuestionType.CustomNPS,
                 )
                 ?.map((item, index) => (
                   <React.Fragment key={index}>
@@ -227,8 +236,11 @@ const ResultsOverview = () => {
                       key={index}
                       question={item?.question}
                       no={index + 1}
-                      choices={item?.choices?.map((choice: string) => {
-                        return { value: choice, color: stringToColour(choice) };
+                      choices={item?.choices?.map((choice) => {
+                        return {
+                          value: choice.value,
+                          color: stringToColour(choice.value),
+                        };
                       })}
                       data={item?.responses}
                       questionType={item?.type}

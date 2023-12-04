@@ -48,6 +48,7 @@ import { parseLogicAction } from "../../../../utils";
 import { validateQuestion } from "../../../../utils/validation";
 import { mapSmileyIcon } from "./SmileyRating";
 import {
+  CustomNPSForm,
   DDMSForm,
   DDSSForm,
   DateForm,
@@ -370,7 +371,7 @@ function TakeSurvey() {
                                   )[0];
                                   if (Array.isArray(responseData)) {
                                     return responseData.map((item, index) => {
-                                      return <li key={index}>{item}</li>;
+                                      return <li key={index}>{item.value}</li>;
                                     });
                                   }
                                   return <li>{responseData}</li>;
@@ -418,6 +419,13 @@ function TakeSurvey() {
                                     </Stack>
                                   );
 
+                                case Q.CustomNPS:
+                                case Q.MCQ:
+                                case Q.DDSS:
+                                  let selectedChoice = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  return <Text>{selectedChoice?.value}</Text>;
                                 default:
                                   return JSON.stringify(
                                     Object.values(response?.response)[0],
@@ -589,6 +597,8 @@ function getQuestionForm(type) {
       return <EmailPhoneForm />;
     case Q.DateTime:
       return <DateForm />;
+    case Q.CustomNPS:
+      return <CustomNPSForm />;
     default:
       return <div>not implemented</div>;
   }

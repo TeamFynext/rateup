@@ -220,6 +220,7 @@ const questionTypesForComparison = [
   QuestionType.Smiley,
   QuestionType.LD,
   QuestionType.YN,
+  QuestionType.CustomNPS,
 ];
 interface CombinedChartProps {
   questionResponses: Array<{
@@ -238,7 +239,11 @@ const CombinedChart = ({
     const responses = getResponseObjectByQuestionType(question.type);
     questionResponses
       ?.filter((response) => response.team.id === id)
-      ?.map(({ response }) => (responses[response] = responses[response] + 1));
+      ?.map(({ response }) =>
+        question?.type === QuestionType.CustomNPS
+          ? (responses[response.weightage] = responses[response.weightage] + 1)
+          : (responses[response] = responses[response] + 1),
+      );
     return {
       name: code,
       responses,

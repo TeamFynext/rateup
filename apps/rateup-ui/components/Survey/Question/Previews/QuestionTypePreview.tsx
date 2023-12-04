@@ -1,6 +1,7 @@
 import React from "react";
 import { QuestionType as Q } from "../../../../types/enums";
 import {
+  CustomNPSForm,
   DDMSForm,
   DDSSForm,
   DateForm,
@@ -59,6 +60,8 @@ const QuestionTypePreview = ({ type, choices }) => {
       return <EmailPhoneForm />;
     case Q.DateTime:
       return <DateForm />;
+    case Q.CustomNPS:
+      return <CustomNPSForm previewChoices={choices} />;
     default:
       return <div>not implemented</div>;
   }
