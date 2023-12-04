@@ -91,6 +91,8 @@ const updateSurveyRequestSchema = z.object({
   welcomePageEnabled: z.boolean().optional(),
   skipPreview: z.boolean().optional(),
   getLocation: z.boolean().optional(),
+  enableNotificationEmail: z.boolean().optional(),
+  notificationEmail:z.string().email().optional()
 });
 const updateLandingPageRequestSchema = z.object({
   title: z
@@ -107,7 +109,7 @@ const updateLandingPageRequestSchema = z.object({
     .optional(),
   surveys: z.array(z.string()).optional(),
   welcomePageEnabled: z.boolean().default(false).optional(),
- 
+
 });
 
 const updateSurveyPasswordRequestSchema = z.object({

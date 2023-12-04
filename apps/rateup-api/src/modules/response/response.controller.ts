@@ -10,6 +10,7 @@ import {
   getAllResponses,
   getResponses,
   resetResponsesStats,
+  sendEmailOnResponseCreation,
   updateResponse,
 } from "./response.service";
 import { fetchLocation } from "../../utils/location";
@@ -102,6 +103,7 @@ export async function createResponseHandler(
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
+      await sendEmailOnResponseCreation(data.surveyTeamMapId)
       const coords = (response.location as any)?.coordinates;
       const ip = getIp(request);
       let location = await fetchLocation(ip, coords);

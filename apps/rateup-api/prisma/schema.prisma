@@ -149,27 +149,29 @@ model Invitation {
 }
 
 model Survey {
-  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime?       @updatedAt
-  title              String
-  description        String?         @default("")
-  questions          Json[]          @default([])
-  languages          String[]
-  user               User            @relation(fields: [createdBy], references: [id])
-  createdBy          String          @db.Uuid
-  teams              SurveyTeamMap[]
-  active             Boolean         @default(true)
-  isPublished        Boolean         @default(false)
-  isProtected        Boolean         @default(false)
-  kioskMode          Boolean         @default(false)
-  password           String?
-  type               String          @default("web")
-  getLocation        Boolean         @default(false)
-  welcomePageEnabled Boolean         @default(true)
-  tags               String[]        @default([])
-  skipPreview        Boolean         @default(false)
-  WelcomeTheme       WelcomeTheme?
+  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime?       @updatedAt
+  title                   String
+  description             String?         @default("")
+  questions               Json[]          @default([])
+  languages               String[]
+  user                    User            @relation(fields: [createdBy], references: [id])
+  createdBy               String          @db.Uuid
+  teams                   SurveyTeamMap[]
+  active                  Boolean         @default(true)
+  isPublished             Boolean         @default(false)
+  isProtected             Boolean         @default(false)
+  kioskMode               Boolean         @default(false)
+  password                String?
+  type                    String          @default("web")
+  getLocation             Boolean         @default(false)
+  welcomePageEnabled      Boolean         @default(true)
+  tags                    String[]        @default([])
+  skipPreview             Boolean         @default(false)
+  enableNotificationEmail Boolean         @default(false)
+  notificationEmail       String          @default("")
+  WelcomeTheme            WelcomeTheme?
 }
 
 model SurveyTeamMap {

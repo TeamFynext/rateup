@@ -16,7 +16,8 @@ const secretPassphrase = "rateup-#$%^@#-passphrase";
 
 export async function createSurvey(
   input: CreateSurveyInput,
-  createdBy: string
+  createdBy: string,
+  notificationEmail: string
 ) {
   const teamIds = input?.teamIds?.map((teamId) => ({ teamId }));
   delete input.teamIds;
@@ -25,6 +26,7 @@ export async function createSurvey(
       ...input,
       title: input.title,
       languages: input.languages,
+      notificationEmail,
       createdBy,
       teams: {
         create: teamIds,
