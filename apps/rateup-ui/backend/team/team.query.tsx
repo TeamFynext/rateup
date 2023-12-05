@@ -80,6 +80,7 @@ export function useEditTeamMutation(id, setIsLoading) {
       });
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers", id] });
     },
     onError: (error: any) => {
       console.error("Error Team Update:", error.message);

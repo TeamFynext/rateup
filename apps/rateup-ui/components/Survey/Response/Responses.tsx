@@ -289,7 +289,12 @@ function TableHead({ questions }: TableHeadProps) {
               maw={200}
               c="dark.3"
             >
-              {q?.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
+              {q?.title[
+                selectedLanguage ? selectedLanguage : defaultLanguage
+              ] ||
+                q?.description[
+                  selectedLanguage ? selectedLanguage : defaultLanguage
+                ]}
             </Text>
           </Table.Th>
         ))}

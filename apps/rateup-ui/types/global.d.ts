@@ -131,14 +131,15 @@ declare global {
     responses: Array<QuestionResponse>;
     language: string;
     location?: {
-      coordinates?: {
-        latitude: number;
-        longitude: number;
-      };
+      coordinates?: Coordinates;
       city?: string;
       state?: string;
       country?: string;
     };
+  };
+  type Coordinates = {
+    latitude: number;
+    longitude: number;
   };
   type Choice = {
     value: string;

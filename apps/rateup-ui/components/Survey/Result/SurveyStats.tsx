@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Group, Text, Badge, Stack, Box, Grid } from "@mantine/core";
-import { Map, Marker, ZoomControl } from "pigeon-maps";
+import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
 import {
   useAllResponses,
   useResponses,
@@ -11,11 +11,15 @@ import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { findCentroid } from "../../../utils/location";
 enum LocationType {
   City = "city",
   State = "state",
   Country = "country",
 }
+const maxZoom = 15;
+const minZoom = 2;
+
 const SurveyStats = ({ survey }) => {
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -30,6 +34,7 @@ const SurveyStats = ({ survey }) => {
     error: rError,
   } = useAllResponses(survey?.id);
   const [zoom, setZoom] = useState(7);
+  const [isFindingZoomLevel, setIsFindingZoomLevel] = useState(false);
   const [locationType, setLocationType] = useState(LocationType.City);
   if (isResponsesLoading || !responses) {
     // TODO: loading ui
@@ -68,6 +73,16 @@ const SurveyStats = ({ survey }) => {
     0,
   );
   const sortedCount = getSortedLocationCount(responses, locationType);
+  const coords: Coordinates[] = responses.reduce((acc, curr) => {
+    if (
+      curr?.location?.coordinates?.latitude &&
+      curr?.location?.coordinates?.longitude
+    ) {
+      acc.push(curr.location.coordinates);
+    }
+    return acc;
+  }, [] as Coordinates[]);
+  const centroid = findCentroid(coords);
   const surveyStatsCountArray = [
     {
       label: "Visited",
@@ -138,27 +153,41 @@ const SurveyStats = ({ survey }) => {
               mih={350}
             >
               <Map
-                // TODO: set center = avg(responseLocations)?
-                defaultCenter={[10.1632, 76.641]}
-                defaultZoom={7}
-                onBoundsChanged={({ zoom }) => {
+                defaultCenter={[centroid?.latitude, centroid?.longitude]}
+                zoom={zoom}
+                onBoundsChanged={({ zoom, bounds, initial }) => {
+                  if (initial) {
+                    setIsFindingZoomLevel(true);
+                  }
+                  if (initial || isFindingZoomLevel) {
+                    // so that we wont reset user actions
+                    // TODO: find out if we can calculate the `bounds` using center, zoomLevel, and heightxwidth
+                    //       then we could calculate the zoomLevel in one go instead of waiting for pigeonMaps to render and return the current bounds
+                    const zoomAction = zoomInorOutToDisplayAllMarkers(
+                      coords,
+                      bounds,
+                    );
+                    if (zoomAction === ZoomAction.Out) {
+                      if (minZoom < zoom) {
+                        setZoom(zoom - 1);
+                        return;
+                      }
+                    } else {
+                      setIsFindingZoomLevel(false);
+                      return;
+                    }
+                  }
                   setZoom(zoom);
                 }}
                 metaWheelZoom={true}
               >
                 <ZoomControl />
-                {responses &&
-                  responses?.map((response) => {
-                    if (!response?.location?.coordinates?.latitude) {
-                      return null;
-                    }
-                    const [lat, long] = [
-                      response?.location?.coordinates?.latitude,
-                      response?.location?.coordinates?.longitude,
-                    ];
+                {coords &&
+                  coords.map(({ latitude, longitude }) => {
+                    if (!latitude || !longitude) return;
                     return (
                       <Marker
-                        anchor={[lat, long]}
+                        anchor={[latitude, longitude]}
                         style={{
                           opacity: 0.7,
                         }}
@@ -183,7 +212,7 @@ function RedDot({ zoom }: { zoom: number }) {
         width: "10px",
         height: "10px",
         borderRadius: "50%",
-        backgroundColor: "red",
+        backgroundColor: "red", // TODO: maybe provide a radial gradient & variable radius based on 'zoom' to have a heatmap effect?
         zIndex: 1000,
         opacity: (zoom + 1) / 18,
       }}
@@ -199,7 +228,7 @@ function LocationFrequencyDisplay({
   return (
     <Stack px="sm">
       {sortedCount.map(([name, count]) => (
-        <Group justify="space-between">
+        <Group justify="space-between" key={name}>
           <Text c="#222">{name}</Text>
           <Text
             px="12px"
@@ -233,6 +262,36 @@ function getSortedLocationCount(
     }
   });
   return Object.entries(count).sort((a, b) => b[1] - a[1]);
+}
+enum ZoomAction {
+  In,
+  Out,
+}
+function zoomInorOutToDisplayAllMarkers(coords: Coordinates[], bounds: Bounds) {
+  const [latMax, longMax] = bounds.ne;
+  const [latMin, longMin] = bounds.sw;
+  let outOfBounds = false;
+
+  const numberOfCoords = coords.length;
+  for (let i = 0; i < numberOfCoords; i++) {
+    if (
+      !(
+        coords[i].latitude >= latMin &&
+        coords[i].latitude <= latMax &&
+        coords[i].longitude >= longMin &&
+        coords[i].longitude <= longMax
+      )
+    ) {
+      outOfBounds = true;
+      break;
+    }
+  }
+
+  if (outOfBounds) {
+    return ZoomAction.Out;
+  } else {
+    return ZoomAction.In;
+  }
 }
 
 export default SurveyStats;
