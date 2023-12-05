@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { LogicAction, LogicCondition, QuestionType } from "../../types/enums";
+import { LogicCondition, NPSWeightage, QuestionType } from "../../types/enums";
 
 
 export const logicConditionSchema = z.nativeEnum(LogicCondition)
@@ -35,7 +35,7 @@ const questionCore = {
   type: z.nativeEnum(QuestionType),
   choices: z.record(z.string(), z.array(z.object({
     value: z.string(),
-    weightage: z.string()
+    weightage: z.nativeEnum(NPSWeightage).optional()
   }))).optional(),
   sections: z.record(z.string(), z.array(
     z.object({
