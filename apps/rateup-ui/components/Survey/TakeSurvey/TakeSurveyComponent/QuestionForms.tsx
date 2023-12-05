@@ -544,6 +544,7 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
 
   useEffect(() => {
     if (selectedOp) {
+      // @ts-ignore
       const res = options?.find((op) => op?.value === selectedOp);
       updateResponse(res);
     } else {
@@ -592,6 +593,7 @@ export function MSQForm({ previewChoices }: MCQFormProps) {
   useEffect(() => {
     if (selectedOp.length) {
       const res = selectedOp?.map((s) => {
+        // @ts-ignore
         return options.find((op) => op?.value === s);
       });
       updateResponse(res);
@@ -645,6 +647,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
 
   useEffect(() => {
     if (selectedOp) {
+      // @ts-ignore
       const res = options?.find((op) => op?.value === selectedOp);
       updateResponse(res);
     } else {
@@ -694,6 +697,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   useEffect(() => {
     if (selectedOp.length) {
       const res = selectedOp?.map((s) => {
+        // @ts-ignore
         return options.find((op) => op?.value === s);
       });
       updateResponse(res);
@@ -820,6 +824,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const data = options?.map((op) => op?.value);
   useEffect(() => {
     if (selectedOp) {
+      // @ts-ignore
       const res = options?.find((op) => op?.value === selectedOp);
       updateResponse(res);
     } else {
