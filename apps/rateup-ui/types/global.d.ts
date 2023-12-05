@@ -339,6 +339,7 @@ declare global {
     };
     categoryId: string;
     itemOrder?: number;
+    disableItem?: boolean;
   };
   interface FullCategory extends MenuCategory {
     items: MenuItem[];

@@ -2,7 +2,7 @@ import {
   ActionIcon,
   Anchor,
   Box,
-  Group,
+  Flex,
   Image,
   Stack,
   Table,
@@ -10,9 +10,14 @@ import {
 } from "@mantine/core";
 import React from "react";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import {
+  IconCircleCheckFilled,
+  IconEdit,
+  IconTrash,
+  IconWashDrycleanOff,
+} from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import { IconMenuOrder } from "@tabler/icons-react";
+import { IconReplace } from "@tabler/icons-react";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { notifications } from "@mantine/notifications";
 
@@ -23,11 +28,12 @@ const TableRow = ({
   setEditingItem,
   open,
   toggleSwapOrder,
+  updateMenuItemMutation,
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
 
   return (
-    <Table.Tr>
+    <Table.Tr opacity={item?.disableItem ? 0.5 : 1}>
       <Table.Td>
         <Image
           style={{ borderRadius: "4px", aspectRatio: "1/1" }}
@@ -67,7 +73,7 @@ const TableRow = ({
         </Anchor>
       </Table.Td>
       <Table.Td>
-        <Group maw="100px" h="100px" align="center">
+        <Flex maw="100px" h="100px" align="center" gap={"lg"} mr={"sm"}>
           <ConfirmationModal
             forDeleteFunctionality
             opened={dialogOpened}
@@ -93,6 +99,7 @@ const TableRow = ({
             c={"var(--tertiary-color)"}
             bg={"white"}
             radius={"md"}
+            disabled={item?.disableItem}
             onClick={(e) => {
               e.preventDefault();
               setEditingItem(item);
@@ -101,15 +108,44 @@ const TableRow = ({
           >
             <IconEdit />
           </ActionIcon>
-          <ActionIcon c={"black"} bg={"white"} radius={"md"} onClick={toggle}>
+          <ActionIcon
+            variant={"transparent"}
+            c={"var(--tertiary-color)"}
+            radius={"md"}
+            onClick={(e) => {
+              e.preventDefault();
+              updateMenuItemMutation.mutate({
+                menuItemId: item?.id,
+                menuItem: {
+                  disableItem: !item?.disableItem,
+                },
+              });
+            }}
+          >
+            {item?.disableItem ? (
+              <IconWashDrycleanOff />
+            ) : (
+              <IconCircleCheckFilled />
+            )}
+          </ActionIcon>
+          <ActionIcon
+            c={"black"}
+            bg={"white"}
+            radius={"md"}
+            onClick={toggle}
+          >
             <IconTrash />
           </ActionIcon>
-        </Group>
+        </Flex>
       </Table.Td>
       <Table.Td>
         <Stack pr={"sm"}>
-          <ActionIcon variant={"transparent"} onClick={toggleSwapOrder}>
-            <IconMenuOrder />
+          <ActionIcon
+            variant={"transparent"}
+            onClick={toggleSwapOrder}
+            c={"var(--grey-color)"}
+          >
+            <IconReplace />
           </ActionIcon>
         </Stack>
       </Table.Td>

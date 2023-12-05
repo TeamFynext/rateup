@@ -1,7 +1,7 @@
 import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
 import {
   IconEdit,
-  IconMenuOrder,
+  IconReplace,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
@@ -87,7 +87,7 @@ export function CategoryCardHeader({
             c={"white"}
             onClick={toggleSwapOrder}
           >
-            <IconMenuOrder />
+            <IconReplace />
           </ActionIcon>
         </Stack>
       </Group>
