@@ -279,7 +279,7 @@ export async function generateMessageDataFromQuestion(
       choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => i.toString());
       break;
     case Q.WaButtons:
-      choices = question.choices![lang];
+      choices = question.choices![lang]?.map(ch => ch?.value);
       break;
     case Q.DateTime:
       description += "\n\nPlease enter date in DD/MM/YYYY format";
@@ -336,7 +336,7 @@ export async function generateMessageDataFromQuestion(
       let bodyText = description;
       // Displaying choices in `index) choice` format
       const options = question
-        .choices![lang].map((choice, index) => `\n${index + 1}) ${choice}`)
+        .choices![lang].map((choice, index) => `\n${index + 1}) ${choice.value}`)
         .join();
 
       bodyText =
@@ -369,7 +369,6 @@ export function isValidResponse(
       return Object.values(LDResponse).includes(response);
     case Q.MCQ:
     case Q.WaButtons:
-      // TODO lang
       if (!question.choices) {
         log.fatal("No choices found for question", question);
         throw new Error("No choices found for question");
@@ -419,7 +418,6 @@ export async function parseResponse(
       case Q.Number:
       case Q.Email:
       case Q.Opinion:
-      case Q.WaButtons:
         return message;
       case Q.Smiley:
         return waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id
@@ -444,6 +442,15 @@ export async function parseResponse(
       case Q.MCQ:
         const index = Number(message);
         return question.choices![session.language][index - 1];
+      case Q.WaButtons: {
+        const choice = question.choices[session.language].find(c => c.value === message);
+        if (!choice) {
+          log.error("Couldn't find choice for message", message);
+          return false;
+        } else {
+          return choice;
+        }
+      };
       case Q.Phone:
         if (message === "Use this number") {
           return session.phone;

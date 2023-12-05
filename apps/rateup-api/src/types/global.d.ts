@@ -1,6 +1,6 @@
 // Any modification to this file should be reflected in the frontend
 import { Prisma, Role } from "@prisma/client";
-import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus } from "./enums";
+import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus, NPSWeightage } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { toBeIncludedWaSessionRelations } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
 
@@ -29,12 +29,16 @@ type ValidationRules = {
 
 export { };
 declare global {
+  type ChoiceObj = {
+    value: string;
+    weightage?: NPSWeightage;
+  }
   type Question = {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
     required: boolean;
     type: QuestionType;
-    choices?: Zod.RecordType<string, Array<string>>;
+    choices?: Zod.RecordType<string, Array<ChoiceObj>>;
     id: string;
     googleReview?: GoogleReview
     logic?: Array<LogicJump>
@@ -69,10 +73,11 @@ declare global {
       [QuestionType.Rating]?: number;
       [QuestionType.Smiley]?: SmileyResponse;
       [QuestionType.Opinion]?: number;
-      [QuestionType.MCQ]?: string;
-      [QuestionType.MSQ]?: Array<string>;
-      [QuestionType.DDSS]?: string;
-      [QuestionType.DDMS]?: Array<string>;
+      [QuestionType.MCQ]?: ChoiceObj;
+      [QuestionType.MSQ]?: Array<ChoiceObj>;
+      [QuestionType.DDSS]?: ChoiceObj;
+      [QuestionType.DDMS]?: Array<ChoiceObj>;
+      [QuestionType.CustomNPS]?: ChoiceObj;
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
