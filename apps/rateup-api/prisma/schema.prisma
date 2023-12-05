@@ -390,6 +390,7 @@ model MenuItem {
   videoUrl    String?
   price       Json
   itemOrder   Int          @default(0)
+  disabled Boolean      @default(false)
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId  String       @db.Uuid
 }
