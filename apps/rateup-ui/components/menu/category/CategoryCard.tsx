@@ -93,11 +93,11 @@ export function CategoryCard({
     );
   }
 
-  const filteredMenuItems = itemsSearch?.map(({ id, name, images,disableItem }) => ({
+  const filteredMenuItems = itemsSearch?.map(({ id, name, images,disabled }) => ({
     id,
     name,
     image: images[0],
-    disableItem,
+    disabled,
   }));
  
   const rows = itemsSearch?.map((item) => (

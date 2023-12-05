@@ -29,8 +29,8 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       mx={smallScreen ? "auto" : "sm"}
       w={"clamp(300px,  14.286rem + 11.905vw, 400px)"}
       h={"clamp(165px, 9.196rem + 2.976vw, 190px)"}
-      hoveractive={!item?.disableItem}
-      onClick={() => !item?.disableItem && setSelectedItem(item)}
+      hoveractive={!item?.disabled}
+      onClick={() => !item?.disabled && setSelectedItem(item)}
     >
       <Flex h={"100%"}>
         <SimpleGrid style={{ flex: 0.8 }}>
@@ -49,7 +49,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
               backgroundColor: "var(--orange-400)",
             }}
           >
-            {item?.disableItem && (
+            {item?.disabled && (
               <Center h={"100%"}>
                 <Paper
                   fz={smallScreen ? "xs" : "md"}
@@ -72,7 +72,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           c={"var(--grey-color)"}
           fw={"600"}
           miw={smallScreen && "134px"}
-          opacity={item?.disableItem ? 0.5 : 1}
+          opacity={item?.disabled ? 0.5 : 1}
         >
           <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
             <Text

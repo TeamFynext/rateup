@@ -33,7 +33,7 @@ const TableRow = ({
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
 
   return (
-    <Table.Tr opacity={item?.disableItem ? 0.5 : 1}>
+    <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
         <Image
           style={{ borderRadius: "4px", aspectRatio: "1/1" }}
@@ -99,7 +99,7 @@ const TableRow = ({
             c={"var(--tertiary-color)"}
             bg={"white"}
             radius={"md"}
-            disabled={item?.disableItem}
+            disabled={item?.disabled}
             onClick={(e) => {
               e.preventDefault();
               setEditingItem(item);
@@ -117,12 +117,12 @@ const TableRow = ({
               updateMenuItemMutation.mutate({
                 menuItemId: item?.id,
                 menuItem: {
-                  disableItem: !item?.disableItem,
+                  disabled: !item?.disabled,
                 },
               });
             }}
           >
-            {item?.disableItem ? (
+            {item?.disabled ? (
               <IconWashDrycleanOff />
             ) : (
               <IconCircleCheckFilled />
