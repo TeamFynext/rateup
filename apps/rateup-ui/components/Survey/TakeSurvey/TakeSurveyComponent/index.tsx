@@ -68,6 +68,8 @@ import {
   TextForm,
   YNForm,
 } from "./QuestionForms";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { emailPattern } from "../../../../utils/constants";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -612,18 +614,75 @@ function NextPrev({ prev, next, num, total }) {
 
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   useEffect(() => {
     // TODO: check if rebase was done correctly
-    if (selectedQ?.required && response && selectedQ?.type === Q.Email) {
-      setErrorMsg(/^\S+@\S+$/.test(response) ? null : "Invalid email");
-      if (!/^\S+@\S+$/.test(response)) {
+    if (
+      ((selectedQ?.required && response) || response?.length > 0) &&
+      selectedQ?.type === Q.Email
+    ) {
+      if (emailPattern.test(response)) {
         setIsErrorInput(false);
+        setErrorMsg("");
+      } else {
+        setIsErrorInput(true);
+        setErrorMsg("Enter a valid email");
       }
-    } else if (selectedQ?.required && response && selectedQ?.type === Q.Phone) {
-      setErrorMsg(/^\d{4,15}$/.test(response) ? null : "Invalid Phone");
-      if (!/^\d{4,15}$/.test(response)) {
+    } else if (
+      ((selectedQ?.required && response) || response?.length > 0) &&
+      selectedQ?.type === Q.Phone
+    ) {
+      if (isValidPhoneNumber(response)) {
+        setIsErrorInput(false);
+        setErrorMsg("");
+      } else {
+        setIsErrorInput(true);
+        setErrorMsg("Enter a valid phone");
+      }
+    } else if (
+      ((selectedQ?.required && response) ||
+        response?.email?.length > 0 ||
+        response?.phone?.length) &&
+      selectedQ?.type === Q.EmailPhone
+    ) {
+      const { email, phone } = response;
+
+      if (
+        selectedQ?.required &&
+        (response?.email?.length < 1 || response?.phone?.length < 1)
+      ) {
+        setIsErrorInput(true);
+        setErrorMsg("Enter a valid email / phone");
+      }
+
+      if (selectedQ?.required || email?.length > 0 || phone?.length > 0) {
+        if (response?.email?.length > 0 || selectedQ?.required) {
+          if (email && emailPattern.test(email)) {
+            setErrorMsg("");
+            setIsErrorInput(false);
+          } else {
+            setErrorMsg("Enter a valid email");
+            setIsErrorInput(true);
+          }
+        }
+
+        if (phone?.length > 0 || selectedQ?.required) {
+          if (phone && isValidPhoneNumber(phone)) {
+            email && emailPattern.test(email)
+              ? setErrorMsg("")
+              : setErrorMsg("Enter a valid email");
+            email && emailPattern.test(email)
+              ? setIsErrorInput(false)
+              : setIsErrorInput(true);
+          } else {
+            setIsErrorInput(true);
+            setErrorMsg("Enter a valid email / phone");
+          }
+        }
+      } else {
+        setErrorMsg("");
         setIsErrorInput(false);
       }
     } else if (
@@ -663,12 +722,13 @@ function NextPrev({ prev, next, num, total }) {
         setIsErrorInput(false);
       }
     }
-  }, [response]);
+  }, [response, selectedQ]);
 
   function handleNextClick() {
     if (
       selectedQ?.type === Q.Email ||
       selectedQ?.type === Q.Phone ||
+      selectedQ?.type === Q.EmailPhone ||
       selectedQ?.type === Q.Testimonial
     ) {
       if (!errorMsg) {

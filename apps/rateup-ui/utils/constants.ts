@@ -1,5 +1,7 @@
 import { QuestionType } from "../types/enums";
 
+export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export const ContactQuestions = [
   QuestionType.Email,
   QuestionType.Phone,

@@ -113,14 +113,6 @@ export function NumberForm() {
 
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [phoneError, setPhoneError] = useState(null);
-
-  useEffect(() => {
-    response &&
-      (isValidPhoneNumber(String(response))
-        ? setPhoneError(null)
-        : setPhoneError("* Enter valid phone number"));
-  }, [response]);
 
   return (
     <Stack>
@@ -135,28 +127,12 @@ export function PhoneForm() {
           className={classes.inputPhone}
         />
       </Paper>
-
-      <Text c="red" ml="sm">
-        {phoneError}
-      </Text>
     </Stack>
   );
 }
 
 export function EmailForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [emailError, setEmailError] = useState(null);
-
-  useEffect(() => {
-    if (response?.length > 0) {
-      setEmailError(
-        /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(response)
-          ? null
-          : "* Enter valid email",
-      );
-    } else setEmailError(null);
-  }, [response]);
-
   return (
     <Stack>
       <Paper shadow="sm" className={classes.inputBox}>
@@ -172,33 +148,12 @@ export function EmailForm() {
           }}
         />
       </Paper>
-      <Text c="red" ml="sm">
-        {emailError}
-      </Text>
     </Stack>
   );
 }
 
 export function EmailPhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [emailError, setEmailError] = useState(null);
-  const [phoneError, setPhoneError] = useState(null);
-
-  useEffect(() => {
-    if (response?.email?.length > 0)
-      setEmailError(
-        /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(response.email)
-          ? null
-          : "* Enter valid email",
-      );
-    else setEmailError(null);
-
-    response?.phone &&
-      (isValidPhoneNumber(response?.phone)
-        ? setPhoneError(null)
-        : setPhoneError("* Enter valid phone number"));
-  }, [response]);
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, email: e.currentTarget.value });
   };
@@ -228,9 +183,6 @@ export function EmailPhoneForm() {
           />
         </Group>
       </Paper>
-      <Text c="red" ml="sm">
-        {emailError}
-      </Text>
 
       <Paper mt="xs" shadow="sm" className={classes.inputBox}>
         <PhoneInput
@@ -243,10 +195,6 @@ export function EmailPhoneForm() {
           className={classes.inputPhone}
         />
       </Paper>
-
-      <Text c="red" ml="sm">
-        {phoneError}
-      </Text>
     </Stack>
   );
 }
