@@ -143,7 +143,11 @@ const Result = ({ survey, setSelectedLanguage }) => {
         <ResultsOverview />
       </Tabs.Panel>
       <Tabs.Panel value="responses">
-        <Responses survey={survey} responses={filteredResponses} />
+        <Responses
+          survey={survey}
+          responses={filteredResponses}
+          allResponses={teamWiseResponses}
+        />
       </Tabs.Panel>
       <Tabs.Panel value="comparison">
         <ResultComparison />
