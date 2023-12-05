@@ -290,8 +290,7 @@ export function QuestionDetailedView({
   );
 }
 
-// TODO: move to new file
-// TODO: better name? :)
+// TODO: use ./ChoicesCreator.tsx instead of this
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
   qId: string;
@@ -300,7 +299,7 @@ interface ChoicesCreatorProps {
 function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
   const [newChoice, setNewChoice] = useState<string>("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
-  const [choiceWeightage, setChoiceWeightage] = useState<string>(
+  const [choiceWeightage, setChoiceWeightage] = useState<NPSWeightage>(
     NPSWeightage.PROMOTER,
   );
 
@@ -311,11 +310,13 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
     if (choiceWeightage.trim().length === 0) return;
-    if (choices.filter((c) => c.value == newChoice).length != 0) return;
+    if (choices.some((c) => c.value == newChoice)) return;
     let choiceObj = {
       value: newChoice,
       weightage:
-        form.values.type === QuestionType.CustomNPS ? choiceWeightage : "",
+        form.values.type === QuestionType.CustomNPS
+          ? choiceWeightage
+          : undefined,
     };
     form.setFieldValue("choices", {
       ...form.values.choices,
@@ -368,7 +369,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
           <Select
             data={Object.values(NPSWeightage)}
             value={choiceWeightage}
-            onChange={setChoiceWeightage}
+            onChange={setChoiceWeightage as any}
             maw={140}
             styles={{
               input: { outline: `1px solid ${getNpsColor(choiceWeightage)}` },
@@ -391,7 +392,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
 }
 
 interface ChoiceProps {
-  choice: ChoiceObjType;
+  choice: Choice;
   onDelete: () => void;
   qtype: string;
 }
@@ -419,7 +420,7 @@ function Choice({ choice, onDelete, qtype }: ChoiceProps) {
           <Select
             data={Object.values(NPSWeightage)}
             value={newWeightage}
-            onChange={setNewWeightage}
+            onChange={setNewWeightage as any}
             maw={140}
             styles={{
               input: { outline: `1px solid ${getNpsColor(newWeightage)}` },

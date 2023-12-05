@@ -154,7 +154,7 @@ interface WaResponseMessageProps {
   header?: string;
   body: string;
   footer?: string;
-  quickReplyButtons?: string[];
+  quickReplyButtons?: string[] | Choice[];
 }
 export function WaResponseMessage({
   body,
@@ -183,8 +183,12 @@ export function WaResponseMessage({
           {footer && <WaMessageFooter>{footer}</WaMessageFooter>}
         </Stack>
       </ResponseMessageContainer>
+      {/* update changes in whatsapp */}
       {quickReplyButtons.map((text, i) => (
-        <QuickReplyButton key={i} text={text} />
+        <QuickReplyButton
+          key={i}
+          text={typeof text === "string" ? text : text.value}
+        />
       ))}
     </Stack>
   );

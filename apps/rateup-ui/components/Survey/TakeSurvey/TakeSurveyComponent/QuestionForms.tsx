@@ -45,7 +45,7 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
 interface MCQFormProps {
-  previewChoices?: Record<string, Array<string>>;
+  previewChoices?: Record<string, Array<Choice>>;
 }
 
 export function TextForm() {
@@ -467,7 +467,12 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     </Stack>
   );
 }
-
+const sampleChoices = [
+  { value: "option1" },
+  { value: "option2" },
+  { value: "option3" },
+  { value: "option4" },
+];
 export function MCQForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -476,12 +481,6 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
   const [selectedOp, setSelectedOp] = useState("");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const sampleChoices = [
-    { value: "option1", weightage: "" },
-    { value: "option2", weightage: "" },
-    { value: "option3", weightage: "" },
-    { value: "option4", weightage: "" },
-  ];
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
@@ -524,12 +523,6 @@ export function MSQForm({ previewChoices }: MCQFormProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState([]);
-  const sampleChoices = [
-    { value: "option1", weightage: "" },
-    { value: "option2", weightage: "" },
-    { value: "option3", weightage: "" },
-    { value: "option4", weightage: "" },
-  ];
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
@@ -578,13 +571,6 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const [selectedOp, setSelectedOp] = useState("");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-
-  const sampleChoices = [
-    { value: "option1", weightage: "" },
-    { value: "option2", weightage: "" },
-    { value: "option3", weightage: "" },
-    { value: "option4", weightage: "" },
-  ];
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
@@ -628,12 +614,6 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const [selectedOp, setSelectedOp] = useState([]);
-  const sampleChoices = [
-    { value: "option1", weightage: "" },
-    { value: "option2", weightage: "" },
-    { value: "option3", weightage: "" },
-    { value: "option4", weightage: "" },
-  ];
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
@@ -758,12 +738,6 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const [selectedOp, setSelectedOp] = useState("");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const sampleChoices = [
-    { value: "option1", weightage: "" },
-    { value: "option2", weightage: "" },
-    { value: "option3", weightage: "" },
-    { value: "option4", weightage: "" },
-  ];
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]

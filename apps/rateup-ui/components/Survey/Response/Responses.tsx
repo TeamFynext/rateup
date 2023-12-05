@@ -303,6 +303,14 @@ function TableHead({ questions }: TableHeadProps) {
   );
 }
 
+const previewRequired = [QuestionType.Photo];
+const badgeRequired = [
+  QuestionType.Rating,
+  QuestionType.Smiley,
+  QuestionType.LD,
+  QuestionType.YN,
+  QuestionType.Opinion,
+];
 function BadgeorTextorPreview({
   questionType,
   response,
@@ -311,14 +319,6 @@ function BadgeorTextorPreview({
   response: string;
 }) {
   const [previewModalopened, { open, close }] = useDisclosure(false);
-  const badgeRequired = [
-    QuestionType.Rating,
-    QuestionType.Smiley,
-    QuestionType.LD,
-    QuestionType.YN,
-    QuestionType.Opinion,
-  ];
-  const previewRequired = [QuestionType.Photo];
   if (previewRequired.includes(questionType)) {
     return (
       <>

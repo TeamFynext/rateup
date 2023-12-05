@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the backend
-import { QuestionType, MenuItemPriceType } from "./enums";
+import { QuestionType, MenuItemPriceType, NPSWeightage } from "./enums";
 
 type GoogleReview = {
   minRating?: number;
@@ -31,7 +31,7 @@ declare global {
     description: Zod.RecordType<string, string>;
     required: boolean;
     type: QuestionType;
-    choices?: Zod.RecordType<string, Array<string>>;
+    choices?: Zod.RecordType<string, Array<Choice>>;
     sections?: Zod.RecordType<string, WaSectionsType>;
     id: string;
     googleReview?: GoogleReview;
@@ -140,9 +140,9 @@ declare global {
       country?: string;
     };
   };
-  type ChoiceObjType = {
+  type Choice = {
     value: string;
-    weightage: string;
+    weightage?: NPSWeightage;
   };
   type QuestionResponse = {
     questionId: string;
@@ -166,14 +166,14 @@ declare global {
       [QuestionType.Rating]?: number;
       [QuestionType.Smiley]?: SmileyResponse;
       [QuestionType.Opinion]?: number;
-      [QuestionType.MCQ]?: ChoiceObjType;
-      [QuestionType.MSQ]?: Array<ChoiceObjType>;
-      [QuestionType.DDSS]?: ChoiceObjType;
-      [QuestionType.DDMS]?: Array<ChoiceObjType>;
+      [QuestionType.MCQ]?: Choice;
+      [QuestionType.MSQ]?: Array<Choice>;
+      [QuestionType.DDSS]?: Choice;
+      [QuestionType.DDMS]?: Array<Choice>;
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
-      [QuestionType.CustomNPS]?: ChoiceObjType;
+      [QuestionType.CustomNPS]?: Choice;
       [QuestionType.WaList]?: { title: string; description?: string };
     };
   };
