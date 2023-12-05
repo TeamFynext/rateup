@@ -45,7 +45,7 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PreviewModal from "../../Modal/PreviewModal";
 
-const Responses = ({ survey, responses, allResponses }) => {
+const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -82,8 +82,9 @@ const Responses = ({ survey, responses, allResponses }) => {
   const handleExcelDownload = useCallback(() => {
     const responses = allResponses && allResponses[0].responses;
     if (questions && responses) {
-      const headerArray = questions.map((question) => question.title.English);
-
+      const headerArray = questions.map((question) => {
+        return question.title[defaultLanguage];
+      });
       const bodyArray = [];
       questions.forEach((question) => {
         const questionId = question.id;

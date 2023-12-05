@@ -56,7 +56,9 @@ enum ResultTab {
 }
 const Result = ({ survey, setSelectedLanguage }) => {
   const { filterTeams } = useContext(SurveyContext);
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
   //fetching the responses associated with the survey
   const {
     data: teamWiseResponses,
@@ -147,6 +149,7 @@ const Result = ({ survey, setSelectedLanguage }) => {
           survey={survey}
           responses={filteredResponses}
           allResponses={teamWiseResponses}
+          defaultLanguage={defaultLanguage}
         />
       </Tabs.Panel>
       <Tabs.Panel value="comparison">
