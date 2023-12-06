@@ -1,7 +1,7 @@
-import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
 import {
   IconEdit,
-  IconMenuOrder,
+  IconReplace,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
@@ -76,10 +76,14 @@ export function CategoryCardHeader({
           radius={"md"}
           onClick={() => handleEdit(category)}
         >
-          <IconEdit />
+          <Tooltip label="Edit">
+            <IconEdit />
+          </Tooltip>
         </ActionIcon>
         <ActionIcon c={"red"} bg={"white"} radius={"md"} onClick={toggle}>
-          <IconTrash />
+          <Tooltip label="Delete">
+            <IconTrash />
+          </Tooltip>
         </ActionIcon>
         <Stack pr={"sm"}>
           <ActionIcon
@@ -87,7 +91,9 @@ export function CategoryCardHeader({
             c={"white"}
             onClick={toggleSwapOrder}
           >
-            <IconMenuOrder />
+            <Tooltip label="Swap Order">
+              <IconReplace />
+            </Tooltip>
           </ActionIcon>
         </Stack>
       </Group>

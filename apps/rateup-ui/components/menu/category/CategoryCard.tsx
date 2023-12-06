@@ -6,14 +6,12 @@ import {
   useDeleteMenuItemMutation,
   useItemsByCategoryId,
   useUpdateMenuItemMutation,
-  useUpdateSortOrderMenuItemMutation,
 } from "../../../backend/menu/item/mItem.query";
 import { CreateMenuItemModal } from "../createMenuItem";
 import { MenuItemPriceType } from "../../../types/enums";
 import { CategoryCardHeader } from "./CategoryCardHeader";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TableRow from "./table/TableRow";
-import { useUpdateMenuCategoryMutation } from "../../../backend/menu/category/mCategory.query";
 import SortDrawer from "./sortDrawer/SortDrawer";
 
 const tableColumns = [
@@ -21,9 +19,9 @@ const tableColumns = [
   "name",
   "price",
   "description",
-  "videoUrl",
+  "video URL",
   "Actions",
-  "Ordering",
+  "Swap Order",
 ];
 interface CategoryCardProps {
   readonly category: MenuCategory;
@@ -60,6 +58,12 @@ export function CategoryCard({
     () => {},
     () => {},
   );
+  const updateMenuItemMutation = useUpdateMenuItemMutation(
+    category?.id,
+    category?.menuId,
+    () => {},
+    () => {},
+  );
 
   let itemsSearch = [];
   if (searchText !== "") {
@@ -89,11 +93,14 @@ export function CategoryCard({
     );
   }
 
-  const filteredMenuItems = itemsSearch?.map(({ id, name, images }) => ({
-    id,
-    name,
-    image: images[0],
-  }));
+  const filteredMenuItems = itemsSearch?.map(
+    ({ id, name, images, disabled }) => ({
+      id,
+      name,
+      image: images[0],
+      disabled,
+    }),
+  );
 
   const rows = itemsSearch?.map((item) => (
     <TableRow
@@ -104,6 +111,7 @@ export function CategoryCard({
       key={item?.id}
       open={open}
       toggleSwapOrder={toggleSwapOrder}
+      updateMenuItemMutation={updateMenuItemMutation}
     />
   ));
 

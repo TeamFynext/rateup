@@ -85,7 +85,7 @@ export function WaQuestionPreview({
                   <>
                     <br />
                     &nbsp;
-                    {`${i + 1}) ${choice}`}
+                    {`${i + 1}) ${choice?.value}`}
                   </>
                 ))}
               </WaMessageBody>

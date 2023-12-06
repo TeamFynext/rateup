@@ -1,26 +1,24 @@
 import React from "react";
 import { QuestionType as Q } from "../../../../types/enums";
-import {
-  CustomNPSForm,
-  DDMSForm,
-  DDSSForm,
-  DateForm,
-  EmailForm,
-  EmailPhoneForm,
-  ImageForm,
-  LDForm,
-  MCQForm,
-  MSQForm,
-  NumberForm,
-  OpinionScaleForm,
-  PhoneForm,
-  RatingForm,
-  SmileyForm,
-  TestimonialForm,
-  TextAreaForm,
-  TextForm,
-  YNForm,
-} from "../../TakeSurvey/TakeSurveyComponent/QuestionForms";
+import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextForm";
+import { PhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PhoneForm";
+import { NumberForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/NumberForm";
+import { TextAreaForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextAreaForm";
+import { EmailForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailForm";
+import { RatingForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/RatingForm";
+import { LDForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/LDForm";
+import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm";
+import { OpinionScaleForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
+import { SmileyForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/SmileyForm";
+import { ImageForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ImageForm";
+import { MCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQForm";
+import { MSQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MSQForm";
+import { DDSSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DDSSForm";
+import { DDMSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DDMSForm";
+import { TestimonialForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TestimonialForm";
+import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailPhoneForm";
+import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
+import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
 
 const QuestionTypePreview = ({ type, choices }) => {
   switch (type) {
@@ -59,7 +57,7 @@ const QuestionTypePreview = ({ type, choices }) => {
     case Q.EmailPhone:
       return <EmailPhoneForm />;
     case Q.DateTime:
-      return <DateForm />;
+      return <DateForm isPreview={true} />;
     case Q.CustomNPS:
       return <CustomNPSForm previewChoices={choices} />;
     default:

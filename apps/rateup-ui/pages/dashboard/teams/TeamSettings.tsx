@@ -5,9 +5,7 @@ import {
   Text,
   Grid,
   Group,
-  Button,
   useMantineTheme,
-  Badge,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
@@ -19,15 +17,13 @@ import {
   useEditTeamMutation,
 } from "../../../backend/team/team.query";
 import { useDisclosure } from "@mantine/hooks";
-import { deleteTeamById, editTeam } from "../../../backend/team/team.api";
+import { deleteTeamById } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import DangerZone from "../../../components/DangerZone/DangerZone";
 import Heading from "../../../components/styled/Heading/Heading";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { ReviewSuggestionModal } from "../../../components/reviewSuggestion/ReviewSuggestionModal";
 import { GoogleIcon } from "../../../components/Button/GoogleIcon";
-import { useReviewSuggestionsCount } from "../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 
 export interface ITeamData {
   name: string;
@@ -224,12 +220,6 @@ function GoogleReviewSettings({ teamId, googleLink }) {
     }
   }, [googleLink]);
 
-  const [
-    reviewModalOpened,
-    { open: openReviewModal, close: closeReviewModal },
-  ] = useDisclosure(false);
-
-  const { data: count } = useReviewSuggestionsCount(!!teamId, teamId);
   const editTeamMutation = useEditTeamMutation(teamId, () => {});
 
   function handleSave() {
@@ -264,20 +254,6 @@ function GoogleReviewSettings({ teamId, googleLink }) {
               />
             </Grid.Col>
           </Grid>
-
-          <Grid>
-            <Grid.Col span={2}>
-              <Button variant="light" onClick={openReviewModal}>
-                Manage review suggestions
-                <Badge ml="xs">{count}</Badge>
-              </Button>
-            </Grid.Col>
-          </Grid>
-          <ReviewSuggestionModal
-            teamId={teamId}
-            opened={reviewModalOpened}
-            onClose={closeReviewModal}
-          />
           <Grid justify="flex-end" pt="xl">
             <Grid.Col span={2}>
               <RateupButtonSecondary

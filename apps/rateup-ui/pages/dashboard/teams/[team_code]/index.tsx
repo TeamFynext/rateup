@@ -10,27 +10,27 @@ import {
   Text,
   Group,
 } from "@mantine/core";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { IconCheck } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import validateNameAndEmail from "./validation";
+import validateNameAndEmail from "../validation";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { getOrgIdRole, getUserID } from "../../../utils/userInfo";
-import { inviteTeamMember } from "../../../backend/team/team.api";
-import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import TeamMemberCard from "./TeamMemberCard";
+import { getOrgIdRole, getUserID } from "../../../../utils/userInfo";
+import { inviteTeamMember } from "../../../../backend/team/team.api";
+import StyledTabs from "../../../../components/styled/StyledTabs/StyledTabs";
+import TeamMemberCard from "../TeamMemberCard";
 import { IconPlus } from "@tabler/icons-react";
-import { useRouteParams } from "../../../context/RouteParamsContext";
-import TeamSettings from "./TeamSettings";
+import { useRouteParams } from "../../../../context/RouteParamsContext";
+import TeamSettings from "../TeamSettings";
 import {
   useTeamMembersFromInvitation,
   useTeamsByUser,
-} from "../../../backend/team/team.query";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
-import Heading from "../../../components/styled/Heading/Heading";
+} from "../../../../backend/team/team.query";
+import FormModalLayout from "../../../../components/Modal/FormModalLayout";
+import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
+import Heading from "../../../../components/styled/Heading/Heading";
 
 const TeamDetails = () => {
   const router = useRouter();

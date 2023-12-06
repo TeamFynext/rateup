@@ -15,9 +15,10 @@ export default function SearchBox({
       style={sx}
       value={searchText}
       onChange={(e) => setSearchText(e.currentTarget.value)}
-      leftSection={<IconSearch stroke={1.5} />}
+      leftSection={<IconSearch stroke={1.5} size={"1rem"} />}
       radius="xl"
       size="md"
+      w={"40vw"}
       rightSectionWidth={42}
     />
   );

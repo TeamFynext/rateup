@@ -1,10 +1,20 @@
-import { Flex, Group, Image, Stack, Text } from "@mantine/core";
+import {
+  BackgroundImage,
+  Center,
+  Flex,
+  Group,
+  Image,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 interface ItemDisplayProps {
-  item: MenuItem;
+  item: any;
   setSelectedItem: (item: MenuItem) => void;
 }
 export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
@@ -19,16 +29,17 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       mx={smallScreen ? "auto" : "sm"}
       w={"clamp(300px,  14.286rem + 11.905vw, 400px)"}
       h={"clamp(165px, 9.196rem + 2.976vw, 190px)"}
-      hoveractive={true}
-      onClick={() => setSelectedItem(item)}
+      hoveractive={!item?.disabled}
+      onClick={() => !item?.disabled && setSelectedItem(item)}
     >
       <Flex h={"100%"}>
-        <Flex style={{ flex: 0.8 }}>
-          <Image
+        <Group style={{ display: "flex", flex: 0.8 }}>
+          <BackgroundImage
             w={"100%"}
             h={"100%"}
-            maw={"300px"}
-            miw={smallScreen && "109px"}
+            // maw={"300px"}
+            miw={smallScreen ? "109px" : "164px"}
+            maw={smallScreen ? "109px" : "164px"}
             src={
               item?.images?.length > 0
                 ? getFileUrlFromKey(item?.images[0])
@@ -36,20 +47,35 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             }
             style={{
               aspectRatio: "4 / 3",
+              backgroundColor: "var(--orange-400)",
             }}
-            variant="gradient"
-            fallbackSrc={fallbackImage}
-            alt="image of menu item"
-          />
-        </Flex>
+            opacity={item?.disabled ? 0.5 : 1}
+          >
+            {item?.disabled && (
+              <Center h={"100%"}>
+                <Paper
+                  fz={smallScreen ? "xs" : "md"}
+                  c={"var(--orange-400)"}
+                  fw={600}
+                  w={"max-content"}
+                  radius={"sm"}
+                  px={"sm"}
+                  py={5}
+                >
+                  Not Available
+                </Paper>
+              </Center>
+            )}
+          </BackgroundImage>
+        </Group>
 
-        <Stack
-          style={{ flex: 1 }}
+        <Flex
           c={"var(--grey-color)"}
           fw={"600"}
-          miw={smallScreen && "134px"}
+          w={smallScreen ? "134px" : "164px"}
+          opacity={item?.disabled ? 0.5 : 1}
         >
-          <Stack p={"clamp(0.625rem, 0.268rem + 0.952vw, 1.125rem)"} gap={0}>
+          <Stack p={smallScreen ? "10px" : "14px"} gap={0}>
             <Text
               fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
               lineClamp={2}
@@ -94,7 +120,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
               )}
             </Group>
           </Stack>
-        </Stack>
+        </Flex>
       </Flex>
     </PaperLayout>
   );

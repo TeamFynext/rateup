@@ -47,29 +47,27 @@ import { useMediaQuery } from "@mantine/hooks";
 import { parseLogicAction } from "../../../../utils";
 import { validateQuestion } from "../../../../utils/validation";
 import { mapSmileyIcon } from "./SmileyRating";
-import {
-  CustomNPSForm,
-  DDMSForm,
-  DDSSForm,
-  DateForm,
-  EmailForm,
-  EmailPhoneForm,
-  ImageForm,
-  LDForm,
-  MCQForm,
-  MSQForm,
-  NumberForm,
-  OpinionScaleForm,
-  PhoneForm,
-  RatingForm,
-  SmileyForm,
-  TestimonialForm,
-  TextAreaForm,
-  TextForm,
-  YNForm,
-} from "./QuestionForms";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { emailPattern } from "../../../../utils/constants";
+import { TextForm } from "./QuestionForms/TextForm";
+import { TextAreaForm } from "./QuestionForms/TextAreaForm";
+import { NumberForm } from "./QuestionForms/NumberForm";
+import { PhoneForm } from "./QuestionForms/PhoneForm";
+import { EmailForm } from "./QuestionForms/EmailForm";
+import { RatingForm } from "./QuestionForms/RatingForm";
+import { LDForm } from "./QuestionForms/LDForm";
+import { YNForm } from "./QuestionForms/YNForm";
+import { OpinionScaleForm } from "./QuestionForms/OpinionScaleForm";
+import { SmileyForm } from "./QuestionForms/SmileyForm";
+import { ImageForm } from "./QuestionForms/ImageForm";
+import { MCQForm } from "./QuestionForms/MCQForm";
+import { MSQForm } from "./QuestionForms/MSQForm";
+import { DDSSForm } from "./QuestionForms/DDSSForm";
+import { DDMSForm } from "./QuestionForms/DDMSForm";
+import { TestimonialForm } from "./QuestionForms/TestimonialForm";
+import { EmailPhoneForm } from "./QuestionForms/EmailPhoneForm";
+import { DateForm } from "./QuestionForms/DateForm";
+import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");

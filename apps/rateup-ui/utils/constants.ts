@@ -69,4 +69,5 @@ export const ChoiceTypeQuestions = [
   QuestionType.DDMS,
   QuestionType.DDSS,
   QuestionType.CustomNPS,
+  QuestionType.WaButtons,
 ];

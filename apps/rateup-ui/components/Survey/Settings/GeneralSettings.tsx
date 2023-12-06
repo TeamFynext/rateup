@@ -12,7 +12,8 @@ import {
   MultiSelect,
 } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm } from "@mantine/form";
+import { zodResolver } from "mantine-form-zod-resolver";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
@@ -39,7 +40,7 @@ const GeneralSettings = ({ survey, enabledModules }) => {
     teams: z
       .array(z.string())
       .min(1, { message: "Must contain atleast one team" }),
-    notificationEmail:z
+    notificationEmail: z
       .string()
       .trim()
       .email({ message: "Invalid email" })
@@ -273,7 +274,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
       setValue((current) =>
         current.includes(val)
           ? current.filter((v) => v !== val)
-          : [...current, val]
+          : [...current, val],
       );
     }
   };
