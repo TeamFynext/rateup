@@ -1,5 +1,4 @@
 import {
-  BackgroundImage,
   Center,
   Flex,
   Group,
@@ -33,8 +32,8 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       onClick={() => !item?.disabled && setSelectedItem(item)}
     >
       <Flex h={"100%"}>
-        <SimpleGrid style={{ flex: 0.8 }}>
-          <BackgroundImage
+        <SimpleGrid style={{ flex: 0.8 }} pos={"relative"}>
+          <Image
             w={"100%"}
             h={"100%"}
             maw={"300px"}
@@ -47,24 +46,26 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             style={{
               aspectRatio: "4 / 3",
               backgroundColor: "var(--orange-400)",
+              position: "absolute",
             }}
-          >
-            {item?.disabled && (
-              <Center h={"100%"}>
-                <Paper
-                  fz={smallScreen ? "xs" : "md"}
-                  c={"var(--orange-400)"}
-                  fw={600}
-                  w={"max-content"}
-                  radius={"sm"}
-                  px={"sm"}
-                  py={5}
-                >
-                  "Not Available
-                </Paper>
-              </Center>
-            )}
-          </BackgroundImage>
+            opacity={item?.disabled ? 0.5 : 1}
+            fallbackSrc={fallbackImage}
+          />
+          {item?.disabled && (
+            <Center h={"100%"} pos={"relative"}>
+              <Paper
+                fz={smallScreen ? "xs" : "md"}
+                c={"var(--orange-400)"}
+                fw={600}
+                w={"max-content"}
+                radius={"sm"}
+                px={"sm"}
+                py={5}
+              >
+                Not Available
+              </Paper>
+            </Center>
+          )}
         </SimpleGrid>
 
         <Stack

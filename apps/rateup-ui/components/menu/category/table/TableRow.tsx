@@ -7,6 +7,7 @@ import {
   Stack,
   Table,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import React from "react";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
@@ -106,7 +107,9 @@ const TableRow = ({
               open();
             }}
           >
-            <IconEdit />
+            <Tooltip label="Edit">
+              <IconEdit />
+            </Tooltip>
           </ActionIcon>
           <ActionIcon
             variant={"transparent"}
@@ -123,18 +126,19 @@ const TableRow = ({
             }}
           >
             {item?.disabled ? (
-              <IconWashDrycleanOff />
+              <Tooltip label="Disable Item">
+                <IconWashDrycleanOff />
+              </Tooltip>
             ) : (
-              <IconCircleCheckFilled />
+              <Tooltip label="Enable Item">
+                <IconCircleCheckFilled />
+              </Tooltip>
             )}
           </ActionIcon>
-          <ActionIcon
-            c={"black"}
-            bg={"white"}
-            radius={"md"}
-            onClick={toggle}
-          >
-            <IconTrash />
+          <ActionIcon c={"black"} bg={"white"} radius={"md"} onClick={toggle}>
+            <Tooltip label="Delete">
+              <IconTrash />
+            </Tooltip>
           </ActionIcon>
         </Flex>
       </Table.Td>
@@ -145,7 +149,9 @@ const TableRow = ({
             onClick={toggleSwapOrder}
             c={"var(--grey-color)"}
           >
-            <IconReplace />
+            <Tooltip label="Swap Order">
+              <IconReplace />
+            </Tooltip>
           </ActionIcon>
         </Stack>
       </Table.Td>
