@@ -3,6 +3,7 @@ import HeroSection from "./HeroSection";
 import OurFeaturesSection from "./OurFeaturesSection";
 import OurSolutionsSection from "./OursolutionsSection";
 import Head from "next/head";
+import TestimonialsSection from "./TestimonialsSection";
 
 function Home() {
   return (
@@ -45,6 +46,7 @@ function Home() {
       <OurSolutionsSection />
       <OurFeaturesSection />
       <Banner text={"Elevate Your Experience, Gauge Your Satisfaction!"} />
+      <TestimonialsSection />
     </>
   );
 }

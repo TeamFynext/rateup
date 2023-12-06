@@ -15,7 +15,7 @@
 }
 
 .company-logos-container img {
-  width: 100px;
-  height: 100px;
+  width: 8.125rem;
+  height: 8.125rem;
   object-fit: contain;
 }
