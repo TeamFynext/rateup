@@ -1,4 +1,3 @@
-import { TeamWiseResponses } from "../backend/surveys/response/response.api";
 import {
   LDResponse,
   NPSWeightage,
@@ -13,7 +12,6 @@ export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
   if (!qResponse) return "Not Answered";
   const { type, response: responseType } = qResponse;
-
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
   } else if (type === QuestionType.EmailPhone) {
@@ -23,11 +21,7 @@ export function getResponse(qId: string, response: SurveyResponse) {
   } else if (type === QuestionType.DateTime) {
     const dateTimeValue = qResponse.response.DateTime;
     const date = dayjs(dateTimeValue);
-
     const formattedDate = date.format("D, MMM YYYY");
-    //const formattedTime = date.format("h:mm A");
-    // return `${formattedDate}, ${formattedTime}`;
-
     return `${formattedDate}`;
   } else if (ChoiceTypeQuestions.includes(type)) {
     const responseValue = responseType[type];
@@ -36,11 +30,11 @@ export function getResponse(qId: string, response: SurveyResponse) {
       if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
         formattedValue = responseValue
           .map((value) => {
-            return value?.trim();
+            return value?.value?.trim();
           })
           .join(", ");
       } else {
-        formattedValue = responseValue;
+        formattedValue = responseValue?.value?.trim();
       }
       return formattedValue;
     } else {
