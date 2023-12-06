@@ -126,11 +126,11 @@ const TableRow = ({
             }}
           >
             {item?.disabled ? (
-              <Tooltip label="Disable Item">
+              <Tooltip label="Enable Item">
                 <IconWashDrycleanOff />
               </Tooltip>
             ) : (
-              <Tooltip label="Enable Item">
+              <Tooltip label="Disable Item">
                 <IconCircleCheckFilled />
               </Tooltip>
             )}

@@ -55,7 +55,7 @@ const ShareMenu = ({
               overlayProps={{ radius: "sm", blur: 2 }}
             />
           </Grid>
-          <ShareQR url={shareLink} />
+          <ShareQR url={shareLink} isSurveyPublished={isPublished} />
         </Stack>
       </Paper>
     </Stack>
