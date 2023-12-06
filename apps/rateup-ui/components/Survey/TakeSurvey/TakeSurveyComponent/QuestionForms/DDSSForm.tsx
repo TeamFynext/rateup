@@ -39,7 +39,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     <Paper shadow="sm" className={classes.inputBox}>
       <Select
         style={{ minWidth: "300px", maxWidth: "500px" }}
-        placeholder="Select one"
+        placeholder="Select one / type in to search"
         data={data}
         value={selectedOp}
         onChange={handleSelectedOp}
@@ -47,6 +47,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
           input: classes.selectBox,
           root: classes.input,
         }}
+        searchable
       />
     </Paper>
   );

@@ -43,11 +43,12 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
         data={data}
         value={selectedOp}
         onChange={handleSelectedOp}
-        placeholder="Select one or more"
+        placeholder="Select one or more / type in to search"
         classNames={{
           input: classes.selectBox,
           root: classes.input,
         }}
+        searchable
       />
     </Paper>
   );
