@@ -33,8 +33,8 @@ export default function ActiveSurveyCard({
       }}
     >
       <Stack h={"100%"} gap={0}>
-        <Group justify={"space-between"} pt={"md"} pr={"md"} pl={"md"}>
-          <Text mr={"sm"} truncate size="xl" fw={700} maw={150}>
+        <Stack justify={"space-between"} pt={"md"} pr={"md"} pl={"md"} gap={10}>
+          <Text mr={"sm"} truncate size="xl" fw={700} maw={"100%"}>
             {survey?.title}
           </Text>
           <Badge
@@ -43,7 +43,7 @@ export default function ActiveSurveyCard({
           >
             {survey?.type}
           </Badge>
-        </Group>
+        </Stack>
         <Group justify="space-between" px="lg" align="center" py={"sm"}>
           {[
             { title: "Responses", value: responsesCount ? responsesCount : 0 },

@@ -141,14 +141,14 @@ export function QuestionTypeSelection({
         <Stack gap={"md"}>
           {filteredQuestionTypes?.map((qtype, i) => {
             return (
-              <Stack gap={"md"} key={i}>
+              <Stack gap={"sm"} key={i}>
                 <Title order={4} c="dimmed">
                   {qtype?.title}
                 </Title>
                 <Grid px={"lg"}>
                   {qtype?.questionTypes?.map((type, index) => {
                     return (
-                      <Grid.Col span="content" key={index}>
+                      <Grid.Col span="content" key={index} p={"sm"}>
                         <QuestionButton type={type} />
                       </Grid.Col>
                     );
