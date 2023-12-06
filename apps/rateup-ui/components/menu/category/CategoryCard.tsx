@@ -56,19 +56,19 @@ export function CategoryCard({
     category.id,
     category.menuId,
     () => {},
-    () => {}
+    () => {},
   );
   const updateMenuItemMutation = useUpdateMenuItemMutation(
     category?.id,
     category?.menuId,
     () => {},
-    () => {}
-  ); 
-  
+    () => {},
+  );
+
   let itemsSearch = [];
   if (searchText !== "") {
     itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
     );
   } else {
     itemsSearch = items;
@@ -93,13 +93,15 @@ export function CategoryCard({
     );
   }
 
-  const filteredMenuItems = itemsSearch?.map(({ id, name, images,disabled }) => ({
-    id,
-    name,
-    image: images[0],
-    disabled,
-  }));
- 
+  const filteredMenuItems = itemsSearch?.map(
+    ({ id, name, images, disabled }) => ({
+      id,
+      name,
+      image: images[0],
+      disabled,
+    }),
+  );
+
   const rows = itemsSearch?.map((item) => (
     <TableRow
       item={item}

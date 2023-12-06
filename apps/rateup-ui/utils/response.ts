@@ -30,11 +30,11 @@ export function getResponse(qId: string, response: SurveyResponse) {
       if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
         formattedValue = responseValue
           .map((value) => {
-            return value?.value?.trim();
+            return value?.trim();
           })
           .join(", ");
       } else {
-        formattedValue = responseValue?.value?.trim();
+        formattedValue = responseValue;
       }
       return formattedValue;
     } else {

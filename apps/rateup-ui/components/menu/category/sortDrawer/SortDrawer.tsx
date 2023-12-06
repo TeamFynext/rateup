@@ -74,7 +74,14 @@ const SortDrawer = ({
           <Stack {...provided.dragHandleProps} justify={"center"}>
             <IconGripVertical size={24} stroke={1.5} />
           </Stack>
-          <Card shadow="sm" padding="lg" radius="lg" w={"90%"} p={"xs"} opacity={item?.disabled ? 0.5 : 1}>
+          <Card
+            shadow="sm"
+            padding="lg"
+            radius="lg"
+            w={"90%"}
+            p={"xs"}
+            opacity={item?.disabled ? 0.5 : 1}
+          >
             <Group>
               <Image
                 src={
