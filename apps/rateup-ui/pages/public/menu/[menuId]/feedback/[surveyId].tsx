@@ -21,6 +21,7 @@ import { Data } from "../../../../../types/global";
 import Link from "next/link";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 import { lexend300 } from "../../../../../utils/fonts";
+import Head from "next/head";
 
 type MenuProp = {
   menuId: string;
@@ -58,12 +59,43 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
   const bgSrc = backgroundImage
     ? getFileUrlFromKey(encodeURI(backgroundImage))
     : fallbackImageBackround;
+
   return (
     <Stack
       gap={0}
       maw={largeScreen ? "2440px" : "768px"}
       ff={lexend300.style.fontFamily}
     >
+      <Head>
+        <title>{`Rateup - Welcome to ${menuLanding?.menu?.displayName}`}</title>
+
+        <meta
+          name="description"
+          content={`This is the menu of ${menuLanding?.menu?.displayName}`}
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Rateup" />
+        <meta
+          property="og:url"
+          content={`https://rateup.app/public/menu/${menuLanding?.menu?.id}`}
+        />
+        <meta
+          property="og:title"
+          content={`Rateup - Welcome to ${menuLanding?.menu?.displayName}`}
+        />
+        <meta
+          property="og:description"
+          content={`This is the menu of ${menuLanding?.menu?.displayName}`}
+        />
+        <meta
+          property="og:image"
+          content="https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png"
+        />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1086" />
+        <meta property="og:image:height" content="832" />
+        <meta property="og:image:alt" content="Star Icon" />
+      </Head>
       <BackgroundImage
         src={bgSrc}
         radius="sm"
