@@ -1,0 +1,6 @@
+export const sampleChoices = [
+  { value: "option1" },
+  { value: "option2" },
+  { value: "option3" },
+  { value: "option4" },
+];
