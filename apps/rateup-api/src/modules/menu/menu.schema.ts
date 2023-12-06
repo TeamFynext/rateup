@@ -61,6 +61,7 @@ const fullMenuPublicResponseSchema = z.object({
           images: z.array(z.string()).optional(),
           videoUrl: z.string().optional(),
           price: z.any(),
+          disabled: z.boolean()?.optional(),
         })
       ),
     })

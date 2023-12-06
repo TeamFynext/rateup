@@ -1,4 +1,5 @@
 import axios from "axios";
+import { log } from "./logger";
 const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY;
 
 export async function fetchLocationFromIp(ip: string) {
@@ -6,6 +7,7 @@ export async function fetchLocationFromIp(ip: string) {
         const url = `https://api.geoapify.com/v1/ipinfo?ip=${ip}&apiKey=${GEOAPIFY_API_KEY}`
         const res = await axios.get(url);
         if (res.status !== 200) return null;
+        log.trace("got location from ip %s => %o", ip, res.data)
         if (res.data.isPrivate) return null;
 
         const {
@@ -29,6 +31,7 @@ export async function fetchLocationFromCoordinates(latitude: number, longitude: 
         const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${GEOAPIFY_API_KEY}`;
         const res = await axios.get(url);
         if (res.status !== 200) return null;
+        log.trace("got location from coordinates %s,%s => %o", latitude, longitude, res.data)
 
         const { city, state, country } = res.data.features[0].properties;
 
@@ -46,7 +49,7 @@ export async function fetchLocationFromCoordinates(latitude: number, longitude: 
  * @param coords 
  * @returns 
  */
-export async function fetchLocation(ip: string, coords: { latitude: number, longitude: number}) {
+export async function fetchLocation(ip: string, coords: { latitude: number, longitude: number }) {
     let location = null;
     if (!coords || !coords.latitude) {
         location = await fetchLocationFromIp(ip);
@@ -54,5 +57,6 @@ export async function fetchLocation(ip: string, coords: { latitude: number, long
         location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);
     }
 
+    log.trace("parsed location => %o", location)
     return location;
 }

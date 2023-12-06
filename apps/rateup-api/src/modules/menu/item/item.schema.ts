@@ -40,7 +40,8 @@ const updateMenuItemInputSchema = z.object({
     ]).optional(),
     images: z.array(z.string()).optional(),
     videoUrl: z.string().optional().optional(),
-    itemOrder: z.string().optional()
+    itemOrder: z.string().optional(),
+    disabled:z.boolean().optional()
 })
 const ByMenuItemIdParamsSchema = z.object({
     menuItemId: z.string(),
