@@ -23,23 +23,20 @@ export function MSQForm({ previewChoices }: MCQFormProps) {
 
   const data = options?.map((op) => op?.value);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  useEffect(() => {
-    if (selectedOp.length) {
-      const res = selectedOp?.map((s) => {
-        // @ts-ignore
-        return options.find((op) => op?.value === s);
-      });
-      updateResponse(res);
-    }
-  }, [selectedOp]);
+
   useEffect(() => {
     if (response) {
       setSelectedOp(response?.map((r) => r?.value));
     }
-  }, []);
+  }, [response]);
+
+  const handleSelectedOp = (values) => {
+    const res = options?.filter((op) => values?.includes(op?.value));
+    updateResponse(res);
+  };
 
   return (
-    <Checkbox.Group value={selectedOp} onChange={setSelectedOp}>
+    <Checkbox.Group value={selectedOp} onChange={handleSelectedOp}>
       <Stack>
         {data?.map((choice) => (
           <Checkbox

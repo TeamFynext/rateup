@@ -27,27 +27,22 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const data = options?.map((op) => op?.value);
 
   useEffect(() => {
-    if (selectedOp.length) {
-      const res = selectedOp?.map((s) => {
-        // @ts-ignore
-        return options.find((op) => op?.value === s);
-      });
-      updateResponse(res);
-    }
-  }, [selectedOp]);
-
-  useEffect(() => {
     if (response) {
       setSelectedOp(response?.map((r) => r?.value));
     }
-  }, []);
+  }, [response]);
+
+  const handleSelectedOp = (values) => {
+    const res = options?.filter((op) => values?.includes(op?.value));
+    updateResponse(res);
+  };
   return (
     <Paper shadow="sm" className={classes.inputBox}>
       <MultiSelect
         style={{ minWidth: "300px", maxWidth: "500px" }}
         data={data}
         value={selectedOp}
-        onChange={setSelectedOp}
+        onChange={handleSelectedOp}
         placeholder="Select one or more"
         classNames={{
           input: classes.selectBox,

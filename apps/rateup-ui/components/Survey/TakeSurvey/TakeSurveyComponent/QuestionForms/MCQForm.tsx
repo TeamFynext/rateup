@@ -26,14 +26,15 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
   const data = options?.map((op) => op?.value);
 
   useEffect(() => {
-    if (selectedOp) {
-      // @ts-ignore
-      const res = options?.find((op) => op?.value === selectedOp);
-      updateResponse(res);
-    } else {
-      updateResponse(response);
+    if (response) {
+      setSelectedOp(response.value);
     }
-  }, [selectedOp, response]);
+  }, [response]);
+
+  const handleSelectedOp = (value) => {
+    const res = options?.find((op) => op?.value === value);
+    updateResponse(res);
+  };
 
   return (
     <Stack>
@@ -41,8 +42,8 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
         <Stack ml="sm">
           <SegmentedControl
             data={data}
-            value={response ? response?.value : selectedOp}
-            onChange={setSelectedOp}
+            value={selectedOp}
+            onChange={handleSelectedOp}
             orientation={"vertical"}
             color="var(--tertiary-color)"
             size="md"

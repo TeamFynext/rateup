@@ -24,16 +24,16 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     : sampleChoices;
 
   const data = options?.map((op) => op?.value);
-
   useEffect(() => {
-    if (selectedOp) {
-      // @ts-ignore
-      const res = options?.find((op) => op?.value === selectedOp);
-      updateResponse(res);
-    } else {
-      updateResponse(response);
+    if (response) {
+      setSelectedOp(response.value);
     }
-  }, [selectedOp, response]);
+  }, [response]);
+
+  const handleSelectedOp = (value) => {
+    const res = options?.find((op) => op?.value === value);
+    updateResponse(res);
+  };
 
   return (
     <Paper shadow="sm" className={classes.inputBox}>
@@ -41,8 +41,8 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
         style={{ minWidth: "300px", maxWidth: "500px" }}
         placeholder="Select one"
         data={data}
-        value={response ? response?.value : selectedOp}
-        onChange={setSelectedOp}
+        value={selectedOp}
+        onChange={handleSelectedOp}
         classNames={{
           input: classes.selectBox,
           root: classes.input,

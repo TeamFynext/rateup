@@ -64,7 +64,7 @@ export function SurveysPage({
     selectedTeamId === "all" || !selectedTeamId
       ? allSurveys
       : allSurveys?.filter(
-          (s: Survey) => s?.teams?.some((team) => team?.id === selectedTeamId)
+          (s: Survey) => s?.teams?.some((team) => team?.id === selectedTeamId),
         );
   //--------handle check box click ----------
 
@@ -112,7 +112,7 @@ export function SurveysPage({
                 ? new Date(b.createdAt).getTime() -
                   new Date(a.createdAt).getTime()
                 : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
+                  new Date(b.createdAt).getTime(),
             )
             .filter((s) => {
               if (filterParam === "active") {

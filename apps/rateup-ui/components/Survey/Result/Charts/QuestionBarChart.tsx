@@ -8,12 +8,22 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Paper, Text, Group, Stack, Title, Badge } from "@mantine/core";
+import {
+  Paper,
+  Text,
+  Group,
+  Stack,
+  Title,
+  Badge,
+  Grid,
+  SimpleGrid,
+} from "@mantine/core";
 import { QuestionType } from "../../../../types/enums";
 import { getResponseArrayByQuestionType } from "../../../../utils/response";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
 import { ChoiceTypeQuestions } from "../../../../utils/constants";
+import SurveySummaryNew from "../SurveySummaryNew";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
@@ -85,42 +95,51 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
         </Text>
         <Badge variant="dot">{questionType}</Badge>
       </Group>
-      <Stack>
-        <Group justify="center">
-          <PaperLayout maw={150}>
-            <Stack align="center" gap={10}>
-              <Heading
-                title={`${data?.length}`}
-                titleprops={{ w: "fit-content" }}
-              />
-              <Text c={"dimmed"} fw={900} size="sm">
-                Responses
-              </Text>
-            </Stack>
-          </PaperLayout>
-        </Group>
-        <Stack miw={300} align="center" style={{ flex: 1 }}>
-          <BarChart
-            width={500}
-            height={300}
-            data={choiceCounts}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-            maxBarSize={50}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Bar dataKey="count" fill="#fff" radius={10} isAnimationActive />
-          </BarChart>
-        </Stack>
-      </Stack>
+      <Grid justify="space-evenly" align="center">
+        <Grid.Col span={"content"}>
+          <SimpleGrid cols={1}>
+            <PaperLayout>
+              <Stack align="center" gap={10}>
+                <Heading
+                  title={`${data?.length}`}
+                  titleprops={{ w: "fit-content" }}
+                />
+                <Text c={"dimmed"} fw={900} size="sm">
+                  Responses
+                </Text>
+              </Stack>
+            </PaperLayout>
+            <SurveySummaryNew
+              response={data}
+              questionType={questionType}
+              choices={choices}
+            />
+          </SimpleGrid>
+        </Grid.Col>
+        <Grid.Col span={"content"}>
+          <Stack miw={300} align="center">
+            <BarChart
+              width={500}
+              height={300}
+              data={choiceCounts}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+              maxBarSize={50}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Bar dataKey="count" fill="#fff" radius={10} isAnimationActive />
+            </BarChart>
+          </Stack>
+        </Grid.Col>
+      </Grid>
     </Stack>
   );
 };

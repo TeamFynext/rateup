@@ -6,6 +6,13 @@ import {
   YNResponse,
 } from "../types/enums";
 import dayjs from "dayjs";
+import {
+  IconMoodCry,
+  IconMoodSad,
+  IconMoodSmile,
+  IconMoodCrazyHappy,
+  IconMoodSmileBeam,
+} from "@tabler/icons-react";
 import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(qId: string, response: SurveyResponse) {
@@ -145,6 +152,7 @@ export function getResponseArrayByQuestionType(
 ): Array<{
   value: string | number;
   color: string;
+  Icon?: any;
 }> {
   switch (questionType) {
     case QuestionType.Rating: {
@@ -172,11 +180,23 @@ export function getResponseArrayByQuestionType(
     }
     case QuestionType.Smiley: {
       return [
-        { value: SmileyResponse.VerySad, color: "#ff5c55" },
-        { value: SmileyResponse.Sad, color: "#feb75c" },
-        { value: SmileyResponse.Neutral, color: "#fedc4e" },
-        { value: SmileyResponse.Happy, color: "#a6e346" },
-        { value: SmileyResponse.VeryHappy, color: "#52ba66" },
+        { value: SmileyResponse.VerySad, color: "#ff5c55", Icon: IconMoodCry },
+        { value: SmileyResponse.Sad, color: "#feb75c", Icon: IconMoodSad },
+        {
+          value: SmileyResponse.Neutral,
+          color: "#fedc4e",
+          Icon: IconMoodSmile,
+        },
+        {
+          value: SmileyResponse.Happy,
+          color: "#a6e346",
+          Icon: IconMoodSmileBeam,
+        },
+        {
+          value: SmileyResponse.VeryHappy,
+          color: "#52ba66",
+          Icon: IconMoodCrazyHappy,
+        },
       ];
     }
     case QuestionType.YN: {

@@ -16,7 +16,6 @@ import {
 } from "@mantine/core";
 import Responses from "../Response/Responses";
 import SurveyStats from "./SurveyStats";
-import SurveySummary from "./SurveySummary";
 import ResultsOverview from "./ResultsOverview";
 import {
   LDResponse,
@@ -139,7 +138,6 @@ const Result = ({ survey, setSelectedLanguage }) => {
       </Stack>
       <Tabs.Panel value="overview">
         <SurveyStats survey={survey} />
-        <SurveySummary />
       </Tabs.Panel>
       <Tabs.Panel value="analytics">
         <ResultsOverview />

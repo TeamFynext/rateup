@@ -371,7 +371,7 @@ function TakeSurvey() {
                                   )[0];
                                   if (Array.isArray(responseData)) {
                                     return responseData.map((item, index) => {
-                                      return <li key={index}>{item.value}</li>;
+                                      return <li key={index}>{item?.value}</li>;
                                     });
                                   }
                                   return <li>{responseData}</li>;
@@ -550,55 +550,55 @@ function QuestionForm() {
       {(() => {
         switch (type) {
           case Q.DateTime:
-            return getQuestionForm(type);
+            return getQuestionForm(type, selectedQ);
           default:
-            return getQuestionForm(type);
+            return getQuestionForm(type, selectedQ);
         }
       })()}
     </Group>
   );
 }
 
-function getQuestionForm(type) {
+function getQuestionForm(type, selectedQ) {
   switch (type) {
     case Q.Text:
-      return <TextForm />;
+      return <TextForm key={selectedQ?.id} />;
     case Q.TextArea:
-      return <TextAreaForm />;
+      return <TextAreaForm key={selectedQ?.id} />;
     case Q.Number:
-      return <NumberForm />;
+      return <NumberForm key={selectedQ?.id} />;
     case Q.Phone:
-      return <PhoneForm />;
+      return <PhoneForm key={selectedQ?.id} />;
     case Q.Email:
-      return <EmailForm />;
+      return <EmailForm key={selectedQ?.id} />;
     case Q.Rating:
-      return <RatingForm />;
+      return <RatingForm key={selectedQ?.id} />;
     case Q.LD:
-      return <LDForm />;
+      return <LDForm key={selectedQ?.id} />;
     case Q.YN:
-      return <YNForm />;
+      return <YNForm key={selectedQ?.id} />;
     case Q.Opinion:
-      return <OpinionScaleForm />;
+      return <OpinionScaleForm key={selectedQ?.id} />;
     case Q.Smiley:
-      return <SmileyForm />;
+      return <SmileyForm key={selectedQ?.id} />;
     case Q.Photo:
-      return <ImageForm />;
+      return <ImageForm key={selectedQ?.id} />;
     case Q.MCQ:
-      return <MCQForm />;
+      return <MCQForm key={selectedQ?.id} />;
     case Q.MSQ:
-      return <MSQForm />;
+      return <MSQForm key={selectedQ?.id} />;
     case Q.DDSS:
-      return <DDSSForm />;
+      return <DDSSForm key={selectedQ?.id} />;
     case Q.DDMS:
-      return <DDMSForm />;
+      return <DDMSForm key={selectedQ?.id} />;
     case Q.Testimonial:
-      return <TestimonialForm />;
+      return <TestimonialForm key={selectedQ?.id} />;
     case Q.EmailPhone:
-      return <EmailPhoneForm />;
+      return <EmailPhoneForm key={selectedQ?.id} />;
     case Q.DateTime:
-      return <DateForm />;
+      return <DateForm key={selectedQ?.id} />;
     case Q.CustomNPS:
-      return <CustomNPSForm />;
+      return <CustomNPSForm key={selectedQ?.id} />;
     default:
       return <div>not implemented</div>;
   }

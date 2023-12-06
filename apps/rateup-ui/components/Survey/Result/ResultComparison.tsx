@@ -241,7 +241,8 @@ const CombinedChart = ({
       ?.filter((response) => response.team.id === id)
       ?.map(({ response }) =>
         question?.type === QuestionType.CustomNPS
-          ? (responses[response.weightage] = responses[response.weightage] + 1)
+          ? (responses[response?.weightage] =
+              responses[response?.weightage] + 1)
           : (responses[response] = responses[response] + 1),
       );
     return {

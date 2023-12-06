@@ -117,31 +117,29 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
         </Text>
         <Badge variant="dot">{type}</Badge>
       </Group>
-      <Stack>
-        <Group justify="center">
-          <PaperLayout maw={150}>
-            <Stack align="center">
-              <Heading
-                title={`${responseCount}`}
-                titleprops={{ w: "fit-content" }}
-              />
-              <Text c={"dimmed"} fw={900} size="sm">
-                Responses
-              </Text>
-            </Stack>
-          </PaperLayout>
-          <PaperLayout maw={150}>
-            <Stack align="center">
-              <Heading
-                title={`${data?.score?.toFixed(2)}`}
-                titleprops={{ w: "fit-content" }}
-              />
-              <Text c={"dimmed"} fw={900} size="sm">
-                NPS Score
-              </Text>
-            </Stack>
-          </PaperLayout>
-        </Group>
+      <Group justify="center">
+        <PaperLayout maw={150}>
+          <Stack align="center">
+            <Heading
+              title={`${responseCount}`}
+              titleprops={{ w: "fit-content" }}
+            />
+            <Text c={"dimmed"} fw={900} size="sm">
+              Responses
+            </Text>
+          </Stack>
+        </PaperLayout>
+        <PaperLayout maw={150}>
+          <Stack align="center">
+            <Heading
+              title={`${data?.score?.toFixed(2)}`}
+              titleprops={{ w: "fit-content" }}
+            />
+            <Text c={"dimmed"} fw={900} size="sm">
+              NPS Score
+            </Text>
+          </Stack>
+        </PaperLayout>
         <Stack style={{ flex: 1 }} align="center" justify="center">
           <ResponsiveContainer height={280} width={300}>
             <PieChart>
@@ -166,7 +164,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
             </PieChart>
           </ResponsiveContainer>
         </Stack>
-      </Stack>
+      </Group>
     </Stack>
   );
 };

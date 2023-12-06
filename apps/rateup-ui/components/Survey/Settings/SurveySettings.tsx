@@ -14,7 +14,7 @@ const defaultEnabledModules = [
   "preview",
   "location",
   "enableNotificationEmail",
-  "notificationEmail"
+  "notificationEmail",
 ];
 const SurveySettings = ({
   surveyId,

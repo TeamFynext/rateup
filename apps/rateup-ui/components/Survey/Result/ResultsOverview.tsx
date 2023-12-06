@@ -131,9 +131,9 @@ const ResultsOverview = () => {
             else detractors++;
             break;
           case QuestionType.CustomNPS:
-            if (rating.weightage == NPSWeightage.PROMOTER) promoters++;
-            if (rating.weightage == NPSWeightage.PASSIVE) passives++;
-            if (rating.weightage == NPSWeightage.DETRACTOR) detractors++;
+            if (rating?.weightage == NPSWeightage.PROMOTER) promoters++;
+            if (rating?.weightage == NPSWeightage.PASSIVE) passives++;
+            if (rating?.weightage == NPSWeightage.DETRACTOR) detractors++;
             break;
         }
       });
@@ -177,6 +177,7 @@ const ResultsOverview = () => {
       };
     });
   };
+
   chartData = prepareData(questions, filteredResponsesByTeam);
   return (
     <>

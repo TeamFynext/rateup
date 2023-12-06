@@ -341,7 +341,6 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
     },
     [handleAddChoice],
   );
-
   return (
     <>
       <Stack
@@ -354,6 +353,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
             choice={choice}
             onDelete={() => handleRemoveChoice(choice)}
             qtype={form.values.type}
+            form={form}
           />
         ))}
       </Stack>
@@ -395,13 +395,25 @@ interface ChoiceProps {
   choice: Choice;
   onDelete: () => void;
   qtype: string;
+  form;
 }
-function Choice({ choice, onDelete, qtype }: ChoiceProps) {
+function Choice({ choice, onDelete, qtype, form }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
-  const [newWeightage, setNewWeightage] = useState(choice.weightage);
-  useEffect(() => {
-    choice.weightage = newWeightage;
-  }, [newWeightage]);
+  const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
+  let newWeightage = choice.weightage;
+
+  const handleChangeWeightage = (value) => {
+    const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c) => {
+      if (c.value == choice?.value) return { ...c, weightage: value };
+      else return c;
+    });
+
+    form.setFieldValue("choices", {
+      ...form.values.choices,
+      [selectedLanguage]: updatedChoices,
+    });
+  };
+
   return (
     <>
       <Group ref={ref} style={{ height: "30px" }}>
@@ -420,7 +432,7 @@ function Choice({ choice, onDelete, qtype }: ChoiceProps) {
           <Select
             data={Object.values(NPSWeightage)}
             value={newWeightage}
-            onChange={setNewWeightage as any}
+            onChange={handleChangeWeightage}
             maw={140}
             styles={{
               input: { outline: `1px solid ${getNpsColor(newWeightage)}` },
