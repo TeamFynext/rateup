@@ -22,7 +22,7 @@ export default function Page({ survey, surveyThemeData }) {
   return (
     <>
       <Head>
-        <title>{`Rateup - ${survey?.title}`}</title>
+        <title>{`Rateup - Survey ${survey?.title}`}</title>
         <meta name="description" content={`Take survey ${survey?.title}`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />

@@ -17,10 +17,7 @@ function Menus() {
         />
         <meta
           name="description"
-          content="Boost Your Credibility 
-        & Get Rated Up
-        With Rate Up's Customer Engagement Platform, you can connect
-        with, interact with, and expand your customer connections."
+          content="Rateup - Experience quick, delicious dining with our digital menus."
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />
