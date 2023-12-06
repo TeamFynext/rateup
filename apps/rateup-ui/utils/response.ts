@@ -11,7 +11,7 @@ import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
-  if (!qResponse) return null;
+  if (!qResponse) return "Not Answered";
   const { type, response: responseType } = qResponse;
 
   if (type === QuestionType.Testimonial) {
@@ -31,15 +31,21 @@ export function getResponse(qId: string, response: SurveyResponse) {
     return `${formattedDate}`;
   } else if (ChoiceTypeQuestions.includes(type)) {
     const responseValue = responseType[type];
-    let formattedValue = "";
-    if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
-      formattedValue = responseValue
-        ?.map((item) => item?.value?.trim())
-        .join(", ");
+    if (responseValue) {
+      let formattedValue = "";
+      if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
+        formattedValue = responseValue
+          .map((value) => {
+            return value?.trim();
+          })
+          .join(", ");
+      } else {
+        formattedValue = responseValue;
+      }
+      return formattedValue;
     } else {
-      formattedValue = responseValue?.value;
+      return "Not Answered";
     }
-    return formattedValue || ""; // Return blank if undefined
   } else if (type === QuestionType.WaList) {
     const { title, description } = qResponse.response[QuestionType.WaList];
     return description ? `${title}: ${description}` : title;
