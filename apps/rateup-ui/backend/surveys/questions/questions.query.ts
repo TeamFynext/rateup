@@ -70,6 +70,7 @@ export const useQuestionUpdateMutation = ({
         // icon: <IconCheck />,
       });
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       setIsSaving(false);
     },
     onError: (err) => {
@@ -96,6 +97,7 @@ export const useQuestionDeleteMutation = (
     onSuccess: (_data, variables) => {
       onSuccess(variables);
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       showSuccessToast("Question deleted");
     },
     onError: (e) => {
