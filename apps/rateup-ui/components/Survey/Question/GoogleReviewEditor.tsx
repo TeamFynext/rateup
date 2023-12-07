@@ -107,10 +107,10 @@ const GoogleReviewEditor = ({
     if (isChecked) {
       notifications.show({
         id: "load-data",
-        color: "info",
+        color: "var(--color-tertiary)",
         title: "Configure Google Review",
         message: "Enter condition and Google page URL",
-        icon: <IconInfoCircle size="1rem" />,
+        icon: <IconInfoCircle size="3rem" />,
         autoClose: 3000,
       });
     }

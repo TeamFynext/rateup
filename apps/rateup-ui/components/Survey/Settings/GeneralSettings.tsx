@@ -10,6 +10,7 @@ import {
   CheckIcon,
   useCombobox,
   MultiSelect,
+  Tooltip,
 } from "@mantine/core";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { useForm } from "@mantine/form";
@@ -23,8 +24,19 @@ import { z } from "zod";
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules }) => {
   const [kioskMode, setKioskMode] = useState(false);
+  const [disableKioskAction, setDisableKioskAction] = useState(false);
   const [languages, setLanguages] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState(null);
+  const [qns, setQns] = useState(survey.questions || []);
+
+  useEffect(() => {
+    let hasGoogleReview = qns?.some(
+      (item) => item.googleReview !== null && item.googleReview !== undefined,
+    );
+    if (hasGoogleReview) {
+      setDisableKioskAction(true);
+    }
+  }, [qns]);
 
   const { data: teamRes } = useTeamsByUser();
 
@@ -152,15 +164,30 @@ const GeneralSettings = ({ survey, enabledModules }) => {
               <Text size={"md"}>Kiosk Mode:</Text>
             </Grid.Col>
             <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Switch
-                size={"md"}
-                onLabel="ON"
-                offLabel="OFF"
-                checked={kioskMode}
-                onChange={(event) => {
-                  setKioskMode(event.target.checked);
-                }}
-              />
+              <Tooltip
+                label={
+                  disableKioskAction
+                    ? "No available since Google Review Questions present."
+                    : ""
+                }
+                refProp={"rootRef"}
+                disabled={!disableKioskAction}
+                arrowOffset={10}
+                arrowSize={4}
+                withArrow
+                position="top-start"
+              >
+                <Switch
+                  size={"md"}
+                  onLabel="ON"
+                  offLabel="OFF"
+                  checked={kioskMode}
+                  disabled={disableKioskAction}
+                  onChange={(event) => {
+                    setKioskMode(event.target.checked);
+                  }}
+                />
+              </Tooltip>
             </Grid.Col>
           </Grid>
         )}
