@@ -1,4 +1,4 @@
-import { Flex, Title } from "@mantine/core";
+import { Flex, Image, Title } from "@mantine/core";
 import styles from "./TrustedBy.module.css";
 
 function TrustedBy() {
@@ -12,12 +12,14 @@ function TrustedBy() {
         wrap={"wrap"}
         gap={"xl"}
       >
-        <img src={`${logosPath}/virtusa.png`} alt="amazon" />
-        <img src={`${logosPath}/infosys.png`} alt="infosys" />
-        <img src={`${logosPath}/cognizant.png`} alt="cognizant" />
-        <img src={`${logosPath}/amazon.png`} alt="amazon" />
-        <img src={`${logosPath}/wipro.png`} alt="wipro" />
-        <img src={`${logosPath}/hcl.png`} alt="hcl" />
+        <Image src={`${logosPath}/government-of-kerala.png`} alt="amazon" />
+        <Image src={`${logosPath}/kdisc.png`} alt="infosys" />
+        <Image
+          src={`${logosPath}/kerala-startup-mission.png`}
+          alt="cognizant"
+        />
+        <Image src={`${logosPath}/fabus.png`} alt="amazon" />
+        <Image src={`${logosPath}/linnk-group.png`} alt="wipro" />
       </Flex>
     </div>
   );

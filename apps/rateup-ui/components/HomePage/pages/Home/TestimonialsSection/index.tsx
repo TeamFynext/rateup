@@ -2,7 +2,7 @@ import { Flex, Text, Title } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "./TestimonialCard";
 import { testimonials } from "./constants";
-import commonStyles from "../index/index.module.css";
+import commonStyles from "../../../index/index.module.css";
 import styles from "./TestimonialsSection.module.css";
 import carouselStyles from "./CarouselStyles.module.css";
 
