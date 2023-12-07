@@ -86,6 +86,17 @@ export async function updateQuestion(
   // questions[index] = { ...questions[index], ...input };
   questions[index] = { ...questions[index], ...input } as Question;
 
+
+  let hasGoogleReview = questions?.some(item => item.googleReview !== null && item.googleReview !== undefined);
+  if (hasGoogleReview) {
+    //Turn off kiosk
+    const surveyUpdate = await prisma.survey.update({
+      where: { id: surveyId },
+      data: { kioskMode: false },
+    });
+   }
+   
+
   await updateQuestionsOnSurvey(surveyId, questions);
 }
 
