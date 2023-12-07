@@ -1,18 +1,16 @@
-import {
-  Center,
-  NavLink,
-  PasswordInput,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Center, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { RateupButtonBlue } from "../Button/RateupButtons";
+import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
 import Link from "next/link";
 import { IconArrowAutofitLeft } from "@tabler/icons";
 import styles from "./AuthForm.module.css";
+import FormModalLayout from "../Modal/FormModalLayout";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowNarrowRight } from "@tabler/icons-react";
 
 function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
+  const [opened, { close, open }] = useDisclosure(true);
+
   const signUpForm = useForm({
     initialValues: {
       name: "",
@@ -53,6 +51,30 @@ function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
   };
   return (
     <>
+      <FormModalLayout
+        title="Google Auth Success"
+        opened={opened}
+        onClose={() => {
+          close();
+        }}
+      >
+        <Text mt="xs" mb="xl">
+          You are successfully authenticated, please fill the information to
+          complete the signup process.
+        </Text>
+
+        <Center mt="xl">
+          <RateupButtonPrimary
+            size="lg"
+            rightIcon={<IconArrowNarrowRight />}
+            title="Continue"
+            onClick={() => {
+              close();
+            }}
+          />
+        </Center>
+      </FormModalLayout>
+
       <Title className={styles["login-signup-form-heading"]} order={2}>
         Complete Signup Process
       </Title>
