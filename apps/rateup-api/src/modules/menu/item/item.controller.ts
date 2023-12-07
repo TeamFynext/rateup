@@ -1,8 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ByMenuItemIdParams, CreateMenuItemInput, UpdateMenuItemInput } from "./item.schema";
-import { createMenuItem, deleteMenuItem, getMenuItem, getMenuItemByCategory, sortMenuItem, updateMenuItem } from "./item.service";
+import { createMenuItem, createMenuItemUsingCsv, deleteMenuItem, getMenuItem, getMenuItemByCategory, sortMenuItem, updateMenuItem } from "./item.service";
 import { ByCategoryIdParams, SortMenuCategoryInput } from "../category/category.schema";
-import Session from "supertokens-node/recipe/session";
 import { hasAccessToCategory } from "../category/category.auth";
 
 export async function createMenuItemHandler(
@@ -15,6 +14,19 @@ export async function createMenuItemHandler(
 
     const menuItem = await createMenuItem(request.body);
     reply.send(menuItem);
+}
+
+export async function createMenuItemUsingCsvHandler(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    try {
+      const data = await request.file();
+      const menu = await createMenuItemUsingCsv(data,data.fields.menuId["value"]);
+      reply.send(menu);
+    } catch (error) {
+      reply.code(500).send(error);
+    }
 }
 
 export async function getMenuItemHandler(
