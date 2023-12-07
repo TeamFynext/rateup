@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   BarChart,
   Bar,
@@ -24,12 +24,14 @@ import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
 import { ChoiceTypeQuestions } from "../../../../utils/constants";
 import SurveySummaryNew from "../SurveySummaryNew";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
   choices: any[];
   questionType: QuestionType;
   no: number;
+  choicesInAllLang: Question["choices"];
 }
 interface CustomTooltipProps {
   active?: boolean;
@@ -58,12 +60,40 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   return null;
 };
 
+const getChoiceCountsforAll = (
+  response,
+  choicesInAllLang: Question["choices"],
+  index,
+) => {
+  let languages = Object.values(choicesInAllLang);
+  if (Array.isArray(response)) {
+    return response.some((r) => {
+      let choiceIndex = null;
+      for (var i = 0; i < languages.length; i++) {
+        choiceIndex = languages[i]?.findIndex((c) => c.value == r.value);
+        if (choiceIndex == -1) continue;
+        break;
+      }
+      return choiceIndex == index;
+    });
+  } else {
+    let choiceIndex = null;
+    for (var i = 0; i < languages.length; i++) {
+      choiceIndex = languages[i]?.findIndex((c) => c.value == response.value);
+      if (choiceIndex == -1) continue;
+      break;
+    }
+    return choiceIndex == index;
+  }
+};
+
 const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   question,
   choices,
   data,
   questionType,
   no,
+  choicesInAllLang,
 }) => {
   let choicesToUse = choices;
   if (!choicesToUse) {
@@ -71,14 +101,19 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
       choicesToUse = getResponseArrayByQuestionType(questionType);
     }
   }
-  const choiceCounts = choicesToUse?.map((choice) => ({
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  let choiceCounts = choicesToUse?.map((choice, index) => ({
     name: choice?.value,
     count: data?.filter((item) => {
       const response = item?.response[questionType];
       if (ChoiceTypeQuestions.includes(questionType)) {
-        return Array.isArray(response)
-          ? response?.some((r) => r.value === choice?.value)
-          : response?.value === choice?.value;
+        if (selectedLanguage) {
+          return Array.isArray(response)
+            ? response?.some((r) => r.value === choice?.value)
+            : response?.value === choice?.value;
+        } else {
+          return getChoiceCountsforAll(response, choicesInAllLang, index);
+        }
       } else {
         return Array.isArray(response)
           ? response.includes(choice?.value)
@@ -87,6 +122,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     })?.length,
     fill: choice?.color,
   }));
+
   return (
     <Stack miw={300}>
       <Group justify="space-between">
@@ -113,6 +149,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
               response={data}
               questionType={questionType}
               choices={choices}
+              choiceCounts={choiceCounts}
             />
           </SimpleGrid>
         </Grid.Col>
