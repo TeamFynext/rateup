@@ -4,15 +4,7 @@ import { useListState } from "@mantine/hooks";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import classes from "./DndListHandle.module.css";
 import { IconGripVertical } from "@tabler/icons-react";
-import {
-  Card,
-  Flex,
-  Group,
-  Image,
-  LoadingOverlay,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";
 import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
 import { useUpdateSortOrderMenuCategoryMutation } from "../../../../backend/menu/category/mCategory.query";
 
@@ -82,7 +74,7 @@ const SortDrawer = ({
             p={"xs"}
             opacity={item?.disabled ? 0.5 : 1}
           >
-            <Group>
+            <Flex gap={"md"} align={"center"}>
               <Image
                 src={
                   item?.image
@@ -98,7 +90,7 @@ const SortDrawer = ({
               <Text fz={24} c={"var(--tertiary-color)"} tt={"capitalize"}>
                 {item?.name}
               </Text>
-            </Group>
+            </Flex>
           </Card>
         </Flex>
       )}

@@ -13,3 +13,9 @@ export const updateMenuItem = async (menuId: string, menuItem) =>
   await axiosClient.put(`${MENUITEM_URL}/${menuId}`, menuItem);
 export const updateSortOrderMenuItem = async (categoryId: string, menuItem) =>
   await axiosClient.put(`${MENUITEM_URL}/sort/${categoryId}`, menuItem);
+export const createMenuItemUsingCsv = async (formData) =>
+  await axiosClient.post(`${MENUITEM_URL}/create-using-csv`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });

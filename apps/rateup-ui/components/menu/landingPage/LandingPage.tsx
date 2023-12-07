@@ -473,7 +473,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         fz={
                           isMobileTab
                             ? "0.875rem"
-                            : "clamp(0.875rem, 0.607rem + 0.714vw, 1.25rem)"
+                            : "clamp(14px, 9.712px + 0.714vw, 20px)"
                         }
                       >
                         powered by

@@ -9,7 +9,7 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
       onClick={() => onClick(categoryId)}
       tt={"capitalize"}
       my={"xs"}
-      fz={"clamp(0.75rem, 0.393rem + 0.952vw, 1.25rem)"}
+      fz={"clamp(12px, 6.288px + 0.952vw, 20px)"}
       mx={4}
       style={{
         border: !selected

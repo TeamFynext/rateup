@@ -104,8 +104,8 @@ export default function ({ fullMenu }) {
               ta={"center"}
               fz={
                 fullMenu?.menuLanding?.headerStyle?.fontSize
-                  ? `clamp(1.125rem, 0.5rem + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
-                  : "clamp(1.125rem, 0.5rem + 1.667vw, 2rem)"
+                  ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
+                  : "clamp(18px, 8px + 1.667vw, 32px)"
               }
               fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
               c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
@@ -115,8 +115,8 @@ export default function ({ fullMenu }) {
             <Text
               fz={
                 fullMenu?.menuLanding?.titleStyle?.fontSize
-                  ? `clamp(1.75rem, 0.857rem + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
-                  : "clamp(1.75rem, 0.857rem + 2.381vw, 3rem))"
+                  ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
+                  : "clamp(28px, 13.712px + 2.381vw, 48px))"
               }
               fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
               c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
@@ -201,7 +201,7 @@ export default function ({ fullMenu }) {
             h={largeScreen ? "38px" : "26px"}
           />
           <Text
-            fz={"clamp(0.688rem, 0.509rem + 0.476vw, 0.938rem)"}
+            fz={"clamp(11.008px, 8.144px + 0.476vw, 15.008px)"}
             c={"white"}
             fw={500}
           >

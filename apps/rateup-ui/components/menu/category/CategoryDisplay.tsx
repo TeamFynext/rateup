@@ -7,7 +7,7 @@ export function CategoryDisplay({ category, setSelectedItem }) {
     <Stack id={category?.id} ff={lexend300.style.fontFamily} pb={"lg"}>
       <Text
         c="var(--grey-color)"
-        fz="clamp(1.25rem, 0.714rem + 1.429vw, 2rem)"
+        fz="clamp(20px, 11.424px + 1.429vw, 32px)"
         tt={"capitalize"}
         fw={500}
       >

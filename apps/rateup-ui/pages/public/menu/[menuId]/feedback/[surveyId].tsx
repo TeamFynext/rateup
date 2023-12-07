@@ -131,8 +131,8 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
             <Text
               fz={
                 menuLanding?.headerStyle?.fontSize
-                  ? `clamp(0.938rem, 0.313rem + 1.667vw, ${menuLanding?.headerStyle?.fontSize}px)`
-                  : "clamp(0.938rem, 0.313rem + 1.667vw, 1.813rem)"
+                  ? `clamp(15.008px, 5.008px + 1.667vw, ${menuLanding?.headerStyle?.fontSize}px)`
+                  : "clamp(15.008px, 5.008px + 1.667vw, 29.008px)"
               }
               fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
               c={menuLanding?.headerStyle?.color ?? "inherit"}
@@ -144,8 +144,8 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
             <Text
               fz={
                 menuLanding?.titleStyle?.fontSize
-                  ? `clamp(1.688rem, -0.679rem + 6.31vw,${menuLanding?.titleStyle?.fontSize}px )`
-                  : "clamp(1.688rem, -0.679rem + 6.31vw,52px )"
+                  ? `clamp(27.008px, -10.864px + 6.31vw,${menuLanding?.titleStyle?.fontSize}px )`
+                  : "clamp(27.008px, -10.864px + 6.31vw,52px )"
               }
               fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
               c={menuLanding?.titleStyle?.color ?? "inherit"}
@@ -188,7 +188,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                       miw={!largeScreen && 188}
                       tt={"capitalize"}
                       ta={largeScreen ? "center" : "start"}
-                      fz={"clamp(0.813rem, 0.5rem + 0.833vw, 1.25rem)"}
+                      fz={"clamp(13.008px, 8px + 0.833vw, 20px)"}
                     >
                       {menuLanding?.menu?.websiteText}
                     </Text>
@@ -220,7 +220,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                       miw={!largeScreen && 188}
                       tt={"capitalize"}
                       ta={largeScreen ? "center" : "start"}
-                      fz={"clamp(0.813rem, 0.5rem + 0.833vw, 1.25rem)"}
+                      fz={"clamp(13.008px, 8px + 0.833vw, 20px)"}
                     >
                       {menuLanding?.menu?.locationText}
                     </Text>
@@ -260,7 +260,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         <Group>
           <Image
             src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/poweredByRateUp.png`}
-            w={"clamp(137px, 4.098rem + 11.905vw, 237px)"}
+            w={"clamp(137px, 65.568px + 11.905vw, 237px)"}
             alt="rate-up logo"
           />
         </Group>
