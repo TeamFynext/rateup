@@ -14,8 +14,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 interface ItemDisplayProps {
-  item: any;
-  setSelectedItem: (item: MenuItem) => void;
+  readonly item: any;
+  readonly setSelectedItem: (item: MenuItem) => void;
 }
 export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
@@ -27,8 +27,8 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       shadow="lg"
       radius="lg"
       mx={smallScreen ? "auto" : "sm"}
-      w={"clamp(300px,  14.286rem + 11.905vw, 400px)"}
-      h={"clamp(165px, 9.196rem + 2.976vw, 190px)"}
+      w={"clamp(300px, 228.576px + 11.905vw, 400px)"}
+      mih={"clamp(165px, 47.136px + 2.976vw, 190px)"}
       hoveractive={!item?.disabled}
       onClick={() => !item?.disabled && setSelectedItem(item)}
     >
@@ -37,12 +37,11 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
           <BackgroundImage
             w={"100%"}
             h={"100%"}
-            // maw={"300px"}
-            miw={smallScreen ? "109px" : "164px"}
-            maw={smallScreen ? "109px" : "164px"}
+            miw={smallScreen ? "120px" : "164px"}
+            maw={smallScreen ? "120px" : "164px"}
             src={
               item?.images?.length > 0
-                ? getFileUrlFromKey(item?.images[0])
+                ? encodeURI(getFileUrlFromKey(item?.images[0]))
                 : fallbackImage
             }
             style={{
@@ -77,7 +76,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
         >
           <Stack p={smallScreen ? "10px" : "14px"} gap={0}>
             <Text
-              fz="clamp(1rem, 0.821rem + 0.476vw, 1.25rem)"
+              fz="clamp(16px, 13.136px + 0.476vw, 20px)"
               lineClamp={2}
               tt={"capitalize"}
               fw={500}
@@ -85,7 +84,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
               {item?.name}
             </Text>
             <Text
-              fz="clamp(0.75rem, 0.616rem + 0.357vw, 0.938rem)"
+              fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
               lineClamp={3}
               mih={"50px"}
             >
@@ -96,22 +95,19 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                 item?.price?.variants.map((varient, index) => (
                   <Stack align="center" gap={"0px"} key={index}>
                     <Text
-                      fz="clamp(0.75rem, 0.616rem + 0.357vw, 0.938rem)"
+                      fz="clamp(12px, 9.856px + 0.357vw, 15.008px)"
                       tt={"capitalize"}
                     >
                       {varient?.name}
                     </Text>
-                    <Text
-                      fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)"
-                      fw={500}
-                    >
+                    <Text fz="clamp(14px, 11.136px + 0.476vw, 18px)" fw={500}>
                       {varient?.price}
                     </Text>
                   </Stack>
                 ))
               ) : (
                 <Text
-                  fz="clamp(0.875rem, 0.696rem + 0.476vw, 1.125rem)"
+                  fz="clamp(14px, 11.136px + 0.476vw, 18px)"
                   mt={"sm"}
                   fw={500}
                 >

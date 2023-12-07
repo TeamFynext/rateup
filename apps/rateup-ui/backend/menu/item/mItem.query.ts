@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createMenuItem,
+  createMenuItemUsingCsv,
   deleteMenuItem,
   getItemsByCategoryId,
   updateMenuItem,
@@ -19,7 +20,7 @@ export const useCreateMenuItemMutation = (
   categoryId: string,
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -39,11 +40,32 @@ export const useCreateMenuItemMutation = (
   return createMutation;
 };
 
+export const useCreateMenuItemUsingCsvMutation = (
+  menuId: string,
+  onSuccess = () => {},
+  onError = () => {},
+) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: createMenuItemUsingCsv,
+    onSuccess: () => {
+      showSuccessToast("Menu items created successfully");
+      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      onSuccess();
+    },
+    onError: () => {
+      showErrorToast("Error creating menu items");
+      onError();
+    },
+  });
+  return createMutation;
+};
+
 export const useDeleteMenuItemMutation = (
   categoryId: string,
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
@@ -53,7 +75,7 @@ export const useDeleteMenuItemMutation = (
         "Menu item deleted successfully",
         "delete-data-menu-item",
         "",
-        true
+        true,
       );
       queryClient.invalidateQueries({
         queryKey: ["menu", menuId, "category", categoryId, "item"],
@@ -65,7 +87,7 @@ export const useDeleteMenuItemMutation = (
         "Error deleting menu item",
         "delete-data-menu-item",
         "",
-        true
+        true,
       );
       onError();
     },
@@ -77,7 +99,7 @@ export const useUpdateMenuItemMutation = (
   categoryId: string,
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
@@ -106,7 +128,7 @@ export const useUpdateMenuItemMutation = (
 export const useUpdateSortOrderMenuItemMutation = (
   categoryId: string,
   menuId: string,
-  onSuccess = () => {}
+  onSuccess = () => {},
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({

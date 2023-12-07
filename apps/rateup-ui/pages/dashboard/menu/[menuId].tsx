@@ -12,7 +12,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
 import { CategoryCard } from "../../../components/menu/category/CategoryCard";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import MenuSettings from "../../../components/menu/Settings/MenuSettings";
 import ShareMenu from "../../../components/menu/Share/ShareMenu";
 import LandingPage from "../../../components/menu/landingPage/LandingPage";
@@ -21,6 +24,8 @@ import { transformData } from "../../../components/menu/util/transformData";
 import Heading from "../../../components/styled/Heading/Heading";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import MenuAnalytics from "../../../components/menu/analytics/MenuAnalytics";
+import CategoryItemCsvModal from "../../../components/menu/category/CategoryItemCsvModal";
+import { IconUpload } from "@tabler/icons-react";
 
 enum TabEnum {
   Menu = "Menu",
@@ -36,6 +41,9 @@ export default ({ categories: initialCategories }) => {
   const [searchText, setSearchText] = useState("");
 
   const [openCreateModal, { close, open }] = useDisclosure(false);
+  const [openUploadCsv, { close: closeUploadCsv, toggle }] =
+    useDisclosure(false);
+
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
@@ -122,13 +130,22 @@ export default ({ categories: initialCategories }) => {
         </Grid>
         <Tabs.Panel value={TabEnum.Menu}>
           <Flex justify={"space-between"} wrap={"wrap"}>
-            <RateupButtonBlue
-              title="Add Category"
-              rightIcon={<IconPlus />}
-              radius="xl"
-              size="md"
-              onClick={handleCreateCategory}
-            />
+            <Group>
+              <RateupButtonBlue
+                title="Add Category"
+                rightIcon={<IconPlus />}
+                radius="xl"
+                size="md"
+                onClick={handleCreateCategory}
+              />
+              <RateupButtonSecondary
+                title="Upload Csv"
+                rightIcon={<IconUpload size={16} />}
+                radius="xl"
+                size="md"
+                onClick={toggle}
+              />
+            </Group>
             <SearchBox
               searchText={searchText}
               setSearchText={setSearchText}
@@ -158,6 +175,11 @@ export default ({ categories: initialCategories }) => {
               ))
             )}
           </Stack>
+          <CategoryItemCsvModal
+            opened={openUploadCsv}
+            close={closeUploadCsv}
+            menuId={menuId}
+          />
           <CreateMenuCategoryModal
             opened={openCreateModal}
             close={handleClose}

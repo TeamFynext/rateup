@@ -63,7 +63,7 @@ export function ItemDetailedViewModal({
                   sx={{
                     width: smallScreen
                       ? "80vw"
-                      : "clamp(13.75rem, 10.2289rem + 15.0235vw, 23.75rem)",
+                      : "clamp(220px, 163.6624px + 15.0235vw, 380px)",
                     aspectRatio: "4 / 3",
                     borderRadius: "12px",
                     border: "unset",
@@ -78,7 +78,7 @@ export function ItemDetailedViewModal({
                   w={
                     smallScreen
                       ? "80vw"
-                      : "clamp(13.75rem, 10.2289rem + 15.0235vw, 23.75rem)"
+                      : "clamp(220px, 163.6624px + 15.0235vw, 380px)"
                   }
                   maw={"400px"}
                   radius={"lg"}
@@ -166,23 +166,19 @@ export function ItemDetailedViewModal({
             item.price.variants.map((varient, index) => (
               <Stack align="center" gap={"0px"} key={index}>
                 <Text
-                  fz={"clamp(0.875rem, 0.429rem + 1.19vw, 1.5rem)"}
+                  fz={"clamp(14px, 6.864px + 1.19vw, 24px)"}
                   tt={"capitalize"}
                   fw={500}
                 >
                   {varient.name}
                 </Text>
-                <Text fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)" fw={500}>
+                <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" fw={500}>
                   {varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
-            <Text
-              fz="clamp(1rem, 0.464rem + 1.429vw, 1.75rem)"
-              mt={"md"}
-              fw={500}
-            >
+            <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" mt={"md"} fw={500}>
               {item?.price?.price}
             </Text>
           )}
