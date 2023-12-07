@@ -125,10 +125,7 @@ export const useSurveysByTeam = (
     queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
   });
 
-export const useCreateSurveyMutation = (
-  onSuccess = (data) => {},
-  onError = () => {},
-) => {
+export const useCreateSurveyMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createSurvey,
@@ -144,7 +141,6 @@ export const useCreateSurveyMutation = (
       });
       queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      onSuccess(data);
     },
     onError: (error: any) => {
       notifications.show({
@@ -155,7 +151,6 @@ export const useCreateSurveyMutation = (
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      onError();
     },
   });
 

@@ -196,7 +196,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
             )
           ) : (
             <Center style={{ flex: 1 }}>
-              {survey?.isPublished !== true && (
+              {(survey?.isPublished !== true || !survey?.active) && (
                 <Group align="center" justify="center">
                   <Image
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}

@@ -12,6 +12,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
+import { useRouter } from "next/router";
 
 interface FormValues {
   title: string;
@@ -27,19 +29,18 @@ interface CreateSurveyModalProps {
   open: boolean;
   close: () => void;
   surveyType: "web" | "whatsapp";
-  onCreate?: (survey: Survey) => void;
   teamsData: any;
 }
 export function CreateSurveyModal({
   open,
   close,
   surveyType,
-  onCreate = (_) => {},
   teamsData,
 }: CreateSurveyModalProps) {
   const [languages, setLanguages] = useState<string[]>([defaultLanguage]);
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const router = useRouter();
 
   const allTeams = teamsData?.map((team) => team?.id);
   const teamOptions = teamsData?.map((team) => ({
@@ -106,12 +107,7 @@ export function CreateSurveyModal({
   }, [open]);
 
   const [isCreating, setIsCreating] = useState(false);
-  const createSurveyMutation = useCreateSurveyMutation((data) => {
-    close();
-    setIsCreating(false);
-    resetForm();
-    onCreate(data);
-  });
+  const createSurveyMutation = useCreateSurveyMutation();
 
   const onSubmit = (values) => {
     const validationRes = form.validate();
@@ -128,7 +124,23 @@ export function CreateSurveyModal({
       autoClose: false,
       withCloseButton: false,
     });
-    createSurveyMutation.mutate({ ...form.values, type: surveyType });
+    createSurveyMutation.mutate(
+      { ...form.values, type: surveyType },
+      {
+        onSuccess: (data: CreateSurveyResponse) => {
+          close();
+          setIsCreating(false);
+          resetForm();
+          if (data?.id) {
+            router.push(`${router.pathname}/${data?.id}`);
+          }
+        },
+        onError: (error) => {
+          setIsCreating(false);
+          resetForm();
+        },
+      },
+    );
   };
   return (
     <FormModalLayout

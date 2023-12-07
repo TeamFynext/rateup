@@ -141,11 +141,6 @@ export function SurveysPage({
         open={createSurveyOpened}
         close={closeCreateSurvey}
         surveyType={surveyType}
-        onCreate={(s) => {
-          if (s?.id) {
-            router.push(`${router.pathname}/${s?.id}`);
-          }
-        }}
         teamsData={teamRes?.data}
       />
       {/* //---------create landing page modal ------------ */}

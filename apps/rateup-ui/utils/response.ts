@@ -36,12 +36,12 @@ export function getResponse(qId: string, response: SurveyResponse) {
       let formattedValue = "";
       if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
         formattedValue = responseValue
-          .map((value) => {
-            return value?.trim();
+          .map((item) => {
+            return item?.value?.trim();
           })
           .join(", ");
       } else {
-        formattedValue = responseValue;
+        formattedValue = responseValue?.value;
       }
       return formattedValue;
     } else {
