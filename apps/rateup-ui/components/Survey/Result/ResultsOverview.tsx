@@ -150,6 +150,7 @@ const ResultsOverview = () => {
           ];
       }
       let choices = null;
+      let choicesInAllLang = question?.choices;
       if (
         question?.choices &&
         question?.choices[selectedLanguage ? selectedLanguage : defaultLanguage]
@@ -174,6 +175,7 @@ const ResultsOverview = () => {
           passives,
           total,
         },
+        choicesInAllLang: choicesInAllLang,
       };
     });
   };
@@ -245,6 +247,7 @@ const ResultsOverview = () => {
                       })}
                       data={item?.responses}
                       questionType={item?.type}
+                      choicesInAllLang={item?.choicesInAllLang}
                     />
                     {index < chartData?.length - 1 && <Divider my="md" />}
                   </React.Fragment>

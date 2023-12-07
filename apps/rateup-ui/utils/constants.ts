@@ -71,16 +71,3 @@ export const ChoiceTypeQuestions = [
   QuestionType.CustomNPS,
   QuestionType.WaButtons,
 ];
-
-export const colorMapping = {
-  1: { c: "rgba(255, 92, 85, 1)", bg: "rgba(255, 92, 85, 0.2)" },
-  2: { c: "rgba(255, 133, 128, 1)", bg: "rgba(255, 133, 128, 0.2)" },
-  3: { c: "rgba(254, 183, 92, 1)", bg: "rgba(254, 183, 92, 0.2)" },
-  4: { c: "rgba(254, 201, 133, 1)", bg: "rgba(254, 201, 133, 0.2)" },
-  5: { c: "rgba(254, 220, 78, 1)", bg: "rgba(254, 220, 78, 0.2)" },
-  6: { c: "rgba(254, 229, 122, 1)", bg: "rgba(254, 229, 122, 0.2)" },
-  7: { c: "rgba(188, 234, 116, 1)", bg: "rgba(188, 234, 116, 0.2)" },
-  8: { c: "rgba(166, 227, 70, 1)", bg: "rgba(166, 227, 70, 0.2)" },
-  9: { c: "rgba(125, 203, 140, 1)", bg: "rgba(125, 203, 140, 0.2)" },
-  10: { c: "rgba(82, 186, 102, 1)", bg: "rgba(82, 186, 102, 0.2)" },
-};

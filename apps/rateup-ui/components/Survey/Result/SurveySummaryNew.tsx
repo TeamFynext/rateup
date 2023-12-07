@@ -8,7 +8,6 @@ import {
 } from "@mantine/core";
 import { IconThumbUpFilled, IconThumbDownFilled } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
-import { ChoiceTypeQuestions, colorMapping } from "../../../utils/constants";
 import { getResponseArrayByQuestionType } from "../../../utils/response";
 
 const countResponses = (surveyResponses) => {
@@ -49,28 +48,25 @@ const countResponses = (surveyResponses) => {
   return counts;
 };
 
-const SurveySummaryNew = ({ response, questionType, choices }) => {
-  let surveyResponses = response;
-
-  if (ChoiceTypeQuestions.includes(questionType)) {
-  }
-
-  const responseCounts = countResponses(response);
+const SurveySummaryNew = ({
+  response,
+  questionType,
+  choices,
+  choiceCounts,
+}) => {
   const totalResponses = response?.length;
 
-  const responseArray = Object.entries(responseCounts)?.map(
-    ([response, countValue]) => {
-      const count = Number(countValue);
-      const percentage = ((count / totalResponses) * 100)?.toFixed(2);
-      const voteText = count > 1 ? "votes" : "vote";
-      return {
-        response: response,
-        count: count,
-        percentage: percentage,
-        voteText: voteText,
-      };
-    },
-  );
+  const responseArray = choiceCounts?.map((choice) => {
+    const count = choice?.count;
+    const percentage = ((count / totalResponses) * 100)?.toFixed(2);
+    const voteText = count > 1 ? "votes" : "vote";
+    return {
+      response: choice?.name,
+      count: count,
+      percentage: percentage,
+      voteText: voteText,
+    };
+  });
 
   switch (questionType) {
     case QuestionType.Opinion:
@@ -87,10 +83,10 @@ const SurveySummaryNew = ({ response, questionType, choices }) => {
                     radius="md"
                     w={34}
                     h={32}
-                    color={colorMapping[item?.value]?.c}
+                    color={item?.color}
                     variant={"light"}
                     style={{
-                      border: `1px solid ${colorMapping[item?.value]?.c}`,
+                      border: `1px solid ${item?.color}`,
                     }}
                   >
                     {item?.value}
