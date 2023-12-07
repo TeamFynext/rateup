@@ -44,6 +44,7 @@ import NothingFound from "../../NothingFound/NothingFound";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PreviewModal from "../../Modal/PreviewModal";
+import { ChoiceTypeQuestions } from "../../../utils/constants";
 
 const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const [responseCount, setResponseCount] = useState(0);
@@ -78,7 +79,6 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   useEffect(() => {
     setResponseCount(responses?.length);
   }, [responses]);
-  //Todo object change choice
   const handleExcelDownload = useCallback(() => {
     const responses = allResponses && allResponses[0].responses;
     if (questions && responses) {
@@ -107,6 +107,11 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
                 responseValue = dayjs(responseValue).format("DD-MM-YYYY");
                 break;
               }
+            }
+            if (ChoiceTypeQuestions.includes(responseType)) {
+              responseValue = Array.isArray(responseValue)
+                ? responseValue?.map((res) => res.value)
+                : responseValue?.value;
             }
             if (typeof responseValue === "object") {
               responseValue = Object.values(responseValue).join(", ");
