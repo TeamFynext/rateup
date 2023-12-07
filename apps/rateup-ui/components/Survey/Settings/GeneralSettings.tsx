@@ -167,7 +167,7 @@ const GeneralSettings = ({ survey, enabledModules }) => {
               <Tooltip
                 label={
                   disableKioskAction
-                    ? "No available since Google Review Questions present."
+                    ? "Not available since Google Review Questions present."
                     : ""
                 }
                 refProp={"rootRef"}
