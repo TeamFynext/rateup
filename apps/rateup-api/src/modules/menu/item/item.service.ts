@@ -148,10 +148,23 @@ export async function createMenuItemUsingCsv(
     });
     let itemOrder = 0;
     if (!category) {
+      const existingCategoryData = await prisma.menuCategory.findFirst({
+        where: {
+          menuId,
+        },
+        orderBy: {
+          itemOrder: "desc",
+        },
+      });
+      let categoryOrder = 0;
+      if (existingCategoryData) {
+        categoryOrder = Number(existingCategoryData.itemOrder) + 1;
+      }
       category = await prisma.menuCategory.create({
         data: {
           name: filteredData?.categoryname,
           menuId,
+          itemOrder: categoryOrder,
         },
       });
     } else {
