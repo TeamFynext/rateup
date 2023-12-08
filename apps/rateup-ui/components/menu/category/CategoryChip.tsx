@@ -18,6 +18,7 @@ export function CategoryChip({ categoryId, name, selected, onClick }) {
           ? "0.5px solid var(--grey-color, #494949)"
           : "0.5px solid var(--orange-400)",
         borderRadius: "10px",
+        whiteSpace: "nowrap",
       }}
     >
       {name}

@@ -33,11 +33,14 @@ export const getFullMenuPublicById = async (menuId: string) => {
     const res = await axiosClient.get(`${PUBLIC_MENU_URL}/full/${menuId}`);
     return res.data as FullMenu;
   } catch (e) {
-    console.log(e);
     return null;
   }
 };
 
 export async function updateMenuVisitedMutation(menuId: string) {
-  return await axiosClient.post(`${PUBLIC_MENU_URL}/${menuId}/visited`, {});
+  try {
+    return await axiosClient.post(`${PUBLIC_MENU_URL}/${menuId}/visited`, {});
+  } catch (e) {
+    return null;
+  }
 }

@@ -15,7 +15,7 @@ import { CategoryChip } from "../../../../../components/menu/category/CategoryCh
 import { CategoryDisplay } from "../../../../../components/menu/category/CategoryDisplay";
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
-import { getFullMenuById } from "../../../../../backend/menu/menu.api";
+import { getFullMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { useRouter } from "next/router";
 import { lexend } from "../../../../../utils/fonts";
 
@@ -26,11 +26,19 @@ type MenuViewProp = {
 export const getServerSideProps = async (context: { params: MenuViewProp }) => {
   const params = context.params;
 
-  const fullMenu = await getFullMenuById(params.menuId);
+  const fullMenu = await getFullMenuPublicById(params.menuId);
   return { props: { fullMenu: fullMenu } };
 };
 
 export default function ({ fullMenu }) {
+  if (!fullMenu || !fullMenu?.isPublished)
+    return (
+      <Stack align="center" h="50vh" justify="space-around">
+        <Text size="xl" c="red" fw="600">
+          Menu is not available..!
+        </Text>
+      </Stack>
+    );
   const router = useRouter();
   const largeScreen = useMediaQuery("(min-width: 40em)");
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(

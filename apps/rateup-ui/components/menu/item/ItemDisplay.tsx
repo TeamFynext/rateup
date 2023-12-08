@@ -87,7 +87,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             <Text
               fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
               lineClamp={3}
-              mih={"50px"}
+              mih={item?.price?.variants?.length > 0 ? "65px" : "70px"}
             >
               {item?.description}
             </Text>
@@ -98,6 +98,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                     <Text
                       fz="clamp(12px, 9.856px + 0.357vw, 15.008px)"
                       tt={"capitalize"}
+                      style={{ whiteSpace: "nowrap" }}
                     >
                       {varient?.name}
                     </Text>
