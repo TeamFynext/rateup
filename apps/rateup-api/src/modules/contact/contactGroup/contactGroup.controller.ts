@@ -126,6 +126,6 @@ export async function removeContactsFromGroupHandler (
         reply.code(200).send(contacts)
     } catch (error) {
         log.error(error);
-        reply.code(500).send({ error: "Something went wrong" });
+        reply.code(500).send({ error: `Something went wrong: ${error}` });
     }
 }
