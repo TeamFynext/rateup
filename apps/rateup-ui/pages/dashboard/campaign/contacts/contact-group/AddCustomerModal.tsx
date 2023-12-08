@@ -183,7 +183,6 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
             form.reset();
           },
           onError: () => {
-            close();
             setIsCreating(false);
             form.reset();
           },
@@ -242,7 +241,6 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
             onError: () => {
               setIsCreating(false);
               form.reset();
-              close();
             },
           },
         );

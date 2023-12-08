@@ -7,6 +7,7 @@ import {
   getContactGroupById,
   getContactGroupList,
   getContactGroupsByTeamId,
+  removeContactsFromGroup,
   updateContactGroup,
 } from "./contactGroup.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -154,6 +155,30 @@ export const useAddExistingContactMutation = (groupId: string) => {
       showErrorToast(
         `Error adding customer to group: ${error?.response?.data?.error}`,
         "contact-group-add-existing",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useRemoveContactsFromGroup = (groupId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeContactsFromGroup,
+    onSuccess() {
+      showSuccessToast(
+        "Customers removed from  group successfully.",
+        "contact-group-remove",
+        <IconCheck />,
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupById", groupId],
+      });
+    },
+    onError(error: any) {
+      showErrorToast(
+        `Error removing customer from group: ${error?.response?.data?.error}`,
+        "contact-group-remove",
         <IconX />,
       );
     },

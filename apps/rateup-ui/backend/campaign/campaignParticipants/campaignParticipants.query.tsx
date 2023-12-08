@@ -3,9 +3,11 @@ import {
   addCampaignParticipants,
   addContactParticipants,
   addGroupParticipants,
+  deleteCampaignParticipant,
   getCampaignParticipants,
 } from "./campaignParticipants.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 export const useAddContactParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
@@ -64,6 +66,28 @@ export const useAddCampaignParticipants = (campaignId) => {
       showErrorToast(
         `Error on adding participants: 
         ${error?.response?.data.error}`,
+      );
+    },
+  });
+};
+
+export const useRemoveCampaignParticipant = (campaignId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCampaignParticipant,
+    onSuccess() {
+      showSuccessToast(
+        "Participants removed from campaign successfully.",
+        "campaign-participants-remove",
+        <IconCheck />,
+      );
+      queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+    },
+    onError(error: any) {
+      showErrorToast(
+        `Error removing participants from campaign: ${error?.response?.data?.error}`,
+        "campaign-participants-remove",
+        <IconX />,
       );
     },
   });
