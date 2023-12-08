@@ -17,7 +17,7 @@ import { CategoriesDrawer } from "../../../../../components/menu/category/Catego
 import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemDetailedViewModal";
 import { getFullMenuById } from "../../../../../backend/menu/menu.api";
 import { useRouter } from "next/router";
-import { lexend300 } from "../../../../../utils/fonts";
+import { lexend } from "../../../../../utils/fonts";
 
 type MenuViewProp = {
   menuId: string;
@@ -61,7 +61,7 @@ export default function ({ fullMenu }) {
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
 
   return (
-    <Paper mih={"100vh"} ff={lexend300.style.fontFamily}>
+    <Paper mih={"100vh"} ff={lexend.style.fontFamily}>
       <BackgroundImage
         px={largeScreen ? "10vw" : "1vw"}
         py="3vh"

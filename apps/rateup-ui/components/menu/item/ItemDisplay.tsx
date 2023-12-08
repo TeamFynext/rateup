@@ -12,6 +12,7 @@ import {
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { lexend } from "../../../utils/fonts";
 
 interface ItemDisplayProps {
   readonly item: any;
@@ -32,7 +33,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
       hoveractive={!item?.disabled}
       onClick={() => !item?.disabled && setSelectedItem(item)}
     >
-      <Flex h={"100%"}>
+      <Flex h={"100%"} ff={lexend.style.fontFamily}>
         <Group style={{ display: "flex", flex: 0.8 }}>
           <BackgroundImage
             w={"100%"}
@@ -71,7 +72,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
         <Flex
           c={"var(--grey-color)"}
           fw={"600"}
-          w={smallScreen ? "134px" : "164px"}
+          w={smallScreen ? "134px" : "100%"}
           opacity={item?.disabled ? 0.5 : 1}
         >
           <Stack p={smallScreen ? "10px" : "14px"} gap={0}>
@@ -90,7 +91,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
             >
               {item?.description}
             </Text>
-            <Group justify="space-evenly" gap={"sm"}>
+            <Flex justify="space-evenly" gap={"sm"}>
               {item?.price?.variants?.length > 0 ? (
                 item?.price?.variants.map((varient, index) => (
                   <Stack align="center" gap={"0px"} key={index}>
@@ -114,7 +115,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                   {item?.price?.price}
                 </Text>
               )}
-            </Group>
+            </Flex>
           </Stack>
         </Flex>
       </Flex>

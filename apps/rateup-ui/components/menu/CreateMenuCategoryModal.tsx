@@ -47,6 +47,7 @@ export function CreateMenuCategoryModal({
       form.setValues(editingItem);
     } else {
       form.reset();
+      setImageToUpload(null);
     }
   }, [editingItem]);
 
@@ -56,6 +57,7 @@ export function CreateMenuCategoryModal({
       form.reset();
       close();
       setIsCreating(false);
+      setImageToUpload(null);
     },
     () => {
       setIsCreating(false);
@@ -68,6 +70,7 @@ export function CreateMenuCategoryModal({
       form.reset();
       close();
       setIsCreating(false);
+      setImageToUpload(null);
     },
     () => {
       setIsCreating(false);

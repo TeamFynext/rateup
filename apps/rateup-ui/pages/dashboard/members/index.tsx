@@ -50,12 +50,12 @@ const Members = () => {
     <Stack>
       <Group justify="space-between">
         <Heading title="Members" />
-        <ContainedTextField
+        {/* <ContainedTextField
           placeholder="Search in all members"
           disabled
           style={{ flex: 1 }}
         />
-        <ContainedSelection disabled placeholder="Sort" />
+        <ContainedSelection disabled placeholder="Sort" /> */}
       </Group>
       <PaperLayout>
         {isLoadingTeamsUser ? (
