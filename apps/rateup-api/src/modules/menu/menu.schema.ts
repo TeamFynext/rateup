@@ -44,6 +44,7 @@ const menuPublicResponseSchema = z.object({
   websiteText: z.string().optional(),
   websiteUrl: z.string().optional(),
   logo: z.string().optional(),
+  isPublished:z.boolean().optional()
 });
 
 const fullMenuPublicResponseSchema = z.object({
