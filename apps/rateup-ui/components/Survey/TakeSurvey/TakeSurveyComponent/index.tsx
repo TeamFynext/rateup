@@ -668,15 +668,22 @@ function NextPrev({ prev, next, num, total }) {
 
         if (phone?.length > 0 || selectedQ?.required) {
           if (phone && isValidPhoneNumber(phone)) {
-            email && emailPattern.test(email)
-              ? setErrorMsg("")
-              : setErrorMsg("Enter a valid email");
-            email && emailPattern.test(email)
-              ? setIsErrorInput(false)
-              : setIsErrorInput(true);
+            email?.length > 0 && !emailPattern.test(email)
+              ? setErrorMsg("Enter a valid email")
+              : setErrorMsg("");
+            email?.length > 0 && !emailPattern.test(email)
+              ? setIsErrorInput(true)
+              : setIsErrorInput(false);
           } else {
-            setIsErrorInput(true);
-            setErrorMsg("Enter a valid email / phone");
+            if (!(email && emailPattern.test(email))) {
+              setIsErrorInput(true);
+              setErrorMsg("Enter a valid email / phone");
+            } else {
+              if (phone?.length > 0 && !isValidPhoneNumber(phone)) {
+                setIsErrorInput(true);
+                setErrorMsg("Enter a valid phone");
+              }
+            }
           }
         }
       } else {

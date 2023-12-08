@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Paper, Image, Flex } from "@mantine/core";
+import { Image, Flex } from "@mantine/core";
 import { useRouter } from "next/router";
 import {
   useConsumeVerificationCode,
@@ -8,7 +8,7 @@ import {
   useSignUp,
 } from "../../utils/auth";
 import Link from "next/link";
-import { AuthMode, UserMode } from "../../utils/enums";
+import { AuthMode } from "../../utils/enums";
 import { useCreateUserMutation } from "../../backend/user/user.query";
 import styles from "./AuthForm.module.css";
 import LoginForm from "./LoginForm";
