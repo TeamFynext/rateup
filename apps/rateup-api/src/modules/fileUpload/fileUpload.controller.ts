@@ -8,7 +8,7 @@ export async function uploadController(
 ) {
   const data = await req.file();
   const { filename, file } = data;
-  const uniqueFilename = `${Date.now()}-${filename}`;
+  const uniqueFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9-.]/g, '')}`;
 
   const params = {
     Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
