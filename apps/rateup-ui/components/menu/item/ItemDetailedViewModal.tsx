@@ -6,7 +6,7 @@ import { extractVideoId } from "../../../utils/youtube/url";
 import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import classes from "./itemDetailedViewModal.module.css";
 import { useMediaQuery } from "@mantine/hooks";
-import { lexend300 } from "../../../utils/fonts";
+import { lexend } from "../../../utils/fonts";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -41,7 +41,7 @@ export function ItemDetailedViewModal({
         close: classes.close,
       }}
       closeButtonProps={{ iconSize: "22px" }}
-      ff={lexend300.style.fontFamily}
+      ff={lexend.style.fontFamily}
     >
       <Stack align="center" c={"var(--grey-color)"}>
         <Box>
