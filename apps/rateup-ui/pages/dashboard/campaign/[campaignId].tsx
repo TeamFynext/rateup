@@ -32,6 +32,7 @@ import { CampaignStatus } from "../../../types/enums";
 import CreateCampaignModal from "./CreateCampaignModal";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import dayjs from "dayjs";
+import CampaignParticipantCard from "./CampaignParticipantCard";
 
 export default () => {
   const [searchText, setSearchText] = useState("");
@@ -113,9 +114,10 @@ export default () => {
           {filteredParticipants?.length > 0 ? (
             <SimpleGrid cols={3}>
               {filteredParticipants?.map((participant) => (
-                <ParticipantCard
+                <CampaignParticipantCard
                   participant={participant}
                   key={participant?.id}
+                  campaign={campaignData}
                 />
               ))}
             </SimpleGrid>
@@ -304,29 +306,6 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
             campaign={campaign}
           />
         </Modal>
-      </Paper>
-    </>
-  );
-};
-
-const ParticipantCard = ({ participant }) => {
-  return (
-    <>
-      <Paper shadow="xl" p="lg" radius={"md"}>
-        <Group justify="space-between">
-          <Stack gap={0}>
-            <Title order={4}>{participant?.contact?.name}</Title>
-            <Text c={"dimmed"}>{participant?.contact?.phone}</Text>
-          </Stack>
-          <Badge
-            variant={renderBadge(participant?.status).variant}
-            color={renderBadge(participant?.status).color}
-            radius={"md"}
-            size="xl"
-          >
-            {participant?.status}
-          </Badge>
-        </Group>
       </Paper>
     </>
   );

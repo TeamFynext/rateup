@@ -14,9 +14,11 @@ import {
   Container,
   Badge,
 } from "@mantine/core";
-import ContactCard from "../../../../../components/Card/ContactCard";
 import { IconEdit, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
-import { RateupButtonBlue } from "../../../../../components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../../../components/Button/RateupButtons";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../../../components/Modal/FormModalLayout";
 import AddCustomerModal from "./AddCustomerModal";
@@ -31,9 +33,15 @@ import { modals } from "@mantine/modals";
 import { useRouteParams } from "../../../../../context/RouteParamsContext";
 import CreateGroupModal from "./CreateGroupModal";
 import { useTeamsByUser } from "../../../../../backend/team/team.query";
+import GroupParticipant from "./GroupParticipant";
+import RemovePartcipantModal from "./RemovePartcipantModal";
 
 export default function () {
   const [opened, { open, close }] = useDisclosure(false);
+  const [
+    openedEditCustomer,
+    { open: openEditCustomer, close: closeEditCustomer },
+  ] = useDisclosure(false);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
   const { groupId } = router.query;
@@ -196,11 +204,18 @@ export default function () {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     w={500}
                   />
+                  <RateupButtonSecondary
+                    title="Edit"
+                    leftIcon={<IconEdit />}
+                    radius={"xl"}
+                    size="md"
+                    onClick={openEditCustomer}
+                  />
                   <RateupButtonBlue
                     title="New customer"
                     rightIcon={<IconPlus />}
                     radius="xl"
-                    size="lg"
+                    size="md"
                     onClick={open}
                   ></RateupButtonBlue>
                 </Group>
@@ -216,11 +231,11 @@ export default function () {
               >
                 {filteredCustomerList?.length > 0 ? (
                   filteredCustomerList?.map((contact) => (
-                    <ContactCard
+                    <GroupParticipant
                       contact={contact}
                       key={contact?.id}
                       groupId={groupDetails?.id}
-                    ></ContactCard>
+                    ></GroupParticipant>
                   ))
                 ) : (
                   <Container p="xl">
@@ -235,12 +250,26 @@ export default function () {
             opened={opened}
             title={`Add customer to ${groupDetails?.name}`}
             size="xl"
+            centered
           >
             <AddCustomerModal
               groupId={groupDetails?.id}
               close={close}
               teamId={groupDetails?.teamId}
             ></AddCustomerModal>
+          </FormModalLayout>
+          <FormModalLayout
+            centered
+            onClose={closeEditCustomer}
+            title={`Remove customer - ${groupDetails?.name}`}
+            size="lg"
+            opened={openedEditCustomer}
+          >
+            <RemovePartcipantModal
+              customerList={groupDetails?.contacts}
+              groupId={groupDetails?.id}
+              close={closeEditCustomer}
+            />
           </FormModalLayout>
         </Box>
       )}

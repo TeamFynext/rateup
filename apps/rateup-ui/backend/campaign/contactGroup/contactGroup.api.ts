@@ -69,3 +69,11 @@ export const addExistingContactsToGroup = ({ customerList, groupId }) => {
   );
   return res;
 };
+
+export const removeContactsFromGroup = async ({ contactIds, groupId }) => {
+  let res = await axiosClient.put(
+    `contact/group/${groupId}/contacts`,
+    contactIds,
+  );
+  return res;
+};

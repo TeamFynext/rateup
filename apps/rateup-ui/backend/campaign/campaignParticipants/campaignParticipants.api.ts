@@ -28,3 +28,13 @@ export const addCampaignParticipants = async ({ data, campaignId }) => {
   );
   return res;
 };
+
+export const deleteCampaignParticipant = async ({
+  participantId,
+  campaignId,
+}) => {
+  let res = await axiosClient.delete(
+    `/campaign/${campaignId}/participants/${participantId}`,
+  );
+  return res;
+};
