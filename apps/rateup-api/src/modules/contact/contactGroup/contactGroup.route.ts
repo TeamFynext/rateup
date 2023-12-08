@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { $contactGroupRef } from "./contactGroup.schema";
-import { createContactGroupHandler, getContactGroupsHandler, updateContactGroupHandler, deleteContactGroupHandler, addExistingContactsToGroupHandler, addNewContactsToGroupHandler, getContactsByContactGroupIdHandler } from "./contactGroup.controller";
+import { createContactGroupHandler, getContactGroupsHandler, updateContactGroupHandler, deleteContactGroupHandler, addExistingContactsToGroupHandler, addNewContactsToGroupHandler, getContactsByContactGroupIdHandler, removeContactsFromGroupHandler } from "./contactGroup.controller";
 
 export async function contactGroupRoutes(server: FastifyInstance) {
     server.post(
@@ -74,5 +74,16 @@ export async function contactGroupRoutes(server: FastifyInstance) {
             },
         },
         addNewContactsToGroupHandler
+    )
+
+    server.put(
+        "/:contactGroupId/contacts", 
+        {
+            schema: {
+               params: $contactGroupRef("byContactGroupIdParamsSchema"),
+               body: $contactGroupRef("removeGroupContactsSchema")
+            }
+        },
+        removeContactsFromGroupHandler
     )
 }

@@ -1,9 +1,9 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "../../../utils/logger";
-import { AddExistingContactsToGroupInput, AddNewContactsToGroupInput, ByContactGroupIdParams, CreateContactGroupInput, GetContactGroupsQuery, UpdateContactGroupInput } from "./contactGroup.schema";
-import { createContactGroup, getContactGroupById, addExistingContactsToGroup, addNewContactsToGroup, updateContactGroup, deleteContactGroup, getContactGroupsByTeamId, getContactGroupsByOrgId, getContactsByContactGroupId } from "./contactGroup.service";
+import { AddExistingContactsToGroupInput, AddNewContactsToGroupInput, ByContactGroupIdParams, CreateContactGroupInput, GetContactGroupsQuery, RemoveGroupContactsSchema, UpdateContactGroupInput } from "./contactGroup.schema";
+import { createContactGroup, getContactGroupById, addExistingContactsToGroup, addNewContactsToGroup, updateContactGroup, deleteContactGroup, getContactGroupsByTeamId, getContactGroupsByOrgId, getContactsByContactGroupId, removeContactsFromGroup } from "./contactGroup.service";
 import { verifyRole } from "../../../utils/auth";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 export async function getContactGroupsHandler(
     request: FastifyRequest<{
@@ -81,7 +81,13 @@ export async function addNewContactsToGroupHandler(
         reply.code(200).send(contactGroup);
     } catch (error) {
         log.error(error);
-        reply.code(500).send({ error: "Something went wrong" });
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                reply.code(500).send({ error: "Contact already exist" });
+              }
+        }else {
+            reply.code(500).send({ error: "Something went wrong" });
+        }
     }
 }
 
@@ -111,3 +117,15 @@ export async function deleteContactGroupHandler(
     }
 }
 
+export async function removeContactsFromGroupHandler (
+    request: FastifyRequest<{ Params: ByContactGroupIdParams, Body: RemoveGroupContactsSchema}>,
+    reply: FastifyReply
+) {
+    try {
+        const contacts = await removeContactsFromGroup(request.params.contactGroupId, request.body)
+        reply.code(200).send(contacts)
+    } catch (error) {
+        log.error(error);
+        reply.code(500).send({ error: `Something went wrong: ${error}` });
+    }
+}
