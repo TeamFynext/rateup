@@ -146,13 +146,39 @@ export async function createMenuItemUsingCsv(
         menuId,
       },
     });
+    let itemOrder = 0;
     if (!category) {
+      const existingCategoryData = await prisma.menuCategory.findFirst({
+        where: {
+          menuId,
+        },
+        orderBy: {
+          itemOrder: "desc",
+        },
+      });
+      let categoryOrder = 0;
+      if (existingCategoryData) {
+        categoryOrder = Number(existingCategoryData.itemOrder) + 1;
+      }
       category = await prisma.menuCategory.create({
         data: {
           name: filteredData?.categoryname,
           menuId,
+          itemOrder: categoryOrder,
         },
       });
+    } else {
+      const existingMenuData = await prisma.menuItem.findFirst({
+        where: {
+          categoryId: category?.id,
+        },
+        orderBy: {
+          itemOrder: "desc",
+        },
+      });
+      if (existingMenuData) {
+        itemOrder = Number(existingMenuData.itemOrder) + 1;
+      }
     }
     await prisma.menuItem.create({
       data: {
@@ -163,6 +189,7 @@ export async function createMenuItemUsingCsv(
           type: "FIXED",
         },
         categoryId: category?.id,
+        itemOrder,
       },
     });
   }
