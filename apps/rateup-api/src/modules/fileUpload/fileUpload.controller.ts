@@ -14,6 +14,7 @@ export async function uploadController(
     Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Key: uniqueFilename,
     Body: file,
+    ContentType: data.mimetype,
   };
 
   try {

@@ -1,8 +1,10 @@
+import { MultipartFile } from "@fastify/multipart";
 import prisma from "../../../utils/prisma";
 import { deleteFile } from "../../../utils/upload/s3Upload";
 import { SortMenuCategoryInput } from "../category/category.schema";
 import { UpdateMenuInput } from "../menu.schema";
 import { CreateMenuItemInput } from "./item.schema";
+import Papa from "papaparse";
 
 export async function createMenuItem(data: CreateMenuItemInput) {
   const existingMenuData = await prisma.menuItem.findFirst({
@@ -114,4 +116,55 @@ export async function deleteMenuItem(id: string) {
     },
   });
   return menuItem;
+}
+export async function createMenuItemUsingCsv(
+  data: MultipartFile,
+  menuId: string
+) {
+  const requiredHeaders = ["categoryname", "name", "description", "price"];
+  const content = await data.toBuffer();
+  const results = Papa.parse(content.toString(), {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    transformHeader: (header: string) => header?.toLowerCase(),
+    transform: (data: string | number, header: string) =>
+      requiredHeaders.includes(header?.toLowerCase()) && data
+        ? data
+        : undefined,
+  });
+
+  const filteredDatas = results.data.filter((row) =>
+    requiredHeaders.every(
+      (header) => header in row && row[header] !== undefined
+    )
+  );
+  for await (const filteredData of filteredDatas) {
+    let category = await prisma.menuCategory.findFirst({
+      where: {
+        name: filteredData.categoryname,
+        menuId,
+      },
+    });
+    if (!category) {
+      category = await prisma.menuCategory.create({
+        data: {
+          name: filteredData?.categoryname,
+          menuId,
+        },
+      });
+    }
+    await prisma.menuItem.create({
+      data: {
+        name: filteredData?.name,
+        description: filteredData?.description,
+        price: {
+          price: filteredData?.price,
+          type: "FIXED",
+        },
+        categoryId: category?.id,
+      },
+    });
+  }
+  return "sucess";
 }
