@@ -29,6 +29,8 @@ const getContactGroupsQuerySchema = z.object({
     teamId: z.string().optional(),
 })
 
+const removeGroupContactsSchema = z.array(z.string())
+
 const addNewContactsToGroupInputSchema = z.array(createContactSchema.omit({ teamId: true }))
 
 export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } = buildJsonSchemas({
@@ -37,7 +39,8 @@ export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } = buildJso
     updateContactGroupInputSchema,
     addExistingContactsToGroupInputSchema,
     addNewContactsToGroupInputSchema,
-    getContactGroupsQuerySchema
+    getContactGroupsQuerySchema,
+    removeGroupContactsSchema
 }, {
     $id: 'contactGroupSchema'
 })
@@ -48,3 +51,4 @@ export type AddNewContactsToGroupInput = z.infer<typeof addNewContactsToGroupInp
 export type ByContactGroupIdParams = z.infer<typeof byContactGroupIdParamsSchema>;
 export type UpdateContactGroupInput = z.infer<typeof updateContactGroupInputSchema>;
 export type CreateContactGroupInput = z.infer<typeof createContactGroupInputSchema>;
+export type RemoveGroupContactsSchema = z.infer<typeof removeGroupContactsSchema>;

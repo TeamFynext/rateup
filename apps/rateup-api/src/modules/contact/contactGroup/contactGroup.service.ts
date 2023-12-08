@@ -1,5 +1,5 @@
 import prisma from "../../../utils/prisma";
-import { AddNewContactsToGroupInput, CreateContactGroupInput, UpdateContactGroupInput } from "./contactGroup.schema";
+import { AddNewContactsToGroupInput, CreateContactGroupInput, RemoveGroupContactsSchema, UpdateContactGroupInput } from "./contactGroup.schema";
 
 export async function getContactGroupById(contactGroupId: string) {
     const contactGroup = await prisma.contactGroup.findUnique({
@@ -148,4 +148,21 @@ export async function deleteContactGroup(contactGroupId: string) {
             id: contactGroupId
         }
     })
+}
+
+export async function removeContactsFromGroup(contactGroupId:string, contactIds:RemoveGroupContactsSchema) {
+   const participants = contactIds.map(c => ({contactId_contactGroupId: {
+     contactId:c,
+     contactGroupId:contactGroupId
+   }}))
+   return await prisma.contactGroup.update({
+    where: {
+      id: contactGroupId
+    },
+    data :{
+      contacts: {
+        delete: participants
+      }
+    }
+   })
 }
