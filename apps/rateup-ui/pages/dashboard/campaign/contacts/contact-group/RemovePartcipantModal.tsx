@@ -15,7 +15,7 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
     ? customerList?.filter(
         (customer) =>
           customer?.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          customer?.phoselectedCustomersne?.startsWith(searchText),
+          customer?.phone?.startsWith(searchText),
       )
     : customerList;
 
