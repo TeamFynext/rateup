@@ -3,6 +3,7 @@ import Button from "../../../components/Button";
 import Image from "next/image";
 import styles from "./HeroSection.module.css";
 import commonStyles from "../Reputation.module.css";
+import BookDemoContactForm from "../../../components/BookDemoContactForm";
 
 const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/transform-online-presence.png`;
 
@@ -20,7 +21,9 @@ function HeroSection() {
           <span>positive brand advocates</span>
         </Text>
         <Flex>
-          <Button whiteBackgroundGradientText>Book a Demo</Button>
+          <BookDemoContactForm
+            buttonProps={{ whiteBackgroundGradientText: true }}
+          />
         </Flex>
       </Stack>
       <Flex className={styles["illustration-image-container"]}>

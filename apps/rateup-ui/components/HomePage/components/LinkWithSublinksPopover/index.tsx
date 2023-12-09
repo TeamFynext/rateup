@@ -1,8 +1,9 @@
-import { Button, Flex, Popover } from "@mantine/core";
+import { Button, Flex, Image, Popover, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import headerStyles from "../Header/Header.module.css";
+import styles from "./LinkWithSublinksPopover.module.css";
 import Link from "next/link";
-import { IconCaretDownFilled } from "@tabler/icons-react";
+import { IconCaretDownFilled, IconChevronDown } from "@tabler/icons-react";
 
 const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
   const [opened, { close, open }] = useDisclosure(false);
@@ -10,13 +11,16 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
     <Popover
       opened={opened}
       zIndex={400}
-      width={200}
+      width={350}
       offset={0}
-      position="bottom-start"
+      position="bottom"
+      withArrow
     >
       <Popover.Target>
         <Flex
-          className={headerStyles["header-link-wrapper"]}
+          className={`${headerStyles["header-link-wrapper"]} ${
+            opened ? styles["dropdown-active"] : ""
+          }`}
           onMouseEnter={open}
           onMouseLeave={close}
         >
@@ -29,24 +33,43 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
             <span>{linkText}</span>
           </Link>
           <Button
-            className={headerStyles["sublinks-caret-btn"]}
+            className={styles["sublinks-chevron-btn"]}
+            classNames={{
+              section: styles["chevron-down"],
+            }}
             onClick={(e) => {
               if (!opened) open();
               else close();
             }}
-          >
-            <IconCaretDownFilled />
-          </Button>
+            rightSection={<IconChevronDown />}
+          ></Button>
         </Flex>
       </Popover.Target>
-      <Popover.Dropdown onMouseEnter={open} onMouseLeave={close}>
-        {sublinks.map(({ link, label }) => {
+      <Popover.Dropdown
+        onMouseEnter={open}
+        onMouseLeave={close}
+        className={styles["popover-dropdown"]}
+      >
+        {sublinks.map(({ id, link, content, iconLink }) => {
+          const { heading, description } = content;
           return (
-            <Flex key={label} justify={"center"}>
-              <Link className={className} href={link}>
-                {label}
-              </Link>
-            </Flex>
+            <Link key={id} href={link} className={styles["link"]}>
+              <Flex className={styles["link-content-container"]}>
+                <Flex className={styles["image-container"]}>
+                  <Image
+                    className={styles["link-content-img"]}
+                    src={iconLink}
+                    alt="icon"
+                  />
+                </Flex>
+                <Stack className={styles["heading-description-container"]}>
+                  <span className={styles["heading-span"]}>{heading}</span>
+                  <span className={styles["description-span"]}>
+                    {description}
+                  </span>
+                </Stack>
+              </Flex>
+            </Link>
           );
         })}
       </Popover.Dropdown>

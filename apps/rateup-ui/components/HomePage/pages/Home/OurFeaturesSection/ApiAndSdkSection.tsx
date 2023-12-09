@@ -2,14 +2,15 @@ import { Text, Title } from "@mantine/core";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
 import styles from "../../../index/index.module.css";
 import Image from "next/image";
+import { imagesPath } from "../../../constants";
 
 function ApiAndSdkSection() {
-  const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/homepage/our-features`;
+  const imagePath = `${imagesPath}/homepage/our-features/api-and-sdk-support.png`;
 
   return (
-    <IllustrationTextLayout>
+    <IllustrationTextLayout imageContainerAsFirstElement>
       <>
-        <Title order={1} className={styles["illustration-txt-section-heading"]}>
+        <Title className={styles["illustration-txt-section-heading"]}>
           API and SDK Support
         </Title>
         <Text className={styles["illustration-txt-section-text-para"]}>
@@ -30,7 +31,7 @@ function ApiAndSdkSection() {
         <Image
           className={`${styles["api-and-sdk-text-section-image"]}
             ${styles["illustration-txt-section-video"]}`}
-          src={`${imagesPath}/api-and-sdk-support.png`}
+          src={imagePath}
           alt="api and sdk support illustration"
           width={1982}
           height={1442}

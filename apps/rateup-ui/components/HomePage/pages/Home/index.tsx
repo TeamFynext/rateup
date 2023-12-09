@@ -1,4 +1,3 @@
-import Banner from "../../components/Banner";
 import HeroSection from "./HeroSection";
 import OurFeaturesSection from "./OurFeaturesSection";
 import OurSolutionsSection from "./OursolutionsSection";
@@ -45,7 +44,6 @@ function Home() {
       <HeroSection />
       <OurSolutionsSection />
       <OurFeaturesSection />
-      <Banner text={"Elevate Your Experience, Gauge Your Satisfaction!"} />
       <TestimonialsSection />
     </>
   );

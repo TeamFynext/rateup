@@ -3,6 +3,8 @@ import { Flex, Menu } from "@mantine/core";
 import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover";
 import headerStyles from "./components/Header/Header.module.css";
 
+export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+
 const navLinks = [
   {
     href: "/",
@@ -13,8 +15,26 @@ const navLinks = [
     linkText: "Solutions",
     hasSublinks: true,
     sublinks: [
-      { link: "/reputation", label: "Reputation" },
-      { link: "/menus", label: "Menus" },
+      {
+        id: 1001,
+        link: "/reputation",
+        content: {
+          heading: "Reputation Management",
+          description:
+            "Offering businesses a platform to boost Google reviews and foster brand advocates.",
+        },
+        iconLink: `${imagesPath}/homepage/header/target.svg`,
+      },
+      {
+        id: 1002,
+        link: "/menus",
+        content: {
+          heading: "Digital Menu",
+          description:
+            "Experience quick, delicious dining with our digital menus.",
+        },
+        iconLink: `${imagesPath}/homepage/header/clipboard.svg`,
+      },
     ],
   },
   {

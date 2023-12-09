@@ -10,7 +10,6 @@ function AdvancedAIModelsTextBanner() {
       align={"center"}
       justify={"space-evenly"}
       wrap={"wrap"}
-      gap={"sm"}
     >
       <div className={styles["text-containter"]}>
         <Title order={2} className={styles["advanced-ai-models-text"]}>

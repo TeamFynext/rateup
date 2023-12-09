@@ -2,6 +2,7 @@ import { Flex, Title, Text, Image } from "@mantine/core";
 import Button from "../../../components/Button";
 import RocketIcon from "./RocketIcon";
 import styles from "./HeroSection.module.css";
+import BookDemoContactForm from "../../../components/BookDemoContactForm";
 
 function HeroSection() {
   return (
@@ -38,7 +39,11 @@ function HeroSection() {
           with, interact with, and expand your customer connections.
         </Text>
       </Text>
-      <Button whiteBackgroundGradientText>Book a Demo</Button>
+      <BookDemoContactForm
+        buttonProps={{
+          whiteBackgroundGradientText: true,
+        }}
+      />
     </Flex>
   );
 }

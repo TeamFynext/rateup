@@ -8,9 +8,20 @@ type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
   children: React.ReactNode;
   type?: "button" | "submit" | "reset";
+  style?: React.CSSProperties;
+  onClick?: () => void;
+  from?: string;
 };
 
-function Button({ whiteBackgroundGradientText, children, type }: ButtonProps) {
+function Button({
+  whiteBackgroundGradientText,
+  children,
+  type,
+  style,
+  onClick,
+  from,
+}: ButtonProps) {
+  console.log(whiteBackgroundGradientText, from);
   return (
     <MotionButtonGesture>
       <MantineButton
@@ -20,6 +31,8 @@ function Button({ whiteBackgroundGradientText, children, type }: ButtonProps) {
             : styles["gradient-background-white-text-btn"]
         }`}
         type={type ? type : "button"}
+        style={style}
+        onClick={onClick}
       >
         <Text
           inherit

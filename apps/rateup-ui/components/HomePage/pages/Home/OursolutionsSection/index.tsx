@@ -1,9 +1,9 @@
 import { Stack, Title } from "@mantine/core";
 import TrustedBy from "./TrustedBy";
-import AdvancedAIModelsTextBanner from "./AdvancedAIModelsTextBanner";
 import { solutionsList } from "./constants";
 import styles from "./OurSolutionsSection.module.css";
 import InteractiveSolutionDescriptions from "../../../components/InteractiveSolutionDescriptions";
+import Banner from "./Banner";
 
 function OurSolutionsSection() {
   return (
@@ -11,7 +11,7 @@ function OurSolutionsSection() {
       <Title>OUR SOLUTIONS</Title>
       <InteractiveSolutionDescriptions solutions={solutionsList} />
       <TrustedBy />
-      <AdvancedAIModelsTextBanner />
+      <Banner text={"Boost Up Your Google Reviews"} />
     </Stack>
   );
 }

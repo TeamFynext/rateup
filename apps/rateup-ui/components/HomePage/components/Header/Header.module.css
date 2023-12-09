@@ -19,7 +19,7 @@
 
 .header-link {
   composes: header-footer-link from "../../index/index.module.css";
-  composes: gradient-text from "../../index/index.module.css";
+  color: var(--grey-color);
   margin-right: 0;
 }
 
@@ -60,17 +60,6 @@
 
 .mobile-nav-burger-btn-container {
   display: none;
-}
-
-.sublinks-caret-btn {
-  padding: 0;
-  height: auto;
-  background-color: initial;
-  color: var(--shade-of-blue-3);
-  width: 1.5rem;
-  height: 1.5rem;
-  position: relative;
-  top: -3px;
 }
 
 /* Mobile Nav styles */

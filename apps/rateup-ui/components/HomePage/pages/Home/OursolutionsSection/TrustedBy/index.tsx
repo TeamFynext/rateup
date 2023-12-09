@@ -6,7 +6,9 @@ function TrustedBy() {
 
   return (
     <div className={styles["trustedby-companies-container"]}>
-      <Title order={1}>TRUSTED BY OVER 25K BUSINESSES</Title>
+      <Title order={1}>
+        TRUSTED BY REPUTED BRANDS AND PUBLIC SECTOR ORGANIZATIONS
+      </Title>
       <Flex
         className={styles["company-logos-container"]}
         wrap={"wrap"}
