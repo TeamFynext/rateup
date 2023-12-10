@@ -404,10 +404,10 @@ export async function updateSurveyPasswordHandler(
     if (!survey) {
       reply.code(404);
     } else {
-      await updateSurveyPassword(request.params.id, request.body);
+    const res = await updateSurveyPassword(request.params.id, request.body);
       reply
         .code(200)
-        .send({ message: "Password Changes Updated successfully." });
+        .send({ message: "Password Changes Updated successfully." ,isProtected: res?.isProtected});
     }
   } catch (e) {
     console.log(e);
