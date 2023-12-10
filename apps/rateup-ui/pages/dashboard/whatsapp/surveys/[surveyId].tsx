@@ -54,7 +54,7 @@ export default () => {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-
+  const [filterTags, setFilterTags] = useState([]);
   useEffect(() => {
     if (user?.role === "MEMBER") {
       router.push(
@@ -102,6 +102,7 @@ export default () => {
       >
         <SurveyContext.Provider
           value={{
+            filterTags,
             selectedTeamId,
             surveyTeamMapId,
             selectedTeamName,
@@ -166,7 +167,11 @@ export default () => {
               />
             </Tabs.Panel>
             <Tabs.Panel value={TabEnum.Result}>
-              <Result survey={survey} setSelectedLanguage={null} />
+              <Result
+                survey={survey}
+                setSelectedLanguage={null}
+                setFilterTags={setFilterTags}
+              />
             </Tabs.Panel>
             <Tabs.Panel value={TabEnum.Share}>
               <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
