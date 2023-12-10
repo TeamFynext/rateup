@@ -207,6 +207,7 @@ model SurveyResponse {
   responses       Json[]
   language        String           @default("")
   platform        ResponsePlatform @default(WEB)
+  tag             String?          @default("")
 
   ip                   String?
   location             Json? // { 
@@ -390,7 +391,7 @@ model MenuItem {
   videoUrl    String?
   price       Json
   itemOrder   Int          @default(0)
-  disabled Boolean      @default(false)
+  disabled    Boolean      @default(false)
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId  String       @db.Uuid
 }

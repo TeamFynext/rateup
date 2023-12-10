@@ -251,7 +251,7 @@ export async function resendInviteTeamMember(id: string) {
     };
     await sendAWSEmail(msg);
   }
-  return "sent"
+  return "sent";
 }
 
 //Complete Email invite
@@ -443,6 +443,7 @@ export async function getTeamMembersAndFromInvitation(
       name: true,
       googleLink: true,
       code: true,
+      tags: true,
       invitations: {
         where: {
           status: {
@@ -480,6 +481,7 @@ export async function getTeamMembersAndFromInvitation(
     teamName: team.name,
     googleLink: team.googleLink,
     code: team.code,
+    tags: team.tags,
     members: team.members.map((member) => {
       return {
         id: member.user.id,
@@ -551,26 +553,47 @@ export async function getTeamIdsByUserId(userId: string) {
 }
 
 export async function editTeam(
-  { name, code, googleLink }: EditTeamInput,
+  { name, code, googleLink, tags }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  let session = await Session.getSession(request, reply);
-  let userId = session.getUserId();
-
+  const { tags: existingTags } = await prisma.team.findUnique({
+    where: { id: params.id },
+    select: { tags: true },
+  });
+  if (tags.some((tag) => existingTags.includes(tag))) {
+    reply.code(400).send({ message: "Survey tag already exists" });
+  } else {
+    tags = [...existingTags, ...tags];
+  }
   const user = await prisma.team.update({
     where: { id: params.id },
     data: {
       name,
       code,
       googleLink,
+      tags,
     },
   });
 
   return user;
 }
 
+export async function manageTags(
+  { tags }: EditTeamInput,
+  params: IdParamInput,
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const team = await prisma.team.update({
+    where: { id: params.id },
+    data: {
+      tags,
+    },
+  });
+  return team;
+}
 export async function getTeamById(teamId: string) {
   const team = await prisma.team.findUnique({
     where: { id: teamId },

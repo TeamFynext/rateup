@@ -240,6 +240,7 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
       surveyStats: team?.surveyStats,
       mapId: team?.id,
       code: team.team.code,
+      tags: team.team.tags,
     };
     return teamData;
   });

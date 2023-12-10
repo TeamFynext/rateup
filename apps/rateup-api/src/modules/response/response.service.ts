@@ -40,6 +40,7 @@ export async function getAllResponses(
       responses: {
         select: {
           language: true,
+          tag:true,
           responses: true,
         },
       },
@@ -79,6 +80,7 @@ export async function createResponse(input: CreateResponseInput) {
   const surveyResponse = await prisma.surveyResponse.create({
     data: {
       ...input,
+      tag: input.tag,
       surveyTeamMapId: input.surveyTeamMapId,
       language: input.language,
       responses: input.responses,
@@ -120,7 +122,7 @@ export async function sendEmailOnResponseCreation(id: string) {
         select: {
           notificationEmail: true,
           enableNotificationEmail: true,
-          id:true
+          id: true,
         },
       },
     },
@@ -133,7 +135,9 @@ export async function sendEmailOnResponseCreation(id: string) {
       to: notificationEmail,
       subject: "survay response - RateUp.app",
       text: "survay response.",
-      html: createEmailBodySurveyResponse(`${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,),
+      html: createEmailBodySurveyResponse(
+        `${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`
+      ),
     };
     await sendAWSEmail(msg);
   }

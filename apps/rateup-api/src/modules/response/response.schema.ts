@@ -29,6 +29,7 @@ const responseCore = {
 const createResponseInputSchema = z.object({
   ...responseCore,
   platform: z.nativeEnum(ResponsePlatform).optional(),
+  tag: z.string().optional(),
   deviceData: z
     .object({
       brand: z.string().optional(),
