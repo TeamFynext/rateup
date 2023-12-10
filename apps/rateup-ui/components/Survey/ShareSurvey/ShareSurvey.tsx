@@ -3,7 +3,6 @@ import {
   Button,
   CopyButton,
   Group,
-  SimpleGrid,
   Title,
   ActionIcon,
   Switch,
@@ -14,17 +13,20 @@ import {
   Center,
   Image,
   Tooltip,
+  Divider,
 } from "@mantine/core";
 import {
   IconCheck,
   IconChevronLeft,
   IconCopy,
+  IconDownload,
   IconPlayerPause,
   IconPlayerPlay,
+  IconTags,
   IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ContainedSelection,
   ContainedTextField,
@@ -43,6 +45,14 @@ import {
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
+import {
+  SingleTag,
+  TagSettings,
+} from "../../../pages/dashboard/teams/TeamSettings";
+import Heading from "../../styled/Heading/Heading";
+import { downloadExcel } from "react-export-table-to-excel";
+import NothingFound from "../../NothingFound/NothingFound";
+import { useEditTeamMutation } from "../../../backend/team/team.query";
 
 const ShareSurvey = ({
   survey,
@@ -53,13 +63,17 @@ const ShareSurvey = ({
 }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
+  const [tag, setTag] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(
     survey?.teams[0]?.mapId,
   );
-
+  const [tagsToMap, setTagsToMap] = useState<Array<string>>([]);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
+
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
+  const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
+    useDisclosure(false);
   const [openedIframe, { open: openIframe, close: closeIframe }] =
     useDisclosure(false);
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
@@ -77,10 +91,12 @@ const ShareSurvey = ({
       );
     } else {
       setShareUrl(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}`,
+        `${
+          process.env.NEXT_PUBLIC_FRONTEND_URL
+        }/public/survey/${surveyTeamMapId}${tag ? `?tag=${tag}` : ""}`,
       );
     }
-  }, [surveyId, surveyTeamMapId]);
+  }, [surveyId, surveyTeamMapId, tag]);
 
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(surveyId, data),
@@ -162,6 +178,38 @@ const ShareSurvey = ({
     label: team?.code,
   }));
 
+  let tagSelectData = survey?.teams
+    ?.filter((ft) => ft?.mapId === surveyTeamMapId)
+    ?.map((team) => team.tags)
+    .reduce((acc, val) => acc.concat(val), []);
+  useEffect(() => {
+    setTagsToMap(tagSelectData);
+  }, []);
+  function handleTagExcelDownload() {
+    downloadExcel({
+      fileName: "URL Tags",
+      sheet: `Team : ${survey?.teams.find(
+        (team) => team?.mapId === surveyTeamMapId,
+      )?.code}`,
+      tablePayload: {
+        header: ["S.No", "URL Tags", "URL"],
+        body: tagSelectData.map((tag, index) => [
+          index + 1,
+          tag,
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
+        ]),
+      },
+    });
+  }
+  const editTeamMutation = useEditTeamMutation(
+    survey?.teams.find((team) => team?.mapId === surveyTeamMapId)?.id,
+    () => {},
+    surveyId,
+    true,
+  );
+  function handleSave() {
+    editTeamMutation.mutate({ tags: tagsToMap });
+  }
   return (
     <Stack p={2}>
       <PaperLayout
@@ -261,24 +309,135 @@ const ShareSurvey = ({
         </Center>
       </FormModalLayout>
       <PaperLayout p="md" shadow="lg" opacity={!isPublished ? 0.5 : 1}>
-        <SimpleGrid cols={2} spacing="xl">
-          <Stack style={{ maxWidth: "450px" }} p="md">
+        <Group gap="lg">
+          <Stack style={{ minWidth: 300, flex: 1 }} p="md">
             <Title order={4}>Share Survey</Title>
             <Group>
               <ContainedSelection
+                style={{ flex: 1 }}
                 disabled={!isPublished}
                 label="Select Team"
                 allowDeselect={false}
-                maw={150}
+                miw={150}
                 value={surveyTeamMapId}
                 data={teamSelectData}
                 onChange={setSurveyTeamMapId}
               />
+
+              <Group gap={2} align="flex-start" style={{ flex: 1 }}>
+                <ContainedSelection
+                  disabled={!isPublished || tagSelectData.length === 0}
+                  label="Select Tag"
+                  placeholder="select a single Tag"
+                  miw={150}
+                  data={tagSelectData}
+                  onChange={(value) => setTag(value)}
+                />
+                <Tooltip label="Manage URL Tags" position="right-start">
+                  <ActionIcon onClick={openTagManager} variant="outline">
+                    <IconTags />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              <FormModalLayout
+                centered
+                size="xl"
+                onClose={closeTagManager}
+                opened={tagManagerOpened}
+                title="Manage URL Tags"
+                onSubmit={handleSave}
+                buttonTitle="Save Changes"
+                includeCancelButton
+                cancelButtonTitle="Discard Changes"
+                cancelOnClick={() => setTagsToMap(tagSelectData)}
+                submitButtonDisabled={
+                  (tagsToMap.length === 0 && tagSelectData.length === 0) ||
+                  JSON.stringify(tagsToMap) === JSON.stringify(tagSelectData)
+                }
+                customHeader={
+                  <Group justify="space-between">
+                    <Heading subtitle="URL Taggers" />
+                    <ContainedSelection
+                      disabled={!isPublished}
+                      label="Select Team"
+                      allowDeselect={false}
+                      miw={150}
+                      value={surveyTeamMapId}
+                      data={teamSelectData}
+                      onChange={setSurveyTeamMapId}
+                    />
+                  </Group>
+                }
+              >
+                <Stack>
+                  <Group justify="space-between" gap={1}>
+                    <TagSettings
+                      tags={tagSelectData}
+                      teamId={
+                        survey?.teams.find(
+                          (team) => team?.mapId === surveyTeamMapId,
+                        )?.id
+                      }
+                      onlyform
+                      surveyId={surveyId}
+                    />
+                    <RateupButtonBlue
+                      disabled={tagSelectData.length === 0}
+                      title="Download as csv"
+                      variant="subtle"
+                      rightIcon={<IconDownload />}
+                      size="sm"
+                      onClick={handleTagExcelDownload}
+                    />
+                  </Group>
+                  <Divider />
+                  {tagSelectData.length > 0 ? (
+                    <ScrollArea.Autosize
+                      mah={400}
+                      p={3}
+                      scrollbarSize={5}
+                      offsetScrollbars
+                    >
+                      <Stack>
+                        {tagsToMap.map((tag) => (
+                          <Group>
+                            <SingleTag
+                              tag={tag}
+                              tagsToMap={tagsToMap}
+                              setTagsToMap={setTagsToMap}
+                            />
+                            <ContainedTextField
+                              style={{ flex: 1 }}
+                              readOnly
+                              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
+                            />
+                            <CopyButton
+                              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
+                            >
+                              {({ copied, copy }) => (
+                                <RateupButtonBlue
+                                  title="Copy"
+                                  variant={copied ? "filled" : "outline"}
+                                  rightIcon={<IconCopy />}
+                                  size="sm"
+                                  onClick={copy}
+                                />
+                              )}
+                            </CopyButton>
+                          </Group>
+                        ))}
+                      </Stack>
+                    </ScrollArea.Autosize>
+                  ) : (
+                    <NothingFound text="No tags found" />
+                  )}
+                </Stack>
+              </FormModalLayout>
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
           </Stack>
 
-          <Stack style={{ maxWidth: "400px" }} p="md">
+          <Stack style={{ minWidth: 300, flex: 1 }} p="md">
             <Title order={4} style={{ textAlign: "center" }}>
               How would you like to survey people?
             </Title>
@@ -381,7 +540,7 @@ const ShareSurvey = ({
               </ActionIcon>
             </Group>
           </Stack>
-        </SimpleGrid>
+        </Group>
       </PaperLayout>
       <ShareQR
         url={shareUrl}

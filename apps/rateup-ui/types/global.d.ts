@@ -68,6 +68,7 @@ declare global {
     id: string;
     name: string;
     surveyStats?: STStats;
+    tags: Array<string>;
     mapId: string;
     code: string;
   }
@@ -130,6 +131,7 @@ declare global {
     surveyTeamMapId: string;
     responses: Array<QuestionResponse>;
     language: string;
+    tag: string;
     location?: {
       coordinates?: Coordinates;
       city?: string;
@@ -272,6 +274,7 @@ declare global {
     teamName: string;
     code: string;
     googleLink?: string | null;
+    tags: Array<string>;
     invitations: Array<{
       id: string;
       name: string;

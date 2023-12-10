@@ -40,7 +40,7 @@ import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 //.............................................................................
 // default export component start
 export default function ResultComparison() {
-  const { filterTeams } = useContext(SurveyContext);
+  const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
@@ -89,6 +89,12 @@ export default function ResultComparison() {
                 if (
                   selectedLanguage &&
                   surveyResponse.language !== selectedLanguage
+                ) {
+                  continue;
+                }
+                if (
+                  filterTags.length > 0 &&
+                  filterTags.includes(surveyResponse?.tag)
                 ) {
                   continue;
                 }

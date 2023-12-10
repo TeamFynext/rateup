@@ -13,10 +13,13 @@ interface FormModalLayoutProps {
   onSubmit?: FormEventHandler<HTMLFormElement> | any;
   isLoading?: boolean;
   buttonTitle?: string;
+  cancelButtonTitle?: string;
   noCustomHeader?: boolean;
   includeCancelButton?: boolean;
   cancelOnClick?: () => void;
   size?: string;
+  customHeader?: React.ReactNode;
+  submitButtonDisabled?: boolean;
 }
 export default function FormModalLayout({
   centered,
@@ -31,6 +34,9 @@ export default function FormModalLayout({
   cancelOnClick,
   includeCancelButton = false,
   size = "md",
+  customHeader,
+  submitButtonDisabled,
+  cancelButtonTitle,
 }: FormModalLayoutProps) {
   return (
     <Modal
@@ -47,9 +53,15 @@ export default function FormModalLayout({
       }}
     >
       {!noCustomHeader && (
-        <Stack align={"center"}>
-          <Title size={30}>{title}</Title>
-        </Stack>
+        <>
+          {customHeader ? (
+            customHeader
+          ) : (
+            <Stack align={"center"}>
+              <Title size={30}>{title}</Title>
+            </Stack>
+          )}
+        </>
       )}
       <form
         onSubmit={(e) => {
@@ -68,7 +80,7 @@ export default function FormModalLayout({
               type="reset"
               variant="subtle"
               onClick={cancelOnClick ? cancelOnClick : onClose}
-              title={"Cancel"}
+              title={cancelButtonTitle ? cancelButtonTitle : "Cancel"}
             />
           )}
           {buttonTitle && (
@@ -77,6 +89,7 @@ export default function FormModalLayout({
               loading={isLoading}
               type="submit"
               title={buttonTitle}
+              disabled={submitButtonDisabled}
             />
           )}
         </Group>

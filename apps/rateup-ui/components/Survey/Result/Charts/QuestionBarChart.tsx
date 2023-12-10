@@ -8,16 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import {
-  Paper,
-  Text,
-  Group,
-  Stack,
-  Title,
-  Badge,
-  Grid,
-  SimpleGrid,
-} from "@mantine/core";
+import { Paper, Text, Group, Stack, Title, Badge } from "@mantine/core";
 import { QuestionType } from "../../../../types/enums";
 import { getResponseArrayByQuestionType } from "../../../../utils/response";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -131,29 +122,27 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
         </Text>
         <Badge variant="dot">{questionType}</Badge>
       </Group>
-      <Grid justify="space-evenly" align="center">
-        <Grid.Col span={"content"}>
-          <SimpleGrid cols={1}>
-            <PaperLayout>
-              <Stack align="center" gap={10}>
-                <Heading
-                  title={`${data?.length}`}
-                  titleprops={{ w: "fit-content" }}
-                />
-                <Text c={"dimmed"} fw={900} size="sm">
-                  Responses
-                </Text>
-              </Stack>
-            </PaperLayout>
-            <SurveySummaryNew
-              response={data}
-              questionType={questionType}
-              choices={choices}
-              choiceCounts={choiceCounts}
-            />
-          </SimpleGrid>
-        </Grid.Col>
-        <Grid.Col span={"content"}>
+      <Group>
+        <Stack style={{ flex: 1 }} align="center">
+          <PaperLayout miw={200} maw={230}>
+            <Stack align="center" gap={10}>
+              <Heading
+                title={`${data?.length}`}
+                titleprops={{ w: "fit-content" }}
+              />
+              <Text c={"dimmed"} fw={900} size="sm">
+                Responses
+              </Text>
+            </Stack>
+          </PaperLayout>
+          <SurveySummaryNew
+            response={data}
+            questionType={questionType}
+            choices={choices}
+            choiceCounts={choiceCounts}
+          />
+        </Stack>
+        <Stack style={{ flex: 1 }} align="center">
           <Stack miw={300} align="center">
             <BarChart
               width={500}
@@ -175,8 +164,8 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
               <Bar dataKey="count" fill="#fff" radius={10} isAnimationActive />
             </BarChart>
           </Stack>
-        </Grid.Col>
-      </Grid>
+        </Stack>
+      </Group>
     </Stack>
   );
 };

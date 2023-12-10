@@ -56,6 +56,7 @@ export default () => {
   const [addQnTrigger, setaddQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
+  const [filterTags, setFilterTags] = useState([]);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
@@ -115,6 +116,7 @@ export default () => {
           surveyTeamMapId,
           selectedTeamName,
           filterTeams,
+          filterTags,
         }}
       >
         <StyledTabs
@@ -175,7 +177,11 @@ export default () => {
             <SurveySettings surveyId={surveyId} survey={survey} />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Result}>
-            <Result survey={survey} setSelectedLanguage={setSelectedLanguage} />
+            <Result
+              survey={survey}
+              setSelectedLanguage={setSelectedLanguage}
+              setFilterTags={setFilterTags}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={TabEnum.Share}>
             <ShareSurvey survey={survey} setActiveTab={setActiveTab} />

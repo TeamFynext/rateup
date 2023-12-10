@@ -229,9 +229,27 @@ export function getfilteredResponseUsingLanguage(
   language: string,
 ) {
   let filteredResponsesByLanguage = responses;
-  if (language)
+  let noofResponses = responses?.length;
+  if (language) {
     filteredResponsesByLanguage = responses?.filter(
       (response) => response.language === language,
     );
-  return { filteredResponsesByLanguage };
+    noofResponses = filteredResponsesByLanguage?.length;
+  }
+  return { filteredResponsesByLanguage, noofResponses };
+}
+
+export function getFilteredResponseUsingTags(
+  responses: SurveyResponse[],
+  selectedTags: string[],
+) {
+  let filteredResponsesByTags = responses;
+  let noofResponses = responses?.length;
+  if (selectedTags?.length > 0) {
+    filteredResponsesByTags = responses?.filter((response) =>
+      selectedTags.includes(response.tag),
+    );
+    noofResponses = filteredResponsesByTags?.length;
+  }
+  return { filteredResponsesByTags, noofResponses };
 }

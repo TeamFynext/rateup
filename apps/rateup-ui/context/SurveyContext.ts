@@ -5,6 +5,7 @@ type ISurveyCtx = {
   selectedTeamName: string;
   surveyTeamMapId: string;
   filterTeams: Array<string>;
+  filterTags: Array<string>;
 };
 
 const SurveyContext = createContext<ISurveyCtx>({
@@ -12,6 +13,7 @@ const SurveyContext = createContext<ISurveyCtx>({
   selectedTeamName: "",
   surveyTeamMapId: "",
   filterTeams: [],
+  filterTags: [],
 });
 
 export default SurveyContext;

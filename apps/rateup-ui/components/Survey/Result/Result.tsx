@@ -2,13 +2,12 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import {
   ActionIcon,
-  Badge,
   Checkbox,
   Group,
   Loader,
+  MultiSelect,
   Radio,
   ScrollArea,
-  ScrollAreaAutosize,
   Stack,
   Tabs,
   Text,
@@ -37,6 +36,7 @@ import { useImmer } from "use-immer";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import {
   filterResponses,
+  getFilteredResponseUsingTags,
   getResponseArrayByQuestionType,
   getfilteredResponseUsingLanguage,
 } from "../../../utils/response";
@@ -53,8 +53,8 @@ enum ResultTab {
   Responses = "responses",
   Comparison = "comparison",
 }
-const Result = ({ survey, setSelectedLanguage }) => {
-  const { filterTeams } = useContext(SurveyContext);
+const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
+  const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
@@ -76,6 +76,10 @@ const Result = ({ survey, setSelectedLanguage }) => {
     mergedResponses,
     selectedLanguage,
   );
+  const { filteredResponsesByTags } = getFilteredResponseUsingTags(
+    filteredResponsesByLanguage,
+    filterTags,
+  );
   const [resultTab, setActiveResultTab] = useState<
     | ResultTab.Analytics
     | ResultTab.OverView
@@ -85,8 +89,8 @@ const Result = ({ survey, setSelectedLanguage }) => {
 
   //this useEffect is used to set the filtered responses to the responses when the responses are fetched
   useEffect(() => {
-    setFilteredResponses(filteredResponsesByLanguage);
-  }, [teamWiseResponses, filterTeams, selectedLanguage]);
+    setFilteredResponses(filteredResponsesByTags);
+  }, [teamWiseResponses, filterTeams, selectedLanguage, filterTags]);
 
   if (isLoading) return <Loader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
@@ -131,9 +135,10 @@ const Result = ({ survey, setSelectedLanguage }) => {
         <ResultFilter
           activeTab={resultTab}
           survey={survey}
-          responses={filteredResponsesByLanguage}
+          responses={filteredResponsesByTags}
           setFilteredResponses={setFilteredResponses}
           setSelectedLanguage={setSelectedLanguage}
+          setFilterTags={setFilterTags}
         />
       </Stack>
       <Tabs.Panel value="overview">
@@ -166,14 +171,17 @@ export const ResultFilter = ({
   setFilteredResponses,
   setSelectedLanguage,
   activeTab,
+  setFilterTags,
 }: {
   survey: Survey;
   responses: Array<SurveyResponse>;
   setFilteredResponses: (data: Array<SurveyResponse>) => void;
   setSelectedLanguage: (language: string) => void;
   activeTab: string;
+  setFilterTags: (data: Array<string>) => void;
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const { filterTags } = useContext(SurveyContext);
   const quantitativeQuestionTypes = [
     QuestionType.Rating,
     QuestionType.Smiley,
@@ -184,6 +192,10 @@ export const ResultFilter = ({
   const languageSelectionOptions = survey?.languages?.map((language) => {
     return { value: language, label: language };
   });
+  let tagSelectData = survey?.teams
+    ?.map((team) => team.tags)
+    .reduce((acc, val) => acc.concat(val), [])
+    .map((tag) => ({ value: tag, label: tag }));
   const {
     isLoading: isQLoading,
     error: QError,
@@ -228,12 +240,38 @@ export const ResultFilter = ({
     (quantitativeQuestions?.length !== 0 && activeTab === ResultTab.Responses)
   ) {
     return (
-      <PaperLayout p={"xs"} style={{ flex: 1 }}>
-        <ScrollArea scrollbarSize={5} h={"100%"}>
+      <PaperLayout p={5} style={{ flex: 1 }}>
+        <ScrollArea scrollbarSize={5} h={"100%"} maw={"100%"}>
           <Stack>
             <Text c={"dark"} fw={900}>
               Filter By
             </Text>
+            {tagSelectData.length > 0 && (
+              <>
+                <Group justify="space-between">
+                  <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
+                    Tags
+                  </Text>
+                  <Tooltip
+                    label="The tag filter works only when response includes tags"
+                    position="bottom-start"
+                  >
+                    <ActionIcon variant="subtle">
+                      <IconInfoCircle size={15} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+                <MultiSelect
+                  radius={"10px"}
+                  maw={180}
+                  searchable
+                  clearable
+                  data={tagSelectData}
+                  onChange={setFilterTags}
+                  placeholder={filterTags.length > 0 ? "" : "All Tags"}
+                />
+              </>
+            )}
             {languageSelectionOptions?.length > 1 && (
               <>
                 <Group justify="space-between">

@@ -9,8 +9,6 @@ import {
 import { Stack, Text, Group, Paper, Badge } from "@mantine/core";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
-import { stringToColour } from "../../../../utils/essential";
-
 interface DataItem {
   name: string;
   value: number;
@@ -118,28 +116,30 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
         <Badge variant="dot">{type}</Badge>
       </Group>
       <Group justify="center">
-        <PaperLayout maw={150}>
-          <Stack align="center">
-            <Heading
-              title={`${responseCount}`}
-              titleprops={{ w: "fit-content" }}
-            />
-            <Text c={"dimmed"} fw={900} size="sm">
-              Responses
-            </Text>
-          </Stack>
-        </PaperLayout>
-        <PaperLayout maw={150}>
-          <Stack align="center">
-            <Heading
-              title={`${data?.score?.toFixed(2)}`}
-              titleprops={{ w: "fit-content" }}
-            />
-            <Text c={"dimmed"} fw={900} size="sm">
-              NPS Score
-            </Text>
-          </Stack>
-        </PaperLayout>
+        <Stack style={{ flex: 1 }} align="center">
+          <PaperLayout miw={200} maw={230}>
+            <Stack align="center">
+              <Heading
+                title={`${responseCount}`}
+                titleprops={{ w: "fit-content" }}
+              />
+              <Text c={"dimmed"} fw={900} size="sm">
+                Responses
+              </Text>
+            </Stack>
+          </PaperLayout>
+          <PaperLayout miw={200} maw={230}>
+            <Stack align="center">
+              <Heading
+                title={`${data?.score?.toFixed(2) ?? 0}`}
+                titleprops={{ w: "fit-content" }}
+              />
+              <Text c={"dimmed"} fw={900} size="sm">
+                NPS Score
+              </Text>
+            </Stack>
+          </PaperLayout>
+        </Stack>
         <Stack style={{ flex: 1 }} align="center" justify="center">
           <ResponsiveContainer height={280} width={300}>
             <PieChart>

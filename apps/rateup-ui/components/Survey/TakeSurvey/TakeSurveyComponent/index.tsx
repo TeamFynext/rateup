@@ -1,4 +1,5 @@
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { useSearchParams } from "next/dist/client/components/navigation";
 import {
   Button,
   Center,
@@ -71,6 +72,7 @@ import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
+  const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -260,6 +262,7 @@ function TakeSurvey() {
       selectedLanguage,
       setIsSavingResponses,
       coordinates,
+      tag: searchParams.get("tag"),
     }).then(() => {
       updateCompleted.mutate(surveyId);
       let kioskMode = survey?.kioskMode ? "y" : "n";
@@ -388,12 +391,10 @@ function TakeSurvey() {
                                   return (
                                     <Stack>
                                       <Group>
-                                        {" "}
                                         <Text fw="400">Name: </Text>{" "}
                                         <Text fw="300">{data.name}</Text>{" "}
                                       </Group>
                                       <Group mt="-10px">
-                                        {" "}
                                         <Text fw="400">Testimonial: </Text>{" "}
                                         <Text fw="300">{data.testimonial}</Text>{" "}
                                       </Group>
@@ -489,12 +490,14 @@ function submitSurvey({
   selectedLanguage,
   setIsSavingResponses,
   coordinates,
+  tag,
 }) {
   return createResponsePublic({
     surveyTeamMapId,
     responses,
     language: selectedLanguage,
     location: { coordinates },
+    tag: tag || null,
   })
     .then(() => {
       notifications.show({

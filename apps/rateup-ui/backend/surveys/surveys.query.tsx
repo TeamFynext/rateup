@@ -27,7 +27,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { getTeamSurveys } from "../team/team.api";
 import { rem } from "@mantine/core";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import { showSuccessToast } from "../../utils/notifications";
 
 export const useSurvey = (surveyId: string) => {
   return useQuery({

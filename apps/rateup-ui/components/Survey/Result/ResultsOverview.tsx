@@ -22,13 +22,16 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
-import { getfilteredResponseUsingLanguage } from "../../../utils/response";
+import {
+  getFilteredResponseUsingTags,
+  getfilteredResponseUsingLanguage,
+} from "../../../utils/response";
 import { stringToColour } from "../../../utils/essential";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
-  const { filterTeams } = useContext(SurveyContext);
+  const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
@@ -72,13 +75,13 @@ const ResultsOverview = () => {
     filterTeams,
     teamWiseResponses,
   );
-  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
-    filteredResponsesByTeam,
-  );
+  const { mergedResponses } = mergeResponsesFromTeams(filteredResponsesByTeam);
   const { filteredResponsesByLanguage } = getfilteredResponseUsingLanguage(
     mergedResponses,
     selectedLanguage,
   );
+  const { filteredResponsesByTags, noofResponses } =
+    getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags);
   if (isLoading || isQLoading) {
     return <div>Loading...</div>;
   }
@@ -92,7 +95,7 @@ const ResultsOverview = () => {
     surveyResponses: Array<TeamWiseResponses>,
   ) => {
     return questions?.map((question) => {
-      const responsesForQuestion = filteredResponsesByLanguage?.flatMap(
+      const responsesForQuestion = filteredResponsesByTags?.flatMap(
         (response) =>
           response?.responses?.filter(
             (item: any) => item?.questionId === question?.id,

@@ -65,10 +65,15 @@ export function useCreateTeamMutation(
   });
 }
 
-export function useEditTeamMutation(id, setIsLoading) {
+export function useEditTeamMutation(
+  id: string,
+  setIsLoading: (e: boolean) => void,
+  surveyId?: string,
+  onlyTag?: boolean,
+) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: IEditTeam) => editTeam(id, values),
+    mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
     onSuccess: () => {
       notifications.show({
         id: "load-data",
@@ -81,6 +86,9 @@ export function useEditTeamMutation(id, setIsLoading) {
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers", id] });
+      if (surveyId) {
+        queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      }
     },
     onError: (error: any) => {
       console.error("Error Team Update:", error.message);

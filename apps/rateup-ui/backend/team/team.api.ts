@@ -19,6 +19,7 @@ export interface IEditTeam {
   name?: string;
   googleLink?: string;
   code?: string;
+  tags?: string[];
 }
 
 export const createTeam = (data: ICreateTeam) =>
@@ -28,9 +29,9 @@ export const createTeam = (data: ICreateTeam) =>
     data: data,
   });
 
-export const editTeam = (teamId: string, data: IEditTeam) =>
+export const editTeam = (teamId: string, data: IEditTeam, onlyTag?: boolean) =>
   axiosClient({
-    url: `/team/edit/${teamId}`,
+    url: `/team/edit/${teamId}${onlyTag ? `?onlytag=true` : ""}`,
     method: "PUT",
     data: data,
   });

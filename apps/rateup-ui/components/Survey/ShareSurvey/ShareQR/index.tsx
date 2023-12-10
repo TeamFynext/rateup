@@ -1,25 +1,8 @@
-import {
-  Paper,
-  Text,
-  Center,
-  Stack,
-  Group,
-  TextInput,
-  Title,
-  Tabs,
-  Textarea,
-  Slider,
-} from "@mantine/core";
+import { Group, Title, Tabs } from "@mantine/core";
 import React, { useState, useEffect, useCallback } from "react";
 import Preview from "../Preview/Preview";
-import StyleTab from "../QRtabs/StyleTab";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import LogoTabpanel from "./LogoTabPanel";
-import CustomColorPicker from "../components/CustomColorPicker";
-import TemplateSvg from "./svg-icons-components/TemplateSvg";
-import LogoSvg from "./svg-icons-components/LogoSvg";
-import BackgroundSvg from "./svg-icons-components/BackgroundSvg";
-import TextSvg from "./svg-icons-components/TextSvg";
 import styles from "./ShareQR.module.css";
 
 interface ShareQRProps {

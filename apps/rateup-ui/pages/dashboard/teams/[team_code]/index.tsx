@@ -232,6 +232,7 @@ const TeamDetails = () => {
               googleLink: teamsMembersData?.googleLink,
               name: teamsMembersData?.teamName,
               id: teamsMembersData?.teamId,
+              tags: teamsMembersData?.tags,
             }}
           />
         </Tabs.Panel>
