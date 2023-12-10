@@ -47,10 +47,10 @@ import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { IconBrandGoogle } from "@tabler/icons";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import { LanguageCompletionView } from "./LanguageCompletionView";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -89,7 +89,10 @@ export function QuestionDetailedView({
   const form = useForm({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
-
+  const incompleteLanguages = validateAllLanguagesArePopulated(
+    surveyLanguages,
+    form.values.title,
+  );
   const handleSave = () => {
     setIsSaving(true);
     if (
@@ -100,17 +103,13 @@ export function QuestionDetailedView({
       showErrorToast("Question title is missing");
       return "error";
     } else {
-      const missingLangs = validateAllLanguagesArePopulated(
-        surveyLanguages,
-        form.values.title,
-      );
       const completedLangs = surveyLanguages.filter(
-        (lang) => !missingLangs.includes(lang),
+        (lang) => !incompleteLanguages.includes(lang),
       );
 
-      if (missingLangs.length > 0) {
+      if (incompleteLanguages.length > 0) {
         setIsSaving(false);
-        setSelectedLanguage(missingLangs[0]);
+        setSelectedLanguage(incompleteLanguages[0]);
         showSuccessToast(`Question is added in ${completedLangs}.`);
         return "error";
       }
@@ -187,10 +186,7 @@ export function QuestionDetailedView({
                 selectedLanguage={selectedLanguage}
                 setSelectedLanguage={setSelectedLanguage}
                 languages={surveyLanguages}
-                notCompletedLanguages={validateAllLanguagesArePopulated(
-                  surveyLanguages,
-                  form.values.title,
-                )}
+                notCompletedLanguages={incompleteLanguages}
               />
             </Group>
             <Divider
@@ -276,7 +272,13 @@ export function QuestionDetailedView({
 
             <Group>
               <RateupButtonBlue
-                title={"Save"}
+                title={
+                  incompleteLanguages.length > 1 ||
+                  (incompleteLanguages.length > 0 &&
+                    incompleteLanguages[0] !== selectedLanguage)
+                    ? "Fill Next Language"
+                    : "Save"
+                }
                 size="md"
                 onClick={handleSave}
                 leftIcon={<IconDeviceSdCard />}
@@ -485,44 +487,3 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
       return null;
   }
 }
-
-const LanguageCompletionView = ({
-  languages,
-  notCompletedLanguages,
-  selectedLanguage,
-  setSelectedLanguage,
-}: {
-  languages: string[];
-  notCompletedLanguages: string[];
-  selectedLanguage?: string;
-  setSelectedLanguage?: React.Dispatch<React.SetStateAction<string>>;
-}) => {
-  function isLanguageCompleted(language: string) {
-    return !notCompletedLanguages.includes(language);
-  }
-
-  return (
-    <PaperLayout w={"fit-content"} p={10} radius={"md"}>
-      <Stack gap={5}>
-        {languages?.map((language, i) => {
-          const { hovered, ref } = useHover();
-          return (
-            <Badge
-              key={i}
-              id={language}
-              ref={ref}
-              style={{ cursor: "pointer" }}
-              color={isLanguageCompleted(language) ? "green" : "red"}
-              variant={
-                selectedLanguage === language || hovered ? "filled" : "light"
-              }
-              onClick={() => setSelectedLanguage(language)}
-            >
-              {language}
-            </Badge>
-          );
-        })}
-      </Stack>
-    </PaperLayout>
-  );
-};

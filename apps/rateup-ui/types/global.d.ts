@@ -1,5 +1,11 @@
 // Any modification to this file should be reflected in the backend
-import { QuestionType, MenuItemPriceType, NPSWeightage } from "./enums";
+import {
+  QuestionType,
+  MenuItemPriceType,
+  NPSWeightage,
+  LogicCondition,
+  LogicAction,
+} from "./enums";
 
 type GoogleReview = {
   minRating?: number;
@@ -294,7 +300,7 @@ declare global {
 
   type LogicJump = {
     condition: LogicCondition;
-    response: any; // Contains the response to match against
+    response: string | string[]; // for (MSQ and DDMS) or (for conditions like includeAnyOf) it will be an array of indices of selected choices
     action: LogicAction;
   };
 

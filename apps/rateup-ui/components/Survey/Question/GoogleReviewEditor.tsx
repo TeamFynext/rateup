@@ -125,8 +125,21 @@ const GoogleReviewEditor = ({
   };
 
   const { data: teamsRes } = useTeamsByUser();
+  const teamsToDisplay = teamsRes?.data?.filter(
+    (t) => survey?.teams.some((st) => st.id === t.id),
+  );
 
   const handleSave = async () => {
+    if (teamsToDisplay.some((team) => !team.googleLink)) {
+      notifications.show({
+        color: "red",
+        title: "Failed",
+        message: `Please enter Google Review links for all teams in team settings page.`,
+        icon: <IconX size="1rem" />,
+        autoClose: 2000,
+      });
+      return;
+    }
     notifications.show({
       id: "load-data",
       loading: true,
@@ -168,10 +181,6 @@ const GoogleReviewEditor = ({
     setActiveTab(QuestionTabsEnum.Edit);
     setLinkUpdateStatus(false);
   };
-
-  const teamsToDisplay = teamsRes?.data?.filter(
-    (t) => survey?.teams.some((st) => st.id === t.id),
-  );
 
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>

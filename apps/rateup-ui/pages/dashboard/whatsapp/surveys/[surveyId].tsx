@@ -130,7 +130,6 @@ export default () => {
                   <ContainedSelection
                     allowDeselect={false}
                     ml="auto"
-                    maw={150}
                     data={survey?.languages}
                     value={selectedLanguage}
                     onChange={setSelectedLanguage}

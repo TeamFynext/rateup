@@ -62,3 +62,10 @@ export const getInitialQuestionValues = (
     sections: type === "whatsapp" ? question?.sections || {} : undefined,
   };
 };
+
+export function getChoiceIndex(choice: string | Choice, choices: Choice[]) {
+  if (typeof choice === "string") {
+    return choices.findIndex((c) => c.value === choice);
+  }
+  return choices.findIndex((c) => c.value === choice.value);
+}

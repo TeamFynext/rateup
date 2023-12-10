@@ -45,7 +45,6 @@ import QuestionCountContext from "../../../../context/QuestionCountContext";
 import classes from "./TakeSurvey.module.css";
 import modalStyles from "./ModalStyles.module.css";
 import { useMediaQuery } from "@mantine/hooks";
-import { parseLogicAction } from "../../../../utils";
 import { validateQuestion } from "../../../../utils/validation";
 import { mapSmileyIcon } from "./SmileyRating";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -69,6 +68,7 @@ import { TestimonialForm } from "./QuestionForms/TestimonialForm";
 import { EmailPhoneForm } from "./QuestionForms/EmailPhoneForm";
 import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
+import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -168,9 +168,9 @@ function TakeSurvey() {
       // Not last question
       // Checking for logic jump
       const action = parseLogicAction(
-        selectedQ.type,
-        selectedQ.logic,
+        selectedQ,
         currentResponse,
+        selectedLanguage,
       );
       if (action) {
         // Performing logic jump

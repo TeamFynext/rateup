@@ -35,6 +35,7 @@ import {
 } from "../../Button/RateupButtons";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useListState } from "@mantine/hooks";
+import { ChoiceTypeQuestions } from "../../../utils/constants";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -147,7 +148,29 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   );
 };
 
-function getResponses(question: Question, selectedLanguage): Array<any> {
+export function validateChoices(
+  question: Question,
+  languages: Array<string>,
+): boolean {
+  if (!ChoiceTypeQuestions.includes(question.type)) {
+    throw new Error("Not a choice type question");
+  } else if (languages.length === 1) {
+    return true;
+  } else {
+    const choiceLength = question.choices[languages[0]]?.length;
+    return languages.every(
+      (lang) => question.choices[lang]?.length === choiceLength,
+    );
+  }
+}
+
+const OpinionResponse = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+const RatingResponse = ["1", "2", "3", "4", "5"];
+
+function getResponses(
+  question: Question,
+  selectedLanguage: string,
+): Array<string | { label: string; value: string }> {
   switch (question.type) {
     case Q.LD:
       return Object.values(LDResponse);
@@ -155,13 +178,19 @@ function getResponses(question: Question, selectedLanguage): Array<any> {
     case Q.MSQ:
     case Q.DDSS:
     case Q.DDMS:
-      return question.choices?.[selectedLanguage] || [];
+    case Q.CustomNPS:
+      return (
+        question.choices[selectedLanguage].map((choice, index) => ({
+          label: choice.value,
+          value: index.toString(),
+        })) || []
+      );
     case Q.YN:
       return Object.values(YNResponse);
     case Q.Opinion:
-      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      return OpinionResponse;
     case Q.Rating:
-      return [1, 2, 3, 4, 5];
+      return RatingResponse;
     case Q.Smiley:
       return Object.values(SmileyResponse);
     default:
@@ -183,6 +212,7 @@ function getConditions(qType: QuestionType): Array<any> {
         LogicCondition.Equals,
         LogicCondition.NotEquals,
         LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
         LogicCondition.Submitted,
       ];
     case Q.YN:
@@ -212,8 +242,6 @@ function getConditions(qType: QuestionType): Array<any> {
     case Q.MSQ:
     case Q.DDMS:
       return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
         LogicCondition.IncludesNoneOf,
         LogicCondition.IncludesAnyOf,
         LogicCondition.IncludesAllOf,
@@ -264,14 +292,6 @@ function ConditionBlock({
   );
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
-
-  function handleSetMatchData(value: string) {
-    if ([Q.Rating, Q.Opinion].includes(selectedQ.type)) {
-      setMatchData(parseInt(value));
-    } else {
-      setMatchData(value);
-    }
-  }
 
   useEffect(() => {
     setCurrentLogicJump({
@@ -324,7 +344,7 @@ function ConditionBlock({
           label="Match Data"
           value={Array.isArray(matchData) ? "" : matchData}
           data={getResponses(selectedQ, selectedLanguage)}
-          onChange={handleSetMatchData}
+          onChange={setMatchData}
         />
       )}
       <Text>then</Text>

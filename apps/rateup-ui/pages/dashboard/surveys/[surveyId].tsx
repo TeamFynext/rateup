@@ -143,8 +143,8 @@ export default () => {
             <Grid.Col span={2}>
               {activeTab === TabEnum.Edit ? (
                 <ContainedSelection
+                  allowDeselect={false}
                   ml="auto"
-                  maw={100}
                   data={survey?.languages}
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}

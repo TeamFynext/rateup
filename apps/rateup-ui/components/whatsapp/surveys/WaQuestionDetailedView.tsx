@@ -13,13 +13,7 @@ import {
   Image,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
-import {
-  IconX,
-  IconEdit,
-  IconEye,
-  IconStar,
-  IconBrandGoogle,
-} from "@tabler/icons-react";
+import { IconX, IconEye, IconBrandGoogle } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -47,6 +41,7 @@ import {
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
 import { WhatsappChatPreview } from "./WaChatPreview";
+import { LanguageCompletionView } from "../../Survey/Question/LanguageCompletionView";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -60,6 +55,7 @@ export function WaQuestionDetailedView({
   setSelectedQ,
   setActiveTab,
   surveyLanguages,
+  setSelectedLanguage,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const theme = useMantineTheme();
@@ -123,6 +119,10 @@ export function WaQuestionDetailedView({
     setSelectedQ({ ...question, ...form.values });
   }, [form.values]);
 
+  const incompleteLanguages = validateAllLanguagesArePopulated(
+    surveyLanguages,
+    form.values.description,
+  );
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
     setIsSaving(true);
@@ -130,19 +130,13 @@ export function WaQuestionDetailedView({
       !form.values.description[selectedLanguage] ||
       form.values.description[selectedLanguage] == ""
     ) {
-      console.log(selectedLanguage, form.values.description);
       setIsSaving(false);
-      showErrorToast("Question body is missing");
+      showErrorToast("Question title is missing");
       return "error";
     } else {
-      const missingLangs = validateAllLanguagesArePopulated(
-        surveyLanguages,
-        form.values.description,
-      );
-
-      if (missingLangs.length > 0) {
+      if (incompleteLanguages.length > 0) {
         setIsSaving(false);
-        showErrorToast(`Question is missing in ${missingLangs[0]} language`);
+        setSelectedLanguage(incompleteLanguages[0]);
         return "error";
       }
 
@@ -182,17 +176,7 @@ export function WaQuestionDetailedView({
       }}
       gap={"xs"}
     >
-      <Badge variant="outline" size="lg" mb={"sm"}>
-        {question.type}
-      </Badge>
-      <Stack
-        style={{
-          height: "100%",
-          overflowY: "auto",
-          overflowX: "clip",
-        }}
-        gap={0}
-      >
+      <Group justify="space-between">
         <Switch
           label="Enable Header"
           checked={enableTitle}
@@ -205,53 +189,77 @@ export function WaQuestionDetailedView({
             },
           }}
         />
-        {enableTitle && (
+        <Badge variant="outline" size="lg">
+          {question.type}
+        </Badge>
+      </Group>
+      <Group p={2} gap={2} pr={42}>
+        {" "}
+        {/* TODO: Preview button & language-complete status component are overlapping */}
+        <Stack
+          style={{
+            height: "100%",
+            overflowY: "auto",
+            overflowX: "clip",
+            flex: 1,
+          }}
+          gap={0}
+        >
+          {enableTitle && (
+            <Textarea
+              fw={800}
+              maw={"95%"}
+              autosize
+              maxRows={2}
+              variant="unstyled"
+              mx="sm"
+              styles={{
+                input: {
+                  fontSize: "26px",
+                },
+              }}
+              placeholder="Enter message header here"
+              rightSection={
+                <LengthTracker
+                  string={form.values.title[selectedLanguage]}
+                  maxValue={WA_HEADER_CHAR_LIMIT}
+                />
+              }
+              {...form.getInputProps(`title.${selectedLanguage}`)}
+              value={form.values.title[selectedLanguage]}
+            />
+          )}
           <Textarea
-            fw={800}
+            mx="sm"
             maw={"95%"}
             autosize
-            maxRows={2}
+            maxRows={4}
+            minRows={2}
             variant="unstyled"
-            mx="sm"
+            placeholder="Enter message body here *"
             styles={{
               input: {
-                fontSize: "26px",
+                fontSize: "24px",
               },
             }}
-            placeholder="Enter message header here"
             rightSection={
               <LengthTracker
-                string={form.values.title[selectedLanguage]}
-                maxValue={WA_HEADER_CHAR_LIMIT}
+                string={form.values.description[selectedLanguage]}
+                maxValue={WA_BODY_CHAR_LIMIT}
               />
             }
-            {...form.getInputProps(`title.${selectedLanguage}`)}
-            value={form.values.title[selectedLanguage]}
+            {...form.getInputProps(`description.${selectedLanguage}`)}
+            value={form.values.description[selectedLanguage]}
           />
-        )}
-        <Textarea
-          mx="sm"
-          maw={"95%"}
-          autosize
-          maxRows={4}
-          variant="unstyled"
-          placeholder="Enter message body here *"
-          styles={{
-            input: {
-              fontSize: "24px",
-            },
-          }}
-          rightSection={
-            <LengthTracker
-              string={form.values.description[selectedLanguage]}
-              maxValue={WA_BODY_CHAR_LIMIT}
-            />
-          }
-          {...form.getInputProps(`description.${selectedLanguage}`)}
-          value={form.values.description[selectedLanguage]}
+          <ExtraProps form={form} question={question} />
+        </Stack>
+        <LanguageCompletionView
+          selectedLanguage={selectedLanguage}
+          setSelectedLanguage={setSelectedLanguage}
+          languages={surveyLanguages}
+          notCompletedLanguages={incompleteLanguages}
         />
-        <ExtraProps form={form} question={question} />
-      </Stack>
+      </Group>
 
       <Divider />
 
@@ -303,7 +311,13 @@ export function WaQuestionDetailedView({
             )}
           </Group>
           <RateupButtonPrimary
-            title={"Save"}
+            title={
+              incompleteLanguages.length > 1 ||
+              (incompleteLanguages.length > 0 &&
+                incompleteLanguages[0] !== selectedLanguage)
+                ? "Fill Next Language"
+                : "Save"
+            }
             size="md"
             onClick={handleSave}
             loading={isSaving}
