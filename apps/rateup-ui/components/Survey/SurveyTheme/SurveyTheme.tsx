@@ -128,7 +128,7 @@ function SurveyTheme({ survey }) {
     }
   };
 
-  const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
+  const editSurvey = useEditSurveyMutation(survey?.id);
 
   const handleSwitchChange = (e) => {
     // setIsLoading(true);

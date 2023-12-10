@@ -24,7 +24,7 @@ export function createBlankQuestion(
     description: {
       [language]: "",
     },
-    required: false,
+    required: true,
     type,
   };
 }

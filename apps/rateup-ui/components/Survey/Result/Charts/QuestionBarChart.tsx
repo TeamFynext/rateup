@@ -56,11 +56,11 @@ const getChoiceCountsforAll = (
   choicesInAllLang: Question["choices"],
   index,
 ) => {
-  let languages = Object.values(choicesInAllLang);
+  let languages: Array<Choice[]> = Object.values(choicesInAllLang);
   if (Array.isArray(response)) {
     return response.some((r) => {
       let choiceIndex = null;
-      for (var i = 0; i < languages.length; i++) {
+      for (var i = 0; i < languages?.length; i++) {
         choiceIndex = languages[i]?.findIndex((c) => c.value == r.value);
         if (choiceIndex == -1) continue;
         break;

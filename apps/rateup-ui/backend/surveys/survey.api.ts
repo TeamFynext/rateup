@@ -156,7 +156,8 @@ export async function updateSurveyGoogleLink(surveyTeamMapId: string, data) {
   );
 }
 
-export async function updateSurveyPassword(surveyId: string, data) {
+export async function updateSurveyPassword({ surveyId, password }) {
+  const data = { password: password };
   return await axiosClient.put(
     `${SURVEYURL}/password-update/${surveyId}`,
     data,

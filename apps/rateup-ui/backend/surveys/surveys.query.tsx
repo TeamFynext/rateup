@@ -288,18 +288,22 @@ export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
   });
 }
 
-export function useUpdateSurveyPwdMutation(id, passwordProtect, password) {
+export function useUpdateSurveyPwdMutation(surveyId) {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => handleSurveyPwd(id, passwordProtect, password),
-    onSuccess: () => {
+    mutationFn: updateSurveyPassword,
+    onSuccess: (res: any) => {
       notifications.show({
         id: "load-data",
-        color: passwordProtect ? "green" : "red",
-        title: passwordProtect ? "Success" : "Disabled Password - Success",
+        color: res?.data?.isProtected ? "green" : "red",
+        title: res?.data?.isProtected
+          ? "Success"
+          : "Disabled Password - Success",
         message: "Sucessfully updated Password Protection ",
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
     onError: (error: any) => {
       console.error("Error Password Protection:", error.message);
@@ -313,18 +317,6 @@ export function useUpdateSurveyPwdMutation(id, passwordProtect, password) {
       });
     },
   });
-}
-
-async function handleSurveyPwd(id, passwordProtect, password) {
-  const surveyId = id;
-  let data = { password: password };
-
-  if (passwordProtect) {
-    data = { password: password };
-  } else {
-    data = { password: "_remove_pwd" };
-  }
-  return updateSurveyPassword(surveyId, data);
 }
 
 export function useVerifySurveyPwdMutation(
@@ -368,7 +360,7 @@ async function handleSurveyVerifyPwd(surveyId: string, password: string) {
   return verifySurveyPassword(surveyId, data);
 }
 
-export function useEditSurveyMutation(id, setIsLoading) {
+export function useEditSurveyMutation(id) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateSurvey(id, data),
@@ -381,7 +373,6 @@ export function useEditSurveyMutation(id, setIsLoading) {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["survey"] });
     },
@@ -396,7 +387,6 @@ export function useEditSurveyMutation(id, setIsLoading) {
         autoClose: 5000,
       });
       queryClient.invalidateQueries({ queryKey: ["survey"] });
-      setIsLoading(false);
     },
   });
 }

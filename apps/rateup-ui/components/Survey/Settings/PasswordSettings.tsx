@@ -1,67 +1,64 @@
-import React, { useEffect, useState } from "react";
-import { Stack, Switch } from "@mantine/core";
+import { Stack, Group, Title, Switch, Text } from "@mantine/core";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { useUpdateSurveyPwdMutation } from "../../../backend/surveys/surveys.query";
-import { IconInfoCircle } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
+import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import { updatePwdSurvey } from "./updateSettings";
+import { useState } from "react";
+import { useUpdateSurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 
-export const PasswordProtection = ({ surveyId, isProtected }) => {
-  const [passwordProtect, setPasswordProtect] = useState(isProtected);
+const PasswordSettings = ({ survey, surveyId }) => {
   const [password, setPassword] = useState("");
-
-  function updatePassword() {
-    updateSurveyPassword.mutate();
-  }
-
-  function handleSwitch(event: any) {
-    setPasswordProtect(event.currentTarget.checked);
-    if (event.currentTarget.checked) {
-      notifications.show({
-        id: "load-data",
-        color: "blue",
-        title: "Set Password",
-        message: "Enter Password and Save to complete the process.",
-        icon: <IconInfoCircle size="1rem" />,
-        autoClose: 5000,
-      });
-    } else {
-      setPassword("");
-      updateSurveyPassword.mutate();
-    }
-  }
-
-  const updateSurveyPassword = useUpdateSurveyPwdMutation(
-    surveyId,
-    passwordProtect,
-    password,
+  const [passwordProtection, setPasswordProtection] = useState(
+    survey?.isProtected,
   );
-
+  const updateSurveyPassword = useUpdateSurveyPwdMutation(surveyId);
   return (
-    <PaperLayout>
-      <>
-        <Switch
-          checked={passwordProtect}
-          onChange={(event) => handleSwitch(event)}
-          label="Enable"
-        />
-        {passwordProtect && (
-          <Stack px={30} py={20} style={{ maxWidth: "400px" }}>
-            <ContainedTextField
-              label="Password"
-              type="text"
-              placeholder="Enter new password"
+    <PaperLayout shadow="xl" p={"xl"}>
+      <Stack gap={"md"}>
+        <Group justify="space-between">
+          <Title order={4}>Password Protection</Title>
+          <Switch
+            label={passwordProtection ? "Disable" : "Enable"}
+            size="md"
+            checked={passwordProtection}
+            onChange={() =>
+              updatePwdSurvey(
+                updateSurveyPassword,
+                setPasswordProtection,
+                surveyId,
+              )
+            }
+          />
+        </Group>
+        {passwordProtection && (
+          <>
+            <ContainedPasswordInput
+              withAsterisk
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="off"
+              placeholder="Enter new password"
             />
-            <RateupButtonBlue
-              title={"Save Password"}
-              onClick={updatePassword}
-            />
-          </Stack>
+            {!survey?.password?.length && (
+              <Text c="var(--tertiary-color)" fz={15}>
+                Please Enter password and Save to complete the process.
+              </Text>
+            )}
+            <Group justify="center">
+              <RateupButtonBlue
+                title={
+                  survey?.password?.length ? "Edit Password" : "Save Password"
+                }
+                radius={"xl"}
+                onClick={() => {
+                  updateSurveyPassword.mutate({ surveyId, password });
+                }}
+              />
+            </Group>
+          </>
         )}
-      </>
+      </Stack>
     </PaperLayout>
   );
 };
+
+export default PasswordSettings;

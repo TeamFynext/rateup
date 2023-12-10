@@ -3,268 +3,117 @@ import {
   Text,
   Grid,
   Group,
-  Switch,
   PillsInput,
   Pill,
   Combobox,
   CheckIcon,
   useCombobox,
   MultiSelect,
-  Tooltip,
+  Stack,
 } from "@mantine/core";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { useTeamsByUser } from "../../../backend/team/team.query";
-import { z } from "zod";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules }) => {
-  const [kioskMode, setKioskMode] = useState(false);
-  const [disableKioskAction, setDisableKioskAction] = useState(false);
+  const settingsForm = useForm({
+    initialValues: {
+      title: survey?.title || "",
+      languages: survey?.langauges || [],
+      teams: survey?.teams?.map((team) => team?.id) || [],
+    },
+    validate: {
+      title: isNotEmpty("Cannot be Empty"),
+      languages: hasLength({ min: 1 }, "Must contain atleast one language"),
+      teams: hasLength({ min: 1 }, "Must contain atleast one team"),
+    },
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const editSurvey = useEditSurveyMutation(survey?.id);
+  const handleSubmit = (values) => {
+    setIsLoading(true);
+    editSurvey.mutate(values, {
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    });
+  };
   const [languages, setLanguages] = useState<string[]>([]);
-  const [selectedTeams, setSelectedTeams] = useState(null);
-  const [qns, setQns] = useState(survey.questions || []);
-
-  useEffect(() => {
-    let hasGoogleReview = qns?.some(
-      (item) => item.googleReview !== null && item.googleReview !== undefined,
-    );
-    if (hasGoogleReview) {
-      setDisableKioskAction(true);
-    }
-  }, [qns]);
-
   const { data: teamRes } = useTeamsByUser();
-
-  const teamOptions = (teamRes?.data || []).map((team) => ({
+  const teamOptions = teamRes?.data?.map((team) => ({
     value: team?.id,
     label: team?.name,
   }));
-  const schema = z.object({
-    title: z.string().trim().min(1, { message: "Cannot be empty" }),
-    languages: z
-      .array(z.string())
-      .min(1, { message: "Must contain atleast one language" }),
-    teams: z
-      .array(z.string())
-      .min(1, { message: "Must contain atleast one team" }),
-    notificationEmail: z
-      .string()
-      .trim()
-      .email({ message: "Invalid email" })
-      .optional()
-      .or(z.literal("")),
-  });
-  const surveyForm = useForm({
-    initialValues: {
-      title: "",
-      languages: [],
-      teams: [],
-      skipPreview: false,
-      getLocation: false,
-      enableNotificationEmail: false,
-      notificationEmail: "",
-    },
-    validate: zodResolver(schema),
-  });
   useEffect(() => {
-    surveyForm.setValues({
-      title: survey?.title || "",
-      languages: survey?.languages || [],
-      teams: survey?.teams?.map((team) => team?.id) || [],
-      skipPreview: survey?.skipPreview || false,
-      getLocation: survey?.getLocation || false,
-      enableNotificationEmail: survey?.enableNotificationEmail || false,
-      notificationEmail: survey?.notificationEmail || "",
-    });
-    setKioskMode(survey?.kioskMode);
     setLanguages(survey?.languages);
-    setSelectedTeams(survey?.teams?.map((team) => team?.id));
   }, [survey]);
-
   useEffect(() => {
-    surveyForm.setFieldValue("languages", languages);
+    settingsForm.setFieldValue("languages", languages);
   }, [languages]);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const editSurvey = useEditSurveyMutation(survey?.id, setIsLoading);
-  const onSubmit = (values) => {
-    setIsLoading(true);
-    const data = {
-      title: values?.title,
-      languages: values?.languages,
-      teams: values?.teams,
-      skipPreview: values?.skipPreview,
-      kioskMode: kioskMode,
-      getLocation: values?.getLocation,
-      enableNotificationEmail: values?.enableNotificationEmail,
-      ...(values?.enableNotificationEmail && {
-        notificationEmail: values?.notificationEmail,
-      }),
-    };
-    editSurvey.mutate(data);
-  };
   return (
-    <PaperLayout>
-      <form onSubmit={surveyForm.onSubmit(onSubmit)} style={{ gap: "20px" }}>
-        {enabledModules.includes("name") && (
-          <Grid align="center">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Survey Name: </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <ContainedTextField
-                withAsterisk
-                placeholder="Enter Survey name"
-                required
-                mt="md"
-                {...surveyForm.getInputProps("title")}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("language") && (
-          <Grid align="center" mt={"md"}>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Languages: </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <MultiSelectCreatable
-                value={languages}
-                setValue={setLanguages}
-                errors={surveyForm.errors.languages}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("teams") && (
-          <Grid align="center" mt={"md"}>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Teams: </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <MultiSelect
-                radius="md"
-                placeholder="Select teams"
-                value={selectedTeams}
-                data={teamOptions}
-                {...surveyForm.getInputProps("teams")}
-                error={surveyForm.errors.teams}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("kiosk") && (
-          <Grid align="center" mt="md">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Kiosk Mode:</Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Tooltip
-                label={
-                  disableKioskAction
-                    ? "Not available since Google Review Questions present."
-                    : ""
-                }
-                refProp={"rootRef"}
-                disabled={!disableKioskAction}
-                arrowOffset={10}
-                arrowSize={4}
-                withArrow
-                position="top-start"
-              >
-                <Switch
-                  size={"md"}
-                  onLabel="ON"
-                  offLabel="OFF"
-                  checked={kioskMode}
-                  disabled={disableKioskAction}
-                  onChange={(event) => {
-                    setKioskMode(event.target.checked);
-                  }}
-                />
-              </Tooltip>
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("preview") && (
-          <Grid align="center" mt="md">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Skip Preview:</Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Switch
-                size={"md"}
-                {...surveyForm.getInputProps("skipPreview", {
-                  type: "checkbox",
-                })}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("location") && (
-          <Grid align="center" mt="md">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Fetch Location:</Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Switch
-                size={"md"}
-                {...surveyForm.getInputProps("getLocation", {
-                  type: "checkbox",
-                })}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("enableNotificationEmail") && (
-          <Grid align="center" mt="md">
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Text size={"md"}>Send Survey Response To Email:</Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-              <Switch
-                size={"md"}
-                {...surveyForm.getInputProps("enableNotificationEmail", {
-                  type: "checkbox",
-                })}
-              />
-            </Grid.Col>
-          </Grid>
-        )}
-        {enabledModules.includes("notificationEmail") &&
-          surveyForm?.getInputProps("enableNotificationEmail")?.value && (
-            <Grid align="center">
-              <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
-                <Text size={"md"}>Survey Response Recipient: </Text>
+    <PaperLayout shadow="xl" p={"xl"} px={50}>
+      <form onSubmit={settingsForm.onSubmit(handleSubmit)}>
+        <Stack gap={"lg"}>
+          {enabledModules.includes("name") && (
+            <Grid columns={10}>
+              <Grid.Col span={4}>
+                <Text>Survey Name :</Text>
               </Grid.Col>
-              <Grid.Col span={{ base: 6, md: 6, lg: 5, xl: 5 }}>
+              <Grid.Col span={6}>
                 <ContainedTextField
                   withAsterisk
-                  placeholder="Enter an email for receiving notification"
-                  required={
-                    surveyForm.getInputProps("enableNotificationEmail")?.value
-                  }
-                  mt="md"
-                  {...surveyForm.getInputProps("notificationEmail")}
+                  placeholder="Enter Survey name"
+                  required
+                  {...settingsForm.getInputProps("title")}
                 />
               </Grid.Col>
             </Grid>
           )}
-        <Grid justify="flex-end" mt={"md"}>
-          <Grid.Col span={2}>
-            <RateupButtonPrimary
-              type="submit"
-              loading={isLoading}
-              title="Save Changes"
-            />
-          </Grid.Col>
-          <Grid.Col span={5}></Grid.Col>
-        </Grid>
+          {enabledModules.includes("language") && (
+            <Grid columns={10}>
+              <Grid.Col span={4}>
+                <Text>Survey Languages :</Text>
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <MultiSelectCreatable
+                  value={languages}
+                  setValue={setLanguages}
+                  errors={settingsForm.errors.languages}
+                />
+              </Grid.Col>
+            </Grid>
+          )}
+          {enabledModules.includes("teams") && (
+            <Grid columns={10}>
+              <Grid.Col span={4}>
+                <Text>Select Teams :</Text>
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <MultiSelect
+                  radius="md"
+                  placeholder="Select teams"
+                  data={teamOptions}
+                  {...settingsForm.getInputProps("teams")}
+                  error={settingsForm.errors.teams}
+                />
+              </Grid.Col>
+            </Grid>
+          )}
+          <Grid columns={10}>
+            <Grid.Col span={4}></Grid.Col>
+            <Grid.Col span={6}>
+              <RateupButtonBlue
+                title="Save Changes"
+                type={"submit"}
+                loading={isLoading}
+              />
+            </Grid.Col>
+          </Grid>
+        </Stack>
       </form>
     </PaperLayout>
   );

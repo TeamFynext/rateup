@@ -1,15 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Text, Stack } from "@mantine/core";
+import { Text, Stack, Group, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
 import { useRouter } from "next/router";
 import { useUser } from "../../../context/UserContext";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
-import DangerZone from "../../DangerZone/DangerZone";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -56,12 +57,19 @@ const OtherSettings = () => {
 
   return (
     <>
-      <DangerZone
-        buttonText={"Reset Responses & Stats"}
-        message="Are you sure you want to reset your data"
-        onClick={open}
-        title="Reset Data"
-      />
+      <PaperLayout shadow="xl" p={"xl"}>
+        <Group justify="space-between">
+          <Stack gap={0}>
+            <Title order={4}>DANGER ZONE</Title>
+            <Text c="dimmed">Reset data and responses</Text>
+          </Stack>
+          <RateupButtonBlue
+            color="red"
+            title="Reset Response data"
+            onClick={open}
+          />
+        </Group>
+      </PaperLayout>
       <FormModalLayout
         opened={opened}
         onClose={close}
