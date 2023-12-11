@@ -60,7 +60,6 @@ export function WaQuestionDetailedView({
   const router = useRouter();
   const theme = useMantineTheme();
   const { surveyId } = router.query as { surveyId: string };
-  const [isSaving, setIsSaving] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [previewOpened, setPreviewOpened] = useState(false);
   const [enableTitle, setEnableTitle] = useState(
@@ -78,11 +77,9 @@ export function WaQuestionDetailedView({
 
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
-    setIsSaving,
   });
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
-    setIsSaving,
   });
 
   const form = useForm({
@@ -126,17 +123,14 @@ export function WaQuestionDetailedView({
   );
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
-    setIsSaving(true);
     if (
       !form.values.description[selectedLanguage] ||
       form.values.description[selectedLanguage] == ""
     ) {
-      setIsSaving(false);
       showErrorToast("Question title is missing");
       return "error";
     } else {
       if (incompleteLanguages.length > 0) {
-        setIsSaving(false);
         setSelectedLanguage(incompleteLanguages[0]);
         return "error";
       }
@@ -144,29 +138,22 @@ export function WaQuestionDetailedView({
       // Checking if its a new question
       if (!question.id) {
         // Creating new question
-        questionCreateMutation
-          .mutateAsync(form.values)
-          .then((r) => {
-            const newQ: Question = r.data;
-            setSelectedQ(newQ);
-          })
-          .finally(() => {
-            setIsSaving(false);
-          });
+        questionCreateMutation.mutate(form.values, {
+          onSuccess: (r) => {
+            setSelectedQ(r.data);
+          },
+        });
       } else {
         // Updating existing question
-        questionUpdateMutation
-          .mutateAsync({ qId: question.id, data: form.values })
-          .finally(() => {
-            setIsSaving(false);
-          });
+        questionUpdateMutation.mutate({ qId: question.id, data: form.values });
       }
     }
 
     return "saved";
   };
 
-  // TODO: show question type somewhere
+  const isSaving =
+    questionCreateMutation.isPending || questionUpdateMutation.isPending;
   return (
     <Stack
       style={{

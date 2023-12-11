@@ -51,9 +51,6 @@ export function validateAllLanguagesArePopulated(
     }
   });
 
-  console.log("missingLangs", missingLangs);
-  console.log("choices", validateChoices(question, languages));
-  console.log("title", missingLangs);
   return missingLangs;
 }
 
