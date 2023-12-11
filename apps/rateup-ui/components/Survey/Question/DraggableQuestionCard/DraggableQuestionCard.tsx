@@ -102,7 +102,19 @@ export function DraggableQuestionCard({
                 {index + 1}
               </Badge>
               {/* TODO: add truncate and make height fixed*/}
-              <Text pl="xs" fw={500} px="md" maw={150} truncate>
+              <Text
+                pl="xs"
+                fw={500}
+                px="md"
+                maw={
+                  question?.logic?.length && question?.googleReview
+                    ? 170
+                    : question?.logic?.length || question?.googleReview
+                    ? 200
+                    : 230
+                }
+                truncate
+              >
                 {question.title[selectedLanguage] ||
                   question.description[selectedLanguage]}
               </Text>
@@ -112,7 +124,7 @@ export function DraggableQuestionCard({
                 ml={"xs"}
                 style={{ position: "absolute", right: "5px" }}
               >
-                {question.logic && (
+                {question?.logic?.length && (
                   <Image
                     src={
                       isWaSurvey == true
