@@ -16,6 +16,7 @@ import {
   Image,
   Select,
   Text,
+  Flex,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { NPSWeightage, QuestionType } from "../../../types/enums";
@@ -26,7 +27,7 @@ import {
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import { useHover } from "@mantine/hooks";
+import { useDisclosure, useHover } from "@mantine/hooks";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
   useQuestionCreateMutation,
@@ -49,8 +50,12 @@ import {
 } from "../../../utils/questions";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { IconBrandGoogle } from "@tabler/icons";
-import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
 import { LanguageCompletionView } from "./LanguageCompletionView";
+import FormModalLayout from "../../Modal/FormModalLayout";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -356,6 +361,7 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
             onDelete={() => handleRemoveChoice(choice)}
             qtype={form.values.type}
             form={form}
+            index={i}
           />
         ))}
       </Stack>
@@ -398,11 +404,15 @@ interface ChoiceProps {
   onDelete: () => void;
   qtype: string;
   form;
+  index;
 }
-function Choice({ choice, onDelete, qtype, form }: ChoiceProps) {
+function Choice({ choice, onDelete, qtype, form, index }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   let newWeightage = choice.weightage;
+  const [opened, { open, close }] = useDisclosure(false);
+  const [choiceValue, setChoiceValue] = useState(choice?.value);
+  const [error, setError] = useState("");
 
   const handleChangeWeightage = (value) => {
     const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c) => {
@@ -415,33 +425,51 @@ function Choice({ choice, onDelete, qtype, form }: ChoiceProps) {
       [selectedLanguage]: updatedChoices,
     });
   };
+  const handleEditChoice = () => {
+    const isExist = form.values.choices?.[selectedLanguage]?.some((c, i) => {
+      return c.value?.trim() == choiceValue?.trim();
+    });
+    if (isExist) {
+      setError("Choice Already exist");
+      return;
+    } else {
+      setError("");
+      const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
+        (c, i) => {
+          if (i == index) return { ...c, value: choiceValue };
+          else return c;
+        },
+      );
+
+      form.setFieldValue("choices", {
+        ...form.values.choices,
+        [selectedLanguage]: updatedChoices,
+      });
+      close();
+    }
+  };
 
   return (
     <>
-      <Group ref={ref} style={{ height: "30px" }}>
+      <Group ref={ref}>
         {qtype == QuestionType.CustomNPS ? (
-          <>
-            <Badge color={getNpsColor(choice.weightage)}></Badge>
-            <Text w={149} truncate>
-              {choice.value}
-            </Text>
-          </>
+          <Flex gap={"xs"}>
+            <Badge color={getNpsColor(choice.weightage)} mt={"5px"}></Badge>
+            <Text maw={400}>{choice.value}</Text>
+            <Select
+              data={Object.values(NPSWeightage)}
+              value={newWeightage}
+              onChange={handleChangeWeightage}
+              maw={140}
+              styles={{
+                input: { outline: `1px solid ${getNpsColor(newWeightage)}` },
+              }}
+              radius={"md"}
+              allowDeselect={false}
+            />
+          </Flex>
         ) : (
-          <Checkbox label={choice.value} checked={false} readOnly />
-        )}
-
-        {qtype === QuestionType.CustomNPS && (
-          <Select
-            data={Object.values(NPSWeightage)}
-            value={newWeightage}
-            onChange={handleChangeWeightage}
-            maw={140}
-            styles={{
-              input: { outline: `1px solid ${getNpsColor(newWeightage)}` },
-            }}
-            radius={"md"}
-            allowDeselect={false}
-          />
+          <Checkbox label={choice.value} maw={"85%"} checked={false} readOnly />
         )}
         {hovered && (
           <ActionIcon
@@ -453,6 +481,27 @@ function Choice({ choice, onDelete, qtype, form }: ChoiceProps) {
             <IconTrash />
           </ActionIcon>
         )}
+        <ActionIcon variant="transparent" onClick={open} size={"sm"}>
+          <IconEdit />
+        </ActionIcon>
+        <FormModalLayout
+          opened={opened}
+          title="Edit Choice"
+          onClose={close}
+          centered
+        >
+          <Stack justify="center">
+            <ContainedTextField
+              value={choiceValue}
+              onChange={(event) => {
+                setError("");
+                setChoiceValue(event.target.value);
+              }}
+              error={error}
+            />
+            <RateupButtonBlue title="Edit choice" onClick={handleEditChoice} />
+          </Stack>
+        </FormModalLayout>
       </Group>
     </>
   );
