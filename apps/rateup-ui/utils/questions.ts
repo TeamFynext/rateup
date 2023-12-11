@@ -1,4 +1,5 @@
 import { QuestionType } from "../types/enums";
+import { ChoiceTypeQuestions } from "./constants";
 
 export function reorder<T>(
   array: Array<T>,
@@ -30,14 +31,23 @@ export function createBlankQuestion(
 }
 
 export function validateAllLanguagesArePopulated(
-  surveyLanguages: string[],
-  data: { [key: string]: string },
+  question: Question,
+  languages: Array<string>,
+  keyToValidate: Array<"title" | "description" | "choices">,
 ) {
-  const missingLangs = [];
+  let missingLangs = [];
 
-  surveyLanguages.forEach((language: string) => {
-    if (!data[language] || data[language] == "") {
-      missingLangs.push(language);
+  keyToValidate.forEach((key) => {
+    if (key === "choices") {
+      validateChoices(question, languages).forEach((missinglang) => {
+        if (!missingLangs.includes(missinglang)) missingLangs.push(missinglang);
+      });
+    } else {
+      languages.forEach((language: string) => {
+        if (!question[key][language] || question[key][language] == "") {
+          if (!missingLangs.includes(language)) missingLangs.push(language);
+        }
+      });
     }
   });
 
@@ -48,7 +58,7 @@ export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,
   type = "web",
-) => {
+): Omit<Question, "id"> => {
   const emptyText = {};
   languages.forEach((lang) => {
     emptyText[lang] = "";
@@ -68,4 +78,23 @@ export function getChoiceIndex(choice: string | Choice, choices: Choice[]) {
     return choices.findIndex((c) => c.value === choice);
   }
   return choices.findIndex((c) => c.value === choice.value);
+}
+
+/**
+ * Returns array of languages that do not have the same number of choices as the first language
+ */
+export function validateChoices(
+  question: Question,
+  languages: Array<string>,
+): Array<string> {
+  if (!ChoiceTypeQuestions.includes(question.type)) {
+    return [];
+  } else if (languages.length === 1) {
+    return [];
+  } else {
+    const choiceLength = question.choices[languages[0]]?.length;
+    return languages.filter(
+      (lang) => question.choices[lang]?.length !== choiceLength,
+    );
+  }
 }

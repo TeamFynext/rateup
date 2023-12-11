@@ -25,10 +25,7 @@ interface iProps {
   surveyId: string;
   setIsSaving?: React.Dispatch<React.SetStateAction<boolean>>;
 }
-export const useQuestionCreateMutation = ({
-  surveyId,
-  setIsSaving,
-}: iProps) => {
+export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: (data: any) => createQuestion(surveyId, data),
@@ -37,7 +34,6 @@ export const useQuestionCreateMutation = ({
         message: "Question created",
       });
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      setIsSaving(false);
     },
     onError: (e) => {
       console.error(e);
@@ -45,15 +41,11 @@ export const useQuestionCreateMutation = ({
         message: "An error has occurred",
         color: "red",
       });
-      setIsSaving(false);
     },
   });
   return createMutation;
 };
-export const useQuestionUpdateMutation = ({
-  surveyId,
-  setIsSaving,
-}: iProps) => {
+export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ qId, data }: QuestionUpdateMutationArgs) => {
@@ -71,7 +63,6 @@ export const useQuestionUpdateMutation = ({
       });
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
-      setIsSaving(false);
     },
     onError: (err) => {
       console.error(err);
@@ -79,7 +70,6 @@ export const useQuestionUpdateMutation = ({
         message: "Error updating question",
         color: "red",
       });
-      setIsSaving(false);
     },
   });
 

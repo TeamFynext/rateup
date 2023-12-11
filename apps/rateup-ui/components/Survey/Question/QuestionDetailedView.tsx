@@ -75,7 +75,6 @@ export function QuestionDetailedView({
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
-  const [isSaving, setIsSaving] = useState(false);
   const [titleFontSize, setTitleFontSize] = useState("2rem");
   const textInputRef = useRef(null);
 
@@ -84,65 +83,51 @@ export function QuestionDetailedView({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
-    setIsSaving,
   });
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
-    setIsSaving,
   });
 
   const form = useForm({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
   const incompleteLanguages = validateAllLanguagesArePopulated(
+    form.values as Question,
     surveyLanguages,
-    form.values.title,
+    ["title", "choices"],
   );
   const handleSave = () => {
-    setIsSaving(true);
     if (
       !form.values.title[selectedLanguage] ||
       form.values.title[selectedLanguage] == ""
     ) {
-      setIsSaving(false);
       showErrorToast("Question title is missing");
       return "error";
     } else {
-      const completedLangs = surveyLanguages.filter(
-        (lang) => !incompleteLanguages.includes(lang),
-      );
-
       if (incompleteLanguages.length > 0) {
-        setIsSaving(false);
         setSelectedLanguage(incompleteLanguages[0]);
-        showSuccessToast(`Question is added in ${completedLangs}.`);
         return "error";
       }
 
       // Checking if its a new question
       if (!question.id) {
         // Creating new question
-        questionCreateMutation
-          .mutateAsync(form.values)
-          .then((r) => {
-            const newQ: Question = r.data;
-            setSelectedQ(newQ);
-          })
-          .finally(() => {
-            setIsSaving(false);
-          });
+        questionCreateMutation.mutate(form.values, {
+          onSuccess: (r) => {
+            setSelectedQ(r.data);
+          },
+        });
       } else {
         // Updating existing question
-        questionUpdateMutation
-          .mutateAsync({ qId: question.id, data: form.values })
-          .finally(() => {
-            setIsSaving(false);
-          });
+        questionUpdateMutation.mutate({ qId: question.id, data: form.values });
       }
     }
 
     return "saved";
   };
+
+  const isSaving =
+    questionCreateMutation.isPending || questionUpdateMutation.isPending;
   return (
     <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
       <Stack justify="space-between" style={{ height: "100%" }}>
@@ -311,8 +296,6 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
   );
 
   const choices = form.values.choices?.[selectedLanguage] || [];
-
-  useEffect(() => {}, [choices]);
 
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
