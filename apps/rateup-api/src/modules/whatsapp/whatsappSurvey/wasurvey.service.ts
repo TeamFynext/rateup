@@ -148,7 +148,7 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
   if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found")
   }
-  const next = parseLogicAction(currentQuestion.type, currentQuestion.logic, response)
+  const next = parseLogicAction(currentQuestion, response, session.language)
   log.info("Next action: %s", next);
   const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
 

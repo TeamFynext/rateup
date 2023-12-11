@@ -11,6 +11,7 @@ import {
   editTeam,
   getTeamMembersAndFromInvitation,
   resendInviteTeamMember,
+  manageTags,
 } from "./team.service";
 import {
   CreateTeamInput,
@@ -21,6 +22,7 @@ import {
   IdParamInput,
   InviteCompleteInput,
   InviteMemberInput,
+  tagQuerySchema,
 } from "./team.schema";
 import Session from "supertokens-node/recipe/session";
 
@@ -219,6 +221,7 @@ export async function editTeamHandler(
   request: FastifyRequest<{
     Body: EditTeamInput;
     Params: IdParamInput;
+    Querystring: tagQuerySchema;
   }>,
   reply: FastifyReply
 ) {
@@ -227,7 +230,11 @@ export async function editTeamHandler(
   let team;
 
   try {
-    team = await editTeam(body, id, request, reply);
+    if (request.query.onlytag) {
+      team = await manageTags(body, id, request, reply);
+    } else {
+      team = await editTeam(body, id, request, reply);
+    }
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });

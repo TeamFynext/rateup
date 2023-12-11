@@ -29,7 +29,7 @@ type ValidationRules = {
 
 export { };
 declare global {
-  type ChoiceObj = {
+  type Choice = {
     value: string;
     weightage?: NPSWeightage;
   }
@@ -38,7 +38,7 @@ declare global {
     description: Zod.RecordType<string, string>;
     required: boolean;
     type: QuestionType;
-    choices?: Zod.RecordType<string, Array<ChoiceObj>>;
+    choices?: Zod.RecordType<string, Array<Choice>>;
     id: string;
     googleReview?: GoogleReview
     logic?: Array<LogicJump>
@@ -73,11 +73,11 @@ declare global {
       [QuestionType.Rating]?: number;
       [QuestionType.Smiley]?: SmileyResponse;
       [QuestionType.Opinion]?: number;
-      [QuestionType.MCQ]?: ChoiceObj;
-      [QuestionType.MSQ]?: Array<ChoiceObj>;
-      [QuestionType.DDSS]?: ChoiceObj;
-      [QuestionType.DDMS]?: Array<ChoiceObj>;
-      [QuestionType.CustomNPS]?: ChoiceObj;
+      [QuestionType.MCQ]?: Choice;
+      [QuestionType.MSQ]?: Array<Choice>;
+      [QuestionType.DDSS]?: Choice;
+      [QuestionType.DDMS]?: Array<Choice>;
+      [QuestionType.CustomNPS]?: Choice;
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
@@ -86,9 +86,9 @@ declare global {
   };
   type LogicJump = {
     condition: LogicCondition;
-    response: any
+    response: string | string[]; // for (MSQ and DDMS) or (for conditions like includeAnyOf) it will be an array of indices of selected choices
     action: LogicAction;
-  }
+  };
   type WaTemplateWithTypes = {
     id: string
     createdAt: Date

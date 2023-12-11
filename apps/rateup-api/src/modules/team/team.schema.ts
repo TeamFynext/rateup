@@ -6,7 +6,6 @@ const teamCore = {
   code: z.string(),
   orgId: z.string(),
   userId: z.string(),
-  
 };
 
 const createTeamRequestSchema = z.object({
@@ -39,8 +38,8 @@ const deleteTeamByIdRequestSchema = z.object({
 });
 
 enum InviteType {
-  ORG = 'ORG',
-  TEAM = 'TEAM',
+  ORG = "ORG",
+  TEAM = "TEAM",
 }
 
 const inviteMemberRequestSchema = z.object({
@@ -50,35 +49,38 @@ const inviteMemberRequestSchema = z.object({
   type: z.nativeEnum(InviteType),
   email: z.string(),
   name: z.string(),
-})
-
-const inviteMemberRequestResponse = z.object({
-   id: z.string(),
 });
 
+const inviteMemberRequestResponse = z.object({
+  id: z.string(),
+});
 
 const inviteCompleteRequestSchema = z.object({
-   token: z.string(),
+  token: z.string(),
 });
 
 const editTeamSchema = z.object({
   name: z.string().min(4).optional(),
   code: z.string().min(2).optional(),
   googleLink: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 const idParamRequestSchema = z.object({
-  id: z.string()
+  id: z.string(),
 });
 
 // Could be used by other modules which are related to team
 const byTeamIdParamsSchema = z.object({
-  teamId: z.string()
-})
+  teamId: z.string(),
+});
 const bySurveyTeamMapIdParamsSchema = z.object({
-  surveyTeamMapId: z.string()
-})
+  surveyTeamMapId: z.string(),
+});
 
+const tagQuerySchema = z.object({
+  onlytag: z.boolean(),
+});
 
 export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
   {
@@ -93,7 +95,7 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     editTeamSchema,
     idParamRequestSchema,
     byTeamIdParamsSchema,
-    bySurveyTeamMapIdParamsSchema
+    bySurveyTeamMapIdParamsSchema,
   },
   { $id: "teamSchema" }
 );
@@ -107,9 +109,7 @@ export type InviteCompleteInput = z.infer<typeof inviteCompleteRequestSchema>;
 export type EditTeamInput = z.infer<typeof editTeamSchema>;
 export type IdParamInput = z.infer<typeof idParamRequestSchema>;
 export type ByTeamIdParams = z.infer<typeof byTeamIdParamsSchema>;
-export type BySurveyTeamMapIdParams = z.infer<typeof bySurveyTeamMapIdParamsSchema>;
-
-
-
-
-
+export type tagQuerySchema = z.infer<typeof tagQuerySchema>;
+export type BySurveyTeamMapIdParams = z.infer<
+  typeof bySurveyTeamMapIdParamsSchema
+>;
