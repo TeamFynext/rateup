@@ -35,7 +35,6 @@ import {
 } from "../../Button/RateupButtons";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useListState } from "@mantine/hooks";
-import { ChoiceTypeQuestions } from "../../../utils/constants";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -148,22 +147,6 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   );
 };
 
-export function validateChoices(
-  question: Question,
-  languages: Array<string>,
-): boolean {
-  if (!ChoiceTypeQuestions.includes(question.type)) {
-    throw new Error("Not a choice type question");
-  } else if (languages.length === 1) {
-    return true;
-  } else {
-    const choiceLength = question.choices[languages[0]]?.length;
-    return languages.every(
-      (lang) => question.choices[lang]?.length === choiceLength,
-    );
-  }
-}
-
 const OpinionResponse = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 const RatingResponse = ["1", "2", "3", "4", "5"];
 
@@ -171,30 +154,35 @@ function getResponses(
   question: Question,
   selectedLanguage: string,
 ): Array<string | { label: string; value: string }> {
-  switch (question.type) {
-    case Q.LD:
-      return Object.values(LDResponse);
-    case Q.MCQ:
-    case Q.MSQ:
-    case Q.DDSS:
-    case Q.DDMS:
-    case Q.CustomNPS:
-      return (
-        question.choices[selectedLanguage].map((choice, index) => ({
-          label: choice.value,
-          value: index.toString(),
-        })) || []
-      );
-    case Q.YN:
-      return Object.values(YNResponse);
-    case Q.Opinion:
-      return OpinionResponse;
-    case Q.Rating:
-      return RatingResponse;
-    case Q.Smiley:
-      return Object.values(SmileyResponse);
-    default:
-      throw new Error("Logic not implemented for this question type");
+  try {
+    switch (question.type) {
+      case Q.LD:
+        return Object.values(LDResponse);
+      case Q.MCQ:
+      case Q.MSQ:
+      case Q.DDSS:
+      case Q.DDMS:
+      case Q.CustomNPS:
+        return (
+          question.choices[selectedLanguage].map((choice, index) => ({
+            label: choice.value,
+            value: index.toString(),
+          })) || []
+        );
+      case Q.YN:
+        return Object.values(YNResponse);
+      case Q.Opinion:
+        return OpinionResponse;
+      case Q.Rating:
+        return RatingResponse;
+      case Q.Smiley:
+        return Object.values(SmileyResponse);
+      default:
+        throw new Error("Logic not implemented for this question type");
+    }
+  } catch (e) {
+    console.log(e);
+    return [];
   }
 }
 

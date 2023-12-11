@@ -90,8 +90,9 @@ export function QuestionDetailedView({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
   const incompleteLanguages = validateAllLanguagesArePopulated(
+    form.values as Question,
     surveyLanguages,
-    form.values.title,
+    ["title", "choices"],
   );
   const handleSave = () => {
     setIsSaving(true);
@@ -103,14 +104,9 @@ export function QuestionDetailedView({
       showErrorToast("Question title is missing");
       return "error";
     } else {
-      const completedLangs = surveyLanguages.filter(
-        (lang) => !incompleteLanguages.includes(lang),
-      );
-
       if (incompleteLanguages.length > 0) {
         setIsSaving(false);
         setSelectedLanguage(incompleteLanguages[0]);
-        showSuccessToast(`Question is added in ${completedLangs}.`);
         return "error";
       }
 
@@ -306,8 +302,6 @@ function ChoicesCreator({ form, qId }: ChoicesCreatorProps) {
   );
 
   const choices = form.values.choices?.[selectedLanguage] || [];
-
-  useEffect(() => {}, [choices]);
 
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;

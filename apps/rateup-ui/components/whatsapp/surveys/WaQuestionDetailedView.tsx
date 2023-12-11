@@ -120,8 +120,9 @@ export function WaQuestionDetailedView({
   }, [form.values]);
 
   const incompleteLanguages = validateAllLanguagesArePopulated(
+    form.values as Question,
     surveyLanguages,
-    form.values.description,
+    ["description", "choices"],
   );
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
