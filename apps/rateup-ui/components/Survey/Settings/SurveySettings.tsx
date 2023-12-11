@@ -77,7 +77,7 @@ const SurveySettings = ({
           <PaperLayout shadow="xl" p={"xl"}>
             <Group justify="space-between">
               <Switch
-                label={"Preview Screen"}
+                label={"Skip Preview"}
                 size="md"
                 checked={preview}
                 onChange={() => updateSkipPreview(setPreview, editSurvey)}
