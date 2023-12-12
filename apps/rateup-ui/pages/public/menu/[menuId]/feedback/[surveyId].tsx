@@ -259,7 +259,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         </Center>
         <Group>
           <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/poweredByRateUp.png`}
+            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits.svg`}
             w={"clamp(137px, 65.568px + 11.905vw, 237px)"}
             alt="rate-up logo"
           />

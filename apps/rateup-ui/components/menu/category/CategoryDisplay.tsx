@@ -1,6 +1,6 @@
 import { Flex, Stack, Text } from "@mantine/core";
 import { ItemDisplay } from "../item/ItemDisplay";
-import { lexend300 } from "../../../utils/fonts";
+import { lexend300, lexend500 } from "../../../utils/fonts";
 
 export function CategoryDisplay({ category, setSelectedItem }) {
   return (
@@ -10,6 +10,7 @@ export function CategoryDisplay({ category, setSelectedItem }) {
         fz="clamp(20px, 11.424px + 1.429vw, 32px)"
         tt={"capitalize"}
         fw={500}
+        className={lexend500.className}
       >
         {category?.name}
       </Text>

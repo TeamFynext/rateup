@@ -48,7 +48,7 @@ export default function ({ fullMenu, menuBanner }) {
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
     fullMenu?.categories,
   );
-  const [categorys, setCategorys] = useState(fullMenu?.categories);
+  const [catagories, setCategorys] = useState(fullMenu?.categories);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     categoryChipLabel[0]?.id,
   );
@@ -74,9 +74,9 @@ export default function ({ fullMenu, menuBanner }) {
 
   return (
     <Paper mih={"100vh"} ff={lexend.style.fontFamily}>
-      <Carousel withIndicators>
-        {menuBanner?.length > 0 ? (
-          menuBanner?.map((value) => (
+      {menuBanner?.length > 0 ? (
+        <Carousel withIndicators>
+          {menuBanner?.map((value) => (
             <Carousel.Slide
               key={value.id}
               onClick={() => {
@@ -114,75 +114,75 @@ export default function ({ fullMenu, menuBanner }) {
                 maw={largeScreen ? "2440px" : "768px"}
               ></BackgroundImage>
             </Carousel.Slide>
-          ))
-        ) : (
-          <BackgroundImage
-            px={largeScreen ? "10vw" : "1vw"}
-            py="3vh"
-            src={
-              backgroundImage
-                ? encodeURI(getFileUrlFromKey(backgroundImage))
-                : backgroundImageFallback
-            }
+          ))}
+        </Carousel>
+      ) : (
+        <BackgroundImage
+          px={largeScreen ? "10vw" : "1vw"}
+          py="3vh"
+          src={
+            backgroundImage
+              ? encodeURI(getFileUrlFromKey(backgroundImage))
+              : backgroundImageFallback
+          }
+          style={{
+            borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+            backgroundColor: "var(--orange-400)",
+          }}
+          bgp={"center"}
+          bgsz={"cover"}
+          c={"white"}
+          h={"33vh"}
+          maw={largeScreen ? "2440px" : "768px"}
+        >
+          <Stack
+            align="center"
             style={{
-              borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-              backgroundColor: "var(--orange-400)",
+              padding: "0 20px 0 20px",
             }}
-            bgp={"center"}
-            bgsz={"cover"}
-            c={"white"}
-            h={"33vh"}
-            maw={largeScreen ? "2440px" : "768px"}
+            justify="center"
+            h="100%"
+            mb="lg"
           >
-            <Stack
-              align="center"
-              style={{
-                padding: "0 20px 0 20px",
-              }}
-              justify="center"
-              h="100%"
-              mb="lg"
-            >
-              {fullMenu?.logo && (
-                <Image
-                  w="100px"
-                  h={"100px"}
-                  style={{
-                    borderRadius: "4px",
-                  }}
-                  src={getFileUrlFromKey(fullMenu?.logo)}
-                />
-              )}
-              <div>
-                <Text
-                  ta={"center"}
-                  fz={
-                    fullMenu?.menuLanding?.headerStyle?.fontSize
-                      ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
-                      : "clamp(18px, 8px + 1.667vw, 32px)"
-                  }
-                  fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
-                  c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
-                >
-                  {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
-                </Text>
-                <Text
-                  fz={
-                    fullMenu?.menuLanding?.titleStyle?.fontSize
-                      ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
-                      : "clamp(28px, 13.712px + 2.381vw, 48px))"
-                  }
-                  fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
-                  c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
-                  ta={"center"}
-                >
-                  {fullMenu?.displayName ?? "Name"}
-                </Text>
-              </div>
+            {fullMenu?.logo && (
+              <Image
+                w="100px"
+                h={"100px"}
+                style={{
+                  borderRadius: "4px",
+                }}
+                src={getFileUrlFromKey(fullMenu?.logo)}
+              />
+            )}
+            <Stack>
+              <Text
+                ta={"center"}
+                fz={
+                  fullMenu?.menuLanding?.headerStyle?.fontSize
+                    ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
+                    : "clamp(18px, 8px + 1.667vw, 32px)"
+                }
+                fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
+                c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
+              >
+                {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
+              </Text>
+              <Text
+                fz={
+                  fullMenu?.menuLanding?.titleStyle?.fontSize
+                    ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
+                    : "clamp(28px, 13.712px + 2.381vw, 48px))"
+                }
+                fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
+                c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
+                ta={"center"}
+              >
+                {fullMenu?.displayName ?? "Name"}
+              </Text>
             </Stack>
-          </BackgroundImage>
-        )}
-      </Carousel>
+          </Stack>
+        </BackgroundImage>
+      )}
       <Group
         px="lg"
         m="sm"
@@ -216,13 +216,15 @@ export default function ({ fullMenu, menuBanner }) {
       </Group>
 
       <Stack px={"5.8vw"} mih={"45vh"}>
-        {categorys?.map((c) => (
-          <CategoryDisplay
-            key={c.id}
-            setSelectedItem={setSelectedItem}
-            category={c}
-          />
-        ))}
+        {catagories?.length > 0
+          ? catagories?.map((c) => (
+              <CategoryDisplay
+                key={c.id}
+                setSelectedItem={setSelectedItem}
+                category={c}
+              />
+            ))
+          : "No Categories Found"}
       </Stack>
       <CategoriesDrawer
         opened={drawerOpen}
@@ -237,33 +239,35 @@ export default function ({ fullMenu, menuBanner }) {
         />
       )}
       <Stack pos={"fixed"} bottom={40} right={30}>
-        <Stack
-          w={largeScreen ? "90px" : "70px"}
-          h={largeScreen ? "90px" : "70px"}
-          bg={"#F8951D"}
-          style={{ borderRadius: "100%" }}
-          justify="center"
-          align="center"
-          gap={0}
-          onClick={() => {
-            router.push(
-              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`,
-            );
-          }}
-        >
-          <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/whiteRateUpLogo.png`}
-            w={largeScreen ? "42px" : "26px"}
-            h={largeScreen ? "38px" : "26px"}
-          />
-          <Text
-            fz={"clamp(11.008px, 8.144px + 0.476vw, 15.008px)"}
-            c={"white"}
-            fw={500}
+        {fullMenu?.menuLanding?.feedbackPageEnabled && (
+          <Stack
+            w={largeScreen ? "90px" : "70px"}
+            h={largeScreen ? "90px" : "70px"}
+            bg={"#F8951D"}
+            style={{ borderRadius: "100%", cursor: "pointer" }}
+            justify="center"
+            align="center"
+            gap={0}
+            onClick={() => {
+              router.push(
+                `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`,
+              );
+            }}
           >
-            Feedback
-          </Text>
-        </Stack>
+            <Image
+              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/whiteRateUpLogo.png`}
+              w={largeScreen ? "42px" : "26px"}
+              h={largeScreen ? "38px" : "26px"}
+            />
+            <Text
+              fz={"clamp(11.008px, 8.144px + 0.476vw, 15.008px)"}
+              c={"white"}
+              fw={500}
+            >
+              Feedback
+            </Text>
+          </Stack>
+        )}
       </Stack>
     </Paper>
   );
