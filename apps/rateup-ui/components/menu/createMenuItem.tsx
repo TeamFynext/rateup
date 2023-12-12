@@ -352,7 +352,7 @@ export function CreateMenuItemModal({
   );
 }
 
-function PriceSection({ form }: { readonly form: any }) {
+export function PriceSection({ form }: { readonly form: any }) {
   return (
     <>
       <Group>

@@ -350,6 +350,24 @@ declare global {
     itemOrder?: number;
     disabled?: boolean;
   };
+
+  type MenuBanner = {
+    id: string;
+    createdAt: string;
+    name: string;
+    description: string;
+    image?: string;
+    videoUrl: string | null;
+    price: {
+      type: MenuItemPriceType;
+      price?: string;
+      variants?: Array<{
+        price: string;
+        name: string;
+      }>;
+    };
+    menuId: string;
+  };
   interface FullCategory extends MenuCategory {
     items: MenuItem[];
   }

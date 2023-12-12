@@ -18,6 +18,8 @@ import { ItemDetailedViewModal } from "../../../../../components/menu/item/ItemD
 import { getFullMenuPublicById } from "../../../../../backend/menu/menu.api";
 import { useRouter } from "next/router";
 import { lexend } from "../../../../../utils/fonts";
+import { Carousel } from "@mantine/carousel";
+import { getMenuBannerByMenuId } from "../../../../../backend/menu/Banner/banner.api";
 
 type MenuViewProp = {
   menuId: string;
@@ -27,10 +29,12 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
   const params = context.params;
 
   const fullMenu = await getFullMenuPublicById(params.menuId);
-  return { props: { fullMenu: fullMenu } };
+  const menuBanner = await getMenuBannerByMenuId(params.menuId);
+
+  return { props: { fullMenu: fullMenu, menuBanner: menuBanner } };
 };
 
-export default function ({ fullMenu }) {
+export default function ({ fullMenu, menuBanner }) {
   if (!fullMenu || !fullMenu?.isPublished)
     return (
       <Stack align="center" h="50vh" justify="space-around">
@@ -70,71 +74,115 @@ export default function ({ fullMenu }) {
 
   return (
     <Paper mih={"100vh"} ff={lexend.style.fontFamily}>
-      <BackgroundImage
-        px={largeScreen ? "10vw" : "1vw"}
-        py="3vh"
-        src={
-          backgroundImage
-            ? encodeURI(getFileUrlFromKey(backgroundImage))
-            : backgroundImageFallback
-        }
-        style={{
-          borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-          backgroundColor: "var(--orange-400)",
-        }}
-        bgp={"center"}
-        bgsz={"cover"}
-        c={"white"}
-        h={"33vh"}
-        maw={largeScreen ? "2440px" : "768px"}
-      >
-        <Stack
-          align="center"
-          style={{
-            padding: "0 20px 0 20px",
-          }}
-          justify="center"
-          h="100%"
-          mb="lg"
-        >
-          {fullMenu?.logo && (
-            <Image
-              w="100px"
-              h={"100px"}
-              style={{
-                borderRadius: "4px",
+      <Carousel withIndicators>
+        {menuBanner?.length > 0 ? (
+          menuBanner?.map((value) => (
+            <Carousel.Slide
+              key={value.id}
+              onClick={() => {
+                setSelectedItem({
+                  images: [value?.image],
+                  description: value?.description,
+                  name: value?.name,
+                  id: value?.id,
+                  price: value?.price,
+                  videoUrl: value?.videoUrl,
+                  categoryId: value?.menuId,
+                  createdAt: value?.createdAt,
+                });
               }}
-              src={getFileUrlFromKey(fullMenu?.logo)}
-            />
-          )}
-          <div>
-            <Text
-              ta={"center"}
-              fz={
-                fullMenu?.menuLanding?.headerStyle?.fontSize
-                  ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
-                  : "clamp(18px, 8px + 1.667vw, 32px)"
-              }
-              fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
-              c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
+              style={{
+                cursor: "pointer",
+              }}
             >
-              {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
-            </Text>
-            <Text
-              fz={
-                fullMenu?.menuLanding?.titleStyle?.fontSize
-                  ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
-                  : "clamp(28px, 13.712px + 2.381vw, 48px))"
-              }
-              fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
-              c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
-              ta={"center"}
+              <BackgroundImage
+                px={largeScreen ? "10vw" : "1vw"}
+                py="3vh"
+                src={
+                  value?.image
+                    ? encodeURI(getFileUrlFromKey(value?.image))
+                    : backgroundImageFallback
+                }
+                style={{
+                  borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+                  backgroundColor: "var(--orange-400)",
+                }}
+                bgp={"center"}
+                bgsz={"cover"}
+                c={"white"}
+                h={"33vh"}
+                maw={largeScreen ? "2440px" : "768px"}
+              ></BackgroundImage>
+            </Carousel.Slide>
+          ))
+        ) : (
+          <BackgroundImage
+            px={largeScreen ? "10vw" : "1vw"}
+            py="3vh"
+            src={
+              backgroundImage
+                ? encodeURI(getFileUrlFromKey(backgroundImage))
+                : backgroundImageFallback
+            }
+            style={{
+              borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+              backgroundColor: "var(--orange-400)",
+            }}
+            bgp={"center"}
+            bgsz={"cover"}
+            c={"white"}
+            h={"33vh"}
+            maw={largeScreen ? "2440px" : "768px"}
+          >
+            <Stack
+              align="center"
+              style={{
+                padding: "0 20px 0 20px",
+              }}
+              justify="center"
+              h="100%"
+              mb="lg"
             >
-              {fullMenu?.displayName ?? "Name"}
-            </Text>
-          </div>
-        </Stack>
-      </BackgroundImage>
+              {fullMenu?.logo && (
+                <Image
+                  w="100px"
+                  h={"100px"}
+                  style={{
+                    borderRadius: "4px",
+                  }}
+                  src={getFileUrlFromKey(fullMenu?.logo)}
+                />
+              )}
+              <div>
+                <Text
+                  ta={"center"}
+                  fz={
+                    fullMenu?.menuLanding?.headerStyle?.fontSize
+                      ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
+                      : "clamp(18px, 8px + 1.667vw, 32px)"
+                  }
+                  fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
+                  c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
+                >
+                  {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
+                </Text>
+                <Text
+                  fz={
+                    fullMenu?.menuLanding?.titleStyle?.fontSize
+                      ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
+                      : "clamp(28px, 13.712px + 2.381vw, 48px))"
+                  }
+                  fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
+                  c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
+                  ta={"center"}
+                >
+                  {fullMenu?.displayName ?? "Name"}
+                </Text>
+              </div>
+            </Stack>
+          </BackgroundImage>
+        )}
+      </Carousel>
       <Group
         px="lg"
         m="sm"

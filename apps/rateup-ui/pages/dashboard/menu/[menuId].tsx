@@ -1,5 +1,5 @@
-import { Flex, Grid, Group, Stack, Tabs } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
+import { IconChevronDown, IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
 import { useEffect, useState } from "react";
@@ -26,6 +26,7 @@ import NothingFound from "../../../components/NothingFound/NothingFound";
 import MenuAnalytics from "../../../components/menu/analytics/MenuAnalytics";
 import CategoryItemCsvModal from "../../../components/menu/category/CategoryItemCsvModal";
 import { IconUpload } from "@tabler/icons-react";
+import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
 
 enum TabEnum {
   Menu = "Menu",
@@ -43,7 +44,8 @@ export default ({ categories: initialCategories }) => {
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [openUploadCsv, { close: closeUploadCsv, toggle }] =
     useDisclosure(false);
-
+  const [openBanner, { close: closeBanner, toggle: toggleBannerModal }] =
+    useDisclosure(false);
   const deleteMutation = useDeleteMenuCategoryMutation(
     menuId,
     () => {},
@@ -146,13 +148,36 @@ export default ({ categories: initialCategories }) => {
                 onClick={toggle}
               />
             </Group>
+
             <SearchBox
               searchText={searchText}
               setSearchText={setSearchText}
               sx={{
                 // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
-                visibility: "hidden",
+                display: "none",
               }}
+            />
+            <RateupButtonBlue
+              title="Manage Banners"
+              rightIcon={
+                <IconChevronDown
+                  style={{ width: rem(18), height: rem(18) }}
+                  stroke={1.5}
+                />
+              }
+              radius="xl"
+              size="md"
+              onClick={toggleBannerModal}
+              color={"var(--light-blue-4)"}
+              sx={{
+                borderColor: "var(--tertiary-color)",
+                color: "var(--tertiary-color)",
+              }}
+            />
+            <BannerAddAndViewModal
+              menuId={menuId}
+              opened={openBanner}
+              onClose={closeBanner}
             />
           </Flex>
           <Stack mt="sm">

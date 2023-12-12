@@ -192,3 +192,23 @@ export const RateupButtonBlackOutline = ({
     </Button>
   );
 };
+
+export const RateupIconButton = ({
+  radius,
+  sx,
+  rightIcon = null,
+  variant,
+  ...other
+}: Props) => {
+  return (
+    <Button
+      radius={radius || "xs"}
+      px={"xs"}
+      variant={variant ? variant : "filled"}
+      style={sx}
+      {...other}
+    >
+      {rightIcon}
+    </Button>
+  );
+};

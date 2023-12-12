@@ -22,7 +22,10 @@
   --shade-of-brown-unselected: #a3a3a3;
   --shade-of-black: #161616;
   --orange-400: #f8951d;
+  --light-blue-4: #e5f1ff;
   --hover-border-color: rgba(28, 81, 142, 0.2);
+  --light-grey-color-2: #efefef;
+  --light-grey-color-3: #f4f4f4;
 }
 
 html {
