@@ -14,8 +14,6 @@ import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { FastifyReply, FastifyRequest } from "fastify";
-import Session from "supertokens-node/recipe/session";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -558,14 +556,16 @@ export async function editTeam(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { tags: existingTags } = await prisma.team.findUnique({
-    where: { id: params.id },
-    select: { tags: true },
-  });
-  if (tags.some((tag) => existingTags.includes(tag))) {
-    reply.code(400).send({ message: "Survey tag already exists" });
-  } else {
-    tags = [...existingTags, ...tags];
+  if (tags) {
+    const { tags: existingTags } = await prisma.team.findUnique({
+      where: { id: params.id },
+      select: { tags: true },
+    });
+    if (tags.some((tag) => existingTags.includes(tag))) {
+      reply.code(400).send({ message: "Survey tag already exists" });
+    } else {
+      tags = [...existingTags, ...tags];
+    }
   }
   const user = await prisma.team.update({
     where: { id: params.id },
@@ -573,7 +573,7 @@ export async function editTeam(
       name,
       code,
       googleLink,
-      tags,
+      tags
     },
   });
 

@@ -168,7 +168,7 @@ model Survey {
   getLocation             Boolean         @default(false)
   welcomePageEnabled      Boolean         @default(true)
   tags                    String[]        @default([])
-  skipPreview             Boolean         @default(false)
+  skipPreview             Boolean         @default(true)
   enableNotificationEmail Boolean         @default(false)
   notificationEmail       String          @default("")
   WelcomeTheme            WelcomeTheme?
