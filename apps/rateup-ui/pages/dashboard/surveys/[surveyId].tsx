@@ -1,4 +1,4 @@
-import { Loader, Tabs, Space, Grid, MultiSelect } from "@mantine/core";
+import { Loader, Tabs, Space, Grid, MultiSelect, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useRouter } from "next/router";
@@ -123,9 +123,21 @@ export default () => {
           value={activeTab}
           onChange={(tab) => setActiveTab(tab as TabEnum)}
         >
-          <Grid columns={10}>
-            <Grid.Col span={2}>
-              <Heading title={survey?.title} />
+          <Grid columns={12}>
+            <Grid.Col span={3}>
+              <Title
+                styles={{
+                  root: {
+                    fontSize: "32px",
+                    width: "100%",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  },
+                }}
+              >
+                {survey?.title}
+              </Title>
             </Grid.Col>
             <Grid.Col span={6}>
               {user?.role !== UserRole.MEMBER && (
@@ -140,7 +152,7 @@ export default () => {
                 </Tabs.List>
               )}
             </Grid.Col>
-            <Grid.Col span={2}>
+            <Grid.Col span={3}>
               {activeTab === TabEnum.Edit ? (
                 <ContainedSelection
                   allowDeselect={false}

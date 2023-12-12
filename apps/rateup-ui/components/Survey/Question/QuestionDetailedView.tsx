@@ -52,6 +52,7 @@ import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import { IconBrandGoogle } from "@tabler/icons";
 import {
   ContainedSelection,
+  ContainedTextArea,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import { LanguageCompletionView } from "./LanguageCompletionView";
@@ -436,9 +437,9 @@ function Choice({ choice, onDelete, qtype, form, index }: ChoiceProps) {
     <>
       <Group ref={ref}>
         {qtype == QuestionType.CustomNPS ? (
-          <Flex gap={"xs"}>
+          <Flex gap={"xs"} w={"85%"}>
             <Badge color={getNpsColor(choice.weightage)} mt={"5px"}></Badge>
-            <Text maw={400}>{choice.value}</Text>
+            <Text w={"85%"}>{choice.value}</Text>
             <Select
               data={Object.values(NPSWeightage)}
               value={newWeightage}
@@ -452,20 +453,19 @@ function Choice({ choice, onDelete, qtype, form, index }: ChoiceProps) {
             />
           </Flex>
         ) : (
-          <Checkbox label={choice.value} maw={"85%"} checked={false} readOnly />
+          <Checkbox label={choice.value} w={"85%"} checked={false} readOnly />
         )}
-        {hovered && (
-          <ActionIcon
-            variant="transparent"
-            color="red"
-            onClick={onDelete}
-            size={"sm"}
-          >
-            <IconTrash />
-          </ActionIcon>
-        )}
+
         <ActionIcon variant="transparent" onClick={open} size={"sm"}>
           <IconEdit />
+        </ActionIcon>
+        <ActionIcon
+          variant="transparent"
+          color="red"
+          onClick={onDelete}
+          size={"sm"}
+        >
+          <IconTrash />
         </ActionIcon>
         <FormModalLayout
           opened={opened}
@@ -474,13 +474,14 @@ function Choice({ choice, onDelete, qtype, form, index }: ChoiceProps) {
           centered
         >
           <Stack justify="center">
-            <ContainedTextField
+            <ContainedTextArea
               value={choiceValue}
               onChange={(event) => {
                 setError("");
                 setChoiceValue(event.target.value);
               }}
               error={error}
+              autosize
             />
             <RateupButtonBlue title="Edit choice" onClick={handleEditChoice} />
           </Stack>
