@@ -108,9 +108,9 @@ export function DraggableQuestionCard({
                 px="md"
                 maw={
                   question?.logic?.length && question?.googleReview
-                    ? "80%"
+                    ? "60%"
                     : question?.logic?.length || question?.googleReview
-                    ? "85%"
+                    ? "70%"
                     : "90%"
                 }
                 truncate

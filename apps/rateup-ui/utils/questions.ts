@@ -92,9 +92,9 @@ export function validateChoices(
   } else if (languages.length === 1) {
     return [];
   } else {
-    const choiceLength = question.choices[languages[0]]?.length;
+    const choiceLength = question.choices?.[languages[0]]?.length;
     return languages.filter(
-      (lang) => question.choices[lang]?.length !== choiceLength,
+      (lang) => question.choices?.[lang]?.length !== choiceLength,
     );
   }
 }

@@ -78,7 +78,7 @@ const SurveySummaryNew = ({
                 (res) => res?.response == item?.value,
               );
               return (
-                <Group pb="sm">
+                <Group pb="sm" key={item?.value}>
                   <Badge
                     radius="md"
                     w={34}
@@ -116,7 +116,7 @@ const SurveySummaryNew = ({
                 (res) => res?.response == choice?.value,
               );
               return (
-                <Group pb="sm">
+                <Group pb="sm" key={choice?.value}>
                   <Badge color="indigo" variant="light" w={100}>
                     {choice?.value}
                   </Badge>
@@ -140,7 +140,7 @@ const SurveySummaryNew = ({
               (res) => res?.response == item?.value,
             );
             return (
-              <Group>
+              <Group key={item?.value}>
                 <Rating
                   value={Number(item?.value)}
                   color="var(--tertiary-color)"
@@ -167,7 +167,7 @@ const SurveySummaryNew = ({
               (res) => res?.response == item?.value,
             );
             return (
-              <Group>
+              <Group key={item?.value}>
                 {item?.value === "Like" ? (
                   <Group align="center" mb="sm">
                     <Badge
@@ -186,7 +186,7 @@ const SurveySummaryNew = ({
                     </Badge>
                   </Group>
                 ) : (
-                  <Group align="center">
+                  <Group align="center" key={item?.value}>
                     <Badge
                       color={"red"}
                       size="lg"
@@ -218,7 +218,7 @@ const SurveySummaryNew = ({
             return (
               <Group>
                 {item?.value === "Yes" ? (
-                  <Group align="center" mb="md">
+                  <Group align="center" mb="md" key={item?.value}>
                     <Badge
                       color={"teal"}
                       size="lg"
@@ -234,7 +234,7 @@ const SurveySummaryNew = ({
                     </Badge>
                   </Group>
                 ) : (
-                  <Group align="center">
+                  <Group align="center" key={item?.value}>
                     <Badge color={"red"} size="lg" p="md" radius="sm" w={190}>
                       {item?.value}{" "}
                       {resObj
@@ -258,7 +258,7 @@ const SurveySummaryNew = ({
             );
             const Icon = item?.Icon;
             return (
-              <Group>
+              <Group key={item?.value}>
                 {<Icon size={"2rem"} color={item?.color} stroke={2} />} :
                 <Text maw={150}>
                   {resObj

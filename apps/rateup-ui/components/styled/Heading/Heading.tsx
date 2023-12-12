@@ -13,8 +13,8 @@ interface HeadingPropsInterface {
 }
 const titleStyle: MantineStyleProp = {
   fontSize: "32px",
-  width: 320,
-  maxWidth: "320px",
+  width: 300,
+  maxWidth: "300px",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",

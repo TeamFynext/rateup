@@ -104,37 +104,50 @@ const ResultsOverview = () => {
       let promoters = 0;
       let passives = 0;
       let detractors = 0;
+      let csat = 0;
       responsesForQuestion?.forEach((response: any) => {
         const rating = response?.response[response?.type];
         switch (response?.type) {
           case QuestionType.Rating:
-            if (rating >= 4) promoters++;
-            else if (rating == 3) passives++;
+            if (rating >= 4) {
+              promoters++;
+              csat++;
+            } else if (rating == 3) passives++;
             else detractors++;
             break;
           case QuestionType.Opinion:
-            if (rating >= 9) promoters++;
-            else if (rating >= 7) passives++;
+            if (rating >= 9) {
+              promoters++;
+              csat++;
+            } else if (rating >= 7) passives++;
             else detractors++;
             break;
           case QuestionType.Smiley:
             if (
               [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(rating)
-            )
+            ) {
               promoters++;
-            else if (rating === SmileyResponse.Neutral) passives++;
+              csat++;
+            } else if (rating === SmileyResponse.Neutral) passives++;
             else detractors++;
             break;
           case QuestionType.LD:
-            if (rating === LDResponse.Like) promoters++;
-            else detractors++;
+            if (rating === LDResponse.Like) {
+              promoters++;
+              csat++;
+            } else detractors++;
             break;
           case QuestionType.YN:
-            if (rating === YNResponse.Yes) promoters++;
-            else detractors++;
+            if (rating === YNResponse.Yes) {
+              promoters++;
+              csat++;
+            } else detractors++;
             break;
           case QuestionType.CustomNPS:
-            if (rating?.weightage == NPSWeightage.PROMOTER) promoters++;
+            if (rating?.weightage == NPSWeightage.PROMOTER) {
+              csat++;
+              promoters++;
+            }
             if (rating?.weightage == NPSWeightage.PASSIVE) passives++;
             if (rating?.weightage == NPSWeightage.DETRACTOR) detractors++;
             break;
@@ -142,6 +155,7 @@ const ResultsOverview = () => {
       });
       const total = promoters + passives + detractors;
       const nps = total ? ((promoters - detractors) / total) * 100 : null;
+      const csatScore = Math.round((csat / noofResponses) * 100);
       let localizedTitle = question?.title[defaultLanguage];
       if (
         question?.title &&
@@ -178,6 +192,7 @@ const ResultsOverview = () => {
           passives,
           total,
         },
+        csat: csatScore,
         choicesInAllLang: choicesInAllLang,
       };
     });
@@ -211,6 +226,7 @@ const ResultsOverview = () => {
                           responseCount={noofResponses}
                           question={item.question}
                           data={item.nps}
+                          csatScore={item?.csat}
                         />
                         {index < filteredArray?.length - 1 && (
                           <Divider my="md" />

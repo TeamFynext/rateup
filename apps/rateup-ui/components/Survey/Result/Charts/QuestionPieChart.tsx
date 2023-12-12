@@ -6,7 +6,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Stack, Text, Group, Paper, Badge } from "@mantine/core";
+import { Stack, Text, Group, Paper, Badge, RingProgress } from "@mantine/core";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
 interface DataItem {
@@ -88,6 +88,7 @@ interface QuestionPieChartProps {
   data: any;
   responseCount: number;
   no: number;
+  csatScore: number;
 }
 
 const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
@@ -96,6 +97,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
   type,
   responseCount,
   data,
+  csatScore,
 }) => {
   const chartData = [
     { name: "Detractors", value: data?.detractors, color: "#FF5C55" },
@@ -106,6 +108,18 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
   const cy = 200;
   const iR = 70;
   const oR = 100;
+
+  const getCSATColor = (score) => {
+    if (score >= 90) {
+      return { color: "green", message: "Excellent" };
+    } else if (score >= 70) {
+      return { color: "lime", message: "Good" };
+    } else if (score >= 50) {
+      return { color: "orange", message: "Fair" };
+    } else {
+      return { color: "red", message: "Needs Improvement" };
+    }
+  };
 
   return (
     <Stack miw={300}>
@@ -140,7 +154,27 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
             </Stack>
           </PaperLayout>
         </Stack>
-        <Stack style={{ flex: 1 }} align="center" justify="center">
+        <Group style={{ flex: 3 }} align="center" justify="space-evenly">
+          <Stack gap={0} align="center" w={250}>
+            <RingProgress
+              sections={[
+                { value: csatScore, color: getCSATColor(csatScore)?.color },
+              ]}
+              label={
+                <Text
+                  c={getCSATColor(csatScore)?.color}
+                  fw={700}
+                  ta="center"
+                  size="xl"
+                >
+                  {csatScore} %
+                </Text>
+              }
+            />
+            <Text c="dimmed" fw={900} size="sm" ta="center">
+              CSAT Score ( {getCSATColor(csatScore)?.message} )
+            </Text>
+          </Stack>
           <ResponsiveContainer height={280} width={300}>
             <PieChart>
               <Pie
@@ -163,7 +197,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
               <Legend content={<CustomLegend total={data?.total} />} />
             </PieChart>
           </ResponsiveContainer>
-        </Stack>
+        </Group>
       </Group>
     </Stack>
   );
