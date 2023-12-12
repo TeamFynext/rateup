@@ -369,6 +369,7 @@ model Menu {
   team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId       String         @db.Uuid
   menuLanding  MenuLanding?
+  menuBanner   MenuBanner[]
 }
 
 model MenuCategory {
@@ -484,4 +485,16 @@ model RM_Topic {
   teamId   String   @db.Uuid
 
   @@unique([name, teamId], name: "rm_topic_name_team_id_unique")
+}
+
+model MenuBanner {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime @default(now())
+  name        String
+  description String
+  image       String?
+  videoUrl    String?
+  price       Json
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId      String   @db.Uuid
 }

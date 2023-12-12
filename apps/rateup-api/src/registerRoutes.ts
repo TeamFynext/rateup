@@ -44,6 +44,9 @@ import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSugges
 import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route";
 import { userPublicRoutes } from "./modules/user/user.public.routes";
 import { reputationManagementRoutes } from "./modules/reputation_management/registerRMRoutes";
+import { menuBannerRoutes } from "./modules/menu/banner/banner.route";
+import { menuBannerSchemas } from "./modules/menu/banner/banner.schema";
+import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -63,7 +66,8 @@ export function registerRoutes(server: FastifyInstance): void {
     contactFormSchemas,
     contactSchemas,
     campaignSchemas,
-    reviewSuggestionSchemas
+    reviewSuggestionSchemas,
+    menuBannerSchemas
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -93,6 +97,8 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(menuPublicRoutes, { prefix: "api/public/menu" })
   server.register(menuCategoryRoutes, { prefix: "api/mcategory" })
   server.register(menuItemRoutes, { prefix: "api/mitem" })
+  server.register(menuBannerRoutes, { prefix: "api/mbanner" })
+  server.register(menuBannerPublicRoutes, { prefix: "api/public/mbanner" })
   server.register(contactFormPublicRoutes, { prefix: "api/public/contact" })
   server.register(electionPublicRoutes, { prefix: "api/public/election" });
   server.register(contactRoutes, { prefix: "api/contact" })
