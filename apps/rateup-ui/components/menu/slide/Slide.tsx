@@ -81,7 +81,7 @@ export const Slide = ({
   });
   const handleSubmit = async (data) => {
     try {
-      if (!imageToUpload) {
+      if (!imageToUpload && !formValues?.image) {
         setImageUploadError(true);
         return;
       }

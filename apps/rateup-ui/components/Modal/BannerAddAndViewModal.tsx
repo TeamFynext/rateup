@@ -1,5 +1,5 @@
 import { Box, Group, Modal, Stack, Text, Title } from "@mantine/core";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
 import {
   IconBookmark,
@@ -8,7 +8,7 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { useCounter, useMediaQuery, useSetState } from "@mantine/hooks";
+import { useCounter, useMediaQuery } from "@mantine/hooks";
 import { Carousel } from "@mantine/carousel";
 import { Slide } from "../menu/slide/Slide";
 import {
@@ -19,13 +19,13 @@ import {
 } from "../../backend/menu/Banner/banner.query";
 import CenteredSpinner from "../Loaders/CenteredSpinner";
 import { MenuItemPriceType } from "../../types/enums";
+import { showErrorToast } from "../../utils/notifications";
 
 export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const carouselRef = useRef(null);
   const [count, { increment, decrement }] = useCounter(0, {
     min: 0,
-    max: 4,
   });
   const createMenuBannerMutation = useCreateMenuBannerMutation(menuId);
   const updateMenuBannerMutation = useUpdateMenuBannerMutation(menuId);
@@ -134,7 +134,10 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
                 rightIcon={<IconPlus />}
                 radius="xl"
                 size="md"
-                onClick={increment}
+                onClick={() => {
+                  increment();
+                  data.push(defaultValues);
+                }}
               />
             </Stack>
           </Stack>
@@ -148,6 +151,12 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
                 size="md"
                 disabled={data?.length === 4}
                 onClick={() => {
+                  if (!data[data?.length - 1]?.id) {
+                    showErrorToast(
+                      "Save the form you just made, then click Add Banner button to make a new form.",
+                    );
+                    return;
+                  }
                   increment();
                   data.push(defaultValues);
                 }}
