@@ -487,6 +487,11 @@ model RM_Topic {
   @@unique([name, teamId], name: "rm_topic_name_team_id_unique")
 }
 
+model NLP_Cache {
+  text   String @unique
+  result Json
+}
+
 model MenuBanner {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt   DateTime @default(now())

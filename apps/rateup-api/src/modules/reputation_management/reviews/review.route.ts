@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { fetchReviewsHandler, getReviewsByTeamIdHandler } from "./review.controller";
+import { deleteAllReviewsHandler, fetchReviewsHandler, getReviewsByTeamIdHandler } from "./review.controller";
 import { log } from "../../../utils/logger";
 import { $Tref } from "../../team/team.schema";
 import { checkSession } from "../../../utils/checkSession";
@@ -40,5 +40,15 @@ export async function reviewsRoutes(server: FastifyInstance) {
             }
         },
         fetchReviewsHandler
+    )
+    server.delete(
+        "/team/:teamId",
+        {
+            preHandler: verifyTeamAccess,
+            schema: {
+                params: $Tref("byTeamIdParamsSchema")
+            }
+        },
+        deleteAllReviewsHandler
     )
 }
