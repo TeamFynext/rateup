@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { getReviewsByTeamId, getReviewsWithAnalysis, getReviewsWithReviewText, saveReviewsToDB } from "./review.service";
+import { deleteAllReviews, getReviewsByTeamId, getReviewsWithAnalysis, getReviewsWithReviewText, saveReviewsToDB } from "./review.service";
 import { ByTeamIdParams } from "../../team/team.schema";
 import { scrapeReviews } from "./review.scraper";
 import { analyzeReviews, saveAnalysis } from "../analysis/analysis.service";
@@ -42,4 +42,15 @@ export async function fetchReviewsHandler(
     log.info(`found ${reviewsWithReviewText.length} reviews with review text`);
     const analysis = await analyzeReviews(reviewsWithReviewText as Array<Review>);
     await saveAnalysis(analysis);
+}
+
+export async function deleteAllReviewsHandler(
+    request: FastifyRequest<{
+        Params: ByTeamIdParams,
+    }>,
+    reply: FastifyReply
+) {
+    const { teamId } = request.params;
+    await deleteAllReviews(teamId);
+    reply.send();
 }

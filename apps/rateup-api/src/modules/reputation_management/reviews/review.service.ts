@@ -1,4 +1,5 @@
 import { ReviewPlatform } from "../../../types/enums";
+import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import { ReviewInput } from "./review.schema";
 
@@ -54,6 +55,16 @@ export async function deleteReview(reviewId: string) {
         }
     });
     return review;
+}
+
+export async function deleteAllReviews(teamId: string) {
+    const reviews = await prisma.review.deleteMany({
+        where: {
+            teamId: teamId
+        }
+    });
+    log.trace(`Deleted ${reviews.count} reviews from team ${teamId}`);
+    return reviews;
 }
 
 export async function createReview(review: ReviewInput) {
