@@ -105,7 +105,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
     { name: "Promoters", value: data?.promoters, color: "#52BA66" },
   ];
   const cx = 150;
-  const cy = 200;
+  const cy = 170;
   const iR = 70;
   const oR = 100;
 
@@ -176,7 +176,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
             </Text>
           </Stack>
           <ResponsiveContainer height={280} width={300}>
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 40 }}>
               <Pie
                 dataKey="value"
                 startAngle={180}
