@@ -1,5 +1,5 @@
 import { Box, Group, Modal, Stack, Text, Title } from "@mantine/core";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
 import {
   IconBookmark,
@@ -9,7 +9,7 @@ import {
 } from "@tabler/icons-react";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { useCounter, useMediaQuery } from "@mantine/hooks";
-import { Carousel } from "@mantine/carousel";
+import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
 import { Slide } from "../menu/slide/Slide";
 import {
   useCreateMenuBannerMutation,
@@ -33,7 +33,10 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
     decrement();
   });
   const { data, isPending, isError } = useMenuBannerQuery(menuId);
+  const TRANSITION_DURATION = 200;
+  const [embla, setEmbla] = useState<Embla | null>(null);
 
+  useAnimationOffsetEffect(embla, TRANSITION_DURATION);
   useEffect(() => {
     if (data) {
       handleCarouselControl(1, data?.length);
@@ -205,6 +208,7 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
                     background: "var(--tertiary-color)",
                   },
                 }}
+                getEmblaApi={setEmbla}
               >
                 {bannerForm}
               </Carousel>
