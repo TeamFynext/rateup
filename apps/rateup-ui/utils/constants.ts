@@ -24,6 +24,7 @@ export const WaNPSQuestions = [
   QuestionType.LD,
   QuestionType.YN,
   QuestionType.Opinion,
+  QuestionType.CustomNPS,
 ];
 
 export const OtherQuestions = [

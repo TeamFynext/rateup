@@ -6,7 +6,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Stack, Text, Group, Paper, Badge, RingProgress } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Paper,
+  Badge,
+  RingProgress,
+  Flex,
+} from "@mantine/core";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
 interface DataItem {
@@ -123,12 +131,18 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
 
   return (
     <Stack miw={300}>
-      <Group justify="space-between">
-        <Text size="xl" fw={800} maw={300} truncate c={"dark.3"}>
-          {no}. {question}
-        </Text>
+      <Flex justify="space-between">
+        <Flex gap={"xs"} w={"85%"}>
+          <Text fw={800} c={"dark.3"}>
+            {" "}
+            {no}.{" "}
+          </Text>
+          <Text fw={800} c={"dark.3"}>
+            {question}
+          </Text>
+        </Flex>
         <Badge variant="dot">{type}</Badge>
-      </Group>
+      </Flex>
       <Group justify="center">
         <Stack style={{ flex: 1 }} align="center">
           <PaperLayout miw={200} maw={230}>

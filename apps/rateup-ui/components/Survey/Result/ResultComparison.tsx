@@ -1,7 +1,7 @@
 //import start
 import { useContext, useState } from "react";
 import { useRouter } from "next/router";
-import { Badge, Divider, Group, Stack, Tabs, Text } from "@mantine/core";
+import { Badge, Divider, Flex, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -112,8 +112,8 @@ export default function ResultComparison() {
             return (
               <PaperLayout mih={500} key={i}>
                 <Stack>
-                  <Group justify="space-between">
-                    <Text c="dark.3" fw={900}>
+                  <Flex justify="space-between">
+                    <Text c="dark.3" fw={900} w={"85%"}>
                       {
                         q.title[
                           selectedLanguage ? selectedLanguage : defaultLanguage
@@ -121,7 +121,7 @@ export default function ResultComparison() {
                       }
                     </Text>
                     <Badge variant="dot">{q.type}</Badge>
-                  </Group>
+                  </Flex>
                   <CombinedChart
                     questionResponses={questionResponses}
                     question={q}
