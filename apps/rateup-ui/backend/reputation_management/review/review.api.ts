@@ -44,3 +44,8 @@ export async function initGoogleReviews(teamId: string, dataId: string) {
   });
   return response.data;
 }
+
+export async function deleteAllReviews(teamId: string) {
+  const response = await axiosClient.delete(`${REVIEW_PATH}/team/${teamId}`);
+  return response.data;
+}

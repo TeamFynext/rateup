@@ -1,4 +1,4 @@
-import { Button, Group, Stack, TextInput, Title } from "@mantine/core";
+import { Button, Divider, Group, Stack, TextInput, Title } from "@mantine/core";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useState } from "react";
 import { GoogleIcon } from "../../../components/Button/GoogleIcon";
@@ -7,20 +7,27 @@ import { TeamSelector } from "../../../components/input/TeamSelector";
 import { initGoogleReviews } from "../../../backend/reputation_management/review/review.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { useRouter } from "next/router";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { useDisclosure } from "@mantine/hooks";
+import { useDeleteAllReviews } from "../../../backend/reputation_management/review/review.query";
 
 export default function () {
-  const [dataId, setDataId] = useState<string>(null);
+  const [url, setUrl] = useState<string>("");
   const [teamId, setTeamId] = useState<string>(null);
-
   const [loading, setLoading] = useState<boolean>(false);
+
   const router = useRouter();
 
+  const dataId = getDataIdFromUrl(url);
+  const [dialogOpened, { open: openDialog, close: closeDialog }] =
+    useDisclosure(false);
+  const deleteMutation = useDeleteAllReviews(teamId);
+
   function handleFetch() {
-    if (!dataId || !teamId) {
-      showErrorToast("Please select a team and enter a data id.");
+    if (!url || !teamId || !dataId) {
+      showErrorToast("Please select a team and enter url of the place.");
       return;
     }
-    setLoading(true);
     initGoogleReviews(teamId, dataId)
       .then((r) => {
         setLoading(false);
@@ -50,7 +57,6 @@ export default function () {
       >
         <Stack>
           <Title order={3}>Initialize Review Platform</Title>
-
           <Group align="end" p="sm">
             <GoogleIcon
               style={{
@@ -64,10 +70,13 @@ export default function () {
               }}
             />
             <TextInput
-              value={dataId}
-              onChange={(e) => setDataId(e.currentTarget.value)}
-              label="Data ID"
-              placeholder="Enter Data ID of the location in Google Maps"
+              value={url}
+              onChange={(e) => setUrl(e.currentTarget.value)}
+              error={
+                url && !dataId ? "Please enter a valid Google Maps URL" : false
+              }
+              label="Place URL"
+              placeholder="Enter URL of the location in Google Maps"
               style={{
                 width: "400px",
               }}
@@ -79,12 +88,43 @@ export default function () {
                 },
               }}
             />
-            <Button variant="outline" loading={loading} onClick={handleFetch}>
+            <Button
+              variant="outline"
+              loading={loading}
+              onClick={handleFetch}
+              disabled={!dataId}
+            >
               {loading ? "Fetching..." : "Fetch"}
             </Button>
           </Group>
+          <Divider />
+          <Button variant="filled" color="red" onClick={openDialog}>
+            Delete All Reviews
+          </Button>
+          <ConfirmationModal
+            forDeleteFunctionality
+            confirmLabel="Delete"
+            headerLabel="Are you sure to delete all reviews?"
+            headerTitle="Delete reviews?"
+            opened={dialogOpened}
+            onClose={closeDialog}
+            onConfirm={(e) => {
+              e.stopPropagation();
+              deleteMutation.mutate(undefined, {
+                onSettled: closeDialog,
+              });
+            }}
+          />
         </Stack>
       </PaperLayout>
     </Stack>
   );
+}
+
+function getDataIdFromUrl(url: string): string | undefined {
+  const regex = /!1s(.*?)!/;
+  const match = url.match(regex);
+  if (match && match[1]) {
+    return match[1];
+  }
 }

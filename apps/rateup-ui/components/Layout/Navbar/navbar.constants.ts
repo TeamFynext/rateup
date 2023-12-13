@@ -12,8 +12,8 @@ import {
   IconBrandWhatsapp,
   IconFileDescription,
   IconLayoutDashboard,
-  IconPhone,
   IconAddressBook,
+  IconComet,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
 
@@ -110,8 +110,8 @@ export const navTopData: Array<NavbarLinkProps> = [
     ? []
     : [
         {
-          Icon: IconSpeakerphone,
-          label: "Reputation Management",
+          Icon: IconComet,
+          label: "Reputation",
           href: "/dashboard/rm",
         },
       ]),
