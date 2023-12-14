@@ -53,6 +53,7 @@ export const useUpdateMenuBannerMutation = (
 
 export const useMenuBannerQuery = (menuId: string) => {
   const data = useQuery({
+    enabled: !!menuId,
     queryKey: ["menu", menuId, "banner"],
     queryFn: () => getMenuBannerByMenuId(menuId),
   });
