@@ -134,8 +134,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
       <Flex justify="space-between">
         <Flex gap={"xs"} w={"85%"}>
           <Text fw={800} c={"dark.3"}>
-            {" "}
-            {no}.{" "}
+            {no}.
           </Text>
           <Text fw={800} c={"dark.3"}>
             {question}

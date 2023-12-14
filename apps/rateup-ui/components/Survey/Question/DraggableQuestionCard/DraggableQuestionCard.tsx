@@ -110,7 +110,7 @@ export function DraggableQuestionCard({
                     ? "60%"
                     : question?.logic?.length || question?.googleReview
                     ? "70%"
-                    : "80%"
+                    : "75%"
                 }
                 truncate
               >

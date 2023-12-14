@@ -50,7 +50,12 @@ export function ChoicesCreator({
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
     if (choiceWeightage.trim().length === 0) return;
-    if (choices.some((c) => c.value == newChoice)) return;
+    if (
+      choices.some(
+        (c) => c.value.replace(/\s+/g, "") === newChoice.replace(/\s+/g, ""),
+      )
+    )
+      return;
     let choiceObj = {
       value: newChoice,
       weightage:
