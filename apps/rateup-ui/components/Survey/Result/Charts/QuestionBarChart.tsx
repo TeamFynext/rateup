@@ -8,7 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Paper, Text, Group, Stack, Title, Badge } from "@mantine/core";
+import { Paper, Text, Group, Stack, Title, Badge, Flex } from "@mantine/core";
 import { QuestionType } from "../../../../types/enums";
 import { getResponseArrayByQuestionType } from "../../../../utils/response";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -69,7 +69,7 @@ const getChoiceCountsforAll = (
     });
   } else {
     let choiceIndex = null;
-    for (var i = 0; i < languages.length; i++) {
+    for (var i = 0; i < languages?.length; i++) {
       choiceIndex = languages[i]?.findIndex((c) => c.value == response.value);
       if (choiceIndex == -1) continue;
       break;
@@ -116,13 +116,19 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
 
   return (
     <Stack miw={300}>
-      <Group justify="space-between">
-        <Text size="xl" fw={800} maw={300} truncate c={"dark.3"}>
-          {no}. {question}
-        </Text>
+      <Flex justify="space-between">
+        <Flex gap={"xs"} w={"85%"}>
+          <Text fw={800} c={"dark.3"}>
+            {" "}
+            {no}.{" "}
+          </Text>
+          <Text fw={800} c={"dark.3"}>
+            {question}
+          </Text>
+        </Flex>
         <Badge variant="dot">{questionType}</Badge>
-      </Group>
-      <Group>
+      </Flex>
+      <Group align="center" justify="center">
         <Stack style={{ flex: 1 }} align="center">
           <PaperLayout miw={200} maw={230}>
             <Stack align="center" gap={10}>

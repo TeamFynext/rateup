@@ -103,15 +103,14 @@ export function DraggableQuestionCard({
               </Badge>
               {/* TODO: add truncate and make height fixed*/}
               <Text
-                pl="xs"
+                px="xs"
                 fw={500}
-                px="md"
                 maw={
                   question?.logic?.length && question?.googleReview
                     ? "60%"
                     : question?.logic?.length || question?.googleReview
                     ? "70%"
-                    : "90%"
+                    : "75%"
                 }
                 truncate
               >
@@ -120,8 +119,7 @@ export function DraggableQuestionCard({
               </Text>
               <Group
                 justify={"flex-end"}
-                gap={"xs"}
-                ml={"xs"}
+                gap={4}
                 style={{ position: "absolute", right: "5px" }}
               >
                 {question?.logic?.length && (

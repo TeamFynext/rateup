@@ -11,9 +11,15 @@ import {
   Switch,
   Badge,
   Image,
+  ScrollArea,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
-import { IconX, IconEye, IconBrandGoogle } from "@tabler/icons-react";
+import {
+  IconX,
+  IconEye,
+  IconBrandGoogle,
+  IconDeviceSdCard,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -162,107 +168,104 @@ export function WaQuestionDetailedView({
         flexDirection: "column",
         position: "relative",
       }}
-      gap={"xs"}
+      justify="space-between"
     >
-      <Group justify="space-between">
-        <Switch
-          label="Enable Header"
-          checked={enableTitle}
-          onChange={(e) => setEnableTitle(e.currentTarget.checked)}
-          mb="sm"
-          ml="sm"
-          styles={{
-            track: {
-              cursor: "pointer",
-            },
-          }}
-        />
-        <Badge variant="outline" size="lg">
-          {question.type}
-        </Badge>
-      </Group>
-      <Group p={2} gap={2} pr={42}>
-        {" "}
-        {/* TODO: Preview button & language-complete status component are overlapping */}
-        <Stack
-          style={{
-            height: "100%",
-            overflowY: "auto",
-            overflowX: "clip",
-            flex: 1,
-          }}
-          gap={0}
-        >
-          {enableTitle && (
-            <Textarea
-              fw={800}
-              maw={"95%"}
-              autosize
-              maxRows={2}
-              variant="unstyled"
-              mx="sm"
-              styles={{
-                input: {
-                  fontSize: "26px",
-                },
-              }}
-              placeholder="Enter message header here"
-              rightSection={
-                <LengthTracker
-                  string={form.values.title[selectedLanguage]}
-                  maxValue={WA_HEADER_CHAR_LIMIT}
-                />
-              }
-              {...form.getInputProps(`title.${selectedLanguage}`)}
-              value={form.values.title[selectedLanguage]}
-            />
-          )}
-          <Textarea
-            mx="sm"
-            maw={"95%"}
-            autosize
-            maxRows={4}
-            minRows={2}
-            variant="unstyled"
-            placeholder="Enter message body here *"
+      <ScrollArea h={"80%"}>
+        <Group justify="space-between">
+          <Switch
+            label="Enable Header"
+            checked={enableTitle}
+            onChange={(e) => setEnableTitle(e.currentTarget.checked)}
+            mb="sm"
+            ml="sm"
             styles={{
-              input: {
-                fontSize: "24px",
+              track: {
+                cursor: "pointer",
               },
             }}
-            rightSection={
-              <LengthTracker
-                string={form.values.description[selectedLanguage]}
-                maxValue={WA_BODY_CHAR_LIMIT}
-              />
-            }
-            {...form.getInputProps(`description.${selectedLanguage}`)}
-            value={form.values.description[selectedLanguage]}
           />
-          <ExtraProps form={form} question={question} />
-        </Stack>
-        <LanguageCompletionView
-          selectedLanguage={selectedLanguage}
-          setSelectedLanguage={setSelectedLanguage}
-          languages={surveyLanguages}
-          notCompletedLanguages={incompleteLanguages}
-        />
-      </Group>
-
-      <Divider />
-
-      <Stack
-        pt="sm"
-        style={{ height: "40px", position: "sticky", bottom: "0" }}
-      >
-        <Group justify="space-between" gap="sm">
-          <Group>
-            <Checkbox
-              label="Required"
-              fw={600}
-              mr="100px"
-              {...form.getInputProps("required", { type: "checkbox" })}
+          <Badge variant="outline" size="lg">
+            {question.type}
+          </Badge>
+        </Group>
+        <Group p={2} gap={2} pr={42}>
+          {" "}
+          {/* TODO: Preview button & language-complete status component are overlapping */}
+          <Stack
+            style={{
+              height: "100%",
+              overflowY: "auto",
+              overflowX: "clip",
+              flex: 1,
+            }}
+            gap={0}
+          >
+            {enableTitle && (
+              <Textarea
+                fw={800}
+                maw={"95%"}
+                autosize
+                maxRows={2}
+                variant="unstyled"
+                mx="sm"
+                styles={{
+                  input: {
+                    fontSize: "26px",
+                  },
+                }}
+                placeholder="Enter message header here"
+                rightSection={
+                  <LengthTracker
+                    string={form.values.title[selectedLanguage]}
+                    maxValue={WA_HEADER_CHAR_LIMIT}
+                  />
+                }
+                {...form.getInputProps(`title.${selectedLanguage}`)}
+                value={form.values.title[selectedLanguage]}
+              />
+            )}
+            <Textarea
+              mx="sm"
+              maw={"95%"}
+              autosize
+              maxRows={4}
+              minRows={2}
+              variant="unstyled"
+              placeholder="Enter message body here *"
+              styles={{
+                input: {
+                  fontSize: "24px",
+                },
+              }}
+              rightSection={
+                <LengthTracker
+                  string={form.values.description[selectedLanguage]}
+                  maxValue={WA_BODY_CHAR_LIMIT}
+                />
+              }
+              {...form.getInputProps(`description.${selectedLanguage}`)}
+              value={form.values.description[selectedLanguage]}
             />
+            <ExtraProps form={form} question={question} />
+          </Stack>
+          <LanguageCompletionView
+            selectedLanguage={selectedLanguage}
+            setSelectedLanguage={setSelectedLanguage}
+            languages={surveyLanguages}
+            notCompletedLanguages={incompleteLanguages}
+          />
+        </Group>
+      </ScrollArea>
+
+      <Stack>
+        <Divider />
+        <Group justify="space-between" p="xs" px={"sm"}>
+          <Checkbox
+            label="Required"
+            fw={600}
+            {...form.getInputProps("required", { type: "checkbox" })}
+          />
+          <Group>
             {logicSupportedTypes.includes(question?.type) && (
               <RateupButtonSecondary
                 title={"Logic Jump"}
@@ -307,11 +310,11 @@ export function WaQuestionDetailedView({
                 : "Save"
             }
             size="md"
+            leftIcon={<IconDeviceSdCard />}
             onClick={handleSave}
             loading={isSaving}
           />
         </Group>
-        <Group justify="flex-start" gap="md"></Group>
       </Stack>
 
       <Popover
@@ -380,6 +383,7 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.MSQ:
     case QuestionType.DDSS:
     case QuestionType.DDMS:
+    case QuestionType.CustomNPS:
       return <ChoicesCreator qId={question.id} form={form} />;
     case QuestionType.WaButtons:
       return (

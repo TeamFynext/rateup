@@ -48,7 +48,7 @@ export function EditWhatsappSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={5} className={classes.root}>
+    <Flex w={"100%"} h={"100%"} p={2} gap={10} className={classes.root}>
       <PaperLayout style={{ flex: 2 }}>
         <QuestionsSideBar
           questions={questions}
@@ -59,7 +59,7 @@ export function EditWhatsappSurvey({
           isWaSurvey={true}
         />
       </PaperLayout>
-      <PaperLayout p={"md"} style={{ flex: 3 }}>
+      <PaperLayout p={"md"} style={{ flex: 5 }}>
         <Tabs
           pb="md"
           value={activeTab}
@@ -85,7 +85,6 @@ export function EditWhatsappSurvey({
             <QuestionTypeSelection
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
-              types={WA_QUESTION_TYPES}
               isWaSurvey={true}
             />
           </Tabs.Panel>
@@ -116,20 +115,3 @@ export function EditWhatsappSurvey({
     </Flex>
   );
 }
-
-const WA_QUESTION_TYPES = [
-  Q.Text,
-  Q.Email,
-  Q.LD,
-  Q.YN,
-  Q.MCQ,
-  Q.Number,
-  Q.Phone,
-  Q.DateTime,
-  Q.Photo,
-  Q.Smiley,
-  Q.Opinion,
-  // Whatsapp Exclusive
-  Q.WaButtons,
-  Q.WaList,
-];

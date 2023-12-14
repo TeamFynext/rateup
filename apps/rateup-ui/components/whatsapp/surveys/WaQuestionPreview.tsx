@@ -72,7 +72,8 @@ export function WaQuestionPreview({
         />
       );
     }
-    case Q.MCQ: {
+    case Q.MCQ:
+    case Q.CustomNPS: {
       const choices = question.choices?.[selectedLanguage] || [];
       return (
         <>
