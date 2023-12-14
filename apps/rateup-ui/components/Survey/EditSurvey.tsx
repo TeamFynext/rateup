@@ -88,7 +88,6 @@ export function EditSurvey({
             <QuestionTypeSelection
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
-              types={WEB_QUESTION_TYPES}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
@@ -118,7 +117,3 @@ export function EditSurvey({
     </Flex>
   );
 }
-
-const WEB_QUESTION_TYPES = Object.values(QuestionType).filter(
-  (type) => !type.toLocaleLowerCase().startsWith("wa_"),
-);

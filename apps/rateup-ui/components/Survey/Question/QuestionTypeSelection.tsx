@@ -52,13 +52,11 @@ import { useQuestionCreateMutation } from "../../../backend/surveys/questions/qu
 interface QuestionTypeSelectionProps {
   setSelectedQ: (q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
-  types: QuestionType[];
   isWaSurvey?: boolean;
 }
 export function QuestionTypeSelection({
   setSelectedQ,
   setActiveTab,
-  types,
   isWaSurvey,
 }: QuestionTypeSelectionProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);

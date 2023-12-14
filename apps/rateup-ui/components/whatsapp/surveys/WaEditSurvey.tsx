@@ -85,7 +85,6 @@ export function EditWhatsappSurvey({
             <QuestionTypeSelection
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
-              types={WA_QUESTION_TYPES}
               isWaSurvey={true}
             />
           </Tabs.Panel>
@@ -116,20 +115,3 @@ export function EditWhatsappSurvey({
     </Flex>
   );
 }
-
-const WA_QUESTION_TYPES = [
-  Q.Text,
-  Q.Email,
-  Q.LD,
-  Q.YN,
-  Q.MCQ,
-  Q.Number,
-  Q.Phone,
-  Q.DateTime,
-  Q.Photo,
-  Q.Smiley,
-  Q.Opinion,
-  // Whatsapp Exclusive
-  Q.WaButtons,
-  Q.WaList,
-];
