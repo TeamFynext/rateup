@@ -7,26 +7,26 @@ import {
 } from "./category.schema";
 
 export async function createMenuCategory(data: CreateMenuCategoryInput) {
-  const existingCategoryData = await prisma.menuCategory.findFirst({
-    where: {
-      menuId: data.menuId,
-    },
-    orderBy: {
-      itemOrder: "desc",
-    },
-  });
   const createData: any = {
     ...data,
     menuId: data.menuId,
     name: data.name,
     image: data.image,
   };
-  if (existingCategoryData) {
-    createData.itemOrder = Number(existingCategoryData.itemOrder) + 1;
-  }
+  await prisma.menuCategory.updateMany({
+    where: {
+      menuId: data.menuId,
+    },
+    data: {
+      itemOrder: {
+        increment: 1,
+      },
+    },
+  });
   const category = await prisma.menuCategory.create({
     data: createData,
   });
+  
   return category;
 }
 
