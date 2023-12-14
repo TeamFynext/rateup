@@ -88,7 +88,12 @@ export function CreateMenuItemModal({
     if (editingItem) {
       form.setValues(editingItem);
       if (!editingItem.price?.variants) {
-        form.setFieldValue("price.variants", []);
+        form.setFieldValue("price.variants", [
+          {
+            name: "",
+            price: "",
+          },
+        ]);
       }
     } else {
       form.reset();
@@ -376,7 +381,7 @@ export function PriceSection({ form }: { readonly form: any }) {
               <Box
                 w="82px"
                 p={"xs"}
-                key={_variant}
+                key={_variant + index}
                 style={{
                   border: "1px solid gray",
                   borderRadius: "15px",
