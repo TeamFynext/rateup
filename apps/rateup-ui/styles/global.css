@@ -26,6 +26,7 @@
   --hover-border-color: rgba(28, 81, 142, 0.2);
   --light-grey-color-2: #efefef;
   --light-grey-color-3: #f4f4f4;
+  --light-dark-color-2: rgba(29, 29, 29, 0.5);
 }
 
 html {

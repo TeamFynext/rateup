@@ -10,7 +10,7 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
 import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CategoryChip } from "../../../../../components/menu/category/CategoryChip";
 import { CategoryDisplay } from "../../../../../components/menu/category/CategoryDisplay";
 import { CategoriesDrawer } from "../../../../../components/menu/category/CategoriesDrawer";
@@ -20,6 +20,7 @@ import { useRouter } from "next/router";
 import { lexend } from "../../../../../utils/fonts";
 import { Carousel } from "@mantine/carousel";
 import { getMenuBannerByMenuId } from "../../../../../backend/menu/Banner/banner.api";
+import Autoplay from "embla-carousel-autoplay";
 
 type MenuViewProp = {
   menuId: string;
@@ -45,6 +46,7 @@ export default function ({ fullMenu, menuBanner }) {
     );
   const router = useRouter();
   const largeScreen = useMediaQuery("(min-width: 40em)");
+  const autoplay = useRef(Autoplay({ delay: 2000, stopOnInteraction: false }));
   let categoryChipLabel = [{ id: "1", name: "all" }].concat(
     fullMenu?.categories,
   );
@@ -75,7 +77,14 @@ export default function ({ fullMenu, menuBanner }) {
   return (
     <Paper mih={"100vh"} ff={lexend.style.fontFamily}>
       {menuBanner?.length > 0 ? (
-        <Carousel withIndicators>
+        <Carousel
+          withIndicators
+          plugins={[autoplay.current]}
+          onMouseEnter={autoplay.current.stop}
+          onMouseLeave={autoplay.current.reset}
+          controlsOffset="lg"
+          loop
+        >
           {menuBanner?.map((value) => (
             <Carousel.Slide
               key={value.id}
@@ -110,7 +119,7 @@ export default function ({ fullMenu, menuBanner }) {
                 bgp={"center"}
                 bgsz={"cover"}
                 c={"white"}
-                h={"33vh"}
+                h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
                 maw={largeScreen ? "2440px" : "768px"}
               ></BackgroundImage>
             </Carousel.Slide>

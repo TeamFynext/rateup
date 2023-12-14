@@ -1,9 +1,7 @@
-import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
   BackgroundImage,
   Box,
-  Button,
   Center,
   FileButton,
   Flex,
@@ -14,7 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { IconUpload, IconMenu2, IconTrash } from "@tabler/icons-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ContainedTextField,
   ContainedTextArea,
@@ -79,6 +77,22 @@ export const Slide = ({
       description: (value) => (value.length ? null : "Cannot be empty"),
     },
   });
+
+  useEffect(() => {
+    if (formValues?.price?.type === "FIXED") {
+      form?.setFieldValue("price", {
+        price: formValues?.price?.price,
+        variants: [
+          {
+            name: "",
+            price: "",
+          },
+        ],
+        type: MenuItemPriceType.FIXED,
+      });
+    }
+  }, [formValues?.price?.type]);
+
   const handleSubmit = async (data) => {
     try {
       if (!imageToUpload && !formValues?.image) {
@@ -211,21 +225,36 @@ export const Slide = ({
                   }
                 >
                   <Center h="100%">
-                    <Flex style={{ cursor: "pointer" }}>
-                      <IconUpload />
-                      <FileButton
-                        onChange={onChangePicture}
-                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    <Stack gap={0} align="center">
+                      <Flex
+                        style={{ cursor: "pointer", borderRadius: "7px" }}
+                        bg={form?.values?.image && "var(--light-dark-color-2)"}
+                        c={form?.values?.image && "white"}
+                        p={5}
+                        columnGap={5}
                       >
-                        {(props) => {
-                          return (
-                            <Text fz={"xs"} {...props}>
-                              Upload Banner Image
-                            </Text>
-                          );
-                        }}
-                      </FileButton>
-                    </Flex>
+                        <IconUpload size={"16px"} />
+                        <FileButton
+                          onChange={onChangePicture}
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        >
+                          {(props) => {
+                            return (
+                              <Text fz={"xs"} {...props}>
+                                {form?.values?.image
+                                  ? "Change Banner Image"
+                                  : "Upload Banner Image"}
+                              </Text>
+                            );
+                          }}
+                        </FileButton>
+                      </Flex>
+                      {!form?.values?.image && (
+                        <Text c={"var(--grey-color-4)"} fz={10}>
+                          Width : 1980 X Height: 312
+                        </Text>
+                      )}
+                    </Stack>
                   </Center>
                 </BackgroundImage>
                 <Stack p={"md"}>

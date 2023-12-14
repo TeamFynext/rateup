@@ -52,6 +52,12 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
     price: {
       price: "",
       type: MenuItemPriceType.FIXED,
+      variants: [
+        {
+          name: "",
+          price: "",
+        },
+      ],
     },
     createdAt: "",
     videoUrl: "",
@@ -108,7 +114,7 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
         </Stack>
       }
     >
-      <Box h={"70vh"} mah={"500px"} px={"lg"}>
+      <Box h={"70vh"} mah={"550px"} px={"lg"}>
         {data?.length <= 0 ? (
           <Stack justify="center" align="center" h={"100%"}>
             <Stack align="center" justify="center">

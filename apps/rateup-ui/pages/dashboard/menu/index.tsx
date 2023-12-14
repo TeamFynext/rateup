@@ -115,7 +115,7 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
   const sortedMenus = filteredMenus?.slice()?.sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
-    return sorthandle ? dateA - dateB : dateB - dateA;
+    return sorthandle ? dateB - dateA : dateA - dateB;
   });
   return (
     <>
