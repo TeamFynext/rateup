@@ -91,7 +91,7 @@ export const Slide = ({
         type: MenuItemPriceType.FIXED,
       });
     }
-  }, [formValues?.price?.type]);
+  }, [formValues]);
 
   const handleSubmit = async (data) => {
     try {
@@ -106,6 +106,11 @@ export const Slide = ({
         if (typeof fileKey === "string") {
           temp = fileKey;
         }
+      }
+      if (data?.price?.type === MenuItemPriceType.FIXED) {
+        delete data?.price?.variants;
+      } else {
+        delete data?.price?.price;
       }
       if (data?.id) {
         if (formValues?.image && formValues?.image !== data?.image) {
