@@ -27,6 +27,8 @@ import inputStyles from "../../input/InputStyles.module.css";
 import { NPSWeightage, QuestionType } from "../../../types/enums";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { getNpsColor } from "./QuestionDetailedView";
+import SurveyContext from "../../../context/SurveyContext";
+import { useResponses } from "../../../backend/surveys/response/response.query";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
@@ -46,6 +48,11 @@ export function ChoicesCreator({
     NPSWeightage.PROMOTER,
   );
   const choices = form.values.choices?.[selectedLanguage] || [];
+
+  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { data: responses } = useResponses(surveyTeamMapId);
+
+  const hasResponse = responses?.length ? true : false;
 
   const handleAddChoice = () => {
     if (newChoice.trim().length === 0) return;
@@ -95,11 +102,12 @@ export function ChoicesCreator({
       >
         {choices.map((choice, i) => (
           <Choice
-            key={choice}
+            key={i}
             choice={choice}
             onDelete={() => handleRemoveChoice(choice)}
             form={form}
             index={i}
+            hasResponse={hasResponse}
           />
         ))}
       </Stack>
@@ -152,16 +160,16 @@ interface ChoiceProps {
   choice: Choice;
   onDelete: () => void;
   form;
-  index;
+  index: number;
+  hasResponse: boolean;
 }
-function Choice({ choice, onDelete, form, index }: ChoiceProps) {
+function Choice({ choice, onDelete, form, index, hasResponse }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
   const [opened, { open, close }] = useDisclosure(false);
   const [choiceValue, setChoiceValue] = useState(choice?.value);
   const [error, setError] = useState("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   let newWeightage = choice.weightage;
-
   const handleChangeWeightage = (value) => {
     const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c) => {
       if (c.value == choice?.value) return { ...c, weightage: value };
@@ -219,7 +227,12 @@ function Choice({ choice, onDelete, form, index }: ChoiceProps) {
       ) : (
         <Checkbox label={choice.value} w={"85%"} checked={false} readOnly />
       )}
-      <ActionIcon variant="transparent" onClick={open} size={"sm"}>
+      <ActionIcon
+        variant="transparent"
+        onClick={open}
+        size={"sm"}
+        disabled={hasResponse}
+      >
         <IconEdit />
       </ActionIcon>
       <ActionIcon
