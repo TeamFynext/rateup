@@ -332,7 +332,7 @@ export async function generateMessageDataFromQuestion(
       )
     ) {
       return createTextMessage(to, title, description);
-    } else if ([Q.MSQ, Q.MCQ].includes(question.type)) {
+    } else if ([Q.MSQ, Q.MCQ, Q.CustomNPS].includes(question.type)) {
       let bodyText = description;
       // Displaying choices in `index) choice` format
       const options = question
@@ -342,7 +342,7 @@ export async function generateMessageDataFromQuestion(
       bodyText =
         bodyText +
         options;
-      if (question.type === Q.MCQ) {
+      if (question.type === Q.MCQ || question.type === Q.CustomNPS) {
         bodyText = bodyText + "\n\nPlease enter your choice index"
       } else if (question.type === Q.MSQ) {
         bodyText = bodyText + "\n\nPlease enter your choice indices separated by space"
@@ -369,6 +369,7 @@ export function isValidResponse(
       return Object.values(LDResponse).includes(response);
     case Q.MCQ:
     case Q.WaButtons:
+    case Q.CustomNPS:
       if (!question.choices) {
         log.fatal("No choices found for question", question);
         throw new Error("No choices found for question");
@@ -440,6 +441,7 @@ export async function parseResponse(
         );
         break;
       case Q.MCQ:
+      case Q.CustomNPS:
         const index = Number(message);
         return question.choices![session.language][index - 1];
       case Q.WaButtons: {
