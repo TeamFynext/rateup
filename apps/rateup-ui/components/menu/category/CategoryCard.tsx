@@ -29,6 +29,7 @@ interface CategoryCardProps {
   readonly handleEdit: (category: MenuCategory) => void;
   readonly searchText: string;
   readonly headerOrder: any;
+  readonly currency: string;
 }
 
 export function CategoryCard({
@@ -37,6 +38,7 @@ export function CategoryCard({
   handleEdit,
   searchText,
   headerOrder,
+  currency,
 }: CategoryCardProps) {
   const [createMenuItemModalOpened, { close, open }] = useDisclosure(false);
   const [swapOrderOpened, { close: closeSwapOrder, toggle: toggleSwapOrder }] =
@@ -110,6 +112,7 @@ export function CategoryCard({
       setEditingItem={setEditingItem}
       key={item?.id}
       open={open}
+      currency={currency}
       toggleSwapOrder={toggleSwapOrder}
       updateMenuItemMutation={updateMenuItemMutation}
     />
@@ -164,6 +167,7 @@ export function CategoryCard({
         categoryId={category?.id}
         menuId={category?.menuId}
         editingItem={editingItem}
+        currency={currency}
       />
       <SortDrawer
         close={closeSwapOrder}

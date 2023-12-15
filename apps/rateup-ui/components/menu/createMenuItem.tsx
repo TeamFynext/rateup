@@ -33,18 +33,16 @@ import {
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-
+import { currencyLabel } from "./util/currencyData";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
   readonly menuId: string;
   readonly categoryId: string;
   readonly editingItem?: MenuItem;
+  readonly currency?: string;
 }
-// type PromiseFulfilledResult<T> = {
-//   status: "fulfilled";
-//   value: T;
-// };
+
 // If editingItem is passed, then we are editing an existing item
 export function CreateMenuItemModal({
   opened,
@@ -52,6 +50,7 @@ export function CreateMenuItemModal({
   menuId,
   categoryId,
   editingItem,
+  currency,
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
   const [deleteImageArray, setDeleteImageArray] = useState([]);
@@ -328,7 +327,7 @@ export function CreateMenuItemModal({
             )}
           </Group>
         </Stack>
-        <Stack style={{ flex: 1.5 }}>
+        <Stack style={{ flex: 1.5 }} gap={8}>
           <Flex columnGap={30}>
             <ContainedTextField
               label="Name"
@@ -350,14 +349,20 @@ export function CreateMenuItemModal({
             minRows={5}
             {...form.getInputProps("description")}
           />
-          <PriceSection form={form} />
+          <PriceSection form={form} currency={currency ?? "0"} />
         </Stack>
       </Flex>
     </FormModalLayout>
   );
 }
 
-export function PriceSection({ form }: { readonly form: any }) {
+export function PriceSection({
+  form,
+  currency = "0",
+}: {
+  readonly form: any;
+  readonly currency: string;
+}) {
   return (
     <>
       <Group>
@@ -371,16 +376,17 @@ export function PriceSection({ form }: { readonly form: any }) {
       </Group>
       {form?.values?.price?.type === MenuItemPriceType.FIXED ? (
         <ContainedTextField
-          placeholder="$ 399"
+          leftSection={currencyLabel[currency]?.symbol}
+          placeholder="399"
           {...form.getInputProps("price.price")}
         />
       ) : (
-        <Group>
+        <Group gap={"3px"}>
           {form?.values?.price?.variants?.map((_variant, index) => {
             return (
               <Box
-                w="82px"
-                p={"xs"}
+                w="95px"
+                p={"5px"}
                 key={_variant + index}
                 style={{
                   border: "1px solid gray",
@@ -397,7 +403,12 @@ export function PriceSection({ form }: { readonly form: any }) {
                   {...form.getInputProps(`price.variants.${index}.name`)}
                 />
                 <TextInput
-                  placeholder="$ 399"
+                  leftSection={
+                    <Box style={{ fontSize: "small" }}>
+                      {currencyLabel[currency]?.symbol}
+                    </Box>
+                  }
+                  placeholder="399"
                   radius={"100px"}
                   {...form.getInputProps(`price.variants.${index}.price`)}
                 />

@@ -2,7 +2,7 @@ import { Flex, Stack, Text } from "@mantine/core";
 import { ItemDisplay } from "../item/ItemDisplay";
 import { lexend300, lexend500 } from "../../../utils/fonts";
 
-export function CategoryDisplay({ category, setSelectedItem }) {
+export function CategoryDisplay({ category, setSelectedItem, currency }) {
   return (
     <Stack id={category?.id} ff={lexend300.style.fontFamily} pb={"lg"}>
       <Text
@@ -24,7 +24,8 @@ export function CategoryDisplay({ category, setSelectedItem }) {
             <ItemDisplay
               setSelectedItem={setSelectedItem}
               item={i}
-              key={i.id}
+              key={i?.id}
+              currency={currency}
             />
           ))
         )}

@@ -3,9 +3,7 @@ import {
   Center,
   Flex,
   Group,
-  Image,
   Paper,
-  SimpleGrid,
   Stack,
   Text,
 } from "@mantine/core";
@@ -13,12 +11,18 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { lexend } from "../../../utils/fonts";
+import { currencyLabel } from "../util/currencyData";
 
 interface ItemDisplayProps {
   readonly item: any;
   readonly setSelectedItem: (item: MenuItem) => void;
+  readonly currency: string;
 }
-export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
+export function ItemDisplay({
+  item,
+  setSelectedItem,
+  currency = "0",
+}: ItemDisplayProps) {
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const smallScreen = useMediaQuery("(max-width: 40em)");
 
@@ -103,6 +107,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                       {varient?.name}
                     </Text>
                     <Text fz="clamp(14px, 11.136px + 0.476vw, 18px)" fw={500}>
+                      {currencyLabel[currency]?.symbol}&nbsp;
                       {varient?.price}
                     </Text>
                   </Stack>
@@ -113,6 +118,7 @@ export function ItemDisplay({ item, setSelectedItem }: ItemDisplayProps) {
                   mt={"sm"}
                   fw={500}
                 >
+                  {currencyLabel[currency]?.symbol}&nbsp;
                   {item?.price?.price}
                 </Text>
               )}

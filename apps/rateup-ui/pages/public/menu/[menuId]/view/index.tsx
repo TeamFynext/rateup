@@ -231,6 +231,7 @@ export default function ({ fullMenu, menuBanner }) {
                 key={c.id}
                 setSelectedItem={setSelectedItem}
                 category={c}
+                currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
               />
             ))
           : "No Categories Found"}
@@ -245,6 +246,7 @@ export default function ({ fullMenu, menuBanner }) {
         <ItemDetailedViewModal
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
+          currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
         />
       )}
       <Stack pos={"fixed"} bottom={40} right={30}>

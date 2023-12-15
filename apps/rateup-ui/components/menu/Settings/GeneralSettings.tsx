@@ -12,6 +12,7 @@ import Heading from "../../styled/Heading/Heading";
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import CenteredSpinner from "../../Loaders/CenteredSpinner";
+import { currencyLabel } from "../util/currencyData";
 
 const GeneralSettings = ({ editingItem }) => {
   const form = useForm({
@@ -24,6 +25,7 @@ const GeneralSettings = ({ editingItem }) => {
       websiteText: "",
       teamId: "",
       surveyTeamMapId: "",
+      currency: "0",
     },
     validate: {
       name: (value) => (value?.trim().length ? null : "Cannot be empty"),
@@ -93,19 +95,28 @@ const GeneralSettings = ({ editingItem }) => {
               type="url"
             />
           </SimpleGrid>
-          <ContainedSelection
-            label="Choose a survey to display in the menu pagel"
-            placeholder={
-              surveyFormatedData?.length === 0
-                ? "There is no published survay"
-                : "Select survey"
-            }
-            disabled={surveyFormatedData?.length === 0}
-            required
-            allowDeselect={false}
-            data={surveyFormatedData}
-            {...form.getInputProps("surveyTeamMapId")}
-          />
+          <SimpleGrid cols={2} spacing="md">
+            <ContainedSelection
+              label="Choose a survey to display in the menu pagel"
+              placeholder={
+                surveyFormatedData?.length === 0
+                  ? "There is no published survay"
+                  : "Select survey"
+              }
+              disabled={surveyFormatedData?.length === 0}
+              required
+              allowDeselect={false}
+              data={surveyFormatedData}
+              {...form.getInputProps("surveyTeamMapId")}
+            />
+            <ContainedSelection
+              allowDeselect={false}
+              data={currencyLabel}
+              defaultValue={currencyLabel[0].value}
+              {...form.getInputProps("currency")}
+              label={"Currency"}
+            />
+          </SimpleGrid>
           <SimpleGrid cols={2} spacing="md">
             <ContainedTextField
               label="Website Label"

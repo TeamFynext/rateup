@@ -178,6 +178,7 @@ export default ({ categories: initialCategories }) => {
               menuId={menuId}
               opened={openBanner}
               onClose={closeBanner}
+              currency={menu?.currency}
             />
           </Flex>
           <Stack mt="sm">
@@ -191,6 +192,7 @@ export default ({ categories: initialCategories }) => {
                   handleDelete={deleteMutation}
                   handleEdit={handleEditCategory}
                   searchText={searchText}
+                  currency={menu?.currency}
                   headerOrder={filteredCategory?.map(({ id, name, image }) => ({
                     id,
                     name,
