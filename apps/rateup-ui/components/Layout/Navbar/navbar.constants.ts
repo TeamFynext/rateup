@@ -13,6 +13,7 @@ import {
   IconFileDescription,
   IconLayoutDashboard,
   IconAddressBook,
+  IconKeyframes,
   IconComet,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
@@ -57,6 +58,11 @@ export const navTopData: Array<NavbarLinkProps> = [
         Icon: IconClipboardList,
         label: "Surveys",
         href: "/dashboard/surveys",
+      },
+      {
+        Icon: IconKeyframes,
+        label: "Templates",
+        href: "/dashboard/surveys/templates",
       },
       ...(hiddenModules.includes("groupSurvey")
         ? []

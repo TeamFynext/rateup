@@ -14,6 +14,7 @@ import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
 import { useRouter } from "next/router";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FormValues {
   title: string;
@@ -30,17 +31,27 @@ interface CreateSurveyModalProps {
   close: () => void;
   surveyType: "web" | "whatsapp";
   teamsData: any;
+  template?: any;
+  setTemplate?: any;
 }
 export function CreateSurveyModal({
   open,
   close,
   surveyType,
   teamsData,
+  template,
+  setTemplate,
 }: CreateSurveyModalProps) {
   const [languages, setLanguages] = useState<string[]>([defaultLanguage]);
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const router = useRouter();
+  const { tmp, tn } = router?.query;
+
+  const [templateId, setTemplateId] = useState(template?.id || tmp || null);
+  const [templateName, setTemplateName] = useState(
+    template?.title || tn || null,
+  );
 
   const allTeams = teamsData?.map((team) => team?.id);
   const teamOptions = teamsData?.map((team) => ({
@@ -50,7 +61,7 @@ export function CreateSurveyModal({
 
   const form = useForm({
     initialValues: {
-      title: "",
+      title: templateName ? templateName : "",
       languages: languages,
       teamIds: [],
       getLocation: false,
@@ -63,6 +74,25 @@ export function CreateSurveyModal({
         values?.length ? null : "Must contain atleast one team",
     },
   });
+
+  useEffect(() => {
+    if (template) {
+      setTemplateId(template?.id);
+      setTemplateName(template?.title);
+    }
+  }, [template]);
+
+  useEffect(() => {
+    form.setFieldValue("title", templateName);
+  }, [templateName]);
+
+  useEffect(() => {
+    if (open === false) {
+      setTemplate(null);
+      setTemplateName(null);
+      setTemplateId(null);
+    }
+  }, [open]);
 
   useEffect(() => {
     form.setFieldValue("languages", languages);
@@ -108,6 +138,7 @@ export function CreateSurveyModal({
 
   const [isCreating, setIsCreating] = useState(false);
   const createSurveyMutation = useCreateSurveyMutation();
+  const queryClient = useQueryClient();
 
   const onSubmit = (values) => {
     const validationRes = form.validate();
@@ -125,11 +156,14 @@ export function CreateSurveyModal({
       withCloseButton: false,
     });
     createSurveyMutation.mutate(
-      { ...form.values, type: surveyType },
+      { ...form.values, type: surveyType, templateId: templateId || "" },
       {
         onSuccess: (data: CreateSurveyResponse) => {
           close();
           setIsCreating(false);
+          queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
+          queryClient.invalidateQueries({ queryKey: ["surveys"] });
+
           resetForm();
           if (data?.id) {
             router.push(`${router.pathname}/${data?.id}`);
@@ -156,17 +190,22 @@ export function CreateSurveyModal({
     >
       <Stack style={{ minHeight: "300px" }} mt="xl">
         <ContainedTextField
-          placeholder="Enter title"
-          label="Title"
+          placeholder={templateName === null ? "Enter title" : templateName}
+          label={templateName === null ? "Title" : "Template Selected"}
           withAsterisk
           {...form.getInputProps("title")}
+          disabled={templateName !== null}
         />
         {/* // TODO: Add a user-level language list */}
-        <MultiSelectCreatable
-          value={languages}
-          setValue={setLanguages}
-          errors={form.errors.languages}
-        />
+
+        {templateName === null && (
+          <MultiSelectCreatable
+            value={languages}
+            setValue={setLanguages}
+            errors={form.errors.languages}
+          />
+        )}
+
         <Radio.Group
           value={teamChoice}
           onChange={setTeamChoice}

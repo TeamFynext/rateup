@@ -23,6 +23,7 @@ export default function Surveys() {
       allSurveys={allSurveys.filter((s) => s.type === "web")}
       selectedTeamId={selectedTeamId}
       setSelectedTeamId={setSelectedTeamId}
+      refetch={refetch}
     />
   );
 }

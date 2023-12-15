@@ -42,6 +42,18 @@ export async function cloneSurvey(surveyId: string, teamIds: string[]) {
   return res.data as Survey;
 }
 
+export async function getSurveyTemplates(surveyType) {
+  try {
+    let surveyTemplates: any = (
+      await axiosClient.get(`${SURVEYURL}/templates/${surveyType}`)
+    ).data;
+    return surveyTemplates;
+  } catch (e) {
+    console.error(e);
+    return { error: "Error Occured!" };
+  }
+}
+
 export async function getSurveys() {
   try {
     let surveys: Array<Survey> = (await axiosClient.get(SURVEYURL)).data;

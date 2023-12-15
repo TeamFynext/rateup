@@ -1,5 +1,5 @@
-import { Group } from "@mantine/core";
-import { IconPlus, IconSelector } from "@tabler/icons-react";
+import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import { IconPlus, IconRefresh, IconSelector } from "@tabler/icons-react";
 import { useUser } from "../../../context/UserContext";
 import { UserRole } from "../../../utils/enums";
 import {
@@ -9,6 +9,7 @@ import {
 import { TeamSelector } from "../../input/TeamSelector";
 import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 import Heading from "../../styled/Heading/Heading";
+import { notifications } from "@mantine/notifications";
 
 export function SurveyHeader({
   selectedTeamId,
@@ -21,6 +22,7 @@ export function SurveyHeader({
   setSort,
   surveyCount,
   surveyType,
+  refetch,
 }) {
   const { user } = useUser();
   return (
@@ -30,6 +32,24 @@ export function SurveyHeader({
           title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
           titleprops={{ w: "fit-content" }}
         />
+        <Tooltip label="Refresh data">
+          <ActionIcon
+            variant="light"
+            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+              refetch();
+              notifications.show({
+                id: "data-reload",
+                color: "teal",
+                title: "Refreshing data",
+                loading: true,
+                message: "Hold.. your data is getting update...",
+                autoClose: 2000,
+              });
+            }}
+          >
+            <IconRefresh style={{ width: "90%", height: "90%" }} stroke={1.5} />
+          </ActionIcon>
+        </Tooltip>
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
             rightIcon={<IconPlus />}

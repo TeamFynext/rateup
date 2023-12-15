@@ -1,6 +1,6 @@
 import { Stack, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useRouter } from "next/router";
+import { Router, useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import CreateSurveyLandingModal from "../../../pages/dashboard/groupsurveys/CreateSurveyLandingModal";
 import { SurveyCard } from "../../Card/SurveyCard/SurveyCard";
@@ -9,6 +9,7 @@ import NothingFound from "../../NothingFound/NothingFound";
 import { CreateSurveyModal } from "../CreateSurveyModal";
 import { SurveyHeader } from "./SurveysPageHeader";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import SurveyTemplatesModal from "../SurveyTemplatesModal";
 
 // USED IN:
 // dashboard/surveys
@@ -19,6 +20,7 @@ interface SurveysPageProps {
   selectedTeamId: string;
   setSelectedTeamId: (id: string) => void;
   surveyType?: "web" | "whatsapp";
+  refetch: any;
 }
 
 export function SurveysPage({
@@ -26,10 +28,15 @@ export function SurveysPage({
   selectedTeamId,
   setSelectedTeamId,
   surveyType = "web",
+  refetch,
 }: SurveysPageProps) {
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },
+  ] = useDisclosure(false);
+  const [
+    surveyTemplatesOpened,
+    { open: openSurveyTemplates, close: closeSurveyTemplates },
   ] = useDisclosure(false);
   const [
     mergeSurveyOpened,
@@ -38,8 +45,10 @@ export function SurveysPage({
   const [sort, setSort] = useState(true);
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
-  const { action } = useRouter().query;
   const router = useRouter();
+
+  const { action } = router.query;
+  const [template, setTemplate] = useState(null);
 
   const {
     data: teamRes,
@@ -53,6 +62,14 @@ export function SurveysPage({
       openCreateSurvey();
     }
   }, [action]);
+
+  useEffect(() => {
+    if (createSurveyOpened === false) {
+      surveyType === "web"
+        ? router.push(`/dashboard/surveys`)
+        : router.push(`/dashboard/whatsapp/surveys`);
+    }
+  }, [createSurveyOpened]);
 
   //----------close merge survey modal ---------
   const closeMergeSurvey = () => {
@@ -96,12 +113,13 @@ export function SurveysPage({
         setSelectedTeamId={setSelectedTeamId}
         filterParam={filterParam}
         setFilterParam={setFilterParam}
-        openCreateSurvey={openCreateSurvey}
+        openCreateSurvey={openSurveyTemplates}
         openMergeSurvey={openMergeSurvey}
         sort={sort}
         setSort={setSort}
         surveyCount={surveyidArray.length}
         surveyType={surveyType}
+        refetch={refetch}
       />
       <Space h="lg" />
       {surveys?.length > 0 ? (
@@ -142,6 +160,15 @@ export function SurveysPage({
         close={closeCreateSurvey}
         surveyType={surveyType}
         teamsData={teamRes?.data}
+        template={template}
+        setTemplate={setTemplate}
+      />
+      <SurveyTemplatesModal
+        opened={surveyTemplatesOpened}
+        close={closeSurveyTemplates}
+        openCreateSurvey={openCreateSurvey}
+        setTemplate={setTemplate}
+        surveyType={surveyType}
       />
       {/* //---------create landing page modal ------------ */}
       <CreateSurveyLandingModal
