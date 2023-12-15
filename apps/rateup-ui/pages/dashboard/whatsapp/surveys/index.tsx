@@ -25,6 +25,7 @@ export default function Surveys() {
         selectedTeamId={selectedTeamId}
         setSelectedTeamId={setSelectedTeamId}
         surveyType={"whatsapp"}
+        refetch={refetch}
       />
     </MantineThemeProvider>
   );

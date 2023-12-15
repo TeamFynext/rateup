@@ -22,6 +22,7 @@ import {
   getActiveSurveysSummary,
   deleteSurvey,
   getSurveyStatsBySurveyTeamMapId,
+  getSurveyTemplates,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -100,6 +101,14 @@ export const useSurveysLanding = (teamIsSelected) =>
 //     onSuccess: (data) => {},
 //   });
 // }
+
+export const useSurveyTemplates = (surveyType) => {
+  return useQuery({
+    queryKey: ["survey-templates", surveyType],
+    queryFn: () => getSurveyTemplates(surveyType),
+  });
+};
+
 export const useSurveys = (specificTeamIsSelected: boolean) => {
   return useQuery({
     enabled: !specificTeamIsSelected,

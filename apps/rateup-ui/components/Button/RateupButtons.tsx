@@ -13,6 +13,7 @@ interface Props {
   sx?: any;
   loading?: boolean;
   fullWidth?: boolean;
+  mr?: string;
   mt?: string;
   py?: string;
   pl?: string;
@@ -54,6 +55,7 @@ export const RateupButtonPrimary = ({
       type={type}
       fullWidth={fullWidth}
       loading={loading}
+      fw={400}
     >
       {title}
     </Button>
@@ -125,6 +127,7 @@ export const RateupButtonSecondary = ({
       type={type}
       fullWidth={fullWidth}
       mt={mt}
+      fw={400}
       variant={variant || "outline"}
       {...other}
     >
