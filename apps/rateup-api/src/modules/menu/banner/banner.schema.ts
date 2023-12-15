@@ -2,24 +2,29 @@ import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { MenuItemPriceType } from "../../../types/enums";
 
+const MenuItemVariant = z.object({
+  name: z.string(),
+  price: z.string(),
+});
 const CreateMenuBannerInput = {
   name: z.string(),
   description: z.string(),
   price: z
     .union([
-      z.object({
-        price: z.string(),
-        type: z.nativeEnum(MenuItemPriceType),
-      }),
-      z.object({
-        type: z.nativeEnum(MenuItemPriceType),
-        variants: z.array(
-          z.object({
-            name: z.string(),
-            price: z.string(),
-          })
-        ),
-      }),
+      z
+        .object({
+          price: z.string().optional(),
+          type: z.nativeEnum(MenuItemPriceType).optional(),
+          variants: z.array(MenuItemVariant).optional(),
+        })
+        .optional(),
+      z
+        .object({
+          type: z.nativeEnum(MenuItemPriceType).optional(),
+          variants: z.array(MenuItemVariant).optional(),
+          price: z.string().optional(),
+        })
+        .optional(),
     ])
     .optional(),
   image: z.string().optional(),

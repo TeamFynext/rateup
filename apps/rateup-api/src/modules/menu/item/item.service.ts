@@ -7,15 +7,6 @@ import { CreateMenuItemInput } from "./item.schema";
 import Papa from "papaparse";
 
 export async function createMenuItem(data: CreateMenuItemInput) {
-  const existingMenuData = await prisma.menuItem.findFirst({
-    where: {
-      categoryId: data?.categoryId,
-    },
-    orderBy: {
-      itemOrder: "desc",
-    },
-  });
-
   const createData: any = {
     categoryId: data?.categoryId,
     description: data?.description,
@@ -25,9 +16,16 @@ export async function createMenuItem(data: CreateMenuItemInput) {
     videoUrl: data?.videoUrl,
   };
 
-  if (existingMenuData) {
-    createData.itemOrder = Number(existingMenuData.itemOrder) + 1;
-  }
+  await prisma.menuItem.updateMany({
+    where: {
+      categoryId: data.categoryId,
+    },
+    data: {
+      itemOrder: {
+        increment: 1,
+      },
+    },
+  });
 
   const menuItem = await prisma.menuItem.create({
     data: createData,
@@ -148,23 +146,20 @@ export async function createMenuItemUsingCsv(
     });
     let itemOrder = 0;
     if (!category) {
-      const existingCategoryData = await prisma.menuCategory.findFirst({
+      await prisma.menuCategory.updateMany({
         where: {
           menuId,
         },
-        orderBy: {
-          itemOrder: "desc",
+        data: {
+          itemOrder: {
+            increment: 1,
+          },
         },
       });
-      let categoryOrder = 0;
-      if (existingCategoryData) {
-        categoryOrder = Number(existingCategoryData.itemOrder) + 1;
-      }
       category = await prisma.menuCategory.create({
         data: {
           name: filteredData?.categoryname,
           menuId,
-          itemOrder: categoryOrder,
         },
       });
     } else {

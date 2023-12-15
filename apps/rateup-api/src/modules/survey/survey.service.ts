@@ -736,6 +736,7 @@ function validateSurvey(surveyData) {
         QuestionType.MSQ,
         QuestionType.DDSS,
         QuestionType.DDMS,
+        QuestionType.CustomNPS
       ].includes(question?.type)
     ) {
       if (question?.choices) {
