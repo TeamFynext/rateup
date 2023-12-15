@@ -21,6 +21,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconReplace } from "@tabler/icons-react";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { notifications } from "@mantine/notifications";
+import { currencyLabel } from "../../util/currencyData";
 
 const TableRow = ({
   item,
@@ -30,6 +31,7 @@ const TableRow = ({
   open,
   toggleSwapOrder,
   updateMenuItemMutation,
+  currency = "0",
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
 
@@ -51,7 +53,10 @@ const TableRow = ({
       <Table.Td tt={"capitalize"}>{item?.name}</Table.Td>
       <Table.Td>
         {item?.price?.type === MenuItemPriceType.FIXED ? (
-          <Text>{item?.price?.price}</Text>
+          <Text>
+            {currencyLabel[currency]?.symbol}&nbsp;
+            {item?.price?.price}
+          </Text>
         ) : (
           <Stack>
             {item?.price?.variants?.map((element) => (
@@ -59,7 +64,10 @@ const TableRow = ({
                 <Text c="dimmed" fz="md">
                   {element?.name}
                 </Text>
-                <Text>{element?.price}</Text>
+                <Text>
+                  {currencyLabel[currency]?.symbol}&nbsp;
+                  {element?.price}
+                </Text>
               </Box>
             ))}
           </Stack>

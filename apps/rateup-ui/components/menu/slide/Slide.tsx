@@ -44,6 +44,7 @@ export const Slide = ({
   updateMenuBannerMutation,
   deleteMenuBannerMutation,
   popFromData,
+  currency,
 }) => {
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
   const largeScreen = useMediaQuery("(min-width: 40em)");
@@ -173,9 +174,9 @@ export const Slide = ({
         loaderProps={{ type: "bars" }}
       />
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <SimpleGrid cols={largeScreen ? 2 : 1} mb={"xl"}>
+        <SimpleGrid cols={largeScreen ? 2 : 1}>
           <Stack>
-            <Flex columnGap={30}>
+            <Flex columnGap={30} rowGap={0}>
               <ContainedTextField
                 label="Name"
                 placeholder="Name"
@@ -196,7 +197,7 @@ export const Slide = ({
               minRows={5}
               {...form.getInputProps("description")}
             />
-            <PriceSection form={form} />
+            <PriceSection form={form} currency={currency ?? "0"} />
           </Stack>
           <Stack align="center">
             <Group w={"100%"} justify="space-between" gap={0}>

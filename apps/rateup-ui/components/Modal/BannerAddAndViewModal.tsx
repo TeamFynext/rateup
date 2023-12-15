@@ -21,7 +21,12 @@ import CenteredSpinner from "../Loaders/CenteredSpinner";
 import { MenuItemPriceType } from "../../types/enums";
 import { showErrorToast } from "../../utils/notifications";
 
-export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
+export const BannerAddAndViewModal = ({
+  opened,
+  onClose,
+  menuId,
+  currency,
+}) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const carouselRef = useRef(null);
   const [count, { increment, decrement }] = useCounter(0, {
@@ -80,6 +85,7 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
         updateMenuBannerMutation={updateMenuBannerMutation}
         deleteMenuBannerMutation={deleteMenuBannerMutation}
         popFromData={popFromData}
+        currency={currency}
       />
     </Carousel.Slide>
   ));
@@ -114,41 +120,43 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
         </Stack>
       }
     >
-      <Box h={"70vh"} mah={"550px"} px={"lg"}>
+      <Stack
+        mih={"clamp(400px, 292.864px + 17.857vw, 550px)"}
+        px={"lg"}
+        justify="center"
+      >
         {data?.length <= 0 ? (
-          <Stack justify="center" align="center" h={"100%"}>
-            <Stack align="center" justify="center">
-              <Group ml={"-25px"}>
-                <IconBookmark
-                  width={"77px"}
-                  height={"77px"}
-                  style={{ position: "absolute" }}
-                  color={"var(--grey-color-4)"}
-                  stroke={1.2}
-                />
-                <IconBookmark
-                  width={"77px"}
-                  height={"77px"}
-                  style={{ position: "relative", left: "25", top: "-10" }}
-                  color={"var(--grey-color-4)"}
-                  stroke={1.2}
-                />
-              </Group>
-
-              <Text fz={"lg"} c={"var(--grey-color-4)"}>
-                No Banners are added
-              </Text>
-              <RateupButtonBlue
-                title="Add Banner"
-                rightIcon={<IconPlus />}
-                radius="xl"
-                size="md"
-                onClick={() => {
-                  increment();
-                  data.push(defaultValues);
-                }}
+          <Stack align="center" justify="center" mt={"-100px"}>
+            <Group ml={"-25px"}>
+              <IconBookmark
+                width={"77px"}
+                height={"77px"}
+                style={{ position: "absolute" }}
+                color={"var(--grey-color-4)"}
+                stroke={1.2}
               />
-            </Stack>
+              <IconBookmark
+                width={"77px"}
+                height={"77px"}
+                style={{ position: "relative", left: "25", top: "-10" }}
+                color={"var(--grey-color-4)"}
+                stroke={1.2}
+              />
+            </Group>
+
+            <Text fz={"lg"} c={"var(--grey-color-4)"}>
+              No Banners are added
+            </Text>
+            <RateupButtonBlue
+              title="Add Banner"
+              rightIcon={<IconPlus />}
+              radius="xl"
+              size="md"
+              onClick={() => {
+                increment();
+                data.push(defaultValues);
+              }}
+            />
           </Stack>
         ) : (
           <>
@@ -221,7 +229,7 @@ export const BannerAddAndViewModal = ({ opened, onClose, menuId }) => {
             </PaperLayout>
           </>
         )}
-      </Box>
+      </Stack>
     </Modal>
   );
 };

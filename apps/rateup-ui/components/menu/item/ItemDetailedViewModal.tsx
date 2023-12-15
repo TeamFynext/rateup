@@ -7,14 +7,17 @@ import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import classes from "./itemDetailedViewModal.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import { lexend } from "../../../utils/fonts";
+import { currencyLabel } from "../util/currencyData";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
   onClose: () => void;
+  currency: string;
 }
 export function ItemDetailedViewModal({
   item,
   onClose,
+  currency = "0",
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
     item?.videoUrl ? item?.videoUrl : item?.images[0],
@@ -173,12 +176,14 @@ export function ItemDetailedViewModal({
                   {varient.name}
                 </Text>
                 <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" fw={500}>
+                  {currencyLabel[currency]?.symbol}&nbsp;
                   {varient.price}
                 </Text>
               </Stack>
             ))
           ) : (
             <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" mt={"md"} fw={500}>
+              {currencyLabel[currency]?.symbol}&nbsp;
               {item?.price?.price}
             </Text>
           )}
