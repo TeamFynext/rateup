@@ -15,50 +15,64 @@ const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
 
 export async function createSurvey(
-  input: CreateSurveyInput,
+  data: CreateSurveyInput,
   createdBy: string,
   notificationEmail: string
 ) {
+
+  const {templateId, ...input} = data;
   const teamIds = input?.teamIds?.map((teamId) => ({ teamId }));
   delete input.teamIds;
-  const survey = await prisma.survey.create({
-    data: {
-      ...input,
-      title: input.title,
-      languages: input.languages,
-      notificationEmail,
+
+  if(templateId){
+    cloneSurvey(
+      templateId,
       createdBy,
-      teams: {
-        create: teamIds,
+      data.teamIds,
+      true
+    )    
+  }else{
+    const survey = await prisma.survey.create({
+      data: {
+        ...input,
+        title: input.title,
+        languages: input.languages,
+        notificationEmail,
+        createdBy,
+        teams: {
+          create: teamIds,
+        },
       },
-    },
-  });
+    });
+  
+  
+    //-------------create a default landing page theme todo-------------
+  
+    let landingData = defaultTheme;
+  
+    let LandingPage = await prisma.welcomeTheme.create({
+      data: {
+        ...landingData,
+        headerText: landingData.headerText,
+        descText: landingData.descText,
+        buttonText: landingData.buttonText,
+        headerStyles: landingData.headerStyles,
+        descStyles: landingData.descStyles,
+        buttonStyles: landingData.buttonStyles,
+        bgStyles: landingData.bgStyles,
+        logoStyles: landingData.logoStyles,
+        surveyId: survey.id,
+        bgUrl: landingData.bgUrl,
+        mobileBgUrl: landingData.mobileBgUrl,
+        bgType: landingData.bgType,
+      },
+    });
+  
+    let surveyRes = { ...survey, teamIds: input?.teamIds };
+  
+    return surveyRes;
+  }
 
-  //-------------create a default landing page theme todo-------------
-
-  let landingData = defaultTheme;
-
-  let LandingPage = await prisma.welcomeTheme.create({
-    data: {
-      ...landingData,
-      headerText: landingData.headerText,
-      descText: landingData.descText,
-      buttonText: landingData.buttonText,
-      headerStyles: landingData.headerStyles,
-      descStyles: landingData.descStyles,
-      buttonStyles: landingData.buttonStyles,
-      bgStyles: landingData.bgStyles,
-      logoStyles: landingData.logoStyles,
-      surveyId: survey.id,
-      bgUrl: landingData.bgUrl,
-      mobileBgUrl: landingData.mobileBgUrl,
-      bgType: landingData.bgType,
-    },
-  });
-
-  let surveyRes = { ...survey, teamIds: input?.teamIds };
-
-  return surveyRes;
 }
 
 //----------------create survey landing-----------------
@@ -112,11 +126,11 @@ export async function updateSurveyLanding(
   return Landing;
 }
 
-//TODO verify SURVEYTEAMMAPS
 export async function cloneSurvey(
   surveyId: string,
   userId: string,
-  teamIds: string[]
+  teamIds: string[],
+  fromTemplate: boolean = false
 ) {
   const survey = await prisma.survey.findUnique({
     where: {
@@ -169,7 +183,7 @@ export async function cloneSurvey(
       createdBy: userId,
       createdAt: new Date(),
       updatedAt: null,
-      title: `${survey.title} Copy ${maxCopyNumber + 1}`,
+      title: fromTemplate ? survey.title.replace(/^.+__/, "") : `${survey.title} Copy ${maxCopyNumber + 1}`,
       teams: {
         create: teams,
       },
@@ -536,6 +550,45 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
   return summaryData;
 }
 
+
+//------------get survey templates list --------
+export async function getSurveyTemplates(surveyType: string) {
+  const teamId = process.env.SURVEY_TEMPLATES_TEAM_ID;
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId: teamId
+    },
+    include: {
+      survey: {
+        include: {
+          WelcomeTheme: true,
+        },
+      },
+    },
+
+  });
+
+  let surveys  = surveyTeamMaps.map((surveyTeamMap) => {
+    return surveyTeamMap.survey
+  });
+
+  const surveysFiltered = surveys.filter((survey) => survey?.type === surveyType);
+
+  const groupedSurveys = surveysFiltered.reduce((groups, survey) => {
+    const category = survey.title.split('__')[0];
+    survey.title = survey.title.replace(`${category}__`, '');
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+    groups[category].push(survey);
+    return groups;
+  }, {});
+
+
+  return groupedSurveys;
+}
+
+
 //------------DELETE SURVEY by id --------
 export async function deleteSurveyById(id: string) {
   const survey = await prisma.survey.delete({
@@ -545,6 +598,7 @@ export async function deleteSurveyById(id: string) {
   });
   return survey;
 }
+
 
 //------------DELETE SURVEY from a team --------
 export async function deleteSurveyFromTeam(

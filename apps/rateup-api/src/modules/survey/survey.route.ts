@@ -19,6 +19,7 @@ import {
   getWebSurveysHandler,
   deleteTeamSurveyHandler,
   getSurveyStatsBySurveyTeamMapIdHandler,
+  getSurveyTemplatesHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
@@ -111,6 +112,18 @@ export async function surveyRoutes(server: FastifyInstance) {
       },
     },
     getSurveyBylandingIdhandler
+  );
+
+
+  //get all survey templates
+  server.get(
+    "/templates/:surveyType",
+    {
+      schema: {
+        params: $Sref("getSurveyTemplatesParamsSchema"),
+      },
+    },
+    getSurveyTemplatesHandler
   );
 
   //duplicate survey

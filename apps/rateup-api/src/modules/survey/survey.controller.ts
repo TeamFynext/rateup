@@ -12,6 +12,7 @@ import {
   getSurveyBylandingId,
   getSurveyLandingByUserId,
   getSurveyStatsBySurveyTeamMapId,
+  getSurveyTemplates,
   getSurveysByTeam,
   getSurveysByUserId,
   getWebSurveysByUserId,
@@ -31,6 +32,7 @@ import {
   CreateSurveyLandingInput,
   DeleteTeamSurveyInput,
   GetSurveyByIdParams,
+  GetSurveyTemplatesParams,
   IdParamInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
@@ -320,6 +322,23 @@ export async function getWhatsappSurveysHandler(
   }
 }
 
+//------------get survey templates -------
+export async function getSurveyTemplatesHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyTemplatesParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const surveys = await getSurveyTemplates(request.params.surveyType);
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e);
+    reply.code(500);
+  }
+}
+
+//------------get delete survey by id -------
 export async function deleteSurveyByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;

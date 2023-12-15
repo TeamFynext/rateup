@@ -16,6 +16,7 @@ const surveyCore = {
 };
 const createSurveyRequestSchema = z.object({
   ...surveyCore,
+  templateId: z.string().optional(),
 });
 const createSurveyLandingRequestSchema = z.object({
   title: z.string({
@@ -46,6 +47,10 @@ const getSurveyByIdParamsSchema = z.object({
 });
 const getSurveyLandingByIdParamsSchema = z.object({
   id: z.string(),
+});
+
+const getSurveyTemplatesParamsSchema = z.object({
+  surveyType: z.string(),
 });
 
 const deleteTeamSurveyRequestSchema = z.object({
@@ -134,6 +139,7 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     createSurveyLandingRequestSchema,
     createSurveyLandingResponseSchema,
     getSurveyByIdParamsSchema,
+    getSurveyTemplatesParamsSchema,
     getSurveyLandingByIdParamsSchema,
     updateSurveyRequestSchema,
     getSurveyPublicResponseSchema,
@@ -150,6 +156,7 @@ export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type CreateSurveyLandingInput = z.infer<
   typeof createSurveyLandingRequestSchema
 >;
+export type GetSurveyTemplatesParams = z.infer<typeof getSurveyTemplatesParamsSchema>;
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
 export type GetSurveyLandingByIdParams = z.infer<typeof getSurveyLandingByIdParamsSchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
