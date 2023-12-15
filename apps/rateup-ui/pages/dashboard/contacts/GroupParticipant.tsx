@@ -2,7 +2,7 @@ import { Paper, Group, Title, Text, Menu } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useRemoveContactsFromGroup } from "../../../../../backend/campaign/contactGroup/contactGroup.query";
+import { useRemoveContactsFromGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
 
 const GroupParticipant = ({ contact, groupId }) => {
   return (

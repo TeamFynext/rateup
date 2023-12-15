@@ -18,21 +18,21 @@ import { IconEdit, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../../../../components/Button/RateupButtons";
+} from "../../../components/Button/RateupButtons";
 import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../../../../../components/Modal/FormModalLayout";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import AddCustomerModal from "./AddCustomerModal";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import {
   useContactGroupById,
   useDeleteGroupMutation,
-} from "../../../../../backend/campaign/contactGroup/contactGroup.query";
-import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
+} from "../../../backend/campaign/contactGroup/contactGroup.query";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { modals } from "@mantine/modals";
-import { useRouteParams } from "../../../../../context/RouteParamsContext";
+import { useRouteParams } from "../../../context/RouteParamsContext";
 import CreateGroupModal from "./CreateGroupModal";
-import { useTeamsByUser } from "../../../../../backend/team/team.query";
+import { useTeamsByUser } from "../../../backend/team/team.query";
 import GroupParticipant from "./GroupParticipant";
 import RemovePartcipantModal from "./RemovePartcipantModal";
 

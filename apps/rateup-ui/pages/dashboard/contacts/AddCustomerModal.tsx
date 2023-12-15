@@ -14,20 +14,20 @@ import {
 import {
   RateupButtonSecondary,
   RateupButtonBlue,
-} from "../../../../../components/Button/RateupButtons";
+} from "../../../components/Button/RateupButtons";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { IconPlus, IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
-} from "../../../../../backend/campaign/contactGroup/contactGroup.query";
-import { useCampaignContactsByTeamId } from "../../../../../backend/campaign/contacts/contacts.query";
-import { contactAddType, importMethod } from "../../../../../utils/enums";
-import { ContainedFileInput } from "../../../../../components/input/ContainedInput/ContainedInput";
-import { ImportContact } from "../CreateContactModal";
+} from "../../../backend/campaign/contactGroup/contactGroup.query";
+import { useCampaignContactsByTeamId } from "../../../backend/campaign/contacts/contacts.query";
+import { contactAddType, importMethod } from "../../../utils/enums";
+import { ContainedFileInput } from "../../../components/input/ContainedInput/ContainedInput";
+import { ImportContact } from "./CreateContactModal";
 import Papa from "papaparse";
-import { showErrorToast } from "../../../../../utils/notifications";
+import { showErrorToast } from "../../../utils/notifications";
 
 export interface IAddCustomer {
   name: string;

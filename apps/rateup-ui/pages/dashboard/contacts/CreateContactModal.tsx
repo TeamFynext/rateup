@@ -11,22 +11,22 @@ import {
   Flex,
   Progress,
 } from "@mantine/core";
-import { TeamSelector } from "../../../../components/input/TeamSelector";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../../../components/Button/RateupButtons";
+} from "../../../components/Button/RateupButtons";
 import {
   useCreateContactMutation,
   useImportContactMutation,
-} from "../../../../backend/campaign/contacts/contacts.query";
-import { ICreateContact } from "../../../../backend/campaign/contacts/contacts.api";
-import { ContainedFileInput } from "../../../../components/input/ContainedInput/ContainedInput";
+} from "../../../backend/campaign/contacts/contacts.query";
+import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
+import { ContainedFileInput } from "../../../components/input/ContainedInput/ContainedInput";
 import Papa from "papaparse";
-import { importMethod } from "../../../../utils/enums";
-import { showErrorToast } from "../../../../utils/notifications";
+import { importMethod } from "../../../utils/enums";
+import { showErrorToast } from "../../../utils/notifications";
 import { IconPlus } from "@tabler/icons-react";
 
 export interface ImportContact {
