@@ -28,7 +28,7 @@ export const ContactGroupCard = ({ group }) => {
       p="xl"
       radius="md"
       onClick={() => {
-        router.push(`contacts/contact-group/${group.id}`);
+        router.push(`contacts/${group.id}`);
       }}
       style={{
         cursor: "pointer",

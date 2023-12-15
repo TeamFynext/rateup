@@ -1,11 +1,11 @@
 import { Checkbox, Group, ScrollArea, Stack, Table } from "@mantine/core";
-import { SearchInput } from "../..";
 import { useState } from "react";
+import { useRemoveContactsFromGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
 import {
-  RateupButtonPrimary,
   RateupButtonSecondary,
-} from "../../../../../components/Button/RateupButtons";
-import { useRemoveContactsFromGroup } from "../../../../../backend/campaign/contactGroup/contactGroup.query";
+  RateupButtonPrimary,
+} from "../../../components/Button/RateupButtons";
+import { SearchInput } from "../campaign";
 
 const RemovePartcipantModal = ({ customerList, groupId, close }) => {
   const [searchText, setSearchText] = useState("");

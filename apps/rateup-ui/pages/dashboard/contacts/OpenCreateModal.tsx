@@ -1,9 +1,9 @@
 import { Center, Container, Group, Paper, Stack, Text } from "@mantine/core";
 import CreateContactModal from "./CreateContactModal";
-import CreateGroupModal from "./contact-group/CreateGroupModal";
 import { IconUser, IconUsersGroup } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../../../../components/Modal/FormModalLayout";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import CreateGroupModal from "./CreateGroupModal";
 
 const OpenCreateModal = ({ close }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =

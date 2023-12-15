@@ -109,7 +109,7 @@ export const navTopData: Array<NavbarLinkProps> = [
         {
           Icon: IconAddressBook,
           label: "Contacts",
-          href: "/dashboard/campaign/contacts",
+          href: "/dashboard/contacts",
         },
       ]),
   ...(hiddenModules.includes("reputation_management")

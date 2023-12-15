@@ -362,6 +362,7 @@ export function WaQuestionDetailedView({
               borderRadius: "16px",
               border: "2px solid",
               borderColor: theme.colors["whatsapp-green"][6],
+              width: "300px",
             }}
           >
             <WhatsappChatPreview selectedQ={question} />

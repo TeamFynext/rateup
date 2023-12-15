@@ -5,7 +5,7 @@ import { useContactDeleteMutation } from "../../backend/campaign/contacts/contac
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../Modal/FormModalLayout";
-import EditContactModal from "../../pages/dashboard/campaign/contacts/EditContactModal";
+import EditContactModal from "../../pages/dashboard/contacts/EditContactModal";
 import dayjs from "dayjs";
 
 interface ContactCardProps {

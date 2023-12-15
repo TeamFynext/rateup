@@ -145,6 +145,9 @@ export const useAddExistingContactMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
+      });
       showSuccessToast(
         "Customers added to  group successfully.",
         "contact-group-add-existing",
@@ -173,6 +176,9 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
       );
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
       });
     },
     onError(error: any) {

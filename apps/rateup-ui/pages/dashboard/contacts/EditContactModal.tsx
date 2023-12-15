@@ -11,9 +11,9 @@ import { isEmail, isNotEmpty, useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../../../components/Button/RateupButtons";
+} from "../../../components/Button/RateupButtons";
 import { useState } from "react";
-import { useEditContactMutation } from "../../../../backend/campaign/contacts/contacts.query";
+import { useEditContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import { IconPlus } from "@tabler/icons-react";
 
 const EditContactModal = ({ contact, closeEditModal, groupId }) => {

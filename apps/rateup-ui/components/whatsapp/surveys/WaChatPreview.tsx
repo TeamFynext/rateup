@@ -8,6 +8,7 @@ import {
   Group,
   ActionIcon,
   Text,
+  ScrollArea,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
@@ -36,11 +37,19 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
       >
         Preview
       </Title>
-      <Stack className={whatsappStyles.chatBg} px="xs" py="sm" justify="end">
-        {selectedQ && (
-          <WaQuestionPreview question={selectedQ} openList={open} />
-        )}
-      </Stack>
+      <ScrollArea h={"100%"}>
+        <Stack
+          className={whatsappStyles.chatBg}
+          px="xs"
+          py="sm"
+          justify="end"
+          mih={480}
+        >
+          {selectedQ && (
+            <WaQuestionPreview question={selectedQ} openList={open} />
+          )}
+        </Stack>
+      </ScrollArea>
       <SendMessageMock />
       <Transition mounted={listOpened}>
         {(ts) => (

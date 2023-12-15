@@ -11,21 +11,21 @@ import {
 } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
-import { TeamSelector } from "../../../../../components/input/TeamSelector";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 import { useEffect, useState } from "react";
 import {
   RateupButtonSecondary,
   RateupButtonBlue,
-} from "../../../../../components/Button/RateupButtons";
+} from "../../../components/Button/RateupButtons";
 import {
   useCreateContactGroupMutation,
   useEditContactGroupMutation,
-} from "../../../../../backend/campaign/contactGroup/contactGroup.query";
+} from "../../../backend/campaign/contactGroup/contactGroup.query";
 import {
   getFileUrlFromKey,
   uploadFile,
-} from "../../../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../../../utils/notifications";
+} from "../../../utils/file-upload/upload";
+import { showErrorToast } from "../../../utils/notifications";
 
 interface GroupModalProps {
   groupClose: () => void;

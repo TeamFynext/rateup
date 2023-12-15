@@ -10,20 +10,23 @@ import {
   Center,
   Container,
 } from "@mantine/core";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+
 import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
-import ContactCard from "../../../../components/Card/ContactCard";
+
 import { IconSearch } from "@tabler/icons";
 import styles from "./contacts.module.css";
-import { TeamSelector } from "../../../../components/input/TeamSelector";
-import { ContactGroupCard } from "../../../../components/Card/ContactGroupCard";
-import FormModalLayout from "../../../../components/Modal/FormModalLayout";
+
 import { useDisclosure } from "@mantine/hooks";
 import OpenCreateModal from "./OpenCreateModal";
-import { useCampaignContacts } from "../../../../backend/campaign/contacts/contacts.query";
-import { useContactGroup } from "../../../../backend/campaign/contactGroup/contactGroup.query";
-import Heading from "../../../../components/styled/Heading/Heading";
+import { useCampaignContacts } from "../../../backend/campaign/contacts/contacts.query";
+import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import ContactCard from "../../../components/Card/ContactCard";
+import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { TeamSelector } from "../../../components/input/TeamSelector";
+import Heading from "../../../components/styled/Heading/Heading";
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,7 +120,7 @@ export default function Contacts() {
         p="xl"
       >
         <Grid>
-          <Grid.Col span={3}>
+          <Grid.Col span={"content"}>
             <Tabs.List>
               <Tabs.Tab value="customers" className={styles.tabLabel}>
                 <Title order={4}>Customers</Title>
@@ -127,7 +130,7 @@ export default function Contacts() {
               </Tabs.Tab>
             </Tabs.List>
           </Grid.Col>
-          <Grid.Col span={7} offset={1}>
+          <Grid.Col span={"auto"}>
             <TextInput
               leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
               radius="xl"
@@ -140,7 +143,8 @@ export default function Contacts() {
               rightSectionWidth={60}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.currentTarget.value)}
-              w={{ base: 100, sm: 250, lg: 500 }}
+              w={{ base: 200, sm: 250, lg: 500 }}
+              m={"auto"}
             />
           </Grid.Col>
         </Grid>
