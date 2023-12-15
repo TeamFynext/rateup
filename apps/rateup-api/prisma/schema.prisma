@@ -365,6 +365,7 @@ model Menu {
   websiteText  String? // text to display for website url
   logo         String? // logo url
   isPublished  Boolean        @default(false)
+  currency     String         @default("0")
   categories   MenuCategory[]
   team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId       String         @db.Uuid

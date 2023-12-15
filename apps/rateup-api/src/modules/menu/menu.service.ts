@@ -63,6 +63,11 @@ export async function getFullMenu(menuId: string) {
           backgroundImage: true,
           mobileBackgroundImage: true,
           surveyTeamMapId: true,
+          menu: {
+            select: {
+              currency: true,
+            },
+          },
         },
       },
     },
