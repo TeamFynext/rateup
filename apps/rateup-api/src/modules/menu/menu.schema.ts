@@ -10,6 +10,7 @@ const menuInput = {
   logo: z.string().optional(),
   backgroundImage: z.string().optional(),
   teamId: z.string(),
+  currency: z.string().optional(),
 };
 
 const updateMenuInputSchema = z.object({
@@ -24,6 +25,7 @@ const updateMenuInputSchema = z.object({
   surveyTeamMapId: z.string().optional(),
   isPublished: z.boolean().optional(),
   itemOrder: z.string().optional(),
+  currency: z.string().optional(),
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
@@ -44,7 +46,7 @@ const menuPublicResponseSchema = z.object({
   websiteText: z.string().optional(),
   websiteUrl: z.string().optional(),
   logo: z.string().optional(),
-  isPublished:z.boolean().optional()
+  isPublished: z.boolean().optional(),
 });
 
 const fullMenuPublicResponseSchema = z.object({
@@ -96,6 +98,9 @@ const fullMenuPublicResponseSchema = z.object({
       backgroundImage: z.string().optional().nullable(),
       mobileBackgroundImage: z.string().optional().nullable(),
       surveyTeamMapId: z.string().optional().nullable(),
+      menu: z.object({
+        currency: z.string().optional(),
+      }),
     })
     .nullable(),
 });

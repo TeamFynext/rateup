@@ -2,8 +2,7 @@ import { MultipartFile } from "@fastify/multipart";
 import prisma from "../../../utils/prisma";
 import { deleteFile } from "../../../utils/upload/s3Upload";
 import { SortMenuCategoryInput } from "../category/category.schema";
-import { UpdateMenuInput } from "../menu.schema";
-import { CreateMenuItemInput } from "./item.schema";
+import { CreateMenuItemInput, UpdateMenuItemInput } from "./item.schema";
 import Papa from "papaparse";
 
 export async function createMenuItem(data: CreateMenuItemInput) {
@@ -55,7 +54,7 @@ export async function getMenuItemByCategory(categoryId: string) {
   return menuItem;
 }
 
-export async function updateMenuItem(id: string, data: UpdateMenuInput) {
+export async function updateMenuItem(id: string, data: UpdateMenuItemInput) {
   let { itemOrder, ...newData } = data;
 
   const menuItem = await prisma.menuItem.update({
