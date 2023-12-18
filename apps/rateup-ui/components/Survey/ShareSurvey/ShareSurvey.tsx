@@ -13,7 +13,7 @@ import {
   Center,
   Image,
   Tooltip,
-  Divider,
+  Badge,
 } from "@mantine/core";
 import {
   IconCheck,
@@ -31,6 +31,18 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
+import {
+  DataGrid,
+  GridPrintGetRowsToExportParams,
+  GridRowId,
+  GridToolbarColumnsButton,
+  GridToolbarContainer,
+  GridToolbarExport,
+  GridToolbarFilterButton,
+  GridToolbarQuickFilter,
+  gridFilteredSortedRowIdsSelector,
+  selectedGridRowsSelector,
+} from "@mui/x-data-grid";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
 import { updateSurvey } from "../../../backend/surveys/survey.api";
@@ -45,15 +57,10 @@ import {
 import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
-import {
-  SingleTag,
-  TagSettings,
-} from "../../../pages/dashboard/teams/TeamSettings";
 import Heading from "../../styled/Heading/Heading";
-import { downloadExcel } from "react-export-table-to-excel";
+import { useQRCode } from "next-qrcode";
+import CustomQRCode from "./components/CustomQrCode/CustomQrCode";
 import NothingFound from "../../NothingFound/NothingFound";
-import { useEditTeamMutation } from "../../../backend/team/team.query";
-
 const ShareSurvey = ({
   survey,
   setActiveTab,
@@ -61,6 +68,7 @@ const ShareSurvey = ({
   survey: Survey;
   setActiveTab: (tab: any) => void;
 }) => {
+  const { SVG } = useQRCode();
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
   const [tag, setTag] = useState("");
@@ -184,32 +192,17 @@ const ShareSurvey = ({
     .reduce((acc, val) => acc.concat(val), []);
   useEffect(() => {
     setTagsToMap(tagSelectData);
-  }, []);
-  function handleTagExcelDownload() {
-    downloadExcel({
-      fileName: "URL Tags",
-      sheet: `Team : ${survey?.teams.find(
-        (team) => team?.mapId === surveyTeamMapId,
-      )?.code}`,
-      tablePayload: {
-        header: ["S.No", "URL Tags", "URL"],
-        body: tagSelectData.map((tag, index) => [
-          index + 1,
-          tag,
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
-        ]),
-      },
-    });
-  }
-  const editTeamMutation = useEditTeamMutation(
-    survey?.teams.find((team) => team?.mapId === surveyTeamMapId)?.id,
-    () => {},
-    surveyId,
-    true,
-  );
-  function handleSave() {
-    editTeamMutation.mutate({ tags: tagsToMap });
-  }
+  }, [survey, surveyTeamMapId]);
+  const getSelectedRowsToExport = ({
+    apiRef,
+  }: GridPrintGetRowsToExportParams): GridRowId[] => {
+    const selectedRowIds = selectedGridRowsSelector(apiRef);
+    if (selectedRowIds.size > 0) {
+      return Array.from(selectedRowIds.keys());
+    }
+
+    return gridFilteredSortedRowIdsSelector(apiRef);
+  };
   return (
     <Stack p={2}>
       <PaperLayout
@@ -345,17 +338,8 @@ const ShareSurvey = ({
                 onClose={closeTagManager}
                 opened={tagManagerOpened}
                 title="Manage URL Tags"
-                onSubmit={handleSave}
-                buttonTitle="Save Changes"
-                includeCancelButton
-                cancelButtonTitle="Discard Changes"
-                cancelOnClick={() => setTagsToMap(tagSelectData)}
-                submitButtonDisabled={
-                  (tagsToMap.length === 0 && tagSelectData.length === 0) ||
-                  JSON.stringify(tagsToMap) === JSON.stringify(tagSelectData)
-                }
                 customHeader={
-                  <Group justify="space-between">
+                  <Group justify="space-between" px={"lg"}>
                     <Heading subtitle="URL Taggers" />
                     <ContainedSelection
                       disabled={!isPublished}
@@ -369,68 +353,114 @@ const ShareSurvey = ({
                   </Group>
                 }
               >
-                <Stack>
-                  <Group justify="space-between" gap={1}>
-                    <TagSettings
-                      tags={tagSelectData}
-                      teamId={
-                        survey?.teams.find(
-                          (team) => team?.mapId === surveyTeamMapId,
-                        )?.id
-                      }
-                      onlyform
-                      surveyId={surveyId}
-                    />
-                    <RateupButtonBlue
-                      disabled={tagSelectData.length === 0}
-                      title="Download as csv"
-                      variant="subtle"
-                      rightIcon={<IconDownload />}
-                      size="sm"
-                      onClick={handleTagExcelDownload}
-                    />
-                  </Group>
-                  <Divider />
-                  {tagSelectData.length > 0 ? (
-                    <ScrollArea.Autosize
-                      mah={400}
-                      p={3}
-                      scrollbarSize={5}
-                      offsetScrollbars
-                    >
-                      <Stack>
-                        {tagsToMap.map((tag) => (
-                          <Group>
-                            <SingleTag
-                              tag={tag}
-                              tagsToMap={tagsToMap}
-                              setTagsToMap={setTagsToMap}
-                            />
+                <Stack h={500}>
+                  <DataGrid
+                    initialState={{
+                      pagination: { paginationModel: { pageSize: 5 } },
+                    }}
+                    disableRowSelectionOnClick
+                    pageSizeOptions={[5, 10, 20]}
+                    rowHeight={70}
+                    slots={{
+                      toolbar: CustomGridToolbar,
+                      noRowsOverlay: NothingFound,
+                    }}
+                    slotProps={{
+                      toolbar: {
+                        printOptions: {
+                          getRowsToExport: getSelectedRowsToExport,
+                        },
+                      },
+                    }}
+                    density="comfortable"
+                    showCellVerticalBorder
+                    showColumnVerticalBorder
+                    disableDensitySelector
+                    checkboxSelection
+                    columns={[
+                      {
+                        field: "col1",
+                        align: "center",
+                        headerName: "Tag",
+                        flex: 1,
+                        renderCell: (params) => (
+                          <Badge size="xl" variant="light">
+                            {params.value}
+                          </Badge>
+                        ),
+                      },
+                      {
+                        field: "col2",
+                        flex: 1,
+                        align: "center",
+                        headerName: "URL",
+                        renderCell: (params) => (
+                          <Group gap={1}>
                             <ContainedTextField
                               style={{ flex: 1 }}
                               readOnly
-                              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
+                              value={params.value}
                             />
-                            <CopyButton
-                              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
-                            >
+                            <CopyButton value={params.value}>
                               {({ copied, copy }) => (
-                                <RateupButtonBlue
-                                  title="Copy"
+                                <ActionIcon
                                   variant={copied ? "filled" : "outline"}
-                                  rightIcon={<IconCopy />}
-                                  size="sm"
+                                  size={"sm"}
                                   onClick={copy}
-                                />
+                                >
+                                  {copied ? <IconCheck /> : <IconCopy />}
+                                </ActionIcon>
                               )}
                             </CopyButton>
                           </Group>
-                        ))}
-                      </Stack>
-                    </ScrollArea.Autosize>
-                  ) : (
-                    <NothingFound text="No tags found" />
-                  )}
+                        ),
+                        minWidth: 200,
+                      },
+                      {
+                        field: "col3",
+                        flex: 1,
+                        align: "center",
+                        headerName: "QR code",
+                        renderCell: (params) => (
+                          <Group gap={1}>
+                            {/* <CustomQRCode
+                              errorCorrectionLevel="H"
+                              version={8}
+                              qrColor="black"
+                              textToBeEmbedded={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${params.id}`}
+                            /> */}
+                            <SVG
+                              text={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${params.id}`}
+                              options={{
+                                margin: 2,
+                                width: 85,
+                                color: {
+                                  dark: "#000",
+                                },
+                              }}
+                            />
+                            {/* <ActionIcon variant="outline" size={"sm"}>
+                                <IconDownload />
+                              </ActionIcon> */}
+                          </Group>
+                        ),
+                        width: 100,
+                      },
+                    ]}
+                    rows={tagsToMap.map((tag) => ({
+                      id: tag,
+                      col1: tag,
+                      col2: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
+                      col3: (
+                        <ShareQR
+                          url={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
+                          sx={{ borderRadius: "0.5rem" }}
+                          surveyTitle={survey.title}
+                          isSurveyPublished={isPublished}
+                        />
+                      ),
+                    }))}
+                  />
                 </Stack>
               </FormModalLayout>
             </Group>
@@ -564,6 +594,23 @@ const ShareSurvey = ({
   );
 };
 
+function CustomGridToolbar() {
+  return (
+    <GridToolbarContainer style={{ justifyContent: "space-between" }}>
+      <Group>
+        <GridToolbarColumnsButton />
+        <GridToolbarFilterButton />
+        <GridToolbarExport
+          printOptions={{
+            hideFooter: true,
+            hideToolbar: true,
+          }}
+        />
+      </Group>
+      <GridToolbarQuickFilter />
+    </GridToolbarContainer>
+  );
+}
 interface CopyLinkComponentProps {
   value: string;
   disabled?: boolean;

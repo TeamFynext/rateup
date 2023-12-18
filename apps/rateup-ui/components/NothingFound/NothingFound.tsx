@@ -13,7 +13,7 @@ export default function NothingFound({ text }: NothingFoundProps) {
         opacity={0.35}
       />
       <Text c={"dimmed"} fw={500}>
-        {text}
+        {text ? text : "Nothing found"}
       </Text>
     </Stack>
   );
