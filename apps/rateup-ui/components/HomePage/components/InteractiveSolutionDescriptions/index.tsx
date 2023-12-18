@@ -116,9 +116,9 @@ function InteractiveSolutionDescriptions({
           // withIndicators
           className="descriptions-carousel"
           orientation="vertical"
-          height={"43.75rem"}
+          height={"40rem"}
           slideSize="33.333333%"
-          slideGap="md"
+          slideGap="sm"
           loop
           align="start"
           slidesToScroll={1}

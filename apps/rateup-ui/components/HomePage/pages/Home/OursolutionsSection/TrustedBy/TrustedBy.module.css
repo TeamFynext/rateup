@@ -1,12 +1,12 @@
 .trustedby-companies-container {
-  margin-bottom: 4.375rem;
+  margin-bottom: 6.25rem;
 }
 
 .trustedby-companies-container > h1 {
   text-align: center;
   margin-bottom: 2.5rem;
   color: var(--grey-color);
-  font-size: 1.625rem;
+  font-size: 1.3125rem;
   text-transform: uppercase;
 }
 

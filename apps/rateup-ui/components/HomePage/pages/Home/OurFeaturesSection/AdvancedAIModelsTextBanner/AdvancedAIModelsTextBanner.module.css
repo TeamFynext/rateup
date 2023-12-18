@@ -1,6 +1,6 @@
 .aidriven-text-img-container {
   flex: 1 1 0;
-  gap: 1rem;
+  gap: 2.5rem;
 }
 
 .text-containter {
@@ -10,7 +10,7 @@
 
 .advanced-ai-models-text {
   font-weight: bold;
-  font-size: 3rem;
+  font-size: 2rem;
   color: var(--grey-color);
   margin-bottom: 1rem;
 }
