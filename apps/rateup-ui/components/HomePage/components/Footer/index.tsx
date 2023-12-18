@@ -22,6 +22,8 @@ function Footer() {
       <Text className={styles["copyright-para"]}>
         Copyright &copy;2023 All rights reserved
       </Text>
+
+      <Flex className={styles["curved-background"]}></Flex>
     </Flex>
   );
 }

@@ -6,6 +6,8 @@
   border-radius: 1.5rem;
   background-color: white;
   margin-bottom: 10rem;
+  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/random-curves-pattern.svg");
+  background-size: cover;
 }
 
 .book-a-demo-container h1 {

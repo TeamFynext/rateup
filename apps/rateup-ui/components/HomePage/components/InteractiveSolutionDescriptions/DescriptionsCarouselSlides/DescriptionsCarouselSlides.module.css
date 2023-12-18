@@ -69,6 +69,10 @@
   font-size: 0.75rem;
 }
 
+.card-content p::-webkit-scrollbar {
+  display: none;
+}
+
 .active-slide .card-content p {
   font-size: 1rem;
 }

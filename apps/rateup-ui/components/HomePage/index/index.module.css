@@ -52,6 +52,12 @@
   width: 100%;
   height: 31vw;
   max-height: 700px;
+  object-fit: cover;
+}
+
+/* should be remove once all the video animations are added */
+.illustration-txt-section-video-container img {
+  object-fit: contain;
 }
 
 .illustration-txt-section-text-container {

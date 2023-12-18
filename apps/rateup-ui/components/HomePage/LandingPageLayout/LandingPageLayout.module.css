@@ -2,7 +2,7 @@
   background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/footer-background-shape.svg");
   background-repeat: no-repeat;
   background-position: left 100%;
-  background-size: 100% 700px;
+  background-size: 100% 600px;
 }
 
 .home-page-container {
@@ -18,7 +18,7 @@
 @media screen and (min-width: 120rem) {
   .home-page-container {
     background-position: center bottom;
-    background-size: 2000px 700px;
+    background-size: 1920px 600px;
   }
 
   .home-page-container {

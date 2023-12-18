@@ -5,11 +5,12 @@ import styles from "./OurFeaturesSection.module.css";
 import SurveyFeaturesCarousel from "./SurveyFeaturesCarousel";
 import AdvancedAIModelsTextBanner from "./AdvancedAIModelsTextBanner";
 import TransformingOnlinePresence from "./TransformingOnlinePresence";
+import { lexend600 } from "../../../../../utils/fonts";
 
 function OurFeaturesSection() {
   return (
     <Stack id="our-features" className={styles["our-features-container"]}>
-      <Title>OUR FEATURES</Title>
+      <Title className={lexend600.className}>OUR FEATURES</Title>
       <AdvancedAIModelsTextBanner />
       <SurveyFeaturesCarousel />
       <DeepInsightsSection />
