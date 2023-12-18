@@ -545,8 +545,11 @@ const ShareSurvey = ({
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
-        surveyTitle={survey.title}
-        isSurveyPublished={isPublished}
+        title={survey.title}
+        isPublished={isPublished}
+        id={surveyId}
+        queryKey={"surveyShareSettings"}
+        resourceName={"survey"}
       />
       <FormModalLayout
         title="Generate IFrame"

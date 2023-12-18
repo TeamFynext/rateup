@@ -6,7 +6,7 @@ type CustomQRCodeProps = {
   version: number;
   errorCorrectionLevel: string;
   size?: number;
-  className: string;
+  className?: string;
   qrColor?: string;
 };
 

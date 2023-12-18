@@ -20,5 +20,4 @@ export const DescriptionPSpan = ({ text }) => (
   <span className={descriptionPSpanClassName}>{text}</span>
 );
 
-export const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const videoClassName = styles["illustration-txt-section-video"];

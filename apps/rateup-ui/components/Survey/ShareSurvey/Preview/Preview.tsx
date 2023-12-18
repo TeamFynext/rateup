@@ -10,7 +10,6 @@ function Preview({
   url,
   qrBgImgLogo,
   qrBgImgFillType,
-  qrSize,
   qrBgColor,
   qrColor,
   surveyTitle,

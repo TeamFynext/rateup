@@ -19,9 +19,7 @@ function Button({
   type,
   style,
   onClick,
-  from,
 }: ButtonProps) {
-  console.log(whiteBackgroundGradientText, from);
   return (
     <MotionButtonGesture>
       <MantineButton

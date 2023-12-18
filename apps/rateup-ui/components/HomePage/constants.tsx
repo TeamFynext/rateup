@@ -3,7 +3,7 @@ import { Flex, Menu } from "@mantine/core";
 import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover";
 import headerStyles from "./components/Header/Header.module.css";
 
-export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+import { imagesPath } from "../../utils/constants";
 
 const navLinks = [
   {

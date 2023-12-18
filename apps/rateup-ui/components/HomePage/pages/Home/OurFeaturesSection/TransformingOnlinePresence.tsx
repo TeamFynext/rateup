@@ -1,7 +1,7 @@
 import { Image, Text, Title } from "@mantine/core";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
 import styles from "../../../index/index.module.css";
-import { imagesPath } from "../../../constants";
+import { imagesPath } from "../../../../../utils/constants";
 import Button from "../../../components/Button";
 
 function TransformingOnlinePresence() {
