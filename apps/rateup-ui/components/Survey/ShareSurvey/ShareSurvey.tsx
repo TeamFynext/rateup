@@ -455,8 +455,11 @@ const ShareSurvey = ({
                         <ShareQR
                           url={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
                           sx={{ borderRadius: "0.5rem" }}
-                          surveyTitle={survey.title}
-                          isSurveyPublished={isPublished}
+                          title={survey.title}
+                          isPublished={isPublished}
+                          queryKey="surveySettings"
+                          resourceName="survey"
+                          id={surveyId}
                         />
                       ),
                     }))}

@@ -141,7 +141,14 @@ function ShareLandingPage({ LandingId }) {
           </Stack>
         </SimpleGrid>
       </Paper>
-      <ShareQR url={getLandingUrl(LandingId)} />
+      <ShareQR
+        url={getLandingUrl(LandingId)}
+        title={"groupSurvey"}
+        isPublished={false}
+        id={LandingId}
+        queryKey={"groupSurveySettings"}
+        resourceName={"survey"}
+      />
     </Stack>
   );
 }

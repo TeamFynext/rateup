@@ -87,7 +87,7 @@ export function CreateSurveyModal({
   }, [templateName]);
 
   useEffect(() => {
-    if (open === false) {
+    if (open === false && setTemplate) {
       setTemplate(null);
       setTemplateName(null);
       setTemplateId(null);
