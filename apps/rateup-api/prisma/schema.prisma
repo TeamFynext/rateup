@@ -172,6 +172,7 @@ model Survey {
   enableNotificationEmail Boolean         @default(false)
   notificationEmail       String          @default("")
   WelcomeTheme            WelcomeTheme?
+  shareSettings           Json?
 }
 
 model SurveyTeamMap {
@@ -355,22 +356,23 @@ model WelcomeTheme {
 }
 
 model Menu {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime       @default(now())
-  name         String // name of the menu
-  displayName  String // name displayed to clients (eg: Restaurant's Name)
-  locationText String? // location of the restaurant
-  locationUrl  String? // google maps url
-  websiteUrl   String? // website url
-  websiteText  String? // text to display for website url
-  logo         String? // logo url
-  isPublished  Boolean        @default(false)
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime       @default(now())
+  name          String // name of the menu
+  displayName   String // name displayed to clients (eg: Restaurant's Name)
+  locationText  String? // location of the restaurant
+  locationUrl   String? // google maps url
+  websiteUrl    String? // website url
+  websiteText   String? // text to display for website url
+  logo          String? // logo url
+  isPublished   Boolean        @default(false)
+  categories    MenuCategory[]
+  team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId        String         @db.Uuid
+  menuLanding   MenuLanding?
   currency     String         @default("0")
-  categories   MenuCategory[]
-  team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId       String         @db.Uuid
-  menuLanding  MenuLanding?
   menuBanner   MenuBanner[]
+  shareSettings Json?
 }
 
 model MenuCategory {

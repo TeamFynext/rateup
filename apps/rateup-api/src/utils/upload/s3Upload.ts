@@ -29,7 +29,8 @@ export async function uploadFile(params) {
       console.log(progress);
     });
 
-    await parallelUploads3.done();
+    const dataObj = await parallelUploads3.done();
+    return dataObj;
   } catch (e) {
     console.log(e);
   }
