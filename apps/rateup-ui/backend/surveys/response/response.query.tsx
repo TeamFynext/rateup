@@ -83,6 +83,7 @@ export function useDeleteResponse(
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
 
       notifications.update({
         id: "load-data",
