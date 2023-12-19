@@ -55,7 +55,7 @@ function BackgroundStyles({
   const handleFileChange = (value) => {
     setisFileLoading(true);
     setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: value });
-    let url = URL.createObjectURL(value);
+    let url = URL?.createObjectURL(value);
     setSelectedTab("Web");
     setbgImage(url);
     setBgFileName(value.name);
@@ -65,7 +65,7 @@ function BackgroundStyles({
   const handleMobileBgFileChange = (value) => {
     setisFileLoading(true);
     setCurrentstyles({ ...currentStyles, mobileBgUrlNotUploaded: value });
-    let url = URL.createObjectURL(value);
+    let url = URL?.createObjectURL(value);
     setSelectedTab("Mobile");
     setbgMobileImage(url);
     setMobileBgFileName(value.name);

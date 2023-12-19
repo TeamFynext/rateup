@@ -76,8 +76,8 @@ function SurveyTheme({ survey }) {
   }, [welcomeTheme?.mobileBgUrl]);
 
   //----------------upload image file ------------
-  const uploadImage = async (value) => {
-    const fileKey = await uploadFile(value);
+  const uploadImage = async (value, withThumbnails = false) => {
+    const fileKey = await uploadFile(value, withThumbnails);
     if (typeof fileKey === "string") {
       return fileKey;
     }
@@ -93,12 +93,12 @@ function SurveyTheme({ survey }) {
       currentStyles.logoUrl = logo;
     }
     if (currentStyles?.bgUrlNotUploaded) {
-      let logo = await uploadImage(currentStyles?.bgUrlNotUploaded);
-      currentStyles.bgUrl = logo;
+      let bg = await uploadImage(currentStyles?.bgUrlNotUploaded, true);
+      currentStyles.bgUrl = bg;
     }
     if (currentStyles?.mobileBgUrlNotUploaded) {
-      let logo = await uploadImage(currentStyles?.mobileBgUrlNotUploaded);
-      currentStyles.mobileBgUrl = logo;
+      let mbg = await uploadImage(currentStyles?.mobileBgUrlNotUploaded);
+      currentStyles.mobileBgUrl = mbg;
     }
 
     if (currentStyles?.id) {
