@@ -181,7 +181,7 @@ const Templates = () => {
       {allTemplates && (
         <Box m="lg" pb="xl">
           {Object?.entries(allTemplates)?.length < 1 && (
-            <Text m="xl">No templates found..!</Text>
+            <Text m="100px">No templates found..!</Text>
           )}
 
           {Object?.entries(allTemplates)?.map(

@@ -1,6 +1,6 @@
 import { Stack, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Router, useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import CreateSurveyLandingModal from "../../../pages/dashboard/groupsurveys/CreateSurveyLandingModal";
 import { SurveyCard } from "../../Card/SurveyCard/SurveyCard";
