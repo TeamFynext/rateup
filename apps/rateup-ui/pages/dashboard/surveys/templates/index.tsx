@@ -79,8 +79,8 @@ const Templates = () => {
         {survey?.WelcomeTheme?.bgUrl && (
           <Image
             radius="md"
-            fit="contain"
-            //fallbackSrc="https://placehold.co/230x150?text=TemplateImg"
+            fit="fill"
+            h={150}
             src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.WelcomeTheme?.bgUrl}`}
           />
         )}
