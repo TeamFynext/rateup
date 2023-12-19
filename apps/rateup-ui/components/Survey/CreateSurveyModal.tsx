@@ -46,6 +46,7 @@ export function CreateSurveyModal({
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const router = useRouter();
+  const [prevOpen, setPrevOpen] = useState(false);
   const { tmp, tn } = router?.query;
 
   const [templateId, setTemplateId] = useState(template?.id || tmp || null);
@@ -87,11 +88,12 @@ export function CreateSurveyModal({
   }, [templateName]);
 
   useEffect(() => {
-    if (open === false && setTemplate) {
+    if (prevOpen === true && open === false && setTemplate) {
       setTemplate(null);
       setTemplateName(null);
       setTemplateId(null);
     }
+    setPrevOpen(open);
   }, [open]);
 
   useEffect(() => {
