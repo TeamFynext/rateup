@@ -260,7 +260,7 @@ function WelcomePageView({
                       textAlign: "center",
                       minWidth: "150px",
                       alignSelf: "center",
-                      fontWeight: 500,
+                      fontWeight: 600,
                       fontFamily: "inherit",
                     },
                   }}
