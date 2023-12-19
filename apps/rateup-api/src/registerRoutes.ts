@@ -44,6 +44,7 @@ import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSugges
 import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route";
 import { userPublicRoutes } from "./modules/user/user.public.routes";
 import { reputationManagementRoutes } from "./modules/reputation_management/registerRMRoutes";
+import surveyMenuShareSettingsRoutes from "./modules/surveyMenuShareSettings/surveyMenuShareSettings.route";
 import { menuBannerRoutes } from "./modules/menu/banner/banner.route";
 import { menuBannerSchemas } from "./modules/menu/banner/banner.schema";
 import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.route";
@@ -78,6 +79,7 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(LandingPageRoutes, { prefix: "api/landingpage" });
   server.register(WelcomeThemeRoutes, { prefix: "api/welcome" });
   server.register(WelcomeThemePublicRoutes, { prefix: "api/public/welcome" });
+  server.register(surveyMenuShareSettingsRoutes, { prefix: "api/shareSettings"})
   server.register(LandingThemeRoutes, { prefix: "api/landingtheme" });
   server.register(LandingThemePublicRoutes, {
     prefix: "api/public/landingtheme",
