@@ -39,6 +39,7 @@ export async function getAllResponses(
       },
       responses: {
         select: {
+          id: true,
           language: true,
           tag:true,
           responses: true,
