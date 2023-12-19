@@ -13,7 +13,6 @@ import Result from "../../../components/Survey/Result/Result";
 import { useUser } from "../../../context/UserContext";
 import SurveyTheme from "../../../components/Survey/SurveyTheme/SurveyTheme";
 import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
-import Heading from "../../../components/styled/Heading/Heading";
 import SurveyContext from "../../../context/SurveyContext";
 import { UserRole } from "../../../utils/enums";
 
