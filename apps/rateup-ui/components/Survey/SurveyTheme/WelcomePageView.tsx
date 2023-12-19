@@ -6,6 +6,7 @@ import {
   Tooltip,
   Box,
   ActionIcon,
+  Textarea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React from "react";
@@ -201,7 +202,7 @@ function WelcomePageView({
             </Tooltip>
             {/* //--------------------------- */}
 
-            <TextInput
+            <Textarea
               className={lexend.className}
               onChange={handleChange}
               value={currentStyles.descText}
