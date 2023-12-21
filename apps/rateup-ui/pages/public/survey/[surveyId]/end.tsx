@@ -1,6 +1,4 @@
 import {
-  Center,
-  Container,
   Group,
   Stack,
   Paper,
@@ -102,7 +100,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           fw={400}
           style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}
         >
-          Thank you for your feedback!
+          Thank you!
         </Title>
       </Stack>
       {enableBody && (
