@@ -1,0 +1,47 @@
+{
+    "index": "Introduction",
+    "profile":{
+        "title" : "Getting Started"
+    } ,
+    "teams":{
+        "title" : "Teams and members"
+    } ,
+    "webSurvey":{
+        "title" : "How to use Web Survey"
+    },
+    "groupSurvey": {
+        "title":"Group Survey"
+    },
+    "whatsappSurvey" : {
+        "title": "How to use WhatsApp Survey"
+    },
+    "menu" : {
+        "title": "Menu",
+        "display": "hidden"
+    },
+    "campaign": {
+        "title": "Campaign",
+        "display":"hidden"
+    },
+    "reputaionMg":{
+        "title":" Reputation Management",
+        "display": "hidden"
+    },
+    "---" : {
+        "type":"separator",
+        "title":""
+    },
+    "advancedFt": {
+        "title": "Advanced Feature"
+    },
+    "-- More": {
+        "type": "separator",
+        "title": "More"
+    },
+    "app-link": {
+        "title": "Go to RateUp App ↗",
+        "href": "https://rateup.app",
+        "newWindow": true
+    }
+
+}
