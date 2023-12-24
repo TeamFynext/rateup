@@ -9,7 +9,6 @@ export async function RM_TopicRoutes(server: FastifyInstance) {
         reply.send(error);
     })
 
-    server.addHook("preHandler", checkSession);
     // TODO: auth
     server.get("/:teamId", getTopicsHandler);
     server.post("/", createTopicHandler);

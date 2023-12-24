@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the frontend
-import { Prisma, Role } from "@prisma/client";
+import { Prisma, Role, Subscription } from "@prisma/client";
 import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus, NPSWeightage } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { toBeIncludedWaSessionRelations } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
@@ -116,6 +116,7 @@ declare module 'fastify' {
       role: Role,
       orgId: string,
       email: string,
-    }
+    },
+    subscription: Subscription
   }
 }

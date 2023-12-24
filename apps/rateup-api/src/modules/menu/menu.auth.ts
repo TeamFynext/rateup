@@ -1,7 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { ByMenuIdParams } from "./menu.schema";
+import { ByMenuIdParams, CreateMenuInput } from "./menu.schema";
 import prisma from "../../utils/prisma";
 import { hasAccessToTeam } from "../../utils/auth";
+import { SubscriptionFeatureName } from "../../types/enums";
 
 
 
@@ -34,5 +35,20 @@ export async function hasAccessToMenu(menuId: string, userId: string) {
     } catch (e) {
         console.error(e)
         return false;
+    }
+}
+
+export async function verifyMenuMaxCountRestriction(
+    request: FastifyRequest<{ Body: CreateMenuInput }>,
+    reply: FastifyReply
+) {
+    const count = await prisma.menu.count({
+        where: {
+            teamId: request.body.teamId
+        },
+    });
+
+    if (count >= request.subscription.features[SubscriptionFeatureName.Menu].count.max) {
+        reply.code(403).send({ message: 'You have reached the maximum limit of menus', displayMessageInClient: true });
     }
 }

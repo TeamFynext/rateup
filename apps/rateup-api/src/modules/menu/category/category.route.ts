@@ -5,9 +5,13 @@ import { $Mref } from "../menu.schema";
 import { verifyMenuAccess } from "../menu.auth";
 import { verifyMenuCategoryAccess } from "./category.auth";
 import { checkSession } from "../../../utils/checkSession";
+import { SubscriptionFeatureName } from "../../../types/enums";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
 
 export async function menuCategoryRoutes(server: FastifyInstance) {
     server.addHook('preHandler', checkSession)
+    server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.Menu]));
+
     server.post(
         "/",
         {

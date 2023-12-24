@@ -7,6 +7,7 @@ import { getValueByKey } from "./utils/signUp";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset";
 import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail";
+import { log } from "./utils/logger";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -42,7 +43,7 @@ export const SuperTokensConfig: TypeInput = {
           {
             id: "inviteCode",
           },
-         
+
         ],
       },
 
@@ -63,11 +64,11 @@ export const SuperTokensConfig: TypeInput = {
 
         {
           config: {
-              thirdPartyId: "google",
-              clients: [{
-                  clientId:  process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
-                  clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
-              }]
+            thirdPartyId: "google",
+            clients: [{
+              clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
+              clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+            }]
           }
         }
       ],
@@ -77,10 +78,9 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             emailPasswordSignUp: async function (input) {
-             
+
               let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
 
-              console.log(input);
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
                 return originalImplementation.emailPasswordSignUp(input);
@@ -127,7 +127,6 @@ export const SuperTokensConfig: TypeInput = {
 
               let formFields = input.formFields;
               const inviteCode = getValueByKey(formFields, "inviteCode");
-              console.log(formFields, "formal fielsds");
               if (inviteCode !== process.env.INVITE_CODE) {
                 return {
                   status: "GENERAL_ERROR",
@@ -194,9 +193,7 @@ export const SuperTokensConfig: TypeInput = {
                     // TODO: some post sign up logic
                   } else {
                     // TODO: some post sign in logic
-                    console.log("Sign in succes............................");
-                    console.log(response?.user?.email);
-                    console.log(response?.user?.id);
+                    log.trace('Signed in\nemail => %s\nuserId => %s', response?.user?.email, response?.user?.id)
                     const user = await getOrgIdAndRole({
                       id: response?.user?.id,
                     });
@@ -231,7 +228,7 @@ export const SuperTokensConfig: TypeInput = {
               let userId = input.userId;
               let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
 
-              console.log("User email................." + userInfo?.email);
+              log.trace('Init session\nemail => %s', userInfo?.email)
               const user = await getOrgIdAndRole({ id: userId });
               // This goes in the access token, and is availble to read on the frontend.
               input.accessTokenPayload = {
@@ -279,12 +276,7 @@ export const SuperTokensConfig: TypeInput = {
               // Then we check if it was successfully completed
               if (response.status === "OK") {
                 let { id, email } = response.user;
-
-                console.log(
-                  "--------------Email Verification Part---------------------------" +
-                    JSON.stringify(response.user)
-                );
-
+                log.trace('Verifying email\n%o', JSON.stringify(response.user))
                 let orgMember = await getOrgIdAndRole({ id: id });
               }
               return response;

@@ -1,6 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth";
-import { EditTeamInput, IdParamInput } from "./team.schema";
+import { CreateTeamInput, EditTeamInput, IdParamInput, InviteMemberInput } from "./team.schema";
+import prisma from "../../utils/prisma";
+import { SubscriptionFeatureName } from "../../types/enums";
 
 
 export async function verifyTeamAdminAccess(
@@ -45,3 +47,49 @@ export async function verifyTeamAccess(
         reply.code(403).send({ message: "You don't have access to this team" });
     }
 }
+
+export async function verifyTeamMaxCountRestriction(
+    request: FastifyRequest<{
+        Body: CreateTeamInput;
+    }>,
+    reply: FastifyReply
+) {
+
+    const orgId = request.user.orgId;
+
+    const count = await prisma.team.count({
+        where: {
+            orgId: orgId,
+        },
+    });
+
+    if (count >= request.subscription.features[SubscriptionFeatureName.Team].count.max) {
+        reply.code(403).send({ message: 'You have reached the maximum limit of teams', displayMessageInClient: true });
+    }
+}
+
+export async function verifyTeamMemberMaxCountRestriction(
+    request: FastifyRequest<{
+        Body: InviteMemberInput;
+    }>,
+    reply: FastifyReply
+) {
+
+    const member = await prisma.teamMember.count({
+        where: {
+            teamId: request.body.teamId,
+        },
+    });
+    const invitationCount = await prisma.invitation.count({
+        where: {
+            teamId: request.body.teamId,
+        },
+    })
+
+    const count = member + invitationCount;
+
+    if (count >= request.subscription.features[SubscriptionFeatureName.Team].teamMember.count.max) {
+        reply.code(403).send({ message: 'You have reached the maximum limit of team-members', displayMessageInClient: true });
+    }
+}
+

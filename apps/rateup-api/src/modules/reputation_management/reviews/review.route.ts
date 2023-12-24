@@ -13,8 +13,6 @@ export async function reviewsRoutes(server: FastifyInstance) {
         reply.send(error);
     })
 
-    server.addHook("preHandler", checkSession)
-
     server.get(
         "/:teamId",
         {

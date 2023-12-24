@@ -7,9 +7,12 @@ import { verifyMenuItemAccess } from "./item.auth";
 import { verifyMenuCategoryAccess } from "../category/category.auth";
 import { checkSession } from "../../../utils/checkSession";
 import fastifyMultipart from "@fastify/multipart";
+import { SubscriptionFeatureName } from "../../../types/enums";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
 
 export async function menuItemRoutes(server: FastifyInstance) {
     server.addHook("preHandler", checkSession);
+    server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.Menu]));
 
     server.post(
         "/",

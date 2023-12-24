@@ -114,3 +114,11 @@ export enum ReviewPlatform {
   GOOGLE = "gb",
   FACEBOOK = "fp",
 }
+export enum SubscriptionFeatureName {
+  WebSurvey = "webSurvey",
+  WhatsAppSurvey = "whatsappSurvey",
+  WhatsAppCampaign = "whatsappCampaign",
+  Menu = "menu",
+  ReputationManagement = "reputationManagement",
+  Team = "team",
+}

@@ -2,13 +2,17 @@ import prisma from "./prisma";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { Role } from "@prisma/client";
 import { log } from "./logger";
+import { getSubscription } from "../modules/subscription/subscription.service";
+import { SubscriptionFeatureName } from "../types/enums";
+import dayjs from "dayjs";
+import { UnlimitedAccess } from "../modules/subscription/subscription.data";
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {
     if (!surveyId || !userId) {
       throw new Error('surveyId and userId must not be empty strings');
     }
-    
+
     const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
       where: {
         surveyId: surveyId,
@@ -90,5 +94,45 @@ export async function verifyRole(
   } catch (err) {
     log.fatal('Error verifying role\n%o\nrequest.user => %o', err, request.user)
     reply.code(403).send({ message: 'Not authorized' })
+  }
+}
+
+export function getVerifySubscriptionHandler(features: Array<SubscriptionFeatureName>) {
+  return async function verifySubscription(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    try {
+      const subscription = await getSubscription(request.user.orgId);
+
+      if (!subscription) {
+        // TODO: allowing access for now, but this should throw unauthorized error
+        // Giving unrestricted access to all features for now
+        request.subscription = await prisma.subscription.create({
+          data: {
+            features: UnlimitedAccess,
+            orgId: request.user.orgId,
+            expiresAt: dayjs().add(100, 'year').toDate(),
+          }
+        })
+        return;
+      }
+      if (dayjs(subscription.expiresAt).isBefore(dayjs())) {
+        log.error('Subscription expired\n%o\nrequest.user => %o', subscription, request.user)
+        reply.code(403).send({ message: 'Subscription expired' })
+        return;
+      }
+      const missingFeatures = features.filter((feature) => !Object.keys(subscription.features).includes(feature));
+      if (missingFeatures.length > 0) {
+        log.error('Subscription missing features\n%o\nrequest.user => %o', missingFeatures, request.user)
+        reply.code(403).send({ message: 'This feature is not included in your subscription' })
+        return;
+      }
+      request.subscription = subscription;
+    } catch (err) {
+      console.log(err) // TODO: find out why error is not getting printed in log.fatal
+      log.fatal('Error verifying subscription\nerr => %o\nrequest.user => %o', err, request.user)
+      reply.code(403).send({ message: 'Error while verifying subscription' })
+    }
   }
 }

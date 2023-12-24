@@ -22,17 +22,24 @@ import {
   getSurveyTemplatesHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
-import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
+import { verifySurveyMaxCountRestriction, verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
 import { checkSession } from "../../utils/checkSession";
 import { $Rref } from "../response/response.schema";
+import { SubscriptionFeatureName } from "../../types/enums";
+import {  getVerifySubscriptionHandler } from "../../utils/auth";
 
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.WebSurvey]));
+
   // create survey
   server.post(
     "/",
     {
-      preHandler: verifySurveyCreateAccess,
+      preHandler: [
+        verifySurveyCreateAccess,
+        verifySurveyMaxCountRestriction
+      ],
       schema: {
         body: $Sref("createSurveyRequestSchema"),
       },

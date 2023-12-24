@@ -48,6 +48,7 @@ import surveyMenuShareSettingsRoutes from "./modules/surveyMenuShareSettings/sur
 import { menuBannerRoutes } from "./modules/menu/banner/banner.route";
 import { menuBannerSchemas } from "./modules/menu/banner/banner.schema";
 import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.route";
+import { subscriptionRoutes } from "./modules/subscription/subscription.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -107,4 +108,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(campaignRoutes, { prefix: "api/campaign" })
   server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" })
   server.register(reputationManagementRoutes, { prefix: "api/rm" })
+  server.register(subscriptionRoutes, {prefix: "api/subscription"})
 }

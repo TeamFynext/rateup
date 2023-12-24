@@ -2,9 +2,13 @@ import { FastifyInstance } from "fastify";
 import { createTemplateHandler, deleteTemplateHandler, getTemplatesHandler, getUnregisteredTemplatesHandler, registerTemplatesInDbHandler, syncTemplatesHandler, updateTemplateHandler } from "./wa_templates.controller";
 import { $WTref } from "./wa_templates.schema";
 import { checkSession } from "../../../utils/checkSession";
+import { SubscriptionFeatureName } from "../../../types/enums";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.addHook('preHandler', checkSession)
+  server.addHook('preHandler', getVerifySubscriptionHandler([SubscriptionFeatureName.WhatsAppCampaign]))
+
 
   server.get(
     "/",

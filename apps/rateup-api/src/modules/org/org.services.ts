@@ -171,3 +171,12 @@ export async function updateOrgDetails(
   });
   return org;
 }
+
+export async function getOrgsByOwnerId(userId: string) {
+  const orgs = await prisma.org.findMany({
+    where: {
+      ownerId: userId,
+    },
+  });
+  return orgs;
+}
