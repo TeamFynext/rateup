@@ -1,10 +1,11 @@
 
 const DashboardSvg = () => {
   return (
+    <div style={{maxWidth:"100%", width:"100%" }}>
     <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 756 417"
-    width={756}
+    width={"100%"}
     height={417}
     fill="none"
   >
@@ -526,6 +527,7 @@ const DashboardSvg = () => {
       </linearGradient>
     </defs>
   </svg>
+  </div>
   )
 }
 

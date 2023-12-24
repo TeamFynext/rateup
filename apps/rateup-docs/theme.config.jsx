@@ -2,13 +2,18 @@ import Image from "next/image";
 
 const Footer = () => {
   return (
-    <footer style={{ display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-    <span>
-      Powered by <span><Image src={"/images/rateup-logo.svg"} width={50} height={50} alt="rateup logo"/></span>
-    </span>
-    <p  style={{marginLeft:"900px"}}>Copyright © {new Date().getFullYear()} RateUp Docs, Inc.</p>
-  </footer>
-  
+    <footer style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      flexWrap: "wrap", 
+      width:"100%"
+    }}>
+      <p>
+        Powered by <Image src={"/images/rateup-logo.svg"} width={50} height={50} alt="rateup logo" />
+      </p>
+      <p style={{ marginLeft: "auto" }}>Copyright © {new Date().getFullYear()} RateUp Docs, Inc.</p>
+    </footer>
   )
 }
 export default {
