@@ -111,3 +111,11 @@ export enum SortType {
   ASC = "asc",
   DESC = "desc",
 }
+export enum SubscriptionFeatureName {
+  WebSurvey = "webSurvey",
+  WhatsAppSurvey = "whatsappSurvey",
+  WhatsAppCampaign = "whatsappCampaign",
+  Menu = "menu",
+  ReputationManagement = "reputationManagement",
+  Team = "team",
+}

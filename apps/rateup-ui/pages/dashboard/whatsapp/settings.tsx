@@ -109,7 +109,6 @@ export default function () {
             </Group>
             <TextInput
               readOnly
-              //TODO: Get orgId in a better way. Maybe save it in localstorage?
               value={webhookUrl}
               rightSection={
                 <CopyButton value={webhookUrl}>

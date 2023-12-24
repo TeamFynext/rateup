@@ -17,9 +17,14 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useUser } from "../../../context/UserContext";
 import classes from "./Navbar.module.css";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { NavbarLinkProps, navBottomData, navTopData } from "./navbar.constants";
+import {
+  NavbarLinkProps,
+  navBottomData,
+  getNavTopData,
+} from "./navbar.constants";
 import { UserRole } from "../../../utils/enums";
 import { IconChevronLeft } from "@tabler/icons-react";
+import { useSubscription } from "../../../backend/subscription/subscription.query";
 interface _NavbarLinkProps {
   data: Array<NavbarLinkProps>;
   opened: boolean;
@@ -204,6 +209,12 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
     role: !user?.role ? "...error..." : user?.role,
     image: userProfileAvatar,
   };
+
+  const { data: subscription, isPending } = useSubscription();
+
+  if (isPending) return null;
+  const navTopData = getNavTopData(subscription);
+
   return (
     <Stack
       className={classes.navbar}
