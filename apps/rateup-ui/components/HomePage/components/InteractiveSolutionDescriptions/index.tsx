@@ -4,10 +4,11 @@ import Image from "next/image";
 import { Carousel } from "@mantine/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { motion, AnimatePresence } from "framer-motion";
-import { useIntersection } from "@mantine/hooks";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import DescriptionsCarouselSlides from "./DescriptionsCarouselSlides";
 import styles from "./InteractiveSolutionDescriptions.module.css";
 import { Solution } from "../../pages/Reputation/constants";
+import MobileInteractiveSolutionDescriptions from "../MobileInteractiveSolutionDescriptions";
 
 type InteractiveSolutionDescriptionsProps = {
   solutions: Solution[];
@@ -31,6 +32,8 @@ function InteractiveSolutionDescriptions({
   const descriptionsCarousalRef = useRef(null);
 
   const autoplay = useRef(Autoplay({ delay: 4000 }));
+
+  const isViewportLeq768px = useMediaQuery("(max-width: 768px)");
 
   const variableValues = useRef({
     activeSlideIndex: null,
@@ -96,39 +99,43 @@ function InteractiveSolutionDescriptions({
         ref={intersectionObserverRef}
         className={styles["descriptions-container"]}
       >
-        <Carousel
-          // withIndicators
-          className="descriptions-carousel"
-          orientation="vertical"
-          height={"40rem"}
-          slideSize="33.333333%"
-          slideGap={"md"}
-          loop
-          align="start"
-          slidesToScroll={1}
-          initialSlide={0}
-          onSlideChange={handleDescriptonsCarouselSlideChange}
-          draggable={false}
-          classNames={styles}
-          plugins={[autoplay.current]}
-          onMouseEnter={autoplay.current.stop}
-          onMouseLeave={() => autoplay.current.play()}
-          speed={5}
-          ref={descriptionsCarousalRef}
-        >
-          <DescriptionsCarouselSlides
-            solutions={solutions}
-            activeSlideIndex={activeSlideIndex}
-            slidesRef={slidesRef}
-          />
+        {isViewportLeq768px ? (
+          <MobileInteractiveSolutionDescriptions solutions={solutions} />
+        ) : (
+          <Carousel
+            // withIndicators
+            className="descriptions-carousel"
+            orientation="vertical"
+            height={"40rem"}
+            slideSize="33.333333%"
+            slideGap={"md"}
+            loop
+            align="start"
+            slidesToScroll={1}
+            initialSlide={0}
+            onSlideChange={handleDescriptonsCarouselSlideChange}
+            draggable={false}
+            classNames={styles}
+            plugins={[autoplay.current]}
+            onMouseEnter={autoplay.current.stop}
+            onMouseLeave={() => autoplay.current.play()}
+            speed={5}
+            ref={descriptionsCarousalRef}
+          >
+            <DescriptionsCarouselSlides
+              solutions={solutions}
+              activeSlideIndex={activeSlideIndex}
+              slidesRef={slidesRef}
+            />
 
-          <DescriptionsCarouselSlides
-            solutions={solutions}
-            activeSlideIndex={activeSlideIndex}
-            slidesRef={slidesRef}
-            copySlides
-          />
-        </Carousel>
+            <DescriptionsCarouselSlides
+              solutions={solutions}
+              activeSlideIndex={activeSlideIndex}
+              slidesRef={slidesRef}
+              copySlides
+            />
+          </Carousel>
+        )}
       </div>
 
       <div className={styles["image-container"]}>

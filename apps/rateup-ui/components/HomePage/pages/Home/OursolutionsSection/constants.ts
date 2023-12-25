@@ -14,7 +14,7 @@ export const solutionsList = [
     imageUrl: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/homepage/our-solutions/whatsapp-first.png`,
   },
   {
-    id: "102232",
+    id: "102233",
     heading: "Loyalty",
     description:
       "Delight your dedicated customers with personalized offers and incentives. Our platform empowers you to pinpoint and connect with your most loyal clientele, guaranteeing their consistent return.",
