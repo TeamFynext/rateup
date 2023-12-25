@@ -19,7 +19,6 @@ function RateupInAction() {
           {" "}
           innovation a staple on your menu!
         </span>
-        "
       </Text>
       <Image
         className={styles["rateup-in-action-img"]}
