@@ -69,7 +69,9 @@ export default () => {
   useEffect(() => {
     if (survey) {
       if (activeTab !== TabEnum.Result) {
-        setSelectedLanguage(survey?.languages?.[0]);
+        setSelectedLanguage(
+          selectedLanguage ? selectedLanguage : survey?.languages?.[0],
+        );
       } else {
         setSelectedLanguage("");
       }
@@ -80,6 +82,7 @@ export default () => {
       }));
       setTeamOptions(options);
     }
+    console.log("hello");
   }, [survey, activeTab]);
 
   useEffect(() => {
