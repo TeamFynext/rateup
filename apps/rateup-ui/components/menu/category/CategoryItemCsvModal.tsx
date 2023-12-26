@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { Blockquote, LoadingOverlay, Stack } from "@mantine/core";
-import { ContainedFileInput } from "../../input/ContainedInput/ContainedInput";
 import { useCreateMenuItemUsingCsvMutation } from "../../../backend/menu/item/mItem.query";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { DropZoneArea } from "./dropZone/DropZone";
 
 const CategoryItemCsvModal = ({ opened, close, menuId }) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -24,10 +24,11 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={"Upload Csv"}
+      title={"Import Menu from CSV file"}
       centered
       onSubmit={handleCsvFileUpload}
       buttonTitle={"Upload Csv"}
+      submitButtonDisabled={!csvFile}
     >
       <Stack>
         <LoadingOverlay
@@ -46,20 +47,7 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
           fields in the file: "categoryname," "name," "description," and
           "price."
         </Blockquote>
-
-        <ContainedFileInput
-          mx={"md"}
-          label=""
-          placeholder="Upload a csv file (.csv)"
-          accept=".csv"
-          multiple={false}
-          onChange={(e) => setCsvFile(e)}
-          styles={{
-            input: {
-              border: "2px dashed lightgrey",
-            },
-          }}
-        />
+        <DropZoneArea setCsvFile={setCsvFile} />
       </Stack>
     </FormModalLayout>
   );

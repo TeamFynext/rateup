@@ -14,6 +14,8 @@ import {
 import { uploadFile } from "../../../../../utils/file-upload/upload";
 import { IconX } from "@tabler/icons-react";
 import { getFileName } from "../../../SurveyTheme/components/BackgroundStyles";
+import { ImageCropModal } from "../../../../Modal/ImageCropModal";
+import { useDisclosure } from "@mantine/hooks";
 
 export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -22,6 +24,14 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     isPreview ? null : response || null,
   );
   const resetRef = useRef<() => void>(null);
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
   useEffect(() => {
     const uploadAndUpdate = async () => {
@@ -51,12 +61,34 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     updateResponse(null);
   }
 
+  const onChangePicture = (event: File) => {
+    if (!event) return;
+    setSelectedImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    resetRef?.current?.();
+  };
+
+  const handleCropImageSave = async (cropedImage) => {
+    if (!cropedImage) return;
+    setFile(cropedImage);
+  };
   return (
     <Stack>
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={4 / 3}
+      />
       <Box w={300}>
         <FileButton
           resetRef={resetRef}
-          onChange={setFile}
+          onChange={onChangePicture}
           accept="image/png,image/jpeg,image/svg+xml,image/webp"
         >
           {(props) => (

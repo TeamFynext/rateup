@@ -23,6 +23,7 @@ import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/carousel/styles.css";
 import "@mantine/nprogress/styles.css";
+import "@mantine/dropzone/styles.css";
 import "../styles/global.css";
 import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";

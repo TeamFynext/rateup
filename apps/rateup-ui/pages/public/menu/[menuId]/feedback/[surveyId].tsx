@@ -106,6 +106,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         style={{
           borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
           backgroundColor: "var(--orange-400)",
+          aspectRatio: "16 / 6",
         }}
       >
         <Stack

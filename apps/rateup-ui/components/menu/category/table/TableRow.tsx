@@ -54,8 +54,12 @@ const TableRow = ({
       <Table.Td>
         {item?.price?.type === MenuItemPriceType.FIXED ? (
           <Text>
-            {currencyLabel[currency]?.symbol}&nbsp;
-            {item?.price?.price}
+            {item?.price?.price && (
+              <>
+                {currencyLabel[currency]?.symbol}&nbsp;
+                {item?.price?.price}
+              </>
+            )}
           </Text>
         ) : (
           <Stack>
@@ -65,8 +69,12 @@ const TableRow = ({
                   {element?.name}
                 </Text>
                 <Text>
-                  {currencyLabel[currency]?.symbol}&nbsp;
-                  {element?.price}
+                  {element?.price && (
+                    <>
+                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {element?.price}
+                    </>
+                  )}
                 </Text>
               </Box>
             ))}

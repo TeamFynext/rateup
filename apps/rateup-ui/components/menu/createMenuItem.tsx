@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Box,
@@ -34,6 +34,8 @@ import {
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
 import { currencyLabel } from "./util/currencyData";
+import { useDisclosure } from "@mantine/hooks";
+import { ImageCropModal } from "../Modal/ImageCropModal";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -54,7 +56,15 @@ export function CreateMenuItemModal({
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
   const [deleteImageArray, setDeleteImageArray] = useState([]);
-
+  const [selectedInputImage, setSelectedInputImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const form = useForm({
     initialValues: editingItem || {
@@ -220,7 +230,16 @@ export function CreateMenuItemModal({
     fallbackSrc: fallbackImage,
   };
   const onChangePicture = (event: File) => {
-    form.setFieldValue("images", [...form.values.images, event]);
+    if (!event) return;
+    setSelectedInputImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    resetRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    form.setFieldValue("images", [...form.values.images, cropedImage]);
   };
   return (
     <FormModalLayout
@@ -233,6 +252,14 @@ export function CreateMenuItemModal({
       size={"lg"}
     >
       <Flex>
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={selectedInputImage.name}
+          handleCropImageSave={handleCropImageSave}
+          image={selectedInputImage.url}
+          aspect={4 / 3}
+        />
         <LoadingOverlay
           visible={
             createMenuItemMutation.isPending ||
@@ -256,6 +283,9 @@ export function CreateMenuItemModal({
                   }
                   {...imageProps}
                   alt="image of menu"
+                  style={{
+                    aspectRatio: 4 / 3,
+                  }}
                 />
                 <Center mt="xs">
                   <Button
@@ -291,15 +321,18 @@ export function CreateMenuItemModal({
                 src={fallbackImage}
                 {...imageProps}
                 alt="placholder image of menu"
+                style={{
+                  aspectRatio: 4 / 3,
+                }}
               />
             )}
           </Group>
           <Group>
-            {form.values.images?.map((image) => (
+            {form.values.images?.map((image, index) => (
               <Image
                 onClick={() => setSelectedImage(image)}
                 style={{ borderRadius: "8px", cursor: "pointer" }}
-                key={typeof image === "object" ? image?.fileName : image}
+                key={typeof image === "object" ? image?.name + index : image}
                 src={
                   typeof image === "object"
                     ? URL.createObjectURL(image)
@@ -317,6 +350,7 @@ export function CreateMenuItemModal({
                 onChange={onChangePicture}
                 accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 key={form?.values?.images?.length}
+                resetRef={resetRef}
               >
                 {(props) => (
                   <Button color="gray" h={75} w={75} {...props}>

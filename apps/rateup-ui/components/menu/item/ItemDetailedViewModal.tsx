@@ -176,15 +176,23 @@ export function ItemDetailedViewModal({
                   {varient.name}
                 </Text>
                 <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" fw={500}>
-                  {currencyLabel[currency]?.symbol}&nbsp;
-                  {varient.price}
+                  {varient?.price && (
+                    <>
+                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {varient.price}
+                    </>
+                  )}
                 </Text>
               </Stack>
             ))
           ) : (
             <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" mt={"md"} fw={500}>
-              {currencyLabel[currency]?.symbol}&nbsp;
-              {item?.price?.price}
+              {item?.price?.price && (
+                <>
+                  {currencyLabel[currency]?.symbol}&nbsp;
+                  {item?.price?.price}
+                </>
+              )}
             </Text>
           )}
         </Group>

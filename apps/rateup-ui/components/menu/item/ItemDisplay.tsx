@@ -107,8 +107,12 @@ export function ItemDisplay({
                       {varient?.name}
                     </Text>
                     <Text fz="clamp(14px, 11.136px + 0.476vw, 18px)" fw={500}>
-                      {currencyLabel[currency]?.symbol}&nbsp;
-                      {varient?.price}
+                      {varient?.price && (
+                        <>
+                          {currencyLabel[currency]?.symbol}&nbsp;
+                          {varient?.price}
+                        </>
+                      )}
                     </Text>
                   </Stack>
                 ))
@@ -118,8 +122,12 @@ export function ItemDisplay({
                   mt={"sm"}
                   fw={500}
                 >
-                  {currencyLabel[currency]?.symbol}&nbsp;
-                  {item?.price?.price}
+                  {item?.price?.price && (
+                    <>
+                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {item?.price?.price}
+                    </>
+                  )}
                 </Text>
               )}
             </Flex>

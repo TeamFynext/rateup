@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileButton, LoadingOverlay, Stack, Image } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
@@ -13,6 +13,8 @@ import {
 import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
+import { ImageCropModal } from "../Modal/ImageCropModal";
+import { useDisclosure } from "@mantine/hooks";
 
 interface CreateMenuCategoryModalProps {
   opened: boolean;
@@ -29,6 +31,15 @@ export function CreateMenuCategoryModal({
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
   const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
   const form = useForm({
     initialValues: editingItem || {
@@ -113,8 +124,17 @@ export function CreateMenuCategoryModal({
     return null;
   }
   const onChangePicture = (event: File) => {
-    form.setFieldValue("image", URL.createObjectURL(event));
-    setImageToUpload(event);
+    if (!event) return;
+    setSelectedImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    resetRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    form.setFieldValue("image", URL.createObjectURL(cropedImage));
+    setImageToUpload(cropedImage);
   };
   return (
     <FormModalLayout
@@ -126,6 +146,14 @@ export function CreateMenuCategoryModal({
       buttonTitle={editingItem ? "Save Category" : "Create Category"}
     >
       <Stack>
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={selectedImage.name}
+          handleCropImageSave={handleCropImageSave}
+          image={selectedImage.url}
+          aspect={16 / 9}
+        />
         <LoadingOverlay
           visible={
             createMenuCategoryMutation.isPending ||
@@ -159,6 +187,7 @@ export function CreateMenuCategoryModal({
           onChange={onChangePicture}
           accept="image/png,image/jpeg,image/svg+xml,image/webp"
           disabled={isCreating}
+          resetRef={resetRef}
         >
           {(props) => {
             let buttonText = "";
