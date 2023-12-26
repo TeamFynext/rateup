@@ -1,16 +1,15 @@
-import { axiosClientUnsplash } from "../apiClient";
+import { axiosClient } from "../apiClient";
 
+const unsplash_URL = "/unsplash";
 export const getPhotosList = async ({
-  pageParams,
+  pageParams = 1,
   searchQuery,
 }: {
   pageParams: number;
   searchQuery: string;
 }) => {
-  const response = await axiosClientUnsplash.get(
-    searchQuery?.length > 0
-      ? `/search/photos?page=${pageParams}&query=${searchQuery}`
-      : `/photos?page=${pageParams}`,
+  const response = await axiosClient.get(
+    `${unsplash_URL}/photos?page=${pageParams}&query=${searchQuery}`,
   );
   return response?.data;
 };

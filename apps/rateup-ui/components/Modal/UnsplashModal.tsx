@@ -7,6 +7,7 @@ import {
   Image,
   LoadingOverlay,
   SimpleGrid,
+  Text,
   rem,
 } from "@mantine/core";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
@@ -51,31 +52,36 @@ export const UnsplashModal = ({ opened, onclose, handleUnsplashImageSave }) => {
         zIndex={1000}
         overlayProps={{ radius: "sm", blur: 2 }}
       />
-      <Center mb={"lg"}>
-        <ContainedTextField
-          w={largeScreen ? "60%" : "90%"}
-          leftSection={
-            <IconSearch
-              style={{ width: rem(18), height: rem(18) }}
-              stroke={1.5}
-            />
-          }
-          rightSection={
-            <ActionIcon
-              size={32}
-              radius="xl"
-              color={"var(--tertiary-color)"}
-              variant="filled"
-            >
-              <IconArrowRight
+      {unsplashPhotosList?.isError && (
+        <Text c={"red"}>Currently Unsplash Is Unavailable</Text>
+      )}
+      {!unsplashPhotosList?.isError && (
+        <Center mb={"lg"}>
+          <ContainedTextField
+            w={largeScreen ? "60%" : "90%"}
+            leftSection={
+              <IconSearch
                 style={{ width: rem(18), height: rem(18) }}
                 stroke={1.5}
               />
-            </ActionIcon>
-          }
-          onChange={(e) => setSearchQuery(e?.target?.value)}
-        />
-      </Center>
+            }
+            rightSection={
+              <ActionIcon
+                size={32}
+                radius="xl"
+                color={"var(--tertiary-color)"}
+                variant="filled"
+              >
+                <IconArrowRight
+                  style={{ width: rem(18), height: rem(18) }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            }
+            onChange={(e) => setSearchQuery(e?.target?.value)}
+          />
+        </Center>
+      )}
       <SimpleGrid
         cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }}
         mx={"lg"}
