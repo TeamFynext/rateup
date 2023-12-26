@@ -6,6 +6,15 @@ import { CreateMenuItemInput, UpdateMenuItemInput } from "./item.schema";
 import Papa from "papaparse";
 
 export async function createMenuItem(data: CreateMenuItemInput) {
+  const existingMenuData = await prisma.menuItem.findFirst({
+    where: {
+      categoryId: data?.categoryId,
+    },
+    orderBy: {
+      itemOrder: "desc",
+    },
+  });
+
   const createData: any = {
     categoryId: data?.categoryId,
     description: data?.description,
@@ -15,16 +24,9 @@ export async function createMenuItem(data: CreateMenuItemInput) {
     videoUrl: data?.videoUrl,
   };
 
-  await prisma.menuItem.updateMany({
-    where: {
-      categoryId: data.categoryId,
-    },
-    data: {
-      itemOrder: {
-        increment: 1,
-      },
-    },
-  });
+  if (existingMenuData) {
+    createData.itemOrder = Number(existingMenuData.itemOrder) + 1;
+  }
 
   const menuItem = await prisma.menuItem.create({
     data: createData,
