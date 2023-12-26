@@ -118,7 +118,7 @@
     "storybook-addon-mantine": "^3.0.1",
     "storybook-dark-mode": "^3.0.1",
     "ts-jest": "^29.1.1",
-    "typescript": "4.8.4"
+    "typescript": "^5.3.3"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
