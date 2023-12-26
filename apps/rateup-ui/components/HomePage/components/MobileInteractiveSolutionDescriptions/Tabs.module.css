@@ -1,0 +1,39 @@
+.list {
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.list::before {
+  border: none;
+}
+
+.tab {
+  font-size: 1.125rem;
+  font-weight: bold;
+  border-radius: 0.3125rem;
+  padding: 0.865 1.725rem;
+  background-color: var(--shade-of-blue);
+  color: var(--shade-of-blue-2);
+  white-space: initial;
+  text-align: center;
+  padding: 1rem;
+}
+
+.tab:hover {
+  border: none;
+}
+
+.tab[data-active="true"] {
+  border: none;
+  background-color: var(--tertiary-color);
+  color: white;
+  font-weight: bold;
+}
+
+.panel {
+  font-size: 1.5rem;
+  color: var(--grey-color-2);
+}

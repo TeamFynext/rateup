@@ -100,7 +100,10 @@ function InteractiveSolutionDescriptions({
         className={styles["descriptions-container"]}
       >
         {isViewportLeq768px ? (
-          <MobileInteractiveSolutionDescriptions solutions={solutions} />
+          <MobileInteractiveSolutionDescriptions
+            solutions={solutions}
+            setActiveSlideIndex={setActiveSlideIndex}
+          />
         ) : (
           <Carousel
             // withIndicators

@@ -71,8 +71,8 @@
   }
 
   .image-container {
-    flex: 0.85 1 80vw;
-    max-height: 40rem;
+    flex: 0.85 1 70vw;
+    max-height: 36rem;
   }
 
   .image-container-as-first-element .descriptions-container {
