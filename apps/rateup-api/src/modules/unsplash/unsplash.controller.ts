@@ -7,8 +7,8 @@ export async function getUnsplashImageListHandler(
   reply: FastifyReply
 ) {
   try {
-    const menu = await getUnsplashImageList(request.query);
-    reply.code(200).send(menu);
+    const unsplashData = await getUnsplashImageList(request.query);
+    reply.code(200).send(unsplashData);
   } catch (error) {
     reply.code(500).send(error);
   }
