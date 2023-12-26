@@ -82,7 +82,6 @@ export default () => {
       }));
       setTeamOptions(options);
     }
-    console.log("hello");
   }, [survey, activeTab]);
 
   useEffect(() => {
