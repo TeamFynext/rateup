@@ -13,9 +13,18 @@
 
 .active-slide .solution-card {
   width: 97%;
-  background-image: linear-gradient(90deg, #2564ae, #00397b);
-  color: white;
+  /* background-image: linear-gradient(90deg, #2564ae, #00397b); */
+  /* color: white; */
+  transition:
+    background-color 0.5s 0.5s ease-out,
+    color 0.5s 0.5s ease-out;
+  /* color: var(--grey-color-2); */
   height: 12.5rem;
+}
+
+.active-slide .solution-card-active {
+  background-color: #1e528d;
+  color: white;
 }
 
 .list-indicator-circle {

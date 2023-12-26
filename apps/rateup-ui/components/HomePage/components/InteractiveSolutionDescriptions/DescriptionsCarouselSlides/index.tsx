@@ -57,10 +57,12 @@ function DescriptionsCarouselSlides({
           >
             <motion.div
               layout
-              className={styles["solution-card"]}
+              className={`${styles["solution-card"]} ${
+                isSlideActive ? styles["solution-card-active"] : ""
+              }`}
               data-index={index}
               transition={{
-                duration: 0.5,
+                duration: 0.75,
               }}
             >
               <div className={styles["card-content"]}>

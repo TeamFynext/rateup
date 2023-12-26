@@ -119,7 +119,7 @@ function InteractiveSolutionDescriptions({
             plugins={[autoplay.current]}
             onMouseEnter={autoplay.current.stop}
             onMouseLeave={() => autoplay.current.play()}
-            speed={5}
+            speed={8}
             ref={descriptionsCarousalRef}
           >
             <DescriptionsCarouselSlides
