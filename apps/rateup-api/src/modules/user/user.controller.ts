@@ -18,6 +18,7 @@ import {
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
+import { log } from "../../utils/logger";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
@@ -25,13 +26,13 @@ export async function getLoggedUserInfoHandler(
 ) {
   try {
     const userData = await getLoggedUserInfo(request, reply);
-    console.log(userData, ">>user data disp");
     if (!userData) {
       reply.code(200).send({ message: "No user data found" });
     } else {
       reply.code(200).send({ message: "Success", data: userData });
     }
   } catch (e) {
+    log.error(e)
     reply.code(500).send({ message: `Internal server error :  ${e}` });
   }
 }

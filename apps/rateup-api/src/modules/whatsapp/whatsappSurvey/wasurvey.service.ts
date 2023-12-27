@@ -13,6 +13,7 @@ import { updateCampaignParticipant } from "../../campaign/campaignParticipants/c
 import { CreateResponseInput } from "../../response/response.schema";
 import { QuestionType as Q } from "../../../types/enums";
 import { updateCompletedSurvey, updateVisitedSurvey } from "../../survey/survey.service";
+import { fetchLocationFromIp } from "../../../utils/location";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -91,6 +92,7 @@ interface createSessionParams {
   language?: string,
   currentQuestionId?: string,
   campaignParticipantId?: string
+  ip?: string
 }
 export async function createSession({
   phone,
@@ -99,7 +101,8 @@ export async function createSession({
   templateId,
   language = "",
   currentQuestionId,
-  campaignParticipantId
+  campaignParticipantId,
+  ip = "",
 }: createSessionParams
 ) {
   log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
@@ -112,7 +115,8 @@ export async function createSession({
       templateId: templateId,
       orgId: orgId,
       currentQuestionId: currentQuestionId,
-      campaignParticipantId: campaignParticipantId
+      campaignParticipantId: campaignParticipantId,
+      ip: ip ? ip : undefined
     },
     include: toBeIncludedWaSessionRelations
   });
@@ -248,6 +252,7 @@ async function saveResponses(session: WaSessionWithRelations) {
     responses: questionResponses,
     language: session.language,
     platform: ResponsePlatform.WHATSAPP,
+    location: await fetchLocationFromIp(session.ip)
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);

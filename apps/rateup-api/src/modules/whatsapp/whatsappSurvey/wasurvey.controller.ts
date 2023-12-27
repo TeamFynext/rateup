@@ -28,6 +28,7 @@ import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
 import { updateStartedSurvey, updateVisitedSurvey } from "../../survey/survey.service";
+import { getIpFromToken } from "../redirect/wa_redirect.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -167,11 +168,18 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   // delete any existing session if any
   await deleteSession(orgId, from);
   // create new session
-  const surveyTeamMapId = message.split(" ")[1]; // format: /start <surveyTeamMapId>
+  const [_, surveyTeamMapId, ipToken] = message.split(" "); // format: /start <surveyTeamMapId>
+
+  let ip = undefined;
+  if (ipToken) {
+    ip = await getIpFromToken(ipToken);
+  }
+
   let session = await createSession({
     phone: from,
     surveyTeamMapId,
-    orgId
+    orgId,
+    ip,
   });
   updateVisitedSurvey(session.surveyTeamMap.id).catch(e => log.error(e)); // increment visited survey count
   updateStartedSurvey(session.surveyTeamMap.id).catch(e => log.error(e)); // increment started survey count
@@ -183,7 +191,6 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   } else {
     session = await updateSession(orgId, from, { language: session.surveyTeamMap.survey.languages[0] });
   }
-  console.log(session)
   await sendFirstQuestion(session);
 }
 

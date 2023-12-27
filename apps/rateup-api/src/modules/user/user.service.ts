@@ -9,7 +9,9 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { Role } from "../../utils/enums";
-import { access } from "fs";
+import supertokens from "supertokens-node";
+import { log } from "../../utils/logger";
+import { createTrialSubscription } from "../subscription/subscription.service";
 
 const prisma = new PrismaClient();
 
@@ -29,7 +31,7 @@ export async function createUserSignup({
   name,
   orgName,
 }: CreateUserSignupSchema) {
-  console.log(".....Creating user.....");
+  log.info("Creating user");
   try {
     // Start a transaction
     const result = await prisma.$transaction(async (prisma) => {
@@ -70,13 +72,16 @@ export async function createUserSignup({
           userId: newUser.id,
         },
       });
+
+      // creating 1 week trial subscription
+      await createTrialSubscription(org.id, prisma as any)
     });
     // Commit the transaction
-    console.log("Transaction committed..........:", result);
+    log.trace(" create user transaction committed..........:", result)
     return result;
   } catch (error) {
     // Rollback the transaction
-    console.error("Transaction rolled back.......:", error);
+    log.error("create user transaction failed %o", error);
     throw error;
   } finally {
     await prisma.$disconnect();
@@ -129,7 +134,6 @@ export async function getLoggedUserInfo(
       phone: true,
     },
   });
-  console.log(profile);
   return {
     userId,
     userName: profile?.name,
@@ -251,4 +255,31 @@ export async function checkEmailExist(email: string) {
     },
   });
   return user;
+}
+
+export async function deleteUser(userId: string) {
+  // TODO: if cascading is safe, then use it
+  try {
+    await prisma.teamMember.deleteMany({
+      where: { userId: userId },
+    })
+    await prisma.orgMember.deleteMany({
+      where: { userId: userId },
+    })
+    const orgs = await prisma.org.findMany({
+      where: { ownerId: userId },
+    })
+    await prisma.team.deleteMany({
+      where: { orgId: { in: orgs.map(org => org.id) } },
+    })
+    await prisma.org.deleteMany({
+      where: { ownerId: userId },
+    })
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+  } catch (error) {
+    log.error("delete user transaction failed in db %o", error);
+  }
+  await supertokens.deleteUser(userId)
 }

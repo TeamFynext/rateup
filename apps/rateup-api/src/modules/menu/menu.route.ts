@@ -14,17 +14,21 @@ import {
 } from "./menu.controller";
 import { $Tref } from "../team/team.schema";
 import { verifyTeamAccess } from "../team/team.auth";
-import { verifyMenuAccess } from "./menu.auth";
+import { verifyMenuAccess, verifyMenuMaxCountRestriction } from "./menu.auth";
 import { checkSession } from "../../utils/checkSession";
+import { getVerifySubscriptionHandler } from "../../utils/auth";
+import { SubscriptionFeatureName } from "../../types/enums";
 
 export async function menuRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.Menu]));
   server.post(
     "/",
     {
       schema: {
         body: $Mref("menuInputSchema"),
       },
+      preHandler: verifyMenuMaxCountRestriction
     },
     createMenuHandler
   );

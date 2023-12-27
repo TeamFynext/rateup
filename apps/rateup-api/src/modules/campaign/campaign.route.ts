@@ -4,11 +4,14 @@ import { $campaignRef } from "./campaign.schema";
 import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route";
 import { campaignParticipantsSchemas } from "./campaignParticipants/campaignParticipants.schema";
 import { checkSession } from "../../utils/checkSession";
-import { startCampaign } from "./campaign.service";
+import { getVerifySubscriptionHandler } from "../../utils/auth";
+import { SubscriptionFeatureName } from "../../types/enums";
+import { verifyCampaignMaxCountRestriction } from "./campaign.auth";
 
 export async function campaignRoutes(server: FastifyInstance) {
 
     server.addHook('preHandler', checkSession)
+    server.addHook('preHandler', getVerifySubscriptionHandler([SubscriptionFeatureName.WhatsAppCampaign]))
     campaignParticipantsSchemas.forEach(schema => server.addSchema(schema))
     server.register(campaignParticipantRoutes, { prefix: ':campaignId/participants' })
 
@@ -17,7 +20,8 @@ export async function campaignRoutes(server: FastifyInstance) {
         {
             schema: {
                 body: $campaignRef('createCampaignInputSchema')
-            }
+            },
+            preHandler: verifyCampaignMaxCountRestriction
         },
         createCampaignHandler
     )

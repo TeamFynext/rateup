@@ -28,12 +28,12 @@ server.get("/api/ping", async (req) => {
   return { message: "pong!" };
 });
 
+registerRoutes(server);
+server.register(formDataPlugin);
+server.register(plugin);
+server.setErrorHandler(errorHandler());
 async function main() {
-  registerRoutes(server);
 
-  await server.register(formDataPlugin);
-  await server.register(plugin);
-  server.setErrorHandler(errorHandler());
   const port: number = parseInt(process.env.PORT || "3001");
   const host: string = process.env.HOST || "0.0.0.0";
   server
@@ -50,4 +50,9 @@ async function main() {
     });
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+
+export default server;

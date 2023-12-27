@@ -48,6 +48,9 @@ import surveyMenuShareSettingsRoutes from "./modules/surveyMenuShareSettings/sur
 import { menuBannerRoutes } from "./modules/menu/banner/banner.route";
 import { menuBannerSchemas } from "./modules/menu/banner/banner.schema";
 import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.route";
+import { subscriptionRoutes } from "./modules/subscription/subscription.route";
+import { unsplashRoutes } from "./modules/unsplash/unsplash.route";
+import { unsplashSchemas } from "./modules/unsplash/unsplash.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -68,7 +71,8 @@ export function registerRoutes(server: FastifyInstance): void {
     contactSchemas,
     campaignSchemas,
     reviewSuggestionSchemas,
-    menuBannerSchemas
+    menuBannerSchemas,
+    unsplashSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -79,7 +83,9 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(LandingPageRoutes, { prefix: "api/landingpage" });
   server.register(WelcomeThemeRoutes, { prefix: "api/welcome" });
   server.register(WelcomeThemePublicRoutes, { prefix: "api/public/welcome" });
-  server.register(surveyMenuShareSettingsRoutes, { prefix: "api/shareSettings"})
+  server.register(surveyMenuShareSettingsRoutes, {
+    prefix: "api/shareSettings",
+  });
   server.register(LandingThemeRoutes, { prefix: "api/landingtheme" });
   server.register(LandingThemePublicRoutes, {
     prefix: "api/public/landingtheme",
@@ -90,21 +96,25 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(orgRoutes, { prefix: "api/org" });
   server.register(teamRoutes, { prefix: "api/team" });
   server.register(responseRoutes, { prefix: "api/response" });
-  server.register(surveyPublicRoutes, { prefix: "api/public/survey" })
-  server.register(landingPagePublicRoutes, { prefix: "api/public/landingpage" })
-  server.register(responsePublicRoutes, { prefix: "api/public/response" })
-  server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" })
-  server.register(whatsappRoutes, { prefix: "api/wa" })
-  server.register(menuRoutes, { prefix: "api/menu" })
-  server.register(menuPublicRoutes, { prefix: "api/public/menu" })
-  server.register(menuCategoryRoutes, { prefix: "api/mcategory" })
-  server.register(menuItemRoutes, { prefix: "api/mitem" })
-  server.register(menuBannerRoutes, { prefix: "api/mbanner" })
-  server.register(menuBannerPublicRoutes, { prefix: "api/public/mbanner" })
-  server.register(contactFormPublicRoutes, { prefix: "api/public/contact" })
+  server.register(surveyPublicRoutes, { prefix: "api/public/survey" });
+  server.register(landingPagePublicRoutes, {
+    prefix: "api/public/landingpage",
+  });
+  server.register(responsePublicRoutes, { prefix: "api/public/response" });
+  server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" });
+  server.register(whatsappRoutes, { prefix: "api/wa" });
+  server.register(menuRoutes, { prefix: "api/menu" });
+  server.register(menuPublicRoutes, { prefix: "api/public/menu" });
+  server.register(menuCategoryRoutes, { prefix: "api/mcategory" });
+  server.register(menuItemRoutes, { prefix: "api/mitem" });
+  server.register(menuBannerRoutes, { prefix: "api/mbanner" });
+  server.register(menuBannerPublicRoutes, { prefix: "api/public/mbanner" });
+  server.register(unsplashRoutes, { prefix: "api/unsplash" });
+  server.register(contactFormPublicRoutes, { prefix: "api/public/contact" });
   server.register(electionPublicRoutes, { prefix: "api/public/election" });
-  server.register(contactRoutes, { prefix: "api/contact" })
-  server.register(campaignRoutes, { prefix: "api/campaign" })
-  server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" })
-  server.register(reputationManagementRoutes, { prefix: "api/rm" })
+  server.register(contactRoutes, { prefix: "api/contact" });
+  server.register(campaignRoutes, { prefix: "api/campaign" });
+  server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" });
+  server.register(reputationManagementRoutes, { prefix: "api/rm" });
+  server.register(subscriptionRoutes, { prefix: "api/subscription" });
 }

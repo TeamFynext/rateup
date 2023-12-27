@@ -74,6 +74,7 @@ model Org {
   invitations      Invitation[]
   whatsappSettings WhatsappSettings?
   templates        WaTemplate[]
+  Subscription     Subscription?
 }
 
 model WhatsappSettings {
@@ -245,6 +246,7 @@ model WaSession {
   responses             Json[]
   language              String               @default("")
   orgId                 String               @db.Uuid
+  ip                    String?
 
   @@unique([phone, orgId])
 }
@@ -370,8 +372,8 @@ model Menu {
   team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId        String         @db.Uuid
   menuLanding   MenuLanding?
-  currency     String         @default("0")
-  menuBanner   MenuBanner[]
+  currency      String         @default("0")
+  menuBanner    MenuBanner[]
   shareSettings Json?
 }
 
@@ -505,4 +507,22 @@ model MenuBanner {
   price       Json
   menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId      String   @db.Uuid
+}
+
+model Subscription {
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @unique @db.Uuid
+
+  features Json
+
+  renewedAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+}
+
+// used to tokenize some data
+model Temporary_Tokenization {
+  token     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  data      Json
+  createdAt DateTime @default(now()) // gets deleted after 24 hours. shouldn't be used for long term storage
 }

@@ -7,9 +7,13 @@ import {
 import { checkSession } from "../../../utils/checkSession";
 
 import { $MBref } from "./banner.schema";
+import { SubscriptionFeatureName } from "../../../types/enums";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
 
 export async function menuBannerRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.Menu]));
+
   server.post("/", createMenuBannerHandler);
   server.put(
     "/:menuBannerId",
