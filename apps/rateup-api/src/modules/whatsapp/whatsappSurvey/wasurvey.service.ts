@@ -165,10 +165,11 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
     await saveResponses(session);
     if (shouldShowGoogleReview({ session })) {
       log.trace("Sending google review link to %s", session.phone)
+      const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${session.surveyTeamMapId}/end?k=n&msg=thanks`;
       const googleReviewMessage = createCTAButtonMessage({
         to: session.phone,
         buttonText: "Review us on Google",
-        url: session.surveyTeamMap.team.googleLink,
+        url: thankYouPage,
         body: "Thank you for your feedback!"
       })
       await sendMessage(session.orgId, googleReviewMessage);

@@ -16,6 +16,8 @@ const smileyEmojiMap = {
   [SmileyResponse.Sad]: "🙁",
   [SmileyResponse.VerySad]: "😠",
 };
+const ratingEmoji = '⭐️';
+
 export function getEventType(data: WaMessageBody) {
   if (data.object === 'whatsapp_business_account') {
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
@@ -272,9 +274,6 @@ export async function generateMessageDataFromQuestion(
     case Q.LD:
       choices = Object.values(LDResponse);
       break;
-    case Q.Rating:
-      choices = [1, 2, 3, 4, 5].map((i) => i.toString());
-      break;
     case Q.Opinion:
       choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => i.toString());
       break;
@@ -284,6 +283,20 @@ export async function generateMessageDataFromQuestion(
     case Q.DateTime:
       description += "\n\nPlease enter date in DD/MM/YYYY format";
       break;
+    case Q.Rating: {
+      const sections: WaSectionsType = [{
+        rows: [1, 2, 3, 4, 5].map((i) => ({
+          id: i.toString(),
+          title: ratingEmoji.repeat(i),
+        }))
+      }]
+      return createNativeListMessage(
+        to,
+        title,
+        description,
+        sections
+      )
+    }
     case Q.Smiley: {
       const sections: WaSectionsType = [{
         rows: Object.entries(smileyEmojiMap).map(([key, value]) => ({
@@ -422,13 +435,13 @@ export async function parseResponse(
         return message;
       case Q.Smiley:
         return waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id
+      case Q.Rating:
+        return Number.parseInt(waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id)
       // TODO: testimonial
       case Q.Testimonial:
         return {
           testimonial: message,
         };
-      case Q.Rating:
-        return Number(message);
       case Q.DateTime:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
           return ""
