@@ -2,10 +2,10 @@ import { Flex, Image, Group } from "@mantine/core";
 import styles from "./Header.module.css";
 import { getNavLinksArray } from "../../constants";
 import LoginSignupLinks from "./LoginSignupLinks";
-import MobileNav from "./MobileNav";
 import Link from "next/link";
 import Button from "../Button";
 import { useRouter } from "next/router";
+import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
 
 function Header() {
   const router = useRouter();
@@ -27,7 +27,7 @@ function Header() {
           <Flex className={styles["header-links-container"]}>
             {getNavLinksArray(styles["header-link"], true)}
           </Flex>
-          <MobileNav />
+          <MobileNavDrawer />
         </nav>
       </Group>
       {!(currentRoutePath === "/menus") ? (
