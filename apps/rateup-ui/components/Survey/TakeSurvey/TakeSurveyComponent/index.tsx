@@ -595,7 +595,9 @@ function getQuestionForm(type, selectedQ) {
     case Q.DDMS:
       return <DDMSForm key={selectedQ?.id} />;
     case Q.Testimonial:
-      return <TestimonialForm key={selectedQ?.id} />;
+      return (
+        <TestimonialForm key={selectedQ?.id} features={selectedQ?.features} />
+      );
     case Q.EmailPhone:
       return <EmailPhoneForm key={selectedQ?.id} />;
     case Q.DateTime:

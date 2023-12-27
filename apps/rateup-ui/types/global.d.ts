@@ -38,6 +38,7 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
     sections?: Zod.RecordType<string, WaSectionsType>;
     id: string;
     googleReview?: GoogleReview;

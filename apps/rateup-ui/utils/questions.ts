@@ -69,6 +69,7 @@ export const getInitialQuestionValues = (
     required: question?.required,
     type: question?.type,
     choices: question?.choices,
+    features: question?.features,
     sections: type === "whatsapp" ? question?.sections || {} : undefined,
   };
 };
