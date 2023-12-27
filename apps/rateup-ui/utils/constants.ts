@@ -23,6 +23,7 @@ export const NPSQuestions = [
 ];
 
 export const WaNPSQuestions = [
+  QuestionType.Rating,
   QuestionType.Smiley,
   QuestionType.LD,
   QuestionType.YN,

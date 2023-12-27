@@ -1,6 +1,8 @@
 export function findCentroid(
   coords: { latitude: number; longitude: number }[],
 ) {
+  if (coords.length === 0) return undefined;
+
   const sum = coords.reduce(
     (acc, curr) => {
       return {

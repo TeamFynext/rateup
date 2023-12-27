@@ -151,10 +151,13 @@ const SurveyStats = ({ survey }) => {
               mih={350}
             >
               <Map
-                defaultCenter={[centroid?.latitude, centroid?.longitude]}
+                defaultCenter={
+                  centroid ? [centroid.latitude, centroid.longitude] : [20, 78]
+                } // default set to India
                 zoom={zoom}
                 onBoundsChanged={({ zoom, bounds, initial }) => {
                   if (initial) {
+                    if (!centroid) return setZoom(2);
                     setIsFindingZoomLevel(true);
                   }
                   if (initial || isFindingZoomLevel) {
@@ -212,7 +215,7 @@ function RedDot({ zoom }: { zoom: number }) {
         borderRadius: "50%",
         backgroundColor: "red", // TODO: maybe provide a radial gradient & variable radius based on 'zoom' to have a heatmap effect?
         zIndex: 1000,
-        opacity: (zoom + 1) / 18,
+        opacity: Math.max((zoom + 1) / 18, 0.2),
       }}
     />
   );

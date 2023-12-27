@@ -116,10 +116,9 @@ export function getNavTopData(subscription) {
       ? []
       : [
           {
-            Icon: IconUsers,
-            label: "Members",
-            href: "/dashboard/members",
-            role: UserRole.SUPADM,
+            Icon: IconSpeakerphone,
+            label: "Campaign",
+            href: "/dashboard/campaign",
           },
           {
             Icon: IconAddressBook,

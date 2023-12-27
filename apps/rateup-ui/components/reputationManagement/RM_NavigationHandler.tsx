@@ -84,7 +84,8 @@ export function RM_NavigationHandler() {
   const [filters, setFilters] = useImmer(defaultFilters);
 
   useEffect(() => {
-    if (ranges.length === 0 && reviews) {
+    if (!reviews || reviews.length === 0) return;
+    if (ranges.length === 0) {
       const endDate = dayjs();
       const startDate = reviews?.reduce(
         (min, r) => (r.reviewedAt.isBefore(min) ? r.reviewedAt : min),
@@ -161,7 +162,9 @@ export function RM_NavigationHandler() {
                 ranges={ranges}
               />
               <TeamSelector
-                w="100px"
+                style={{
+                  flex: 1,
+                }}
                 value={selectedTeamId}
                 onChange={setSelectedTeamId}
               />
