@@ -2,9 +2,12 @@ import { Flex, Drawer, Burger, Image, Menu, Text } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import styles from "./MobileNavDrawer.module.css";
 import headerStyles from "../Header.module.css";
+import drawerStyles from "./Drawer.module.css";
+import menuStyles from "./Menu.module.css";
 import Link from "next/link";
 import { getMobileNavLinkMenuItems } from "../../../constants";
 import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 function MobileNavDrawer() {
   const [
@@ -14,6 +17,11 @@ function MobileNavDrawer() {
 
   const isViewportLEQ1024px = useMediaQuery("(max-width: 1024px");
   const isViewportLEQ768px = useMediaQuery("(max-width: 768px");
+
+  const router = useRouter();
+  useEffect(() => {
+    closeNavDrawer();
+  }, [router]);
 
   useEffect(() => {
     if (!isViewportLEQ1024px) {
@@ -46,10 +54,10 @@ function MobileNavDrawer() {
           </Link>
         }
         zIndex={500}
-        classNames={styles}
+        classNames={drawerStyles}
         size={"400px"}
       >
-        <Menu classNames={styles}>
+        <Menu classNames={menuStyles}>
           {getMobileNavLinkMenuItems(
             `${headerStyles["header-link"]} ${styles["mobile-nav-drawer-link"]}`,
           )}

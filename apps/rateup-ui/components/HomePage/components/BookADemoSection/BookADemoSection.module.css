@@ -18,3 +18,12 @@
 .heading-span {
   display: block;
 }
+
+@media screen and (max-width: 425px) {
+  .book-a-demo-container {
+    padding: 2rem;
+  }
+  .book-a-demo-container h1 {
+    font-size: 1.25rem;
+  }
+}

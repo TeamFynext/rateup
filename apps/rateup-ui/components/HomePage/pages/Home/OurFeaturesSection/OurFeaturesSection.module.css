@@ -3,13 +3,12 @@
   gap: 1.5rem;
 }
 
-.our-features-container > h1 {
-  text-align: center;
-  margin-bottom: 1rem;
-  color: var(--grey-color-2);
-  font-size: 1.625rem;
-}
-
 .line {
   display: block;
+}
+
+@media screen and (max-width: 425px) {
+  .our-features-container > h1 {
+    margin-bottom: 6px;
+  }
 }

@@ -54,3 +54,9 @@
     font-size: 0.625rem;
   }
 }
+
+@media screen and (max-width: 425px) {
+  .panel {
+    font-size: 0.875rem;
+  }
+}

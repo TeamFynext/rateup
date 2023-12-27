@@ -2,6 +2,7 @@ import { Flex, Stack, Text, Title } from "@mantine/core";
 import DeepInsightsSection from "./DeepInsightsSection";
 import ApiAndSdkSection from "./ApiAndSdkSection";
 import styles from "./OurFeaturesSection.module.css";
+import commonStyles from "../../../index/index.module.css";
 import SurveyFeaturesCarousel from "./SurveyFeaturesCarousel";
 import AdvancedAIModelsTextBanner from "./AdvancedAIModelsTextBanner";
 import TransformingOnlinePresence from "./TransformingOnlinePresence";
@@ -10,7 +11,11 @@ import { lexend600 } from "../../../../../utils/fonts";
 function OurFeaturesSection() {
   return (
     <Stack id="our-features" className={styles["our-features-container"]}>
-      <Title className={lexend600.className}>OUR FEATURES</Title>
+      <Title
+        className={`${lexend600.className} ${commonStyles["section-heading"]}`}
+      >
+        OUR FEATURES
+      </Title>
       <AdvancedAIModelsTextBanner />
       <SurveyFeaturesCarousel />
       <DeepInsightsSection />

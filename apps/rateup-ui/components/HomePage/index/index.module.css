@@ -95,9 +95,23 @@
     flex-direction: column;
   }
   .illustration-txt-section-video {
-    height: 70vw;
+    height: 60vw;
   }
   .illustration-txt-section-video-container {
     order: 1;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  .section-heading {
+    font-size: 1.125rem;
+  }
+
+  .illustration-txt-section-heading {
+    font-size: 1rem;
+  }
+
+  .illustration-txt-section-text-para {
+    font-size: 0.875rem;
   }
 }

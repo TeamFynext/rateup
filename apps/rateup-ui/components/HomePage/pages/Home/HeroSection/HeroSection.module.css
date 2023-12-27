@@ -66,9 +66,28 @@
 @media screen and (max-width: 768px) {
   .hero-section-container {
     padding: 3rem 1rem;
+    background-size:
+      250px 250px,
+      auto;
   }
 
   .hero-section-heading {
     font-size: 1.875rem;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  .hero-section-container {
+    background-size:
+      200px 200px,
+      auto;
+  }
+
+  .hero-section-heading {
+    font-size: 1.5rem;
+  }
+
+  .hero-section-para {
+    font-size: 1rem;
   }
 }

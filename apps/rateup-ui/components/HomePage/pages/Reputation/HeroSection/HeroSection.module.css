@@ -55,3 +55,13 @@
     display: none;
   }
 }
+
+@media screen and (max-width: 425px) {
+  .text-container > h1 {
+    font-size: 1.5rem;
+  }
+
+  .text-container > p {
+    font-size: 1rem;
+  }
+}

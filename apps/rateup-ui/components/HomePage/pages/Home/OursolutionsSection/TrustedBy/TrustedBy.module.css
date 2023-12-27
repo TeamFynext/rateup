@@ -20,3 +20,9 @@
   height: 8.125rem;
   object-fit: contain;
 }
+
+@media screen and (max-width: 425px) {
+  .trustedby-companies-container > h1 {
+    font-size: 1.125rem;
+  }
+}

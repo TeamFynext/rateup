@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Flex, Menu, NavLink } from "@mantine/core";
 import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover";
 import headerStyles from "./components/Header/Header.module.css";
-import navLinkStyles from "./components/Header/MobileNavDrawer/MobileNavDrawer.module.css";
+import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 
@@ -73,7 +73,7 @@ export const getNavLinksArray = (className: string, isHeader: boolean) =>
 
 export const getMobileNavLinkMenuItems = (className: string = "") =>
   navLinks.map(({ href, linkText, hasSublinks, sublinks }) => (
-    <Menu.Item key={linkText}>
+    <Menu.Item key={linkText} component="div">
       {hasSublinks ? (
         <NavLink
           href={href}

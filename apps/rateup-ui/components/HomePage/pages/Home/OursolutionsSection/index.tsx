@@ -13,7 +13,9 @@ function OurSolutionsSection() {
 
   return (
     <Stack id="our-solutions" className={styles["our-solutions-container"]}>
-      <Title className={lexend600.className}>OUR SOLUTIONS</Title>
+      <Title className={`${lexend600.className} ${styles["section-heading"]}`}>
+        OUR SOLUTIONS
+      </Title>
       <InteractiveSolutionDescriptions solutions={solutionsList} />
       <TrustedBy />
       <Banner text={"Boost Up Your Google Reviews"} />
