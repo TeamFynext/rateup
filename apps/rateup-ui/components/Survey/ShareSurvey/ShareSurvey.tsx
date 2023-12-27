@@ -54,12 +54,11 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
-import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
+import { TabEnum } from "../SurveyId";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
 import Heading from "../../styled/Heading/Heading";
 import { useQRCode } from "next-qrcode";
-import CustomQRCode from "./components/CustomQrCode/CustomQrCode";
 import NothingFound from "../../NothingFound/NothingFound";
 import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
 const ShareSurvey = ({
