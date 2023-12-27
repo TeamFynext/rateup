@@ -61,6 +61,7 @@ import Heading from "../../styled/Heading/Heading";
 import { useQRCode } from "next-qrcode";
 import CustomQRCode from "./components/CustomQrCode/CustomQrCode";
 import NothingFound from "../../NothingFound/NothingFound";
+import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
 const ShareSurvey = ({
   survey,
   setActiveTab,
@@ -92,11 +93,12 @@ const ShareSurvey = ({
     if (!surveyId || !surveyTeamMapId) return;
     if (survey.type === "whatsapp") {
       // TODO: get phone number from phone id (add phone number field)
-      setShareUrl(
-        `https://wa.me/7907137774?text=${encodeURIComponent(
-          "/start " + surveyTeamMapId, //TODO verify  id:    use survey.id if required
-        )}`,
-      );
+      if (survey.getLocation) {
+        // redirecting through our page to fetch ip
+        setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
+      } else {
+        setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+      }
     } else {
       setShareUrl(
         `${

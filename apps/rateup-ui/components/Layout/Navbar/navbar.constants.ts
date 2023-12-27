@@ -30,7 +30,7 @@ export interface NavbarLinkProps {
 }
 //data Array consisting of NavbarTopData
 export function getNavTopData(subscription) {
-  const featureList = Object.keys(subscription.features);
+  const featureList = Object.keys(subscription?.features || {});
   const navTopData: Array<NavbarLinkProps> = [
     {
       Icon: IconLayoutDashboard,

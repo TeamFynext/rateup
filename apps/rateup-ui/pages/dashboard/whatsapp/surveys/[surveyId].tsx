@@ -162,7 +162,7 @@ export default () => {
               <SurveySettings
                 survey={survey}
                 surveyId={survey?.id}
-                enabledModules={["name", "language", "teams"]}
+                enabledModules={["name", "language", "teams", "location"]}
               />
             </Tabs.Panel>
             <Tabs.Panel value={TabEnum.Result}>
