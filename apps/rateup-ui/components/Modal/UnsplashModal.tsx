@@ -34,9 +34,13 @@ export const UnsplashModal = ({ opened, onclose, handleUnsplashImageSave }) => {
       unsplashPhotosList?.fetchNextPage();
     }
   }, [entry]);
-  const _photoList = unsplashPhotosList?.data?.pages?.flatMap((page) =>
-    debouncedSearchQuery?.length > 0 ? page?.results : page,
-  );
+
+  const _photoList = (
+    unsplashPhotosList?.data?.pages?.flatMap((page) =>
+      debouncedSearchQuery?.trim()?.length > 0 ? page?.results : page,
+    ) ?? []
+  ).filter((item) => item !== undefined);
+
   return (
     <SimpleModalLayout
       title="Unsplash Images"

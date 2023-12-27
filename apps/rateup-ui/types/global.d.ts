@@ -329,6 +329,9 @@ declare global {
     menuId: string;
     image: string;
     itemOrder?: number;
+    scheduleEnabled?: boolean;
+    startTime?: string;
+    endTime?: string;
   };
 
   type MenuItem = {

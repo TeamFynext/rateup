@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { FileButton, LoadingOverlay, Stack, Image } from "@mantine/core";
+import {
+  FileButton,
+  LoadingOverlay,
+  Stack,
+  Image,
+  SimpleGrid,
+  Title,
+  Switch,
+  Group,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   useCreateMenuCategoryMutation,
@@ -11,16 +20,19 @@ import {
   uploadFile,
 } from "../../utils/file-upload/upload";
 import FormModalLayout from "../Modal/FormModalLayout";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedTextField,
+  ContainedTimeInput,
+} from "../input/ContainedInput/ContainedInput";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 import { ImageCropModal } from "../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
 
 interface CreateMenuCategoryModalProps {
-  opened: boolean;
-  close: () => void;
-  menuId: string;
-  editingItem?: MenuCategory;
+  readonly opened: boolean;
+  readonly close: () => void;
+  readonly menuId: string;
+  readonly editingItem?: MenuCategory;
 }
 export function CreateMenuCategoryModal({
   opened,
@@ -46,9 +58,16 @@ export function CreateMenuCategoryModal({
       name: "",
       menuId: menuId,
       image: "",
+      scheduleEnabled: false,
+      startTime: "",
+      endTime: "",
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
+      endTime: (value, values) => {
+        const startTime = values.startTime;
+        return value < startTime && "End time cannot be before start time";
+      },
     },
   });
 
@@ -88,36 +107,34 @@ export function CreateMenuCategoryModal({
     },
   );
 
-  const onSubmit = async (values) => {
-    const validationRes = form.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
-      return;
-    }
+  const onSubmit = (values) => {
     setIsCreating(true);
     let temp = "";
-    if (imageToUpload) {
-      const fileKey = await uploadFile(imageToUpload);
-      if (typeof fileKey === "string") {
-        temp = fileKey;
+    const processSubmit = async () => {
+      if (imageToUpload) {
+        const fileKey = await uploadFile(imageToUpload);
+        if (typeof fileKey === "string") {
+          temp = fileKey;
+        }
       }
-    }
-    if (editingItem) {
-      if (editingItem?.image && editingItem?.image !== values?.image) {
-        await deleteUploadedFiles({
-          fileKeyArray: [{ Key: editingItem?.image }],
+      if (editingItem) {
+        if (editingItem?.image && editingItem?.image !== values?.image) {
+          await deleteUploadedFiles({
+            fileKeyArray: [{ Key: editingItem?.image }],
+          });
+        }
+        values.image = temp;
+        editMenuCategoryMutation.mutate({
+          categoryId: editingItem.id,
+          menuCategory: values,
         });
+      } else {
+        values.image = temp;
+        createMenuCategoryMutation.mutate(values);
       }
-      values.image = temp;
-      editMenuCategoryMutation.mutate({
-        categoryId: editingItem.id,
-        menuCategory: values,
-      });
-    } else {
-      values.image = temp;
-      createMenuCategoryMutation.mutate(values);
-    }
-    setIsCreating(false);
+      setIsCreating(false);
+    };
+    processSubmit();
   };
 
   if (!menuId) {
@@ -144,6 +161,7 @@ export function CreateMenuCategoryModal({
       centered
       onSubmit={form.onSubmit(onSubmit)}
       buttonTitle={editingItem ? "Save Category" : "Create Category"}
+      size="55rem"
     >
       <Stack>
         <ImageCropModal
@@ -164,48 +182,80 @@ export function CreateMenuCategoryModal({
           overlayProps={{ radius: "sm", blur: 2 }}
           loaderProps={{ type: "bars" }}
         />
-        <ContainedTextField
-          label="Name"
-          placeholder="Name"
-          withAsterisk
-          {...form.getInputProps("name")}
-        />
-        {form.values.image && (
-          <Image
-            w={"200px"}
-            h={200}
-            mah={200}
-            fallbackSrc={fallbackImage}
-            src={
-              form.values?.image?.startsWith("blob")
-                ? form.values.image
-                : getFileUrlFromKey(form.values?.image)
-            }
-          />
-        )}
-        <FileButton
-          onChange={onChangePicture}
-          accept="image/png,image/jpeg,image/svg+xml,image/webp"
-          disabled={isCreating}
-          resetRef={resetRef}
-        >
-          {(props) => {
-            let buttonText = "";
-            if (form.values.image) {
-              buttonText = "Replace Image";
-            } else {
-              buttonText = "Add Image";
-            }
-            return (
-              <RateupButtonSecondary
-                title={buttonText}
-                {...props}
-                loading={isCreating}
-                disabled={isCreating}
+        <SimpleGrid cols={{ base: 1, md: 2 }}>
+          <Stack>
+            <Title order={3} c={"var(--grey-color)"}>
+              Category Details
+            </Title>
+            <ContainedTextField
+              label="Name"
+              placeholder="Name"
+              withAsterisk
+              {...form.getInputProps("name")}
+            />
+            <SimpleGrid cols={{ base: 1, md: 2 }}>
+              {form.values.image && (
+                <Image
+                  w={186}
+                  h={125}
+                  mah={125}
+                  fallbackSrc={fallbackImage}
+                  src={
+                    form.values?.image?.startsWith("blob")
+                      ? form.values.image
+                      : getFileUrlFromKey(form.values?.image)
+                  }
+                />
+              )}
+              <Stack justify="center">
+                <FileButton
+                  onChange={onChangePicture}
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  disabled={isCreating}
+                  resetRef={resetRef}
+                >
+                  {(props) => {
+                    let buttonText = "";
+                    if (form.values.image) {
+                      buttonText = "Replace Image";
+                    } else {
+                      buttonText = "Add Image";
+                    }
+                    return (
+                      <RateupButtonSecondary
+                        title={buttonText}
+                        {...props}
+                        loading={isCreating}
+                        disabled={isCreating}
+                      />
+                    );
+                  }}
+                </FileButton>
+              </Stack>
+            </SimpleGrid>
+          </Stack>
+          <Stack>
+            <Group>
+              <Title order={3} c={"var(--grey-color)"}>
+                Schedule Category{" "}
+              </Title>
+              <Switch
+                {...form.getInputProps("scheduleEnabled")}
+                checked={form?.values?.scheduleEnabled}
               />
-            );
-          }}
-        </FileButton>
+            </Group>
+            <ContainedTimeInput
+              label={"Start Time:"}
+              disabled={!form?.values?.scheduleEnabled}
+              {...form.getInputProps("startTime")}
+            />
+            <ContainedTimeInput
+              label={"End Time:"}
+              disabled={!form?.values?.scheduleEnabled}
+              {...form.getInputProps("endTime")}
+            />
+          </Stack>
+        </SimpleGrid>
       </Stack>
     </FormModalLayout>
   );
