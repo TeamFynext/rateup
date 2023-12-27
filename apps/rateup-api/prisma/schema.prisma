@@ -246,6 +246,7 @@ model WaSession {
   responses             Json[]
   language              String               @default("")
   orgId                 String               @db.Uuid
+  ip                    String?
 
   @@unique([phone, orgId])
 }
@@ -517,4 +518,11 @@ model Subscription {
   renewedAt DateTime?
   expiresAt DateTime
   createdAt DateTime  @default(now())
+}
+
+// used to tokenize some data
+model Temporary_Tokenization {
+  token     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  data      Json
+  createdAt DateTime @default(now()) // gets deleted after 24 hours. shouldn't be used for long term storage
 }
