@@ -119,7 +119,7 @@ export default function SurveyID() {
   }
   return (
     <MantineProvider
-      theme={survey?.type === SurveyType.WhatsApp ? whatsappTheme : null}
+      theme={survey?.type === SurveyType.WhatsApp ? whatsappTheme : undefined}
     >
       <SelectedLanguageContext.Provider
         value={{ selectedLanguage, defaultLanguage }}
@@ -192,7 +192,7 @@ export default function SurveyID() {
               value={TabEnum.Edit}
               style={{ background: "white", width: "100%" }}
             >
-              {survey?.type !== SurveyType.WhatsApp ? (
+              {survey?.type === SurveyType.WhatsApp ? (
                 <EditWhatsappSurvey
                   questions={questions}
                   addQnTrigger={addQnTrigger}
