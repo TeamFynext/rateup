@@ -1,15 +1,26 @@
 import { Flex, Drawer, Burger, Image, Menu, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import styles from "./MobileNavDrawer.module.css";
 import headerStyles from "../Header.module.css";
 import Link from "next/link";
 import { getMobileNavLinkMenuItems } from "../../../constants";
+import { useEffect } from "react";
 
 function MobileNavDrawer() {
   const [
     isNavDrawerOpen,
     { open: openNavDrawer, close: closeNavDrawer, toggle },
   ] = useDisclosure(false);
+
+  const isViewportLEQ1024px = useMediaQuery("(max-width: 1024px");
+  const isViewportLEQ768px = useMediaQuery("(max-width: 768px");
+
+  useEffect(() => {
+    if (!isViewportLEQ1024px) {
+      closeNavDrawer();
+    }
+  }, [isViewportLEQ1024px]);
+
   return (
     <Flex className={styles["mobile-nav-drawer-container"]}>
       <Burger
@@ -21,6 +32,7 @@ function MobileNavDrawer() {
 
       <Drawer
         opened={isNavDrawerOpen}
+        position={isViewportLEQ768px ? "right" : "left"}
         onClose={closeNavDrawer}
         title={
           <Link href="/">

@@ -62,7 +62,7 @@ function DescriptionsCarouselSlides({
               }`}
               data-index={index}
               transition={{
-                duration: 0.75,
+                duration: 1,
               }}
             >
               <div className={styles["card-content"]}>
