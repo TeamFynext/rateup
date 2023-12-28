@@ -28,6 +28,7 @@ import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import FormModalLayout from "../../../../Modal/FormModalLayout";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal";
+import { fallbackImage } from "../../../../../utils/constants";
 
 interface TestimonialProps {
   features;
@@ -183,19 +184,15 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                     />
                   </Box>
                 </FormModalLayout>
-                {file || response?.photo ? (
-                  <Skeleton
-                    visible={isUploading}
-                    height={"100%"}
-                    width={"100%"}
-                  >
-                    <Image
-                      src={getFileUrlFromKey(response?.photo)}
-                      alt="Your uploaded image"
-                      radius={"10px"}
-                    />
-                  </Skeleton>
-                ) : null}
+                <Skeleton visible={isUploading} height={"100%"} width={"100%"}>
+                  <Image
+                    src={getFileUrlFromKey(response?.photo)}
+                    alt="Your uploaded image"
+                    radius={"10px"}
+                    fallbackSrc={fallbackImage}
+                    h={fallbackImage ? 148 : 200}
+                  />
+                </Skeleton>
               </Box>
               <Stack>
                 <FileButton
