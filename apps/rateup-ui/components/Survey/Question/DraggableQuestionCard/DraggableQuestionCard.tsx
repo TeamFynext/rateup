@@ -65,7 +65,6 @@ export function DraggableQuestionCard({
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {
-          e.stopPropagation();
           handleDelete(e, question.id);
         }}
       />

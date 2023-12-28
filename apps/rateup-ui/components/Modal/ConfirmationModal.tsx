@@ -1,5 +1,10 @@
-import { Group, Modal, Stack, Text } from "@mantine/core";
+import { Group, Modal, Stack, Text, Blockquote } from "@mantine/core";
 import { RateupButtonBlue } from "../Button/RateupButtons";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import { useState } from "react";
+import { useUser } from "../../context/UserContext";
+import { showErrorToast } from "../../utils/notifications";
+import { IconAlertOctagon, IconAlertOctagonFilled } from "@tabler/icons-react";
 
 interface ConfirmationModalProps {
   forDeleteFunctionality?: boolean;
@@ -9,6 +14,8 @@ interface ConfirmationModalProps {
   headerLabel: string;
   confirmLabel: string;
   onConfirm: (e?: any) => void;
+  includeEmailConfirmation?: boolean;
+  deleteQuotion?: string;
 }
 export default function ConfirmationModal({
   opened,
@@ -18,7 +25,27 @@ export default function ConfirmationModal({
   onConfirm,
   headerTitle,
   forDeleteFunctionality,
+  includeEmailConfirmation = false,
+  deleteQuotion,
 }: ConfirmationModalProps) {
+  const [email, setEmail] = useState("");
+  const {
+    user: { email: currentUserMail },
+  } = useUser();
+  function confirmation(e) {
+    e.stopPropagation();
+    if (includeEmailConfirmation) {
+      if (email === currentUserMail) {
+        onConfirm();
+        onClose();
+      } else {
+        showErrorToast("Entered email invalid");
+      }
+    } else {
+      onConfirm();
+      onClose();
+    }
+  }
   return (
     <Modal
       centered
@@ -37,11 +64,33 @@ export default function ConfirmationModal({
       <Modal.Body>
         <Stack>
           <Text fw={500}>{headerLabel}</Text>
+          {forDeleteFunctionality && deleteQuotion && (
+            <Blockquote
+              color="red"
+              icon={<IconAlertOctagon size={18} />}
+              iconSize={30}
+              p={"sm"}
+            >
+              <Text size="xs">{deleteQuotion}</Text>
+            </Blockquote>
+          )}
+          {includeEmailConfirmation && (
+            <Stack gap={0}>
+              <Text c="dimmed" size="xs">
+                Please enter your email to confirm
+              </Text>
+              <ContainedTextField
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+              />
+            </Stack>
+          )}
           <Group justify="flex-end" mt="md">
             <RateupButtonBlue title={"Cancel"} onClick={onClose} />
             <RateupButtonBlue
               title={confirmLabel ?? "Submit"}
-              onClick={onConfirm}
+              onClick={confirmation}
               color={forDeleteFunctionality ? "red" : ""}
             />
           </Group>

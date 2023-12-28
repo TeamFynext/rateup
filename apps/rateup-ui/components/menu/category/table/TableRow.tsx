@@ -100,7 +100,6 @@ const TableRow = ({
             headerTitle="Delete Menu Item?"
             confirmLabel="Delete"
             onConfirm={(e) => {
-              e.stopPropagation();
               notifications.show({
                 id: "delete-data-menu-item",
                 loading: true,

@@ -359,7 +359,6 @@ export const Slide = ({
           headerTitle="Delete Menu Banner?"
           confirmLabel="Delete"
           onConfirm={(e) => {
-            e.stopPropagation();
             handleDeleteMutation();
             closeDialog();
           }}
