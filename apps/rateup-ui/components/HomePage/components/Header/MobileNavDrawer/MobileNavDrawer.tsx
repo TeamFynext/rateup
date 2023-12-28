@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getMobileNavLinkMenuItems } from "../../../constants";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { imagesPath } from "../../../constants";
 
 function MobileNavDrawer() {
   const [
@@ -45,7 +46,7 @@ function MobileNavDrawer() {
         title={
           <Link href="/">
             <Image
-              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
+              src={`${imagesPath}/logo.svg`}
               alt="logo"
               w={75}
               h={65}

@@ -80,9 +80,6 @@ function DescriptionsCarouselSlides({
                     </div>
                   ) : (
                     ""
-                    // <div className={styles["list-indicator-circle-container"]}>
-                    //   <div className={styles["list-indicator-circle"]}></div>
-                    // </div>
                   )}
                   <span>{heading}</span>
                 </Title>
