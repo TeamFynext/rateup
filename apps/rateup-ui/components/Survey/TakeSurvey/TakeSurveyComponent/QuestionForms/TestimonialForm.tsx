@@ -80,7 +80,6 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
       .then((key) => {
         updateResponse({ ...response, photo: key });
         setIsUploading(false);
-        console.log("response", response);
       })
       .catch((err) => {
         showErrorToast("Error uploading icon. Please try again.");

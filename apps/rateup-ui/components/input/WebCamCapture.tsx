@@ -31,7 +31,6 @@ const WebcamCapture = ({
     });
     setImgSrc(imageSrc);
   }, [webcamRef]);
-  console.log("imgSrc", imgSrc);
   return (
     <Stack>
       {imgSrc ? (

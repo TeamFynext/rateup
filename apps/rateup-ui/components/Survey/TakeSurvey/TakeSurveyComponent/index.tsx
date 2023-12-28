@@ -389,7 +389,6 @@ function TakeSurvey() {
                                   const data = Object.values(
                                     response?.response,
                                   )[0];
-                                  console.log("data", data);
                                   return (
                                     <Stack>
                                       <Group>
