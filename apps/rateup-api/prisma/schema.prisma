@@ -246,6 +246,7 @@ model WaSession {
   responses             Json[]
   language              String               @default("")
   orgId                 String               @db.Uuid
+  ip                    String?
 
   @@unique([phone, orgId])
 }
@@ -357,34 +358,38 @@ model WelcomeTheme {
 }
 
 model Menu {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt     DateTime       @default(now())
-  name          String // name of the menu
-  displayName   String // name displayed to clients (eg: Restaurant's Name)
-  locationText  String? // location of the restaurant
-  locationUrl   String? // google maps url
-  websiteUrl    String? // website url
-  websiteText   String? // text to display for website url
-  logo          String? // logo url
-  isPublished   Boolean        @default(false)
-  categories    MenuCategory[]
-  team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId        String         @db.Uuid
-  menuLanding   MenuLanding?
-  currency      String         @default("0")
-  menuBanner    MenuBanner[]
-  shareSettings Json?
+  id                            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                     DateTime       @default(now())
+  name                          String // name of the menu
+  displayName                   String // name displayed to clients (eg: Restaurant's Name)
+  locationText                  String? // location of the restaurant
+  locationUrl                   String? // google maps url
+  websiteUrl                    String? // website url
+  websiteText                   String? // text to display for website url
+  logo                          String? // logo url
+  isPublished                   Boolean        @default(false)
+  categories                    MenuCategory[]
+  team                          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                        String         @db.Uuid
+  menuLanding                   MenuLanding?
+  currency                      String         @default("0")
+  menuBanner                    MenuBanner[]
+  shareSettings                 Json?
+  hideUnavailableCategory Boolean        @default(false)
 }
 
 model MenuCategory {
-  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime   @default(now())
-  name      String
-  itemOrder Int        @default(0)
-  menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  menuId    String     @db.Uuid
-  items     MenuItem[]
-  image     String?
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime   @default(now())
+  name            String
+  itemOrder       Int        @default(0)
+  menu            Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId          String     @db.Uuid
+  items           MenuItem[]
+  image           String?
+  scheduleEnabled Boolean    @default(false)
+  startTime       DateTime?
+  endTime         DateTime?
 }
 
 model MenuItem {
@@ -517,4 +522,11 @@ model Subscription {
   renewedAt DateTime?
   expiresAt DateTime
   createdAt DateTime  @default(now())
+}
+
+// used to tokenize some data
+model Temporary_Tokenization {
+  token     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  data      Json
+  createdAt DateTime @default(now()) // gets deleted after 24 hours. shouldn't be used for long term storage
 }

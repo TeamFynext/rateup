@@ -108,6 +108,8 @@ export function getVerifySubscriptionHandler(features: Array<SubscriptionFeature
       if (!subscription) {
         // TODO: allowing access for now, but this should throw unauthorized error
         // Giving unrestricted access to all features for now
+        log.trace('No subscription found\nrequest.user => %o', request.user);
+        log.trace('Creating subscription with unlimited access\nrequest.user => %o\n%o', request.user, UnlimitedAccess);
         request.subscription = await prisma.subscription.create({
           data: {
             features: UnlimitedAccess,

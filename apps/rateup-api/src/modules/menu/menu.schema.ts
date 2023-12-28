@@ -26,6 +26,8 @@ const updateMenuInputSchema = z.object({
   isPublished: z.boolean().optional(),
   itemOrder: z.string().optional(),
   currency: z.string().optional(),
+  teamId: z.string().optional(),
+  hideUnavailableCategory: z.boolean().optional(),
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
@@ -56,6 +58,9 @@ const fullMenuPublicResponseSchema = z.object({
       id: z.string(),
       name: z.string(),
       image: z.string().optional(),
+      scheduleEnabled: z.boolean().optional(),
+      startTime: z.date().optional(),
+      endTime: z.date().optional(),
       items: z.array(
         z.object({
           id: z.string(),
@@ -65,9 +70,9 @@ const fullMenuPublicResponseSchema = z.object({
           videoUrl: z.string().optional(),
           price: z.any(),
           disabled: z.boolean()?.optional(),
-        })
+        }),
       ),
-    })
+    }),
   ),
   menuLanding: z
     .object({
@@ -100,6 +105,7 @@ const fullMenuPublicResponseSchema = z.object({
       surveyTeamMapId: z.string().optional().nullable(),
       menu: z.object({
         currency: z.string().optional(),
+        hideUnavailableCategory: z.boolean().optional(),
       }),
     })
     .nullable(),
@@ -115,7 +121,7 @@ const updateMenuLandingInputSchema = z.object({
   titleStyle: StyleSchema.merge(
     z.object({
       fontSize: z.number(),
-    })
+    }),
   ),
   otherStyle: z.object({
     fontFamily: z.string().optional(),
@@ -158,7 +164,7 @@ export const { schemas: menuSchemas, $ref: $Mref } = buildJsonSchemas(
   },
   {
     $id: "menuSchema",
-  }
+  },
 );
 
 export type CreateMenuInput = z.infer<typeof menuInputSchema>;
