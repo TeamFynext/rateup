@@ -19,8 +19,9 @@ import { TestimonialForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionFo
 import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailPhoneForm";
 import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
 import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
+import TrustedBy from "../../../HomePage/pages/Home/OursolutionsSection/TrustedBy";
 
-const QuestionTypePreview = ({ type, choices }) => {
+const QuestionTypePreview = ({ type, choices, features }) => {
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -53,7 +54,7 @@ const QuestionTypePreview = ({ type, choices }) => {
     case Q.DDMS:
       return <DDMSForm previewChoices={choices} />;
     case Q.Testimonial:
-      return <TestimonialForm />;
+      return <TestimonialForm features={features} isPreview={true} />;
     case Q.EmailPhone:
       return <EmailPhoneForm />;
     case Q.DateTime:
