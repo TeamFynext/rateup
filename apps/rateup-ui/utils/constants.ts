@@ -23,6 +23,7 @@ export const NPSQuestions = [
 ];
 
 export const WaNPSQuestions = [
+  QuestionType.Rating,
   QuestionType.Smiley,
   QuestionType.LD,
   QuestionType.YN,
@@ -75,3 +76,5 @@ export const ChoiceTypeQuestions = [
   QuestionType.CustomNPS,
   QuestionType.WaButtons,
 ];
+
+export const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;

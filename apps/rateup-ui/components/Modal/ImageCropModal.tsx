@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import FormModalLayout from "./FormModalLayout";
 import ReactCrop, {
   centerCrop,
@@ -6,10 +6,10 @@ import ReactCrop, {
   Crop,
   PixelCrop,
 } from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
 import { useDebounceEffect } from "../menu/hook/useDebounceEffect";
 import { canvasPreview } from "../menu/easyCrop/CanvasPreview";
 import { getCroppedImg } from "../menu/easyCrop/EasyCrop";
+import "react-image-crop/dist/ReactCrop.css";
 
 export const ImageCropModal = ({
   opened,
@@ -58,6 +58,16 @@ export const ImageCropModal = ({
       mediaHeight,
     );
   }
+  useEffect(() => {
+    setCrop({
+      unit: "%",
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+    });
+  }, [image]);
+
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     if (aspect) {
       const { width, height } = e.currentTarget;

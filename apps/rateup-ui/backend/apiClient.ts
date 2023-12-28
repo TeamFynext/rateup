@@ -26,15 +26,6 @@ const axiosClientIP = axios.create({
     Accept: "application/json",
   },
 });
-
-const axiosClientUnsplash = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_UNSPLASH_API_URL}`,
-  timeout: 8000,
-  headers: {
-    Accept: "application/json",
-    Authorization: `Client-ID ${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}`,
-  },
-});
 axiosClientIP.interceptors.response.use((_) => _, subscriptionErrorHandler);
 
-export { axiosClient, axiosClientIP, axiosClientUnsplash };
+export { axiosClient, axiosClientIP };

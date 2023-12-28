@@ -57,7 +57,6 @@ export default function ResultComparison() {
     isLoading: rLoading,
     error: rError,
   } = useAllResponses(surveyId?.toString());
-
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
     teamWiseResponses,

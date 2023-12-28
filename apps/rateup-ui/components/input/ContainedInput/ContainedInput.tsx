@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   Select,
   TextInput,
@@ -14,8 +14,12 @@ import {
   NumberInput,
   ColorInput,
   ColorInputProps,
+  ActionIcon,
+  rem,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
+import { TimeInput, TimeInputProps } from "@mantine/dates";
+import { IconClock } from "@tabler/icons-react";
 
 export function ContainedTextField(props: TextInputProps) {
   return <TextInput classNames={classes} {...props} />;
@@ -50,4 +54,25 @@ export function ContainedNumberInput(props: NumberInputProps) {
 
 export function ContainedColorInput(props: ColorInputProps) {
   return <ColorInput disallowInput classNames={classes} {...props} />;
+}
+
+export function ContainedTimeInput(props: TimeInputProps) {
+  const ref = useRef<HTMLInputElement>(null);
+  const pickerControl = (
+    <ActionIcon
+      variant="subtle"
+      color="gray"
+      onClick={() => ref?.current?.showPicker()}
+    >
+      <IconClock style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+    </ActionIcon>
+  );
+  return (
+    <TimeInput
+      ref={ref}
+      rightSection={pickerControl}
+      classNames={classes}
+      {...props}
+    />
+  );
 }

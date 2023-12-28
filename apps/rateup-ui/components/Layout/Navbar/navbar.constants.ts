@@ -30,7 +30,7 @@ export interface NavbarLinkProps {
 }
 //data Array consisting of NavbarTopData
 export function getNavTopData(subscription) {
-  const featureList = Object.keys(subscription.features);
+  const featureList = Object.keys(subscription?.features || {});
   const navTopData: Array<NavbarLinkProps> = [
     {
       Icon: IconLayoutDashboard,
@@ -116,10 +116,9 @@ export function getNavTopData(subscription) {
       ? []
       : [
           {
-            Icon: IconUsers,
-            label: "Members",
-            href: "/dashboard/members",
-            role: UserRole.SUPADM,
+            Icon: IconSpeakerphone,
+            label: "Campaign",
+            href: "/dashboard/campaign",
           },
           {
             Icon: IconAddressBook,
