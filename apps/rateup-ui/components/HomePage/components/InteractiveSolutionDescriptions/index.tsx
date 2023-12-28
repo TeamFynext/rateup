@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Flex } from "@mantine/core";
+import Image from "next/image";
 import { Carousel } from "@mantine/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import DescriptionsCarouselSlides from "./DescriptionsCarouselSlides";
 import styles from "./InteractiveSolutionDescriptions.module.css";
 import { Solution } from "../../pages/Reputation/constants";
+import MobileInteractiveSolutionDescriptions from "../MobileInteractiveSolutionDescriptions";
 
 type InteractiveSolutionDescriptionsProps = {
   solutions: Solution[];
@@ -23,8 +25,6 @@ function InteractiveSolutionDescriptions({
 
   const [activeSlideIndex, setActiveSlideIndex] = useState<number | null>(null);
 
-  const isViewPortLeq500px = useMediaQuery("(max-width: 500px)");
-
   const { ref: intersectionObserverRef, entry } = useIntersection({
     threshold: 0,
   });
@@ -33,9 +33,10 @@ function InteractiveSolutionDescriptions({
 
   const autoplay = useRef(Autoplay({ delay: 4000 }));
 
+  const isViewportLeq768px = useMediaQuery("(max-width: 768px)");
+
   const variableValues = useRef({
     activeSlideIndex: null,
-    imageCarousalEmblaInstance: null,
     autoplayInterval: null,
   });
 
@@ -48,19 +49,6 @@ function InteractiveSolutionDescriptions({
     }
   }, [entry]);
 
-  const setImageCarousalEmblaInstance = useCallback((emblaInstance) => {
-    variableValues.current.imageCarousalEmblaInstance = emblaInstance;
-  }, []);
-
-  const scrollToActiveIndexImageSlide = useCallback(() => {
-    if (imageContainerImageUrl) return;
-    const { imageCarousalEmblaInstance, activeSlideIndex } =
-      variableValues.current;
-    if (imageCarousalEmblaInstance) {
-      imageCarousalEmblaInstance.scrollTo(activeSlideIndex);
-    }
-  }, []);
-
   const handleDescriptonsCarouselSlideChange = useCallback((index) => {
     if (index < slidesRef.current.size - 1) {
       setActiveSlideIndex(index + 1);
@@ -69,7 +57,6 @@ function InteractiveSolutionDescriptions({
       setActiveSlideIndex(0);
       variableValues.current.activeSlideIndex = 0;
     }
-    scrollToActiveIndexImageSlide();
   }, []);
 
   useEffect(() => {
@@ -112,84 +99,81 @@ function InteractiveSolutionDescriptions({
         ref={intersectionObserverRef}
         className={styles["descriptions-container"]}
       >
-        <Carousel
-          // withIndicators
-          className="descriptions-carousel"
-          orientation="vertical"
-          height={"43.75rem"}
-          slideSize="33.333333%"
-          slideGap="md"
-          loop
-          align="start"
-          slidesToScroll={1}
-          initialSlide={0}
-          onSlideChange={handleDescriptonsCarouselSlideChange}
-          draggable={false}
-          classNames={styles}
-          plugins={[autoplay.current]}
-          onMouseEnter={autoplay.current.stop}
-          onMouseLeave={() => autoplay.current.play()}
-          speed={5}
-          ref={descriptionsCarousalRef}
-        >
-          <DescriptionsCarouselSlides
+        {isViewportLeq768px ? (
+          <MobileInteractiveSolutionDescriptions
             solutions={solutions}
-            activeSlideIndex={activeSlideIndex}
-            slidesRef={slidesRef}
+            setActiveSlideIndex={setActiveSlideIndex}
           />
+        ) : (
+          <Carousel
+            // withIndicators
+            className="descriptions-carousel"
+            orientation="vertical"
+            height={"40rem"}
+            slideSize="33.333333%"
+            slideGap={"md"}
+            loop
+            align="start"
+            slidesToScroll={1}
+            initialSlide={0}
+            onSlideChange={handleDescriptonsCarouselSlideChange}
+            draggable={false}
+            classNames={styles}
+            plugins={[autoplay.current]}
+            onMouseEnter={autoplay.current.stop}
+            onMouseLeave={() => autoplay.current.play()}
+            speed={8}
+            ref={descriptionsCarousalRef}
+          >
+            <DescriptionsCarouselSlides
+              solutions={solutions}
+              activeSlideIndex={activeSlideIndex}
+              slidesRef={slidesRef}
+            />
 
-          <DescriptionsCarouselSlides
-            solutions={solutions}
-            activeSlideIndex={activeSlideIndex}
-            slidesRef={slidesRef}
-            copySlides
-          />
-        </Carousel>
+            <DescriptionsCarouselSlides
+              solutions={solutions}
+              activeSlideIndex={activeSlideIndex}
+              slidesRef={slidesRef}
+              copySlides
+            />
+          </Carousel>
+        )}
       </div>
 
       <div className={styles["image-container"]}>
-        <Carousel
-          orientation="vertical"
-          height={isViewPortLeq500px ? "25rem" : "43.75rem"}
-          align="start"
-          loop
-          getEmblaApi={setImageCarousalEmblaInstance}
-          initialSlide={1}
-          withControls={false}
-          draggable={false}
-          classNames={styles}
-          slideGap={"sm"}
-          speed={5}
-        >
-          {imageContainerImageUrl ? (
-            <Carousel.Slide>
-              <Image
-                src={imageContainerImageUrl}
-                alt={"Illustration"}
-                width={500}
-                height={500}
-                priority={false}
-              />
-            </Carousel.Slide>
-          ) : (
-            // Doing concat for displaying copy slides(for displaying carousel in loop).
-            solutions.concat(solutions).map((solution, i) => {
-              let key = solution.heading;
-              if (i >= solutions.length) key = solution.heading + "x";
-              return (
-                <Carousel.Slide key={key}>
-                  <Image
-                    src={solution.imageUrl}
-                    alt={`${solution.heading}`}
-                    width={500}
-                    height={500}
-                    priority={false}
-                  />
-                </Carousel.Slide>
-              );
-            })
-          )}
-        </Carousel>
+        {imageContainerImageUrl ? (
+          <Image
+            src={imageContainerImageUrl}
+            alt={"Illustration"}
+            width={500}
+            height={500}
+            priority={false}
+          />
+        ) : (
+          <AnimatePresence>
+            {
+              <motion.div
+                className={styles["motion-div"]}
+                key={activeSlideIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  opacity: { duration: 0.75 },
+                }}
+              >
+                <Image
+                  src={solutions[activeSlideIndex % 3].imageUrl}
+                  alt="illustration"
+                  width={500}
+                  height={500}
+                  priority={false}
+                />
+              </motion.div>
+            }
+          </AnimatePresence>
+        )}
       </div>
     </Flex>
   );

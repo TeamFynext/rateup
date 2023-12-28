@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { Flex, Menu } from "@mantine/core";
+import { Flex, Menu, NavLink } from "@mantine/core";
 import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover";
 import headerStyles from "./components/Header/Header.module.css";
+import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
 
-import { imagesPath } from "../../utils/constants";
+export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+export const rateupLogoUrl = `${imagesPath}/logo.svg`;
 
 const navLinks = [
   {
@@ -45,10 +47,10 @@ const navLinks = [
     href: "/",
     linkText: "About Us",
   },
-  {
-    href: "/",
-    linkText: "Blog",
-  },
+  // {
+  //   href: "/",
+  //   linkText: "Blog",
+  // },
 ];
 
 export const getNavLinksArray = (className: string, isHeader: boolean) =>
@@ -70,11 +72,32 @@ export const getNavLinksArray = (className: string, isHeader: boolean) =>
     ),
   );
 
-export const getMobileNavLinkMenuItems = (className: string) =>
-  navLinks.map(({ href, linkText }) => (
-    <Menu.Item key={linkText}>
-      <Link className={className} href={href} key={linkText}>
-        {linkText}
-      </Link>
+export const getMobileNavLinkMenuItems = (className: string = "") =>
+  navLinks.map(({ href, linkText, hasSublinks, sublinks }) => (
+    <Menu.Item key={linkText} component="div">
+      {hasSublinks ? (
+        <NavLink
+          href={href}
+          label={linkText}
+          className={navLinkStyles["navlink-with-chevron"]}
+          classNames={navLinkStyles}
+        >
+          {sublinks.map(({ id, link, content }) => {
+            return (
+              <NavLink
+                key={id}
+                label={content.heading}
+                href={link}
+                component={Link}
+                classNames={navLinkStyles}
+              />
+            );
+          })}
+        </NavLink>
+      ) : (
+        <Link className={className} href={href} key={linkText}>
+          {linkText}
+        </Link>
+      )}
     </Menu.Item>
   ));

@@ -11,14 +11,15 @@ export const getCroppedImg = async (
   previewCanvasRef,
   completedCrop,
   imageName,
+  landingPage = false,
 ) => {
   const image = (await createImage(imgRef?.current?.src)) as HTMLImageElement;
   const previewCanvas = previewCanvasRef.current;
   if (!image || !previewCanvas || !completedCrop) {
     throw new Error("Crop canvas does not exist");
   }
-  const scaleX = 1;
-  const scaleY = 1;
+  const scaleX = landingPage ? 3 : 1;
+  const scaleY = landingPage ? 3 : 1;
 
   const offscreen = new OffscreenCanvas(
     completedCrop.width * scaleX,

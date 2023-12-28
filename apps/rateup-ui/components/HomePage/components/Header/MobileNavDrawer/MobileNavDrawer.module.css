@@ -1,0 +1,29 @@
+.mobile-nav-drawer-container {
+  display: none;
+}
+
+.login-signup-menu-item :global(.mantine-Menu-itemLabel) {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.login-signup-menu-item a {
+  text-align: center;
+}
+
+/* link styles */
+.mobile-nav-drawer-link {
+  background-color: initial;
+  padding: 1rem 0;
+  display: block;
+}
+
+/* Media Queries */
+@media screen and (max-width: 1024px) {
+  .mobile-nav-drawer-container {
+    display: block;
+  }
+}

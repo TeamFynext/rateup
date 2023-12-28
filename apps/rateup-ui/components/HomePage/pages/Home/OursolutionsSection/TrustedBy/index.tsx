@@ -1,12 +1,13 @@
 import { Flex, Image, Title } from "@mantine/core";
 import styles from "./TrustedBy.module.css";
+import { lexend600 } from "../../../../../../utils/fonts";
 
 function TrustedBy() {
   const logosPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/homepage/our-solutions/companies-logos`;
 
   return (
     <div className={styles["trustedby-companies-container"]}>
-      <Title order={1}>
+      <Title order={1} className={lexend600.className}>
         TRUSTED BY REPUTED BRANDS AND PUBLIC SECTOR ORGANIZATIONS
       </Title>
       <Flex

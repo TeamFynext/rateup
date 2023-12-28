@@ -31,9 +31,7 @@ function CustomColorPicker({ value, onChange }) {
     try {
       const { sRGBHex } = (await open())!;
       onChange(sRGBHex);
-    } catch (e) {
-      console.log(e);
-    }
+    } catch (e) {}
   };
 
   return (
