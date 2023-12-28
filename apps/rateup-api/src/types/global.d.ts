@@ -39,6 +39,7 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
     id: string;
     googleReview?: GoogleReview
     logic?: Array<LogicJump>
@@ -63,6 +64,8 @@ declare global {
         testimonial: string;
         name?: string;
         photo?: string;
+        rating?: number;
+        jobTitle?: string;
       };
       [QuestionType.EmailPhone]?: {
         email: string;
