@@ -19,6 +19,7 @@ import {
 } from "../../../backend/LandingPage/landingpage.query";
 import LandingWelcomePage from "./LandingWelcomePage";
 import RateupRedirectCard from "../../../components/Card/RateupRedirectCard";
+import { rateupLogoUrl } from "../../../components/HomePage/constants";
 
 export default () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
@@ -61,13 +62,7 @@ export default () => {
       style={{ background: "#F7F6FB", height: "100vh" }}
     >
       <>
-        <Image
-          pb={30}
-          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
-          alt="RateUp Logo"
-          w={140}
-          h={35}
-        />
+        <Image pb={30} src={rateupLogoUrl} alt="RateUp Logo" w={140} h={35} />
       </>
       <Paper radius="lg" style={{ minHeight: "75vh" }} bg={"#F7F6FB"}>
         <Paper bg={"#F7F6FB"}>

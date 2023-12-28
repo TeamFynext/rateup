@@ -1,12 +1,19 @@
-import { Button, Flex, Image, Popover, Stack, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { Button, Flex, Image, Popover, Stack } from "@mantine/core";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import headerStyles from "../Header/Header.module.css";
 import styles from "./LinkWithSublinksPopover.module.css";
 import Link from "next/link";
-import { IconCaretDownFilled, IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown } from "@tabler/icons-react";
+import { useEffect } from "react";
 
 const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
   const [opened, { close, open }] = useDisclosure(false);
+  const isViewportLEQ1024px = useMediaQuery("(max-width: 1024px");
+  useEffect(() => {
+    if (isViewportLEQ1024px && opened) {
+      close();
+    }
+  }, [isViewportLEQ1024px]);
   return (
     <Popover
       opened={opened}

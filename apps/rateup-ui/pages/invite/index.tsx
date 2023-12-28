@@ -21,6 +21,7 @@ import { RateupButtonPrimary } from "../../components/Button/RateupButtons";
 import styles from "./styles.module.css";
 import { signOut } from "supertokens-web-js/recipe/session";
 import Link from "next/link";
+import { rateupLogoUrl } from "../../components/HomePage/constants";
 
 const Invite = () => {
   const router = useRouter();
@@ -98,11 +99,7 @@ const Invite = () => {
         >
           <Center>
             <Link href="/">
-              <Image
-                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
-                alt="RateUp Logo"
-                w={140}
-              />
+              <Image src={rateupLogoUrl} alt="RateUp Logo" w={140} />
             </Link>
           </Center>
           <Flex

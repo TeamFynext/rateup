@@ -44,7 +44,7 @@ function Home() {
       <HeroSection />
       <OurSolutionsSection />
       <OurFeaturesSection />
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
     </>
   );
 }

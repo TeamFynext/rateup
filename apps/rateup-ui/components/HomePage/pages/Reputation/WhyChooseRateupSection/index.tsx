@@ -3,13 +3,17 @@ import InteractiveSolutionDescriptions from "../../../components/InteractiveSolu
 import { solutionsList } from "../constants";
 import styles from "./WhyChooseRateupSection.module.css";
 import commonStyles from "../../../index/index.module.css";
+import { lexend600 } from "../../../../../utils/fonts";
 
 const sectionClassName = `${styles["why-choose-rateup-container"]}`;
 
 function WhyChooseRateupSection() {
   return (
     <Stack className={sectionClassName} id="our-solutions">
-      <Title order={1} className={`${commonStyles["section-heading"]}`}>
+      <Title
+        order={1}
+        className={`${commonStyles["section-heading"]} ${lexend600.className}`}
+      >
         Why Choose Rateup
       </Title>
       <InteractiveSolutionDescriptions

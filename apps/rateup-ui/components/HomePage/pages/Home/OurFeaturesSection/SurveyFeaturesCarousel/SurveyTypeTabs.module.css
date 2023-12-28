@@ -31,3 +31,13 @@
   font-size: 1.5rem;
   color: var(--grey-color-2);
 }
+
+@media screen and (max-width: 425px) {
+  .tab {
+    font-size: 0.875rem;
+  }
+
+  .panel {
+    font-size: 0.875rem;
+  }
+}

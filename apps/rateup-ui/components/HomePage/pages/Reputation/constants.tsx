@@ -15,10 +15,12 @@ export type Solution = {
     enabledIcon: string;
     disabledIcon: string;
   };
+  id: string;
 };
 
 export const solutionsList: Solution[] = [
   {
+    id: "10234351",
     heading: "Enhanced Brand Credibility",
     description:
       "Track and manage what customers are saying about your business online. Respond to reviews, address concerns, and showcase the best of what your customers love about you.",
@@ -29,6 +31,7 @@ export const solutionsList: Solution[] = [
     },
   },
   {
+    id: "10234352",
     heading: "Data-Driven Decision Making",
     description:
       "Leverage insights from our AI-driven analytics to make informed decisions for business improvement.",
@@ -39,6 +42,7 @@ export const solutionsList: Solution[] = [
     },
   },
   {
+    id: "10234353",
     heading: "Proactive Issue Resolution",
     description:
       "Identify and resolve customer concerns in real-time, showcasing a commitment to exceptional customer service.",
