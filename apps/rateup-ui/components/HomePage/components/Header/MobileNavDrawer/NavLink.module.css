@@ -1,0 +1,31 @@
+/* NavLink styles */
+.root {
+  padding: 1rem 0;
+  background-color: transparent;
+  color: var(--grey-color-2);
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+.root:hover {
+  color: var(--grey-color);
+}
+
+.label {
+  font-size: inherit;
+}
+
+.section {
+  margin: 0;
+  width: 3.75rem;
+  height: 3.75rem;
+}
+
+.chevron {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.navlink-with-chevron {
+  padding: 0;
+}
