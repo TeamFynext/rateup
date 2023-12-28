@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Title,
   Divider,
@@ -32,6 +32,8 @@ import {
 import { mergeNames, retrieveRole } from "../../../utils/essential";
 import { passwordValidation } from "../../../utils/validation";
 import { IconPlus } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 
 const ProfileSettings = () => {
   const {
@@ -150,6 +152,15 @@ const ProfileSettings = () => {
 
   const [file, setFile] = useState<File | null>(null);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
   useEffect(() => {
@@ -178,9 +189,28 @@ const ProfileSettings = () => {
     const data = { profilePhoto: "REMOVED_PHOTO" };
     updateProfilePhoto.mutate(data);
   }
-
+  const handleImagePicker = (event) => {
+    if (!event) return;
+    toggleCropDialog();
+    setSelectedImage({
+      name: event.name,
+      url: URL.createObjectURL(event),
+    });
+    resetRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    setFile(cropedImage);
+  };
   return (
     <Flex direction={"column"} h={"100%"}>
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={4 / 3}
+      />
       <Title order={2}>User Settings</Title>
       <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
@@ -209,8 +239,9 @@ const ProfileSettings = () => {
               onClick={removePhoto}
             />
             <FileButton
-              onChange={setFile}
+              onChange={handleImagePicker}
               accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              resetRef={resetRef}
             >
               {(props) => (
                 <RateupButtonBlue
