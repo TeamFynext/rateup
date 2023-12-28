@@ -15,6 +15,7 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import VerifyEmailPage from "./VerifyEmailPage";
 import AuthTypeSignupForm from "./AuthTypeSignupForm";
+import { rateupLogoUrl } from "../HomePage/constants";
 
 const AuthForm = ({
   mode,
@@ -90,7 +91,7 @@ const AuthForm = ({
         <Link href="/">
           <Image
             className={styles["rateup-logo-img"]}
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
+            src={rateupLogoUrl}
             alt="RateUp Logo"
           />
         </Link>

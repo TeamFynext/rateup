@@ -38,7 +38,7 @@
   background-color: #fff;
   width: 100%;
 }
-
+/* 
 .editorSection::-webkit-scrollbar {
   width: 10px !important;
 }
@@ -53,4 +53,4 @@
 
 .editorSection::-webkit-scrollbar-thumb:hover {
   background: #555 !important;
-}
+} */

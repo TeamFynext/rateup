@@ -19,3 +19,9 @@
   composes: gradient-image-1 from "../../index/index.module.css";
   color: white;
 }
+
+@media screen and (max-width: 425px) {
+  .button {
+    font-size: 0.875rem;
+  }
+}

@@ -1,8 +1,12 @@
 .sublinks-chevron-btn {
   padding: 0;
   background-color: initial;
-  color: var(--grey-color);
+  color: var(--grey-color-2);
   transition: transform 0.3s linear;
+}
+
+.sublinks-chevron-btn:hover {
+  color: var(--grey-color);
 }
 
 .chevron-down {
@@ -57,4 +61,11 @@
 
 .description-span {
   color: inherit;
+}
+
+/* Media Queries */
+@media screen and (max-width: 1024px) {
+  .popover-dropdown {
+    display: none;
+  }
 }

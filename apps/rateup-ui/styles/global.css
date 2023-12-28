@@ -1,9 +1,11 @@
 * {
   box-sizing: border-box;
 }
+
 ::-webkit-scrollbar {
   display: none;
 }
+
 :root {
   --primary-color: #ffffff;
   --secondary-color: #000000;
@@ -11,6 +13,7 @@
   --shade-of-blue: #edf2ff;
   --shade-of-blue-2: #3f5ba9;
   --shade-of-blue-3: #00397b;
+  --shade-of-blue-4: #225fa4;
   --grey-color: #494949;
   --grey-color-2: #73737a;
   --grey-color-3: #595959;

@@ -4,7 +4,7 @@
   padding: 2.85rem;
   border-radius: 1.5625rem;
   gap: 2rem;
-  margin-bottom: 4.375rem;
+  margin-bottom: 6.25rem;
 }
 
 .text-container {
@@ -53,5 +53,15 @@
 
   .illustration-image-container {
     display: none;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  .text-container > h1 {
+    font-size: 1.5rem;
+  }
+
+  .text-container > p {
+    font-size: 1rem;
   }
 }
