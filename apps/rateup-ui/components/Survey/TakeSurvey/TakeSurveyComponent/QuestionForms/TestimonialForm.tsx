@@ -27,6 +27,7 @@ import WebcamCapture from "../../../../input/WebCamCapture";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import FormModalLayout from "../../../../Modal/FormModalLayout";
+import { ImageCropModal } from "../../../../Modal/ImageCropModal";
 
 interface TestimonialProps {
   features;
@@ -36,11 +37,15 @@ interface TestimonialProps {
 export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [file, setFile] = useState<File>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [rating, setRating] = useState(0);
   const [opened, { open, close }] = useDisclosure(false);
   const [capturedImg, setCapturedImg] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, name: e.currentTarget.value });
@@ -57,17 +62,14 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   };
 
   useEffect(() => {
-    updateResponse({ ...response, rating: rating });
-  }, [rating]);
-
-  useEffect(() => {
     if (capturedImg) {
       const blob = dataURItoBlob(capturedImg);
       const capturedImageFile = new File([blob], "captured-image.jpg", {
         type: blob.type,
         lastModified: new Date().getTime(),
       });
-      setFile(capturedImageFile);
+      setSelectedImage(capturedImageFile);
+      toggleCropDialog();
     }
   }, [capturedImg]);
 
@@ -85,9 +87,29 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       });
   }, [file]);
+  const handleCropImageSave = async (cropedImage) => {
+    if (!cropedImage) return;
+    setFile(cropedImage);
+  };
+
+  const onChangePicture = (event: File) => {
+    if (!event) return;
+    setSelectedImage(event);
+    toggleCropDialog();
+  };
 
   return (
     <Stack>
+      {selectedImage && (
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={selectedImage?.name}
+          handleCropImageSave={handleCropImageSave}
+          image={URL.createObjectURL(selectedImage)}
+          aspect={4 / 3}
+        />
+      )}
       <Paper shadow="sm" className={classes.inputBox}>
         <TextInput
           placeholder="Enter your name"
@@ -130,8 +152,8 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <>
           <Text>Rate Us Now</Text>
           <Rating
-            value={rating}
-            onChange={setRating}
+            value={response?.rating}
+            onChange={(value) => updateResponse({ ...response, rating: value })}
             size={"xl"}
             color="var(--tertiary-color)"
           />
@@ -145,7 +167,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
               <Box
                 style={{ border: "1px solid grey", borderRadius: "10px" }}
                 w={200}
-                h={200}
+                h={150}
               >
                 <FormModalLayout
                   title="Camera"
@@ -162,7 +184,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                     />
                   </Box>
                 </FormModalLayout>
-                {file ? (
+                {file || response?.pfp ? (
                   <Skeleton
                     visible={isUploading}
                     height={"100%"}
@@ -178,7 +200,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
               </Box>
               <Stack>
                 <FileButton
-                  onChange={setFile}
+                  onChange={onChangePicture}
                   accept="image/png,image/jpeg"
                   disabled={isPreview}
                 >

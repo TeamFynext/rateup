@@ -69,6 +69,7 @@ import { EmailPhoneForm } from "./QuestionForms/EmailPhoneForm";
 import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
+import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -388,16 +389,34 @@ function TakeSurvey() {
                                   const data = Object.values(
                                     response?.response,
                                   )[0];
+                                  console.log("data", data);
                                   return (
                                     <Stack>
                                       <Group>
                                         <Text fw="400">Name: </Text>{" "}
                                         <Text fw="300">{data.name}</Text>{" "}
                                       </Group>
+                                      {data.jobTitle && (
+                                        <Group mt="-10px">
+                                          <Text fw={"400"}>Job Title: </Text>
+                                          <Text fw="300">{data.jobTitle}</Text>
+                                        </Group>
+                                      )}
                                       <Group mt="-10px">
                                         <Text fw="400">Testimonial: </Text>{" "}
                                         <Text fw="300">{data.testimonial}</Text>{" "}
                                       </Group>
+                                      {data.rating && (
+                                        <Rating value={data.rating} readOnly />
+                                      )}
+                                      {data.pfp && (
+                                        <Image
+                                          src={getFileUrlFromKey(data?.pfp)}
+                                          radius="md"
+                                          maw={240}
+                                          mx="0px"
+                                        />
+                                      )}
                                     </Stack>
                                   );
 
