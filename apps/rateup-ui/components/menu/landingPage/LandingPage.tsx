@@ -277,7 +277,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       url: unsplashImage,
       name: imageName,
     });
-    setLandingPageBackgroundImage(true);
+    setLandingPageBackgroundImage(
+      imageType === "backgroundImage" ? true : false,
+    );
     toggleCropDialog();
   };
   const handleUploadMethod = (type: string) => {
@@ -392,6 +394,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                             radius={"md"}
                             fallbackSrc={fallbackImage}
                             alt="image of logo"
+                            style={{
+                              objectFit: "contain",
+                            }}
                           />
                         </TooltipWithEditIcon>
                         <TooltipWithEditIcon
