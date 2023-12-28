@@ -66,6 +66,7 @@ export async function getFullMenu(menuId: string) {
           menu: {
             select: {
               currency: true,
+              hideUnavailableCategory: true,
             },
           },
         },
@@ -124,19 +125,18 @@ export async function getMenus(teamId: string) {
 }
 
 export async function updateMenu(id: string, data: UpdateMenuInput) {
-  const { surveyTeamMapId, ...newObject } = data;
-
+  const { surveyTeamMapId, teamId, ...newObject } = data;
+  const teamData = teamId && { team: { connect: { id: teamId } } };
   const menu = await prisma.menu.update({
     where: {
       id,
     },
-    data: newObject,
+    data: { ...newObject, ...teamData },
   });
-
+  const createMenuLandingData = {
+    menu: { connect: { id: id } },
+  };
   if (surveyTeamMapId) {
-    const createMenuLandingData = {
-      menu: { connect: { id: id } },
-    };
     let surveyId = { surveyTeamMap: { connect: { id: data.surveyTeamMapId } } };
     await prisma.menuLanding.upsert({
       where: {
@@ -147,6 +147,16 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
         ...surveyId,
       },
       update: surveyId,
+    });
+  } else {
+    await prisma.menuLanding.upsert({
+      where: {
+        menuId: id,
+      },
+      create: {
+        ...createMenuLandingData,
+      },
+      update: { surveyTeamMapId: null },
     });
   }
   return menu;
@@ -173,10 +183,11 @@ export async function deleteMenu(id: string) {
         },
       });
 
-      items?.flatMap((item) =>
-        item.images?.map((image) => {
-          fileKeyArray.push({ Key: image });
-        })
+      items?.flatMap(
+        (item) =>
+          item.images?.map((image) => {
+            fileKeyArray.push({ Key: image });
+          }),
       );
     }
 
@@ -246,7 +257,7 @@ export async function getMenuLanding(id: string) {
 
 export async function updateMenuLanding(
   id: string,
-  body: updateMenuLandingInput
+  body: updateMenuLandingInput,
 ) {
   let updatedMenuData = {
     displayName: body.titleText,
@@ -292,7 +303,7 @@ export async function updateMenuLanding(
 
 export async function updateLandingPage(
   id: string,
-  data: updateLandingPageOption
+  data: updateLandingPageOption,
 ) {
   const createMenuLandingData = {
     menu: { connect: { id: id } },

@@ -14,7 +14,7 @@ export async function getResponses(surveyTeamMapId: string) {
 
 export async function getAllResponses(
   surveyId: string,
-  teamIds: Array<string>
+  teamIds: Array<string>,
 ) {
   const responses = await prisma.surveyTeamMap.findMany({
     where: {
@@ -41,7 +41,7 @@ export async function getAllResponses(
         select: {
           id: true,
           language: true,
-          tag:true,
+          tag: true,
           responses: true,
         },
       },
@@ -101,7 +101,7 @@ interface Location {
 }
 export async function updateResponse(
   responseId: string,
-  data: { ip: string; location: Location }
+  data: { ip: string; location: Location },
 ) {
   const response = await prisma.surveyResponse.update({
     where: {
@@ -134,10 +134,10 @@ export async function sendEmailOnResponseCreation(id: string) {
     const { notificationEmail } = survey;
     const msg = {
       to: notificationEmail,
-      subject: "survay response - RateUp.app",
-      text: "survay response.",
+      subject: "RateUp: New Survey Response",
+      text: "survey response.",
       html: createEmailBodySurveyResponse(
-        `${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`
+        `${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,
       ),
     };
     await sendAWSEmail(msg);
