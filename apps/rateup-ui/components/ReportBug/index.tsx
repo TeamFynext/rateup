@@ -44,7 +44,7 @@ function ReportBug() {
           <iframe
             onLoad={upadateLoadingStateOfIframe}
             className={styles["bug-report-form-iframe"]}
-            src="https://rateup.app/public/survey/89421698-e6dd-43ee-9b63-757a7614bed3"
+            src="https://rateup.app/public/survey/98c9d3a7-d335-4f03-989d-287588a2e536"
           />
         )}
       </Popover.Dropdown>
