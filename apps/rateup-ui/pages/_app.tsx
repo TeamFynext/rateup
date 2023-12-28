@@ -177,10 +177,10 @@ export default function App({
                     </AnimatePresence>
                   </LayoutComponent>
                 </UserProvider>
-                <ReactQueryDevtools
+                {/* <ReactQueryDevtools
                   initialIsOpen={false}
                   buttonPosition="top-right"
-                />
+                /> */}
               </HydrationBoundary>
             </QueryClientProvider>
             <Notifications />

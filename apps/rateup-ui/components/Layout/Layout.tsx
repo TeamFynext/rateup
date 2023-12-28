@@ -13,7 +13,9 @@ import { useRouter } from "next/router";
 import useLocalStorage from "../../hooks/localStorage";
 import LeftNavbar from "./Navbar/LeftNavbar";
 import FocusMode from "../Switch/Focusmode";
+import ReportBug from "../ReportBug";
 import styles from "./Layout.module.css";
+
 // @ts-ignore
 export default function Layout({ children }) {
   const router = useRouter();
@@ -93,6 +95,7 @@ export default function Layout({ children }) {
             </Flex>
           </Flex>
           <FocusMode focus={focus} toggleFocus={toggleFocus} />
+          <ReportBug />
         </Flex>
       </RouteParamsProvider>
     </SessionAuth>
