@@ -18,6 +18,7 @@ export const ImageCropModal = ({
   imageName,
   handleCropImageSave,
   aspect = 4 / 3,
+  landingPage = false,
 }) => {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
@@ -89,6 +90,7 @@ export const ImageCropModal = ({
       previewCanvasRef,
       completedCrop,
       imageName,
+      landingPage,
     );
     if (handleCropImageSave) {
       handleCropImageSave(croppedImage);

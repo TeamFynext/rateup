@@ -86,6 +86,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     url: "",
     name: "",
   });
+  const [landingPageBackgroundImage, setLandingPageBackgroundImage] =
+    useState(false);
   const [
     openedUnsplashDialog,
     { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
@@ -246,6 +248,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         url: URL.createObjectURL(event),
         name: event.name,
       });
+      setLandingPageBackgroundImage(false);
       toggleCropDialog();
       setAspectRatio(4 / 3);
       setImageType("logo");
@@ -274,6 +277,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       url: unsplashImage,
       name: imageName,
     });
+    setLandingPageBackgroundImage(true);
     toggleCropDialog();
   };
   const handleUploadMethod = (type: string) => {
@@ -300,6 +304,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               handleCropImageSave={handleCropImageSave}
               image={selectedUnslashImage.url}
               aspect={aspectRatio}
+              landingPage={landingPageBackgroundImage}
             />
             <ImageUploadMethodModal
               onClose={closeMethodSelectionDialog}
@@ -341,9 +346,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     w={isMobileTab && 300}
                     bgsz={"cover"}
                     bgp={"center"}
-                    style={{
-                      aspectRatio: "16 / 6",
-                    }}
                     mih={300}
                   >
                     <TooltipWithEditIcon
@@ -548,21 +550,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         </PaperLayout>
                       </SimpleGrid>
                     </Center>
-                    <Group>
-                      <Text
-                        fz={
-                          isMobileTab
-                            ? "0.875rem"
-                            : "clamp(14px, 9.712px + 0.714vw, 20px)"
-                        }
-                      >
-                        powered by
-                      </Text>
+                    <Group justify="center">
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
-                        h={54}
-                        w={94}
+                        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits.svg`}
+                        w={"clamp(137px, 65.568px + 11.905vw, 237px)"}
                         alt="rate-up logo"
+                        mb={"sm"}
                       />
                     </Group>
                   </Stack>
