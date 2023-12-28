@@ -409,9 +409,9 @@ function TakeSurvey() {
                                       {data.rating && (
                                         <Rating value={data.rating} readOnly />
                                       )}
-                                      {data.pfp && (
+                                      {data.photo && (
                                         <Image
-                                          src={getFileUrlFromKey(data?.pfp)}
+                                          src={getFileUrlFromKey(data?.photo)}
                                           radius="md"
                                           maw={240}
                                           mx="0px"

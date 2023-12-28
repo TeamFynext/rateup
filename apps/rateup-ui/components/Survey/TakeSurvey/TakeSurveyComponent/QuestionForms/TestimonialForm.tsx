@@ -78,7 +78,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     setIsUploading(true);
     uploadFile(file)
       .then((key) => {
-        updateResponse({ ...response, pfp: key });
+        updateResponse({ ...response, photo: key });
         setIsUploading(false);
         console.log("response", response);
       })
@@ -184,14 +184,14 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                     />
                   </Box>
                 </FormModalLayout>
-                {file || response?.pfp ? (
+                {file || response?.photo ? (
                   <Skeleton
                     visible={isUploading}
                     height={"100%"}
                     width={"100%"}
                   >
                     <Image
-                      src={getFileUrlFromKey(response?.pfp)}
+                      src={getFileUrlFromKey(response?.photo)}
                       alt="Your uploaded image"
                       radius={"10px"}
                     />

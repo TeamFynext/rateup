@@ -166,6 +166,8 @@ declare global {
         testimonial: string;
         name?: string;
         photo?: string;
+        rating?: number;
+        jobTitle?: string;
       };
       [QuestionType.EmailPhone]?: {
         email: string;
