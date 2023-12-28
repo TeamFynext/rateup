@@ -36,6 +36,9 @@ import {
 import { currencyLabel } from "./util/currencyData";
 import { useDisclosure } from "@mantine/hooks";
 import { ImageCropModal } from "../Modal/ImageCropModal";
+import { UnsplashModal } from "../Modal/UnsplashModal";
+import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal";
+import { fallbackImage } from "../../utils/constants";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -61,11 +64,20 @@ export function CreateMenuItemModal({
     name: "",
   });
   const resetRef = useRef(null);
+  const itemImgBtnRef = useRef(null);
+  const [
+    openedUnsplashDialog,
+    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
+  ] = useDisclosure(false);
   const [
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
+  const [
+    openedMethodSelectionDialog,
+    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
+  ] = useDisclosure(false);
+
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -241,6 +253,23 @@ export function CreateMenuItemModal({
   const handleCropImageSave = (cropedImage) => {
     form.setFieldValue("images", [...form.values.images, cropedImage]);
   };
+  const handleUnsplashImageSave = (
+    unsplashImage: string,
+    imageName: string,
+  ) => {
+    setSelectedInputImage({
+      url: unsplashImage,
+      name: imageName,
+    });
+    toggleCropDialog();
+  };
+  const handleUploadMethod = (type: string) => {
+    if (type === "unsplash") {
+      toggleUnsplashDialog();
+    } else {
+      itemImgBtnRef?.current?.click();
+    }
+  };
   return (
     <FormModalLayout
       opened={opened}
@@ -252,6 +281,16 @@ export function CreateMenuItemModal({
       size={"lg"}
     >
       <Flex>
+        <UnsplashModal
+          handleUnsplashImageSave={handleUnsplashImageSave}
+          opened={openedUnsplashDialog}
+          onclose={closeUnsplashDialog}
+        />
+        <ImageUploadMethodModal
+          onClose={closeMethodSelectionDialog}
+          opened={openedMethodSelectionDialog}
+          handleUploadMethod={handleUploadMethod}
+        />
         <ImageCropModal
           opened={openedCropDialog}
           onclose={closeCropDialog}
@@ -346,18 +385,29 @@ export function CreateMenuItemModal({
               />
             ))}
             {form?.values?.images?.length < 3 && (
-              <FileButton
-                onChange={onChangePicture}
-                accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                key={form?.values?.images?.length}
-                resetRef={resetRef}
-              >
-                {(props) => (
-                  <Button color="gray" h={75} w={75} {...props}>
-                    <IconPlus />
-                  </Button>
-                )}
-              </FileButton>
+              <>
+                <FileButton
+                  onChange={onChangePicture}
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  key={form?.values?.images?.length}
+                  resetRef={resetRef}
+                >
+                  {(props) => (
+                    <Button display={"none"} {...props} ref={itemImgBtnRef}>
+                      <IconPlus />
+                    </Button>
+                  )}
+                </FileButton>
+                <Button
+                  color="gray"
+                  h={75}
+                  w={75}
+                  type="button"
+                  onClick={toggleMethodSelectionDialog}
+                >
+                  <IconPlus />
+                </Button>
+              </>
             )}
           </Group>
         </Stack>

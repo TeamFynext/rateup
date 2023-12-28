@@ -8,6 +8,7 @@ import classes from "./itemDetailedViewModal.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import { lexend } from "../../../utils/fonts";
 import { currencyLabel } from "../util/currencyData";
+import { fallbackImage } from "../../../utils/constants";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -31,7 +32,6 @@ export function ItemDetailedViewModal({
       }
     }
   }, [item]);
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   return (
     <Modal
       centered

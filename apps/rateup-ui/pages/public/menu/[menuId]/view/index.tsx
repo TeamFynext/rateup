@@ -232,6 +232,9 @@ export default function ({ fullMenu, menuBanner }) {
                 setSelectedItem={setSelectedItem}
                 category={c}
                 currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
+                hideUnavailableCategory={
+                  fullMenu?.menuLanding?.menu?.hideUnavailableCategory
+                }
               />
             ))
           : "No Categories Found"}
@@ -239,7 +242,7 @@ export default function ({ fullMenu, menuBanner }) {
       <CategoriesDrawer
         opened={drawerOpen}
         close={close}
-        categories={fullMenu?.categories}
+        categories={catagories}
         handleCategoryChipClick={handleCategoryChipClick}
       />
       {selectedItem && (

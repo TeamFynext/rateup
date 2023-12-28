@@ -27,6 +27,11 @@ import {
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 import { ImageCropModal } from "../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
+import {
+  createCustomTimestamp,
+  formatToCustomTime,
+} from "../../utils/dateTime";
+import { fallbackImage } from "../../utils/constants";
 
 interface CreateMenuCategoryModalProps {
   readonly opened: boolean;
@@ -42,7 +47,6 @@ export function CreateMenuCategoryModal({
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [selectedImage, setSelectedImage] = useState({
     url: "",
     name: "",
@@ -66,15 +70,28 @@ export function CreateMenuCategoryModal({
       name: (value) => (value.length ? null : "Cannot be empty"),
       endTime: (value, values) => {
         const startTime = values.startTime;
-        return value < startTime && "End time cannot be before start time";
+        const scheduleEnabled = values.scheduleEnabled;
+        return (
+          scheduleEnabled &&
+          (value?.length === 0 ||
+            startTime?.length === 0 ||
+            value < startTime) &&
+          "End time cannot be before start time"
+        );
       },
     },
   });
 
+  let menuCategoryData;
   // updates form values when editingItem changes
   useEffect(() => {
     if (editingItem) {
-      form.setValues(editingItem);
+      menuCategoryData = editingItem;
+      menuCategoryData.startTime = formatToCustomTime(
+        menuCategoryData.startTime,
+      );
+      menuCategoryData.endTime = formatToCustomTime(menuCategoryData.endTime);
+      form.setValues(menuCategoryData);
     } else {
       form.reset();
       setImageToUpload(null);
@@ -117,6 +134,16 @@ export function CreateMenuCategoryModal({
           temp = fileKey;
         }
       }
+      if (values?.scheduleEnabled) {
+        values.startTime &&
+          (values.startTime = createCustomTimestamp(values.startTime));
+        values.endTime &&
+          (values.endTime = createCustomTimestamp(values.endTime));
+      } else {
+        values.startTime = undefined;
+        values.endTime = undefined;
+      }
+
       if (editingItem) {
         if (editingItem?.image && editingItem?.image !== values?.image) {
           await deleteUploadedFiles({
@@ -237,7 +264,7 @@ export function CreateMenuCategoryModal({
           <Stack>
             <Group>
               <Title order={3} c={"var(--grey-color)"}>
-                Schedule Category{" "}
+                Schedule Category
               </Title>
               <Switch
                 {...form.getInputProps("scheduleEnabled")}

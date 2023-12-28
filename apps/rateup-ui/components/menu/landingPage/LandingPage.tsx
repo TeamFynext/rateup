@@ -51,6 +51,7 @@ import { lexend } from "../../../utils/fonts";
 import { UnsplashModal } from "../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
+import { fallbackImage } from "../../../utils/constants";
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
@@ -74,7 +75,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const resetRef = useRef(null);
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [tabState, setTabState] = useState<string>("title");
   const [mainTabState, setMainTabState] = useState<string>("bg");
   const [catalogue, setCatalogue] = useState(
