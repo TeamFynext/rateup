@@ -41,12 +41,10 @@ interface LogicEditorProps {
   setActiveTab: (tab: QuestionTabsEnum) => void;
 }
 const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
-  const [isSaving, setIsSaving] = useState(false);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { isLoading, isError, data: questions } = useQuestions(surveyId);
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
-    setIsSaving,
   });
   const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
 
@@ -69,7 +67,6 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   };
 
   const handleSave = () => {
-    setIsSaving(true);
     questionUpdateMutation
       .mutateAsync({
         qId: selectedQ.id,
@@ -95,13 +92,6 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
     );
   }
 
-  const stickyHeaderStyles: React.CSSProperties = {
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
-    backgroundColor: "white",
-    marginBottom: "50px",
-  };
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Stack gap={"xs"} style={{ overflowY: "auto", height: "100%" }}>
@@ -140,7 +130,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
           title={"Save"}
           size="md"
           onClick={handleSave}
-          loading={isSaving}
+          loading={questionUpdateMutation.isPending}
         />
       </Group>
     </Stack>

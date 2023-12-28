@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Box,
@@ -34,6 +34,11 @@ import {
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
 import { currencyLabel } from "./util/currencyData";
+import { useDisclosure } from "@mantine/hooks";
+import { ImageCropModal } from "../Modal/ImageCropModal";
+import { UnsplashModal } from "../Modal/UnsplashModal";
+import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal";
+import { fallbackImage } from "../../utils/constants";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -54,8 +59,25 @@ export function CreateMenuItemModal({
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
   const [deleteImageArray, setDeleteImageArray] = useState([]);
+  const [selectedInputImage, setSelectedInputImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef(null);
+  const itemImgBtnRef = useRef(null);
+  const [
+    openedUnsplashDialog,
+    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
+  ] = useDisclosure(false);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
+  const [
+    openedMethodSelectionDialog,
+    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
+  ] = useDisclosure(false);
 
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -220,7 +242,33 @@ export function CreateMenuItemModal({
     fallbackSrc: fallbackImage,
   };
   const onChangePicture = (event: File) => {
-    form.setFieldValue("images", [...form.values.images, event]);
+    if (!event) return;
+    setSelectedInputImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    resetRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    form.setFieldValue("images", [...form.values.images, cropedImage]);
+  };
+  const handleUnsplashImageSave = (
+    unsplashImage: string,
+    imageName: string,
+  ) => {
+    setSelectedInputImage({
+      url: unsplashImage,
+      name: imageName,
+    });
+    toggleCropDialog();
+  };
+  const handleUploadMethod = (type: string) => {
+    if (type === "unsplash") {
+      toggleUnsplashDialog();
+    } else {
+      itemImgBtnRef?.current?.click();
+    }
   };
   return (
     <FormModalLayout
@@ -233,6 +281,24 @@ export function CreateMenuItemModal({
       size={"lg"}
     >
       <Flex>
+        <UnsplashModal
+          handleUnsplashImageSave={handleUnsplashImageSave}
+          opened={openedUnsplashDialog}
+          onclose={closeUnsplashDialog}
+        />
+        <ImageUploadMethodModal
+          onClose={closeMethodSelectionDialog}
+          opened={openedMethodSelectionDialog}
+          handleUploadMethod={handleUploadMethod}
+        />
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={selectedInputImage.name}
+          handleCropImageSave={handleCropImageSave}
+          image={selectedInputImage.url}
+          aspect={4 / 3}
+        />
         <LoadingOverlay
           visible={
             createMenuItemMutation.isPending ||
@@ -256,6 +322,9 @@ export function CreateMenuItemModal({
                   }
                   {...imageProps}
                   alt="image of menu"
+                  style={{
+                    aspectRatio: 4 / 3,
+                  }}
                 />
                 <Center mt="xs">
                   <Button
@@ -291,15 +360,18 @@ export function CreateMenuItemModal({
                 src={fallbackImage}
                 {...imageProps}
                 alt="placholder image of menu"
+                style={{
+                  aspectRatio: 4 / 3,
+                }}
               />
             )}
           </Group>
           <Group>
-            {form.values.images?.map((image) => (
+            {form.values.images?.map((image, index) => (
               <Image
                 onClick={() => setSelectedImage(image)}
                 style={{ borderRadius: "8px", cursor: "pointer" }}
-                key={typeof image === "object" ? image?.fileName : image}
+                key={typeof image === "object" ? image?.name + index : image}
                 src={
                   typeof image === "object"
                     ? URL.createObjectURL(image)
@@ -313,17 +385,29 @@ export function CreateMenuItemModal({
               />
             ))}
             {form?.values?.images?.length < 3 && (
-              <FileButton
-                onChange={onChangePicture}
-                accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                key={form?.values?.images?.length}
-              >
-                {(props) => (
-                  <Button color="gray" h={75} w={75} {...props}>
-                    <IconPlus />
-                  </Button>
-                )}
-              </FileButton>
+              <>
+                <FileButton
+                  onChange={onChangePicture}
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  key={form?.values?.images?.length}
+                  resetRef={resetRef}
+                >
+                  {(props) => (
+                    <Button display={"none"} {...props} ref={itemImgBtnRef}>
+                      <IconPlus />
+                    </Button>
+                  )}
+                </FileButton>
+                <Button
+                  color="gray"
+                  h={75}
+                  w={75}
+                  type="button"
+                  onClick={toggleMethodSelectionDialog}
+                >
+                  <IconPlus />
+                </Button>
+              </>
             )}
           </Group>
         </Stack>

@@ -11,7 +11,7 @@ import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 export const useCategories = (menuId: string, initialData) =>
   useQuery({
     enabled: !!menuId,
-    queryKey: ["menu", menuId, "category"],
+    queryKey: ["menu-category", menuId],
     queryFn: () => getMenuCategoriesByMenuId(menuId),
     initialData: initialData,
   });
@@ -19,14 +19,14 @@ export const useCategories = (menuId: string, initialData) =>
 export const useCreateMenuCategoryMutation = (
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createMenuCategory,
     onSuccess: () => {
       showSuccessToast("Menu category created successfully");
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-category", menuId] });
 
       onSuccess();
     },
@@ -42,14 +42,14 @@ export const useCreateMenuCategoryMutation = (
 export const useUpdateMenuCategoryMutation = (
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: updateMenuCategory,
     onSuccess: () => {
       showSuccessToast("Menu category updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-category", menuId] });
 
       onSuccess();
     },
@@ -65,7 +65,7 @@ export const useUpdateMenuCategoryMutation = (
 export const useDeleteMenuCategoryMutation = (
   menuId: string,
   onSuccess = () => {},
-  onError = () => {}
+  onError = () => {},
 ) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
@@ -75,9 +75,9 @@ export const useDeleteMenuCategoryMutation = (
         "Menu category deleted successfully",
         "delete-data-menu-category",
         "",
-        true
+        true,
       );
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-category", menuId] });
 
       onSuccess();
     },
@@ -86,7 +86,7 @@ export const useDeleteMenuCategoryMutation = (
         "Error deleting menu category",
         "delete-data-menu-category",
         "",
-        true
+        true,
       );
       onError();
     },
@@ -97,7 +97,7 @@ export const useDeleteMenuCategoryMutation = (
 
 export const useUpdateSortOrderMenuCategoryMutation = (
   menuId: string,
-  onSuccess = () => {}
+  onSuccess = () => {},
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({

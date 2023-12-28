@@ -19,6 +19,8 @@ interface QuestionsSideBarProps {
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
   addQnTrigger?: number;
+  surveyLanguages: string[];
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   isWaSurvey?: boolean;
 }
 export function QuestionsSideBar({
@@ -28,6 +30,8 @@ export function QuestionsSideBar({
   setSelectedQ,
   addQnTrigger,
   isWaSurvey,
+  surveyLanguages,
+  setSelectedLanguage,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -48,6 +52,7 @@ export function QuestionsSideBar({
 
   const handleAddQn = () => {
     setActiveTab(QuestionTabsEnum.TypeSelection);
+    setSelectedLanguage(surveyLanguages[0]);
     setSelectedQ(null);
   };
 

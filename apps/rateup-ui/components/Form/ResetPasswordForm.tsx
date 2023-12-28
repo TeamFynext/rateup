@@ -9,7 +9,6 @@ import {
 import {
   Title,
   Text,
-  TextInput,
   PasswordInput,
   Anchor,
   Group,
@@ -30,6 +29,7 @@ import styles from "./AuthForm.module.css";
 import { useCheckEmailExistMutation } from "../../backend/user/user.query";
 import { showNotification } from "../../utils/auth";
 import { rateupLogoUrl } from "../HomePage/constants";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
@@ -177,8 +177,7 @@ const ResetPasswordForm = ({ mode }) => {
             }
           >
             {isEmailPage ? (
-              <TextInput
-                classNames={styles}
+              <ContainedTextField
                 placeholder="Email ID"
                 {...emailForm.getInputProps("email")}
               />

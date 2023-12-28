@@ -25,7 +25,7 @@ import {
   ContainedSelection,
   ContainedTextArea,
 } from "../../input/ContainedInput/ContainedInput";
-import { useMediaQuery } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
@@ -48,6 +48,10 @@ import {
 } from "./Button/LandingButtons";
 import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
 import { lexend } from "../../../utils/fonts";
+import { UnsplashModal } from "../../Modal/UnsplashModal";
+import { ImageCropModal } from "../../Modal/ImageCropModal";
+import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
+import { fallbackImage } from "../../../utils/constants";
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
@@ -67,13 +71,33 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   );
   const [updatingLoading, setUpdatingLoading] = useState(false);
   const logoRef = useRef<HTMLButtonElement>(null);
+  const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
+  const resetRef = useRef(null);
+
   const [selectedTab, setSelectedTab] = useState("Tablet");
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [tabState, setTabState] = useState<string>("title");
   const [mainTabState, setMainTabState] = useState<string>("bg");
   const [catalogue, setCatalogue] = useState(
     editingItem?.catalogue ? "catalogue" : "menu",
   );
+  const [aspectRatio, setAspectRatio] = useState(16 / 9);
+  const [imageType, setImageType] = useState("");
+  const [selectedUnslashImage, setSelectedUnslashImage] = useState({
+    url: "",
+    name: "",
+  });
+  const [
+    openedUnsplashDialog,
+    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
+  ] = useDisclosure(false);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
+  const [
+    openedMethodSelectionDialog,
+    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
+  ] = useDisclosure(false);
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
     editingItem?.menuId,
@@ -204,24 +228,59 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
     }/images/menu/${isMobileTab ? "mobileBackground" : "background"}.jpg`;
   }
-  const onChangePictureBackground = (event: File) => {
-    if (event) {
-      form.setFieldValue("backgroundImage", URL.createObjectURL(event));
-      setBackgroundImage(event);
-      setSelectedTab("Tablet");
-    }
+  const handlePictureBackground = () => {
+    setAspectRatio(16 / 6);
+    toggleMethodSelectionDialog();
+    setImageType("backgroundImage");
+    setSelectedTab("Tablet");
   };
-  const onChangePictureMobileBackground = (event: File) => {
-    if (event) {
-      form.setFieldValue("mobileBackgroundImage", URL.createObjectURL(event));
-      setMobileBackgroundImage(event);
-      setSelectedTab("Mobile");
-    }
+  const handlePictureMobileBackground = () => {
+    setAspectRatio(4 / 3);
+    toggleMethodSelectionDialog();
+    setImageType("mobileBackgroundImage");
+    setSelectedTab("Mobile");
   };
   const onChangeLogo = (event: File) => {
     if (event) {
-      form.setFieldValue("logo", URL.createObjectURL(event));
-      setLogo(event);
+      setSelectedUnslashImage({
+        url: URL.createObjectURL(event),
+        name: event.name,
+      });
+      toggleCropDialog();
+      setAspectRatio(4 / 3);
+      setImageType("logo");
+    }
+  };
+  const handleCropImageSave = (cropedImage) => {
+    if (imageType === "backgroundImage") {
+      form?.setFieldValue("backgroundImage", URL.createObjectURL(cropedImage));
+      setBackgroundImage(cropedImage);
+    } else if (imageType === "mobileBackgroundImage") {
+      form?.setFieldValue(
+        "mobileBackgroundImage",
+        URL.createObjectURL(cropedImage),
+      );
+      setMobileBackgroundImage(cropedImage);
+    } else if (imageType === "logo") {
+      form?.setFieldValue("logo", URL.createObjectURL(cropedImage));
+      setLogo(cropedImage);
+    }
+  };
+  const handleUnsplashImageSave = (
+    unsplashImage: string,
+    imageName: string,
+  ) => {
+    setSelectedUnslashImage({
+      url: unsplashImage,
+      name: imageName,
+    });
+    toggleCropDialog();
+  };
+  const handleUploadMethod = (type: string) => {
+    if (type === "unsplash") {
+      toggleUnsplashDialog();
+    } else {
+      imageUploadBtnRef?.current?.click();
     }
   };
   return (
@@ -229,6 +288,24 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
         <PaperLayout>
           <>
+            <UnsplashModal
+              handleUnsplashImageSave={handleUnsplashImageSave}
+              opened={openedUnsplashDialog}
+              onclose={closeUnsplashDialog}
+            />
+            <ImageCropModal
+              opened={openedCropDialog}
+              onclose={closeCropDialog}
+              imageName={selectedUnslashImage.name}
+              handleCropImageSave={handleCropImageSave}
+              image={selectedUnslashImage.url}
+              aspect={aspectRatio}
+            />
+            <ImageUploadMethodModal
+              onClose={closeMethodSelectionDialog}
+              opened={openedMethodSelectionDialog}
+              handleUploadMethod={handleUploadMethod}
+            />
             <SimpleGrid p={"sm"} cols={3}>
               <TabsCommon
                 tabHeading={["Tablet", "Mobile"]}
@@ -264,6 +341,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     w={isMobileTab && 300}
                     bgsz={"cover"}
                     bgp={"center"}
+                    style={{
+                      aspectRatio: "16 / 6",
+                    }}
                     mih={300}
                   >
                     <TooltipWithEditIcon
@@ -541,21 +621,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!mobileBackgroundImage,
                         )}
                       </Text>
-                      <FileButton
-                        onChange={onChangePictureMobileBackground}
-                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      <Button
+                        leftSection={<IconUpload size={16} />}
+                        size="xs"
+                        radius="18px"
+                        type="button"
+                        onClick={handlePictureMobileBackground}
                       >
-                        {(props) => (
-                          <Button
-                            leftSection={<IconUpload size={16} />}
-                            size="xs"
-                            radius="18px"
-                            {...props}
-                          >
-                            Upload Mobile Image
-                          </Button>
-                        )}
-                      </FileButton>
+                        Upload Mobile Image
+                      </Button>
                       <Text>
                         {getFileNameFromUrl(
                           backgroundImage
@@ -564,19 +638,33 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!backgroundImage,
                         )}
                       </Text>
+                      <Button
+                        leftSection={<IconUpload size={16} />}
+                        size="xs"
+                        radius="18px"
+                        type="button"
+                        onClick={handlePictureBackground}
+                      >
+                        Upload Tablet Image
+                      </Button>
                       <FileButton
-                        onChange={onChangePictureBackground}
+                        onChange={(e) => {
+                          if (!e) return;
+                          handleUnsplashImageSave(
+                            URL.createObjectURL(e),
+                            e.name,
+                          );
+                          resetRef.current?.();
+                        }}
+                        resetRef={resetRef}
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       >
                         {(props) => (
                           <Button
-                            leftSection={<IconUpload size={16} />}
-                            size="xs"
-                            radius="18px"
+                            ref={imageUploadBtnRef}
+                            display={"none"}
                             {...props}
-                          >
-                            Upload Tablet Image
-                          </Button>
+                          />
                         )}
                       </FileButton>
                     </Stack>
@@ -640,18 +728,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       onChange={(value: string) => setTabState(value)}
                     >
                       <Tabs.Panel value="header">
-                        {/* for future implementation  */}
-                        {/* <ContainedSelection
-                          mx={"lg"}
-                          mt={"xs"}
-                          withAsterisk
-                          allowDeselect={false}
-                          label=""
-                          placeholder="Select font family"
-                          required
-                          data={fontListMenu || []}
-                          {...form.getInputProps("headerStyle.fontFamily")}
-                        /> */}
                         <SimpleGrid mx={"lg"} cols={2}>
                           <ContainedSelection
                             allowDeselect={false}

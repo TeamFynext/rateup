@@ -7,6 +7,7 @@ import { IconGripVertical } from "@tabler/icons-react";
 import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";
 import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
 import { useUpdateSortOrderMenuCategoryMutation } from "../../../../backend/menu/category/mCategory.query";
+import { fallbackImage } from "../../../../utils/constants";
 
 interface Idata {
   id: string;
@@ -36,7 +37,6 @@ const SortDrawer = ({
   categoryOrNot = false,
 }: ISortDrawerProps) => {
   const [state, handlers] = useListState(data);
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
 
   useEffect(() => {
     handlers.setState(data);

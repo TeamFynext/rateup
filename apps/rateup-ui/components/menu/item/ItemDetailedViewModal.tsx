@@ -8,6 +8,7 @@ import classes from "./itemDetailedViewModal.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import { lexend } from "../../../utils/fonts";
 import { currencyLabel } from "../util/currencyData";
+import { fallbackImage } from "../../../utils/constants";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -31,7 +32,6 @@ export function ItemDetailedViewModal({
       }
     }
   }, [item]);
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   return (
     <Modal
       centered
@@ -176,15 +176,23 @@ export function ItemDetailedViewModal({
                   {varient.name}
                 </Text>
                 <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" fw={500}>
-                  {currencyLabel[currency]?.symbol}&nbsp;
-                  {varient.price}
+                  {varient?.price && (
+                    <>
+                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {varient.price}
+                    </>
+                  )}
                 </Text>
               </Stack>
             ))
           ) : (
             <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" mt={"md"} fw={500}>
-              {currencyLabel[currency]?.symbol}&nbsp;
-              {item?.price?.price}
+              {item?.price?.price && (
+                <>
+                  {currencyLabel[currency]?.symbol}&nbsp;
+                  {item?.price?.price}
+                </>
+              )}
             </Text>
           )}
         </Group>

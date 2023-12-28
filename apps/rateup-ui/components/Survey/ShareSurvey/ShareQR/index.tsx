@@ -1,81 +1,129 @@
-import { Group, Title, Tabs } from "@mantine/core";
+import { Group, Title, Tabs, Stack } from "@mantine/core";
 import React, { useState, useEffect, useCallback } from "react";
 import Preview from "../Preview/Preview";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import LogoTabpanel from "./LogoTabPanel";
 import styles from "./ShareQR.module.css";
+import { RateupButtonBlue } from "../../../Button/RateupButtons";
+import {
+  useGetShareSettings,
+  useUpdateShareSettingsMutation,
+} from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
+import { getLogoFileValueForFileInput, getLogoSrc } from "./utils";
 
 interface ShareQRProps {
   url: string;
   sx?: any;
-  surveyTitle?: string;
-  isSurveyPublished?: boolean;
+  title: string;
+  isPublished: boolean;
+  id: string;
+  queryKey: string;
+  resourceName: string;
 }
 
-const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
-  const [activeTab, setActiveTab] = useState<string | null>("text");
+type ShareQRState = {
+  qrBgColor: string;
+  qrColor: string;
+  logoSize: number;
+  logoFillType: string;
+  logoBorderRadius: number;
+  logoFile: null | File;
+};
 
-  const [qrSize, setQRSize] = useState<number>(250);
+export enum statePropertiesEnum {
+  QrBgColor = "qrBgColor",
+  QrColor = "qrColor",
+  LogoSize = "logoSize",
+  LogoFillType = "logoFillType",
+  LogoBorderRadius = "logoBorderRadius",
+  LogoFile = "logoFile",
+}
 
-  const [qrBgColor, setQRBgColor] = useState("#FFFFFF");
+const ShareQR = ({
+  url,
+  sx,
+  title,
+  isPublished,
+  id,
+  queryKey,
+  resourceName,
+}: ShareQRProps) => {
+  const [state, setState] = useState<ShareQRState>({
+    qrBgColor: "#FFFFFF",
+    qrColor: "#000000",
+    logoSize: 75,
+    logoFillType: "contain",
+    logoBorderRadius: 50,
+    logoFile: null,
+  });
 
-  const [qrColor, setQRColor] = useState("#000000");
+  // currently we are using only two resources(first arg below) survey, menu.
+  const shareSettings = useGetShareSettings(queryKey, resourceName, id);
+  const shareSettingsMutation = useUpdateShareSettingsMutation(
+    queryKey,
+    resourceName,
+    id,
+  );
 
-  const [logoSize, setLogoSize] = useState(75);
+  const {
+    qrBgColor,
+    qrColor,
+    logoSize,
+    logoFillType,
+    logoBorderRadius,
+    logoFile,
+  } = state;
 
-  const [logoFillType, setLogoFillType] = useState<string>("contain");
-
-  const [logoBorderRadius, setlogoBorderRadius] = useState("50");
-
-  const [logoSrc, setLogoSrc] = useState("/images/rateup-star.svg");
+  const logoSrc = getLogoSrc(logoFile);
 
   useEffect(() => {
-    //For server upload - template setup
-    // const uploadAndUpdate = async () => {
-    //   if (file) {
-    //     notifications.show({
-    //       id: "load-data",
-    //       loading: true,
-    //       title: "Uploading image",
-    //       message: `Hold on, uploading your image in progress`,
-    //       autoClose: false,
-    //       withCloseButton: false,
-    //     });
-    //     const fileKey = await uploadFile(file);
-    //     if (typeof fileKey === "string") {
-    //       setLogoSrc(fileKey)
-    //     }
-    //   }
-    // };
-    // uploadAndUpdate();
+    return () => {
+      URL.revokeObjectURL(logoSrc);
+    };
   }, []);
 
-  const removeLogo = useCallback(
-    function () {
-      setLogoSrc("/images/rateup-star.svg");
+  useEffect(() => {
+    const qrSettingsFromApi = shareSettings?.data;
+    if (qrSettingsFromApi) {
+      setState(qrSettingsFromApi);
+    }
+  }, [shareSettings.data]);
+
+  const updateState = useCallback(
+    (stateObjectProperty: statePropertiesEnum) => {
+      return (value) => setState({ ...state, [stateObjectProperty]: value });
     },
-    [logoSrc],
+    [state],
   );
 
-  const handleLogoInputChange = useCallback(
-    (file) => {
-      if (file) {
-        const reader = new FileReader();
-        reader.addEventListener(
-          "load",
-          function () {
-            const url = reader.result.toString();
-            setLogoSrc(url);
-          },
-          false,
-        );
-        reader.readAsDataURL(file);
+  const handleSaveOfSurveyShareSettings = useCallback(async () => {
+    const formData = new FormData();
+    for (const property in state) {
+      let value = state[property];
+      formData.append(property, value);
+    }
+
+    await shareSettingsMutation.mutateAsync({
+      params: {
+        resourceName,
+        id,
+      },
+      body: formData,
+    });
+  }, [state]);
+
+  const handleSelectLogoFileInputChange = (value) => {
+    if (value) {
+      updateState(statePropertiesEnum.LogoFile)(value);
+    } else {
+      const logoLink = shareSettings.data?.logoFile;
+      if (logoLink) {
+        updateState(statePropertiesEnum.LogoFile)(logoLink);
       } else {
-        removeLogo();
+        updateState(statePropertiesEnum.LogoFile)(`/images/rateup-star.svg`);
       }
-    },
-    [removeLogo],
-  );
+    }
+  };
 
   return (
     <PaperLayout shadow="sm" p="xl" style={{ ...sx }}>
@@ -84,46 +132,41 @@ const ShareQR = ({ url, sx, surveyTitle, isSurveyPublished }: ShareQRProps) => {
           Generate & Share QR Code
         </Title>
 
-        <Tabs
-          value={activeTab}
-          onChange={setActiveTab}
-          variant="pills"
-          color="gray"
-          defaultValue="text"
-        >
-          <Group className={styles["options-preview-container"]}>
-            <LogoTabpanel
-              handleLogoInputChange={handleLogoInputChange}
-              logoFillType={logoFillType}
-              setLogoFillType={setLogoFillType}
-              qrBgColor={qrBgColor}
-              setQRBgColor={setQRBgColor}
-              qrColor={qrColor}
-              setQRColor={setQRColor}
-              logoSize={logoSize}
-              setLogoSize={setLogoSize}
-              borderRadius={logoBorderRadius}
-              setBorderRadius={setlogoBorderRadius}
-            />
+        <Group className={styles["options-preview-container"]}>
+          <LogoTabpanel
+            logoFillType={logoFillType}
+            qrBgColor={qrBgColor}
+            qrColor={qrColor}
+            logoSize={logoSize}
+            logoBorderRadius={logoBorderRadius}
+            updateStateFunc={updateState}
+            selectLogoFileInputValue={getLogoFileValueForFileInput(logoFile)}
+            onSelectLogoFileInputChange={handleSelectLogoFileInputChange}
+          />
 
-            {/*..... QR Editor - Preview ........ */}
+          {/*..... QR Editor - Preview ........ */}
 
-            {url && (
+          {url && (
+            <Stack align="center">
               <Preview
                 url={url}
                 qrBgImgLogo={logoSrc}
                 qrBgImgFillType={logoFillType}
-                qrSize={qrSize}
                 qrBgColor={qrBgColor}
                 qrColor={qrColor}
-                surveyTitle={surveyTitle}
-                isSurveyPublished={isSurveyPublished}
+                surveyTitle={title}
+                isSurveyPublished={isPublished}
                 logoSize={logoSize}
                 logoBorderRadius={logoBorderRadius}
               />
-            )}
-          </Group>
-        </Tabs>
+              <RateupButtonBlue
+                loading={shareSettingsMutation.isPending}
+                title="Save Settings"
+                onClick={handleSaveOfSurveyShareSettings}
+              />
+            </Stack>
+          )}
+        </Group>
       </>
     </PaperLayout>
   );

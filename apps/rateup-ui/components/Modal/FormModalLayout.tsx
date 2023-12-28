@@ -66,6 +66,7 @@ export default function FormModalLayout({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           onSubmit();
         }}
         style={{ padding: 20 }}

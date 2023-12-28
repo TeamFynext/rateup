@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Title,
   Divider,
   Stack,
-  Container,
   Group,
-  Image,
   FileButton,
-  Button,
   Flex,
   Paper,
   Avatar,
@@ -25,17 +22,25 @@ import {
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
 import { useUser } from "../../../context/UserContext";
-import {
-  ContainedPasswordInput,
-  ContainedTextField,
-} from "../../../components/input/ContainedInput/ContainedInput";
+import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import { useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
+import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
+import { useDisclosure } from "@mantine/hooks";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
   const { user } = useUser();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
   const orgForm = useForm({
@@ -115,8 +120,28 @@ const OrgSettings = () => {
     }
   }, [user.orgLogo]);
 
+  const handleImagePicker = (event) => {
+    if (!event) return;
+    toggleCropDialog();
+    setSelectedImage({
+      name: event.name,
+      url: URL.createObjectURL(event),
+    });
+    resetRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    setFile(cropedImage);
+  };
   return (
     <Flex direction={"column"} h={"100%"}>
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={4 / 3}
+      />
       <Title order={2}>Organization Settings</Title>
       <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
@@ -145,8 +170,9 @@ const OrgSettings = () => {
               color="var(--tertiary-color)"
             />
             <FileButton
-              onChange={setFile}
+              onChange={handleImagePicker}
               accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              resetRef={resetRef}
             >
               {(props) => (
                 <RateupButtonBlue

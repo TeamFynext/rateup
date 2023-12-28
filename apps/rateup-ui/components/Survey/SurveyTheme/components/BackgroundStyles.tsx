@@ -15,6 +15,10 @@ import {
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, useEffect } from "react";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
+import { UnsplashModal } from "../../../Modal/UnsplashModal";
+import { ImageCropModal } from "../../../Modal/ImageCropModal";
+import { ImageUploadMethodModal } from "../../../Modal/ImageUploadMethodModal";
+import { useDisclosure } from "@mantine/hooks";
 function BackgroundStyles({
   saveStyles,
   currentStyles,
@@ -42,6 +46,27 @@ function BackgroundStyles({
   });
 
   const [isFileLoading, setisFileLoading] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState(16 / 9);
+  const [imageType, setImageType] = useState("");
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const [
+    openedUnsplashDialog,
+    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
+  ] = useDisclosure(false);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
+  const [
+    openedMethodSelectionDialog,
+    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
+  ] = useDisclosure(false);
+  const bgFileUploadBtnRef = useRef(null);
+  const mobileBgFileUploadBtnRef = useRef(null);
+
   useEffect(() => {
     setCurrentstyles({ ...currentStyles, bgStyles: backgroundStyles.bgStyles });
   }, [backgroundStyles]);
@@ -53,23 +78,19 @@ function BackgroundStyles({
   };
 
   const handleFileChange = (value) => {
-    setisFileLoading(true);
-    setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: value });
-    let url = URL.createObjectURL(value);
+    if (!value) return;
+    setAspectRatio(16 / 9);
+    toggleMethodSelectionDialog();
+    setImageType("backgroundImage");
     setSelectedTab("Web");
-    setbgImage(url);
-    setBgFileName(value.name);
-    setisFileLoading(false);
   };
 
   const handleMobileBgFileChange = (value) => {
-    setisFileLoading(true);
-    setCurrentstyles({ ...currentStyles, mobileBgUrlNotUploaded: value });
-    let url = URL.createObjectURL(value);
+    if (!value) return;
+    setAspectRatio(4 / 3);
+    toggleMethodSelectionDialog();
+    setImageType("mobileBackgroundImage");
     setSelectedTab("Mobile");
-    setbgMobileImage(url);
-    setMobileBgFileName(value.name);
-    setisFileLoading(false);
   };
 
   const removeBg = () => {
@@ -103,9 +124,64 @@ function BackgroundStyles({
   const handleMouseOverMobileBg = () => {
     !isMobileView && setSelectedTab("Mobile");
   };
-
+  const handleUploadMethod = (type: string) => {
+    if (type === "unsplash") {
+      toggleUnsplashDialog();
+    } else {
+      if (imageType === "backgroundImage") bgFileUploadBtnRef?.current?.click();
+      else mobileBgFileUploadBtnRef?.current?.click();
+    }
+  };
+  const handleUnsplashImageSave = (
+    unsplashImage: string,
+    imageName: string,
+  ) => {
+    setSelectedImage({
+      url: unsplashImage,
+      name: imageName,
+    });
+    toggleCropDialog();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    if (imageType === "backgroundImage") {
+      setisFileLoading(true);
+      setCurrentstyles({ ...currentStyles, bgUrlNotUploaded: cropedImage });
+      let url = URL.createObjectURL(cropedImage);
+      setbgImage(url);
+      setBgFileName(cropedImage?.name);
+      setisFileLoading(false);
+    } else if (imageType === "mobileBackgroundImage") {
+      setisFileLoading(true);
+      setCurrentstyles({
+        ...currentStyles,
+        mobileBgUrlNotUploaded: cropedImage,
+      });
+      let url = URL.createObjectURL(cropedImage);
+      setbgMobileImage(url);
+      setMobileBgFileName(cropedImage?.name);
+      setisFileLoading(false);
+    }
+  };
   return (
     <Stack>
+      <UnsplashModal
+        handleUnsplashImageSave={handleUnsplashImageSave}
+        opened={openedUnsplashDialog}
+        onclose={closeUnsplashDialog}
+      />
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={aspectRatio}
+      />
+      <ImageUploadMethodModal
+        onClose={closeMethodSelectionDialog}
+        opened={openedMethodSelectionDialog}
+        handleUploadMethod={handleUploadMethod}
+      />
       <Stack mt={10}>
         {/* //-------------tabs ------------ */}
         <Tabs
@@ -197,18 +273,30 @@ function BackgroundStyles({
                   }
                   leftIcon={<IconTrash size={16} />}
                 />
+                <Button
+                  leftSection={<IconUpload size={16} />}
+                  size="xs"
+                  radius="18px"
+                  type="button"
+                  onClick={handleFileChange}
+                  loading={isFileLoading}
+                >
+                  Upload Image
+                </Button>
                 <FileButton
                   resetRef={resetBgRef}
-                  onChange={handleFileChange}
+                  onChange={(e) => {
+                    if (!e) return;
+                    handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+                    resetBgRef?.current?.();
+                  }}
                   accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 >
                   {(props) => (
                     <Button
-                      leftSection={<IconUpload size={16} />}
-                      size="xs"
-                      radius="18px"
+                      ref={bgFileUploadBtnRef}
+                      display={"none"}
                       {...props}
-                      loading={isFileLoading}
                     >
                       Upload Image
                     </Button>
@@ -248,18 +336,30 @@ function BackgroundStyles({
                   }
                   leftIcon={<IconTrash size={16} />}
                 />
+                <Button
+                  leftSection={<IconUpload size={16} />}
+                  size="xs"
+                  radius="18px"
+                  type="button"
+                  onClick={handleMobileBgFileChange}
+                  loading={isFileLoading}
+                >
+                  Upload Image
+                </Button>
                 <FileButton
                   resetRef={resetMobileBgRef}
-                  onChange={handleMobileBgFileChange}
+                  onChange={(e) => {
+                    if (!e) return;
+                    handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+                    resetMobileBgRef?.current?.();
+                  }}
                   accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 >
                   {(props) => (
                     <Button
-                      leftSection={<IconUpload size={16} />}
-                      size="xs"
-                      radius="18px"
+                      ref={mobileBgFileUploadBtnRef}
+                      display={"none"}
                       {...props}
-                      loading={isFileLoading}
                     >
                       Upload Image
                     </Button>

@@ -1,4 +1,4 @@
-import { Box, Group, Modal, Stack, Text, Title } from "@mantine/core";
+import { Group, Modal, Stack, Text, Title } from "@mantine/core";
 import React, { useEffect, useRef, useState } from "react";
 import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
 import {

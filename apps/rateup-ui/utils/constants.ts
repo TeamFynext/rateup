@@ -1,5 +1,8 @@
 import { QuestionType } from "../types/enums";
 
+export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`;
+
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const ContactQuestions = [
@@ -20,6 +23,7 @@ export const NPSQuestions = [
 ];
 
 export const WaNPSQuestions = [
+  QuestionType.Rating,
   QuestionType.Smiley,
   QuestionType.LD,
   QuestionType.YN,
@@ -72,3 +76,5 @@ export const ChoiceTypeQuestions = [
   QuestionType.CustomNPS,
   QuestionType.WaButtons,
 ];
+
+export const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;

@@ -2,7 +2,7 @@ import { Text, Title } from "@mantine/core";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
 import styles from "../../../index/index.module.css";
 import Image from "next/image";
-import { imagesPath } from "../../../constants";
+import { imagesPath } from "../../../../../utils/constants";
 
 function ApiAndSdkSection() {
   const imagePath = `${imagesPath}/homepage/our-features/api-and-sdk-support.png`;

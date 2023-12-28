@@ -17,6 +17,7 @@ import {
   IconComet,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
+import { SubscriptionFeatureName } from "../../../types/enums";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -28,100 +29,116 @@ export interface NavbarLinkProps {
   role?: string;
 }
 //data Array consisting of NavbarTopData
-export const navTopData: Array<NavbarLinkProps> = [
-  {
-    Icon: IconLayoutDashboard,
-    label: "Dashboard",
-    href: "/dashboard",
-    role: "",
-  },
-  {
-    Icon: IconSocial,
-    label: "Teams",
-    href: "",
-    submenus: [
-      { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
-      {
-        Icon: IconUsers,
-        label: "Members",
-        href: "/dashboard/members",
-        role: UserRole.SUPADM,
-      },
-    ],
-  },
-  {
-    Icon: IconBrowser,
-    label: "Web Survey",
-    href: "",
-    submenus: [
-      {
-        Icon: IconClipboardList,
-        label: "Surveys",
-        href: "/dashboard/surveys",
-      },
-      {
-        Icon: IconKeyframes,
-        label: "Templates",
-        href: "/dashboard/surveys/templates",
-      },
-      ...(hiddenModules.includes("groupSurvey")
-        ? []
-        : [
-            {
-              Icon: IconPageBreak,
-              label: "Group Surveys",
-              href: "/dashboard/groupsurveys",
-            },
-          ]),
-    ],
-  },
-  // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
-  {
-    Icon: IconBrandWhatsapp,
-    label: "WhatsApp Survey",
-    submenus: [
-      {
-        Icon: IconFileDescription,
-        label: "Surveys",
-        href: "/dashboard/whatsapp/surveys",
-      },
-      {
-        Icon: IconMessage2Code,
-        label: "Templates",
-        href: "/dashboard/whatsapp/templates",
-      },
-      {
-        Icon: IconSettings,
-        label: "Settings",
-        href: "/dashboard/whatsapp/settings",
-      },
-    ],
-  },
-  { Icon: IconClipboardList, label: "Menu", href: "/dashboard/menu" },
-  ...(hiddenModules.includes("campaign")
-    ? []
-    : [
+export function getNavTopData(subscription) {
+  const featureList = Object.keys(subscription?.features || {});
+  const navTopData: Array<NavbarLinkProps> = [
+    {
+      Icon: IconLayoutDashboard,
+      label: "Dashboard",
+      href: "/dashboard",
+      role: "",
+    },
+    {
+      Icon: IconSocial,
+      label: "Teams",
+      href: "",
+      submenus: [
+        { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
         {
-          Icon: IconSpeakerphone,
-          label: "Campaign",
-          href: "/dashboard/campaign",
+          Icon: IconUsers,
+          label: "Members",
+          href: "/dashboard/members",
+          role: UserRole.SUPADM,
         },
-        {
-          Icon: IconAddressBook,
-          label: "Contacts",
-          href: "/dashboard/contacts",
-        },
-      ]),
-  ...(hiddenModules.includes("reputation_management")
-    ? []
-    : [
-        {
-          Icon: IconComet,
-          label: "Reputation",
-          href: "/dashboard/rm",
-        },
-      ]),
-];
+      ],
+    },
+    ...(featureList.includes(SubscriptionFeatureName.WebSurvey)
+      ? [
+          {
+            Icon: IconBrowser,
+            label: "Web Survey",
+            href: "",
+            submenus: [
+              {
+                Icon: IconClipboardList,
+                label: "Surveys",
+                href: "/dashboard/surveys",
+              },
+              {
+                Icon: IconKeyframes,
+                label: "Templates",
+                href: "/dashboard/surveys/templates",
+              },
+              ...(hiddenModules.includes("groupSurvey")
+                ? []
+                : [
+                    {
+                      Icon: IconPageBreak,
+                      label: "Group Surveys",
+                      href: "/dashboard/groupsurveys",
+                    },
+                  ]),
+            ],
+          },
+        ]
+      : []),
+    // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
+    ...(featureList.includes(SubscriptionFeatureName.WhatsAppSurvey)
+      ? [
+          {
+            Icon: IconBrandWhatsapp,
+            label: "WhatsApp Survey",
+            submenus: [
+              {
+                Icon: IconFileDescription,
+                label: "Surveys",
+                href: "/dashboard/whatsapp/surveys",
+              },
+              {
+                Icon: IconMessage2Code,
+                label: "Templates",
+                href: "/dashboard/whatsapp/templates",
+              },
+              {
+                Icon: IconSettings,
+                label: "Settings",
+                href: "/dashboard/whatsapp/settings",
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(featureList.includes(SubscriptionFeatureName.Menu)
+      ? [{ Icon: IconClipboardList, label: "Menu", href: "/dashboard/menu" }]
+      : []),
+    ...(hiddenModules.includes("campaign") ||
+    !featureList.includes(SubscriptionFeatureName.WhatsAppCampaign)
+      ? []
+      : [
+          {
+            Icon: IconSpeakerphone,
+            label: "Campaign",
+            href: "/dashboard/campaign",
+          },
+          {
+            Icon: IconAddressBook,
+            label: "Contacts",
+            href: "/dashboard/contacts",
+          },
+        ]),
+    ...(hiddenModules.includes("reputation_management") ||
+    !featureList.includes(SubscriptionFeatureName.ReputationManagement)
+      ? []
+      : [
+          {
+            Icon: IconComet,
+            label: "Reputation",
+            href: "/dashboard/rm",
+          },
+        ]),
+  ];
+  return navTopData;
+}
 
 //data Array consisting of NavbarBottomData
 export const navBottomData: Array<NavbarLinkProps> = [

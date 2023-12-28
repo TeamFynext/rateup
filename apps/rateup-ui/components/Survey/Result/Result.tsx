@@ -192,10 +192,15 @@ export const ResultFilter = ({
   const languageSelectionOptions = survey?.languages?.map((language) => {
     return { value: language, label: language };
   });
-  let tagSelectData = survey?.teams
-    ?.map((team) => team.tags)
-    .reduce((acc, val) => acc.concat(val), [])
-    .map((tag) => ({ value: tag, label: tag }));
+  let tagSelectSet = new Set(
+    survey?.teams
+      ?.map((team) => team.tags)
+      .reduce((acc, val) => acc.concat(val), []),
+  );
+  let tagSelectData = Array.from(tagSelectSet).map((tag) => ({
+    value: tag,
+    label: tag,
+  }));
   const {
     isLoading: isQLoading,
     error: QError,
@@ -235,8 +240,8 @@ export const ResultFilter = ({
     setFilteredResponses(filterResponses(responses, filters));
   }, [filters]);
   if (
-    (languageSelectionOptions?.length > 1 &&
-      activeTab !== ResultTab.Responses) ||
+    languageSelectionOptions?.length > 1 ||
+    tagSelectData.length > 0 ||
     (quantitativeQuestions?.length !== 0 && activeTab === ResultTab.Responses)
   ) {
     return (

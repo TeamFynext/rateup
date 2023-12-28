@@ -12,7 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { IconUpload, IconMenu2, IconTrash } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ContainedTextField,
   ContainedTextArea,
@@ -35,6 +35,7 @@ import {
 } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import { ImageCropModal } from "../../Modal/ImageCropModal";
 
 export const Slide = ({
   menuId,
@@ -53,7 +54,15 @@ export const Slide = ({
   const [imageUploadError, setImageUploadError] = useState(false);
   const isMobile = selectedTab === "Mobile";
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
   const form = useForm({
     initialValues: formValues || {
       id: "",
@@ -137,11 +146,13 @@ export const Slide = ({
   };
 
   const onChangePicture = (event: File) => {
-    if (event) {
-      form.setFieldValue("image", URL.createObjectURL(event));
-      setImageToUpload(event);
-      setImageUploadError(false);
-    }
+    if (!event) return;
+    setSelectedImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    resetRef?.current?.();
   };
 
   const handleDeleteMutation = () => {
@@ -160,9 +171,21 @@ export const Slide = ({
       popFromData();
     }
   };
-
+  const handleCropImageSave = (cropedImage) => {
+    form.setFieldValue("image", URL.createObjectURL(cropedImage));
+    setImageToUpload(cropedImage);
+    setImageUploadError(false);
+  };
   return (
     <>
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={16 / 9}
+      />
       <LoadingOverlay
         visible={
           createMenuBannerMutation.isPending ||
@@ -243,6 +266,7 @@ export const Slide = ({
                         <FileButton
                           onChange={onChangePicture}
                           accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          resetRef={resetRef}
                         >
                           {(props) => {
                             return (

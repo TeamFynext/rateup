@@ -1,25 +1,23 @@
-
 .item {
   display: flex;
   align-items: center;
-  border-radius: 8px; 
-  border: 1px solid var(--item-border-color, #ccc); 
-  padding: var(--item-padding, 8px 16px); 
-  background-color: var(--item-background-color, white); 
-  margin-bottom: var(--item-margin-bottom, 8px); 
+  border-radius: 8px;
+  border: 1px solid var(--item-border-color, #ccc);
+  padding: var(--item-padding, 8px 0px 8px 10px);
+  background-color: var(--item-background-color, white);
+  margin-bottom: var(--item-margin-bottom, 8px);
   cursor: pointer;
   position: relative;
 }
 
 .itemDragging {
-  box-shadow: var(--item-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1)); 
+  box-shadow: var(--item-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .dragHandle {
-  
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--drag-handle-color, #666); 
+  color: var(--drag-handle-color, #666);
 }
