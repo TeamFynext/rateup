@@ -1,6 +1,6 @@
 import { Flex, Image, Group } from "@mantine/core";
 import styles from "./Header.module.css";
-import { getNavLinksArray } from "../../constants";
+import { getNavLinksArray, rateupLogoUrl } from "../../constants";
 import LoginSignupLinks from "./LoginSignupLinks";
 import Link from "next/link";
 import Button from "../Button";
@@ -15,13 +15,7 @@ function Header() {
     <Flex justify="space-between" className={styles["header-container"]}>
       <Group gap={"xl"} className={styles["logo-nav-container"]} wrap="nowrap">
         <Link href="/">
-          <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
-            alt="logo"
-            w={110}
-            h={110}
-            fit="contain"
-          />
+          <Image src={rateupLogoUrl} alt="logo" w={110} h={110} fit="contain" />
         </Link>
         <nav>
           <Flex className={styles["header-links-container"]}>

@@ -29,6 +29,7 @@ import { RateupButtonBlue } from "../Button/RateupButtons";
 import styles from "./AuthForm.module.css";
 import { useCheckEmailExistMutation } from "../../backend/user/user.query";
 import { showNotification } from "../../utils/auth";
+import { rateupLogoUrl } from "../HomePage/constants";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
@@ -143,7 +144,7 @@ const ResetPasswordForm = ({ mode }) => {
             <Link href="/" className={styles["rateup-logo-link"]}>
               <Image
                 className={styles["rateup-logo-img"]}
-                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
+                src={rateupLogoUrl}
                 alt="RateUp Logo"
               />
             </Link>
@@ -230,7 +231,7 @@ const ResetPasswordForm = ({ mode }) => {
             <Link href="/" className={styles["rateup-logo-link"]}>
               <Image
                 className={styles["rateup-logo-img"]}
-                src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`}
+                src={rateupLogoUrl}
                 alt="RateUp Logo"
               />
             </Link>

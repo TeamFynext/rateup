@@ -5,6 +5,7 @@ import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+export const rateupLogoUrl = `${imagesPath}/logo.svg`;
 
 const navLinks = [
   {

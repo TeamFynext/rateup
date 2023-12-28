@@ -5,10 +5,9 @@ import headerStyles from "../Header.module.css";
 import drawerStyles from "./Drawer.module.css";
 import menuStyles from "./Menu.module.css";
 import Link from "next/link";
-import { getMobileNavLinkMenuItems } from "../../../constants";
+import { getMobileNavLinkMenuItems, rateupLogoUrl } from "../../../constants";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import { imagesPath } from "../../../constants";
 
 function MobileNavDrawer() {
   const [
@@ -45,13 +44,7 @@ function MobileNavDrawer() {
         onClose={closeNavDrawer}
         title={
           <Link href="/">
-            <Image
-              src={`${imagesPath}/logo.svg`}
-              alt="logo"
-              w={75}
-              h={65}
-              fit="cover"
-            />
+            <Image src={rateupLogoUrl} alt="logo" w={75} h={65} fit="cover" />
           </Link>
         }
         zIndex={500}
