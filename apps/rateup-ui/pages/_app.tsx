@@ -179,7 +179,7 @@ export default function App({
                 </UserProvider>
                 <ReactQueryDevtools
                   initialIsOpen={false}
-                  buttonPosition="top-right"
+                  buttonPosition="top-left"
                 />
               </HydrationBoundary>
             </QueryClientProvider>
