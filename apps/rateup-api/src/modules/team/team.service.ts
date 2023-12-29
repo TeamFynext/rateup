@@ -1,3 +1,4 @@
+import Session from "supertokens-node/recipe/session";
 import prisma from "../../utils/prisma";
 import { createUser } from "../user/user.service";
 import {
@@ -143,7 +144,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
 
     if (existingTeamMember) {
       throw new Error(
-        "Team member with the provided email already exists in the team."
+        "Team member with the provided email already exists in the team.",
       );
     }
 
@@ -159,7 +160,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
 
     if (existingOrgMember) {
       throw new Error(
-        "User with the provided email is already a SUPER_ADMIN member in an organization."
+        "User with the provided email is already a SUPER_ADMIN member in an organization.",
       );
     }
 
@@ -177,7 +178,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         //TODO
 
         throw new Error(
-          "Invitation with the provided email is already pending."
+          "Invitation with the provided email is already pending.",
         );
       } else if (
         existingInvitation.status === "ACCEPTED" &&
@@ -206,7 +207,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
         html: createEmailBody(
           `${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}`,
-          email
+          email,
         ),
       };
       try {
@@ -244,7 +245,7 @@ export async function resendInviteTeamMember(id: string) {
       text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
       html: createEmailBody(
         `${process.env.FRONTEND_URL}/invite?type=team&token=${existingInvitation?.id}`,
-        existingInvitation?.email
+        existingInvitation?.email,
       ),
     };
     await sendAWSEmail(msg);
@@ -285,7 +286,7 @@ export async function completeInvite(token: string) {
     let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp(
       "public",
       updatedInvitation.email,
-      FAKE_PASSWORD
+      FAKE_PASSWORD,
     );
     if (signUpResult.status === "EMAIL_ALREADY_EXISTS_ERROR") {
       throw new Error("User already exists");
@@ -293,7 +294,7 @@ export async function completeInvite(token: string) {
 
     const tokenRes = await EmailVerification.createEmailVerificationToken(
       "public",
-      signUpResult.user.id
+      signUpResult.user.id,
     );
     if (tokenRes.status === "OK") {
       await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
@@ -324,14 +325,14 @@ export async function completeInvite(token: string) {
       if (orgMember && updatedInvitation.teamId) {
         createTeamMemberIfNotExists(
           updatedInvitation.teamId,
-          signUpResult.user.id
+          signUpResult.user.id,
         );
       }
       // change password page
       let passwordResetToken =
         await ThirdPartyEmailPassword.createResetPasswordToken(
           "public",
-          signUpResult.user.id
+          signUpResult.user.id,
         );
 
       if (passwordResetToken.status === "UNKNOWN_USER_ID_ERROR") {
@@ -430,7 +431,7 @@ export function getTeamMembers(input: GetTeamMembersInput) {
 
 export async function getTeamMembersAndFromInvitation(
   orgId: string,
-  input: GetTeamMembersInput
+  input: GetTeamMembersInput,
 ) {
   const team = await prisma.team.findUnique({
     where: {
@@ -450,6 +451,11 @@ export async function getTeamMembersAndFromInvitation(
         },
       },
       members: {
+        where: {
+          user: {
+            active: true,
+          },
+        },
         select: {
           teamId: true,
           userId: true,
@@ -526,7 +532,13 @@ export async function getTeamsByUserId(userId: string) {
           googleLink: true,
           _count: {
             select: {
-              members: true,
+              members: {
+                where: {
+                  user: {
+                    active: true,
+                  },
+                },
+              },
             },
           },
         },
@@ -551,40 +563,37 @@ export async function getTeamIdsByUserId(userId: string) {
 }
 
 export async function editTeam(
-  { name, code, googleLink, tags }: EditTeamInput,
+  { name, code, googleLink }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
-  if (tags) {
-    const { tags: existingTags } = await prisma.team.findUnique({
-      where: { id: params.id },
-      select: { tags: true },
-    });
-    if (tags.some((tag) => existingTags.includes(tag))) {
-      reply.code(400).send({ message: "Survey tag already exists" });
-    } else {
-      tags = [...existingTags, ...tags];
-    }
+  if (name?.length < 3) {
+    throw new Error("Invalid team name.");
   }
-  const user = await prisma.team.update({
-    where: { id: params.id },
-    data: {
-      name,
-      code,
-      googleLink,
-      tags
-    },
-  });
-
-  return user;
+  if (code?.length < 2) {
+    throw new Error("Invalid team code.");
+  }
+  try {
+    const team = await prisma.team.update({
+      where: { id: params.id },
+      data: {
+        name,
+        code,
+        googleLink,
+      },
+    });
+    return team;
+  } catch (error) {
+    throw new Error("Team with same name or code already exists");
+  }
 }
 
 export async function manageTags(
   { tags }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const team = await prisma.team.update({
     where: { id: params.id },

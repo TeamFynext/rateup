@@ -140,7 +140,7 @@ model Invitation {
   type      InviteType
   org       Org          @relation(fields: [orgId], references: [id])
   orgId     String       @db.Uuid
-  team      Team?        @relation(fields: [teamId], references: [id])
+  team      Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String?      @db.Uuid
   invitedBy String
   createdAt DateTime     @default(now())
@@ -204,7 +204,7 @@ model SurveyLanding {
 model SurveyResponse {
   id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt       DateTime         @default(now())
-  surveyTeamMap   SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id])
+  surveyTeamMap   SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id],onDelete: Cascade)
   surveyTeamMapId String           @db.Uuid
   responses       Json[]
   language        String           @default("")
@@ -224,7 +224,7 @@ model SurveyResponse {
 
 model SurveyStats {
   id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyTeamMap   SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id])
+  surveyTeamMap   SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id],onDelete: Cascade)
   surveyTeamMapId String        @unique @db.Uuid
   visited         Int           @default(0)
   started         Int           @default(0)
