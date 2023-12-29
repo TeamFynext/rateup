@@ -99,14 +99,15 @@ export function DraggableQuestionCard({
               </Text>
               <Group justify={"flex-end"} gap={4} ml={"auto"} miw={70}>
                 {question?.logic?.length && (
-                  <img
+                  <Image
                     src={
                       isWaSurvey == true
                         ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
                         : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`
                     }
-                    width={30}
-                    height={30}
+                    w={30}
+                    h={30}
+                    fit="contain"
                   />
                 )}
                 {question.googleReview && (

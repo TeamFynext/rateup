@@ -210,10 +210,11 @@ export function QuestionDetailedView({
                 <RateupButtonSecondary
                   title={"Logic Jump"}
                   leftIcon={
-                    <img
+                    <Image
                       src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                      height={30}
-                      width={30}
+                      h={30}
+                      w={30}
+                      fit="contain"
                     />
                   }
                   size="sm"

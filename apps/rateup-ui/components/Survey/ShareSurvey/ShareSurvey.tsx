@@ -490,12 +490,13 @@ const ShareSurvey = ({
                   position="bottom"
                   styles={{ tooltip: { color: "grey" } }}
                 >
-                  <img
-                    style={{ opacity: isPublished ? 1 : 0.5 }}
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
                     alt="mail icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
+                    style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
               </ActionIcon>
@@ -513,12 +514,13 @@ const ShareSurvey = ({
                   position="bottom"
                   styles={{ tooltip: { color: "grey" } }}
                 >
-                  <img
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
                     alt="whatsapp icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
-                    width={40}
-                    height={40}
-                    style={{ opacity: isPublished ? 1 : 0.5 }}
+                    w={40}
+                    h={40}
+                    style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
               </ActionIcon>
@@ -536,12 +538,13 @@ const ShareSurvey = ({
                   position="bottom"
                   styles={{ tooltip: { color: "grey" } }}
                 >
-                  <img
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
                     alt="facebook icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
-                    width={40}
-                    height={40}
-                    style={{ opacity: isPublished ? 1 : 0.5 }}
+                    w={40}
+                    h={40}
+                    style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
               </ActionIcon>
@@ -559,12 +562,13 @@ const ShareSurvey = ({
                   position="bottom"
                   styles={{ tooltip: { color: "grey" } }}
                 >
-                  <img
-                    style={{ opacity: isPublished ? 1 : 0.5 }}
+                  <Image
+                    opacity={isPublished ? 1 : 0.5}
                     alt="iframe icon"
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
+                    style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
               </ActionIcon>
