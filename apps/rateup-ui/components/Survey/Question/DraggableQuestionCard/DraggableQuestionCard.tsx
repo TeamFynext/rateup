@@ -105,8 +105,8 @@ export function DraggableQuestionCard({
                         ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
                         : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`
                     }
-                    width={30}
-                    height={30}
+                    w={30}
+                    h={30}
                     fit="contain"
                   />
                 )}
