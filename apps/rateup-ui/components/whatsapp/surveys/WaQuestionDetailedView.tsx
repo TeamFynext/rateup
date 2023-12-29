@@ -270,11 +270,10 @@ export function WaQuestionDetailedView({
               <RateupButtonSecondary
                 title={"Logic Jump"}
                 leftIcon={
-                  <Image
+                  <img
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
                     width={30}
                     height={30}
-                    fit="contain"
                   />
                 }
                 size="sm"
