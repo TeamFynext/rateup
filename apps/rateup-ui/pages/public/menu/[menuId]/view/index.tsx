@@ -242,7 +242,7 @@ export default function ({ fullMenu, menuBanner }) {
       <CategoriesDrawer
         opened={drawerOpen}
         close={close}
-        categories={catagories}
+        categories={fullMenu?.categories}
         handleCategoryChipClick={handleCategoryChipClick}
       />
       {selectedItem && (
