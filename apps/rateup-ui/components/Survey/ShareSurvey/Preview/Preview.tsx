@@ -16,6 +16,7 @@ function Preview({
   isSurveyPublished,
   logoSize,
   logoBorderRadius,
+  customAttrForDownloadedQrFileName = "",
 }) {
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
     useState(false);
@@ -45,7 +46,11 @@ function Preview({
 
   return (
     <Stack className={styles["preview-download-btn-container"]}>
-      <Stack className={styles["preview-container"]} ref={previewContainerRef}>
+      <Stack
+        className={styles["preview-container"]}
+        ref={previewContainerRef}
+        data-tagname={customAttrForDownloadedQrFileName}
+      >
         <Box
           className={styles["qr-svg-bg-img-container"]}
           style={{

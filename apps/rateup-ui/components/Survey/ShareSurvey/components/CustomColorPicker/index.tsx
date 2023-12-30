@@ -55,11 +55,7 @@ function CustomColorPicker({ value, onChange }) {
             onChange={handleInputChange}
           />
 
-          {!isEyeDroppersupported ? (
-            <Text className={styles["eye-dropper-not-supported-text"]}>
-              Eye Dropper API Not supported in your browser
-            </Text>
-          ) : (
+          {!isEyeDroppersupported ? null : (
             <Button
               className={styles["eye-dropper-btn"]}
               leftSection={<IconColorPicker />}

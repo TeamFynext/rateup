@@ -22,6 +22,7 @@ import {
   IconMessage,
 } from "@tabler/icons-react";
 import ShareQR from "../../Survey/ShareSurvey/ShareQR";
+
 function ShareLandingPage({ LandingId }) {
   const getLandingUrl = (LandingId) => {
     return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/landing/${LandingId}`;
