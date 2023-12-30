@@ -1,6 +1,16 @@
 // Any modification to this file should be reflected in the frontend
-import { Prisma, Role, Subscription } from "@prisma/client";
-import { QuestionType, SmileyResponse, YNResponse, LDResponse, LogicAction, LogicCondition, WaTemplateStatus, NPSWeightage } from "./enums";
+import { Prisma, Role } from "@prisma/client";
+import {
+  QuestionType,
+  SmileyResponse,
+  YNResponse,
+  LDResponse,
+  LogicAction,
+  LogicCondition,
+  WaTemplateStatus,
+  NPSWeightage,
+  SubscriptionFeaturePathName as sfpn,
+} from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { toBeIncludedWaSessionRelations } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
 
@@ -24,15 +34,15 @@ type ValidationRules = {
   textType?: {
     type: string;
     errorMessage: string;
-  } | null
+  } | null;
 };
 
-export { };
+export {};
 declare global {
   type Choice = {
     value: string;
     weightage?: NPSWeightage;
-  }
+  };
   type Question = {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
@@ -41,14 +51,14 @@ declare global {
     choices?: Zod.RecordType<string, Array<Choice>>;
     features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
     id: string;
-    googleReview?: GoogleReview
-    logic?: Array<LogicJump>
-    validationRules?: ValidationRules
+    googleReview?: GoogleReview;
+    logic?: Array<LogicJump>;
+    validationRules?: ValidationRules;
     sections?: Zod.RecordType<string, WaSectionsType>; // for Wa_List
   };
   type WaSectionsType = Array<{
     title?: string;
-    rows: Array<{ id?: string, title: string; description?: string }>;
+    rows: Array<{ id?: string; title: string; description?: string }>;
   }>;
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.
@@ -84,7 +94,7 @@ declare global {
       [QuestionType.Phone]?: string;
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
-      [QuestionType.WaList]?: { title: string, description?: string };
+      [QuestionType.WaList]?: { title: string; description?: string };
     };
   };
   type LogicJump = {
@@ -93,33 +103,69 @@ declare global {
     action: LogicAction;
   };
   type WaTemplateWithTypes = {
-    id: string
-    createdAt: Date
+    id: string;
+    createdAt: Date;
     data: {
-      name: string
-      components: Array<any>
-      id: string
-      status: WaTemplateStatus
-      language: string
-    }
-    acceptButton: string
-    orgId: string
+      name: string;
+      components: Array<any>;
+      id: string;
+      status: WaTemplateStatus;
+      language: string;
+    };
+    acceptButton: string;
+    orgId: string;
+  };
+  type WaSessionWithRelations = Omit<
+    Prisma.WaSessionGetPayload<typeof fullWaSession>,
+    "responses"
+  > & { responses: Array<QuestionResponse> }; // overriding JSON type
+
+  type subscriptionCountRestrictionCountType = {
+    max: number;
+  };
+  type subscriptionCountRestriction = {
+    count: subscriptionCountRestrictionCountType;
+  };
+  type subscriptionActiveField = {
+    active: boolean;
+  };
+  interface SubscriptionFeatures {
+    // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
+    [sfpn.Menu]: subscriptionCountRestriction & subscriptionActiveField;
+    [sfpn.Team]: {
+      teamMember: subscriptionCountRestriction & subscriptionActiveField;
+    } & subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.WebSurvey]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.WhatsAppSurvey]: subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.WhatsAppCampaign]: subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.ReputationManagement]: subscriptionActiveField &
+      subscriptionCountRestriction;
   }
-  type WaSessionWithRelations = Omit<Prisma.WaSessionGetPayload<typeof fullWaSession>, "responses"> & { responses: Array<QuestionResponse> } // overriding JSON type
+
+  interface Subscription {
+    orgId: string;
+    features: SubscriptionFeatures;
+    expiresAt: Date;
+    renewedAt?: Date;
+    createdAt: Date;
+  }
 }
 
 const fullWaSession = Prisma.validator<Prisma.WaSessionArgs>()({
-  include: toBeIncludedWaSessionRelations
-})
-declare module 'fastify' {
+  include: toBeIncludedWaSessionRelations,
+});
+declare module "fastify" {
   interface FastifyRequest {
-    userId: string,
+    userId: string;
     user: {
-      userId: string,
-      role: Role,
-      orgId: string,
-      email: string,
-    },
-    subscription: Subscription
+      userId: string;
+      role: Role;
+      orgId: string;
+      email: string;
+    };
+    subscription: Subscription;
   }
 }

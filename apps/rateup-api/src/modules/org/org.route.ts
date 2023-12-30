@@ -2,18 +2,20 @@ import { FastifyInstance } from "fastify";
 import {
   createOrgHandler,
   getAllMembersWithTeamsHandler,
+  getAllOrgsHandler,
   getAllTeamsAndMembers,
+  getOrgStatsHandler,
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
 } from "./org.controller";
 import { $Sref } from "./org.schema";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { checkSession } from "../../utils/checkSession";
-
+import { assertRootOrg } from "../../utils/auth";
 export async function orgRoutes(server: FastifyInstance) {
-  // create survey
+  server.addHook("preHandler", checkSession);
+
   server.post(
     "/",
     {
@@ -24,55 +26,72 @@ export async function orgRoutes(server: FastifyInstance) {
         },
       },
     },
-    createOrgHandler
+    createOrgHandler,
+  );
+
+  server.get(
+    "/",
+    {
+      preHandler: assertRootOrg,
+    },
+    getAllOrgsHandler,
+  );
+
+  server.get(
+    "/:orgId",
+    {
+      schema: {
+        params: $Sref("byOrgIdParams"),
+      },
+      preHandler: assertRootOrg,
+    },
+    getOrgStatsHandler,
   );
 
   server.get(
     "/teams-and-members",
     {
-      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
     },
-    getAllTeamsAndMembers
+    getAllTeamsAndMembers,
   );
 
   server.get(
     "/members-with-teams",
     {
-      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
     },
-    getAllMembersWithTeamsHandler
+    getAllMembersWithTeamsHandler,
   );
 
   server.put(
     "/update-logo",
     {
-      preHandler: [verifySession()],
       schema: {
         body: $Sref("updateLogoSchema"),
       },
     },
-    updateLogoHandler
+    updateLogoHandler,
   );
   server.put(
     "/update-details",
     {
-      preHandler: [verifySession()],
       schema: {
         body: $Sref("updateOrgDetailsSchema"),
       },
     },
-    updateOrgDetailsHandler
+    updateOrgDetailsHandler,
   );
 
   server.put(
     "/members/change-role/:id",
     {
-      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
         params: $Sref("idParamRequestSchema"),
         body: $Sref("updateRoleSchema"),
       },
     },
-    updateRoleController
+    updateRoleController,
   );
 }

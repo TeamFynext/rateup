@@ -15,11 +15,14 @@ import {
 } from "./team.controller";
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
-import { verifyTeamAdminAccess, verifyTeamMaxCountRestriction, verifyTeamMemberMaxCountRestriction } from "./team.auth";
+import {
+  verifyTeamAdminAccess,
+  verifyTeamMaxCountRestriction,
+  verifyTeamMemberMaxCountRestriction,
+} from "./team.auth";
 import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { SubscriptionFeatureName as sf } from "../../types/enums";
-
+import { SubscriptionFeaturePathName as sf } from "../../types/enums";
 
 // TODO: add checkSession as server.addHook instead of defining it in every route
 // move routes which doesn't need checkSession to another route (invitation)
@@ -27,7 +30,12 @@ export async function teamRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"]), verifyTeamMaxCountRestriction],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+        verifyTeamMaxCountRestriction,
+      ],
       schema: {
         body: $Tref("createTeamRequestSchema"),
         response: {
@@ -35,18 +43,22 @@ export async function teamRoutes(server: FastifyInstance) {
         },
       },
     },
-    createTeamHandler
+    createTeamHandler,
   );
 
   server.get(
     "/:orgId",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
       schema: {
         params: $Tref("getTeamsByOrgRequestSchema"),
       },
     },
-    getAllTeamsByOrgHandler
+    getAllTeamsByOrgHandler,
   );
 
   // Get list of teams a user is member of
@@ -55,18 +67,22 @@ export async function teamRoutes(server: FastifyInstance) {
     {
       preHandler: checkSession,
     },
-    getTeamsByUserHandler
+    getTeamsByUserHandler,
   );
 
   server.delete(
     "/:id",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
       schema: {
         params: $Tref("deleteTeamByIdRequestSchema"),
       },
     },
-    deleteTeamByIdHandler
+    deleteTeamByIdHandler,
   );
 
   server.put(
@@ -78,7 +94,7 @@ export async function teamRoutes(server: FastifyInstance) {
         params: $Tref("idParamRequestSchema"),
       },
     },
-    editTeamHandler
+    editTeamHandler,
   );
 
   server.get("/", async () => {
@@ -88,7 +104,12 @@ export async function teamRoutes(server: FastifyInstance) {
   server.post(
     "/invite",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"]), verifyTeamMemberMaxCountRestriction],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+        verifyTeamMemberMaxCountRestriction,
+      ],
       schema: {
         body: $Tref("inviteMemberRequestSchema"),
         response: {
@@ -96,17 +117,21 @@ export async function teamRoutes(server: FastifyInstance) {
         },
       },
     },
-    inviteMemberHandler
+    inviteMemberHandler,
   );
   server.put(
     "/invite/resend/:id",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
       schema: {
         params: $Tref("idParamRequestSchema"),
       },
     },
-    resendInviteMemberHandler
+    resendInviteMemberHandler,
   );
 
   server.post(
@@ -116,39 +141,51 @@ export async function teamRoutes(server: FastifyInstance) {
         params: $Tref("inviteCompleteRequestSchema"),
       },
     },
-    completeInviteHandler
+    completeInviteHandler,
   );
 
   server.delete(
     "/invite/:id",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
       schema: {
         params: $Tref("deleteTeamByIdRequestSchema"),
       },
     },
-    deleteInviteHandler
+    deleteInviteHandler,
   );
 
   server.get(
     "/members/:teamId",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
       schema: {
         params: $Tref("getTeamMembersRequestSchema"),
       },
     },
-    getTeamMembersHandler
+    getTeamMembersHandler,
   );
 
   server.get(
     "/invitation/:teamId",
     {
-      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
       schema: {
         params: $Tref("getTeamMembersRequestSchema"),
       },
     },
-    getTeamMembersFromInviteHandler
+    getTeamMembersFromInviteHandler,
   );
 }

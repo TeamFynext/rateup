@@ -44,7 +44,7 @@ export async function getTeamsMembers(orgId: string) {
     team_code: t.code,
     members: t.members.map((member) => {
       const orgMember = member.user.orgMember.find(
-        (orgMember) => orgMember.orgId === orgId
+        (orgMember) => orgMember.orgId === orgId,
       );
       return {
         id: member.user.id,
@@ -96,7 +96,7 @@ export async function updateOrgUserRole(
   { role }: { role: string },
   params: IdParamInput,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
   const accessTokenPayload = session.getAccessTokenPayload();
@@ -136,7 +136,7 @@ export async function updateOrgUserRole(
 export async function updateOrgLogo(
   { logo }: UpdateLogoInput,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
   const accessTokenPayload = session.getAccessTokenPayload();
@@ -155,7 +155,7 @@ export async function updateOrgLogo(
 export async function updateOrgDetails(
   { address, phone, name }: UpdateOrgDetailsInput,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
   const accessTokenPayload = session.getAccessTokenPayload();
@@ -179,4 +179,260 @@ export async function getOrgsByOwnerId(userId: string) {
     },
   });
   return orgs;
+}
+
+export async function getAllOrgs() {
+  return await prisma.org.findMany({
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          teams: true,
+          members: true,
+          invitations: true,
+          templates: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getOrgStats(orgId: string) {
+  const org = await prisma.org.findUnique({
+    where: {
+      id: orgId,
+    },
+    include: {
+      teams: true,
+      members: true,
+      _count: {
+        select: {
+          teams: true,
+          members: true,
+          invitations: true,
+          templates: true,
+        },
+      },
+    },
+  });
+
+  const teamIds = org.teams.map((t) => t.id);
+
+  const teamMemberCount = await prisma.teamMember.count({
+    where: {
+      team: {
+        orgId,
+      },
+    },
+  });
+
+  const teamInvitationsCount = await prisma.invitation.count({
+    where: {
+      team: {
+        orgId,
+      },
+      type: "TEAM",
+    },
+  });
+
+  // TODO: add orgid to survey or also count using createdBy since survey.teams maybe empty
+  const webSurveyCount = await prisma.survey.count({
+    where: {
+      teams: {
+        some: {
+          id: {
+            in: teamIds,
+          },
+        },
+      },
+      type: "web",
+    },
+  });
+
+  const webSurveyResponseCount = await prisma.surveyResponse.count({
+    where: {
+      surveyTeamMap: {
+        survey: {
+          teams: {
+            some: {
+              id: {
+                in: teamIds,
+              },
+            },
+          },
+          type: "web",
+        },
+      },
+    },
+  });
+  const webSurveyVisitedCount = await prisma.surveyStats.count({
+    where: {
+      surveyTeamMap: {
+        survey: {
+          teams: {
+            some: {
+              id: {
+                in: teamIds,
+              },
+            },
+          },
+          type: "web",
+        },
+      },
+    },
+  });
+
+  const whatsappSurveyCount = await prisma.survey.count({
+    where: {
+      teams: {
+        some: {
+          id: {
+            in: teamIds,
+          },
+        },
+      },
+      type: "whatsapp",
+    },
+  });
+  const whatsappSurveyVisitedCount = await prisma.surveyStats.count({
+    where: {
+      surveyTeamMap: {
+        survey: {
+          teams: {
+            some: {
+              id: {
+                in: teamIds,
+              },
+            },
+          },
+          type: "whatsapp",
+        },
+      },
+    },
+  });
+
+  const whatsappSurveyResponseCount = await prisma.surveyResponse.count({
+    where: {
+      surveyTeamMap: {
+        survey: {
+          teams: {
+            some: {
+              id: {
+                in: teamIds,
+              },
+            },
+          },
+          type: "whatsapp",
+        },
+      },
+    },
+  });
+
+  const reviews = await prisma.review.count({
+    where: {
+      team: {
+        id: {
+          in: teamIds,
+        },
+      },
+    },
+  });
+
+  const analyzedReviews = await prisma.reviewAnalysis.count({
+    where: {
+      review: {
+        team: {
+          id: {
+            in: teamIds,
+          },
+        },
+      },
+    },
+  });
+
+  const campaigns = await prisma.campaign.count({
+    where: {
+      team: {
+        id: {
+          in: teamIds,
+        },
+      },
+    },
+  });
+
+  const campaignParticipants = await prisma.campaignParticipant.count({
+    where: {
+      campaign: {
+        team: {
+          id: {
+            in: teamIds,
+          },
+        },
+      },
+    },
+  });
+
+  const menuCount = await prisma.menu.count({
+    where: {
+      team: {
+        id: {
+          in: teamIds,
+        },
+      },
+    },
+  });
+  const menuBannerCount = await prisma.menuBanner.count({
+    where: {
+      menu: {
+        team: {
+          id: {
+            in: teamIds,
+          },
+        },
+      },
+    },
+  });
+
+  const stats = {
+    members: org._count.members,
+    invitations: org._count.invitations,
+    name: org.name,
+
+    teams: {
+      total: org._count.teams,
+      members: teamMemberCount,
+      invitations: teamInvitationsCount,
+    },
+    whatsapp: {
+      surveys: whatsappSurveyCount,
+      responses: whatsappSurveyResponseCount,
+      templates: org._count.templates,
+      visited: whatsappSurveyVisitedCount,
+    },
+    web: {
+      surveys: webSurveyCount,
+      responses: webSurveyResponseCount,
+      visited: webSurveyVisitedCount,
+    },
+    rm: {
+      reviews,
+      analyzedReviews,
+    },
+    campaigns: {
+      campaigns,
+      participants: campaignParticipants,
+    },
+    menu: {
+      total: menuCount,
+      banners: menuBannerCount,
+    },
+  };
+
+  return stats;
 }

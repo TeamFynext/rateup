@@ -7,12 +7,15 @@ import {
 import { checkSession } from "../../../utils/checkSession";
 
 import { $MBref } from "./banner.schema";
-import { SubscriptionFeatureName } from "../../../types/enums";
 import { getVerifySubscriptionHandler } from "../../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export async function menuBannerRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.Menu]));
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]),
+  );
 
   server.post("/", createMenuBannerHandler);
   server.put(
@@ -23,7 +26,7 @@ export async function menuBannerRoutes(server: FastifyInstance) {
         body: $MBref("createMenuBannerInputSchema"),
       },
     },
-    updateMenuBannerHandler
+    updateMenuBannerHandler,
   );
   server.delete(
     "/:menuBannerId",
@@ -32,6 +35,6 @@ export async function menuBannerRoutes(server: FastifyInstance) {
         params: $MBref("ByMenuBannerIdParamsSchema"),
       },
     },
-    deleteMenuBannerHandler
+    deleteMenuBannerHandler,
   );
 }

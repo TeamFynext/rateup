@@ -51,6 +51,7 @@ import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.rout
 import { subscriptionRoutes } from "./modules/subscription/subscription.route";
 import { unsplashRoutes } from "./modules/unsplash/unsplash.route";
 import { unsplashSchemas } from "./modules/unsplash/unsplash.schema";
+import { subscriptionSchemas } from "./modules/subscription/subscription.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -73,6 +74,7 @@ export function registerRoutes(server: FastifyInstance): void {
     reviewSuggestionSchemas,
     menuBannerSchemas,
     unsplashSchemas,
+    subscriptionSchemas
   ];
   for (const module of modules) {
     for (const schema of module) {
