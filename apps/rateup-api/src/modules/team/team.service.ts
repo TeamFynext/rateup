@@ -15,6 +15,7 @@ import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { FastifyReply, FastifyRequest } from "fastify";
+import { Prisma } from "@prisma/client";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -584,8 +585,12 @@ export async function editTeam(
       },
     });
     return team;
-  } catch (error) {
-    throw new Error("Team with same name or code already exists");
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === "P2002") {
+        throw new Error("Team with same name or code already exists");
+      }
+    }
   }
 }
 
