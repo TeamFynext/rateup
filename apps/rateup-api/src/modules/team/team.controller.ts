@@ -12,6 +12,7 @@ import {
   getTeamMembersAndFromInvitation,
   resendInviteTeamMember,
   manageTags,
+  getTeamById,
 } from "./team.service";
 import {
   CreateTeamInput,
@@ -30,7 +31,7 @@ export async function createTeamHandler(
   request: FastifyRequest<{
     Body: CreateTeamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   let team;
@@ -50,7 +51,7 @@ export async function getAllTeamsByOrgHandler(
   request: FastifyRequest<{
     Params: GetTeamsByOrgInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     //TODO:change all the status code to 404 when the requested resource is not found
@@ -67,7 +68,7 @@ export async function getAllTeamsByOrgHandler(
 
 export async function getTeamsByUserHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const userId = request.userId;
@@ -87,7 +88,7 @@ export async function deleteTeamByIdHandler(
   request: FastifyRequest<{
     Params: DeleteTeamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const team = await deleteTeamById(request.params.id);
@@ -106,7 +107,7 @@ export async function inviteMemberHandler(
   request: FastifyRequest<{
     Body: InviteMemberInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
 
@@ -126,7 +127,7 @@ export async function resendInviteMemberHandler(
   request: FastifyRequest<{
     Params: IdParamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     await resendInviteTeamMember(request.params.id);
@@ -139,7 +140,7 @@ export async function completeInviteHandler(
   request: FastifyRequest<{
     Params: InviteCompleteInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const invite = await completeInvite(request.params.token);
@@ -155,7 +156,7 @@ export async function deleteInviteHandler(
   request: FastifyRequest<{
     Params: DeleteTeamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const invite = await deleteMemberInvite(request.params.id);
@@ -176,7 +177,7 @@ export async function getTeamMembersHandler(
   request: FastifyRequest<{
     Params: GetTeamMembersInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const members = await getTeamMembers({ teamId: request.params.teamId });
@@ -196,7 +197,7 @@ export async function getTeamMembersFromInviteHandler(
   request: FastifyRequest<{
     Params: GetTeamMembersInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
 
@@ -223,7 +224,7 @@ export async function editTeamHandler(
     Params: IdParamInput;
     Querystring: tagQuerySchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   const id = request.params;

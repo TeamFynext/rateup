@@ -2,6 +2,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
   getAllMembersWithTeams,
+  getAllOrgs,
+  getOrgStats,
   getTeamsMembers,
   updateOrgDetails,
   updateOrgLogo,
@@ -15,11 +17,12 @@ import {
   UpdateRoleInput,
 } from "./org.schema";
 import Session from "supertokens-node/recipe/session";
+
 export async function createOrgHandler(
   request: FastifyRequest<{
     Body: CreateOrgInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   try {
@@ -35,7 +38,7 @@ export async function createOrgHandler(
 
 export async function getAllTeamsAndMembers(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let session = await Session.getSession(request, reply);
@@ -58,7 +61,7 @@ export async function getAllTeamsAndMembers(
 
 export async function getAllMembersWithTeamsHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let session = await Session.getSession(request, reply);
@@ -84,7 +87,7 @@ export async function updateRoleController(
     Body: UpdateRoleInput;
     Params: IdParamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   const id = request.params;
@@ -100,7 +103,7 @@ export async function updateRoleController(
       body as { role: string },
       id,
       request,
-      reply
+      reply,
     );
 
     // Check if the roleUpdate is an error message
@@ -121,7 +124,7 @@ export async function updateLogoHandler(
   request: FastifyRequest<{
     Body: UpdateLogoInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   let user;
@@ -141,12 +144,11 @@ export async function updateOrgDetailsHandler(
   request: FastifyRequest<{
     Body: UpdateOrgDetailsInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   try {
     let user = await updateOrgDetails(body, request, reply);
-    console.log(user);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
@@ -154,4 +156,22 @@ export async function updateOrgDetailsHandler(
   }
 
   reply.code(201).send({ success: true, data: "Logo Updated..!" });
+}
+
+export async function getAllOrgsHandler(
+  _: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const orgs = await getAllOrgs();
+  reply.send(orgs);
+}
+
+export async function getOrgStatsHandler(
+  request: FastifyRequest<{
+    Params: { orgId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  const orgStats = await getOrgStats(request.params.orgId);
+  reply.send(orgStats);
 }

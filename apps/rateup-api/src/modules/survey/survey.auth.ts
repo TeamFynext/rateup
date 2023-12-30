@@ -3,13 +3,13 @@ import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth";
 import { CreateSurveyInput } from "./survey.schema";
 import { GetSurveyByIdParams } from "./survey.schema";
 import prisma from "../../utils/prisma";
-import { SubscriptionFeatureName } from "../../types/enums";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export async function verifySurveyAccess(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const surveyId = request.params.id;
   const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
@@ -23,7 +23,7 @@ export async function verifySurveyCreateAccess(
   request: FastifyRequest<{
     Body: CreateSurveyInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const teamIds = request.body.teamIds;
 
@@ -39,9 +39,8 @@ export async function verifySurveyMaxCountRestriction(
   request: FastifyRequest<{
     Body: CreateSurveyInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
-
   const orgId = request.user.orgId;
 
   const count = await prisma.survey.count({
@@ -56,7 +55,16 @@ export async function verifySurveyMaxCountRestriction(
     },
   });
 
-  if (count >= request.subscription.features[SubscriptionFeatureName.WebSurvey].count.max) {
-    reply.code(403).send({ message: 'You have reached the maximum limit of surveys', displayMessageInClient: true });
+  if (
+    count >=
+    request.subscription.features[SubscriptionFeaturePathName.WebSurvey].count
+      .max
+  ) {
+    reply
+      .code(403)
+      .send({
+        message: "You have reached the maximum limit of surveys",
+        displayMessageInClient: true,
+      });
   }
 }

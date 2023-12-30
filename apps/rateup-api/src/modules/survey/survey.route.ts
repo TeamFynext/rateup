@@ -22,29 +22,33 @@ import {
   getSurveyTemplatesHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
-import { verifySurveyMaxCountRestriction, verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth";
+import {
+  verifySurveyMaxCountRestriction,
+  verifySurveyAccess,
+  verifySurveyCreateAccess,
+} from "./survey.auth";
 import { checkSession } from "../../utils/checkSession";
 import { $Rref } from "../response/response.schema";
-import { SubscriptionFeatureName } from "../../types/enums";
-import {  getVerifySubscriptionHandler } from "../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../types/enums";
+import { getVerifySubscriptionHandler } from "../../utils/auth";
 
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.WebSurvey]));
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WebSurvey]),
+  );
 
   // create survey
   server.post(
     "/",
     {
-      preHandler: [
-        verifySurveyCreateAccess,
-        verifySurveyMaxCountRestriction
-      ],
+      preHandler: [verifySurveyCreateAccess, verifySurveyMaxCountRestriction],
       schema: {
         body: $Sref("createSurveyRequestSchema"),
       },
     },
-    createSurveyHandler
+    createSurveyHandler,
   );
   // ----------create survey landing page ---------
   server.post(
@@ -57,7 +61,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         },
       },
     },
-    createSurveyLandingHandler
+    createSurveyLandingHandler,
   );
   // ----------create survey landing page ---------
   server.post(
@@ -70,7 +74,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         },
       },
     },
-    updateSurveyLandingHandler
+    updateSurveyLandingHandler,
   );
 
   // get all surveys from user
@@ -97,7 +101,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
     },
-    getSurveyByIdHandler
+    getSurveyByIdHandler,
   );
   // get landingpage by id
   server.get(
@@ -108,7 +112,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
     },
-    getLandingPageByIdHandler
+    getLandingPageByIdHandler,
   );
   // get survey by landingid
   server.get(
@@ -118,9 +122,8 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
     },
-    getSurveyBylandingIdhandler
+    getSurveyBylandingIdhandler,
   );
-
 
   //get all survey templates
   server.get(
@@ -130,7 +133,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Sref("getSurveyTemplatesParamsSchema"),
       },
     },
-    getSurveyTemplatesHandler
+    getSurveyTemplatesHandler,
   );
 
   //duplicate survey
@@ -143,7 +146,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         body: $Sref("cloneSurveySchema"),
       },
     },
-    cloneSurveyHandler
+    cloneSurveyHandler,
   );
 
   interface GetSurveyByTeamParams {
@@ -157,7 +160,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
     },
-    getSurveyByTeamHandler
+    getSurveyByTeamHandler,
   );
   // get surveyStats by surveyTeamMapId
   server.get(
@@ -167,7 +170,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Rref("getResponsesParamsSchema"),
       },
     },
-    getSurveyStatsBySurveyTeamMapIdHandler
+    getSurveyStatsBySurveyTeamMapIdHandler,
   );
 
   // delete survey by id
@@ -179,7 +182,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         params: $Sref("getSurveyByIdParamsSchema"),
       },
     },
-    deleteSurveyByIdHandler
+    deleteSurveyByIdHandler,
   );
 
   // delete team survey by surveyId, teamId
@@ -192,7 +195,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         body: $Sref("deleteTeamSurveyRequestSchema"),
       },
     },
-    deleteTeamSurveyHandler
+    deleteTeamSurveyHandler,
   );
 
   // update survey by id
@@ -205,7 +208,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         body: $Sref("updateSurveyRequestSchema"),
       },
     },
-    updateSurveyByIdHandler
+    updateSurveyByIdHandler,
   );
 
   server.put(
@@ -217,7 +220,7 @@ export async function surveyRoutes(server: FastifyInstance) {
         body: $Sref("updateSurveyPasswordRequestSchema"),
       },
     },
-    updateSurveyPasswordHandler
+    updateSurveyPasswordHandler,
   );
 
   server.put(
@@ -229,6 +232,6 @@ export async function surveyRoutes(server: FastifyInstance) {
         body: $Sref("updateGoogleLinkRequestSchema"),
       },
     },
-    updateGoogleLinkHandler
+    updateGoogleLinkHandler,
   );
 }

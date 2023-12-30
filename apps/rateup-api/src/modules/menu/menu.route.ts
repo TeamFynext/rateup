@@ -17,20 +17,23 @@ import { verifyTeamAccess } from "../team/team.auth";
 import { verifyMenuAccess, verifyMenuMaxCountRestriction } from "./menu.auth";
 import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { SubscriptionFeatureName } from "../../types/enums";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export async function menuRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeatureName.Menu]));
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]),
+  );
   server.post(
     "/",
     {
       schema: {
         body: $Mref("menuInputSchema"),
       },
-      preHandler: verifyMenuMaxCountRestriction
+      preHandler: verifyMenuMaxCountRestriction,
     },
-    createMenuHandler
+    createMenuHandler,
   );
 
   server.get("/all", getAllMenusHandler);
@@ -43,7 +46,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyTeamAccess,
     },
-    getAllMenusByTeamIdHandler
+    getAllMenusByTeamIdHandler,
   );
 
   server.get(
@@ -54,7 +57,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    getMenuByIdHandler
+    getMenuByIdHandler,
   );
 
   server.get(
@@ -65,7 +68,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    getFullMenuByIdHandler
+    getFullMenuByIdHandler,
   );
 
   server.put(
@@ -77,7 +80,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    updateMenuHandler
+    updateMenuHandler,
   );
   server.delete(
     "/:menuId",
@@ -87,7 +90,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    deleteMenuHandler
+    deleteMenuHandler,
   );
   server.get(
     "/getLanding/:menuId",
@@ -97,7 +100,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    getMenuLandingHandler
+    getMenuLandingHandler,
   );
   server.put(
     "/updateLanding/:menuId",
@@ -108,7 +111,7 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    updateMenuLandingHandler
+    updateMenuLandingHandler,
   );
   server.put(
     "/updateLandingPageOption/:menuId",
@@ -119,6 +122,6 @@ export async function menuRoutes(server: FastifyInstance) {
       },
       preHandler: verifyMenuAccess,
     },
-    updateLandingPageOptionHandler
+    updateLandingPageOptionHandler,
   );
 }

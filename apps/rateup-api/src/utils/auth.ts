@@ -3,14 +3,15 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { Role } from "@prisma/client";
 import { log } from "./logger";
 import { getSubscription } from "../modules/subscription/subscription.service";
-import { SubscriptionFeatureName } from "../types/enums";
+import { SubscriptionFeaturePathName } from "../types/enums";
 import dayjs from "dayjs";
 import { UnlimitedAccess } from "../modules/subscription/subscription.data";
+import { getNestedProperty } from "./misc/obj.utils";
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {
     if (!surveyId || !userId) {
-      throw new Error('surveyId and userId must not be empty strings');
+      throw new Error("surveyId and userId must not be empty strings");
     }
 
     const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
@@ -35,7 +36,6 @@ export async function hasAccessToSurvey(surveyId: string, userId: string) {
         return true;
       }
     }
-
   } catch (e) {
     console.log(e);
     return false;
@@ -53,7 +53,7 @@ export async function hasAccessToTeam(teamId: string, userId: string) {
 }
 
 export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
-  const teamMember = await hasAccessToTeam(teamId, userId)
+  const teamMember = await hasAccessToTeam(teamId, userId);
 
   if (teamMember) {
     const superAdmin = await prisma.orgMember.findFirst({
@@ -66,14 +66,14 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
             },
           },
         },
-        role: 'SUPER_ADMIN',
+        role: "SUPER_ADMIN",
       },
     });
 
     if (!superAdmin) {
       return false;
     } else {
-      return true
+      return true;
     }
   }
 
@@ -83,24 +83,30 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
 export async function verifyRole(
   request: FastifyRequest,
   reply: FastifyReply,
-  role: Role
+  role: Role,
 ) {
   try {
     if (request.user.role !== role) {
-      reply.code(403).send({ message: 'Not authorized' })
+      reply.code(403).send({ message: "Not authorized" });
     } else {
-      return true
+      return true;
     }
   } catch (err) {
-    log.fatal('Error verifying role\n%o\nrequest.user => %o', err, request.user)
-    reply.code(403).send({ message: 'Not authorized' })
+    log.fatal(
+      "Error verifying role\n%o\nrequest.user => %o",
+      err,
+      request.user,
+    );
+    reply.code(403).send({ message: "Not authorized" });
   }
 }
 
-export function getVerifySubscriptionHandler(features: Array<SubscriptionFeatureName>) {
+export function getVerifySubscriptionHandler(
+  featurePathNames: Array<SubscriptionFeaturePathName>,
+) {
   return async function verifySubscription(
     request: FastifyRequest,
-    reply: FastifyReply
+    reply: FastifyReply,
   ) {
     try {
       const subscription = await getSubscription(request.user.orgId);
@@ -108,33 +114,66 @@ export function getVerifySubscriptionHandler(features: Array<SubscriptionFeature
       if (!subscription) {
         // TODO: allowing access for now, but this should throw unauthorized error
         // Giving unrestricted access to all features for now
-        log.trace('No subscription found\nrequest.user => %o', request.user);
-        log.trace('Creating subscription with unlimited access\nrequest.user => %o\n%o', request.user, UnlimitedAccess);
-        request.subscription = await prisma.subscription.create({
+        log.trace("No subscription found\nrequest.user => %o", request.user);
+        log.trace(
+          "Creating subscription with unlimited access\nrequest.user => %o\n%o",
+          request.user,
+          UnlimitedAccess,
+        );
+        request.subscription = (await prisma.subscription.create({
           data: {
-            features: UnlimitedAccess,
+            features: UnlimitedAccess as any,
             orgId: request.user.orgId,
-            expiresAt: dayjs().add(100, 'year').toDate(),
-          }
-        })
+            expiresAt: dayjs().add(100, "year").toDate(),
+          },
+        })) as unknown as Subscription;
         return;
       }
       if (dayjs(subscription.expiresAt).isBefore(dayjs())) {
-        log.error('Subscription expired\n%o\nrequest.user => %o', subscription, request.user)
-        reply.code(403).send({ message: 'Subscription expired' })
+        log.error(
+          "Subscription expired\n%o\nrequest.user => %o",
+          subscription,
+          request.user,
+        );
+        reply.code(403).send({ message: "Subscription expired" });
         return;
       }
-      const missingFeatures = features.filter((feature) => !Object.keys(subscription.features).includes(feature));
+      const missingFeatures = featurePathNames.filter(
+        (feature) => !getNestedProperty(subscription.features, feature).active,
+      );
       if (missingFeatures.length > 0) {
-        log.error('Subscription missing features\n%o\nrequest.user => %o', missingFeatures, request.user)
-        reply.code(403).send({ message: 'This feature is not included in your subscription' })
+        log.error(
+          "Subscription missing features\n%o\nrequest.user => %o",
+          missingFeatures,
+          request.user,
+        );
+        reply
+          .code(403)
+          .send({
+            message: "This feature is not included in your subscription",
+          });
         return;
       }
       request.subscription = subscription;
     } catch (err) {
-      console.log(err) // TODO: find out why error is not getting printed in log.fatal
-      log.fatal('Error verifying subscription\nerr => %o\nrequest.user => %o', err, request.user)
-      reply.code(403).send({ message: 'Error while verifying subscription' })
+      console.log(err); // TODO: find out why error is not getting printed in log.fatal
+      log.fatal(
+        "Error verifying subscription\nerr => %o\nrequest.user => %o",
+        err,
+        request.user,
+      );
+      reply.code(403).send({ message: "Error while verifying subscription" });
     }
+  };
+}
+
+export function assertRootOrg(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  done,
+) {
+  if (!request.user.orgId || request.user.orgId !== process.env.ROOT_ORG) {
+    reply.code(403).send({ message: "Not authorized" });
   }
+  done();
 }

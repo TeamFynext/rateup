@@ -37,6 +37,7 @@ const questionCore = {
     value: z.string(),
     weightage: z.nativeEnum(NPSWeightage).optional()
   }))).optional(),
+  features: z.record(z.string(), z.record(z.string(), z.boolean())).optional(),
   sections: z.record(z.string(), z.array(
     z.object({
       title: z.string(),

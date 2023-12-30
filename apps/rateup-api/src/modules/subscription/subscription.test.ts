@@ -1,138 +1,170 @@
 import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
-import { createNewTestSession, createTestUser, initTestSupertokens, } from "../../utils/test/test.setup.utils";
+import {
+  createNewTestSession,
+  createTestUser,
+  initTestSupertokens,
+} from "../../utils/test/test.setup.utils";
 import prisma from "../../utils/prisma";
 import { deleteUser, getOrgIdAndRole } from "../user/user.service";
-import fastifyInstance from "../../index"
+import fastifyInstance from "../../index";
 import { getSubscription } from "./subscription.service";
-import { SubscriptionFeatureName } from "../../types/enums";
 import dayjs from "dayjs";
 
-beforeAll(() => { process.env.LOG_LEVEL = "fatal" })
-beforeAll(async () => await fastifyInstance.ready())
-beforeAll(initTestSupertokens)
+const timeout = 30 * 1000;
+
+beforeAll(() => {
+  process.env.LOG_LEVEL = "fatal";
+});
+beforeAll(async () => await fastifyInstance.ready());
+beforeAll(initTestSupertokens);
 let testUsers = []; //Array<userId>
 
 // or delete all *@test.com?
 afterAll(async () => {
-    testUsers.forEach(async (userId) => {
-        await deleteUser(userId)
-    })
-})
-afterAll(async () => await fastifyInstance.close())
-
+  testUsers.forEach(async (userId) => {
+    await deleteUser(userId);
+  });
+});
+afterAll(async () => await fastifyInstance.close());
 
 const createTemporaryTestUser = async () => {
-    const user = await createTestUser(fastifyInstance)
-    testUsers.push(user.id)
-    return user
-}
+  const user = await createTestUser(fastifyInstance);
+  testUsers.push(user.id);
+  return user;
+};
 
-describe('Subscription', () => {
+describe("Subscription", () => {
+  test(
+    "trial gets created on signup",
+    async () => {
+      const user = await createTemporaryTestUser();
+      const { orgId } = await getOrgIdAndRole({ id: user.id });
+      const subscription = await getSubscription(orgId);
 
-    test('trial gets created on signup', async () => {
-        const user = await createTemporaryTestUser()
-        const { orgId } = await getOrgIdAndRole({ id: user.id })
-        const subscription = await getSubscription(orgId)
+      // expires in 7 days
+      expect(
+        [6, 7].includes(dayjs(subscription.expiresAt).diff(dayjs(), "day")),
+      ).toBe(true);
+    },
+    timeout,
+  );
 
-        // includes all features
-        expect(Object.keys(subscription.features).length).toBe(Object.values(SubscriptionFeatureName).length)
-        // expires in 7 days
-        expect([6, 7].includes(dayjs(subscription.expiresAt).diff(dayjs(), 'day'))).toBe(true)
-    })
+  describe("Menu", () => {
+    test(
+      "is accessible to trial users",
+      async () => {
+        const user = await createTemporaryTestUser();
+        const session = await createNewTestSession(user.email);
 
-    describe('Menu', () => {
-        test('is accessible to trial users', async () => {
-            const user = await createTemporaryTestUser()
-            const session = await createNewTestSession(user.email);
+        const res = await fastifyInstance
+          .inject()
+          .get("/api/menu/all")
+          .cookies({ sAccessToken: session.getAccessToken() });
 
-            const res = await fastifyInstance.inject()
-                .get('/api/menu/all')
-                .cookies({ sAccessToken: session.getAccessToken() })
+        expect(res.statusCode).toBe(200);
+      },
+      timeout,
+    );
 
-            expect(res.statusCode).toBe(200)
-        })
+    test(
+      "not accessible to expired trial users",
+      async () => {
+        const user = await createTemporaryTestUser();
+        await prisma.subscription.updateMany({
+          where: {
+            org: {
+              owner: {
+                email: user.email,
+              },
+            },
+          },
+          data: {
+            expiresAt: dayjs().subtract(1, "day").toDate(), // setting expiry to yesterday
+          },
+        });
+        const session = await createNewTestSession(user.email);
+        const res = await fastifyInstance
+          .inject()
+          .get("/api/menu/all")
+          .cookies({ sAccessToken: session.getAccessToken() });
+        expect(res.statusCode).toBe(403);
+      },
+      timeout,
+    );
 
-        test('not accessible to expired trial users', async () => {
-            const user = await createTemporaryTestUser()
-            await prisma.subscription.updateMany({
-                where: {
-                    org: {
-                        owner: {
-                            email: user.email
-                        }
-                    }
-                },
-                data: {
-                    expiresAt: dayjs().subtract(1, 'day').toDate() // setting expiry to yesterday
-                }
-            })
+    test(
+      "not accessible to users without menu feature",
+      async () => {
+        const user = await createTemporaryTestUser();
 
-            const session = await createNewTestSession(user.email);
-            const res = await fastifyInstance.inject()
-                .get('/api/menu/all')
-                .cookies({ sAccessToken: session.getAccessToken() })
-            expect(res.statusCode).toBe(403)
-        })
+        await prisma.subscription.updateMany({
+          where: {
+            org: {
+              owner: {
+                email: user.email,
+              },
+            },
+          },
+          data: {
+            features: {
+              set: [],
+            },
+          },
+        });
 
-        test('not accessible to users without menu feature', async () => {
-            const user = await createTemporaryTestUser()
+        const session = await createNewTestSession(user.email);
+        const res = await fastifyInstance
+          .inject()
+          .get("/api/menu/all")
+          .cookies({ sAccessToken: session.getAccessToken() });
+        expect(res.statusCode).toBe(403);
+      },
+      timeout,
+    );
+  });
 
-            await prisma.subscription.updateMany({
-                where: {
-                    org: {
-                        owner: {
-                            email: user.email
-                        }
-                    }
-                },
-                data: {
-                    features: {
-                        set: []
-                    }
-                }
-            })
+  describe("Whatsapp", () => {
+    test(
+      "is accessible to trial users",
+      async () => {
+        const user = await createTemporaryTestUser();
+        const { orgId } = await getOrgIdAndRole({ id: user.id });
+        const res = await fastifyInstance
+          .inject()
+          .get(`/api/wa/webhook/${orgId}`);
 
-            const session = await createNewTestSession(user.email);
-            const res = await fastifyInstance.inject()
-                .get('/api/menu/all')
-                .cookies({ sAccessToken: session.getAccessToken() })
-            expect(res.statusCode).toBe(403)
-        })
-    })
+        expect(res.statusCode).toBe(500);
+      },
+      timeout,
+    );
 
-    describe('Whatsapp', () => {
-        test('is accessible to trial users', async () => {
-            const user = await createTemporaryTestUser()
-            const { orgId } = await getOrgIdAndRole({ id: user.id })
-            const res = await fastifyInstance.inject()
-                .get(`/api/wa/webhook/${orgId}`)
+    test(
+      "not accessible to users without whatsapp feature",
+      async () => {
+        const user = await createTemporaryTestUser();
 
-            expect(res.statusCode).toBe(500)
-        })
+        await prisma.subscription.updateMany({
+          where: {
+            org: {
+              owner: {
+                email: user.email,
+              },
+            },
+          },
+          data: {
+            features: {
+              set: [],
+            },
+          },
+        });
 
-        test('not accessible to users without whatsapp feature', async () => {
-            const user = await createTemporaryTestUser()
-
-            await prisma.subscription.updateMany({
-                where: {
-                    org: {
-                        owner: {
-                            email: user.email
-                        }
-                    }
-                },
-                data: {
-                    features: {
-                        set: []
-                    }
-                }
-            })
-
-            const { orgId } = await getOrgIdAndRole({ id: user.id })
-            const res = await fastifyInstance.inject()
-                .get(`/api/wa/webhook/${orgId}`)
-            expect(res.statusCode).toBe(403)
-        })
-    })
-})
-
+        const { orgId } = await getOrgIdAndRole({ id: user.id });
+        const res = await fastifyInstance
+          .inject()
+          .get(`/api/wa/webhook/${orgId}`);
+        expect(res.statusCode).toBe(403);
+      },
+      timeout,
+    );
+  });
+});

@@ -22,8 +22,8 @@ export enum QuestionType {
   CustomNPS = "Custom NPS",
 
   // WhatsApp exclusive
-  WaList = 'Wa_List', // Interactive > List
-  WaButtons = 'Wa_Buttons', // Interactive > Quick Reply Buttons
+  WaList = "Wa_List", // Interactive > List
+  WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
 }
 
 export enum LDResponse {
@@ -55,7 +55,7 @@ export enum LogicCondition {
 }
 export enum MenuItemPriceType {
   FIXED = "FIXED",
-  VARIANT = "VARIANT"
+  VARIANT = "VARIANT",
 }
 export enum WaButtonType {
   QUICK_REPLY = "quick_reply",
@@ -79,8 +79,8 @@ export enum WaTemplateStatus {
 }
 // changes.field
 export enum WaEvent {
-  TemplateStatusChange = 'message_template_status_update',
-  Message = 'messages'
+  TemplateStatusChange = "message_template_status_update",
+  Message = "messages",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues
@@ -108,17 +108,18 @@ export enum CampaignParticipantStatus {
 export enum NPSWeightage {
   PROMOTER = "PROMOTER",
   PASSIVE = "PASSIVE",
-  DETRACTOR = "DETRACTOR"
+  DETRACTOR = "DETRACTOR",
 }
 export enum ReviewPlatform {
   GOOGLE = "gb",
   FACEBOOK = "fp",
 }
-export enum SubscriptionFeatureName {
+export enum SubscriptionFeaturePathName {
   WebSurvey = "webSurvey",
   WhatsAppSurvey = "whatsappSurvey",
   WhatsAppCampaign = "whatsappCampaign",
   Menu = "menu",
   ReputationManagement = "reputationManagement",
   Team = "team",
+  TeamMember = "team.teamMember",
 }
