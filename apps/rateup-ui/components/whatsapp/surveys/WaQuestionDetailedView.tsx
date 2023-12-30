@@ -272,9 +272,9 @@ export function WaQuestionDetailedView({
                 leftIcon={
                   <Image
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
-                    width={30}
-                    height={30}
-                    fit="contain"
+                    w={30}
+                    h={30}
+                    fit={"contain"}
                   />
                 }
                 size="sm"

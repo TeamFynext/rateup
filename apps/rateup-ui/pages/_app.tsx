@@ -32,6 +32,7 @@ import axios from "axios";
 import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
 import { lexend300 } from "../utils/fonts";
+import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -51,10 +52,14 @@ export default function App({
 }: AppPropsWithLayout) {
   const router = useRouter();
   const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
+  let showQueryDevTools = true;
   let LayoutComponent;
   // page has pre defined layout
   if (Component.getLayout !== undefined) {
     LayoutComponent = Component.getLayout;
+  } else if (appProps.router.pathname.includes("admin")) {
+    LayoutComponent = AdminPanelLayout;
+    showQueryDevTools = false;
   } else {
     // page has no pre defined layout
     if (isLayoutNeeded) {
@@ -177,10 +182,12 @@ export default function App({
                     </AnimatePresence>
                   </LayoutComponent>
                 </UserProvider>
-                <ReactQueryDevtools
-                  initialIsOpen={false}
-                  buttonPosition="top-right"
-                />
+                {showQueryDevTools && (
+                  <ReactQueryDevtools
+                    initialIsOpen={false}
+                    buttonPosition="top-left"
+                  />
+                )}
               </HydrationBoundary>
             </QueryClientProvider>
             <Notifications />

@@ -48,7 +48,6 @@ export function CategoryCardHeader({
           headerTitle="Delete Category?"
           confirmLabel="Delete"
           onConfirm={(e) => {
-            e.stopPropagation();
             notifications.show({
               id: "delete-data-menu-category",
               loading: true,

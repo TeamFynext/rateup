@@ -7,10 +7,8 @@ import {
   Group,
   useMantineTheme,
   TagsInput,
-  Badge,
   Title,
   Kbd,
-  ActionIcon,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
@@ -31,9 +29,7 @@ import { ContainedTextField } from "../../../components/input/ContainedInput/Con
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { GoogleIcon } from "../../../components/Button/GoogleIcon";
 import { showErrorToast } from "../../../utils/notifications";
-import SimpleModalLayout from "../../../components/Modal/SimpleModalLayout";
-import { produce } from "immer";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 export interface ITeamData {
   name: string;
@@ -170,40 +166,19 @@ const TeamSettings = ({
           onClick={toggle}
           buttonText={"Delete Team"}
         />
-        <Dialog
+        <ConfirmationModal
+          forDeleteFunctionality
+          includeEmailConfirmation
+          deleteQuotion="All the associated enities including Team Members, Survey Responses and Menus will be deleted"
           opened={opened}
-          withCloseButton
           onClose={close}
-          size="lg"
-          radius="md"
-          position={{ top: "0", left: "40vw" }}
-          onClick={(e) => {
-            e.stopPropagation();
+          onConfirm={(e) => {
+            setDeleteTeamId(teamData?.id);
           }}
-        >
-          <Text size="md" mb="xs" fw={500}>
-            Are you sure to delete this team?
-          </Text>
-
-          <Group align="center" pt="lg">
-            <RateupButtonSecondary
-              onClick={close}
-              loading={isLoading}
-              size="md"
-              title="Cancel"
-            />
-
-            <RateupButtonPrimary
-              onClick={() => {
-                close();
-                setDeleteTeamId(teamData?.id);
-              }}
-              loading={isLoading}
-              size="md"
-              title="Yes, Delete"
-            />
-          </Group>
-        </Dialog>
+          confirmLabel="Delete"
+          headerLabel="Are you sure to delete this team?"
+          headerTitle="Delete Team"
+        />
       </Stack>
     </>
   );

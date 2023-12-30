@@ -126,13 +126,12 @@ export function useDeleteTeamMutation(handleDeleteTeam) {
       router.push("/dashboard/teams");
     },
     onError: (error: any) => {
-      console.error("Error :", error.message);
       notifications.update({
         id: "load-data",
         color: "red",
         loading: false,
         title: "Failed",
-        message: error.message,
+        message: error.response.data,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });

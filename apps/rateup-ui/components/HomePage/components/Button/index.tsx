@@ -10,7 +10,7 @@ type ButtonProps = {
   type?: "button" | "submit" | "reset";
   style?: React.CSSProperties;
   onClick?: () => void;
-  from?: string;
+  className?: string;
 };
 
 function Button({
@@ -19,6 +19,7 @@ function Button({
   type,
   style,
   onClick,
+  className,
 }: ButtonProps) {
   return (
     <MotionButtonGesture>
@@ -27,7 +28,7 @@ function Button({
           whiteBackgroundGradientText
             ? styles["white-background-gradient-text-btn"]
             : styles["gradient-background-white-text-btn"]
-        }`}
+        } ${className}`}
         type={type ? type : "button"}
         style={style}
         onClick={onClick}

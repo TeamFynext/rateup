@@ -58,6 +58,7 @@ const ShareQR = ({
   });
 
   // currently we are using only two resources(first arg below) survey, menu.
+
   const shareSettings = useGetShareSettings(queryKey, resourceName, id);
   const shareSettingsMutation = useUpdateShareSettingsMutation(
     queryKey,

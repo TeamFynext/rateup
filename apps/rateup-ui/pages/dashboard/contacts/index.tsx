@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 
 import { IconPlus } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { IconSearch } from "@tabler/icons";
 import styles from "./contacts.module.css";
@@ -27,12 +27,22 @@ import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import Heading from "../../../components/styled/Heading/Heading";
+import NothingFound from "../../../components/NothingFound/NothingFound";
+import { useRouter } from "next/router";
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<string | null>("customers");
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
+  const router = useRouter();
+  const { tab } = router.query as { tab: string };
+
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   const {
     isLoading: isLoadingContacts,
@@ -153,26 +163,21 @@ export default function Contacts() {
             <Center pt="xl">
               <Loader></Loader>
             </Center>
-          ) : (
+          ) : filteredContacts?.length > 0 ? (
             <SimpleGrid
               mt={"xl"}
               cols={{ base: 1, sm: 2, lg: 3 }}
               spacing={{ base: 10, sm: "xl", lg: "xl" }}
               verticalSpacing={{ base: "md", sm: "xl" }}
             >
-              {filteredContacts?.length > 0 ? (
-                filteredContacts?.map((contact) => (
-                  <ContactCard
-                    contact={contact}
-                    key={contact?.id}
-                  ></ContactCard>
-                ))
-              ) : (
-                <Container p="xl">
-                  <Title order={5}>No Contacts found</Title>
-                </Container>
-              )}
+              {filteredContacts?.map((contact) => (
+                <ContactCard contact={contact} key={contact?.id}></ContactCard>
+              ))}
             </SimpleGrid>
+          ) : (
+            <Container mt={"7%"}>
+              <NothingFound text="No Contacts Found" />
+            </Container>
           )}
         </Tabs.Panel>
         <Tabs.Panel value="groups">
@@ -180,26 +185,24 @@ export default function Contacts() {
             <Center pt="xl">
               <Loader></Loader>
             </Center>
-          ) : (
+          ) : filteredGroups?.length > 0 ? (
             <SimpleGrid
               mt={"xl"}
               cols={{ base: 1, sm: 2, lg: 3 }}
               spacing={{ base: 10, sm: "xl", lg: "xl" }}
               verticalSpacing={{ base: "md", sm: "xl" }}
             >
-              {filteredGroups?.length > 0 ? (
-                filteredGroups?.map((group) => (
-                  <ContactGroupCard
-                    group={group}
-                    key={group?.id}
-                  ></ContactGroupCard>
-                ))
-              ) : (
-                <Container p="xl">
-                  <Title order={5}>No Groups found</Title>
-                </Container>
-              )}
+              {filteredGroups?.map((group) => (
+                <ContactGroupCard
+                  group={group}
+                  key={group?.id}
+                ></ContactGroupCard>
+              ))}
             </SimpleGrid>
+          ) : (
+            <Container mt={"7%"}>
+              <NothingFound text="No Contact Groups Found" />
+            </Container>
           )}
         </Tabs.Panel>
       </Tabs>

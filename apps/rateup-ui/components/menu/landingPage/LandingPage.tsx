@@ -52,6 +52,7 @@ import { UnsplashModal } from "../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
 import { fallbackImage } from "../../../utils/constants";
+//TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
@@ -73,6 +74,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const logoRef = useRef<HTMLButtonElement>(null);
   const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
   const resetRef = useRef(null);
+  const resetLogoRef = useRef(null);
 
   const [selectedTab, setSelectedTab] = useState("Tablet");
   const [tabState, setTabState] = useState<string>("title");
@@ -86,8 +88,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     url: "",
     name: "",
   });
-  const [landingPageBackgroundImage, setLandingPageBackgroundImage] =
-    useState(false);
   const [
     openedUnsplashDialog,
     { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
@@ -231,7 +231,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     }/images/menu/${isMobileTab ? "mobileBackground" : "background"}.jpg`;
   }
   const handlePictureBackground = () => {
-    setAspectRatio(16 / 6);
+    setAspectRatio(8 / 3);
     toggleMethodSelectionDialog();
     setImageType("backgroundImage");
     setSelectedTab("Tablet");
@@ -248,10 +248,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         url: URL.createObjectURL(event),
         name: event.name,
       });
-      setLandingPageBackgroundImage(false);
       toggleCropDialog();
       setAspectRatio(4 / 3);
       setImageType("logo");
+      resetLogoRef?.current?.();
     }
   };
   const handleCropImageSave = (cropedImage) => {
@@ -277,9 +277,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       url: unsplashImage,
       name: imageName,
     });
-    setLandingPageBackgroundImage(
-      imageType === "backgroundImage" ? true : false,
-    );
     toggleCropDialog();
   };
   const handleUploadMethod = (type: string) => {
@@ -306,7 +303,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
               handleCropImageSave={handleCropImageSave}
               image={selectedUnslashImage.url}
               aspect={aspectRatio}
-              landingPage={landingPageBackgroundImage}
             />
             <ImageUploadMethodModal
               onClose={closeMethodSelectionDialog}
@@ -681,6 +677,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       <FileButton
                         onChange={onChangeLogo}
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        resetRef={resetLogoRef}
                       >
                         {(props) => (
                           <Button

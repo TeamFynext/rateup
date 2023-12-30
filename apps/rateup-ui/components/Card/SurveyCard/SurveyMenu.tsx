@@ -218,7 +218,6 @@ export function SurveyMenu({
         headerTitle="Delete Survey?"
         confirmLabel="Delete"
         onConfirm={(e) => {
-          e.stopPropagation();
           notifications.show({
             id: "delete-data",
             loading: true,

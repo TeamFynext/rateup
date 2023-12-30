@@ -110,7 +110,6 @@ function MenuCardMenu({ menuId, teamId, close }) {
         headerTitle="Delete Menu?"
         confirmLabel="Delete"
         onConfirm={(e) => {
-          e.stopPropagation();
           notifications.show({
             id: "delete-data-menu",
             loading: true,

@@ -57,10 +57,10 @@ import {
 import { TabEnum } from "../SurveyId";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
-import Heading from "../../styled/Heading/Heading";
-import { useQRCode } from "next-qrcode";
 import NothingFound from "../../NothingFound/NothingFound";
 import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
+import TagManager from "./TagManager";
+
 const ShareSurvey = ({
   survey,
   setActiveTab,
@@ -68,7 +68,6 @@ const ShareSurvey = ({
   survey: Survey;
   setActiveTab: (tab: any) => void;
 }) => {
-  const { SVG } = useQRCode();
   const { surveyId } = useRouter().query as { surveyId: string };
   const [shareUrl, setShareUrl] = useState("");
   const [tag, setTag] = useState("");
@@ -87,6 +86,9 @@ const ShareSurvey = ({
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
     null,
   );
+
+  // currently we are using only two resources(first arg below) survey, menu.
+  // shareSettings means qr settings.
 
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
@@ -327,146 +329,21 @@ const ShareSurvey = ({
                   data={tagSelectData}
                   onChange={(value) => setTag(value)}
                 />
-                <Tooltip label="Manage URL Tags" position="right-start">
-                  <ActionIcon onClick={openTagManager} variant="outline">
-                    <IconTags />
-                  </ActionIcon>
-                </Tooltip>
+                <TagManager
+                  openTagManager={openTagManager}
+                  closeTagManager={closeTagManager}
+                  tagManagerOpened={tagManagerOpened}
+                  isPublished={isPublished}
+                  surveyTeamMapId={surveyTeamMapId}
+                  teamSelectData={teamSelectData}
+                  setSurveyTeamMapId={setSurveyTeamMapId}
+                  nothingFound={NothingFound}
+                  getSelectedRowsToExport={getSelectedRowsToExport}
+                  tagsToMap={tagsToMap}
+                  surveyTitle={survey?.title}
+                  surveyId={surveyId}
+                />
               </Group>
-              <FormModalLayout
-                centered
-                size="xl"
-                onClose={closeTagManager}
-                opened={tagManagerOpened}
-                title="Manage URL Tags"
-                customHeader={
-                  <Group justify="space-between" px={"lg"}>
-                    <Heading subtitle="URL Taggers" />
-                    <ContainedSelection
-                      disabled={!isPublished}
-                      label="Select Team"
-                      allowDeselect={false}
-                      miw={150}
-                      value={surveyTeamMapId}
-                      data={teamSelectData}
-                      onChange={setSurveyTeamMapId}
-                    />
-                  </Group>
-                }
-              >
-                <Stack h={500}>
-                  <DataGrid
-                    initialState={{
-                      pagination: { paginationModel: { pageSize: 5 } },
-                    }}
-                    disableRowSelectionOnClick
-                    pageSizeOptions={[5, 10, 20]}
-                    rowHeight={70}
-                    slots={{
-                      toolbar: CustomGridToolbar,
-                      noRowsOverlay: NothingFound,
-                    }}
-                    slotProps={{
-                      toolbar: {
-                        printOptions: {
-                          getRowsToExport: getSelectedRowsToExport,
-                        },
-                      },
-                    }}
-                    density="comfortable"
-                    showCellVerticalBorder
-                    showColumnVerticalBorder
-                    disableDensitySelector
-                    checkboxSelection
-                    columns={[
-                      {
-                        field: "col1",
-                        align: "center",
-                        headerName: "Tag",
-                        flex: 1,
-                        renderCell: (params) => (
-                          <Badge size="xl" variant="light">
-                            {params.value}
-                          </Badge>
-                        ),
-                      },
-                      {
-                        field: "col2",
-                        flex: 1,
-                        align: "center",
-                        headerName: "URL",
-                        renderCell: (params) => (
-                          <Group gap={1}>
-                            <ContainedTextField
-                              style={{ flex: 1 }}
-                              readOnly
-                              value={params.value}
-                            />
-                            <CopyButton value={params.value}>
-                              {({ copied, copy }) => (
-                                <ActionIcon
-                                  variant={copied ? "filled" : "outline"}
-                                  size={"sm"}
-                                  onClick={copy}
-                                >
-                                  {copied ? <IconCheck /> : <IconCopy />}
-                                </ActionIcon>
-                              )}
-                            </CopyButton>
-                          </Group>
-                        ),
-                        minWidth: 200,
-                      },
-                      {
-                        field: "col3",
-                        flex: 1,
-                        align: "center",
-                        headerName: "QR code",
-                        renderCell: (params) => (
-                          <Group gap={1}>
-                            {/* <CustomQRCode
-                              errorCorrectionLevel="H"
-                              version={8}
-                              qrColor="black"
-                              textToBeEmbedded={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${params.id}`}
-                            /> */}
-                            <SVG
-                              text={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${params.id}`}
-                              options={{
-                                margin: 2,
-                                width: 85,
-                                color: {
-                                  dark: "#000",
-                                },
-                              }}
-                            />
-                            {/* <ActionIcon variant="outline" size={"sm"}>
-                                <IconDownload />
-                              </ActionIcon> */}
-                          </Group>
-                        ),
-                        width: 100,
-                      },
-                    ]}
-                    rows={tagsToMap.map((tag) => ({
-                      id: tag,
-                      col1: tag,
-                      col2: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
-                      col3: (
-                        <ShareQR
-                          url={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
-                          sx={{ borderRadius: "0.5rem" }}
-                          title={survey.title}
-                          isPublished={isPublished}
-                          queryKey="surveySettings"
-                          resourceName="survey"
-                          id={surveyId}
-                        />
-                      ),
-                    }))}
-                  />
-                </Stack>
-              </FormModalLayout>
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
           </Stack>
@@ -494,8 +371,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="mail icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -518,8 +395,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="whatsapp icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -542,8 +419,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="facebook icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -566,8 +443,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="iframe icon"
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -598,23 +475,6 @@ const ShareSurvey = ({
   );
 };
 
-function CustomGridToolbar() {
-  return (
-    <GridToolbarContainer style={{ justifyContent: "space-between" }}>
-      <Group>
-        <GridToolbarColumnsButton />
-        <GridToolbarFilterButton />
-        <GridToolbarExport
-          printOptions={{
-            hideFooter: true,
-            hideToolbar: true,
-          }}
-        />
-      </Group>
-      <GridToolbarQuickFilter />
-    </GridToolbarContainer>
-  );
-}
 interface CopyLinkComponentProps {
   value: string;
   disabled?: boolean;
