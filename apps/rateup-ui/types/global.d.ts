@@ -440,6 +440,46 @@ declare global {
       [key: number]: boolean;
     };
   }
+  type subscriptionCountRestrictionCountType = {
+    max: number;
+  };
+  type subscriptionCountRestriction = {
+    count: subscriptionCountRestrictionCountType;
+  };
+  type subscriptionActiveField = {
+    active: boolean;
+  };
+  interface SubscriptionFeatures {
+    // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
+    [sfpn.Menu]: subscriptionCountRestriction & subscriptionActiveField;
+    [sfpn.Team]: {
+      teamMember: subscriptionCountRestriction & subscriptionActiveField;
+    } & subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.WebSurvey]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.WhatsAppSurvey]: subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.WhatsAppCampaign]: subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.ReputationManagement]: subscriptionActiveField &
+      subscriptionCountRestriction;
+  }
+  interface Subscription {
+    orgId: string;
+    features: SubscriptionFeatures;
+    expiresAt: Date;
+    renewedAt?: Date;
+    createdAt: Date;
+  }
+  type Org = {
+    id: string;
+    createdAt: Date;
+    name: string;
+    ownerId: string;
+    logo: string;
+    phone: string;
+    address: string;
+  };
 }
 
 export interface MenuLanding {

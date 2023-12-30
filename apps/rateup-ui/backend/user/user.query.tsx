@@ -6,9 +6,11 @@ import {
   ICreateGoogleUser,
   IUpdateProfile,
   IUpdateProfilePhoto,
+  IUserInfoApiResponse,
   changeUserPassword,
   checkEmailExist,
   createGoogleUser,
+  fetchUserInfo,
   fetchUserProfile,
   updateActiveStatus,
   updateUserProfile,
@@ -20,6 +22,13 @@ export const useGetUserProfile = () =>
   useQuery({
     queryKey: ["userProfile"],
     queryFn: () => fetchUserProfile(),
+  });
+
+export const useUserInfo = () =>
+  useQuery<IUserInfoApiResponse>({
+    queryKey: ["userInfoQuery"],
+    queryFn: fetchUserInfo,
+    notifyOnChangeProps: ["data"],
   });
 
 export function useCreateUserMutation(setIsLoading) {

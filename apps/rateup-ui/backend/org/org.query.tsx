@@ -8,6 +8,8 @@ import {
   updateRole,
   updateOrgDetails,
   IUpdateOrgDetails,
+  getAllOrgs,
+  getOrgStats,
 } from "./org.api";
 
 export const useTeamsMembersOfOrg = () => {
@@ -16,6 +18,19 @@ export const useTeamsMembersOfOrg = () => {
     queryFn: () => getTeamsMembersOfOrg(),
   });
 };
+
+export const useAllOrgs = () =>
+  useQuery({
+    queryKey: ["org"],
+    queryFn: getAllOrgs,
+  });
+
+export const useOrgStats = (orgId: string) =>
+  useQuery({
+    queryKey: ["org", orgId, "stats"],
+    queryFn: () => getOrgStats(orgId),
+    enabled: !!orgId,
+  });
 
 export function useUpdateRoleMutation() {
   const queryClient = useQueryClient();

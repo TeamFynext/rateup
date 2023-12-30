@@ -15,9 +15,15 @@ import {
   IconAddressBook,
   IconKeyframes,
   IconComet,
+  IconTerminal2,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
-import { SubscriptionFeatureName } from "../../../types/enums";
+import { useUserInfo } from "../../../backend/user/user.query";
+import {
+  SubscriptionFeaturePathName,
+  SubscriptionFeaturePathName as sfpn,
+} from "../../../types/enums";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -28,9 +34,14 @@ export interface NavbarLinkProps {
   submenus?: NavbarLinkProps[];
   role?: string;
 }
+
 //data Array consisting of NavbarTopData
-export function getNavTopData(subscription) {
-  const featureList = Object.keys(subscription?.features || {});
+export function getNavTopData(subscription?: Subscription) {
+  function hasFeature(featurePath: SubscriptionFeaturePathName) {
+    if (!subscription) return false;
+    return getNestedProperty(subscription.features, featurePath).active;
+  }
+
   const navTopData: Array<NavbarLinkProps> = [
     {
       Icon: IconLayoutDashboard,
@@ -52,7 +63,7 @@ export function getNavTopData(subscription) {
         },
       ],
     },
-    ...(featureList.includes(SubscriptionFeatureName.WebSurvey)
+    ...(hasFeature(sfpn.WebSurvey)
       ? [
           {
             Icon: IconBrowser,
@@ -83,7 +94,7 @@ export function getNavTopData(subscription) {
         ]
       : []),
     // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
-    ...(featureList.includes(SubscriptionFeatureName.WhatsAppSurvey)
+    ...(hasFeature(sfpn.WhatsAppSurvey)
       ? [
           {
             Icon: IconBrandWhatsapp,
@@ -108,11 +119,10 @@ export function getNavTopData(subscription) {
           },
         ]
       : []),
-    ...(featureList.includes(SubscriptionFeatureName.Menu)
+    ...(hasFeature(sfpn.Menu)
       ? [{ Icon: IconClipboardList, label: "Menu", href: "/dashboard/menu" }]
       : []),
-    ...(hiddenModules.includes("campaign") ||
-    !featureList.includes(SubscriptionFeatureName.WhatsAppCampaign)
+    ...(hiddenModules.includes("campaign") || !hasFeature(sfpn.WhatsAppCampaign)
       ? []
       : [
           {
@@ -127,7 +137,7 @@ export function getNavTopData(subscription) {
           },
         ]),
     ...(hiddenModules.includes("reputation_management") ||
-    !featureList.includes(SubscriptionFeatureName.ReputationManagement)
+    !hasFeature(sfpn.ReputationManagement)
       ? []
       : [
           {
@@ -141,7 +151,21 @@ export function getNavTopData(subscription) {
 }
 
 //data Array consisting of NavbarBottomData
-export const navBottomData: Array<NavbarLinkProps> = [
+const navBottomData: Array<NavbarLinkProps> = [
   { Icon: IconSettings, label: "Settings", href: "/dashboard/settings" },
   { Icon: IconLogout, label: "Logout", href: "/logout" },
 ];
+
+export function useNavBottomData() {
+  const { data, isError, isLoading } = useUserInfo();
+
+  if (isLoading || isError) return navBottomData;
+
+  if (data?.data?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG) {
+    return [
+      { Icon: IconTerminal2, label: "Admin", href: "/admin" },
+      ...navBottomData,
+    ];
+  }
+  return navBottomData;
+}

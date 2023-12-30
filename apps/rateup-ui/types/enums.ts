@@ -115,11 +115,12 @@ export enum SortType {
   ASC = "asc",
   DESC = "desc",
 }
-export enum SubscriptionFeatureName {
+export enum SubscriptionFeaturePathName {
   WebSurvey = "webSurvey",
   WhatsAppSurvey = "whatsappSurvey",
   WhatsAppCampaign = "whatsappCampaign",
   Menu = "menu",
   ReputationManagement = "reputationManagement",
   Team = "team",
+  TeamMember = "team.teamMember",
 }

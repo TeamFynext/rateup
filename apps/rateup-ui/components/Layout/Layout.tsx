@@ -15,7 +15,7 @@ import LeftNavbar from "./Navbar/LeftNavbar";
 import FocusMode from "../Switch/Focusmode";
 import ReportBug from "../ReportBug";
 import styles from "./Layout.module.css";
-
+import { useUserInfo } from "../../backend/user/user.query";
 // @ts-ignore
 export default function Layout({ children }) {
   const router = useRouter();
@@ -32,12 +32,8 @@ export default function Layout({ children }) {
     data: userQueryData,
     error: errorUserInfo,
     refetch,
-  } = useQuery<IUserInfoApiResponse>({
-    queryKey: ["userInfoQuery"],
-    queryFn: fetchUserInfo,
-    notifyOnChangeProps: ["data"],
-    enabled: !userInfo, // fetch only if there is no data in localStorage
-  });
+  } = useUserInfo();
+
   useEffect(() => {
     if (userQueryData?.data) {
       setUserInfo(userQueryData); // update localStorage

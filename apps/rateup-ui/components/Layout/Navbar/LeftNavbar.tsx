@@ -19,8 +19,8 @@ import classes from "./Navbar.module.css";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import {
   NavbarLinkProps,
-  navBottomData,
   getNavTopData,
+  useNavBottomData,
 } from "./navbar.constants";
 import { UserRole } from "../../../utils/enums";
 import { IconChevronLeft } from "@tabler/icons-react";
@@ -193,6 +193,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       );
     }
   }, [user]);
+  const navBottomData = useNavBottomData();
 
   const userInfo: {
     name: string;
@@ -273,25 +274,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
             </PaperLayout>
           </Group>
           <PaperLayout mt={10} w="100%">
-            <Group gap={10} justify="flex-start">
-              <Avatar
-                onClick={() => {
-                  setOpened((o) => !o);
-                }}
-                src={userInfo?.image}
-                alt={userInfo.name}
-                radius="xl"
-                size={30}
-              />
-              <Stack gap={0}>
-                <Text size="sm" fw={500}>
-                  {userInfo.name ? userInfo.name : userInfo.email}
-                </Text>
-                <Text c="dimmed" size="xs">
-                  {userInfo.role}
-                </Text>
-              </Stack>
-            </Group>
+            {LoggedInUserCard(userInfo)}
           </PaperLayout>
         </Stack>
       ) : (
@@ -364,3 +347,28 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
 };
 
 export default LeftNavbar;
+
+export function LoggedInUserCard(userInfo: {
+  name: string;
+  email: string;
+  role:
+    | typeof UserRole.ADM
+    | typeof UserRole.MEMBER
+    | typeof UserRole.SUPADM
+    | "...error...";
+  image: string;
+}) {
+  return (
+    <Group gap={10} justify="flex-start">
+      <Avatar src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} />
+      <Stack gap={0}>
+        <Text size="sm" fw={500}>
+          {userInfo.name ? userInfo.name : userInfo.email}
+        </Text>
+        <Text c="dimmed" size="xs">
+          {userInfo.role}
+        </Text>
+      </Stack>
+    </Group>
+  );
+}
