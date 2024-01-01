@@ -1,9 +1,16 @@
-import { Flex, Popover, LoadingOverlay } from "@mantine/core";
+import {
+  Flex,
+  Popover,
+  LoadingOverlay,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import Button from "../HomePage/components/Button";
 import styles from "./ReportBug.module.css";
 import popoverStyles from "./PopoverStyles.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import { useCallback, useEffect, useState } from "react";
+import { IconBug } from "@tabler/icons-react";
 
 function ReportBug() {
   const [opened, { toggle }] = useDisclosure(false);
@@ -28,9 +35,14 @@ function ReportBug() {
     >
       <Popover.Target>
         <Flex className={styles["report-bug-container"]}>
-          <Button className={styles["report-bug-button"]} onClick={toggle}>
-            Report Bug
-          </Button>
+          <Tooltip label="Report Bug" position="left">
+            <ActionIcon
+              className={styles["report-bug-button"]}
+              onClick={toggle}
+            >
+              <IconBug />
+            </ActionIcon>
+          </Tooltip>
         </Flex>
       </Popover.Target>
 

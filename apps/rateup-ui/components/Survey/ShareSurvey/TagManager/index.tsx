@@ -24,7 +24,7 @@ import Preview from "../Preview/Preview";
 import previewStyles from "../Preview/Preview.module.css";
 import styles from "./TagManager.module.css";
 import { useGetShareSettings } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
-import CustomGridToolbar from "./CustomGridToolbar";
+import CustomGridToolbar from "./CustomGridToolbar/CustomGridToolbar";
 import { useCallback, useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
 import { saveAs } from "file-saver";
@@ -227,6 +227,7 @@ function TagManager({
                 minWidth: 200,
               },
               {
+                disableExport: true,
                 field: "col3",
                 flex: 1,
                 align: "center",
