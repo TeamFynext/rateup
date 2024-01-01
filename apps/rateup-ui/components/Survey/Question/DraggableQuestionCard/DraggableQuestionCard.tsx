@@ -118,7 +118,7 @@ export function DraggableQuestionCard({
                         : "var(--tertiary-color)"
                     }
                     stroke={4}
-                    size={"1rem"}
+                    style={{ width: "2rem", height: "1rem" }}
                   />
                 )}
                 <ActionIcon

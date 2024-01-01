@@ -245,7 +245,7 @@ export const ResultFilter = ({
     (quantitativeQuestions?.length !== 0 && activeTab === ResultTab.Responses)
   ) {
     return (
-      <PaperLayout p={5} style={{ flex: 1 }}>
+      <PaperLayout p={5} style={{ flex: 1 }} py={"sm"}>
         <ScrollArea scrollbarSize={5} h={"100%"} maw={"100%"}>
           <Stack>
             <Text c={"dark"} fw={900}>
