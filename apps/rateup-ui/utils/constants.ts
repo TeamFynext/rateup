@@ -86,3 +86,6 @@ export const mimeTypesForImage: { [key: string]: string } = {
   gif: "image/gif",
   webp: "image/webp",
 };
+
+export const MAX_FILE_SIZE_IN_MB = 10;
+export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;

@@ -16,8 +16,7 @@ export const uploadFile = async (file) => {
     );
     return response?.data?.data?.key as string;
   } catch (error) {
-    console.error(error);
-    return null;
+    throw error?.response?.data?.message;
   }
 };
 

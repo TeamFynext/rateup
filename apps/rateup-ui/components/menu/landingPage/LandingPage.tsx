@@ -52,7 +52,11 @@ import { lexend } from "../../../utils/fonts";
 import { UnsplashModal } from "../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
-import { fallbackImage } from "../../../utils/constants";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  fallbackImage,
+} from "../../../utils/constants";
 //TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
@@ -164,7 +168,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
           )
           .map((r) => r?.value);
         if (deleteImageArray?.length > 0) {
-          successes.pop();
+          successes?.pop();
         }
         if (logo) data.logo = successes.pop();
         if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
@@ -248,16 +252,19 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     setSelectedTab("Mobile");
   };
   const onChangeLogo = (event: File) => {
-    if (event) {
-      setSelectedUnslashImage({
-        url: URL.createObjectURL(event),
-        name: event.name,
-      });
-      toggleCropDialog();
-      setAspectRatio(4 / 3);
-      setImageType("logo");
-      resetLogoRef?.current?.();
+    if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
     }
+    setSelectedUnslashImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    setAspectRatio(4 / 3);
+    setImageType("logo");
+    resetLogoRef?.current?.();
   };
   const handleCropImageSave = (cropedImage) => {
     if (imageType === "backgroundImage") {
@@ -290,6 +297,14 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     } else {
       imageUploadBtnRef?.current?.click();
     }
+  };
+  const handleBgPick = (e: File | null) => {
+    if (!e) return;
+    if (e.size > MAX_FILE_SIZE_IN_BYTE) {
+      return showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+    }
+    handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+    resetRef.current?.();
   };
   return (
     <Grid ff={lexend.style.fontFamily} fw={300}>
@@ -345,7 +360,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 <>
                   <BackgroundImage
                     src={result}
-                    radius="0px 0px 22px 22px"
+                    radius="0rem 0rem 1.375rem 1.375rem"
                     w={isMobileTab && 300}
                     bgsz={"cover"}
                     bgp={"center"}
@@ -364,11 +379,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       justify={!isMobileTab ? "space-around" : "center"}
                       h={"100%"}
                       style={{
-                        padding: !isMobileTab ? "0 20px 0 20px" : "0",
+                        padding: !isMobileTab ? "0 1.25rem 0 1.25rem" : "0",
                       }}
                     >
                       <div></div>
-                      <Stack align="center" gap={0} px={"50px"}>
+                      <Stack align="center" gap={0} px={"3.125rem"}>
                         <TooltipWithEditIcon
                           tooltipLabel="change logo"
                           handleEditIcon={(e) => {
@@ -462,8 +477,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                                 <IconWorld
                                   size={
                                     isMobileTab
-                                      ? "21px"
-                                      : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                      ? "1.3125rem"
+                                      : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
                                   }
                                   color={form?.values?.otherStyle?.color}
                                 />
@@ -492,8 +507,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                                 <IconMapPin
                                   size={
                                     isMobileTab
-                                      ? "21px"
-                                      : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                      ? "1.3125rem"
+                                      : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
                                   }
                                   color={form?.values?.otherStyle?.color}
                                 />
@@ -527,8 +542,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           shadow={isMenuEnabled && "sm"}
                           radius={"md"}
                           p={"lg"}
-                          h={"120px"}
-                          w={"120px"}
+                          h={"7.5rem"}
+                          w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
                           selected={isMenuEnabled}
@@ -540,8 +555,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <PaperLayout
                           radius={"md"}
                           p={"lg"}
-                          h={"120px"}
-                          w={"120px"}
+                          h={"7.5rem"}
+                          w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
                           selected={isFeedbackEnabled}
@@ -553,7 +568,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     <Group justify="center">
                       <Image
                         src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits.svg`}
-                        w={"clamp(137px, 65.568px + 11.905vw, 237px)"}
+                        w={"clamp(8.5625rem, 4.098rem + 11.905vw, 14.8125rem)"}
                         alt="rate-up logo"
                         mb={"sm"}
                       />
@@ -617,7 +632,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       <Button
                         leftSection={<IconUpload size={16} />}
                         size="xs"
-                        radius="18px"
+                        radius="1.125rem"
                         type="button"
                         onClick={handlePictureMobileBackground}
                       >
@@ -634,21 +649,14 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       <Button
                         leftSection={<IconUpload size={16} />}
                         size="xs"
-                        radius="18px"
+                        radius="1.125rem"
                         type="button"
                         onClick={handlePictureBackground}
                       >
                         Upload Tablet Image
                       </Button>
                       <FileButton
-                        onChange={(e) => {
-                          if (!e) return;
-                          handleUnsplashImageSave(
-                            URL.createObjectURL(e),
-                            e.name,
-                          );
-                          resetRef.current?.();
-                        }}
+                        onChange={handleBgPick}
                         resetRef={resetRef}
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       >
@@ -682,7 +690,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           <Button
                             leftSection={<IconUpload size={16} />}
                             size="xs"
-                            radius="18px"
+                            radius="1.125rem"
                             ref={logoRef}
                             {...props}
                           >

@@ -31,7 +31,12 @@ import {
   createCustomTimestamp,
   formatToCustomTime,
 } from "../../utils/dateTime";
-import { fallbackImage } from "../../utils/constants";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  fallbackImage,
+} from "../../utils/constants";
+import { showErrorToast } from "../../utils/notifications";
 
 interface CreateMenuCategoryModalProps {
   readonly opened: boolean;
@@ -172,6 +177,10 @@ export function CreateMenuCategoryModal({
   }
   const onChangePicture = (event: File | null) => {
     if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
+    }
     setSelectedImage({
       url: URL.createObjectURL(event),
       name: event.name,

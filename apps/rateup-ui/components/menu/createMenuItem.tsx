@@ -33,7 +33,11 @@ import { useDisclosure } from "@mantine/hooks";
 import { ImageCropModal } from "../Modal/ImageCropModal";
 import { UnsplashModal } from "../Modal/UnsplashModal";
 import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal";
-import { fallbackImage } from "../../utils/constants";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  fallbackImage,
+} from "../../utils/constants";
 import { PriceSection } from "./item/PriceSection";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
@@ -234,6 +238,10 @@ export function CreateMenuItemModal({
   };
   const onChangePicture = (event: File | null) => {
     if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
+    }
     setSelectedInputImage({
       url: URL.createObjectURL(event),
       name: event.name,
