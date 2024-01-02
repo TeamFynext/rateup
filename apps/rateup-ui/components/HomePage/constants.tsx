@@ -7,7 +7,7 @@ import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.cs
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const rateupLogoUrl = `${imagesPath}/logo.svg`;
 
-const navLinks = [
+const headerNavLinks = [
   {
     href: "/",
     linkText: "Home",
@@ -53,8 +53,21 @@ const navLinks = [
   // },
 ];
 
-export const getNavLinksArray = (className: string, isHeader: boolean) =>
-  navLinks.map(({ href, linkText, hasSublinks, sublinks }) =>
+const footerNavLinks = [
+  ...headerNavLinks,
+  {
+    href: "/terms-of-service",
+    linkText: "Terms of Service",
+  },
+  {
+    href: "/privacy-policy",
+    linkText: "Privacy Policy",
+  },
+];
+
+export const getNavLinksArray = (className: string, isHeader: boolean) => {
+  const navLinks = isHeader ? headerNavLinks : footerNavLinks;
+  return navLinks.map(({ href, linkText, hasSublinks, sublinks }) =>
     isHeader && hasSublinks ? (
       <LinkWithSublinksPopover
         key={linkText}
@@ -71,9 +84,10 @@ export const getNavLinksArray = (className: string, isHeader: boolean) =>
       </Flex>
     ),
   );
+};
 
 export const getMobileNavLinkMenuItems = (className: string = "") =>
-  navLinks.map(({ href, linkText, hasSublinks, sublinks }) => (
+  headerNavLinks.map(({ href, linkText, hasSublinks, sublinks }) => (
     <Menu.Item key={linkText} component="div">
       {hasSublinks ? (
         <NavLink
