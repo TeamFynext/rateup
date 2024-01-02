@@ -102,7 +102,11 @@ function _NavbarLink({
               }
               onClick={(e) => {
                 if (href) {
-                  router.push(href);
+                  if (label == "Docs") {
+                    window.open(href, "_blank");
+                  } else {
+                    router.push(href);
+                  }
                   setActive(parentIndex);
                 } else if (submenus?.length > 0) {
                   if (!opened) {
