@@ -1,12 +1,19 @@
 .report-bug-container {
   position: fixed;
   right: 15px;
-  top: 9.5px;
+  top: 15px;
 }
 
 .report-bug-button {
-  font-size: 0.875rem;
-  padding: 0.8125em 1.5em;
+  background-color: rgb(236, 236, 236);
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+}
+
+.report-bug-button svg path {
+  fill: rgb(234, 141, 141);
+  stroke: rgb(156, 52, 52);
 }
 
 .report-bug-button :global(.mantine-Button-label) {

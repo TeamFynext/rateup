@@ -16,6 +16,8 @@ import {
   Divider,
   Flex,
   RingProgress,
+  Box,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -483,19 +485,26 @@ function TakeSurvey() {
             </Flex>
           </Modal>
 
-          <Stack>
-            <Stack style={{ minHeight: "45vh" }} justify="center">
-              <QuestionTitle largeScreen={largeScreen} />
-              <QuestionDesc largeScreen={largeScreen} />
-              <QuestionForm />
-            </Stack>
-            <NextPrev
-              next={handleNext}
-              prev={handlePrev}
-              num={QnNo}
-              total={questionCount}
+          <Box pos="relative">
+            <LoadingOverlay
+              visible={isSavingResponses}
+              zIndex={1000}
+              overlayProps={{ radius: "sm", blur: 2 }}
             />
-          </Stack>
+            <Stack>
+              <Stack style={{ minHeight: "45vh" }} justify="center">
+                <QuestionTitle largeScreen={largeScreen} />
+                <QuestionDesc largeScreen={largeScreen} />
+                <QuestionForm />
+              </Stack>
+              <NextPrev
+                next={handleNext}
+                prev={handlePrev}
+                num={QnNo}
+                total={questionCount}
+              />
+            </Stack>
+          </Box>
         </Container>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>
@@ -518,10 +527,10 @@ function submitSurvey({
     tag: tag || null,
   })
     .then(() => {
-      notifications.show({
-        message: "Survey completed!",
-        color: "teal",
-      });
+      // notifications.show({
+      //   message: "Survey completed!",
+      //   color: "teal",
+      // });
       setIsSavingResponses(false);
     })
     .catch((e) => {
