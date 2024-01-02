@@ -65,11 +65,7 @@ const PasswordSettings = ({ survey, surveyId }) => {
                 }
                 radius={"xl"}
                 onClick={() => {
-                  if (!/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
-                    setIsPasswordInputInvalid(
-                      "Password should contain at least one letter and one number",
-                    );
-                  } else if (survey?.password?.slice(0, 8) === password) {
+                  if (survey?.password?.slice(0, 8) === password) {
                     setIsPasswordInputInvalid("Please enter a new password");
                   } else {
                     setIsPasswordInputInvalid(false);
