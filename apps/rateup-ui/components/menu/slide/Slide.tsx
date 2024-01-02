@@ -18,7 +18,7 @@ import {
   ContainedTextArea,
 } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { PriceSection } from "../createMenuItem";
+import { PriceSection } from "../item/PriceSection";
 import TabsCommon from "../landingPage/Tabs/TabsCommon";
 import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 import { useForm } from "@mantine/form";
