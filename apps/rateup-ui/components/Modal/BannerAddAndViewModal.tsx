@@ -21,15 +21,22 @@ import CenteredSpinner from "../Loaders/CenteredSpinner";
 import { MenuItemPriceType } from "../../types/enums";
 import { showErrorToast } from "../../utils/notifications";
 
+type BannerAddAndViewModalProps = {
+  opened: boolean;
+  onClose: () => void;
+  menuId: string;
+  currency: string;
+};
+
 export const BannerAddAndViewModal = ({
   opened,
   onClose,
   menuId,
   currency,
-}) => {
+}: BannerAddAndViewModalProps) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const carouselRef = useRef(null);
-  const [count, { increment, decrement }] = useCounter(0, {
+  const [_, { increment, decrement }] = useCounter(0, {
     min: 0,
   });
   const createMenuBannerMutation = useCreateMenuBannerMutation(menuId);
@@ -37,7 +44,7 @@ export const BannerAddAndViewModal = ({
   const deleteMenuBannerMutation = useDeleteMenuBannerMutation(menuId, () => {
     decrement();
   });
-  const { data, isPending, isError } = useMenuBannerQuery(menuId);
+  const { data, isPending } = useMenuBannerQuery(menuId);
   const TRANSITION_DURATION = 200;
   const [embla, setEmbla] = useState<Embla | null>(null);
 
@@ -46,10 +53,10 @@ export const BannerAddAndViewModal = ({
     if (data) {
       handleCarouselControl(1, data?.length);
     }
-  }, [data?.length]);
+  }, [data, data?.length]);
 
   if (isPending) return <CenteredSpinner />;
-  const defaultValues = {
+  const defaultValues: MenuBanner = {
     description: "",
     id: "",
     menuId: menuId,
@@ -68,7 +75,7 @@ export const BannerAddAndViewModal = ({
     videoUrl: "",
   };
   const popFromData = () => {
-    if (data?.length > 0) {
+    if ((data?.length ?? 0) > 0) {
       data?.pop();
       decrement();
     }
@@ -125,7 +132,7 @@ export const BannerAddAndViewModal = ({
         px={"lg"}
         justify="center"
       >
-        {data?.length <= 0 ? (
+        {(data?.length ?? 0) <= 0 ? (
           <Stack align="center" justify="center" mt={"-100px"}>
             <Group ml={"-25px"}>
               <IconBookmark
@@ -154,7 +161,7 @@ export const BannerAddAndViewModal = ({
               size="md"
               onClick={() => {
                 increment();
-                data.push(defaultValues);
+                data?.push(defaultValues);
               }}
             />
           </Stack>
@@ -168,7 +175,7 @@ export const BannerAddAndViewModal = ({
                 size="md"
                 disabled={data?.length === 4}
                 onClick={() => {
-                  if (!data[data?.length - 1]?.id) {
+                  if (!data?.[data?.length - 1]?.id) {
                     showErrorToast(
                       "Save the form you just made, then click Add Banner button to make a new form.",
                     );
@@ -212,8 +219,8 @@ export const BannerAddAndViewModal = ({
                 ref={carouselRef}
                 withIndicators
                 slideGap="lg"
-                onNextSlide={() => increment()}
-                onPreviousSlide={() => decrement()}
+                onNextSlide={increment}
+                onPreviousSlide={decrement}
                 styles={{
                   control: {
                     visibility: "hidden",

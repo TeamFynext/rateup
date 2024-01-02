@@ -16,7 +16,7 @@ import {
 } from "../../backend/menu/category/mCategory.query";
 import {
   deleteUploadedFiles,
-  getFileUrlFromKey,
+  getImageValue,
   uploadFile,
 } from "../../utils/file-upload/upload";
 import FormModalLayout from "../Modal/FormModalLayout";
@@ -51,14 +51,14 @@ export function CreateMenuCategoryModal({
     url: "",
     name: "",
   });
-  const resetRef = useRef(null);
+  const resetRef = useRef<() => void>(null);
   const [
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
 
   const form = useForm({
-    initialValues: editingItem || {
+    initialValues: editingItem ?? {
       name: "",
       menuId: menuId,
       image: "",
@@ -68,7 +68,7 @@ export function CreateMenuCategoryModal({
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
-      endTime: (value, values) => {
+      endTime: (value: string, values: any) => {
         const startTime = values.startTime;
         const scheduleEnabled = values.scheduleEnabled;
         return (
@@ -82,20 +82,20 @@ export function CreateMenuCategoryModal({
     },
   });
 
-  let menuCategoryData;
-  // updates form values when editingItem changes
   useEffect(() => {
     if (editingItem) {
-      menuCategoryData = editingItem;
-      menuCategoryData.startTime = formatToCustomTime(
-        menuCategoryData.startTime,
-      );
-      menuCategoryData.endTime = formatToCustomTime(menuCategoryData.endTime);
-      form.setValues(menuCategoryData);
+      const updatedEditingItem = {
+        ...editingItem,
+        startTime: formatToCustomTime(editingItem.startTime),
+        endTime: formatToCustomTime(editingItem.endTime),
+      };
+      form.setValues(updatedEditingItem);
     } else {
       form.reset();
       setImageToUpload(null);
     }
+    //if form add then infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingItem]);
 
   const createMenuCategoryMutation = useCreateMenuCategoryMutation(
@@ -124,9 +124,10 @@ export function CreateMenuCategoryModal({
     },
   );
 
-  const onSubmit = (values) => {
+  const onSubmit = (values: typeof form.values) => {
     setIsCreating(true);
     let temp = "";
+    const formatedData: any = values;
     const processSubmit = async () => {
       if (imageToUpload) {
         const fileKey = await uploadFile(imageToUpload);
@@ -135,11 +136,13 @@ export function CreateMenuCategoryModal({
         }
       }
       if (values?.scheduleEnabled) {
-        values.startTime &&
-          (values.startTime = createCustomTimestamp(values.startTime));
-        values.endTime &&
-          (values.endTime = createCustomTimestamp(values.endTime));
+        formatedData.startTime =
+          values.startTime && createCustomTimestamp(values.startTime);
+        formatedData.endTime =
+          values.endTime && createCustomTimestamp(values.endTime);
       } else {
+        formatedData.startTime = undefined;
+        formatedData.endTime = undefined;
         values.startTime = undefined;
         values.endTime = undefined;
       }
@@ -150,14 +153,14 @@ export function CreateMenuCategoryModal({
             fileKeyArray: [{ Key: editingItem?.image }],
           });
         }
-        values.image = temp;
+        formatedData.image = temp;
         editMenuCategoryMutation.mutate({
           categoryId: editingItem.id,
-          menuCategory: values,
+          menuCategory: formatedData,
         });
       } else {
-        values.image = temp;
-        createMenuCategoryMutation.mutate(values);
+        formatedData.image = temp;
+        createMenuCategoryMutation.mutate(formatedData);
       }
       setIsCreating(false);
     };
@@ -167,7 +170,7 @@ export function CreateMenuCategoryModal({
   if (!menuId) {
     return null;
   }
-  const onChangePicture = (event: File) => {
+  const onChangePicture = (event: File | null) => {
     if (!event) return;
     setSelectedImage({
       url: URL.createObjectURL(event),
@@ -176,7 +179,7 @@ export function CreateMenuCategoryModal({
     toggleCropDialog();
     resetRef?.current?.();
   };
-  const handleCropImageSave = (cropedImage) => {
+  const handleCropImageSave = (cropedImage: File) => {
     form.setFieldValue("image", URL.createObjectURL(cropedImage));
     setImageToUpload(cropedImage);
   };
@@ -227,11 +230,8 @@ export function CreateMenuCategoryModal({
                   h={125}
                   mah={125}
                   fallbackSrc={fallbackImage}
-                  src={
-                    form.values?.image?.startsWith("blob")
-                      ? form.values.image
-                      : getFileUrlFromKey(form.values?.image)
-                  }
+                  src={getImageValue(form.values?.image)}
+                  alt="image of menu category"
                 />
               )}
               <Stack justify="center">
@@ -242,12 +242,9 @@ export function CreateMenuCategoryModal({
                   resetRef={resetRef}
                 >
                   {(props) => {
-                    let buttonText = "";
-                    if (form.values.image) {
-                      buttonText = "Replace Image";
-                    } else {
-                      buttonText = "Add Image";
-                    }
+                    let buttonText = form.values.image
+                      ? "Replace Image"
+                      : "Add Image";
                     return (
                       <RateupButtonSecondary
                         title={buttonText}

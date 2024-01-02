@@ -342,13 +342,13 @@ declare global {
     createdAt: string;
     name: string;
     description: string;
-    images: string[];
+    images: Array<string | File>;
     videoUrl: string | null;
     price: {
       type: MenuItemPriceType;
-      price?: number;
+      price?: number | string;
       variants?: Array<{
-        price: number;
+        price: number | string;
         name: string;
       }>;
     };

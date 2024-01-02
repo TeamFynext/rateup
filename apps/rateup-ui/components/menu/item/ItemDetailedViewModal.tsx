@@ -21,14 +21,14 @@ export function ItemDetailedViewModal({
   currency = "0",
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0],
+    (item?.videoUrl ?? String(item?.images[0])) as string,
   );
   const smallScreen = useMediaQuery("(max-width: 30em)");
 
   useEffect(() => {
     if (item.videoUrl) {
       if (!extractVideoId(item?.videoUrl)) {
-        setSelectedMedia(item?.images[0]);
+        setSelectedMedia(item?.images[0] as string);
       }
     }
   }, [item]);
@@ -98,7 +98,7 @@ export function ItemDetailedViewModal({
           </Box>
 
           <Group justify="center" mt="xs">
-            {item?.images?.map((imageKey) => (
+            {item?.images?.map((imageKey: string) => (
               <Image
                 key={imageKey}
                 w="75px"

@@ -29,6 +29,7 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
+  getImageValue,
   uploadFile,
 } from "../../../utils/file-upload/upload";
 import {
@@ -131,23 +132,27 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       setUpdatingLoading(true);
       backgroundImage && imageArray.push(backgroundImage);
       editingItem?.backgroundImage &&
+        backgroundImage &&
         deleteImageArray.push({ Key: editingItem.backgroundImage });
 
       mobileBackgroundImage && imageArray.push(mobileBackgroundImage);
       editingItem?.mobileBackgroundImage &&
+        mobileBackgroundImage &&
         deleteImageArray.push({ Key: editingItem.mobileBackgroundImage });
 
       logo && imageArray.push(logo);
-      editingItem?.logo && deleteImageArray.push({ Key: editingItem.logo });
+      editingItem?.logo &&
+        logo &&
+        deleteImageArray.push({ Key: editingItem.logo });
 
       let errors = [];
       if (imageArray?.length > 0) {
         const imageResponse = imageArray.map((data) => uploadFile(data));
-        if (deleteImageArray?.length > 0) {
-          imageResponse.push(
-            deleteUploadedFiles({ fileKeyArray: deleteImageArray }),
-          );
-        }
+        // if (deleteImageArray?.length > 0) {
+        //   imageResponse.push(
+        //     deleteUploadedFiles({ fileKeyArray: deleteImageArray })
+        //   );
+        // }
         const response = await Promise.allSettled(imageResponse);
         errors = response.filter(
           (r) => r.status === "rejected",
@@ -161,14 +166,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         if (deleteImageArray?.length > 0) {
           successes.pop();
         }
-
         if (logo) data.logo = successes.pop();
-
         if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
-
         if (backgroundImage) data.backgroundImage = successes.pop();
       }
-      menulandingMutation.mutate(data);
+      // menulandingMutation.mutate(data);
       for (const imageUploadError of errors) {
         showErrorToast(imageUploadError.reason);
       }
@@ -176,6 +178,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       setUpdatingLoading(false);
     } finally {
       setUpdatingLoading(false);
+      setBackgroundImage(null);
+      setMobileBackgroundImage(null);
+      setLogo(null);
     }
   };
 
@@ -371,13 +376,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           }}
                         >
                           <Image
-                            src={
-                              form?.values?.logo
-                                ? form?.values?.logo?.startsWith("blob")
-                                  ? form.values?.logo
-                                  : getFileUrlFromKey(form?.values?.logo)
-                                : fallbackImage
-                            }
+                            src={getImageValue(form?.values?.logo)}
                             onClick={() => {
                               logoRef?.current?.click();
                               setMainTabState("logo");

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { fallbackImage } from "../constants";
 
 export const uploadFile = async (file) => {
   const formData = new FormData();
@@ -54,4 +55,16 @@ export const dataURItoBlob = (dataURI) => {
     ia[i] = byteString.charCodeAt(i);
   }
   return new Blob([ab], { type: mimeString });
+};
+
+export const getImageValue = (image) => {
+  if (typeof image === "object") {
+    return URL.createObjectURL(image);
+  } else if (image && image.startsWith("blob")) {
+    return image;
+  } else if (image) {
+    return getFileUrlFromKey(image);
+  } else {
+    return fallbackImage;
+  }
 };

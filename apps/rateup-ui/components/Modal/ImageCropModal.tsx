@@ -13,6 +13,15 @@ import "react-image-crop/dist/ReactCrop.css";
 import { Image, NumberInput } from "@mantine/core";
 import { mimeTypesForImage } from "../../utils/constants";
 
+interface ImageCropModalProps {
+  opened: boolean;
+  onclose: () => void;
+  image: string;
+  imageName: string;
+  handleCropImageSave: (file: File) => void;
+  aspect?: number;
+}
+
 export const ImageCropModal = ({
   opened,
   onclose,
@@ -20,7 +29,7 @@ export const ImageCropModal = ({
   imageName,
   handleCropImageSave,
   aspect = 4 / 3,
-}) => {
+}: ImageCropModalProps) => {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -28,7 +37,7 @@ export const ImageCropModal = ({
   const [scale, setScale] = useState(1);
 
   useDebounceEffect(
-    async () => {
+    () => {
       if (
         completedCrop?.width &&
         completedCrop?.height &&
@@ -86,10 +95,11 @@ export const ImageCropModal = ({
   }
   const handleCropSubmit = async () => {
     const fileExtension =
-      imageName?.split(".")?.pop()?.toLowerCase() || "cropped.jpg";
+      imageName?.split(".")?.pop()?.toLowerCase() ?? "cropped.jpg";
 
     previewCanvasRef?.current?.toBlob(
       (blob) => {
+        if (!blob) return;
         const file = new File([blob], imageName, {
           type: mimeTypesForImage[fileExtension],
         });
@@ -140,6 +150,7 @@ export const ImageCropModal = ({
           style={{
             transform: `scale(${scale})`,
           }}
+          alt="cropping image"
         />
       </ReactCrop>
       <canvas
