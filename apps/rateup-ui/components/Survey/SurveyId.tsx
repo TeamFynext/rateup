@@ -167,15 +167,7 @@ export default function SurveyID() {
                 )}
               </Grid.Col>
               <Grid.Col span={3}>
-                {activeTab === TabEnum.Edit ? (
-                  <ContainedSelection
-                    allowDeselect={false}
-                    ml="auto"
-                    data={survey?.languages}
-                    value={selectedLanguage}
-                    onChange={setSelectedLanguage}
-                  />
-                ) : activeTab === TabEnum.Result ? (
+                {activeTab === TabEnum.Result ? (
                   <MultiSelect
                     radius={"10px"}
                     searchable
