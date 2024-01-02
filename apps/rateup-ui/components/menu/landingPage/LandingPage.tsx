@@ -148,11 +148,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       let errors = [];
       if (imageArray?.length > 0) {
         const imageResponse = imageArray.map((data) => uploadFile(data));
-        // if (deleteImageArray?.length > 0) {
-        //   imageResponse.push(
-        //     deleteUploadedFiles({ fileKeyArray: deleteImageArray })
-        //   );
-        // }
+        if (deleteImageArray?.length > 0) {
+          imageResponse.push(
+            deleteUploadedFiles({ fileKeyArray: deleteImageArray }),
+          );
+        }
         const response = await Promise.allSettled(imageResponse);
         errors = response.filter(
           (r) => r.status === "rejected",
@@ -170,7 +170,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
         if (backgroundImage) data.backgroundImage = successes.pop();
       }
-      // menulandingMutation.mutate(data);
+      menulandingMutation.mutate(data);
       for (const imageUploadError of errors) {
         showErrorToast(imageUploadError.reason);
       }
