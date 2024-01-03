@@ -28,9 +28,10 @@ export function SurveyCard({
   const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
     if (survey?.createdAt) {
-      setTimeSince(getTimeSince(survey?.createdAt));
+      setTimeSince(getTimeSince(new Date(survey?.createdAt).toString()));
       const timeoutID = setInterval(
-        () => setTimeSince(getTimeSince(survey?.createdAt)),
+        () =>
+          setTimeSince(getTimeSince(new Date(survey?.createdAt).toString())),
         5000,
       );
       return () => clearInterval(timeoutID);

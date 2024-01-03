@@ -18,7 +18,7 @@ import {
   ContainedTextArea,
 } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { PriceSection } from "../createMenuItem";
+import { PriceSection } from "../item/PriceSection";
 import TabsCommon from "../landingPage/Tabs/TabsCommon";
 import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 import { useForm } from "@mantine/form";
@@ -36,6 +36,11 @@ import {
 import { notifications } from "@mantine/notifications";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+} from "../../../utils/constants";
+import { showErrorToast } from "../../../utils/notifications";
 
 export const Slide = ({
   menuId,
@@ -147,6 +152,10 @@ export const Slide = ({
 
   const onChangePicture = (event: File) => {
     if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
+    }
     setSelectedImage({
       url: URL.createObjectURL(event),
       name: event.name,

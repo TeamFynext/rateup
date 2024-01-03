@@ -3,6 +3,8 @@ import Home from "../pages/Home";
 import { useRouter } from "next/router";
 import Reputation from "../pages/Reputation";
 import Menus from "../pages/Menus";
+import TermsOfService from "../pages/TermsOfService";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
 
 function HomePage() {
   const { pathname } = useRouter();
@@ -20,6 +22,13 @@ function HomePage() {
     case "/menus": {
       componentToBeRendered = <Menus />;
       break;
+    }
+    case "/terms-of-service": {
+      componentToBeRendered = <TermsOfService />;
+      break;
+    }
+    case "/privacy-policy": {
+      componentToBeRendered = <PrivacyPolicy />;
     }
   }
 

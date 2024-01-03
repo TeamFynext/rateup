@@ -79,10 +79,13 @@ export const ChoiceTypeQuestions = [
 
 export const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
 
-export const mimeTypesForImage = {
+export const mimeTypesForImage: { [key: string]: string } = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   png: "image/png",
   gif: "image/gif",
   webp: "image/webp",
 };
+
+export const MAX_FILE_SIZE_IN_MB = 10;
+export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;

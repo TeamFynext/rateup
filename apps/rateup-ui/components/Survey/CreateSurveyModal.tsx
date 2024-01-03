@@ -167,7 +167,6 @@ export function CreateSurveyModal({
         onSuccess: (data: CreateSurveyResponse) => {
           queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
           queryClient.invalidateQueries({ queryKey: ["surveys"] });
-          handleClose();
           if (data?.id) {
             router.push(`${router.pathname}/${data?.id}`);
           }

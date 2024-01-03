@@ -21,16 +21,3 @@ function LandingPageLayout({ children }) {
 }
 
 export default LandingPageLayout;
-
-{
-  /* 
-    <Header />
-    <HeroSection />
-    <OurSolutionsSection />
-    <OurFeaturesSection />
-    <Banner />
-    <TestimonialsSection />
-    <BookADemoSection />
-    <Footer /> 
-  */
-}

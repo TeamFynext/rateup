@@ -10,7 +10,16 @@ import FormModalLayout from "../Modal/FormModalLayout";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
 
-export function CreateMenuModal({ opened, close, editingItem }) {
+interface CreateMenuModalProps {
+  readonly opened: boolean;
+  readonly close: () => void;
+  readonly editingItem?: Menu;
+}
+export function CreateMenuModal({
+  opened,
+  close,
+  editingItem,
+}: CreateMenuModalProps) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const form = useForm({
     initialValues: editingItem || {
@@ -48,12 +57,7 @@ export function CreateMenuModal({ opened, close, editingItem }) {
     }
   }, [editingItem]);
 
-  const onSubmit = (values) => {
-    const validationRes = form.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
-      return;
-    }
+  const onSubmit = (values: typeof form.values) => {
     if (editingItem) {
       updateMenuMutation.mutate({
         menuId: editingItem.id,

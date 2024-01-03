@@ -64,7 +64,7 @@ export function MenuCard({
                   handleEditClick(menu);
                 }}
               />
-              <MenuCardMenu menuId={menu.id} teamId={menu.teamId} close />
+              <MenuCardMenu menuId={menu.id} teamId={menu.teamId} />
             </Group>
           </Flex>
           <Text size="lg">{menu.displayName}</Text>
@@ -90,7 +90,11 @@ export function MenuCard({
   );
 }
 
-function MenuCardMenu({ menuId, teamId, close }) {
+type MenuCardMenuProps = {
+  readonly menuId: string;
+  readonly teamId: string;
+};
+function MenuCardMenu({ menuId, teamId }: MenuCardMenuProps) {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
 
   const deleteMutation = useDeleteMenuMutation(

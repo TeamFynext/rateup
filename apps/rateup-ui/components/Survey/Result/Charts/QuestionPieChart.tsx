@@ -124,8 +124,20 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
       return { color: "lime", message: "Good" };
     } else if (score >= 50) {
       return { color: "orange", message: "Fair" };
-    } else {
+    } else if (score < 50) {
       return { color: "red", message: "Needs Improvement" };
+    } else {
+      return { color: "gray", message: "Neutral" };
+    }
+  };
+
+  const getNPSScoreColor = (score) => {
+    if (score < 0) {
+      return { color: "red", message: "Needs Improvement" };
+    } else if (score > 0) {
+      return { color: "green", message: "Good" };
+    } else {
+      return { color: "gray", message: "Neutral" };
     }
   };
 
@@ -143,35 +155,48 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
         <Badge variant="dot">{type}</Badge>
       </Flex>
       <Group justify="center">
-        <Stack style={{ flex: 1 }} align="center">
-          <PaperLayout miw={200} maw={230}>
-            <Stack align="center">
-              <Heading
-                title={`${responseCount}`}
-                titleprops={{ w: "fit-content" }}
-              />
-              <Text c={"dimmed"} fw={900} size="sm">
-                Responses
-              </Text>
-            </Stack>
-          </PaperLayout>
-          <PaperLayout miw={200} maw={230}>
-            <Stack align="center">
-              <Heading
-                title={`${data?.score?.toFixed(2) ?? 0}`}
-                titleprops={{ w: "fit-content" }}
-              />
-              <Text c={"dimmed"} fw={900} size="sm">
-                NPS Score
-              </Text>
-            </Stack>
-          </PaperLayout>
-        </Stack>
-        <Group style={{ flex: 3 }} align="center" justify="space-evenly">
+        <PaperLayout w={"fit-content"}>
+          <Stack align="center">
+            <Heading
+              title={`${responseCount}`}
+              titleprops={{ w: "fit-content" }}
+            />
+            <Text c={"dimmed"} fw={900} size="sm">
+              Responses
+            </Text>
+          </Stack>
+        </PaperLayout>
+        <Group style={{ flex: 1 }} align="center" justify="space-evenly">
           <Stack gap={0} align="center" w={250}>
             <RingProgress
               sections={[
-                { value: csatScore, color: getCSATColor(csatScore)?.color },
+                {
+                  value: Math.abs(data?.score),
+                  color: getNPSScoreColor(data?.score)?.color,
+                },
+              ]}
+              label={
+                <Text
+                  c={getNPSScoreColor(data?.score)?.color}
+                  fw={700}
+                  ta="center"
+                  size="xl"
+                >
+                  {Math.round(data?.score)} %
+                </Text>
+              }
+            />
+            <Text c="dimmed" fw={900} size="sm" ta="center">
+              NPS Score
+            </Text>
+          </Stack>
+          <Stack gap={0} align="center" w={250}>
+            <RingProgress
+              sections={[
+                {
+                  value: isNaN(csatScore) ? 0 : csatScore,
+                  color: getCSATColor(csatScore)?.color,
+                },
               ]}
               label={
                 <Text
@@ -180,12 +205,15 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
                   ta="center"
                   size="xl"
                 >
-                  {csatScore} %
+                  {isNaN(csatScore) ? 0 : csatScore} %
                 </Text>
               }
             />
             <Text c="dimmed" fw={900} size="sm" ta="center">
-              CSAT Score ( {getCSATColor(csatScore)?.message} )
+              CSAT Score{" "}
+              {isNaN(csatScore)
+                ? null
+                : `(${getCSATColor(csatScore)?.message})`}
             </Text>
           </Stack>
           <ResponsiveContainer height={280} width={300}>
