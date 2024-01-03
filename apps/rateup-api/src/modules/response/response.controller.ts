@@ -22,7 +22,7 @@ export async function getResponsesHandler(
   request: FastifyRequest<{
     Params: GetResponsesParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveyTeamMapId = request.params.surveyTeamMapId;
@@ -38,14 +38,14 @@ export async function getAllResponsesHandler(
   request: FastifyRequest<{
     Params: GetResponsesParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let session = await Session.getSession(request, reply);
     const userId = session.getUserId();
     const teamIds = await getTeamIdsByUserId(userId);
     const surveyId = request.params.surveyId;
-    const responses = await getAllResponses(surveyId,teamIds);
+    const responses = await getAllResponses(surveyId, teamIds);
     if (responses.length === 0)
       reply.code(404).send({ message: "No responses found" });
     reply.code(200).send(responses);
@@ -59,7 +59,7 @@ export async function resetResponsesHandler(
   request: FastifyRequest<{
     Params: GetResponsesParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveyTeamMapId = request.params.surveyTeamMapId;
@@ -75,7 +75,7 @@ export async function deleteResponseHandler(
   request: FastifyRequest<{
     Params: DeleteResponseParamsSchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const id = request.params.id;
@@ -91,7 +91,7 @@ export async function createResponseHandler(
   request: FastifyRequest<{
     Body: CreateResponseInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const data = request.body;
   try {
@@ -103,7 +103,7 @@ export async function createResponseHandler(
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
-      await sendEmailOnResponseCreation(data.surveyTeamMapId)
+      await sendEmailOnResponseCreation(data.surveyTeamMapId, response);
       const coords = (response.location as any)?.coordinates;
       const ip = getIp(request);
       let location = await fetchLocation(ip, coords);

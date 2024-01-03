@@ -1,4 +1,4 @@
-export function createEmailBodySurveyResponse(invite_link: string) {
+export function createEmailBodySurveyResponse(invite_link: string, body: any) {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -92,6 +92,14 @@ export function createEmailBodySurveyResponse(invite_link: string) {
             text-align: center;
             padding: 10px;
           }
+          ul{
+            margin: 4px;
+          }
+          .question-answer-body{
+            text-align: initial;
+            padding-left: 100px;
+            padding-block: 5px;
+          }
         </style>
       </head>
       <body style="max-width: 1000px;font-family: 'Lexend', sans-serif;">
@@ -126,18 +134,12 @@ export function createEmailBodySurveyResponse(invite_link: string) {
                     />
                   </td>
                 </tr>
-                <tr>
-                  <td>
-                    <p class="email-body">
-                    A new response has been submitted to the survey
-                    </p>
-                  </td>
-                </tr>
+                ${body}
                 <tr>
                   <td></td>
                 </tr>
                 <tr>
-                  <td>
+                <td>
                     <a href="${invite_link}" class="verify-btn" style="color: #e5e5ef">
                     View Response
                     </a>
