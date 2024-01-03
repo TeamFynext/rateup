@@ -87,7 +87,7 @@ function BackgroundStyles({
 
   const handleMobileBgFileChange = (value) => {
     if (!value) return;
-    setAspectRatio(4 / 3);
+    setAspectRatio(9 / 16);
     toggleMethodSelectionDialog();
     setImageType("mobileBackgroundImage");
     setSelectedTab("Mobile");
