@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
 
-const allowedMimeTypes = [
+export const allowedMimeTypes = [
   "image/jpeg",
   "image/png",
   "image/gif",
@@ -31,17 +31,17 @@ const fileDeleteInputSchema = z.object({
     .array(
       z.object({
         Key: z.string().trim().min(1),
-      })
+      }),
     )
     .min(1),
 });
 
-export const { schemas: uploadSchemas, $ref: $Rref } = buildJsonSchemas(
+export const { schemas: uploadSchemas, $ref: $Iref } = buildJsonSchemas(
   {
     uploadFileSchema,
     fileDeleteInputSchema,
   },
-  { $id: "uploadSchema" }
+  { $id: "uploadSchema" },
 );
 
 export type UploadFileInput = z.infer<typeof uploadFileSchema>;

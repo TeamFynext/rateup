@@ -3,21 +3,22 @@ import {
   deleteUploadedFileController,
   uploadController,
 } from "./fileUpload.controller";
-import { $Rref } from "./fileUpload.schema";
+import { $Iref } from "./fileUpload.schema";
 import FastifyMultipart from "@fastify/multipart";
 
 export async function fileUploadPublicRoutes(server: FastifyInstance) {
   server.register(FastifyMultipart, {
     limits: {
-      fileSize: 1048576 * 5,
+      fileSize: 1048576 * 10,
     },
+    throwFileSizeLimit: true,
   });
   server.post(
     "/file",
     {
-      //   schema: {
-      //     body: $Rref("uploadFileSchema"),
-      //   }
+      schema: {
+        consumes: ["multipart/form-data"],
+      },
       //TODO - fix schema for file upload
     },
     uploadController,
@@ -26,7 +27,7 @@ export async function fileUploadPublicRoutes(server: FastifyInstance) {
     "/file/delete",
     {
       schema: {
-        body: $Rref("fileDeleteInputSchema"),
+        body: $Iref("fileDeleteInputSchema"),
       },
     },
     deleteUploadedFileController,
