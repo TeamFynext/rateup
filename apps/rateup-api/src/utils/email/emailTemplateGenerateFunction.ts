@@ -19,8 +19,10 @@ export const generateAnswerHtml = (answer, type) => {
       listHtmlString += `<li>${key}: ${processedValue}</li>`;
     }
     return `<ul>${listHtmlString}</ul>`;
+  } else if (typeof answer === "object") {
+    return Object.values(answer)[0];
   } else if (type === "Photo") {
     return generateImageHtml(answer);
   }
-  return "";
+  return answer;
 };

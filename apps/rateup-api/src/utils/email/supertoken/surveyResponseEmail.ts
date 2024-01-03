@@ -97,8 +97,7 @@ export function createEmailBodySurveyResponse(invite_link: string, body: any) {
           }
           .question-answer-body{
             text-align: initial;
-            padding-left: 100px;
-            padding-block: 5px;
+            padding: 5px 0px 5px 100px;
           }
         </style>
       </head>
