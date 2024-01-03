@@ -1,11 +1,17 @@
 .header-container {
   margin-bottom: 4.375rem;
   border-bottom: 1px solid rgb(215, 215, 215);
+  box-shadow:
+    0 4px 8px 0 rgba(0, 0, 0, 0.1),
+    0 6px 20px 0 rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 400;
   background-color: white;
   align-items: center;
+  padding: 0 10%;
+  width: 100%;
+  max-width: 120rem;
 }
 
 .header-links-container {

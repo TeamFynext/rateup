@@ -5,6 +5,7 @@ import Reputation from "../pages/Reputation";
 import Menus from "../pages/Menus";
 import TermsOfService from "../pages/TermsOfService";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
+import ContactUs from "../pages/ContactUs";
 
 function HomePage() {
   const { pathname } = useRouter();
@@ -29,6 +30,11 @@ function HomePage() {
     }
     case "/privacy-policy": {
       componentToBeRendered = <PrivacyPolicy />;
+      break;
+    }
+    case "/contact-us": {
+      componentToBeRendered = <ContactUs />;
+      break;
     }
   }
 
