@@ -19,4 +19,18 @@ module.exports = withBundleAnalyzer({
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  async redirects() {
+    return [
+      {
+        source: "/shipping-and-delivery",
+        destination: "/terms-of-service#shipping-and-delivery",
+        permanent: false,
+      },
+      {
+        source: "/cancellation-and-refund",
+        destination: "/terms-of-service#cancellation-and-refund",
+        permanent: false,
+      },
+    ];
+  },
 });

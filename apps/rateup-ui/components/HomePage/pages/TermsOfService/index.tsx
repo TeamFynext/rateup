@@ -168,8 +168,45 @@ function TermsOfService() {
           </li>
         </ul>
       </section>
-      <section>
-        <h2>Cancellation and Termination</h2>
+      <section id="shipping-and-delivery">
+        <h2>Shipping and Delivery</h2>
+        <p>
+          <strong>Non-Physical Delivery: </strong>
+          RateUp provides a cloud-based SaaS solution. Consequently, there are
+          no physical goods shipped or delivered to the subscriber. All services
+          are accessible electronically.
+        </p>
+        <p>
+          <strong>Access to Services: </strong>
+          Upon successful subscription and payment, RateUp shall provide the
+          subscriber with necessary login credentials. These credentials will
+          allow the subscriber to access RateUp services via an
+          internet-connected device. No physical installation or additional
+          setup is required on the subscriber's part.
+        </p>
+        <p>
+          <strong>Support Services: </strong>
+          In the event of technical issues or the need for assistance, the
+          subscriber may contact RateUp's customer service team through
+          designated communication channels, including the website or email.
+          RateUp commits to a prompt response and resolution of subscriber
+          inquiries and issues.
+        </p>
+        <p>
+          <strong>Subscription and Billing: </strong>
+          RateUp's services are offered on a subscription basis. Charges shall
+          be automatically billed and collected at the commencement of each
+          billing cycle, consistent with the subscriber's chosen service plan.
+        </p>
+        <p>
+          <strong>Inquiries and Clarifications: </strong>
+          Subscribers are encouraged to contact RateUp for any inquiries or
+          clarifications regarding this Policy. RateUp commits to providing
+          timely and clear responses to assist subscribers.
+        </p>
+      </section>
+      <section id="cancellation-and-refund">
+        <h2>Cancellation, Refund and Termination</h2>
         <ul>
           <li>
             You must cancel Your account via www.rateup.app. An email or phone

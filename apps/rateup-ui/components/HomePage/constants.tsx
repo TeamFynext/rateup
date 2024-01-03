@@ -63,6 +63,18 @@ const footerNavLinks = [
     href: "/privacy-policy",
     linkText: "Privacy Policy",
   },
+  {
+    href: "/shipping-and-delivery",
+    linkText: "Shipping and Delivery",
+  },
+  {
+    href: "/cancellation-and-refund",
+    linkText: "Cancellation and Refund",
+  },
+  {
+    href: "/contact-us",
+    linkText: "Contact Us",
+  },
 ];
 
 export const getNavLinksArray = (className: string, isHeader: boolean) => {
