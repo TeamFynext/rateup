@@ -35,3 +35,12 @@
 html {
   scroll-behavior: smooth;
 }
+
+#shipping-and-delivery::before,
+#cancellation-and-refund::before {
+  content: "";
+  display: block;
+  height: 111px;
+  margin-top: -111px;
+  visibility: hidden;
+}

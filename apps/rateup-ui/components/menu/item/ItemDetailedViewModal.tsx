@@ -21,7 +21,7 @@ export function ItemDetailedViewModal({
   currency = "0",
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    (item?.videoUrl ?? String(item?.images[0])) as string,
+    item?.videoUrl?.length === 0 ? (item?.images[0] as string) : item?.videoUrl,
   );
   const smallScreen = useMediaQuery("(max-width: 30em)");
 

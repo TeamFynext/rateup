@@ -20,7 +20,7 @@ function Footer() {
         {getNavLinksArray(styles["footer-link"], false)}
       </Flex>
       <Text className={styles["copyright-para"]}>
-        Copyright &copy;2023 All rights reserved
+        Copyright &copy;{new Date().getFullYear()} All rights reserved
       </Text>
 
       <Flex className={styles["curved-background"]}></Flex>

@@ -54,7 +54,6 @@ export function ItemDisplay({
                 : fallbackImage
             }
             style={{
-              aspectRatio: "4 / 3",
               backgroundColor: "var(--orange-400)",
             }}
             opacity={item?.disabled || categoryDisabled ? 0.5 : 1}

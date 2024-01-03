@@ -1,12 +1,6 @@
-.homepage-footer-curved-background-image-styles {
-  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/footer-background-shape.svg");
-  background-repeat: no-repeat;
-  background-position: left 100%;
-  background-size: 100% 650px;
-}
-
 .home-page-container {
-  composes: homepage-footer-curved-background-image-styles;
+  overflow-x: hidden;
+  padding-top: 180px;
 }
 
 .home-page-mantine-container {
@@ -18,30 +12,13 @@
 @media screen and (min-width: 120rem) {
   .home-page-container {
     background-position: center bottom;
-    background-size: 1920px 600px;
+    background-size: 1920px 700px;
   }
 
   .home-page-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
-  }
-}
-
-@media screen and (max-width: 950px) {
-  .homepage-footer-curved-background-image-styles {
-    background-position: center 100%;
-    background-size: 210% 600px;
-  }
-}
-
-@media screen and (max-width: 700px) {
-  .homepage-footer-curved-background-image-styles {
-    background-size: 210% 690px;
-  }
-}
-
-@media screen and (max-width: 425px) {
-  .homepage-footer-curved-background-image-styles {
-    background-size: 250% 640px;
+    align-items: center;
   }
 }
