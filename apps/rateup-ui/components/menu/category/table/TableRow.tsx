@@ -40,14 +40,13 @@ const TableRow = ({
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
         <Image
-          style={{ borderRadius: "4px", aspectRatio: "1/1" }}
+          style={{ borderRadius: "4px", aspectRatio: "4/3" }}
           src={
             item?.images?.length > 0
               ? getFileUrlFromKey(item?.images[0])
               : fallbackImage
           }
           alt={item?.name}
-          h={100}
           w={100}
         />
       </Table.Td>

@@ -291,7 +291,7 @@ export function CreateMenuItemModal({
       centered
       onSubmit={form.onSubmit(onSubmit)}
       buttonTitle={editingItem ? "Save Item" : "Create Item"}
-      size={"lg"}
+      size={"xl"}
     >
       <Flex>
         <UnsplashModal
@@ -334,6 +334,7 @@ export function CreateMenuItemModal({
                   style={{
                     aspectRatio: 4 / 3,
                   }}
+                  w={"100%"}
                 />
                 <Center mt="xs">
                   <Button
@@ -369,9 +370,7 @@ export function CreateMenuItemModal({
                     : String(image)
                 }
                 src={getImageValue(image)}
-                w={50}
                 h={50}
-                miw={50}
                 fallbackSrc={fallbackImage}
                 alt="thumbnail image of menu item"
               />
