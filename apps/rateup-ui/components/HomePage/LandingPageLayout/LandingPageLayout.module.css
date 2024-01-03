@@ -1,18 +1,10 @@
-.homepage-footer-curved-background-image-styles {
-  /* background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/footer-background-shape.svg"); */
-  background-repeat: no-repeat;
-  background-position: center 100%;
-  background-size: 175% 700px;
-}
-
 .home-page-container {
-  /* composes: homepage-footer-curved-background-image-styles; */
   overflow-x: hidden;
+  padding-top: 180px;
 }
 
 .home-page-mantine-container {
   padding: 0 10%;
-  composes: homepage-footer-curved-background-image-styles;
 }
 
 /* Media Queries */
