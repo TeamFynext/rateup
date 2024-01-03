@@ -6,10 +6,13 @@ import Menus from "../pages/Menus";
 import TermsOfService from "../pages/TermsOfService";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import ContactUs from "../pages/ContactUs";
+import AboutUs from "../pages/AboutUs";
 
 function HomePage() {
   const { pathname } = useRouter();
   let componentToBeRendered: React.ReactNode;
+
+  let lanadingPageLayoutClassName = "";
 
   switch (pathname) {
     case "/": {
@@ -36,9 +39,18 @@ function HomePage() {
       componentToBeRendered = <ContactUs />;
       break;
     }
+    case "/about-us": {
+      lanadingPageLayoutClassName = "about-us-landing-page-layout";
+      componentToBeRendered = <AboutUs />;
+      break;
+    }
   }
 
-  return <LandingPageLayout>{componentToBeRendered}</LandingPageLayout>;
+  return (
+    <LandingPageLayout className={lanadingPageLayoutClassName}>
+      {componentToBeRendered}
+    </LandingPageLayout>
+  );
 }
 
 export default HomePage;

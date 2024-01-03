@@ -60,3 +60,9 @@
     height: 120%;
   }
 }
+
+@media screen and (min-width: 120rem) {
+  .footer-root-div {
+    padding: 0 192px;
+  }
+}

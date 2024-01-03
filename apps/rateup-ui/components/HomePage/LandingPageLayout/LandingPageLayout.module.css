@@ -1,6 +1,6 @@
 .home-page-container {
   overflow-x: hidden;
-  padding-top: 180px;
+  padding-top: 111px;
 }
 
 .home-page-mantine-container {
@@ -20,5 +20,9 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  .home-page-mantine-container {
+    padding: 0 192px;
   }
 }
