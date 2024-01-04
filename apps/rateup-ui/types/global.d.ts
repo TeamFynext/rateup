@@ -355,6 +355,7 @@ declare global {
     categoryId: string;
     itemOrder?: number;
     disabled?: boolean;
+    foodLabels?: Array<string>;
   };
 
   type MenuBanner = {

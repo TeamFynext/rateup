@@ -16,6 +16,8 @@ import {
   ColorInputProps,
   ActionIcon,
   rem,
+  MultiSelect,
+  MultiSelectProps,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
 import { TimeInput, TimeInputProps } from "@mantine/dates";
@@ -75,6 +77,20 @@ export function ContainedTimeInput(props: Readonly<TimeInputProps>) {
       rightSection={isChrome && pickerControl}
       classNames={classes}
       {...props}
+    />
+  );
+}
+export function ContainedMultiSelect(props: MultiSelectProps) {
+  return (
+    <MultiSelect
+      searchable
+      hidePickedOptions
+      {...props}
+      styles={{
+        input: {
+          borderRadius: "12px",
+        },
+      }}
     />
   );
 }
