@@ -25,7 +25,7 @@ export async function createSurvey(
   delete input.teamIds;
 
   if(templateId){
-    cloneSurvey(
+   return cloneSurvey(
       templateId,
       createdBy,
       data.teamIds,
