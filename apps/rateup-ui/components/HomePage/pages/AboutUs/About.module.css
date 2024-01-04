@@ -1,2 +1,9 @@
-.about-us-container {
+.page-content {
+  padding: 0 10%;
+}
+
+@media screen and (min-width: 120rem) {
+  .page-content {
+    padding: 0 192px;
+  }
 }
