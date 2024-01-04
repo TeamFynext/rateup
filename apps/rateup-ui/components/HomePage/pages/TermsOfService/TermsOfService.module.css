@@ -1,6 +1,7 @@
 .terms-of-service-container {
   color: var(--grey-color);
   margin-bottom: 6.25rem;
+  margin-top: 4.375rem;
 }
 
 .terms-of-service-container > h1 {

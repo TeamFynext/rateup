@@ -121,3 +121,9 @@
     flex: 1 1 auto;
   }
 }
+
+@media screen and (min-width: 120rem) {
+  .header-container {
+    padding: 0 192px;
+  }
+}

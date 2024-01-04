@@ -4,19 +4,19 @@ import BookADemoSection from "../components/BookADemoSection";
 import Footer from "../components/Footer";
 import styles from "./LandingPageLayout.module.css";
 
-function LandingPageLayout({ children }) {
+function LandingPageLayout({ children, className = "" }) {
   return (
-    <div className={styles["home-page-container"]}>
+    <div className={`${styles["home-page-container"]} ${className}`}>
       <Header />
 
       <Container
-        className={styles["home-page-mantine-container"]}
+        className={`${styles["home-page-mantine-container"]} home-page-mantine-container`}
         size={"120rem"}
       >
         {children}
-        <BookADemoSection />
       </Container>
 
+      <BookADemoSection />
       <Footer />
     </div>
   );
