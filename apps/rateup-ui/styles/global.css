@@ -14,6 +14,8 @@
   --shade-of-blue-2: #3f5ba9;
   --shade-of-blue-3: #00397b;
   --shade-of-blue-4: #225fa4;
+  --shade-of-blue-5: #2564ae;
+  --shade-of-blue-6: #d6e9ff;
   --grey-color: #494949;
   --grey-color-2: #73737a;
   --grey-color-3: #595959;
@@ -43,4 +45,9 @@ html {
   height: 111px;
   margin-top: -111px;
   visibility: hidden;
+}
+
+.about-us-landing-page-layout .home-page-mantine-container {
+  padding: 0;
+  width: 100%;
 }

@@ -44,7 +44,7 @@ const headerNavLinks = [
     linkText: "Features",
   },
   {
-    href: "/",
+    href: "/about-us",
     linkText: "About Us",
   },
   // {

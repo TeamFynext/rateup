@@ -1,6 +1,7 @@
 .contact-us-container {
   margin-bottom: 6.25rem;
   color: var(--grey-color);
+  margin-top: 4.375rem;
 }
 
 .contact-us-container > h1 {
