@@ -94,6 +94,14 @@ export function ItemDisplay({
             >
               {item?.name}
             </Text>
+            <ScrollArea
+              h={"30px"}
+              w={"clamp(100px, 28.576px + 11.905vw, 200px)"}
+            >
+              <Flex gap={4}>
+                <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} p={0} />
+              </Flex>
+            </ScrollArea>
             <Text
               fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
               lineClamp={3}
@@ -101,14 +109,6 @@ export function ItemDisplay({
             >
               {item?.description}
             </Text>
-            <ScrollArea
-              h={"30px"}
-              w={"clamp(100px, 78.8736px + 5.6338vw, 160px);"}
-            >
-              <Flex gap={4}>
-                <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} p={0} />
-              </Flex>
-            </ScrollArea>
             <Flex justify="space-evenly" gap={"sm"}>
               {item?.price?.variants?.length > 0 ? (
                 item?.price?.variants.map((varient, index) => (

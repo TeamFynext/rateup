@@ -1,13 +1,4 @@
-import {
-  Box,
-  Flex,
-  Group,
-  Image,
-  Modal,
-  ScrollArea,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Box, Flex, Group, Image, Modal, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -163,6 +154,14 @@ export function ItemDetailedViewModal({
           <Text fz="xl" fw={600} tt={"capitalize"} ta={"center"}>
             {item.name}
           </Text>
+          <Flex
+            gap={4}
+            wrap={"wrap"}
+            w={"clamp(220px, 163.6624px + 15.0235vw, 380px)"}
+            my={4}
+          >
+            <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
+          </Flex>
           <Text
             maw={"350px"}
             h="100px"
@@ -174,14 +173,6 @@ export function ItemDetailedViewModal({
             {item.description}
           </Text>
         </Box>
-        <ScrollArea
-          h={"30px"}
-          w={"clamp(168px, 133.1408px + 9.2958vw, 267px);"}
-        >
-          <Flex gap={4}>
-            <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
-          </Flex>
-        </ScrollArea>
         <Group justify="space-evenly" gap={"sm"}>
           {item.price.variants?.length > 0 ? (
             item.price.variants.map((varient, index) => (

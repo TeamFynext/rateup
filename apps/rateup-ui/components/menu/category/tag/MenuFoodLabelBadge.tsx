@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@mantine/core";
-import { menuLabel } from "../../util/menuLabelData";
+import { menuLabelWithText } from "../../util/menuLabelData";
 
 type MenuFoodLabelBadgeProps = {
   foodLabels: string[];
@@ -12,7 +12,7 @@ const MenuFoodLabelBadge = ({
 }: MenuFoodLabelBadgeProps) => {
   const response = foodLabels?.map((data: string) => (
     <Badge variant="light" color="blue" key={data} p={p}>
-      {menuLabel.find((item) => item.value === data)?.label}
+      {menuLabelWithText.find((item) => item.value === data)?.label}
     </Badge>
   ));
 

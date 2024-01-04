@@ -4,7 +4,6 @@ import {
   Box,
   Flex,
   Image,
-  SimpleGrid,
   Stack,
   Table,
   Text,
@@ -92,9 +91,9 @@ const TableRow = ({
         </Anchor>
       </Table.Td>
       <Table.Td>
-        <SimpleGrid cols={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={5}>
+        <Flex maw={"300px"} wrap={"wrap"} gap={4}>
           <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
-        </SimpleGrid>
+        </Flex>
       </Table.Td>
       <Table.Td>
         <Flex maw="100px" h="100px" align="center" gap={"lg"} mr={"sm"}>
