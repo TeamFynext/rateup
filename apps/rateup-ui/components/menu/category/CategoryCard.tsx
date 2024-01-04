@@ -20,6 +20,7 @@ const tableColumns = [
   "price",
   "description",
   "video URL",
+  "Food Labels",
   "Actions",
   "Swap Order",
 ];

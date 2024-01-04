@@ -1,4 +1,4 @@
-import { Box, Group, Image, Modal, Stack, Text } from "@mantine/core";
+import { Box, Flex, Group, Image, Modal, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -9,6 +9,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { lexend } from "../../../utils/fonts";
 import { currencyLabel } from "../util/currencyData";
 import { fallbackImage } from "../../../utils/constants";
+import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -153,6 +154,14 @@ export function ItemDetailedViewModal({
           <Text fz="xl" fw={600} tt={"capitalize"} ta={"center"}>
             {item.name}
           </Text>
+          <Flex
+            gap={4}
+            wrap={"wrap"}
+            w={"clamp(220px, 163.6624px + 15.0235vw, 380px)"}
+            my={4}
+          >
+            <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
+          </Flex>
           <Text
             maw={"350px"}
             h="100px"

@@ -23,6 +23,7 @@ import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { notifications } from "@mantine/notifications";
 import { currencyLabel } from "../../util/currencyData";
 import { fallbackImage } from "../../../../utils/constants";
+import MenuFoodLabelBadge from "../tag/MenuFoodLabelBadge";
 
 const TableRow = ({
   item,
@@ -88,6 +89,11 @@ const TableRow = ({
         <Anchor href={item?.videoUrl} target="_blank">
           {item?.videoUrl}
         </Anchor>
+      </Table.Td>
+      <Table.Td>
+        <Flex maw={"300px"} wrap={"wrap"} gap={4}>
+          <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
+        </Flex>
       </Table.Td>
       <Table.Td>
         <Flex maw="100px" h="100px" align="center" gap={"lg"} mr={"sm"}>

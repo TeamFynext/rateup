@@ -37,6 +37,7 @@ import {
   fallbackImage,
 } from "../../utils/constants";
 import { showErrorToast } from "../../utils/notifications";
+import { menuLabelWithText } from "./util/menuLabelData";
 
 interface CreateMenuCategoryModalProps {
   readonly opened: boolean;

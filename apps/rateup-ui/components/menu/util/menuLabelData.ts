@@ -1,0 +1,18 @@
+export const menuLabelWithText = [
+  { label: "🥩 Beef", value: "Beef" },
+  { label: "🥚 Egg", value: "Egg" },
+  { label: "🐟 Fish", value: "Fish" },
+  { label: "🚫🌾Gluten-free", value: "Gluten-free" },
+  { label: "🍖 Meat", value: "Meat" },
+  { label: "🥛 Milk", value: "Milk" },
+  { label: "🥜 Peanut", value: "Peanut" },
+  { label: "🐖 Pork", value: "Pork" },
+  { label: "🐔 Poultry", value: "Poultry" },
+  { label: "🌱 Sesame", value: "Sesame" },
+  { label: "🦞 Shellfish", value: "Shellfish" },
+  { label: "🌱 Soy", value: "Soy" },
+  { label: "🌰 Tree nuts", value: "Tree nuts" },
+  { label: "🌿 Vegan", value: "Vegan" },
+  { label: "🥦 Vegetarian", value: "Vegetarian" },
+  { label: "🌾 Wheat", value: "Wheat" },
+];

@@ -26,6 +26,7 @@ import { showErrorToast } from "../../utils/notifications";
 import { MenuItemPriceType } from "../../types/enums";
 import FormModalLayout from "../Modal/FormModalLayout";
 import {
+  ContainedMultiSelect,
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
@@ -39,6 +40,7 @@ import {
   fallbackImage,
 } from "../../utils/constants";
 import { PriceSection } from "./item/PriceSection";
+import { menuLabelWithText } from "./util/menuLabelData";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -97,6 +99,7 @@ export function CreateMenuItemModal({
         ],
         type: MenuItemPriceType.FIXED,
       },
+      foodLabels: [],
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
@@ -425,6 +428,12 @@ export function CreateMenuItemModal({
             {...form.getInputProps("description")}
           />
           <PriceSection form={form} currency={currency ?? "0"} />
+          <ContainedMultiSelect
+            label="Select Food Label"
+            placeholder="Choose a label"
+            data={menuLabelWithText}
+            {...form.getInputProps("foodLabels")}
+          />
         </Stack>
       </Flex>
     </FormModalLayout>

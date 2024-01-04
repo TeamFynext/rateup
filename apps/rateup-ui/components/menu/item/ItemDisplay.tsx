@@ -4,6 +4,7 @@ import {
   Flex,
   Group,
   Paper,
+  ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
@@ -13,6 +14,7 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { lexend } from "../../../utils/fonts";
 import { currencyLabel } from "../util/currencyData";
 import { fallbackImage } from "../../../utils/constants";
+import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 
 interface ItemDisplayProps {
   readonly item: any;
@@ -92,6 +94,14 @@ export function ItemDisplay({
             >
               {item?.name}
             </Text>
+            <ScrollArea
+              h={"30px"}
+              w={"clamp(100px, 28.576px + 11.905vw, 200px)"}
+            >
+              <Flex gap={4}>
+                <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} p={0} />
+              </Flex>
+            </ScrollArea>
             <Text
               fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
               lineClamp={3}
