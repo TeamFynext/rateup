@@ -12,7 +12,7 @@ function HomePage() {
   const { pathname } = useRouter();
   let componentToBeRendered: React.ReactNode;
 
-  let lanadingPageLayoutClassName = "";
+  let landingPageLayoutClassName = "";
 
   switch (pathname) {
     case "/": {
@@ -40,14 +40,14 @@ function HomePage() {
       break;
     }
     case "/about-us": {
-      lanadingPageLayoutClassName = "about-us-landing-page-layout";
+      landingPageLayoutClassName = "about-us-landing-page-layout";
       componentToBeRendered = <AboutUs />;
       break;
     }
   }
 
   return (
-    <LandingPageLayout className={lanadingPageLayoutClassName}>
+    <LandingPageLayout className={landingPageLayoutClassName}>
       {componentToBeRendered}
     </LandingPageLayout>
   );
