@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ContainedTextField,
   ContainedTextArea,
+  ContainedMultiSelect,
 } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { PriceSection } from "../item/PriceSection";
@@ -41,6 +42,7 @@ import {
   MAX_FILE_SIZE_IN_MB,
 } from "../../../utils/constants";
 import { showErrorToast } from "../../../utils/notifications";
+import { menuLabelWithText } from "../util/menuLabelData";
 
 export const Slide = ({
   menuId,
@@ -86,6 +88,7 @@ export const Slide = ({
         ],
         type: MenuItemPriceType.FIXED,
       },
+      foodLabels: [],
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
@@ -230,6 +233,12 @@ export const Slide = ({
               {...form.getInputProps("description")}
             />
             <PriceSection form={form} currency={currency ?? "0"} />
+            <ContainedMultiSelect
+              label="Select Food Label"
+              placeholder="Choose a label"
+              data={menuLabelWithText}
+              {...form.getInputProps("foodLabels")}
+            />
           </Stack>
           <Stack align="center">
             <Group w={"100%"} justify="space-between" gap={0}>
