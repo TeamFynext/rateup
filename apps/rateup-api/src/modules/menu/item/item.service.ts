@@ -22,6 +22,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
     price: data?.price,
     images: data?.images,
     videoUrl: data?.videoUrl,
+    foodLabels: data?.foodLabels,
   };
 
   if (existingMenuData) {
@@ -69,7 +70,7 @@ export async function updateMenuItem(id: string, data: UpdateMenuItemInput) {
 
 export async function sortMenuItem(
   categoryId: string,
-  data: SortMenuCategoryInput
+  data: SortMenuCategoryInput,
 ) {
   let index = 0;
   let { itemOrder = [] } = data;
@@ -118,7 +119,7 @@ export async function deleteMenuItem(id: string) {
 }
 export async function createMenuItemUsingCsv(
   data: MultipartFile,
-  menuId: string
+  menuId: string,
 ) {
   const requiredHeaders = ["categoryname", "name", "description", "price"];
   const content = await data.toBuffer();
@@ -135,8 +136,8 @@ export async function createMenuItemUsingCsv(
 
   const filteredDatas = results.data.filter((row) =>
     requiredHeaders.every(
-      (header) => header in row && row[header] !== undefined
-    )
+      (header) => header in row && row[header] !== undefined,
+    ),
   );
   for await (const filteredData of filteredDatas) {
     let category = await prisma.menuCategory.findFirst({

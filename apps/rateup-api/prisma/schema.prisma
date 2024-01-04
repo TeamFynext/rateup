@@ -204,7 +204,7 @@ model SurveyLanding {
 model SurveyResponse {
   id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt       DateTime         @default(now())
-  surveyTeamMap   SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id],onDelete: Cascade)
+  surveyTeamMap   SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId String           @db.Uuid
   responses       Json[]
   language        String           @default("")
@@ -224,7 +224,7 @@ model SurveyResponse {
 
 model SurveyStats {
   id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyTeamMap   SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id],onDelete: Cascade)
+  surveyTeamMap   SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId String        @unique @db.Uuid
   visited         Int           @default(0)
   started         Int           @default(0)
@@ -358,23 +358,23 @@ model WelcomeTheme {
 }
 
 model Menu {
-  id                            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                     DateTime       @default(now())
-  name                          String // name of the menu
-  displayName                   String // name displayed to clients (eg: Restaurant's Name)
-  locationText                  String? // location of the restaurant
-  locationUrl                   String? // google maps url
-  websiteUrl                    String? // website url
-  websiteText                   String? // text to display for website url
-  logo                          String? // logo url
-  isPublished                   Boolean        @default(false)
-  categories                    MenuCategory[]
-  team                          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                        String         @db.Uuid
-  menuLanding                   MenuLanding?
-  currency                      String         @default("0")
-  menuBanner                    MenuBanner[]
-  shareSettings                 Json?
+  id                      String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime       @default(now())
+  name                    String // name of the menu
+  displayName             String // name displayed to clients (eg: Restaurant's Name)
+  locationText            String? // location of the restaurant
+  locationUrl             String? // google maps url
+  websiteUrl              String? // website url
+  websiteText             String? // text to display for website url
+  logo                    String? // logo url
+  isPublished             Boolean        @default(false)
+  categories              MenuCategory[]
+  team                    Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                  String         @db.Uuid
+  menuLanding             MenuLanding?
+  currency                String         @default("0")
+  menuBanner              MenuBanner[]
+  shareSettings           Json?
   hideUnavailableCategory Boolean        @default(false)
 }
 
@@ -404,6 +404,7 @@ model MenuItem {
   disabled    Boolean      @default(false)
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId  String       @db.Uuid
+  foodLabels  String[]     @default([])
 }
 
 //homepage contact form
@@ -511,6 +512,7 @@ model MenuBanner {
   price       Json
   menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId      String   @db.Uuid
+  foodLabels  String[] @default([])
 }
 
 model Subscription {

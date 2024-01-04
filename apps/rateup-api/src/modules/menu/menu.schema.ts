@@ -70,6 +70,7 @@ const fullMenuPublicResponseSchema = z.object({
           videoUrl: z.string().optional(),
           price: z.any(),
           disabled: z.boolean()?.optional(),
+          foodLabels: z.array(z.string()).optional(),
         }),
       ),
     }),
