@@ -98,6 +98,7 @@ export default function ({ fullMenu, menuBanner }) {
                   videoUrl: value?.videoUrl,
                   categoryId: value?.menuId,
                   createdAt: value?.createdAt,
+                  foodLabels: value?.foodLabels,
                 });
               }}
               style={{
