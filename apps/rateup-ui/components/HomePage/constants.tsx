@@ -47,6 +47,10 @@ const headerNavLinks = [
     href: "/about-us",
     linkText: "About Us",
   },
+  {
+    href: "/pricing",
+    linkText: "Pricing",
+  },
   // {
   //   href: "/",
   //   linkText: "Blog",
