@@ -7,6 +7,7 @@ import TermsOfService from "../pages/TermsOfService";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import ContactUs from "../pages/ContactUs";
 import AboutUs from "../pages/AboutUs";
+import Pricing from "../pages/Pricing";
 
 function HomePage() {
   const { pathname } = useRouter();
@@ -42,6 +43,10 @@ function HomePage() {
     case "/about-us": {
       landingPageLayoutClassName = "about-us-landing-page-layout";
       componentToBeRendered = <AboutUs />;
+      break;
+    }
+    case "/pricing": {
+      componentToBeRendered = <Pricing />;
       break;
     }
   }
