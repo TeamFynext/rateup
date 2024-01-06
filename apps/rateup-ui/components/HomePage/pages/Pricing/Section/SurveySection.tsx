@@ -5,7 +5,8 @@ import { NumberAnimate } from "../Animate/NumberAnimate";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants";
 
-export const SurveySection = ({ largeScreen, price }) => {
+export const SurveySection = ({ largeScreen, price, checked }) => {
+  const durationType = checked ? "year" : "month";
   return (
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
       <Card shadow="sm" padding="lg" radius="lg" w={CardWidth} mt={"xl"}>
@@ -28,7 +29,7 @@ export const SurveySection = ({ largeScreen, price }) => {
             </sup>
             <NumberAnimate value={price?.essentials} />
           </Text>
-          <Text>/month</Text>
+          <Text>/{durationType}</Text>
         </Center>
         <Center>
           <RateupButtonPrimary
@@ -85,7 +86,7 @@ export const SurveySection = ({ largeScreen, price }) => {
               </sup>
               <NumberAnimate value={price?.plus} />
             </Text>
-            <Text>/month</Text>
+            <Text>/{durationType}</Text>
           </Center>
           <Center>
             <RateupButtonPrimary

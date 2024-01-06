@@ -90,7 +90,7 @@ const Pricing = () => {
           />
           <Stack gap={0} fz={"clamp(14px, 12.576px + 0.238vw, 16px)"}>
             <Text
-              c={"var(--light-grey-color-4)"}
+              c={"var(--light-grey-color-5)"}
               ff={lexend300.style.fontFamily}
             >
               Subscribe Anually
@@ -111,12 +111,17 @@ const Pricing = () => {
           transition={{ duration: 0.2 }}
         >
           {value === "Surveys" ? (
-            <SurveySection largeScreen={largeScreen} price={price} />
+            <SurveySection
+              largeScreen={largeScreen}
+              price={price}
+              checked={checked}
+            />
           ) : (
             <MenuSection
               largeScreen={largeScreen}
               price={price}
               BlueGradient={BlueGradient}
+              checked={checked}
             />
           )}
         </motion.div>
