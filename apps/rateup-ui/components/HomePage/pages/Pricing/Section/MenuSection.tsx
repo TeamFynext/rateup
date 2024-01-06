@@ -15,8 +15,9 @@ import PaperLayout from "../../../../styled/Layouts/PaperLayout";
 import { Title1, Title2, Title3, Title4 } from "../Utils/constants";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 
-export const MenuSection = ({ largeScreen, price, BlueGradient }) => {
+export const MenuSection = ({ largeScreen, price, BlueGradient, checked }) => {
   const [addonEnabled, setAddonEnabled] = useState(false);
+  const durationType = checked ? "year" : "month";
   return (
     <Stack my={"lg"}>
       <PaperLayout
@@ -51,7 +52,7 @@ export const MenuSection = ({ largeScreen, price, BlueGradient }) => {
                 <NumberAnimate value={price?.menu} />
               </Text>
               <Text variant="gradient" gradient={BlueGradient}>
-                /month
+                /{durationType}
               </Text>
             </Group>
             <Stack ff={lexend300.style.fontFamily} gap={5}>
@@ -92,7 +93,7 @@ export const MenuSection = ({ largeScreen, price, BlueGradient }) => {
                       <NumberAnimate value={price?.surveyAddon} />
                     </Text>
                     <Text variant="gradient" gradient={BlueGradient}>
-                      /month
+                      /{durationType}
                     </Text>
                   </Group>
                 </Group>
@@ -136,7 +137,7 @@ export const MenuSection = ({ largeScreen, price, BlueGradient }) => {
                   />
                 </Text>
                 <Text variant="gradient" gradient={BlueGradient}>
-                  /month
+                  /{durationType}
                 </Text>
               </Group>
               <Center>
