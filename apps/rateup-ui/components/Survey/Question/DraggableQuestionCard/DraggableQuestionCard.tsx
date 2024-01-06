@@ -52,7 +52,7 @@ export function DraggableQuestionCard({
   });
 
   const handleDelete = (e, qId) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
   return (
