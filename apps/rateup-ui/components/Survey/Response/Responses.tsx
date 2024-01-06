@@ -45,6 +45,7 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PreviewModal from "../../Modal/PreviewModal";
 import { ChoiceTypeQuestions } from "../../../utils/constants";
+import { HoverCardComponent } from "../HoverCard/HoverCard";
 
 const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const [responseCount, setResponseCount] = useState(0);
@@ -197,10 +198,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
                         </Text>
                       </Table.Td>
                       {questions?.map((q) => (
-                        <Table.Td
-                          key={q?.id}
-                          title={getResponse(q?.id, response)}
-                        >
+                        <Table.Td key={q?.id}>
                           <BadgeorTextorPreview
                             questionType={q?.type}
                             response={getResponse(q?.id, response)}
@@ -365,10 +363,6 @@ function BadgeorTextorPreview({
       </Badge>
     );
   } else {
-    return (
-      <Text c="dark.3" truncate="end" miw={200} maw={200}>
-        {response}
-      </Text>
-    );
+    return <HoverCardComponent content={response} />;
   }
 }
