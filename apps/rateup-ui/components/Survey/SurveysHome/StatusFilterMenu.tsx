@@ -10,8 +10,9 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
           color="rgba(13, 13, 13, 1)"
           radius="xl"
           rightSection={<IconChevronDown size="1rem" />}
+          tt={"capitalize"}
         >
-          Status
+          {filterParam ?? "Status"}
         </Button>
       </Menu.Target>
 

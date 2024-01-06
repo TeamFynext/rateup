@@ -16,7 +16,6 @@ export default function PaperLayout(props: PaperLayoutProps) {
       p="md"
       {...restProps}
       style={{
-        ...props?.style,
         boxSizing: "border-box",
         boxShadow: selected
           ? "rgba(0, 0, 0, 0.05) 0px 1px 0px, rgba(0, 0, 0, 0.11) 0px 0px 8px"
@@ -28,6 +27,7 @@ export default function PaperLayout(props: PaperLayoutProps) {
             ? "2px solid var(--hover-border-color)"
             : "2px solid var(--primary-color)",
         cursor: hoveractive ? "pointer" : "default",
+        ...props?.style,
       }}
     />
   );
