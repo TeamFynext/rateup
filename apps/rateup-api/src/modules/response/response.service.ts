@@ -44,6 +44,7 @@ export async function getAllResponses(
           language: true,
           tag: true,
           responses: true,
+          createdAt: true,
         },
       },
     },
