@@ -17,21 +17,15 @@ const secretPassphrase = "rateup-#$%^@#-passphrase";
 export async function createSurvey(
   data: CreateSurveyInput,
   createdBy: string,
-  notificationEmail: string
+  notificationEmail: string,
 ) {
-
-  const {templateId, ...input} = data;
+  const { templateId, ...input } = data;
   const teamIds = input?.teamIds?.map((teamId) => ({ teamId }));
   delete input.teamIds;
 
-  if(templateId){
-   return cloneSurvey(
-      templateId,
-      createdBy,
-      data.teamIds,
-      true
-    )    
-  }else{
+  if (templateId) {
+    return cloneSurvey(templateId, createdBy, data.teamIds, true);
+  } else {
     const survey = await prisma.survey.create({
       data: {
         ...input,
@@ -44,12 +38,11 @@ export async function createSurvey(
         },
       },
     });
-  
-  
+
     //-------------create a default landing page theme todo-------------
-  
+
     let landingData = defaultTheme;
-  
+
     let LandingPage = await prisma.welcomeTheme.create({
       data: {
         ...landingData,
@@ -67,18 +60,17 @@ export async function createSurvey(
         bgType: landingData.bgType,
       },
     });
-  
+
     let surveyRes = { ...survey, teamIds: input?.teamIds };
-  
+
     return surveyRes;
   }
-
 }
 
 //----------------create survey landing-----------------
 export async function createSurveyLanding(
   input: CreateSurveyLandingInput,
-  createdBy: string
+  createdBy: string,
 ) {
   const Landing = await prisma.surveyLanding.create({
     data: {
@@ -114,7 +106,7 @@ export async function createSurveyLanding(
 //----------------update survey landing page details-----------------
 export async function updateSurveyLanding(
   id,
-  input: UpdateLandingPageInput
+  input: UpdateLandingPageInput,
   // createdBy: string
 ) {
   const Landing = await prisma.surveyLanding.update({
@@ -130,7 +122,7 @@ export async function cloneSurvey(
   surveyId: string,
   userId: string,
   teamIds: string[],
-  fromTemplate: boolean = false
+  fromTemplate: boolean = false,
 ) {
   const survey = await prisma.survey.findUnique({
     where: {
@@ -167,7 +159,7 @@ export async function cloneSurvey(
         const copyNumberStr = suffix.slice(" Copy ".length);
         const copyNumber = parseInt(copyNumberStr, 10);
         console.log(
-          `Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`
+          `Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`,
         );
         if (!isNaN(copyNumber)) {
           maxCopyNumber = Math.max(maxCopyNumber, copyNumber);
@@ -183,7 +175,9 @@ export async function cloneSurvey(
       createdBy: userId,
       createdAt: new Date(),
       updatedAt: null,
-      title: fromTemplate ? survey.title.replace(/^.+__/, "") : `${survey.title} Copy ${maxCopyNumber + 1}`,
+      title: fromTemplate
+        ? survey.title.replace(/^.+__/, "")
+        : `${survey.title} Copy ${maxCopyNumber + 1}`,
       teams: {
         create: teams,
       },
@@ -550,13 +544,14 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
   return summaryData;
 }
 
-
 //------------get survey templates list --------
 export async function getSurveyTemplates(surveyType: string) {
-  const teamId = process.env.SURVEY_TEMPLATES_TEAM_ID || '591ec71f-984e-46b0-88e9-1ef46db9f33a';
+  const teamId =
+    process.env.SURVEY_TEMPLATES_TEAM_ID ||
+    "591ec71f-984e-46b0-88e9-1ef46db9f33a";
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
-      teamId: teamId
+      teamId: teamId,
     },
     include: {
       survey: {
@@ -565,18 +560,19 @@ export async function getSurveyTemplates(surveyType: string) {
         },
       },
     },
-
   });
 
-  let surveys  = surveyTeamMaps.map((surveyTeamMap) => {
-    return surveyTeamMap.survey
+  let surveys = surveyTeamMaps.map((surveyTeamMap) => {
+    return surveyTeamMap.survey;
   });
 
-  const surveysFiltered = surveys.filter((survey) => survey?.type === surveyType);
+  const surveysFiltered = surveys.filter(
+    (survey) => survey?.type === surveyType,
+  );
 
   const groupedSurveys = surveysFiltered.reduce((groups, survey) => {
-    const category = survey.title.split('__')[0];
-    survey.title = survey.title.replace(`${category}__`, '');
+    const category = survey.title.split("__")[0];
+    survey.title = survey.title.replace(`${category}__`, "");
     if (!groups[category]) {
       groups[category] = [];
     }
@@ -584,10 +580,8 @@ export async function getSurveyTemplates(surveyType: string) {
     return groups;
   }, {});
 
-
   return groupedSurveys;
 }
-
 
 //------------DELETE SURVEY by id --------
 export async function deleteSurveyById(id: string) {
@@ -599,11 +593,10 @@ export async function deleteSurveyById(id: string) {
   return survey;
 }
 
-
 //------------DELETE SURVEY from a team --------
 export async function deleteSurveyFromTeam(
   id: string,
-  input: DeleteTeamSurveyInput
+  input: DeleteTeamSurveyInput,
 ) {
   const surveyTeams = await prisma.surveyTeamMap.findMany({
     where: {
@@ -714,7 +707,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
     let existingTeams = surveyTeams.map((team) => team?.teamId);
     let newTeams = teamIds?.filter(
-      (team) => !existingTeams?.includes(team?.teamId)
+      (team) => !existingTeams?.includes(team?.teamId),
     );
 
     if (newTeams?.length) {
@@ -724,7 +717,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     }
 
     let deletedTeams = existingTeams?.filter(
-      (team) => !teamIds?.map((team) => team?.teamId).includes(team)
+      (team) => !teamIds?.map((team) => team?.teamId).includes(team),
     );
 
     if (deletedTeams?.length) {
@@ -754,7 +747,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
           const deletedSurvey = await prisma.surveyTeamMap.delete({
             where: { id: surveyTeamMap?.id },
           });
-        })
+        }),
       );
     }
   }
@@ -774,7 +767,7 @@ function validateSurvey(surveyData) {
     // Check if title contains all languages
     let titleLanguages = question?.title ? Object.keys(question.title) : [];
     let missingLangTitle = languages.filter(
-      (lang) => !titleLanguages.includes(lang)
+      (lang) => !titleLanguages.includes(lang),
     );
     if (missingLangTitle.length > 0) {
       incompleteQuestions.push({
@@ -790,20 +783,20 @@ function validateSurvey(surveyData) {
         QuestionType.MSQ,
         QuestionType.DDSS,
         QuestionType.DDMS,
-        QuestionType.CustomNPS
+        QuestionType.CustomNPS,
       ].includes(question?.type)
     ) {
       if (question?.choices) {
         let choiceLanguages = Object.keys(question.choices);
         let missingLangChoices = languages.filter(
-          (lang) => !choiceLanguages.includes(lang)
+          (lang) => !choiceLanguages.includes(lang),
         );
         if (missingLangChoices.length > 0) {
           incompleteQuestions.push({
             id: question.id,
             title: question.title,
             error: `Missing choices for languages: ${missingLangChoices.join(
-              ", "
+              ", ",
             )}`,
           });
         }
@@ -811,11 +804,11 @@ function validateSurvey(surveyData) {
         // Check if all languages have the maximum number of choices
         let maxChoices = Math.max(
           ...Object.values(question.choices).map(
-            (choiceArr: any[]) => choiceArr?.length
-          )
+            (choiceArr: any[]) => choiceArr?.length,
+          ),
         );
         let unequalChoices = Object.values(question.choices).some(
-          (choiceArr: any[]) => choiceArr?.length < maxChoices
+          (choiceArr: any[]) => choiceArr?.length < maxChoices,
         );
         if (unequalChoices) {
           incompleteQuestions.push({
@@ -827,7 +820,7 @@ function validateSurvey(surveyData) {
 
         // Check for minimum 2 choices
         let insufficientChoices = Object.values(question.choices).some(
-          (choiceArr: any[]) => choiceArr.length < 2
+          (choiceArr: any[]) => choiceArr.length < 2,
         );
         if (insufficientChoices) {
           incompleteQuestions.push({
@@ -870,7 +863,7 @@ export async function getGoogleUrlBySurveyTeamMapId(surveyTeamMapId: string) {
 
 export async function updateGoogleLink(
   id: string,
-  data: UpdateGoogleLinkInput
+  data: UpdateGoogleLinkInput,
 ) {
   const survey = await prisma.surveyTeamMap.findUnique({
     where: {
@@ -899,7 +892,7 @@ export async function updateGoogleLink(
 
 export async function updateSurveyPassword(
   id: string,
-  data: UpdateSurveyPassword
+  data: UpdateSurveyPassword,
 ) {
   let isProtected = true;
   let password = data.password;
@@ -909,7 +902,7 @@ export async function updateSurveyPassword(
       password = "";
     } else {
       isProtected = true;
-      password = CryptoJS.AES.encrypt(password, secretPassphrase).toString();
+      // password = CryptoJS.AES.encrypt(password, secretPassphrase).toString();
     }
     const survey = await prisma.survey.update({
       where: {
@@ -929,7 +922,7 @@ export async function updateSurveyPassword(
 
 export async function verifySurveyPassword(
   id: string,
-  data: UpdateSurveyPassword
+  data: UpdateSurveyPassword,
 ) {
   let enteredPassword = data.password;
   try {
@@ -940,12 +933,12 @@ export async function verifySurveyPassword(
       throw new Error(`Survey not found`);
     }
 
-    const decryptedPassword = CryptoJS.AES.decrypt(
-      survey.password,
-      secretPassphrase
-    ).toString(CryptoJS.enc.Utf8);
+    // const decryptedPassword = CryptoJS.AES.decrypt(
+    //   survey.password,
+    //   secretPassphrase,
+    // ).toString(CryptoJS.enc.Utf8);
 
-    if (survey.isProtected && decryptedPassword === enteredPassword) {
+    if (survey.isProtected && survey.password === enteredPassword) {
       return "Access granted";
     } else {
       throw new Error(`Password Error`);
