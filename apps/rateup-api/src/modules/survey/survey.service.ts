@@ -933,12 +933,12 @@ export async function verifySurveyPassword(
       throw new Error(`Survey not found`);
     }
 
-    const decryptedPassword = CryptoJS.AES.decrypt(
-      survey.password,
-      secretPassphrase,
-    ).toString(CryptoJS.enc.Utf8);
+    // const decryptedPassword = CryptoJS.AES.decrypt(
+    //   survey.password,
+    //   secretPassphrase,
+    // ).toString(CryptoJS.enc.Utf8);
 
-    if (survey.isProtected && decryptedPassword === enteredPassword) {
+    if (survey.isProtected && survey.password === enteredPassword) {
       return "Access granted";
     } else {
       throw new Error(`Password Error`);
