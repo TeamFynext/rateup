@@ -146,6 +146,10 @@ export default function App({
   if (pageProps.fromSupertokens === "needs-refresh") {
     return null;
   }
+  const canonicalUrl = (
+    `https://rateup.app` + (router.asPath === "/" ? "" : router.asPath)
+  ).split("?")[0];
+
   return (
     <>
       <Head>
@@ -155,6 +159,7 @@ export default function App({
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
         <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="canonical" href={canonicalUrl} />
       </Head>
       <main className={lexend300.className}>
         <MantineProvider theme={theme}>

@@ -8,20 +8,14 @@ function Home() {
   return (
     <>
       <Head>
-        <title>
-          Rateup - With Rate Up's Customer Engagement Platform, you can connect
-          with, interact with, and expand your customer connections.
-        </title>
+        <title>Customer Engagement platform - Feedback tool | RateUp</title>
         <meta
           name="keywords"
           content="Customer Engagement Platform, Online reputation management, Survey, Review, Whatsapp Survey, Feedback "
         />
         <meta
           name="description"
-          content="Boost Your Credibility 
-          & Get Rated Up
-          With Rate Up's Customer Engagement Platform, you can connect
-          with, interact with, and expand your customer connections."
+          content="Unlock RateUp's Platform: Digital Menus, reputation management, real-time reviews. Elevate your brand and boost customer satisfaction. Book a demo!"
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />
@@ -40,6 +34,7 @@ function Home() {
         <meta property="og:image:width" content="1086" />
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Star Icon" />
+        <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
       <OurSolutionsSection />

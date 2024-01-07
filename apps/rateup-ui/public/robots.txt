@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+User-agent: *
+Disallow: /dashboard
+
+User-agent: *
+Disallow: /admin
+
+Sitemap: https://rateup.app/sitemap.xml
