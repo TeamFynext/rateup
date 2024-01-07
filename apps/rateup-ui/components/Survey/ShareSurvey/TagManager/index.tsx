@@ -28,11 +28,9 @@ import CustomGridToolbar from "./CustomGridToolbar/CustomGridToolbar";
 import { useCallback, useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
 import { saveAs } from "file-saver";
+import { useDisclosure } from "@mantine/hooks";
 
 function TagManager({
-  openTagManager,
-  closeTagManager,
-  tagManagerOpened,
   isPublished,
   surveyTeamMapId,
   teamSelectData,
@@ -43,6 +41,9 @@ function TagManager({
   surveyTitle,
   surveyId,
 }) {
+  const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
+    useDisclosure(false);
+
   const shareSettings = useGetShareSettings(
     "surveyShareSettings",
     "survey",
@@ -235,24 +236,20 @@ function TagManager({
                 minWidth: 200,
                 renderCell: (params) => (
                   <Group gap={1} className={styles["qr-code-container"]}>
-                    {shareSettings.data ? (
-                      <Preview
-                        url={params.row?.col3}
-                        isSurveyPublished={isPublished}
-                        surveyTitle={surveyTitle}
-                        qrBgColor={qrBgColor}
-                        qrColor={qrColor}
-                        qrBgImgLogo={
-                          logoFile ? logoFile : "/images/rateup-star.svg"
-                        }
-                        qrBgImgFillType={logoFillType}
-                        logoSize={logoSize}
-                        logoBorderRadius={logoBorderRadius}
-                        customAttrForDownloadedQrFileName={params.row.col1}
-                      />
-                    ) : (
-                      "unable to load qr"
-                    )}
+                    <Preview
+                      url={params.row?.col3}
+                      isSurveyPublished={isPublished}
+                      surveyTitle={surveyTitle}
+                      qrBgColor={qrBgColor}
+                      qrColor={qrColor}
+                      qrBgImgLogo={
+                        logoFile ? logoFile : "/images/rateup-star.svg"
+                      }
+                      qrBgImgFillType={logoFillType}
+                      logoSize={logoSize}
+                      logoBorderRadius={logoBorderRadius}
+                      customAttrForDownloadedQrFileName={params.row.col1}
+                    />
                   </Group>
                 ),
               },

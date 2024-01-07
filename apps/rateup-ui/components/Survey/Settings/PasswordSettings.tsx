@@ -18,8 +18,7 @@ const PasswordSettings = ({ survey, surveyId }) => {
 
   useEffect(() => {
     if (survey?.password?.length) {
-      const password = survey.password.slice(0, 8);
-      setPassword(password);
+      setPassword(survey.password);
     }
   }, [survey]);
   return (
@@ -65,8 +64,8 @@ const PasswordSettings = ({ survey, surveyId }) => {
                 }
                 radius={"xl"}
                 onClick={() => {
-                  if (survey?.password?.slice(0, 8) === password) {
-                    setIsPasswordInputInvalid("Please enter a new password");
+                  if (passwordProtection && password === "") {
+                    setIsPasswordInputInvalid("Please enter a password");
                   } else {
                     setIsPasswordInputInvalid(false);
                     updateSurveyPassword.mutate({ surveyId, password });

@@ -79,16 +79,11 @@ const ShareSurvey = ({
 
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
-  const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
-    useDisclosure(false);
   const [openedIframe, { open: openIframe, close: closeIframe }] =
     useDisclosure(false);
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
     null,
   );
-
-  // currently we are using only two resources(first arg below) survey, menu.
-  // shareSettings means qr settings.
 
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
@@ -330,9 +325,6 @@ const ShareSurvey = ({
                   onChange={(value) => setTag(value)}
                 />
                 <TagManager
-                  openTagManager={openTagManager}
-                  closeTagManager={closeTagManager}
-                  tagManagerOpened={tagManagerOpened}
                   isPublished={isPublished}
                   surveyTeamMapId={surveyTeamMapId}
                   teamSelectData={teamSelectData}
