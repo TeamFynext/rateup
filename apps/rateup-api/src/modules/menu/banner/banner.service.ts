@@ -12,6 +12,7 @@ export async function createMenuBanner(data: CreateMenuBannerInput) {
       price: data?.price,
       image: data?.image,
       videoUrl: data?.videoUrl,
+      foodLabels: data?.foodLabels,
     },
   });
 
@@ -23,16 +24,16 @@ export async function getMenuBanner(menuId: string) {
     where: {
       menuId,
     },
-    orderBy:{
-      createdAt:"asc"
-    }
+    orderBy: {
+      createdAt: "asc",
+    },
   });
   return menuBanner;
 }
 
 export async function updateMenuBanner(
   id: string,
-  data: CreateMenuCategoryInput
+  data: CreateMenuCategoryInput,
 ) {
   const menuBanner = await prisma.menuBanner.update({
     where: { id },

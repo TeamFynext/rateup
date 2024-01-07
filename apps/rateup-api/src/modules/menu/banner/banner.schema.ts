@@ -30,6 +30,7 @@ const CreateMenuBannerInput = {
   image: z.string().optional(),
   menuId: z.string(),
   videoUrl: z.string().optional(),
+  foodLabels: z.array(z.string()).optional(),
 };
 const createMenuBannerInputSchema = z.object(CreateMenuBannerInput);
 
@@ -42,7 +43,7 @@ export const { schemas: menuBannerSchemas, $ref: $MBref } = buildJsonSchemas(
     createMenuBannerInputSchema,
     ByMenuBannerIdParamsSchema,
   },
-  { $id: "menuBannerSchema" }
+  { $id: "menuBannerSchema" },
 );
 
 export type CreateMenuBannerInput = z.infer<typeof createMenuBannerInputSchema>;
