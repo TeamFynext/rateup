@@ -65,7 +65,7 @@ const SurveySettings = ({
                 label={
                   hasGoogleReview
                     ? "Not available since Google Review Questions present."
-                    : "enable kiosk mode"
+                    : "When enabled allows survey to restart on completion"
                 }
               >
                 <IconInfoCircle color="var(--tertiary-color)" />
@@ -82,7 +82,11 @@ const SurveySettings = ({
                 checked={preview}
                 onChange={() => updateSkipPreview(setPreview, editSurvey)}
               />
-              <Tooltip label={"enable preview screen"}>
+              <Tooltip
+                label={
+                  "When enabled skips confirmation preview screen on completion"
+                }
+              >
                 <IconInfoCircle color="var(--tertiary-color)" />
               </Tooltip>
             </Group>
@@ -97,7 +101,9 @@ const SurveySettings = ({
                 checked={location}
                 onChange={(event) => updateGetLocation(setLocation, editSurvey)}
               />
-              <Tooltip label={"enable location fetch"}>
+              <Tooltip
+                label={"when enabled allows fetch location of survey taker"}
+              >
                 <IconInfoCircle color="var(--tertiary-color)" />
               </Tooltip>
             </Group>
