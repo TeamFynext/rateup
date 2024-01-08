@@ -5,17 +5,18 @@ import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import { IconDownload } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
+import { getLogoSrc } from "../ShareQR/utils";
 
 function Preview({
   url,
-  qrBgImgLogo,
-  qrBgImgFillType,
-  qrBgColor,
-  qrColor,
+  qrBgImgLogo = getLogoSrc(null),
+  qrBgImgFillType = "contain",
+  qrBgColor = "#FFFFFF",
+  qrColor = "#000000",
   surveyTitle,
   isSurveyPublished,
-  logoSize,
-  logoBorderRadius,
+  logoSize = 75,
+  logoBorderRadius = 50,
   customAttrForDownloadedQrFileName = "",
 }) {
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
@@ -68,7 +69,7 @@ function Preview({
               height: logoSize,
               top: `calc(50% - ${logoSize / 2}px)`,
               left: `calc(50% - ${logoSize / 2}px)`,
-              objectFit: qrBgImgFillType,
+              objectFit: qrBgImgFillType as any,
               borderRadius: `${logoBorderRadius}%`,
             }}
           />

@@ -10,17 +10,16 @@ function Reputation() {
     <>
       <Head>
         <title>
-          Rateup- We redefine the dynamics of online reputation management,
-          providing businesses with a robust platform to not only enhance their
-          Google reviews but also cultivate positive brand advocates
+          Online reputation management - Review analysis 2024 | RateUp
         </title>
         <meta
           name="keywords"
-          content="Customer Engagement Platform, Online reputation management, Survey, Review, Whatsapp Survey, Feedback "
+          content="Online reputation management, review analysis, review tracking, sentiment analysis, customer feedback analysis"
         />
         <meta
           name="description"
-          content="Transforming Online Presence and Customer Experiences, We redefine the dynamics of online reputation management, providing businesses with a robust platform to not only enhance their Google reviews but also cultivate positive brand advocates"
+          content="Enhance your online presence with RateUp's reputation management. Leverage the Review Analysis Tool for a comprehensive digital boost. Book a demo!
+          "
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />
