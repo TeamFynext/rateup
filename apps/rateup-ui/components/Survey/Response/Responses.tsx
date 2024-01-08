@@ -195,7 +195,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
                       <Table.Td>
                         <Text c="dark.3" p={10} miw={200}>
                           {dayjs(response?.createdAt).format(
-                            "DD-MM-YYYY HH:mm",
+                            "DD-MM-YYYY hh:mm A",
                           )}
                         </Text>
                       </Table.Td>
