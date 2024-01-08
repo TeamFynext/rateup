@@ -194,7 +194,9 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
                     >
                       <Table.Td>
                         <Text c="dark.3" p={10} miw={200}>
-                          {dayjs(response?.createdAt).format("DD-MM-YYYY")}
+                          {dayjs(response?.createdAt).format(
+                            "DD-MM-YYYY HH:mm",
+                          )}
                         </Text>
                       </Table.Td>
                       {questions?.map((q) => (
@@ -284,21 +286,18 @@ function TableHead({ questions }: TableHeadProps) {
         </Table.Th>
         {questions?.map((q) => (
           <Table.Th key={q?.id}>
-            <Text
-              fz="lg"
-              fw="600"
-              truncate="end"
-              miw={200}
-              maw={200}
-              c="dark.3"
-            >
-              {q?.title[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
+            <HoverCardComponent
+              content={
+                q?.title[
+                  selectedLanguage ? selectedLanguage : defaultLanguage
+                ] ||
                 q?.description[
                   selectedLanguage ? selectedLanguage : defaultLanguage
-                ]}
-            </Text>
+                ]
+              }
+              fw={600}
+              fz={"lg"}
+            />
           </Table.Th>
         ))}
         <Table.Th>
