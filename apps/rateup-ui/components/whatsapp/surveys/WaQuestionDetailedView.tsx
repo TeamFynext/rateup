@@ -398,7 +398,7 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.WaList:
       return (
         <WaListMessageItemsCreator
-          initialSections={form.values.sections?.[selectedLanguage]}
+          initialSections={form.values.sections}
           saveSections={(sections) => {
             form.setFieldValue(`sections.${selectedLanguage}`, sections);
           }}
