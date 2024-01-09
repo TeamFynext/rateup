@@ -246,7 +246,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     setSelectedTab("Tablet");
   };
   const handlePictureMobileBackground = () => {
-    setAspectRatio(4 / 3);
+    setAspectRatio(3 / 4);
     toggleMethodSelectionDialog();
     setImageType("mobileBackgroundImage");
     setSelectedTab("Mobile");
