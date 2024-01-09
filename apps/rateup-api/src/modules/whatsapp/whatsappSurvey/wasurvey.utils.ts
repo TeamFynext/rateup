@@ -319,6 +319,10 @@ export async function generateMessageDataFromQuestion(
         description,
         sections
       )
+    case Q.Testimonial:
+      const features = question.features?.[lang] || {}
+      description += "\n\nPlease share your name"
+      return createTextMessage(to, title, description);
   }
 
   if (choices.length > 0) {
@@ -440,7 +444,8 @@ export async function parseResponse(
       // TODO: testimonial
       case Q.Testimonial:
         return {
-          testimonial: message,
+          name: message,
+          // testimonial: message,
         };
       case Q.DateTime:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
