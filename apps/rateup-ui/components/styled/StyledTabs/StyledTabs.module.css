@@ -15,6 +15,7 @@
   background-color: #fff;
   width: fit-content;
   border: 1px solid var(--tertiary-color);
+  flex: 0 0 auto;
 }
 
 /* Style for each individual tab */
@@ -40,7 +41,11 @@
 
 /* Style for the content panel */
 .panel {
-  flex: 1 0;
-  overflow: scroll;
+  flex: 1 0 0;
+  /* overflow: auto; */
   margin-top: 0 !important;
+}
+
+.panel > div {
+  height: 100%;
 }

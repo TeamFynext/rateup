@@ -3,7 +3,17 @@
 }
 
 ::-webkit-scrollbar {
-  display: none;
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: rgb(223, 223, 223);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(173, 173, 173);
+  border-radius: 5px;
 }
 
 :root {

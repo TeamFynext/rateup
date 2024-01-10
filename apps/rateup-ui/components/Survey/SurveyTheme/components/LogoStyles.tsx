@@ -159,13 +159,13 @@ function LogoStyles({
             </FileButton>
           </SimpleGrid>
 
-          <Flex justify={"center"} mt="xl">
+          <Flex justify={"center"}>
             <Button
               radius={48}
               size={"sm"}
               pl={40}
               pr={40}
-              mt={20}
+              mt={"2rem"}
               onClick={onSubmit}
               loading={saveLoading}
             >

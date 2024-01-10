@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, Flex } from "@mantine/core";
+import { Image, Flex, ScrollArea } from "@mantine/core";
 import { useRouter } from "next/router";
 import {
   useConsumeVerificationCode,
@@ -87,17 +87,18 @@ const AuthForm = ({
           ${styles[`${authType ? "auth-type-signup-form" : ""}`]}
         `}
     >
-      <Flex justify="center">
-        <Link href="/">
-          <Image
-            className={styles["rateup-logo-img"]}
-            src={rateupLogoUrl}
-            alt="RateUp Logo"
-          />
-        </Link>
-      </Flex>
-
-      {jsxToReturn}
+      <ScrollArea h={"100%"} w={"100%"} scrollbarSize={5} type="hover">
+        <Flex justify={"center"}>
+          <Link href="/">
+            <Image
+              className={styles["rateup-logo-img"]}
+              src={rateupLogoUrl}
+              alt="RateUp Logo"
+            />
+          </Link>
+        </Flex>
+        {jsxToReturn}
+      </ScrollArea>
     </Flex>
   );
 };
