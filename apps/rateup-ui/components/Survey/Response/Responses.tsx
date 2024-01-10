@@ -122,7 +122,8 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
             !contacts.some(
               (c) =>
                 c.teamId == contact.teamId &&
-                (c.phone == contact.phone || c.email == contact.email),
+                ((c.phone && c.phone == contact.phone) ||
+                  (c.email && c.email == contact.email)),
             )
           )
             contacts.push(contact);
