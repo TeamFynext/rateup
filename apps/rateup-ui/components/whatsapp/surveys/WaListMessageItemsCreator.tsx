@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { EditableText } from "../../input/EditableText";
 import { useImmer } from "use-immer";
 import {
@@ -15,15 +15,21 @@ import {
 } from "@mantine/core";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 
 export function WaListMessageItemsCreator({ initialSections, saveSections }) {
-  const [sections, setSections] = useImmer(initialSections || []);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const selectedLangSections = initialSections?.[selectedLanguage] || [];
+  const [sections, setSections] = useImmer(selectedLangSections || []);
   const [expanded, setExpanded] = useState(0); // index of expanded section
   const [editingItem, setEditingItem] = useState(null);
-
   useEffect(() => {
     saveSections(sections);
   }, [sections]);
+
+  useEffect(() => {
+    setSections(selectedLangSections);
+  }, [selectedLanguage]);
 
   function handleAddItem(sIndex: number) {
     setSections((draft) => {
@@ -36,7 +42,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
 
   return (
     <Stack gap="4px" p="sm" w="100%">
-      {sections.map(({ rows, title }, sIndex) => {
+      {sections?.map(({ rows, title }, sIndex) => {
         const sectionId = `s${sIndex}`;
         return (
           <Paper
@@ -128,9 +134,9 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
       })}
       <Button
         onClick={() => {
-          setExpanded(sections.length); // expand the new section
+          setExpanded(sections?.length); // expand the new section
           setSections((draft) => {
-            draft.push({
+            draft?.push({
               title: "",
               rows: [
                 {

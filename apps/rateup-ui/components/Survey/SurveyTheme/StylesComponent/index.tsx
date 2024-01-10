@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import BackgroundStyles from "./components/BackgroundStyles";
-import HeaderStyles from "./components/HeaderStyles";
-import DescStyles from "./components/DescStyles";
-import ButtonStyles from "./components/ButtonStyles";
+import BackgroundStyles from "../components/BackgroundStyles";
+import HeaderStyles from "../components/HeaderStyles";
+import DescStyles from "../components/DescStyles";
+import ButtonStyles from "../components/ButtonStyles";
 import { Box, Tabs, Divider } from "@mantine/core";
-import LogoStyles from "./components/LogoStyles";
-import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
+import LogoStyles from "../components/LogoStyles";
+import TabsCommon from "../../../menu/landingPage/Tabs/TabsCommon";
+import styles from "./StylesComponent.module.css";
 
 function StylesComponent({
   selectedType,
@@ -61,12 +62,13 @@ function StylesComponent({
   }
 
   return (
-    <Box mt="-10px">
+    <Box mt="-10px" className={styles["styles-component-div"]}>
       <TabsCommon
         tabHeading={["Bg", "Logo", "Title", "Desc", "Btn"]}
         value={tabState}
         radius={"xl"}
         onChange={(value: string) => setTabState(value)}
+        className={styles["tabs-common-div"]}
       >
         <Divider
           label={`${getDividerLabel(tabState)} Settings`}

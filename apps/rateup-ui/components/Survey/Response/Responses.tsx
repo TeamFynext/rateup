@@ -46,6 +46,7 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PreviewModal from "../../Modal/PreviewModal";
 import { ChoiceTypeQuestions } from "../../../utils/constants";
 import { HoverCardComponent } from "../HoverCard/HoverCard";
+import styles from "./Responses.module.css";
 
 const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const [responseCount, setResponseCount] = useState(0);
@@ -167,7 +168,10 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
 
   return (
     <Stack h="100%">
-      <PaperLayout style={{ cursor: "pointer" }}>
+      <PaperLayout
+        style={{ cursor: "pointer" }}
+        className={styles["total-responses-heading-container"]}
+      >
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <RateupButtonBlue
@@ -183,7 +187,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
       {responseCount > 0 ? (
         <PaperLayout style={{ flex: 1 }}>
           <>
-            <ScrollArea h={"100%"} maw={"100%"}>
+            <ScrollArea mah={"100%"} maw={"100%"}>
               <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
                 <TableHead questions={questions} />
                 <Table.Tbody>
@@ -194,7 +198,9 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
                     >
                       <Table.Td>
                         <Text c="dark.3" p={10} miw={200}>
-                          {dayjs(response?.createdAt).format("DD-MM-YYYY")}
+                          {dayjs(response?.createdAt).format(
+                            "DD-MM-YYYY hh:mm A",
+                          )}
                         </Text>
                       </Table.Td>
                       {questions?.map((q) => (
@@ -284,21 +290,18 @@ function TableHead({ questions }: TableHeadProps) {
         </Table.Th>
         {questions?.map((q) => (
           <Table.Th key={q?.id}>
-            <Text
-              fz="lg"
-              fw="600"
-              truncate="end"
-              miw={200}
-              maw={200}
-              c="dark.3"
-            >
-              {q?.title[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
+            <HoverCardComponent
+              content={
+                q?.title[
+                  selectedLanguage ? selectedLanguage : defaultLanguage
+                ] ||
                 q?.description[
                   selectedLanguage ? selectedLanguage : defaultLanguage
-                ]}
-            </Text>
+                ]
+              }
+              fw={600}
+              fz={"lg"}
+            />
           </Table.Th>
         ))}
         <Table.Th>

@@ -107,7 +107,7 @@ function ButtonStyles({
               size={"sm"}
               pl={40}
               pr={40}
-              mt={15}
+              mt={"1rem"}
               onClick={onSubmit}
               loading={saveLoading}
             >

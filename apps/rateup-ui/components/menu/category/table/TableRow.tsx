@@ -4,6 +4,7 @@ import {
   Box,
   Flex,
   Image,
+  Spoiler,
   Stack,
   Table,
   Text,
@@ -83,7 +84,15 @@ const TableRow = ({
         )}
       </Table.Td>
       <Table.Td>
-        <Text lineClamp={7}>{item?.description}</Text>
+        <Text>
+          <Spoiler
+            showLabel="Show more"
+            hideLabel="Hide"
+            transitionDuration={0}
+          >
+            {item?.description}
+          </Spoiler>
+        </Text>
       </Table.Td>
       <Table.Td>
         <Anchor href={item?.videoUrl} target="_blank">

@@ -78,7 +78,7 @@ const CustomLegend: React.FC<CustomTooltipProps> = ({
               {myPayload?.value}
             </Text>
             <Text c={returnColor(myPayload?.name)} fw={900}>
-              ( {((myPayload?.value / total) * 100)?.toFixed(1)}% )
+              ( {!total ? 0 : ((myPayload?.value / total) * 100)?.toFixed(1)}% )
             </Text>
             <Text size="xs" fw={"bolder"}>
               {myPayload?.name}

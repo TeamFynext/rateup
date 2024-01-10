@@ -65,7 +65,7 @@ export function LogoSelectCard({
     <PaperLayout
       radius={"md"}
       p={"lg"}
-      h={"120px"}
+      // h={"120px"}
       w={"120px"}
       mih={80}
       hoveractive

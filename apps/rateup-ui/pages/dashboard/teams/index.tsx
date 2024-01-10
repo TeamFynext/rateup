@@ -34,6 +34,7 @@ import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
+import styles from "./Teams.module.css";
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -104,7 +105,7 @@ export default function Teams() {
     }
   }, [action]);
   return (
-    <>
+    <div className={styles["teams-container"]}>
       <FormModalLayout
         centered
         onClose={close}
@@ -176,7 +177,7 @@ export default function Teams() {
         <Loader />
       ) : (
         <>
-          <Grid columns={9} p={10} h="100%" style={{ overflow: "auto" }}>
+          <Grid columns={9} p={10} className={styles["team-cards-container"]}>
             {teamsData?.data?.length > 0 ? (
               (sort
                 ? [...teamsData?.data]?.sort((a, b) =>
@@ -210,6 +211,6 @@ export default function Teams() {
           </Grid>
         </>
       )}
-    </>
+    </div>
   );
 }
