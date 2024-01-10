@@ -61,12 +61,13 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const tableRef = useRef(null);
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
-  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
+  const { surveyTeamMapId } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
+
   const hasContactQuestion =
     responses &&
     responses.some((response) =>
@@ -78,6 +79,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
     close,
     setIsDeleting,
   );
+
   const importContactMutation = useImportContactMutation();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
