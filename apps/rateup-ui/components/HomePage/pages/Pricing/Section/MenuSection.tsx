@@ -15,7 +15,13 @@ import PaperLayout from "../../../../styled/Layouts/PaperLayout";
 import { Title1, Title2, Title3, Title4 } from "../Utils/constants";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 
-export const MenuSection = ({ largeScreen, price, BlueGradient, checked }) => {
+export const MenuSection = ({
+  largeScreen,
+  price,
+  BlueGradient,
+  checked,
+  handlePlanSelection,
+}) => {
   const [addonEnabled, setAddonEnabled] = useState(false);
   const durationType = checked ? "year" : "month";
   return (
@@ -151,6 +157,12 @@ export const MenuSection = ({ largeScreen, price, BlueGradient, checked }) => {
                     fontSize: Title4,
                     height: Title2,
                   }}
+                  onClick={() =>
+                    handlePlanSelection({
+                      id: addonEnabled ? "_0h4n9g5m0" : "_bm43dy9j3",
+                      name: "menuplan",
+                    })
+                  }
                 />
               </Center>
             </Box>
