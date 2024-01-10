@@ -30,11 +30,15 @@ export async function createMultipleContactsHandler(
     reply: FastifyReply
 ) {
     try {
-        const contacts = await createMultipleContacts(request.body);
-        reply.code(201).send(contacts)
+        const existingcontacts = await getContactsByOrgId(request.user.orgId)
+        const contacts = request.body;
+        const newContacts = contacts.filter(c => !existingcontacts.some(contact => contact.teamId == c.teamId && (contact.phone && contact.phone == c.phone || contact.email && contact.email == c.email)));
+        if(!newContacts.length) throw new Error("Contacts already Exist")
+        const res = await createMultipleContacts(newContacts);
+        reply.code(201).send(res)
     } catch (error) {
         log.error(error)
-        reply.code(500).send({ error: "Something went wrong" })
+        reply.code(500).send({ error: error.message || "Something went wrong" })
     }
 }
 
