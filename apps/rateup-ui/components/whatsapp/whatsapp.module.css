@@ -13,7 +13,7 @@
 .chatBg {
   position: relative;
   flex: 1 1 0;
-  overflow: "scroll";
+  overflow: "auto";
   flex-grow: 1;
 }
 

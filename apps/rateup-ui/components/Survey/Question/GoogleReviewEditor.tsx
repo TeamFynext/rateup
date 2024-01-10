@@ -314,7 +314,7 @@ const GoogleReviewEditor = ({
               <Stack
                 p="sm"
                 style={{
-                  overflowY: "scroll",
+                  overflowY: "auto",
                   flexGrow: 1,
                 }}
               >

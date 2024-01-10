@@ -202,7 +202,7 @@ const ResultsOverview = () => {
   return (
     <>
       <Stack h={"100%"}>
-        <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
+        <Stack style={{ overflow: "auto", height: "100%", padding: 2 }}>
           {chartData?.length > 0 ? (
             <Stack>
               {isAllowedQnsPresent && (

@@ -542,7 +542,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           shadow={isMenuEnabled && "sm"}
                           radius={"md"}
                           p={"lg"}
-                          h={"7.5rem"}
                           w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
@@ -555,7 +554,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <PaperLayout
                           radius={"md"}
                           p={"lg"}
-                          h={"7.5rem"}
                           w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}

@@ -121,7 +121,7 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           minWidth: "300px",
           padding: 2,
           height: "100%",
-          overflow: "scroll",
+          overflow: "auto",
         },
       }}
     >
