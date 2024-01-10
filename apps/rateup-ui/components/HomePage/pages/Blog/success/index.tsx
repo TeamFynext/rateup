@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { Container, MantineProvider } from "@mantine/core";
 
-export default function successReadmore() {
+export default function SuccessReadmore() {
   return (
     <MantineProvider>
       <Container>
@@ -14,7 +14,7 @@ export default function successReadmore() {
           Building and Managing Your Online Reputation: A Guide for Success
         </h1>
         <img
-          src="./laptop-image.jpg"
+          src="/images/blog/laptop-image.jpg"
           alt="Example Image"
           width={700}
           height={400}

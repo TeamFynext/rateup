@@ -12,7 +12,7 @@ export default function PositiveConnection() {
 
         <h1>Nurturing Positive Connections and Online Reputation Management</h1>
         <img
-          src="./images/blog/nurturing-positive.jpg"
+          src="/images/blog/nurturing-positive.jpg"
           alt="Example Image"
           width={700}
           height={400}
@@ -25,7 +25,7 @@ export default function PositiveConnection() {
           (ORM) tools has become a strategic move for companies looking to boost
           profitability and navigate the competitive landscape effectively.
         </p>
-        <h2> 1. Trust is the Currency of Success:</h2>
+        <h1> 1. Trust is the Currency of Success:</h1>
         <p>
           In the realm of business, trust is the foundation of customer
           relationships. Online Reputation Management tools help businesses
