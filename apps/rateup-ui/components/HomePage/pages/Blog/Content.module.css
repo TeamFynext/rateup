@@ -1,0 +1,51 @@
+.main-article-nurture-btns-container {
+  margin-right: rem;
+  margin-top: 1rem;
+  background-color: #347aeb;
+  margin-bottom: 1rem;
+  display: flex;
+}
+
+.main-article-img-title-btn-container {
+  display: flex;
+}
+
+.main-article-image {
+  width: 100%;
+  object-fit: contain;
+  margin-left: 2rem;
+}
+
+.main-article-title--para--btn-container {
+  margin-left: 5rem;
+  margin-bottom: 5rem;
+  margin-top: 2rem;
+  margin-right: 2rem;
+}
+
+.main-article-btn-container {
+  justify-content: center;
+  flex-wrap: wrap;
+  height: auto;
+}
+
+.main-article-title-nly-container {
+  font-size: 50px;
+  color: #f7f9fc;
+  margin-bottom: 2rem;
+}
+
+.after-main-article-featured-read {
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #06429c;
+}
+
+.article-two-three-together-container {
+  margin-bottom: 5rem;
+}
+
+.page-last-explore-all-btn {
+  margin-bottom: 5rem;
+  text-align: center;
+}

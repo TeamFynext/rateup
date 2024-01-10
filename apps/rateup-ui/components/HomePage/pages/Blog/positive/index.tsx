@@ -1,6 +1,6 @@
+import { Container, MantineProvider } from "@mantine/core";
 import Head from "next/head";
 import Link from "next/link";
-import { Container, MantineProvider } from "@mantine/core";
 
 export default function PositiveConnection() {
   return (
@@ -12,7 +12,7 @@ export default function PositiveConnection() {
 
         <h1>Nurturing Positive Connections and Online Reputation Management</h1>
         <img
-          src="./nurturing-positive.jpg"
+          src="./images/blog/nurturing-positive.jpg"
           alt="Example Image"
           width={700}
           height={400}
@@ -97,8 +97,6 @@ export default function PositiveConnection() {
         <p>
           <Link href="/">Go home</Link>{" "}
         </p>
-
-        {/* Add more content, sections, or additional blog posts as needed */}
       </Container>
     </MantineProvider>
   );

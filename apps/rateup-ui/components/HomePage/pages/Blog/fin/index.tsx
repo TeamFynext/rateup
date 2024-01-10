@@ -15,7 +15,7 @@ export default function FinancialReview() {
           Management Tools
         </h1>
         <img
-          src="./financial-review.jpg"
+          src="/images/blog/financial-review.jpg"
           alt="Example Image"
           width={700}
           height={400}
