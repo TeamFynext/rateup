@@ -10,7 +10,7 @@ const axiosClient = axios.create({
 });
 function subscriptionErrorHandler(error: AxiosError) {
   const response = error.response as AxiosResponse;
-  if (response.status === 403) {
+  if (response?.status === 403) {
     if (response.data.displayMessageInClient) {
       showErrorToast(response.data.message || "Forbidden");
     }

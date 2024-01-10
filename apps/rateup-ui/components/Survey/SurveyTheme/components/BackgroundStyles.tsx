@@ -378,9 +378,9 @@ function BackgroundStyles({
             size={"sm"}
             pl={40}
             pr={40}
-            mt={50}
             onClick={onSubmit}
             loading={saveLoading}
+            mt={"1rem"}
           >
             Save
           </Button>

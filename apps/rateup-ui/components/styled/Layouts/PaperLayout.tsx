@@ -21,7 +21,7 @@ export default function PaperLayout(props: PaperLayoutProps) {
           ? "rgba(0, 0, 0, 0.05) 0px 1px 0px, rgba(0, 0, 0, 0.11) 0px 0px 8px"
           : "initial",
         width: "100%",
-        overflowX: "auto",
+        overflow: "auto",
         border:
           hovered && hoveractive
             ? "2px solid var(--hover-border-color)"

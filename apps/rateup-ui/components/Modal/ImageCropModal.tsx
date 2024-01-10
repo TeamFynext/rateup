@@ -35,6 +35,7 @@ export const ImageCropModal = ({
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(1);
+  const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
 
   useDebounceEffect(
     () => {
@@ -49,6 +50,7 @@ export const ImageCropModal = ({
           previewCanvasRef.current,
           completedCrop,
           scale,
+          fileExtension,
         );
       }
     },
@@ -94,9 +96,7 @@ export const ImageCropModal = ({
     }
   }
   const handleCropSubmit = async () => {
-    const fileExtension =
-      imageName?.split(".")?.pop()?.toLowerCase() ?? "cropped.jpg";
-
+    setScale(1);
     previewCanvasRef?.current?.toBlob(
       (blob) => {
         if (!blob) return;
@@ -116,7 +116,10 @@ export const ImageCropModal = ({
   return (
     <FormModalLayout
       title="Crop Image"
-      onClose={onclose}
+      onClose={() => {
+        onclose();
+        setScale(1);
+      }}
       opened={opened}
       buttonTitle="save"
       includeCancelButton

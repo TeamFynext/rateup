@@ -23,6 +23,7 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
+import styles from "./SurveyTheme.module.css";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -180,8 +181,12 @@ function SurveyTheme({ survey }) {
           </Group>
         </Stack>
       </PaperLayout>
-      <Stack style={{ flex: 0.3 }} ml="sm">
-        <PaperLayout p={"xl"}>
+      <Stack
+        style={{ flex: 0.3 }}
+        ml="sm"
+        className={styles["enable-btn-and-styles-comp-containers-parent-div"]}
+      >
+        <PaperLayout className={styles["enable-welcome-page-switch-container"]}>
           <Group justify="center">
             <Switch
               fw={400}
@@ -194,7 +199,10 @@ function SurveyTheme({ survey }) {
           </Group>
         </PaperLayout>
 
-        <PaperLayout h={"100%"}>
+        <PaperLayout
+          h={"100%"}
+          className={styles["styles-component-container"]}
+        >
           <StylesComponent
             selectedType={selectedType ? selectedType : "header"}
             saveStyles={saveStyles}

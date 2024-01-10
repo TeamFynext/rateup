@@ -52,6 +52,7 @@ import {
   ContactQuestions,
 } from "../../../utils/constants";
 import { HoverCardComponent } from "../HoverCard/HoverCard";
+import styles from "./Responses.module.css";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 
@@ -219,7 +220,10 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
 
   return (
     <Stack h="100%">
-      <PaperLayout style={{ cursor: "pointer" }}>
+      <PaperLayout
+        style={{ cursor: "pointer" }}
+        className={styles["total-responses-heading-container"]}
+      >
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <Group>
@@ -246,7 +250,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
       {responseCount > 0 ? (
         <PaperLayout style={{ flex: 1 }}>
           <>
-            <ScrollArea h={"100%"} maw={"100%"}>
+            <ScrollArea mah={"100%"} maw={"100%"}>
               <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
                 <TableHead questions={questions} />
                 <Table.Tbody>
