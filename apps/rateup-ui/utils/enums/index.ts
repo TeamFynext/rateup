@@ -8,6 +8,7 @@ export const AuthMode = {
   VERIFY: "VERIFY",
   LOGIN: "LOGIN",
   SIGNUP: "SIGNUP",
+  VERIFY_PHONE_NO: "VERIFY_PHONE_NO",
 };
 
 export const UserMode = {

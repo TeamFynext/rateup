@@ -5,6 +5,12 @@ import {
   emailPasswordSignUp,
   emailPasswordSignIn,
 } from "supertokens-web-js/recipe/thirdpartyemailpassword";
+import {
+  createCode,
+  resendCode,
+  consumeCode,
+  clearLoginAttemptInfo,
+} from "supertokens-web-js/recipe/Passwordless";
 
 export function useSignIn() {
   const router = useRouter();
@@ -92,6 +98,57 @@ export function showNotification(
   });
 }
 
+export async function sendOTP(phoneNumber: string) {
+  const router = useRouter();
+
+  try {
+    let response = await createCode({
+      phoneNumber,
+    });
+    if (response.status !== "OK") {
+      // this can happen due to automatic account linking. See that section in our docs.
+    } else {
+      // OTP sent successfully.
+      router.push("/login/verify-email");
+    }
+  } catch (err: any) {
+    if (err.isSuperTokensGeneralError === true) {
+      // this may be a custom error message sent from the API by you,
+      // or if the input email / phone number is not valid.
+      window.alert(err.message);
+    } else {
+      window.alert("Oops! Something went wrong.");
+    }
+  }
+}
+export async function resendOTP() {
+  try {
+    const router = useRouter();
+    let response = await resendCode();
+
+    if (response.status === "RESTART_FLOW_ERROR") {
+      // this can happen if the user has already successfully logged in into
+      // another device whilst also trying to login to this one.
+
+      // we clear the login attempt info that was added when the createCode function
+      // was called - so that if the user does a page reload, they will now see the
+      // enter email / phone UI again.
+      await clearLoginAttemptInfo();
+      window.alert("Login failed. Please try again");
+      window.location.assign("/auth");
+    } else {
+      router.push("/login/verify-email");
+    }
+  } catch (err: any) {
+    if (err.isSuperTokensGeneralError === true) {
+      // this may be a custom error message sent from the API by you.
+      window.alert(err.message);
+    } else {
+      window.alert("Oops! Something went wrong.");
+    }
+  }
+}
+
 export function useSignUp() {
   const router = useRouter();
 
@@ -101,62 +158,85 @@ export function useSignUp() {
     name: string,
     orgName: string,
     inviteCode: string,
+    phoneNumber: string,
   ) {
     try {
-      let response = await emailPasswordSignUp({
-        formFields: [
-          {
-            id: "email",
-            value: email,
-          },
-          {
-            id: "password",
-            value: password,
-          },
-          {
-            id: "name",
-            value: name,
-          },
-          {
-            id: "orgName",
-            value: orgName,
-          },
-          {
-            id: "inviteCode",
-            value: inviteCode,
-          },
-        ],
-      });
-
-      if (response?.status === "FIELD_ERROR") {
-        response?.formFields?.forEach((formField) => {
-          if (formField?.id === "email") {
-            // Email validation failed (for example incorrect email syntax),
-            // or the email is not unique.
-            showNotification(
-              "sign-up-error",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
-          } else if (formField?.id === "password") {
-            // Password validation failed.
-            // Maybe it didn't match the password strength
-            showNotification(
-              "sign-up-error",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
+      if (phoneNumber) {
+        try {
+          let response = await createCode({
+            phoneNumber,
+          });
+          if (response.status !== "OK") {
+            // this can happen due to automatic account linking. See that section in our docs.
+          } else {
+            // OTP sent successfully.
+            router.push(`/login/verify-phone-number`);
           }
-        });
+        } catch (err: any) {
+          if (err.isSuperTokensGeneralError === true) {
+            // this may be a custom error message sent from the API by you,
+            // or if the input email / phone number is not valid.
+            window.alert(err.message);
+          } else {
+            window.alert("Oops! Something went wrong.");
+          }
+        }
       } else {
-        // sign up successful. The session tokens are automatically handled by
-        // the frontend SDK.
-        router.push("/login/verify-email");
-        //consumeVerificationCode()
+        let response = await emailPasswordSignUp({
+          formFields: [
+            {
+              id: "email",
+              value: email,
+            },
+            {
+              id: "password",
+              value: password,
+            },
+            {
+              id: "name",
+              value: name,
+            },
+            {
+              id: "orgName",
+              value: orgName,
+            },
+            {
+              id: "inviteCode",
+              value: inviteCode,
+            },
+          ],
+        });
+
+        if (response?.status === "FIELD_ERROR") {
+          response?.formFields?.forEach((formField) => {
+            if (formField?.id === "email") {
+              // Email validation failed (for example incorrect email syntax),
+              // or the email is not unique.
+              showNotification(
+                "sign-up-error",
+                "red",
+                "Error",
+                formField?.error,
+                <IconX size="1rem" />,
+              );
+            } else if (formField?.id === "password") {
+              // Password validation failed.
+              // Maybe it didn't match the password strength
+              showNotification(
+                "sign-up-error",
+                "red",
+                "Error",
+                formField?.error,
+                <IconX size="1rem" />,
+              );
+            }
+          });
+        } else {
+          // sign up successful. The session tokens are automatically handled by
+          // the frontend SDK.
+          router.push("/login/verify-email");
+          //consumeVerificationCode()
+        }
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {

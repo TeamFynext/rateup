@@ -16,6 +16,7 @@ import SignupForm from "./SignupForm";
 import VerifyEmailPage from "./VerifyEmailPage";
 import AuthTypeSignupForm from "./AuthTypeSignupForm";
 import { rateupLogoUrl } from "../HomePage/constants";
+import VerifyPhoneNumberPage from "./VerifyPhoneNumberPage";
 
 const AuthForm = ({
   mode,
@@ -50,6 +51,8 @@ const AuthForm = ({
   let jsxToReturn = <></>;
   if (mode === AuthMode.VERIFY) {
     jsxToReturn = <VerifyEmailPage sendEmail={sendEmail} />;
+  } else if (mode === AuthMode.VERIFY_PHONE_NO) {
+    jsxToReturn = <VerifyPhoneNumberPage />;
   } else {
     if (isLogin) {
       jsxToReturn = (
