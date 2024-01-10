@@ -10,7 +10,10 @@ import {
   Button,
   ScrollAreaAutosize,
 } from "@mantine/core";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import {
   IconEye,
   IconFileDownload,
@@ -44,9 +47,14 @@ import NothingFound from "../../NothingFound/NothingFound";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PreviewModal from "../../Modal/PreviewModal";
-import { ChoiceTypeQuestions } from "../../../utils/constants";
+import {
+  ChoiceTypeQuestions,
+  ContactQuestions,
+} from "../../../utils/constants";
 import { HoverCardComponent } from "../HoverCard/HoverCard";
 import styles from "./Responses.module.css";
+import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
+import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 
 const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const [responseCount, setResponseCount] = useState(0);
@@ -60,6 +68,11 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const hasContactQuestion =
+    responses &&
+    responses.some((response) =>
+      response.responses.some((res) => ContactQuestions.includes(res.type)),
+    );
   const deleteResponse = useDeleteResponse(
     surveyId,
     surveyTeamMapId,
@@ -67,6 +80,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
     setIsDeleting,
   );
 
+  const importContactMutation = useImportContactMutation();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -81,6 +95,46 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   useEffect(() => {
     setResponseCount(responses?.length);
   }, [responses]);
+
+  function handleExportContacts() {
+    const contacts = [];
+    responses.map((response) => {
+      const teamId = response.teamId;
+      const responseArray = response.responses;
+      responseArray.map((res) => {
+        if (ContactQuestions.includes(res.type)) {
+          const contact: ICreateContact = {
+            name: "",
+            teamId: teamId,
+          };
+          switch (res.type) {
+            case QuestionType.Email:
+              contact.email = res.response?.[QuestionType.Email];
+              break;
+            case QuestionType.Phone:
+              contact.phone = res.response?.[QuestionType.Phone].slice(1);
+              break;
+            case QuestionType.EmailPhone:
+              const phone = res.response?.[QuestionType.EmailPhone]?.phone;
+              const email = res.response?.[QuestionType.EmailPhone]?.email;
+              contact.phone = phone ? phone.slice(1) : undefined;
+              contact.email = email ? email : undefined;
+              break;
+          }
+          if (
+            !contacts.some(
+              (c) =>
+                c.teamId == contact.teamId &&
+                ((c.phone && c.phone == contact.phone) ||
+                  (c.email && c.email == contact.email)),
+            )
+          )
+            contacts.push(contact);
+        }
+      });
+    });
+    importContactMutation.mutate(contacts, {});
+  }
   const handleExcelDownload = useCallback(() => {
     const responses = allResponses && allResponses[0].responses;
     if (questions && responses) {
@@ -174,14 +228,25 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
       >
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
-          <RateupButtonBlue
-            onClick={handleExcelDownload}
-            title={"Download"}
-            size="md"
-            radius={"lg"}
-            disabled={responseCount > 0 ? false : true}
-            rightIcon={<IconFileDownload size="1rem" />}
-          />
+          <Group>
+            <RateupButtonBlue
+              onClick={handleExcelDownload}
+              title={"Download"}
+              size="md"
+              radius={"lg"}
+              disabled={responseCount > 0 ? false : true}
+              rightIcon={<IconFileDownload size="1rem" />}
+            />
+            {hasContactQuestion && (
+              <RateupButtonSecondary
+                onClick={handleExportContacts}
+                title={"Export to contacts"}
+                size="md"
+                radius={"lg"}
+                rightIcon={<IconFileDownload size="1rem" />}
+              />
+            )}
+          </Group>
         </Group>
       </PaperLayout>
       {responseCount > 0 ? (
