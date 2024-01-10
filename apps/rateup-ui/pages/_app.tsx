@@ -95,7 +95,9 @@ export default function App({
                   console.log("Session Refreshed");
                 } else {
                   // user has been logged out
-                  redirectToAuth();
+                  // TODO: not working redirect in localhost when we try to access secure route without login
+                  // redirectToAuth();
+                  router.push("/login");
                 }
               }
             }
