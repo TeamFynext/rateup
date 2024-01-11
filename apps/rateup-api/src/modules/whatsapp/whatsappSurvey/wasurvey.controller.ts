@@ -12,6 +12,7 @@ import {
   createSession,
   deleteSession,
   getSession,
+  handleTestimonialQuestion,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
@@ -19,7 +20,7 @@ import {
   sendTextMessage,
   updateSession,
 } from "./wasurvey.service";
-import { CampaignParticipantStatus, WaEvent, WaTemplateStatus } from "../../../types/enums";
+import { CampaignParticipantStatus, QuestionType, WaEvent, WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
 import { getTemplateWithHSMId, updateTemplateInDb, getDbTemplate } from "../messageTemplates/wa_templates.service";
@@ -211,7 +212,9 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   if (!question) {
     throw new Error("Question not found");
   }
-
+  if(question.type == QuestionType.Testimonial){
+    await handleTestimonialQuestion(question,session,waMessage)
+  }
   const response = await parseResponse(waMessage, question, session);
   log.trace('parsedResponse => %o', response)
   if (!isValidResponse(response, question, session.language)) {

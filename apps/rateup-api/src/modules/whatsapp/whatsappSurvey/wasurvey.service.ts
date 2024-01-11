@@ -1,6 +1,6 @@
 import { ResponsePlatform } from "@prisma/client";
-import { CampaignParticipantStatus, LogicAction } from "../../../types/enums";
-import { WaSendMessageBody } from "../../../types/whatsapp.types";
+import { CampaignParticipantStatus, LogicAction, QuestionType, TestimonialFeatureQuestions } from "../../../types/enums";
+import { WaMessageBody, WaSendMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import { getQuestionsBySurveyId } from "../../question/question.service";
@@ -8,7 +8,7 @@ import { parseLogicAction } from "../../question/question.utils";
 import { createResponse } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
-import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession, createCTAButtonMessage } from "./wasurvey.utils";
+import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession, createCTAButtonMessage, parseMessage } from "./wasurvey.utils";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import { CreateResponseInput } from "../../response/response.schema";
 import { QuestionType as Q } from "../../../types/enums";
@@ -235,9 +235,13 @@ async function updateCurrentQuestion(orgId: string, from: string, newQId: string
   });
 }
 export async function sendQuestion(question: Question, session: WaSessionWithRelations) {
-  const message = await generateMessageDataFromQuestion(session, question);
-  await updateCurrentQuestion(session.orgId, session.phone, question.id,);
-  await sendMessage(session.orgId, message);
+  if(question.type == QuestionType.Testimonial){
+    await handleTestimonialQuestion(question, session)
+  } else {
+    const message = await generateMessageDataFromQuestion(session, question);
+    await updateCurrentQuestion(session.orgId, session.phone, question.id);
+    await sendMessage(session.orgId, message);
+  }
 }
 /**
  * Saves responses to the database in SurveyResponse table.
@@ -312,5 +316,40 @@ export async function sendSurveyToParticipant({
   } catch (e) {
     log.error(e)
     return false
+  }
+}
+
+export async function handleTestimonialQuestion(question: Question, session: WaSessionWithRelations, reply ?: WaMessageBody){
+  // const message = await generateMessageDataFromQuestion(session, question);
+  // await updateCurrentQuestion(session.orgId, session.phone, question.id,);
+  // await sendMessage(session.orgId, message);
+ 
+  const to = session.phone;
+  if (!session.language) {
+    log.error("No language found for session", session);
+    throw new Error("No language found for session");
+  }
+  const lang = session.language;
+
+  const title = question.title[lang];
+  let description = question.description[lang];
+
+  const buttonTitle = "View Options";
+  if(reply){
+    let message = parseMessage(reply).message;
+    const response = {
+      name: message
+    }
+    // if (!isValidResponse(response, question, session.language)) {
+    //   await sendTextMessage(session, "Invalid response. Please try again.", "");
+    //   await sendQuestion(question, session);
+    //   return;
+    // }
+
+
+  } else {
+    const message = createTextMessage(to,title, description)
+    await updateCurrentQuestion(session.orgId, session.phone, question.id);
+    await sendMessage(session.orgId, message)
   }
 }
