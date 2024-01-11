@@ -60,7 +60,6 @@
     "pg": "^8.10.0",
     "pigeon-maps": "^0.21.3",
     "postcss-mixins": "^9.0.4",
-    "qartjs": "^1.2.0",
     "qrcode": "^1.5.3",
     "react": "18.2.0",
     "react-beautiful-dnd": "^13.1.1",
@@ -80,7 +79,9 @@
     "supertokens-node": "^15.2.0",
     "supertokens-web-js": "^0.7.3",
     "use-immer": "^0.9.0",
-    "zod": "^3.21.4"
+    "uuid": "^9.0.1",
+    "zod": "^3.21.4",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",

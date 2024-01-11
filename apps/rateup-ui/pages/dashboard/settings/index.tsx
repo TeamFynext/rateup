@@ -5,10 +5,16 @@ import ProfileSettings from "./UserSettings";
 import OrgSettings from "./OrgSettings";
 import { useUser } from "../../../context/UserContext";
 import { retrieveRole } from "../../../utils/essential";
+import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
+import { useCheckSession } from "../../../hooks/checkSession";
 
 const AccountSettings = () => {
+  const session = useCheckSession();
   const { user } = useUser();
-  if (retrieveRole(user.role) === "Super Admin") {
+  if (!session || !user) return;
+  const cart = useRouteAndCartStore.getState().cart;
+
+  if (retrieveRole(user?.role) === "Super Admin") {
     return (
       <StyledTabs defaultValue="user" w="100%">
         <Tabs.List mb="md" pb="md">
