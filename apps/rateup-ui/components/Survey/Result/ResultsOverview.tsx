@@ -202,82 +202,80 @@ const ResultsOverview = () => {
   return (
     <>
       <Stack h={"100%"}>
-        <Stack style={{ overflow: "auto", height: "100%", padding: 2 }}>
-          {chartData?.length > 0 ? (
-            <Stack>
-              {isAllowedQnsPresent && (
-                <>
-                  <Heading subtitle="NPS Overview" />
-                  <PaperLayout p={"xl"}>
-                    {chartData
-                      ?.filter(
-                        (item) =>
-                          item.type === QuestionType.Rating ||
-                          item.type === QuestionType.Smiley ||
-                          item.type === QuestionType.LD ||
-                          item.type === QuestionType.YN ||
-                          item.type === QuestionType.Opinion ||
-                          item.type === QuestionType.CustomNPS,
-                      )
-                      ?.map((item, index, filteredArray) => (
-                        <React.Fragment key={index}>
-                          <QuestionPieChart
-                            no={index + 1}
-                            type={item.type}
-                            responseCount={noofResponses}
-                            question={item.question}
-                            data={item.nps}
-                            csatScore={item?.csat}
-                          />
-                          {index < filteredArray?.length - 1 && (
-                            <Divider my="md" />
-                          )}
-                        </React.Fragment>
-                      ))}
-                  </PaperLayout>
-                </>
-              )}
-              <Heading subtitle="Question Wise Overview" />
-              <PaperLayout p={"xl"}>
-                {chartData
-                  ?.filter(
-                    (item) =>
-                      item.type === QuestionType.Rating ||
-                      item.type === QuestionType.Smiley ||
-                      item.type === QuestionType.LD ||
-                      item.type === QuestionType.YN ||
-                      item.type === QuestionType.Opinion ||
-                      item.type === QuestionType.MCQ ||
-                      item.type === QuestionType.MSQ ||
-                      item.type === QuestionType.DDSS ||
-                      item.type === QuestionType.DDMS ||
-                      item.type === QuestionType.CustomNPS,
-                  )
-                  ?.map((item, index) => (
-                    <React.Fragment key={index}>
-                      <QuestionBarChart
-                        key={index}
-                        question={item?.question}
-                        no={index + 1}
-                        choices={item?.choices?.map((choice) => {
-                          return {
-                            value: choice.value,
-                            color: stringToColour(choice.value),
-                          };
-                        })}
-                        data={item?.responses}
-                        questionType={item?.type}
-                        choicesInAllLang={item?.choicesInAllLang}
-                      />
-                      {index < chartData?.length - 1 && <Divider my="md" />}
-                    </React.Fragment>
-                  ))}
-              </PaperLayout>
-            </Stack>
-          ) : (
-            <NothingFound text="No responses yet" />
-          )}
-        </Stack>
+        {chartData?.length > 0 ? (
+          <Stack>
+            {isAllowedQnsPresent && (
+              <>
+                <Heading subtitle="NPS Overview" />
+                <PaperLayout p={"xl"}>
+                  {chartData
+                    ?.filter(
+                      (item) =>
+                        item.type === QuestionType.Rating ||
+                        item.type === QuestionType.Smiley ||
+                        item.type === QuestionType.LD ||
+                        item.type === QuestionType.YN ||
+                        item.type === QuestionType.Opinion ||
+                        item.type === QuestionType.CustomNPS,
+                    )
+                    ?.map((item, index, filteredArray) => (
+                      <React.Fragment key={index}>
+                        <QuestionPieChart
+                          no={index + 1}
+                          type={item.type}
+                          responseCount={noofResponses}
+                          question={item.question}
+                          data={item.nps}
+                          csatScore={item?.csat}
+                        />
+                        {index < filteredArray?.length - 1 && (
+                          <Divider my="md" />
+                        )}
+                      </React.Fragment>
+                    ))}
+                </PaperLayout>
+              </>
+            )}
+            <Heading subtitle="Question Wise Overview" />
+            <PaperLayout p={"xl"}>
+              {chartData
+                ?.filter(
+                  (item) =>
+                    item.type === QuestionType.Rating ||
+                    item.type === QuestionType.Smiley ||
+                    item.type === QuestionType.LD ||
+                    item.type === QuestionType.YN ||
+                    item.type === QuestionType.Opinion ||
+                    item.type === QuestionType.MCQ ||
+                    item.type === QuestionType.MSQ ||
+                    item.type === QuestionType.DDSS ||
+                    item.type === QuestionType.DDMS ||
+                    item.type === QuestionType.CustomNPS,
+                )
+                ?.map((item, index) => (
+                  <React.Fragment key={index}>
+                    <QuestionBarChart
+                      key={index}
+                      question={item?.question}
+                      no={index + 1}
+                      choices={item?.choices?.map((choice) => {
+                        return {
+                          value: choice.value,
+                          color: stringToColour(choice.value),
+                        };
+                      })}
+                      data={item?.responses}
+                      questionType={item?.type}
+                      choicesInAllLang={item?.choicesInAllLang}
+                    />
+                    {index < chartData?.length - 1 && <Divider my="md" />}
+                  </React.Fragment>
+                ))}
+            </PaperLayout>
+          </Stack>
+        ) : (
+          <NothingFound text="No responses yet" />
+        )}
       </Stack>
     </>
   );
