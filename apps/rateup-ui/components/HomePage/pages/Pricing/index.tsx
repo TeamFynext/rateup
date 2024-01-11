@@ -22,18 +22,26 @@ import {
   DISCOUNT_PERCENTAGE,
   initialPrices,
 } from "./Utils/constants";
+import { useRouter } from "next/router";
+import { useRouteAndCartStore } from "./store/RouteAndCartStore";
 
 const Pricing = () => {
   const [value, setValue] = useState("Surveys");
   const [checked, setChecked] = useState(true);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
+  const { updateRouteAndCart } = useRouteAndCartStore();
+  const router = useRouter();
 
   const getPriceBasedOnLocation = () => {
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return userTimeZone === "Asia/Calcutta" ? initialPrices : defaultPrices;
   };
-
+  const handlePlanSelection = ({ id, name }) => {
+    const route = "/dashboard/settings";
+    updateRouteAndCart(route, { id, name });
+    router.push(route);
+  };
   const price = usePriceUpdater(
     initialPrices,
     getPriceBasedOnLocation,
@@ -115,6 +123,7 @@ const Pricing = () => {
               largeScreen={largeScreen}
               price={price}
               checked={checked}
+              handlePlanSelection={handlePlanSelection}
             />
           ) : (
             <MenuSection
@@ -122,6 +131,7 @@ const Pricing = () => {
               price={price}
               BlueGradient={BlueGradient}
               checked={checked}
+              handlePlanSelection={handlePlanSelection}
             />
           )}
         </motion.div>

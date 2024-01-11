@@ -80,7 +80,8 @@
     "supertokens-web-js": "^0.7.3",
     "use-immer": "^0.9.0",
     "uuid": "^9.0.1",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",
