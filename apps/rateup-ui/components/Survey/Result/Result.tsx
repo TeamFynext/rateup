@@ -47,6 +47,8 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
+import styles from "./Result.module.css";
+
 enum ResultTab {
   OverView = "overview",
   Analytics = "analytics",
@@ -98,40 +100,17 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
     <StyledTabs
       value={resultTab}
       onChange={(value) => setActiveResultTab(value as ResultTab)}
-      defaultValue="overview"
-      placement="left"
-      orientation="vertical"
-      styles={{
-        root: {
-          flexDirection: "row",
-          flexWrap: "wrap",
-        },
-        list: {
-          position: "sticky",
-          display: "flex",
-          flexDirection: "column",
-          borderBottomLeftRadius: 10,
-          borderBottomRightRadius: 10,
-          height: "fit-content",
-          minWidth: 200,
-          border: "1px solid var(--mantine-color-gray-3)",
-          minHeight: "fit-content",
-        },
-        panel: {
-          minWidth: "300px",
-          padding: 2,
-          height: "100%",
-          overflow: "auto",
-        },
-      }}
+      className={styles["result-page-container"]}
     >
-      <Stack maw={200} p={2} h={"100%"}>
+      <div className={styles["tabs-container"]}>
         <Tabs.List>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
         </Tabs.List>
+      </div>
+      {/* <div className={styles["responses-filter-container"]}>
         <ResultFilter
           activeTab={resultTab}
           survey={survey}
@@ -140,7 +119,8 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           setSelectedLanguage={setSelectedLanguage}
           setFilterTags={setFilterTags}
         />
-      </Stack>
+      </div> */}
+
       <Tabs.Panel value="overview">
         <SurveyStats survey={survey} />
       </Tabs.Panel>
@@ -153,6 +133,14 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           responses={filteredResponses}
           allResponses={teamWiseResponses}
           defaultLanguage={defaultLanguage}
+          resultFilterProps={{
+            activeTab: resultTab,
+            survey: survey,
+            responses: filteredResponsesByTags,
+            setFilteredResponses: setFilteredResponses,
+            setSelectedLanguage: setSelectedLanguage,
+            setFilterTags: setFilterTags,
+          }}
         />
       </Tabs.Panel>
       <Tabs.Panel value="comparison">
@@ -245,83 +233,83 @@ export const ResultFilter = ({
     (quantitativeQuestions?.length !== 0 && activeTab === ResultTab.Responses)
   ) {
     return (
-      <PaperLayout p={5} style={{ flex: 1 }} py={"sm"}>
-        <ScrollArea scrollbarSize={5} h={"100%"} maw={"100%"}>
-          <Stack>
-            <Text c={"dark"} fw={900}>
-              Filter By
-            </Text>
-            {tagSelectData.length > 0 && (
-              <>
-                <Group justify="space-between">
-                  <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
-                    Tags
-                  </Text>
-                  <Tooltip
-                    label="The tag filter works only when response includes tags"
-                    position="bottom-start"
-                  >
-                    <ActionIcon variant="subtle">
-                      <IconInfoCircle size={15} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-                <MultiSelect
-                  radius={"10px"}
-                  maw={180}
-                  searchable
-                  clearable
-                  data={tagSelectData}
-                  onChange={setFilterTags}
-                  placeholder={filterTags.length > 0 ? "" : "All Tags"}
-                />
-              </>
-            )}
-            {languageSelectionOptions?.length > 1 && (
-              <>
-                <Group justify="space-between">
-                  <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
-                    Languages
-                  </Text>
-                  <Tooltip
-                    label="The question title will be displayed in the default language only when All options is selected"
-                    position="bottom-start"
-                  >
-                    <ActionIcon variant="subtle">
-                      <IconInfoCircle size={15} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-
-                <Radio.Group
-                  value={selectedLanguage}
-                  onChange={(value) => setSelectedLanguage(value)}
+      // <PaperLayout p={5} style={{ flex: 1 }} py={"sm"}>
+      <ScrollArea scrollbarSize={5} h={"100%"} maw={"100%"}>
+        <Stack className={styles["filters-container"]}>
+          <Text c={"dark"} fw={900}>
+            Filter By
+          </Text>
+          {tagSelectData.length > 0 && (
+            <>
+              <Group justify="space-between">
+                <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
+                  Tags
+                </Text>
+                <Tooltip
+                  label="The tag filter works only when response includes tags"
+                  position="bottom-start"
                 >
-                  <Radio label="All" value={""} size="xs" />
-                  {languageSelectionOptions?.map((option, i) => (
-                    <Radio
-                      mt={2}
-                      key={i}
-                      label={option.label}
-                      value={option.value}
-                      size="xs"
-                    />
-                  ))}
-                </Radio.Group>
-              </>
-            )}
-            {quantitativeQuestions?.length > 0 &&
-              activeTab === ResultTab.Responses &&
-              quantitativeQuestions?.map((question, i) => (
-                <ReturnSingleFilterComponent
-                  key={i}
-                  question={question}
-                  handleUpdate={handleUpdate}
-                />
-              ))}
-          </Stack>
-        </ScrollArea>
-      </PaperLayout>
+                  <ActionIcon variant="subtle">
+                    <IconInfoCircle size={15} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              <MultiSelect
+                radius={"10px"}
+                maw={180}
+                searchable
+                clearable
+                data={tagSelectData}
+                onChange={setFilterTags}
+                placeholder={filterTags.length > 0 ? "" : "All Tags"}
+              />
+            </>
+          )}
+          {languageSelectionOptions?.length > 1 && (
+            <>
+              <Group justify="space-between">
+                <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
+                  Languages
+                </Text>
+                <Tooltip
+                  label="The question title will be displayed in the default language only when All options is selected"
+                  position="bottom-start"
+                >
+                  <ActionIcon variant="subtle">
+                    <IconInfoCircle size={15} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+
+              <Radio.Group
+                value={selectedLanguage}
+                onChange={(value) => setSelectedLanguage(value)}
+              >
+                <Radio label="All" value={""} size="xs" />
+                {languageSelectionOptions?.map((option, i) => (
+                  <Radio
+                    mt={2}
+                    key={i}
+                    label={option.label}
+                    value={option.value}
+                    size="xs"
+                  />
+                ))}
+              </Radio.Group>
+            </>
+          )}
+          {quantitativeQuestions?.length > 0 &&
+            activeTab === ResultTab.Responses &&
+            quantitativeQuestions?.map((question, i) => (
+              <ReturnSingleFilterComponent
+                key={i}
+                question={question}
+                handleUpdate={handleUpdate}
+              />
+            ))}
+        </Stack>
+      </ScrollArea>
+      // </PaperLayout>
     );
   }
 };
