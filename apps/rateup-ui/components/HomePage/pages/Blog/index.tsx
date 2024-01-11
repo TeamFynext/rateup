@@ -1,7 +1,9 @@
 import {
   Container,
+  Title,
   Flex,
   Button,
+  Text,
   Grid,
   MantineProvider,
   Stack,
@@ -17,11 +19,21 @@ export default function ContentPage() {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push("/blog/positive");
+    router.push("/blog/nurturing-positive-connections");
   };
 
   return (
     <MantineProvider>
+      <Title className={styles["main-blog-page-title-container"]}>
+        {" "}
+        All You Need to Know About Building Your Online Reputation
+      </Title>
+      <Text className={styles["main-blog-page-title-text-container"]}>
+        {" "}
+        Unearth the mastery of impactful communication and acquire profound
+        insights into the opportunities presented by the cultivation of a
+        positive reputation.
+      </Text>
       <Flex className={styles["main-article-nurture-btns-container"]}>
         <Flex className={styles["main-article-img-container"]}>
           <img
@@ -29,7 +41,7 @@ export default function ContentPage() {
             src="/images/blog/nurturing-positive.jpg"
             alt="Example Image"
             width={500}
-            height={437}
+            height={300}
           />
         </Flex>
         <Stack className={styles["main-article-title--para--btn-container"]}>
@@ -37,7 +49,6 @@ export default function ContentPage() {
             Nurturing Positive Connections
           </h1>
           <p className={styles["main-article-para-nly-container"]}>
-            {" "}
             Whether you're an individual building a personal brand or a business
             striving for success, the way you are perceived online can
             significantly impact your opportunities and relationships.
@@ -53,12 +64,14 @@ export default function ContentPage() {
         </Stack>
       </Flex>
 
-      <h1 className={styles["after-main-article-featured-read"]}>
+      <Title className={styles["after-main-article-featured-read"]}>
         FEATURED READS
-      </h1>
+      </Title>
 
-      <Flex className={styles["article-two-three-together-container"]}>
-        <Container>
+      <Grid className={styles["article-two-three-together-container"]}>
+        <Container
+          className={styles["article-together-first-article-container"]}
+        >
           <img
             src="/images/blog/laptop-image.jpg"
             alt="Example Image"
@@ -69,10 +82,15 @@ export default function ContentPage() {
             {" "}
             Building and Managing Your Online Reputation: A Guide for Success{" "}
           </h1>
-          <Link href="./blog/success"> Readmore</Link>
+          <Link href="./blog/Building-and-managing-your-online-reputation">
+            {" "}
+            Readmore
+          </Link>
         </Container>
 
-        <Container>
+        <Container
+          className={styles["article-together-first-article-container"]}
+        >
           <img
             src="/images/blog/financial-review.jpg"
             alt="Example Image"
@@ -85,9 +103,12 @@ export default function ContentPage() {
             Transforming Financial Fortunes: The Impact of Online Reputation
             Management Tools
           </h1>
-          <Link href="/blog/fin">Read more</Link>
+          <Link href="/blog/transforming-inancial-fortunes-impact-ORM">
+            Read more
+          </Link>
         </Container>
-      </Flex>
+      </Grid>
+
       <MotionButtonGesture>
         <Button className={styles["page-last-explore-all-btn"]}>
           Explore All
