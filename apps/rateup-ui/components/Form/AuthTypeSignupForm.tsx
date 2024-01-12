@@ -8,7 +8,12 @@ import FormModalLayout from "../Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowNarrowRight } from "@tabler/icons-react";
 
-function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
+function AuthTypeSignupForm({
+  setIsLoading,
+  createUserMutation,
+  isLoading,
+  authType,
+}) {
   const [opened, { close, open }] = useDisclosure(true);
 
   const signUpForm = useForm({
@@ -46,13 +51,18 @@ function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
       name: values?.name,
       orgName: values?.orgName,
       inviteCode: values?.inviteCode,
+      type: authType,
     };
     createUserMutation.mutate(data);
   };
   return (
     <>
       <FormModalLayout
-        title="Google Auth Success"
+        title={
+          authType === "google"
+            ? "Google Auth Success"
+            : "Phone Number Auth Success"
+        }
         opened={opened}
         onClose={() => {
           close();
