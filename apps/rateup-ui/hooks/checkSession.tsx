@@ -12,8 +12,8 @@ export const useCheckSession = () => {
       const doesSessionExist = await Session.doesSessionExist();
       if (
         doesSessionExist &&
-        (router.pathname?.toLowerCase().startsWith("/login") ||
-          router.pathname?.toLowerCase().startsWith("/signup"))
+        (router.asPath?.toLowerCase() === "/login" ||
+          router.asPath?.toLowerCase() === "/signup")
       ) {
         router.push("/dashboard");
       }

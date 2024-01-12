@@ -10,6 +10,7 @@ import styles from "./AuthForm.module.css";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import PhoneNumberForm from "./phoneNumberForm";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
@@ -18,7 +19,6 @@ export const signUpType = {
 };
 
 function SignupForm({ setIsLoading, signUp, isLoading }) {
-  const [phoneNumberSignIn, setPhoneNumberSignIn] = useState(false);
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
 
   const signUpForm = useForm({
@@ -69,6 +69,12 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           return "Invalid invite code";
         }
         return null; // Validation passed
+      },
+      phoneNumber: (value) => {
+        if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
+        if (!isValidPhoneNumber(value)) {
+          return "Enter a valid phone number";
+        } else return null;
       },
     },
   });
