@@ -9,6 +9,9 @@ import {
   Badge,
   Button,
   ScrollAreaAutosize,
+  ActionIcon,
+  Popover,
+  Box,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -17,6 +20,7 @@ import {
 import {
   IconEye,
   IconFileDownload,
+  IconFilter,
   IconTrashXFilled,
   IconX,
 } from "@tabler/icons-react";
@@ -55,8 +59,16 @@ import { HoverCardComponent } from "../HoverCard/HoverCard";
 import styles from "./Responses.module.css";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
+import { IconAdjustments } from "@tabler/icons-react";
+import { ResultFilter } from "../Result/Result";
 
-const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
+const Responses = ({
+  survey,
+  responses,
+  allResponses,
+  defaultLanguage,
+  resultFilterProps,
+}) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -221,7 +233,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   if (QError) return <Text>An error has occurred</Text>;
 
   return (
-    <Stack h="100%">
+    <Stack className={styles["responses-container"]}>
       <PaperLayout
         style={{ cursor: "pointer" }}
         className={styles["total-responses-heading-container"]}
@@ -229,6 +241,19 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <Group>
+            <Popover width={300} position="bottom-end">
+              <Popover.Target>
+                <ActionIcon variant="filled" aria-label="Settings">
+                  <IconFilter stroke={1.5} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown
+                classNames={{ dropdown: styles["result-filter-dropdown"] }}
+              >
+                <ResultFilter {...resultFilterProps} />
+              </Popover.Dropdown>
+            </Popover>
+
             <RateupButtonBlue
               onClick={handleExcelDownload}
               title={"Download"}
@@ -250,75 +275,71 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
         </Group>
       </PaperLayout>
       {responseCount > 0 ? (
-        <PaperLayout style={{ flex: 1 }}>
-          <>
-            <ScrollArea mah={"100%"} maw={"100%"}>
-              <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
-                <TableHead questions={questions} />
-                <Table.Tbody>
-                  {responses?.map((response) => (
-                    <Table.Tr
-                      key={response?.id}
-                      style={{ alignItems: "center" }}
-                    >
-                      <Table.Td>
-                        <Text c="dark.3" p={10} miw={200}>
-                          {dayjs(response?.createdAt).format(
-                            "DD-MM-YYYY hh:mm A",
-                          )}
-                        </Text>
-                      </Table.Td>
-                      {questions?.map((q) => (
-                        <Table.Td key={q?.id}>
-                          <BadgeorTextorPreview
-                            questionType={q?.type}
-                            response={getResponse(q?.id, response)}
-                          />
-                        </Table.Td>
-                      ))}
-                      <Table.Td p={10} miw={50}>
-                        <Button
-                          variant="subtle"
-                          color="red"
-                          onClick={() => {
-                            setSelectedRowId(response?.id);
-                            open();
-                          }}
-                        >
-                          <IconTrashXFilled />
-                        </Button>
-                      </Table.Td>
-                    </Table.Tr>
+        <Box className={styles["responses-table-container"]}>
+          <Table
+            ref={tableRef}
+            withRowBorders
+            stickyHeader
+            className={styles["responses-table"]}
+          >
+            <TableHead questions={questions} />
+            <Table.Tbody>
+              {responses?.map((response) => (
+                <Table.Tr key={response?.id} style={{ alignItems: "center" }}>
+                  <Table.Td>
+                    <Text c="dark.3" p={10} miw={200}>
+                      {dayjs(response?.createdAt).format("DD-MM-YYYY hh:mm A")}
+                    </Text>
+                  </Table.Td>
+                  {questions?.map((q) => (
+                    <Table.Td key={q?.id}>
+                      <BadgeorTextorPreview
+                        questionType={q?.type}
+                        response={getResponse(q?.id, response)}
+                      />
+                    </Table.Td>
                   ))}
-                </Table.Tbody>
-              </Table>
-            </ScrollArea>
-            <FormModalLayout
-              opened={opened}
-              onClose={close}
-              title="Delete Response"
-              centered
-              buttonTitle="Delete"
-              includeCancelButton
-              onSubmit={confirmDelete}
-            >
-              <Stack py={"sm"}>
-                <Text>To proceed further, verify your email id.</Text>
-                <ContainedTextField
-                  withAsterisk
-                  label="Verify email"
-                  placeholder="Enter your login email"
-                  required
-                  value={verifyEmail}
-                  onChange={(e) => setVerifyEmail(e.target.value)}
-                />
-                <Text c="red">
-                  Once deleted, response entry data will be lost.
-                </Text>
-              </Stack>
-            </FormModalLayout>
-          </>
-        </PaperLayout>
+                  <Table.Td p={10} miw={50}>
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      onClick={() => {
+                        setSelectedRowId(response?.id);
+                        open();
+                      }}
+                    >
+                      <IconTrashXFilled />
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+          <FormModalLayout
+            opened={opened}
+            onClose={close}
+            title="Delete Response"
+            centered
+            buttonTitle="Delete"
+            includeCancelButton
+            onSubmit={confirmDelete}
+          >
+            <Stack py={"sm"}>
+              <Text>To proceed further, verify your email id.</Text>
+              <ContainedTextField
+                withAsterisk
+                label="Verify email"
+                placeholder="Enter your login email"
+                required
+                value={verifyEmail}
+                onChange={(e) => setVerifyEmail(e.target.value)}
+              />
+              <Text c="red">
+                Once deleted, response entry data will be lost.
+              </Text>
+            </Stack>
+          </FormModalLayout>
+        </Box>
       ) : (
         <NothingFound text="No responses yet" />
       )}
