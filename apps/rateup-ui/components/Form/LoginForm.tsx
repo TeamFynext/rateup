@@ -101,7 +101,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
         />
         <RateupButtonSecondary
           type="button"
-          title="Sign In With Phone Number"
+          title="Login with Phone Number"
           loading={isLoading}
           onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_PHONE)}
           className={styles["login-signup-form-submit-btn"]}

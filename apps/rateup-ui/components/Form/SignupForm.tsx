@@ -91,7 +91,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     <>
       <RateupButtonSecondary
         type="button"
-        title="Sign Up With Email"
+        title="SignUp with Email"
         loading={isLoading}
         onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_EMAIL)}
         className={styles["login-signup-form-submit-btn"]}
@@ -103,7 +103,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       />
       <RateupButtonSecondary
         type="button"
-        title="Sign Up With Phone Number"
+        title="SignUp with Phone Number"
         loading={isLoading}
         onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_PHONE)}
         className={styles["login-signup-form-submit-btn"]}
@@ -180,7 +180,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           `}
         order={2}
       >
-        <span>Sign up now</span>
+        <span>SignUp now &</span>
         <span>Start engaging with your Customers</span>
       </Title>
 
