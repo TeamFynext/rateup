@@ -15,7 +15,7 @@ import { useState } from "react";
 import {
   clearLoginAttemptInfo,
   consumeCode,
-} from "supertokens-web-js/recipe/Passwordless";
+} from "supertokens-web-js/recipe/passwordless";
 import { useRouter } from "next/router";
 import { resendOTP } from "../../utils/auth";
 
