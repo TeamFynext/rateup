@@ -33,7 +33,13 @@ export function mergeResponsesFromTeams(
   surveyResponses: Array<TeamWiseResponses>,
 ) {
   if (!surveyResponses) return { mergedResponses: [], noofResponses: 0 };
-  const responses = surveyResponses?.map((response) => response.responses);
+  const responses = surveyResponses?.map((res) => {
+    const responseWithTeamId = res.responses.map((resp) => ({
+      ...resp,
+      teamId: res.team.id,
+    }));
+    return responseWithTeamId;
+  });
   const mergedResponses = [];
   for (const response of responses) {
     mergedResponses.push(...response);

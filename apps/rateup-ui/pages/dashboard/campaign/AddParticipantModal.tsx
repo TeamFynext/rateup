@@ -81,7 +81,7 @@ const AddParticipantModal = ({ close, campaign }) => {
           c.name.toLowerCase().includes(searchText.toLowerCase()) ||
           c.phone.includes(searchText),
       )
-    : contacts?.data;
+    : contacts?.data?.filter((c) => c.phone != null);
   const filteredGroups = searchText
     ? contactGroup?.data.filter((g) =>
         g.name.toLowerCase().includes(searchText.toLowerCase()),
@@ -220,7 +220,7 @@ const Individual = ({
 }) => {
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
   return (
-    <Group justify="space-between">
+    <Group justify="space-between" my={"xs"}>
       <Stack gap={0}>
         <Title order={5}>{customer?.name}</Title>
         <Text c={"dimmed"} size="sm">
