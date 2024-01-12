@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import { Container, Title, Text, MantineProvider } from "@mantine/core";
+import { Container, Title, Text, Image, MantineProvider } from "@mantine/core";
 import styles from "./success.module.css";
 export default function SuccessReadmore() {
   return (
@@ -13,13 +13,14 @@ export default function SuccessReadmore() {
         <Title className={styles["success-main-title-container"]}>
           Building and Managing Your Online Reputation: A Guide for Success
         </Title>
-        <img
-          className={styles["success-article-image-container"]}
-          src="/images/blog/laptop-image.jpg"
-          alt="Example Image"
-          width={700}
-          height={400}
-        />
+        <div className={styles["success-article-image-container"]}>
+          <Image
+            src="/images/blog/laptop-image.jpg"
+            alt="Example Image"
+            width={700}
+            height={400}
+          />
+        </div>
 
         <Text className={styles["success-article-text-container"]}>
           In today's digital age, where information is just a click away, the

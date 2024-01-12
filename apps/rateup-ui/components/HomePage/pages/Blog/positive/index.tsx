@@ -1,4 +1,11 @@
-import { Container, Title, Text, Flex, MantineProvider } from "@mantine/core";
+import {
+  Container,
+  Title,
+  Text,
+  Flex,
+  Image,
+  MantineProvider,
+} from "@mantine/core";
 import Head from "next/head";
 import Link from "next/link";
 import styles from "./positive.module.css";
@@ -9,7 +16,6 @@ export default function PositiveConnection() {
         <Head>
           <title>Nurturing Positive Connections</title>
         </Head>
-
         <Title className={styles["nurturing-main-title-container"]}>
           Nurturing Positive Connections and Online Reputation Management
         </Title>
@@ -22,7 +28,7 @@ export default function PositiveConnection() {
             to boost profitability and navigate the competitive landscape
             effectively.
           </Text>
-          <img
+          <Image
             className={styles["nurturing-main-image-container"]}
             src="/images/blog/nurturing-positive.jpg"
             alt="Example Image"
@@ -44,7 +50,6 @@ export default function PositiveConnection() {
         <Title className={styles["nurturing-article-title-content-container"]}>
           Visibility Translates to Profitability:
         </Title>
-
         <Text className={styles["nurturing-article-text-content-container"]}>
           Enhancing online visibility is a key objective of ORM tools. A strong
           online presence ensures that your business is easily discoverable by
@@ -101,7 +106,7 @@ export default function PositiveConnection() {
           decisions, adjusting strategies to align with changing economic
           conditions and ensuring financial stability.
         </Text>
-        <h4 className={styles["nurturing-article-last-content-container"]}>
+        <Text className={styles["nurturing-article-last-content-container"]}>
           Investing in Online Reputation Management tools is not just a
           tech-savvy trend; it's a strategic move that can significantly impact
           a business's financial trajectory. By building trust, increasing
@@ -112,12 +117,10 @@ export default function PositiveConnection() {
           reputation is currency, businesses armed with effective ORM tools are
           well-positioned to thrive financially, weathering storms and seizing
           opportunities with confidence.
-        </h4>
-        <p>
-          <Link href="/blog" style={{ fontSize: "large" }}>
-            Back
-          </Link>{" "}
-        </p>
+        </Text>
+        <Link href="/blog" style={{ fontSize: "large" }}>
+          Back
+        </Link>{" "}
       </Container>
     </MantineProvider>
   );

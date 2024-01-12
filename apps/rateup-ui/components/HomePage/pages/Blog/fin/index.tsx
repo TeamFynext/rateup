@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import { Container, Title, Text, MantineProvider } from "@mantine/core";
+import { Container, Title, Text, Image, MantineProvider } from "@mantine/core";
 import styles from "./fin.module.css";
 
 export default function FinancialReview() {
@@ -15,7 +15,7 @@ export default function FinancialReview() {
           Transforming Financial Fortunes: The Impact of Online Reputation
           Management Tools
         </Title>
-        <img
+        <Image
           src="/images/blog/financial-review.jpg"
           alt="Example Image"
           width={700}
