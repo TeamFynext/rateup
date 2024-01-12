@@ -47,6 +47,7 @@ const handleCreateCode = async (phoneNumber: string, router) => {
 };
 export function useSignIn() {
   const router = useRouter();
+  const { route } = useRouteAndCartStore();
 
   return async function (email: string, password: string, phoneNumber: string) {
     try {
@@ -91,7 +92,7 @@ export function useSignIn() {
         } else {
           // sign in successful. The session tokens are automatically handled by
           // the frontend SDK.
-          router.push("/dashboard");
+          router.push(route);
         }
       }
     } catch (err: any) {
@@ -309,6 +310,7 @@ import { verifyEmail } from "supertokens-web-js/recipe/emailverification";
 
 export const useConsumeVerificationCode = () => {
   const router = useRouter();
+  const { route } = useRouteAndCartStore();
   const consumeVerificationCode = async () => {
     notifications.show({
       id: "verify-email",
@@ -343,7 +345,7 @@ export const useConsumeVerificationCode = () => {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-        router.push("/dashboard");
+        router.push(route);
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
@@ -372,6 +374,7 @@ export const useConsumeVerificationCode = () => {
 
 import { sendVerificationEmail } from "supertokens-web-js/recipe/emailverification";
 import { useCallback } from "react";
+import { useRouteAndCartStore } from "../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 
 export function useEmailSend() {
   const router = useRouter();

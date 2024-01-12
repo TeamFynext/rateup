@@ -1,3 +1,14 @@
 .title-tabs-container {
   flex: 0 0 auto;
 }
+
+.survey-tabs-and-panels-container :global(.mantine-Tabs-panel) {
+  flex: 1 1 auto;
+  overflow: auto;
+  height: initial;
+}
+
+.survey-tabs-and-panels-container :global(.mantine-Tabs-panel) > div {
+  height: auto;
+  overflow: auto;
+}

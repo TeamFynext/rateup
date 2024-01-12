@@ -1,0 +1,62 @@
+import { useCallback, useEffect, useState } from "react";
+import ResourceSelector from "./ResourceSelector";
+import styles from "./ShareQRPage.module.css";
+import LinkWithCopyBtn from "./LinkWithCopyBtn";
+import { v4 as uuid } from "uuid";
+import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
+import ShareQR from "../../Survey/ShareSurvey/ShareQR";
+
+const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
+
+function ShareQRPage() {
+  const [resource, setResource] = useState<string>("Web Survey");
+  const [link, setLink] = useState(null);
+
+  const handleGenerateBtnClick = useCallback(() => {
+    switch (resource) {
+      case "Web Survey": {
+        const surveyTeamMapId = uuid();
+        const link = `${frontendUrl}/public/survey/${surveyTeamMapId}`;
+        setLink(link);
+        break;
+      }
+      case "Whatsapp Survey": {
+        const surveyTeamMapId = uuid();
+        const link = generateWaSurveyUrl(surveyTeamMapId);
+        setLink(link);
+        break;
+      }
+      case "Menu": {
+        const newMenuID = uuid();
+        const surveyTeamMapId = uuid();
+        const link = `${frontendUrl}}/public/menu/${newMenuID}/feedback/${surveyTeamMapId}`;
+        setLink(link);
+        break;
+      }
+    }
+  }, [resource]);
+
+  useEffect(() => {
+    handleGenerateBtnClick();
+  }, [resource]);
+
+  return (
+    <div className={styles["share-qr-page-container"]}>
+      <h1>Share QR</h1>
+      <ResourceSelector
+        resource={resource}
+        setResource={setResource}
+        onGenerateBtnClick={handleGenerateBtnClick}
+      />
+
+      {link && (
+        <div>
+          <LinkWithCopyBtn link={link} />
+          <ShareQR url={link} title={`New-${resource}`} isPublished={true} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ShareQRPage;
