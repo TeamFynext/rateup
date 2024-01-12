@@ -8,7 +8,6 @@ import {
 import {
   createCode,
   resendCode,
-  consumeCode,
   clearLoginAttemptInfo,
 } from "supertokens-web-js/recipe/passwordless";
 
@@ -153,9 +152,21 @@ export async function sendOTP(phoneNumber: string) {
     if (err.isSuperTokensGeneralError === true) {
       // this may be a custom error message sent from the API by you,
       // or if the input email / phone number is not valid.
-      window.alert(err.message);
+      showNotification(
+        "load-data",
+        "red",
+        "Error",
+        err.message,
+        <IconX size="1rem" />,
+      );
     } else {
-      window.alert("Oops! Something went wrong.");
+      showNotification(
+        "load-data",
+        "red",
+        "Error",
+        "Oops! Something went wrong.",
+        <IconX size="1rem" />,
+      );
     }
   }
 }

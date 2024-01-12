@@ -7,7 +7,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
+import { IconArrowAutofitLeft, IconSend, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import styles from "./AuthForm.module.css";
 import { RateupButtonBlue } from "../Button/RateupButtons";
@@ -17,13 +17,18 @@ import {
   consumeCode,
 } from "supertokens-web-js/recipe/passwordless";
 import { useRouter } from "next/router";
-import { resendOTP } from "../../utils/auth";
+import { resendOTP, showNotification } from "../../utils/auth";
+import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 
 function VerifyPhoneNumberPage() {
   const router = useRouter();
   const [otpNumber, setOtpNumber] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { route } = useRouteAndCartStore();
+
   async function handleOTPInput() {
     try {
+      setIsLoading(true);
       let response = await consumeCode({
         userInputCode: otpNumber,
       });
@@ -35,20 +40,28 @@ function VerifyPhoneNumberPage() {
         if (response?.createdNewUser && response?.user?.timeJoined) {
           router.push("/signup?auth=phone");
         } else {
-          router.push("/dashboard");
+          router.push(route);
         }
       } else if (response.status === "INCORRECT_USER_INPUT_CODE_ERROR") {
         // the user entered an invalid OTP
-        window.alert(
+        showNotification(
+          "load-data",
+          "red",
+          "Error",
           "Wrong OTP! Please try again. Number of attempts left: " +
             (response.maximumCodeInputAttempts -
               response.failedCodeInputAttemptCount),
+          <IconX size="1rem" />,
         );
       } else if (response.status === "EXPIRED_USER_INPUT_CODE_ERROR") {
         // it can come here if the entered OTP was correct, but has expired because
         // it was generated too long ago.
-        window.alert(
+        showNotification(
+          "load-data",
+          "red",
+          "Error",
           "Old OTP entered. Please regenerate a new one and try again",
+          <IconX size="1rem" />,
         );
       } else {
         // this can happen if the user tried an incorrect OTP too many times.
@@ -58,15 +71,29 @@ function VerifyPhoneNumberPage() {
         // was called - so that if the user does a page reload, they will now see the
         // enter email / phone UI again.
         await clearLoginAttemptInfo();
-        window.location.assign("/login");
+        router.push("/login");
       }
     } catch (err: any) {
       if (err.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        window.alert(err.message);
+        showNotification(
+          "load-data",
+          "red",
+          "Error",
+          err.message,
+          <IconX size="1rem" />,
+        );
       } else {
-        window.alert("Oops! Something went wrong.");
+        showNotification(
+          "load-data",
+          "red",
+          "Error",
+          "Oops! Something went wrong.",
+          <IconX size="1rem" />,
+        );
       }
+    } finally {
+      setIsLoading(false);
     }
   }
   return (
@@ -93,8 +120,8 @@ function VerifyPhoneNumberPage() {
         />
         <RateupButtonBlue
           type="button"
-          title="Verfy Otp"
-          // loading={isLoading}
+          title="Verify Otp"
+          loading={isLoading}
           className={styles["login-signup-form-submit-btn"]}
           onClick={handleOTPInput}
         />
