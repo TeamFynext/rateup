@@ -10,7 +10,7 @@ import {
   resendCode,
   consumeCode,
   clearLoginAttemptInfo,
-} from "supertokens-web-js/recipe/Passwordless";
+} from "supertokens-web-js/recipe/passwordless";
 
 const handleCreateCode = async (phoneNumber: string, router) => {
   try {
