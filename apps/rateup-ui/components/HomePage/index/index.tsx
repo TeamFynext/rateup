@@ -8,6 +8,7 @@ import PrivacyPolicy from "../pages/PrivacyPolicy";
 import ContactUs from "../pages/ContactUs";
 import AboutUs from "../pages/AboutUs";
 import Pricing from "../pages/Pricing";
+import Blog from "../pages/Blog";
 
 function HomePage() {
   const { pathname } = useRouter();
@@ -47,6 +48,10 @@ function HomePage() {
     }
     case "/pricing": {
       componentToBeRendered = <Pricing />;
+      break;
+    }
+    case "/blog": {
+      componentToBeRendered = <Blog />;
       break;
     }
   }
