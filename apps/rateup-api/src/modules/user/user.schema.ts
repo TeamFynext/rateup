@@ -19,12 +19,14 @@ const createUserSignupSchema = z.object({
   email: z.string().email(),
   name: z.string().min(4),
   orgName: z.string().min(4),
+  phone: z.string(),
 });
 
 const createUserGoogleSchema = z.object({
   inviteCode: z.string().min(4),
   name: z.string().min(4),
   orgName: z.string().min(4),
+  type: z.string(),
 });
 
 const changeUserPasswordSchema = z.object({
@@ -39,11 +41,13 @@ const updateProfileSchema = z.object({
 });
 
 const updateProfilePhotoSchema = z.object({
-  profilePhoto: z.string().min(6)
-    .refine(value => value.includes('.'), {
-      message: 'Invalid photo.',
+  profilePhoto: z
+    .string()
+    .min(6)
+    .refine((value) => value.includes("."), {
+      message: "Invalid photo.",
     }),
-})
+});
 
 const userEmailCheckSchema = z.object({
   email: z.string().email(),
@@ -56,9 +60,9 @@ export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
     changeUserPasswordSchema,
     updateProfileSchema,
     updateProfilePhotoSchema,
-    userEmailCheckSchema
+    userEmailCheckSchema,
   },
-  { $id: "userSchema" }
+  { $id: "userSchema" },
 );
 
 export type CreateUserParams = z.infer<typeof createUserSchema>;
@@ -69,5 +73,3 @@ export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
 export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;
-
-

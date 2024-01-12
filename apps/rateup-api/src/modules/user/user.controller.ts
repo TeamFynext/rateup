@@ -16,13 +16,14 @@ import {
   userEmailCheckSchemaInput,
 } from "./user.schema";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import PasswordLess from "supertokens-node/recipe/passwordless";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { log } from "../../utils/logger";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const userData = await getLoggedUserInfo(request, reply);
@@ -32,14 +33,14 @@ export async function getLoggedUserInfoHandler(
       reply.code(200).send({ message: "Success", data: userData });
     }
   } catch (e) {
-    log.error(e)
+    log.error(e);
     reply.code(500).send({ message: `Internal server error :  ${e}` });
   }
 }
 
 export async function getLoggedUserProfileHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const userData = await getLoggedUserProfile(request, reply);
@@ -57,7 +58,7 @@ export async function createGoogleUserHandler(
   request: FastifyRequest<{
     Body: CreateUserGoogleSchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   // console.log("enter user signup6777",request?.body)
   if (request?.body?.inviteCode !== process.env.INVITE_CODE) {
@@ -69,11 +70,17 @@ export async function createGoogleUserHandler(
     let userId = session.getUserId();
 
     let user;
-    let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+    let userInfo;
+    if (request?.body?.type === "google") {
+      userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+    } else {
+      userInfo = await PasswordLess.getUserById({ userId });
+    }
 
     let data = {
       id: userId,
       email: userInfo?.email !== undefined ? userInfo.email : "",
+      phone: userInfo?.phoneNumber !== undefined ? userInfo.phoneNumber : "",
       name: request?.body?.name,
       orgName: request?.body?.orgName,
     };
@@ -102,7 +109,7 @@ export async function changeUserPasswordHandler(
   req: FastifyRequest<{
     Body: ChangeUserPasswordSchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   // get the supertokens session object from the req
   //let session = req.session
@@ -130,7 +137,7 @@ export async function changeUserPasswordHandler(
   let isPasswordValid = await ThirdPartyEmailPassword.emailPasswordSignIn(
     session!.getTenantId(),
     userInfo?.email,
-    oldPassword
+    oldPassword,
   );
 
   if (isPasswordValid.status !== "OK") {
@@ -171,7 +178,7 @@ export async function updateProfileHandler(
   request: FastifyRequest<{
     Body: UpdateProfileSchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   let user;
@@ -191,7 +198,7 @@ export async function updateProfilePhotoHandler(
   request: FastifyRequest<{
     Body: UpdateProfilePhotoSchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   let user;
@@ -212,7 +219,7 @@ export async function updateUserActiveStatusHandler(
   request: FastifyRequest<{
     Params: { userId: string };
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     await updateUserActiveStatus(request.params.userId);
@@ -229,7 +236,7 @@ export async function checkEmailExistHandler(
   request: FastifyRequest<{
     Body: userEmailCheckSchemaInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const user = await checkEmailExist(request.body.email);
