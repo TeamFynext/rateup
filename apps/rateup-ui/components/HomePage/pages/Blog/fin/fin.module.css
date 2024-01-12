@@ -1,0 +1,32 @@
+.fin-main-title-container {
+  font-size: 50px;
+  margin-top: 5rem;
+  text-align: center;
+  color: midnightblue;
+  margin-bottom: 5rem;
+}
+
+.fin-manin-text-container {
+  text-align: justify;
+  line-height: 40px;
+  font-size: 20px;
+}
+
+.fin-title-container {
+  font-size: 30px;
+  color: midnightblue;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+}
+
+.fin-text-container {
+  text-align: justify;
+  line-height: 40px;
+  font-size: 18px;
+}
+
+.fin-text-last-para-container {
+  text-align: justify;
+  line-height: 40px;
+  font-size: 20px;
+}
