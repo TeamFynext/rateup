@@ -36,6 +36,7 @@ import {
 import SurveyContext from "../../../context/SurveyContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
+import styles from "./ResultComparison.module.css";
 //import end
 //.............................................................................
 // default export component start
@@ -73,6 +74,7 @@ export default function ResultComparison() {
       h={"100%"}
       display={"flex"}
       style={{ flexDirection: "column" }}
+      className={styles["result-comparison-container"]}
     >
       <Stack style={{ overflow: "auto", flex: 1 }} mt={"md"} p={10}>
         <Heading subtitle="Team Response Activity" />

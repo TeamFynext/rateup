@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import classes from "./EditSurvey.module.css";
+import styles from "./EditSurvey.module.css";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export enum QuestionTabsEnum {
@@ -47,8 +47,11 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={10}>
-      <PaperLayout style={{ flex: 2 }}>
+    <Flex w={"100%"} h={"100%"} gap={10}>
+      <PaperLayout
+        style={{ flex: 2 }}
+        className={styles["questions-sidebar-container"]}
+      >
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -59,7 +62,10 @@ export function EditSurvey({
           addQnTrigger={addQnTrigger}
         />
       </PaperLayout>
-      <PaperLayout style={{ flex: 5 }}>
+      <PaperLayout
+        style={{ flex: 5 }}
+        className={styles["edit-question-container"]}
+      >
         <Tabs
           px={"md"}
           pb="md"
@@ -67,7 +73,7 @@ export function EditSurvey({
           onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           style={{ height: "100%" }}
           classNames={{
-            panel: classes.panel,
+            panel: styles.panel,
           }}
         >
           <Tabs.Panel value={QuestionTabsEnum.Edit} style={{ height: "100%" }}>
