@@ -75,6 +75,7 @@ export async function createGoogleUserHandler(
       userInfo = await ThirdPartyEmailPassword.getUserById(userId);
     } else {
       userInfo = await PasswordLess.getUserById({ userId });
+      userInfo.email = request?.body?.email;
     }
 
     let data = {
