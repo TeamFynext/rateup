@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import {
   ActionIcon,
+  Box,
   Checkbox,
   Group,
   Loader,
@@ -102,14 +103,14 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
       onChange={(value) => setActiveResultTab(value as ResultTab)}
       className={styles["result-page-container"]}
     >
-      <div className={styles["tabs-container"]}>
+      <Box className={styles["tabs-container"]}>
         <Tabs.List>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
         </Tabs.List>
-      </div>
+      </Box>
       {/* <div className={styles["responses-filter-container"]}>
         <ResultFilter
           activeTab={resultTab}

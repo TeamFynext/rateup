@@ -11,6 +11,7 @@ import {
   ScrollAreaAutosize,
   ActionIcon,
   Popover,
+  Box,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -274,7 +275,7 @@ const Responses = ({
         </Group>
       </PaperLayout>
       {responseCount > 0 ? (
-        <div className={styles["responses-table-container"]}>
+        <Box className={styles["responses-table-container"]}>
           <Table
             ref={tableRef}
             withRowBorders
@@ -338,7 +339,7 @@ const Responses = ({
               </Text>
             </Stack>
           </FormModalLayout>
-        </div>
+        </Box>
       ) : (
         <NothingFound text="No responses yet" />
       )}
