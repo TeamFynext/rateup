@@ -1,0 +1,17 @@
+.result-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100% !important;
+}
+
+.tabs-container {
+  flex: 0 0 auto;
+}
+
+.result-page-container :global(.mantine-Tabs-panel) {
+  flex: 1 0 0;
+}
+
+.filters-container {
+  padding: 1rem;
+}

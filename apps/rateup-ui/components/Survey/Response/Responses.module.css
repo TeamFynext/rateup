@@ -1,3 +1,26 @@
+.responses-container {
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+
 .total-responses-heading-container {
-  overflow: visible !important;
+  flex: 0 0 auto;
+}
+
+.responses-table-container {
+  flex: 1 1 auto;
+  min-height: 300px;
+  overflow: auto;
+}
+
+.responses-table {
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 1rem;
+}
+
+.result-filter-dropdown {
+  max-height: 300px;
+  overflow: auto;
+  padding: 4px;
 }

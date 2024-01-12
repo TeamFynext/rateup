@@ -2,6 +2,12 @@
   height: 100%;
 }
 
-.root > * {
-  border: 1px solid gray;
+.questions-sidebar-container {
+  padding: 0;
+  border: 1px solid var(--grey-color-4);
+}
+
+.edit-question-container {
+  border: 1px solid var(--grey-color-4);
+  overflow-x: hidden;
 }
