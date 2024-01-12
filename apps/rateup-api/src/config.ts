@@ -8,6 +8,8 @@ import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpass
 import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset";
 import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail";
 import { log } from "./utils/logger";
+import Passwordless from "supertokens-node/recipe/passwordless";
+import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -43,7 +45,6 @@ export const SuperTokensConfig: TypeInput = {
           {
             id: "inviteCode",
           },
-
         ],
       },
 
@@ -52,7 +53,7 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             sendEmail: async function (input) {
-              sendResetPasswordMail(input?.passwordResetLink, input.user.email)
+              sendResetPasswordMail(input?.passwordResetLink, input.user.email);
             },
           };
         },
@@ -65,12 +66,14 @@ export const SuperTokensConfig: TypeInput = {
         {
           config: {
             thirdPartyId: "google",
-            clients: [{
-              clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
-              clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
-            }]
-          }
-        }
+            clients: [
+              {
+                clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
+                clientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+              },
+            ],
+          },
+        },
       ],
 
       override: {
@@ -78,8 +81,10 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             emailPasswordSignUp: async function (input) {
-
-              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
+                "public",
+                input.email,
+              );
 
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
@@ -90,7 +95,10 @@ export const SuperTokensConfig: TypeInput = {
               };
             },
             thirdPartySignInUp: async function (input) {
-              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail("public", input.email);
+              let existingUsers = await ThirdPartyEmailPassword.getUsersByEmail(
+                "public",
+                input.email,
+              );
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up
                 return originalImplementation.thirdPartySignInUp(input);
@@ -100,7 +108,7 @@ export const SuperTokensConfig: TypeInput = {
                   (i) =>
                     i.thirdParty !== undefined &&
                     i.thirdParty.id === input.thirdPartyId &&
-                    i.thirdParty.userId === input.thirdPartyUserId
+                    i.thirdParty.userId === input.thirdPartyUserId,
                 )
               ) {
                 // this means we are trying to sign in with the same social login. So we allow it
@@ -193,7 +201,11 @@ export const SuperTokensConfig: TypeInput = {
                     // TODO: some post sign up logic
                   } else {
                     // TODO: some post sign in logic
-                    log.trace('Signed in\nemail => %s\nuserId => %s', response?.user?.email, response?.user?.id)
+                    log.trace(
+                      "Signed in\nemail => %s\nuserId => %s",
+                      response?.user?.email,
+                      response?.user?.id,
+                    );
                     const user = await getOrgIdAndRole({
                       id: response?.user?.id,
                     });
@@ -218,6 +230,13 @@ export const SuperTokensConfig: TypeInput = {
         },
       },
     }),
+    Passwordless.init({
+      smsDelivery: {
+        service: new SupertokensService(process.env.SUPERTOKEN_SMS_API_KEY),
+      },
+      contactMethod: "PHONE",
+      flowType: "USER_INPUT_CODE",
+    }),
 
     Session.init({
       override: {
@@ -228,7 +247,7 @@ export const SuperTokensConfig: TypeInput = {
               let userId = input.userId;
               let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
 
-              log.trace('Init session\nemail => %s', userInfo?.email)
+              log.trace("Init session\nemail => %s", userInfo?.email);
               const user = await getOrgIdAndRole({ id: userId });
               // This goes in the access token, and is availble to read on the frontend.
               input.accessTokenPayload = {
@@ -253,9 +272,8 @@ export const SuperTokensConfig: TypeInput = {
             ...originalImplementation,
 
             sendEmail: async function (input) {
-              sendVerifyMail(input.emailVerifyLink, input.user.email)
-            }
-
+              sendVerifyMail(input.emailVerifyLink, input.user.email);
+            },
           };
         },
       },
@@ -269,14 +287,13 @@ export const SuperTokensConfig: TypeInput = {
               }
 
               // First we call the original implementation
-              let response = await originalImplementation.verifyEmailPOST(
-                input
-              );
+              let response =
+                await originalImplementation.verifyEmailPOST(input);
 
               // Then we check if it was successfully completed
               if (response.status === "OK") {
                 let { id, email } = response.user;
-                log.trace('Verifying email\n%o', JSON.stringify(response.user))
+                log.trace("Verifying email\n%o", JSON.stringify(response.user));
                 let orgMember = await getOrgIdAndRole({ id: id });
               }
               return response;

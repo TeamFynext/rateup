@@ -30,6 +30,7 @@ export async function createUserSignup({
   email,
   name,
   orgName,
+  phone,
 }: CreateUserSignupSchema) {
   log.info("Creating user");
   try {
@@ -40,6 +41,7 @@ export async function createUserSignup({
           id,
           email,
           name,
+          phone,
         },
       });
 
@@ -74,10 +76,10 @@ export async function createUserSignup({
       });
 
       // creating 1 week trial subscription
-      await createTrialSubscription(org.id, prisma as any)
+      await createTrialSubscription(org.id, prisma as any);
     });
     // Commit the transaction
-    log.trace(" create user transaction committed..........:", result)
+    log.trace(" create user transaction committed..........:", result);
     return result;
   } catch (error) {
     // Rollback the transaction
@@ -90,7 +92,7 @@ export async function createUserSignup({
 
 export async function getLoggedUserInfo(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
 
@@ -151,7 +153,7 @@ export async function getLoggedUserInfo(
 
 export async function getLoggedUserProfile(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
 
@@ -182,7 +184,7 @@ export enum Gender {
 export async function updateUserProfile(
   { title, name, phone }: UpdateProfileSchema,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
   let userId = session.getUserId();
@@ -202,7 +204,7 @@ export async function updateUserProfile(
 export async function updateUserProfilePhoto(
   { profilePhoto }: UpdateProfilePhotoSchema,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let session = await Session.getSession(request, reply);
   let userId = session.getUserId();
@@ -262,24 +264,24 @@ export async function deleteUser(userId: string) {
   try {
     await prisma.teamMember.deleteMany({
       where: { userId: userId },
-    })
+    });
     await prisma.orgMember.deleteMany({
       where: { userId: userId },
-    })
+    });
     const orgs = await prisma.org.findMany({
       where: { ownerId: userId },
-    })
+    });
     await prisma.team.deleteMany({
-      where: { orgId: { in: orgs.map(org => org.id) } },
-    })
+      where: { orgId: { in: orgs.map((org) => org.id) } },
+    });
     await prisma.org.deleteMany({
       where: { ownerId: userId },
-    })
+    });
     await prisma.user.delete({
       where: { id: userId },
     });
   } catch (error) {
     log.error("delete user transaction failed in db %o", error);
   }
-  await supertokens.deleteUser(userId)
+  await supertokens.deleteUser(userId);
 }

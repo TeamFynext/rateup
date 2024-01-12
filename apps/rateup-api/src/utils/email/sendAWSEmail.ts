@@ -21,11 +21,12 @@ interface EmailParams {
   subject: string;
   text: string;
   html: string;
+  attachments?: [{ filename: string; path: string }];
 }
 
 export const sendAWSEmail = async (emailParams: EmailParams) => {
   try {
-    const { to, subject, text, html } = emailParams;
+    const { to, subject, text, html, attachments } = emailParams;
     const from = "RateUp.app <hello@rateup.app>"; // replace with your verified email address
 
     await transporter.sendMail({
@@ -34,6 +35,7 @@ export const sendAWSEmail = async (emailParams: EmailParams) => {
       subject,
       text,
       html,
+      attachments,
     });
 
     log.debug("Email sent successfully to %s", to);
