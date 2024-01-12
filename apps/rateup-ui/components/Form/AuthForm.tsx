@@ -69,6 +69,7 @@ const AuthForm = ({
             setIsLoading={setIsLoading}
             createUserMutation={createUserMutation}
             isLoading={isLoading}
+            authType={authType}
           />
         );
       else
@@ -86,7 +87,7 @@ const AuthForm = ({
     <Flex
       className={`
           ${styles["auth-form-container"]}
-          ${styles[`${mode}-auth-form-container`]}
+          ${styles[`LOGIN-auth-form-container`]}
           ${styles[`${authType ? "auth-type-signup-form" : ""}`]}
         `}
     >

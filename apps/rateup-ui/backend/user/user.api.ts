@@ -4,6 +4,7 @@ export interface ICreateGoogleUser {
   name: string;
   orgName: string;
   inviteCode: string;
+  type: string;
 }
 
 export interface IChangePassword {

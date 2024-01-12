@@ -7,11 +7,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import {
-  IconArrowAutofitLeft,
-  IconChevronRight,
-  IconSend,
-} from "@tabler/icons-react";
+import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
 import Link from "next/link";
 import styles from "./AuthForm.module.css";
 import { RateupButtonBlue } from "../Button/RateupButtons";
@@ -21,6 +17,7 @@ import {
   consumeCode,
 } from "supertokens-web-js/recipe/Passwordless";
 import { useRouter } from "next/router";
+import { resendOTP } from "../../utils/auth";
 
 function VerifyPhoneNumberPage() {
   const router = useRouter();
@@ -35,19 +32,11 @@ function VerifyPhoneNumberPage() {
         // we clear the login attempt info that was added when the createCode function
         // was called since the login was successful.
         await clearLoginAttemptInfo();
-        console.log(response?.user?.timeJoined);
-
-        if (
-          response?.createdNewUser &&
-          response?.user?.loginMethods?.length === 1
-        ) {
-          // user sign up success
-          console.log("sign up");
+        if (response?.createdNewUser && response?.user?.timeJoined) {
+          router.push("/signup?auth=phone");
         } else {
-          // user sign in success
-          console.log("sign in");
+          router.push("/dashboard");
         }
-        router.push("/dashboard");
       } else if (response.status === "INCORRECT_USER_INPUT_CODE_ERROR") {
         // the user entered an invalid OTP
         window.alert(
@@ -69,8 +58,7 @@ function VerifyPhoneNumberPage() {
         // was called - so that if the user does a page reload, they will now see the
         // enter email / phone UI again.
         await clearLoginAttemptInfo();
-        window.alert("Login failed. Please try again");
-        window.location.assign("/auth");
+        window.location.assign("/login");
       }
     } catch (err: any) {
       if (err.isSuperTokensGeneralError === true) {
@@ -112,7 +100,7 @@ function VerifyPhoneNumberPage() {
         />
         <Flex justify={"end"} gap={0}>
           <NavLink
-            // onClick={resendOTP}
+            onClick={resendOTP}
             component="div"
             label="Resend Otp"
             leftSection={<IconSend size="1rem" stroke={1.5} />}
@@ -122,17 +110,8 @@ function VerifyPhoneNumberPage() {
           />
         </Flex>
       </form>
-      <NavLink
-        className={styles["resend-change-email-navlink-component"]}
-        // onClick={sendEmail}
-        component="div"
-        label="change phone number"
-        leftSection={<IconSend size="1rem" stroke={1.5} />}
-        rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
-        variant="subtle"
-      />
 
-      <Link href="/auth/logout" style={{ textDecoration: "none" }}>
+      <Link href="/logout" style={{ textDecoration: "none" }}>
         <NavLink
           component="div"
           style={{ fontWeight: 620 }}

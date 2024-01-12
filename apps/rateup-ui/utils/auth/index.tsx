@@ -12,50 +12,87 @@ import {
   clearLoginAttemptInfo,
 } from "supertokens-web-js/recipe/Passwordless";
 
+const handleCreateCode = async (phoneNumber: string, router) => {
+  try {
+    let response = await createCode({
+      phoneNumber,
+    });
+    if (response.status !== "OK") {
+      // this can happen due to automatic account linking. See that section in our docs.
+    } else {
+      // OTP sent successfully.
+      router.push(`/login/verify-phone-number`);
+    }
+  } catch (err: any) {
+    if (err.isSuperTokensGeneralError === true) {
+      // this may be a custom error message sent from the API by you,
+      // or if the input email / phone number is not valid.
+      showNotification(
+        "load-data",
+        "red",
+        "Failed",
+        err.message,
+        <IconX size="1rem" />,
+      );
+    } else {
+      showNotification(
+        "load-data",
+        "red",
+        "Failed",
+        "Oops! Something went wrong.",
+        <IconX size="1rem" />,
+      );
+    }
+  }
+};
 export function useSignIn() {
   const router = useRouter();
 
-  return async function (email: string, password: string) {
+  return async function (email: string, password: string, phoneNumber: string) {
     try {
-      let response = await emailPasswordSignIn({
-        formFields: [
-          {
-            id: "email",
-            value: email,
-          },
-          {
-            id: "password",
-            value: password,
-          },
-        ],
-      });
-
-      if (response?.status === "FIELD_ERROR") {
-        response?.formFields?.forEach((formField) => {
-          if (formField?.id === "email") {
-            // Email validation failed (for example incorrect email syntax).
-            showNotification(
-              "load-data",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
-          }
-        });
-      } else if (response?.status === "WRONG_CREDENTIALS_ERROR") {
-        // Email password combination is incorrect.
-        showNotification(
-          "load-data",
-          "red",
-          "Failed",
-          "Email password combination is incorrect.",
-          <IconX size="1rem" />,
-        );
+      if (phoneNumber) {
+        await handleCreateCode(phoneNumber, router);
       } else {
-        // sign in successful. The session tokens are automatically handled by
-        // the frontend SDK.
-        router.push("/dashboard");
+        let response = await emailPasswordSignIn({
+          formFields: [
+            {
+              id: "email",
+              value: email,
+            },
+            {
+              id: "password",
+              value: password,
+            },
+          ],
+        });
+
+        if (response?.status === "FIELD_ERROR") {
+          response?.formFields?.forEach((formField) => {
+            if (formField?.id === "email") {
+              // Email validation failed (for example incorrect email syntax).
+              showNotification(
+                "load-data",
+                "red",
+                "Error",
+                formField?.error,
+                <IconX size="1rem" />,
+              );
+            }
+          });
+        } else if (response?.status === "WRONG_CREDENTIALS_ERROR") {
+          // Email password combination is incorrect.
+          showNotification(
+            "load-data",
+            "red",
+            "Failed",
+            "Email password combination is incorrect.",
+            <IconX size="1rem" />,
+          );
+        } else {
+          // sign in successful. The session tokens are automatically handled by
+          // the frontend SDK.
+          router.push("/dashboard");
+        }
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
@@ -123,7 +160,6 @@ export async function sendOTP(phoneNumber: string) {
 }
 export async function resendOTP() {
   try {
-    const router = useRouter();
     let response = await resendCode();
 
     if (response.status === "RESTART_FLOW_ERROR") {
@@ -134,17 +170,43 @@ export async function resendOTP() {
       // was called - so that if the user does a page reload, they will now see the
       // enter email / phone UI again.
       await clearLoginAttemptInfo();
-      window.alert("Login failed. Please try again");
-      window.location.assign("/auth");
+      showNotification(
+        "load-data",
+        "red",
+        "Failed",
+        "Login failed. Please try again",
+        <IconX size="1rem" />,
+      );
+      window.location.assign("/login");
     } else {
-      router.push("/login/verify-email");
+      showNotification(
+        "load-data",
+        "green",
+        "Sucess",
+        "Otp resend sucessfully",
+        <IconCheck size="1rem" />,
+      );
     }
   } catch (err: any) {
+    console.log(err);
+
     if (err.isSuperTokensGeneralError === true) {
       // this may be a custom error message sent from the API by you.
-      window.alert(err.message);
+      showNotification(
+        "load-data",
+        "red",
+        "Failed",
+        err.message,
+        <IconX size="1rem" />,
+      );
     } else {
-      window.alert("Oops! Something went wrong.");
+      showNotification(
+        "load-data",
+        "red",
+        "Failed",
+        "Oops! Something went wrong.",
+        <IconX size="1rem" />,
+      );
     }
   }
 }
@@ -162,25 +224,7 @@ export function useSignUp() {
   ) {
     try {
       if (phoneNumber) {
-        try {
-          let response = await createCode({
-            phoneNumber,
-          });
-          if (response.status !== "OK") {
-            // this can happen due to automatic account linking. See that section in our docs.
-          } else {
-            // OTP sent successfully.
-            router.push(`/login/verify-phone-number`);
-          }
-        } catch (err: any) {
-          if (err.isSuperTokensGeneralError === true) {
-            // this may be a custom error message sent from the API by you,
-            // or if the input email / phone number is not valid.
-            window.alert(err.message);
-          } else {
-            window.alert("Oops! Something went wrong.");
-          }
-        }
+        await handleCreateCode(phoneNumber, router);
       } else {
         let response = await emailPasswordSignUp({
           formFields: [
