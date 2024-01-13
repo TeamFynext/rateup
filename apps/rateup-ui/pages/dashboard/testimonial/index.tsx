@@ -1,41 +1,24 @@
+import { SimpleGrid } from "@mantine/core";
+import { useTestimonialSurveys } from "../../../backend/testimonials/testimonial.query";
+import TestimonialSurveyCard from "../../../components/testimonial/TestimonialSurveyCard";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 import { useState } from "react";
-import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { Flex, Stack, Tabs } from "@mantine/core";
-import Heading from "../../../components/styled/Heading/Heading";
 
-enum TestimonialTabs {
-  Review = "Review",
-  Published = "Published",
-}
 export default function () {
-  const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(
-    TestimonialTabs.Review,
-  );
+  const { data: allSurveys } = useTestimonialSurveys();
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const filteredSurveys = allSurveys;
+
   return (
     <>
-      <StyledTabs
-        value={activeTab}
-        onChange={(value) => setActiveTab(value as TestimonialTabs)}
-      >
-        <Tabs.List>
-          <Tabs.Tab value={TestimonialTabs.Review}>Review</Tabs.Tab>
-          <Tabs.Tab value={TestimonialTabs.Published}>Published</Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value={TestimonialTabs.Review}>
-          <Stack>
-            <Flex>
-              <Heading
-                title={"Testimonials"}
-                titleprops={{ tt: "capitalize" }}
-              />
-            </Flex>
-          </Stack>
-        </Tabs.Panel>
-        <Tabs.Panel value={TestimonialTabs.Published}>
-          <>published</>
-        </Tabs.Panel>
-      </StyledTabs>
+      <TeamSelector
+        value={selectedTeamId}
+        onChange={(teamId) => setSelectedTeamId(teamId)}
+        enableAll={true}
+      />
+      <SimpleGrid cols={1}>
+        {allSurveys?.map((survey) => <TestimonialSurveyCard survey={survey} />)}
+      </SimpleGrid>
     </>
   );
 }
