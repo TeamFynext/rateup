@@ -27,6 +27,8 @@
     "papaparse": "^5.4.1",
     "pino": "^8.14.1",
     "pino-pretty": "^10.0.0",
+    "sharp": "^0.33.2",
+    "stream-to-array": "^2.3.0",
     "supertokens-node": "^15.2.0",
     "unirest": "^0.6.0",
     "zod": "^3.21.4"
@@ -36,7 +38,7 @@
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only --exit-child src/index.ts",
     "test": "jest --silent",
-    "prepare":"husky install"
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
