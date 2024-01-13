@@ -1,7 +1,7 @@
 import { Image, Modal, Stack } from "@mantine/core";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 
-interface ConfirmationModalProps {
+interface PreviewModalProps {
   opened: boolean;
   onClose: () => void;
   headerTitle: string;
@@ -12,7 +12,7 @@ export default function PreviewModal({
   onClose,
   headerTitle,
   imgObject,
-}: ConfirmationModalProps) {
+}: PreviewModalProps) {
   return (
     <Modal
       centered

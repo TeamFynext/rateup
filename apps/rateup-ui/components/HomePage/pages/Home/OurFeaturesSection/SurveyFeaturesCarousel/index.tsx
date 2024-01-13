@@ -101,22 +101,16 @@ function SurveyFeaturesCarousel() {
           </Tabs.List>
 
           <Tabs.Panel value={SurveyType.WebSurvey}>
-            Web Survey
-            <br />
             For businesses with complex structures, our platform offers
             multi-organizational support. Streamline customer experience
             management across various departments and locations effortlessly.
           </Tabs.Panel>
           <Tabs.Panel value={SurveyType.WhatsappSurvey}>
-            Whatsapp Survey
-            <br />
             For businesses with complex structures, our platform offers
             multi-organizational support. Streamline customer experience
             management across various departments and locations effortlessly.
           </Tabs.Panel>
           <Tabs.Panel value={SurveyType.GroupSurvey}>
-            Group Survey
-            <br />
             For businesses with complex structures, our platform offers
             multi-organizational support. Streamline customer experience
             management across various departments and locations effortlessly.

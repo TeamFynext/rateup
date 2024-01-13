@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
@@ -12,6 +12,9 @@ import {
   Badge,
   Textarea,
   Image,
+  Switch,
+  Paper,
+  Flex,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { NPSWeightage, QuestionType } from "../../../types/enums";
@@ -42,6 +45,7 @@ import { IconBrandGoogle } from "@tabler/icons";
 import { LanguageCompletionView } from "./LanguageCompletionView";
 
 import { ChoicesCreator } from "./ChoicesCreator";
+import TestimonialExtraProps from "./TestimonialExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -183,6 +187,7 @@ export function QuestionDetailedView({
                 <QuestionTypePreview
                   type={question?.type}
                   choices={form.values.choices}
+                  features={form.values.features}
                 />
               </CurrentResponsesContext.Provider>
             </Center>
@@ -207,8 +212,8 @@ export function QuestionDetailedView({
                   leftIcon={
                     <Image
                       src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                      height={30}
-                      width={30}
+                      h={30}
+                      w={30}
                       fit="contain"
                     />
                   }
@@ -293,6 +298,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.DDMS:
     case QuestionType.CustomNPS:
       return <ChoicesCreator qId={question?.id} form={form} />;
+    case QuestionType.Testimonial:
+      return <TestimonialExtraProps qId={question.id} form={form} />;
     default:
       return null;
   }

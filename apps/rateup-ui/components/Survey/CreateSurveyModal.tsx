@@ -15,6 +15,7 @@ import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
 import { useRouter } from "next/router";
 import { useQueryClient } from "@tanstack/react-query";
+import { showErrorToast } from "../../utils/notifications";
 
 interface FormValues {
   title: string;
@@ -46,6 +47,7 @@ export function CreateSurveyModal({
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const router = useRouter();
+  const [prevOpen, setPrevOpen] = useState(false);
   const { tmp, tn } = router?.query;
 
   const [templateId, setTemplateId] = useState(template?.id || tmp || null);
@@ -87,11 +89,12 @@ export function CreateSurveyModal({
   }, [templateName]);
 
   useEffect(() => {
-    if (open === false) {
+    if (prevOpen === true && open === false && setTemplate) {
       setTemplate(null);
       setTemplateName(null);
       setTemplateId(null);
     }
+    setPrevOpen(open);
   }, [open]);
 
   useEffect(() => {
@@ -136,42 +139,40 @@ export function CreateSurveyModal({
     setLanguages([defaultLanguage]);
   }, [open]);
 
-  const [isCreating, setIsCreating] = useState(false);
+  function handleClose() {
+    close();
+    resetForm();
+  }
+
   const createSurveyMutation = useCreateSurveyMutation();
   const queryClient = useQueryClient();
 
-  const onSubmit = (values) => {
+  const onSubmit = () => {
     const validationRes = form.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
       return;
     }
-    setIsCreating(true);
     notifications.show({
       id: "load-data",
       loading: true,
       title: "Creating survey..",
       message: `Hold on, your survey is getting created...`,
       autoClose: false,
-      withCloseButton: false,
+      withCloseButton: true,
     });
     createSurveyMutation.mutate(
       { ...form.values, type: surveyType, templateId: templateId || "" },
       {
         onSuccess: (data: CreateSurveyResponse) => {
-          close();
-          setIsCreating(false);
           queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
           queryClient.invalidateQueries({ queryKey: ["surveys"] });
-
-          resetForm();
           if (data?.id) {
             router.push(`${router.pathname}/${data?.id}`);
           }
         },
         onError: (error) => {
-          setIsCreating(false);
-          resetForm();
+          notifications.hide("load-data");
         },
       },
     );
@@ -179,10 +180,7 @@ export function CreateSurveyModal({
   return (
     <FormModalLayout
       opened={open}
-      onClose={() => {
-        close();
-        form.reset();
-      }}
+      onClose={handleClose}
       title={"Create Survey"}
       centered
       onSubmit={form.onSubmit(onSubmit)}

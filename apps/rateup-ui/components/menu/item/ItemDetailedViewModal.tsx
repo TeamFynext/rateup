@@ -1,4 +1,4 @@
-import { Box, Group, Image, Modal, Stack, Text } from "@mantine/core";
+import { Box, Flex, Group, Image, Modal, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -8,6 +8,8 @@ import classes from "./itemDetailedViewModal.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import { lexend } from "../../../utils/fonts";
 import { currencyLabel } from "../util/currencyData";
+import { fallbackImage } from "../../../utils/constants";
+import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -20,18 +22,17 @@ export function ItemDetailedViewModal({
   currency = "0",
 }: ItemDetailedViewModalProps) {
   const [selectedMedia, setSelectedMedia] = useState<string>(
-    item?.videoUrl ? item?.videoUrl : item?.images[0],
+    item?.videoUrl?.length === 0 ? (item?.images[0] as string) : item?.videoUrl,
   );
   const smallScreen = useMediaQuery("(max-width: 30em)");
 
   useEffect(() => {
     if (item.videoUrl) {
       if (!extractVideoId(item?.videoUrl)) {
-        setSelectedMedia(item?.images[0]);
+        setSelectedMedia(item?.images[0] as string);
       }
     }
   }, [item]);
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   return (
     <Modal
       centered
@@ -98,7 +99,7 @@ export function ItemDetailedViewModal({
           </Box>
 
           <Group justify="center" mt="xs">
-            {item?.images?.map((imageKey) => (
+            {item?.images?.map((imageKey: string) => (
               <Image
                 key={imageKey}
                 w="75px"
@@ -153,6 +154,14 @@ export function ItemDetailedViewModal({
           <Text fz="xl" fw={600} tt={"capitalize"} ta={"center"}>
             {item.name}
           </Text>
+          <Flex
+            gap={4}
+            wrap={"wrap"}
+            w={"clamp(220px, 163.6624px + 15.0235vw, 380px)"}
+            my={4}
+          >
+            <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
+          </Flex>
           <Text
             maw={"350px"}
             h="100px"
@@ -176,15 +185,23 @@ export function ItemDetailedViewModal({
                   {varient.name}
                 </Text>
                 <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" fw={500}>
-                  {currencyLabel[currency]?.symbol}&nbsp;
-                  {varient.price}
+                  {varient?.price && (
+                    <>
+                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {varient.price}
+                    </>
+                  )}
                 </Text>
               </Stack>
             ))
           ) : (
             <Text fz="clamp(16px, 7.424px + 1.429vw, 28px)" mt={"md"} fw={500}>
-              {currencyLabel[currency]?.symbol}&nbsp;
-              {item?.price?.price}
+              {item?.price?.price && (
+                <>
+                  {currencyLabel[currency]?.symbol}&nbsp;
+                  {item?.price?.price}
+                </>
+              )}
             </Text>
           )}
         </Group>

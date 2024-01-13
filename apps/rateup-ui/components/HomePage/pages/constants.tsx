@@ -1,6 +1,8 @@
 import { Text, Title } from "@mantine/core";
 import styles from "../index/index.module.css";
 
+export const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+
 const featuresH1ClassName = styles["illustration-txt-section-heading"];
 const descriptionPClassName = styles["illustration-txt-section-text-para"];
 const descriptionPSpanClassName = styles["bold-span"];
@@ -20,5 +22,4 @@ export const DescriptionPSpan = ({ text }) => (
   <span className={descriptionPSpanClassName}>{text}</span>
 );
 
-export const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const videoClassName = styles["illustration-txt-section-video"];

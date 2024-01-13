@@ -4,6 +4,7 @@ import {
   Box,
   Flex,
   Image,
+  Spoiler,
   Stack,
   Table,
   Text,
@@ -16,12 +17,14 @@ import {
   IconEdit,
   IconTrash,
   IconWashDrycleanOff,
+  IconReplace,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import { IconReplace } from "@tabler/icons-react";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { notifications } from "@mantine/notifications";
 import { currencyLabel } from "../../util/currencyData";
+import { fallbackImage } from "../../../../utils/constants";
+import MenuFoodLabelBadge from "../tag/MenuFoodLabelBadge";
 
 const TableRow = ({
   item,
@@ -39,14 +42,13 @@ const TableRow = ({
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
         <Image
-          style={{ borderRadius: "4px", aspectRatio: "1/1" }}
+          style={{ borderRadius: "4px", aspectRatio: "4/3" }}
           src={
             item?.images?.length > 0
               ? getFileUrlFromKey(item?.images[0])
-              : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`
+              : fallbackImage
           }
           alt={item?.name}
-          h={100}
           w={100}
         />
       </Table.Td>
@@ -54,8 +56,12 @@ const TableRow = ({
       <Table.Td>
         {item?.price?.type === MenuItemPriceType.FIXED ? (
           <Text>
-            {currencyLabel[currency]?.symbol}&nbsp;
-            {item?.price?.price}
+            {item?.price?.price && (
+              <>
+                {currencyLabel[currency]?.symbol}&nbsp;
+                {item?.price?.price}
+              </>
+            )}
           </Text>
         ) : (
           <Stack>
@@ -65,8 +71,12 @@ const TableRow = ({
                   {element?.name}
                 </Text>
                 <Text>
-                  {currencyLabel[currency]?.symbol}&nbsp;
-                  {element?.price}
+                  {element?.price && (
+                    <>
+                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {element?.price}
+                    </>
+                  )}
                 </Text>
               </Box>
             ))}
@@ -74,12 +84,25 @@ const TableRow = ({
         )}
       </Table.Td>
       <Table.Td>
-        <Text lineClamp={7}>{item?.description}</Text>
+        <Text>
+          <Spoiler
+            showLabel="Show more"
+            hideLabel="Hide"
+            transitionDuration={0}
+          >
+            {item?.description}
+          </Spoiler>
+        </Text>
       </Table.Td>
       <Table.Td>
         <Anchor href={item?.videoUrl} target="_blank">
           {item?.videoUrl}
         </Anchor>
+      </Table.Td>
+      <Table.Td>
+        <Flex maw={"300px"} wrap={"wrap"} gap={4}>
+          <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
+        </Flex>
       </Table.Td>
       <Table.Td>
         <Flex maw="100px" h="100px" align="center" gap={"lg"} mr={"sm"}>
@@ -91,7 +114,6 @@ const TableRow = ({
             headerTitle="Delete Menu Item?"
             confirmLabel="Delete"
             onConfirm={(e) => {
-              e.stopPropagation();
               notifications.show({
                 id: "delete-data-menu-item",
                 loading: true,

@@ -22,6 +22,7 @@ import {
   IconMessage,
 } from "@tabler/icons-react";
 import ShareQR from "../../Survey/ShareSurvey/ShareQR";
+
 function ShareLandingPage({ LandingId }) {
   const getLandingUrl = (LandingId) => {
     return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/landing/${LandingId}`;
@@ -141,7 +142,14 @@ function ShareLandingPage({ LandingId }) {
           </Stack>
         </SimpleGrid>
       </Paper>
-      <ShareQR url={getLandingUrl(LandingId)} />
+      <ShareQR
+        url={getLandingUrl(LandingId)}
+        title={"groupSurvey"}
+        isPublished={false}
+        id={LandingId}
+        queryKey={"groupSurveySettings"}
+        resourceName={"survey"}
+      />
     </Stack>
   );
 }

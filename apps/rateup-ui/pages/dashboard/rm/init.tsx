@@ -109,7 +109,6 @@ export default function () {
             opened={dialogOpened}
             onClose={closeDialog}
             onConfirm={(e) => {
-              e.stopPropagation();
               deleteMutation.mutate(undefined, {
                 onSettled: closeDialog,
               });

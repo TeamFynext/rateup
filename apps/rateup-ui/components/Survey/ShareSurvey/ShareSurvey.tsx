@@ -13,7 +13,7 @@ import {
   Center,
   Image,
   Tooltip,
-  Divider,
+  Badge,
 } from "@mantine/core";
 import {
   IconCheck,
@@ -31,6 +31,18 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
+import {
+  DataGrid,
+  GridPrintGetRowsToExportParams,
+  GridRowId,
+  GridToolbarColumnsButton,
+  GridToolbarContainer,
+  GridToolbarExport,
+  GridToolbarFilterButton,
+  GridToolbarQuickFilter,
+  gridFilteredSortedRowIdsSelector,
+  selectedGridRowsSelector,
+} from "@mui/x-data-grid";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
 import { updateSurvey } from "../../../backend/surveys/survey.api";
@@ -42,17 +54,12 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
-import { TabEnum } from "../../../pages/dashboard/surveys/[surveyId]";
+import { TabEnum } from "../SurveyId";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
-import {
-  SingleTag,
-  TagSettings,
-} from "../../../pages/dashboard/teams/TeamSettings";
-import Heading from "../../styled/Heading/Heading";
-import { downloadExcel } from "react-export-table-to-excel";
 import NothingFound from "../../NothingFound/NothingFound";
-import { useEditTeamMutation } from "../../../backend/team/team.query";
+import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
+import TagManager from "./TagManager";
 
 const ShareSurvey = ({
   survey,
@@ -72,8 +79,6 @@ const ShareSurvey = ({
 
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
-  const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
-    useDisclosure(false);
   const [openedIframe, { open: openIframe, close: closeIframe }] =
     useDisclosure(false);
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
@@ -84,11 +89,12 @@ const ShareSurvey = ({
     if (!surveyId || !surveyTeamMapId) return;
     if (survey.type === "whatsapp") {
       // TODO: get phone number from phone id (add phone number field)
-      setShareUrl(
-        `https://wa.me/7907137774?text=${encodeURIComponent(
-          "/start " + surveyTeamMapId, //TODO verify  id:    use survey.id if required
-        )}`,
-      );
+      if (survey.getLocation) {
+        // redirecting through our page to fetch ip
+        setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
+      } else {
+        setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+      }
     } else {
       setShareUrl(
         `${
@@ -184,32 +190,17 @@ const ShareSurvey = ({
     .reduce((acc, val) => acc.concat(val), []);
   useEffect(() => {
     setTagsToMap(tagSelectData);
-  }, []);
-  function handleTagExcelDownload() {
-    downloadExcel({
-      fileName: "URL Tags",
-      sheet: `Team : ${survey?.teams.find(
-        (team) => team?.mapId === surveyTeamMapId,
-      )?.code}`,
-      tablePayload: {
-        header: ["S.No", "URL Tags", "URL"],
-        body: tagSelectData.map((tag, index) => [
-          index + 1,
-          tag,
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
-        ]),
-      },
-    });
-  }
-  const editTeamMutation = useEditTeamMutation(
-    survey?.teams.find((team) => team?.mapId === surveyTeamMapId)?.id,
-    () => {},
-    surveyId,
-    true,
-  );
-  function handleSave() {
-    editTeamMutation.mutate({ tags: tagsToMap });
-  }
+  }, [survey, surveyTeamMapId]);
+  const getSelectedRowsToExport = ({
+    apiRef,
+  }: GridPrintGetRowsToExportParams): GridRowId[] => {
+    const selectedRowIds = selectedGridRowsSelector(apiRef);
+    if (selectedRowIds.size > 0) {
+      return Array.from(selectedRowIds.keys());
+    }
+
+    return gridFilteredSortedRowIdsSelector(apiRef);
+  };
   return (
     <Stack p={2}>
       <PaperLayout
@@ -333,106 +324,18 @@ const ShareSurvey = ({
                   data={tagSelectData}
                   onChange={(value) => setTag(value)}
                 />
-                <Tooltip label="Manage URL Tags" position="right-start">
-                  <ActionIcon onClick={openTagManager} variant="outline">
-                    <IconTags />
-                  </ActionIcon>
-                </Tooltip>
+                <TagManager
+                  isPublished={isPublished}
+                  surveyTeamMapId={surveyTeamMapId}
+                  teamSelectData={teamSelectData}
+                  setSurveyTeamMapId={setSurveyTeamMapId}
+                  nothingFound={NothingFound}
+                  getSelectedRowsToExport={getSelectedRowsToExport}
+                  tagsToMap={tagsToMap}
+                  surveyTitle={survey?.title}
+                  surveyId={surveyId}
+                />
               </Group>
-              <FormModalLayout
-                centered
-                size="xl"
-                onClose={closeTagManager}
-                opened={tagManagerOpened}
-                title="Manage URL Tags"
-                onSubmit={handleSave}
-                buttonTitle="Save Changes"
-                includeCancelButton
-                cancelButtonTitle="Discard Changes"
-                cancelOnClick={() => setTagsToMap(tagSelectData)}
-                submitButtonDisabled={
-                  (tagsToMap.length === 0 && tagSelectData.length === 0) ||
-                  JSON.stringify(tagsToMap) === JSON.stringify(tagSelectData)
-                }
-                customHeader={
-                  <Group justify="space-between">
-                    <Heading subtitle="URL Taggers" />
-                    <ContainedSelection
-                      disabled={!isPublished}
-                      label="Select Team"
-                      allowDeselect={false}
-                      miw={150}
-                      value={surveyTeamMapId}
-                      data={teamSelectData}
-                      onChange={setSurveyTeamMapId}
-                    />
-                  </Group>
-                }
-              >
-                <Stack>
-                  <Group justify="space-between" gap={1}>
-                    <TagSettings
-                      tags={tagSelectData}
-                      teamId={
-                        survey?.teams.find(
-                          (team) => team?.mapId === surveyTeamMapId,
-                        )?.id
-                      }
-                      onlyform
-                      surveyId={surveyId}
-                    />
-                    <RateupButtonBlue
-                      disabled={tagSelectData.length === 0}
-                      title="Download as csv"
-                      variant="subtle"
-                      rightIcon={<IconDownload />}
-                      size="sm"
-                      onClick={handleTagExcelDownload}
-                    />
-                  </Group>
-                  <Divider />
-                  {tagSelectData.length > 0 ? (
-                    <ScrollArea.Autosize
-                      mah={400}
-                      p={3}
-                      scrollbarSize={5}
-                      offsetScrollbars
-                    >
-                      <Stack>
-                        {tagsToMap.map((tag) => (
-                          <Group>
-                            <SingleTag
-                              tag={tag}
-                              tagsToMap={tagsToMap}
-                              setTagsToMap={setTagsToMap}
-                            />
-                            <ContainedTextField
-                              style={{ flex: 1 }}
-                              readOnly
-                              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
-                            />
-                            <CopyButton
-                              value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`}
-                            >
-                              {({ copied, copy }) => (
-                                <RateupButtonBlue
-                                  title="Copy"
-                                  variant={copied ? "filled" : "outline"}
-                                  rightIcon={<IconCopy />}
-                                  size="sm"
-                                  onClick={copy}
-                                />
-                              )}
-                            </CopyButton>
-                          </Group>
-                        ))}
-                      </Stack>
-                    </ScrollArea.Autosize>
-                  ) : (
-                    <NothingFound text="No tags found" />
-                  )}
-                </Stack>
-              </FormModalLayout>
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
           </Stack>
@@ -460,8 +363,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="mail icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -484,8 +387,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="whatsapp icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -508,8 +411,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="facebook icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -532,8 +435,8 @@ const ShareSurvey = ({
                     opacity={isPublished ? 1 : 0.5}
                     alt="iframe icon"
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     style={{ objectFit: "contain" }}
                   />
                 </Tooltip>
@@ -545,8 +448,11 @@ const ShareSurvey = ({
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
-        surveyTitle={survey.title}
-        isSurveyPublished={isPublished}
+        title={survey.title}
+        isPublished={isPublished}
+        id={surveyId}
+        queryKey={"surveyShareSettings"}
+        resourceName={"survey"}
       />
       <FormModalLayout
         title="Generate IFrame"

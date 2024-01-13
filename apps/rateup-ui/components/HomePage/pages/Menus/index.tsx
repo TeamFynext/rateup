@@ -8,16 +8,15 @@ function Menus() {
   return (
     <>
       <Head>
-        <title>
-          Rateup - Experience quick, delicious dining with our digital menus
-        </title>
+        <title>Digital Menu Boards - Easy to use & share | RateUp</title>
         <meta
           name="keywords"
-          content="Customer Engagement Platform, Online reputation management, Survey, Review, Whatsapp Survey, Feedback "
+          content="Digital menu, Innovative menu solutions, Personalized menu designs"
         />
         <meta
           name="description"
-          content="Rateup - Experience quick, delicious dining with our digital menus."
+          content="Craft restaurant menus effortlessly with RateUp. Tailor for your brand, simplify sharing with QR codes. Experience the ease - Book a demo!
+          "
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />

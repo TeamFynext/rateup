@@ -15,8 +15,11 @@ import CenteredSpinner from "../../Loaders/CenteredSpinner";
 import { currencyLabel } from "../util/currencyData";
 
 const GeneralSettings = ({ editingItem }) => {
+  let formatedItemValue = editingItem;
+  formatedItemValue.hideUnavailableCategory =
+    formatedItemValue?.hideUnavailableCategory?.toString();
   const form = useForm({
-    initialValues: editingItem || {
+    initialValues: formatedItemValue || {
       name: "",
       displayName: "",
       locationUrl: "",
@@ -26,6 +29,7 @@ const GeneralSettings = ({ editingItem }) => {
       teamId: "",
       surveyTeamMapId: "",
       currency: "0",
+      hideUnavailableCategory: "false",
     },
     validate: {
       name: (value) => (value?.trim().length ? null : "Cannot be empty"),
@@ -51,6 +55,9 @@ const GeneralSettings = ({ editingItem }) => {
     label: survey.title,
   }));
   const onSubmit = (values: any) => {
+    let changedValue = values;
+    changedValue.hideUnavailableCategory =
+      changedValue?.hideUnavailableCategory === "true";
     mutate({
       menuId: editingItem?.id,
       updatedData: values,
@@ -69,6 +76,10 @@ const GeneralSettings = ({ editingItem }) => {
             allowDeselect={false}
             disabled={isPending}
             {...form.getInputProps("teamId")}
+            onChange={(value) => {
+              form.setFieldValue("surveyTeamMapId", "");
+              form.setFieldValue("teamId", value);
+            }}
           />
           <ContainedTextField
             label="Menu Name"
@@ -76,12 +87,26 @@ const GeneralSettings = ({ editingItem }) => {
             withAsterisk
             {...form.getInputProps("name")}
           />
-          <ContainedTextField
-            label="Display Name"
-            placeholder="Hotel Name"
-            withAsterisk
-            {...form.getInputProps("displayName")}
-          />
+          <SimpleGrid cols={2} spacing="md">
+            <ContainedTextField
+              label="Display Name"
+              placeholder="Hotel Name"
+              withAsterisk
+              {...form.getInputProps("displayName")}
+            />
+            <ContainedSelection
+              allowDeselect={false}
+              withAsterisk
+              data={[
+                { value: "false", label: "show category" },
+                { value: "true", label: "hide category" },
+              ]}
+              defaultValue={form?.values?.hideUnavailableCategory}
+              {...form.getInputProps("hideUnavailableCategory")}
+              label={"Hide the category if the schedule isn't right"}
+            />
+          </SimpleGrid>
+
           <SimpleGrid cols={2} spacing="md">
             <ContainedTextField
               label="Location Label"

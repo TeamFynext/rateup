@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  ActionIcon,
   Box,
   Button,
   Center,
@@ -9,31 +8,39 @@ import {
   Group,
   Image,
   LoadingOverlay,
-  Radio,
-  SimpleGrid,
   Stack,
   Text,
-  TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
 } from "../../backend/menu/item/mItem.query";
-import { IconMinus, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
   deleteUploadedFiles,
-  getFileUrlFromKey,
+  getImageValue,
   uploadFile,
 } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
 import { MenuItemPriceType } from "../../types/enums";
 import FormModalLayout from "../Modal/FormModalLayout";
 import {
+  ContainedMultiSelect,
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { currencyLabel } from "./util/currencyData";
+import { useDisclosure } from "@mantine/hooks";
+import { ImageCropModal } from "../Modal/ImageCropModal";
+import { UnsplashModal } from "../Modal/UnsplashModal";
+import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  fallbackImage,
+} from "../../utils/constants";
+import { PriceSection } from "./item/PriceSection";
+import { menuLabelWithText } from "./util/menuLabelData";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -53,9 +60,28 @@ export function CreateMenuItemModal({
   currency,
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
-  const [deleteImageArray, setDeleteImageArray] = useState([]);
+  const [deleteImageArray, setDeleteImageArray] = useState<
+    { Key: string | File | undefined }[]
+  >([]);
+  const [selectedInputImage, setSelectedInputImage] = useState({
+    url: "",
+    name: "",
+  });
+  const resetRef = useRef<() => void>(null);
+  const itemImgBtnRef = useRef<HTMLButtonElement>(null);
+  const [
+    openedUnsplashDialog,
+    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
+  ] = useDisclosure(false);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
+  const [
+    openedMethodSelectionDialog,
+    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
+  ] = useDisclosure(false);
 
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -73,6 +99,7 @@ export function CreateMenuItemModal({
         ],
         type: MenuItemPriceType.FIXED,
       },
+      foodLabels: [],
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
@@ -106,7 +133,6 @@ export function CreateMenuItemModal({
       close();
       form.reset();
     },
-    () => {},
   );
 
   const updateMenuItemMutation = useUpdateMenuItemMutation(
@@ -116,20 +142,14 @@ export function CreateMenuItemModal({
       close();
       form.reset();
     },
-    () => {},
   );
 
   useEffect(() => {
     setSelectedImage(form?.values.images[0] || "");
   }, [form.values.images]);
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: typeof form.values) => {
     try {
-      const validationRes = form.validate();
-      if (validationRes.hasErrors) {
-        return;
-      }
-
       if (values?.price?.type === MenuItemPriceType.FIXED) {
         delete values?.price?.variants;
       } else {
@@ -137,9 +157,9 @@ export function CreateMenuItemModal({
       }
 
       const imageArray = values?.images;
-      let errors = [];
+      let errors: PromiseRejectedResult[] = [];
       if (editingItem) {
-        const newImages = [];
+        const newImages: File[] = [];
 
         for (const image of imageArray) {
           setImageLoading(true);
@@ -219,8 +239,52 @@ export function CreateMenuItemModal({
     w: 200,
     fallbackSrc: fallbackImage,
   };
-  const onChangePicture = (event: File) => {
-    form.setFieldValue("images", [...form.values.images, event]);
+  const onChangePicture = (event: File | null) => {
+    if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
+    }
+    setSelectedInputImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    resetRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage: File) => {
+    form.setFieldValue("images", [...form.values.images, cropedImage]);
+  };
+  const handleUnsplashImageSave = (
+    unsplashImage: string,
+    imageName: string,
+  ) => {
+    setSelectedInputImage({
+      url: unsplashImage,
+      name: imageName,
+    });
+    toggleCropDialog();
+  };
+  const handleUploadMethod = (type: string) => {
+    if (type === "unsplash") {
+      toggleUnsplashDialog();
+    } else {
+      itemImgBtnRef?.current?.click();
+    }
+  };
+  const handleDeleteImage = () => {
+    if (typeof selectedImage !== "object") {
+      setDeleteImageArray((prev) => [
+        ...prev,
+        {
+          Key: form?.values?.images?.find((image) => image === selectedImage),
+        },
+      ]);
+    }
+    form.removeListItem(
+      "images",
+      form?.values?.images?.findIndex((image) => image === selectedImage),
+    );
   };
   return (
     <FormModalLayout
@@ -230,9 +294,27 @@ export function CreateMenuItemModal({
       centered
       onSubmit={form.onSubmit(onSubmit)}
       buttonTitle={editingItem ? "Save Item" : "Create Item"}
-      size={"lg"}
+      size={"xl"}
     >
       <Flex>
+        <UnsplashModal
+          handleUnsplashImageSave={handleUnsplashImageSave}
+          opened={openedUnsplashDialog}
+          onclose={closeUnsplashDialog}
+        />
+        <ImageUploadMethodModal
+          onClose={closeMethodSelectionDialog}
+          opened={openedMethodSelectionDialog}
+          handleUploadMethod={handleUploadMethod}
+        />
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={selectedInputImage.name}
+          handleCropImageSave={handleCropImageSave}
+          image={selectedInputImage.url}
+          aspect={4 / 3}
+        />
         <LoadingOverlay
           visible={
             createMenuItemMutation.isPending ||
@@ -249,13 +331,13 @@ export function CreateMenuItemModal({
             {form?.values?.images?.length > 0 ? (
               <Box>
                 <Image
-                  src={
-                    typeof selectedImage === "object"
-                      ? URL.createObjectURL(selectedImage)
-                      : getFileUrlFromKey(selectedImage)
-                  }
+                  src={getImageValue(selectedImage)}
                   {...imageProps}
                   alt="image of menu"
+                  style={{
+                    aspectRatio: 4 / 3,
+                  }}
+                  w={"100%"}
                 />
                 <Center mt="xs">
                   <Button
@@ -263,24 +345,7 @@ export function CreateMenuItemModal({
                     variant="light"
                     color="red"
                     leftSection={<IconTrash />}
-                    onClick={() => {
-                      if (typeof selectedImage !== "object") {
-                        setDeleteImageArray((prev) => [
-                          ...prev,
-                          {
-                            Key: form?.values?.images?.find(
-                              (image) => image === selectedImage,
-                            ),
-                          },
-                        ]);
-                      }
-                      form.removeListItem(
-                        "images",
-                        form?.values?.images?.findIndex(
-                          (image) => image === selectedImage,
-                        ),
-                      );
-                    }}
+                    onClick={handleDeleteImage}
                   >
                     Delete
                   </Button>
@@ -291,39 +356,52 @@ export function CreateMenuItemModal({
                 src={fallbackImage}
                 {...imageProps}
                 alt="placholder image of menu"
+                style={{
+                  aspectRatio: 4 / 3,
+                }}
               />
             )}
           </Group>
           <Group>
-            {form.values.images?.map((image) => (
+            {form.values.images?.map((image: File | string, index) => (
               <Image
                 onClick={() => setSelectedImage(image)}
                 style={{ borderRadius: "8px", cursor: "pointer" }}
-                key={typeof image === "object" ? image?.fileName : image}
-                src={
-                  typeof image === "object"
-                    ? URL.createObjectURL(image)
-                    : getFileUrlFromKey(image)
+                key={
+                  typeof image === "object" && image !== null
+                    ? (image as File).name + index
+                    : String(image)
                 }
-                w={50}
+                src={getImageValue(image)}
                 h={50}
-                miw={50}
                 fallbackSrc={fallbackImage}
                 alt="thumbnail image of menu item"
               />
             ))}
             {form?.values?.images?.length < 3 && (
-              <FileButton
-                onChange={onChangePicture}
-                accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                key={form?.values?.images?.length}
-              >
-                {(props) => (
-                  <Button color="gray" h={75} w={75} {...props}>
-                    <IconPlus />
-                  </Button>
-                )}
-              </FileButton>
+              <>
+                <FileButton
+                  onChange={onChangePicture}
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  key={form?.values?.images?.length}
+                  resetRef={resetRef}
+                >
+                  {(props) => (
+                    <Button display={"none"} {...props} ref={itemImgBtnRef}>
+                      <IconPlus />
+                    </Button>
+                  )}
+                </FileButton>
+                <Button
+                  color="gray"
+                  h={75}
+                  w={75}
+                  type="button"
+                  onClick={toggleMethodSelectionDialog}
+                >
+                  <IconPlus />
+                </Button>
+              </>
             )}
           </Group>
         </Stack>
@@ -350,99 +428,14 @@ export function CreateMenuItemModal({
             {...form.getInputProps("description")}
           />
           <PriceSection form={form} currency={currency ?? "0"} />
+          <ContainedMultiSelect
+            label="Select Food Label"
+            placeholder="Choose a label"
+            data={menuLabelWithText}
+            {...form.getInputProps("foodLabels")}
+          />
         </Stack>
       </Flex>
     </FormModalLayout>
-  );
-}
-
-export function PriceSection({
-  form,
-  currency = "0",
-}: {
-  readonly form: any;
-  readonly currency: string;
-}) {
-  return (
-    <>
-      <Group>
-        <Text>Price</Text>
-        <Radio.Group {...form.getInputProps("price.type")}>
-          <Group>
-            <Radio label="Fixed" value={MenuItemPriceType.FIXED} />
-            <Radio label="Variant" value={MenuItemPriceType.VARIANT} />
-          </Group>
-        </Radio.Group>
-      </Group>
-      {form?.values?.price?.type === MenuItemPriceType.FIXED ? (
-        <ContainedTextField
-          leftSection={currencyLabel[currency]?.symbol}
-          placeholder="399"
-          {...form.getInputProps("price.price")}
-        />
-      ) : (
-        <Group gap={"3px"}>
-          {form?.values?.price?.variants?.map((_variant, index) => {
-            return (
-              <Box
-                w="95px"
-                p={"5px"}
-                key={_variant + index}
-                style={{
-                  border: "1px solid gray",
-                  borderRadius: "15px",
-                }}
-              >
-                {form?.values?.price?.variant}
-                <TextInput
-                  placeholder="Small"
-                  variant="unstyled"
-                  sx={{
-                    borderBottom: "1px solid gray",
-                  }}
-                  {...form.getInputProps(`price.variants.${index}.name`)}
-                />
-                <TextInput
-                  leftSection={
-                    <Box style={{ fontSize: "small" }}>
-                      {currencyLabel[currency]?.symbol}
-                    </Box>
-                  }
-                  placeholder="399"
-                  radius={"100px"}
-                  {...form.getInputProps(`price.variants.${index}.price`)}
-                />
-              </Box>
-            );
-          })}
-          <SimpleGrid>
-            {form?.values?.price?.variants?.length < 3 && (
-              <ActionIcon
-                variant="filled"
-                size={"lg"}
-                onClick={() => form.insertListItem("price.variants", {})}
-              >
-                <IconPlus size={16} />
-              </ActionIcon>
-            )}
-            {form?.values?.price?.variants?.length > 1 && (
-              <ActionIcon
-                variant="filled"
-                size={"lg"}
-                onClick={() => {
-                  const newVariants = form?.values?.price?.variants?.slice(
-                    0,
-                    -1,
-                  );
-                  form.setFieldValue("price.variants", newVariants);
-                }}
-              >
-                <IconMinus size={16} />
-              </ActionIcon>
-            )}
-          </SimpleGrid>
-        </Group>
-      )}
-    </>
   );
 }

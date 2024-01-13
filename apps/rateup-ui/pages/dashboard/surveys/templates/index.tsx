@@ -28,6 +28,7 @@ import { useRouter } from "next/router";
 import { lexend300 } from "../../../../utils/fonts";
 import { notifications } from "@mantine/notifications";
 import { Tooltip as MantineTooltip } from "@mantine/core";
+import FormModalLayout from "../../../../components/Modal/FormModalLayout";
 
 const Templates = () => {
   const { user } = useUser();
@@ -79,8 +80,8 @@ const Templates = () => {
         {survey?.WelcomeTheme?.bgUrl && (
           <Image
             radius="md"
-            fit="contain"
-            //fallbackSrc="https://placehold.co/230x150?text=TemplateImg"
+            fit="fill"
+            h={150}
             src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.WelcomeTheme?.bgUrl}`}
           />
         )}
@@ -93,7 +94,14 @@ const Templates = () => {
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title="" size="auto" centered>
+      {/* <Modal opened={opened} onClose={close} title="Create Survey from Template" size="auto" centered> */}
+      <FormModalLayout
+        opened={opened}
+        title="Create Survey from Template"
+        onClose={close}
+        centered
+        size="auto"
+      >
         <Group p="xl">
           <Flex
             h={"70vh"}
@@ -106,14 +114,21 @@ const Templates = () => {
             ff={lexend300.style.fontFamily}
           >
             <BackgroundImage
-              style={{ height: "100%", width: "100%", objectFit: "contain" }}
+              style={{
+                height: "85%",
+                width: "90%",
+                objectFit: "contain",
+                borderRadius: "10px",
+              }}
               src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedTemplate?.WelcomeTheme?.bgUrl}`}
-              // fallbackSrc="https://placehold.co/600x400?text=BgImg"
             />
           </Flex>
 
           <Stack style={{ minWidth: "300px", maxWidth: "300px" }}>
-            <Title order={2}>{selectedTemplate?.title || "Template"}</Title>
+            <Text mb="sm">Template: </Text>
+            <Title order={3} mb="sm">
+              {selectedTemplate?.title || "Template"}
+            </Title>
             <RateupButtonPrimary
               onClick={() =>
                 router.push(
@@ -124,7 +139,8 @@ const Templates = () => {
             />
           </Stack>
         </Group>
-      </Modal>
+        {/* </Modal> */}
+      </FormModalLayout>
 
       <Group gap="md" justify="space-between">
         <Group ml="md">
@@ -181,7 +197,7 @@ const Templates = () => {
       {allTemplates && (
         <Box m="lg" pb="xl">
           {Object?.entries(allTemplates)?.length < 1 && (
-            <Text m="xl">No templates found..!</Text>
+            <Text m="100px">No templates found..!</Text>
           )}
 
           {Object?.entries(allTemplates)?.map(

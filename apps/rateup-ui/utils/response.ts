@@ -22,9 +22,7 @@ export function getResponse(qId: string, response: SurveyResponse) {
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
   } else if (type === QuestionType.EmailPhone) {
-    return (
-      qResponse.response[type].email + " , " + qResponse.response[type].phone
-    );
+    return Object.values(qResponse.response[type]).filter(Boolean).join(" , ");
   } else if (type === QuestionType.DateTime) {
     const dateTimeValue = qResponse.response.DateTime;
     const date = dayjs(dateTimeValue);
@@ -251,5 +249,10 @@ export function getFilteredResponseUsingTags(
     );
     noofResponses = filteredResponsesByTags?.length;
   }
+  filteredResponsesByTags?.sort((a, b) => {
+    const dateA = dayjs(a.createdAt);
+    const dateB = dayjs(b.createdAt);
+    return dateA.diff(dateB);
+  });
   return { filteredResponsesByTags, noofResponses };
 }

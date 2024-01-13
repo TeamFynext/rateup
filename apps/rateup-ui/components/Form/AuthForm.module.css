@@ -4,14 +4,19 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1rem;
   overflow: auto;
-  max-width: 26.25rem;
+  max-width: 27rem;
   background-color: white;
 }
 
-.SIGNUP-auth-form-container {
-  justify-content: flex-start;
+.auth-form-container :global(.mantine-ScrollArea-viewport) {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+}
+
+.SIGNUP-auth-form-container :global(.mantine-ScrollArea-viewport) {
+  align-items: flex-start;
 }
 
 .auth-type-signup-form {
@@ -96,6 +101,26 @@
   font-weight: 600;
   color: rgb(34, 139, 230);
   background-color: var(--light-grey-color);
+}
+
+.inputBox {
+  background-color: var(--input-background-color, white);
+  color: var(--input-text-color, black);
+  border-radius: var(--input-border-radius, 8px);
+  padding: 6px var(--input-padding, 12px);
+  border-color: var(--light-grey-color);
+  border-width: 1px;
+  border-style: solid;
+}
+
+.inputPhone {
+  font-size: 16px;
+  border: none;
+}
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
 }
 
 /* Media Queries */

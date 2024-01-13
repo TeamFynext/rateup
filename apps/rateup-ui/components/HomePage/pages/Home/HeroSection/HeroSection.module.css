@@ -2,11 +2,12 @@
   /* height: calc(100vh - 10.6rem); */
   border-radius: 25px;
   color: white;
-  margin-bottom: 4.375rem;
+  margin-bottom: 6.25rem;
+  margin-top: 4.375rem;
   background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/rateup-star-svg-path.svg"),
     linear-gradient(90deg, #2564ae, #00397b);
   background-repeat: no-repeat, no-repeat;
-  padding: 4.5rem 1rem;
+  padding: 5.25rem 1rem;
 }
 
 .hero-section-heading {
@@ -66,9 +67,28 @@
 @media screen and (max-width: 768px) {
   .hero-section-container {
     padding: 3rem 1rem;
+    background-size:
+      250px 250px,
+      auto;
   }
 
   .hero-section-heading {
     font-size: 1.875rem;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  .hero-section-container {
+    background-size:
+      200px 200px,
+      auto;
+  }
+
+  .hero-section-heading {
+    font-size: 1.5rem;
+  }
+
+  .hero-section-para {
+    font-size: 1rem;
   }
 }

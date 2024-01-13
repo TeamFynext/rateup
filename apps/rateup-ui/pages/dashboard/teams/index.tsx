@@ -3,12 +3,25 @@
   RateupButtonOutline,
   RateupButtonPrimary,
 } from "../../../components/Button/RateupButtons";
-import { Loader, Space, Grid, Center, Group } from "@mantine/core";
+import {
+  Loader,
+  Space,
+  Grid,
+  Center,
+  Group,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import { Box } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlus, IconReload, IconSelector } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconRefresh,
+  IconReload,
+  IconSelector,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useUser } from "../../../context/UserContext";
 import { useForm } from "@mantine/form";
@@ -21,6 +34,7 @@ import { retrieveRole } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
+import styles from "./Teams.module.css";
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -91,7 +105,7 @@ export default function Teams() {
     }
   }, [action]);
   return (
-    <>
+    <div className={styles["teams-container"]}>
       <FormModalLayout
         centered
         onClose={close}
@@ -120,6 +134,29 @@ export default function Teams() {
       <Group gap="md" justify="space-between">
         <Group gap={"md"}>
           <Heading title="Teams" titleprops={{ w: "fit-content" }} />
+          <Tooltip label="Refresh data">
+            <ActionIcon
+              variant="light"
+              ml="xs"
+              mr="50px"
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                reftchTeams();
+                notifications.show({
+                  id: "data-reload",
+                  color: "teal",
+                  title: "Refreshing data",
+                  loading: true,
+                  message: "Hold.. your data is getting update...",
+                  autoClose: 2000,
+                });
+              }}
+            >
+              <IconRefresh
+                style={{ width: "90%", height: "90%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+          </Tooltip>
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
               title="Create Team"
@@ -140,7 +177,7 @@ export default function Teams() {
         <Loader />
       ) : (
         <>
-          <Grid columns={9} p={10} h="100%" style={{ overflow: "auto" }}>
+          <Grid columns={9} p={10} className={styles["team-cards-container"]}>
             {teamsData?.data?.length > 0 ? (
               (sort
                 ? [...teamsData?.data]?.sort((a, b) =>
@@ -174,6 +211,6 @@ export default function Teams() {
           </Grid>
         </>
       )}
-    </>
+    </div>
   );
 }

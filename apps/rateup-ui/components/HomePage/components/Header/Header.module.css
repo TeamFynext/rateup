@@ -1,11 +1,17 @@
 .header-container {
-  margin-bottom: 1.5rem;
+  margin-bottom: 4.375rem;
   border-bottom: 1px solid rgb(215, 215, 215);
-  position: sticky;
+  box-shadow:
+    0 4px 8px 0 rgba(0, 0, 0, 0.1),
+    0 6px 20px 0 rgba(0, 0, 0, 0.1);
+  position: fixed;
   top: 0;
   z-index: 400;
   background-color: white;
   align-items: center;
+  padding: 0 10%;
+  width: 100%;
+  max-width: 120rem;
 }
 
 .header-links-container {
@@ -19,12 +25,16 @@
 
 .header-link {
   composes: header-footer-link from "../../index/index.module.css";
-  color: var(--grey-color);
+  color: var(--grey-color-2);
   margin-right: 0;
 }
 
 .header-link:active {
   color: #00397b;
+}
+
+.header-link:hover {
+  color: var(--grey-color);
 }
 
 .login-signup-link {
@@ -109,5 +119,11 @@
   .logo-nav-container {
     justify-content: space-between;
     flex: 1 1 auto;
+  }
+}
+
+@media screen and (min-width: 120rem) {
+  .header-container {
+    padding: 0 192px;
   }
 }

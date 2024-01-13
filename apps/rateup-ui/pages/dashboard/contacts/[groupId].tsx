@@ -82,7 +82,7 @@ export default function () {
   const deleteContactGroup = () => {
     deleteGroupMutation.mutate(groupId, {
       onSuccess: () => {
-        router.push("/dashboard/campaign/contacts/");
+        router.push("/dashboard/contacts?tab=groups");
       },
     });
   };

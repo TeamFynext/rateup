@@ -40,3 +40,15 @@ export interface IUpdateOrgDetails {
 }
 export const updateOrgDetails = (data: IUpdateOrgDetails) =>
   axiosClient.put("/org/update-details", data);
+
+export async function getAllOrgs() {
+  return (await axiosClient.get("/org")).data as Array<
+    Org & {
+      _count: { members: number; teams: number; invitations: number };
+      owner: { id: string; name: string };
+    }
+  >;
+}
+export async function getOrgStats(orgId: string) {
+  return (await axiosClient.get(`/org/${orgId}`)).data;
+}

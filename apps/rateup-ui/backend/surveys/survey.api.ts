@@ -16,14 +16,9 @@ export interface CreateSurveyResponse {
 }
 
 export async function createSurvey(data) {
-  try {
-    let res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data))
-      .data;
-    return res;
-  } catch (e) {
-    console.error(e);
-    return { error: "Error Occured!" };
-  }
+  let res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data))
+    .data;
+  return res;
 }
 
 export const createSurveyLandingPage = (data) =>

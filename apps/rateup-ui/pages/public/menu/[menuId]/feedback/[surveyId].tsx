@@ -22,6 +22,7 @@ import Link from "next/link";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 import { lexend300 } from "../../../../../utils/fonts";
 import Head from "next/head";
+import { fallbackImage } from "../../../../../utils/constants";
 
 type MenuProp = {
   menuId: string;
@@ -48,7 +49,6 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
       </Stack>
     );
   const backgroundImageBorderRadius = largeScreen ? "47px" : "22px";
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const fallbackImageBackround = largeScreen
     ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
@@ -106,6 +106,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
         style={{
           borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
           backgroundColor: "var(--orange-400)",
+          aspectRatio: "16 / 6",
         }}
       >
         <Stack

@@ -1,26 +1,115 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Paper, Stack, TextInput, Textarea } from "@mantine/core";
+import {
+  Box,
+  FileButton,
+  Group,
+  Image,
+  Paper,
+  Skeleton,
+  Stack,
+  TextInput,
+  Textarea,
+  Title,
+  Text,
+  Rating,
+  closeOnEscape,
+} from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
+import {
+  dataURItoBlob,
+  getFileUrlFromKey,
+  uploadFile,
+} from "../../../../../utils/file-upload/upload";
+import { showErrorToast } from "../../../../../utils/notifications";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import WebcamCapture from "../../../../input/WebCamCapture";
+import { RateupButtonBlue } from "../../../../Button/RateupButtons";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import FormModalLayout from "../../../../Modal/FormModalLayout";
+import { ImageCropModal } from "../../../../Modal/ImageCropModal";
+import { fallbackImage } from "../../../../../utils/constants";
 
-export function TestimonialForm() {
-  // TODO: show some disclaimer about the image & testimonial being being displayed in public
+interface TestimonialProps {
+  features;
+  isPreview?;
+}
+
+export function TestimonialForm({ features, isPreview }: TestimonialProps) {
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [file, setFile] = useState<File>(response?.file);
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [opened, { open, close }] = useDisclosure(false);
+  const [capturedImg, setCapturedImg] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, name: e.currentTarget.value });
   };
+
+  const handleJobTitleChange = (e) => {
+    updateResponse({ ...response, jobTitle: e.currentTarget.value });
+  };
+
   const handleTestimonialChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
     updateResponse({ ...response, testimonial: e.currentTarget.value });
   };
-  //TODO: image storage
-  //console.error("Image storage not implemented");
+
+  useEffect(() => {
+    if (capturedImg) {
+      const blob = dataURItoBlob(capturedImg);
+      const capturedImageFile = new File([blob], "captured-image.jpg", {
+        type: blob.type,
+        lastModified: new Date().getTime(),
+      });
+      setSelectedImage(capturedImageFile);
+      toggleCropDialog();
+    }
+  }, [capturedImg]);
+
+  useEffect(() => {
+    if (!file) return;
+    setIsUploading(true);
+    uploadFile(file)
+      .then((key) => {
+        updateResponse({ ...response, photo: key });
+        setIsUploading(false);
+      })
+      .catch((err) => {
+        showErrorToast("Error uploading icon. Please try again.");
+        setIsUploading(false);
+      });
+  }, [file]);
+  const handleCropImageSave = async (cropedImage) => {
+    if (!cropedImage) return;
+    setFile(cropedImage);
+  };
+
+  const onChangePicture = (event: File) => {
+    if (!event) return;
+    setSelectedImage(event);
+    toggleCropDialog();
+  };
 
   return (
     <Stack>
+      {selectedImage && (
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={selectedImage?.name}
+          handleCropImageSave={handleCropImageSave}
+          image={URL.createObjectURL(selectedImage)}
+          aspect={4 / 3}
+        />
+      )}
       <Paper shadow="sm" className={classes.inputBox}>
         <TextInput
           placeholder="Enter your name"
@@ -33,6 +122,20 @@ export function TestimonialForm() {
           }}
         />
       </Paper>
+      {features?.[selectedLanguage]?.hasJobTitle && (
+        <Paper shadow="sm" className={classes.inputBox}>
+          <TextInput
+            placeholder="Enter your job title"
+            value={response?.jobTitle}
+            onChange={handleJobTitleChange}
+            style={{ maxWidth: "400px" }}
+            variant="unstyled"
+            classNames={{
+              input: classes.input,
+            }}
+          />
+        </Paper>
+      )}
       <Paper shadow="sm" className={classes.inputBox}>
         <Textarea
           placeholder="Enter your testimonial"
@@ -45,16 +148,72 @@ export function TestimonialForm() {
           }}
         />
       </Paper>
-      {/* Will be brought back once image storing setup is  */}
-      {/* <FileButton onChange={setFile} accept="image/png,image/jpeg">
-        {(props) => <Button {...props}>Upload your image</Button>}
-      </FileButton>
-
-      {file && (
-        <Text size="sm" align="center" mt="sm">
-          Picked file: {file.name}
-        </Text>
-      )} */}
+      {features?.[selectedLanguage]?.hasRating && (
+        <>
+          <Text>Rate Us Now</Text>
+          <Rating
+            value={response?.rating}
+            onChange={(value) => updateResponse({ ...response, rating: value })}
+            size={"xl"}
+            color="var(--tertiary-color)"
+          />
+        </>
+      )}
+      {features?.[selectedLanguage]?.hasPhoto && (
+        <>
+          <Stack>
+            <Text>Upload your Image</Text>
+            <Group>
+              <Box
+                style={{ border: "1px solid grey", borderRadius: "10px" }}
+                w={200}
+                h={150}
+              >
+                <FormModalLayout
+                  title="Camera"
+                  onClose={close}
+                  opened={opened}
+                  centered
+                >
+                  <Box>
+                    <WebcamCapture
+                      height={"100%"}
+                      width={"100%"}
+                      setCapturedImg={setCapturedImg}
+                      close={close}
+                    />
+                  </Box>
+                </FormModalLayout>
+                <Skeleton visible={isUploading} height={"100%"} width={"100%"}>
+                  <Image
+                    src={getFileUrlFromKey(response?.photo)}
+                    alt="Your uploaded image"
+                    radius={"10px"}
+                    fallbackSrc={fallbackImage}
+                    h={fallbackImage ? 148 : 200}
+                  />
+                </Skeleton>
+              </Box>
+              <Stack>
+                <FileButton
+                  onChange={onChangePicture}
+                  accept="image/png,image/jpeg"
+                  disabled={isPreview}
+                >
+                  {(props) => (
+                    <RateupButtonBlue {...props} title="Browse from device" />
+                  )}
+                </FileButton>
+                <RateupButtonBlue
+                  title="Capture Photo"
+                  onClick={() => open()}
+                  disabled={isPreview}
+                />
+              </Stack>
+            </Group>
+          </Stack>
+        </>
+      )}
     </Stack>
   );
 }

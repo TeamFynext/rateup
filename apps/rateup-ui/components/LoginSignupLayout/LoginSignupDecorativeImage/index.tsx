@@ -10,6 +10,7 @@ function LoginSignupDecorativeImage() {
         alt="decorative image"
         width={400}
         height={400}
+        priority={true}
       />
     </Center>
   );

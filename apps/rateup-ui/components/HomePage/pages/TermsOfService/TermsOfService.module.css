@@ -1,0 +1,28 @@
+.terms-of-service-container {
+  color: var(--grey-color);
+  margin-bottom: 6.25rem;
+  margin-top: 4.375rem;
+}
+
+.terms-of-service-container > h1 {
+  text-align: center;
+  color: var(--grey-color-2);
+  text-transform: uppercase;
+  font-size: 1.625rem;
+  margin: 1rem 0;
+}
+
+.terms-of-service-container section {
+  margin-bottom: 2rem;
+}
+
+.last-revised-p {
+  text-align: center;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.terms-of-service-container h2 {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+}

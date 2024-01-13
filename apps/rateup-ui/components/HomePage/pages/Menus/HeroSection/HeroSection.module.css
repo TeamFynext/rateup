@@ -4,7 +4,8 @@
   padding: 2.85rem;
   border-radius: 1.5625rem;
   gap: 3rem;
-  margin-bottom: 4.375rem;
+  margin-bottom: 6.25rem;
+  margin-top: 4.375rem;
   justify-content: center;
 }
 
@@ -72,5 +73,20 @@
 
   .para {
     text-align: center;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  .heading {
+    font-size: 1.5rem;
+  }
+
+  .para {
+    font-size: 1.25rem;
+  }
+
+  .see-sample-button {
+    font-size: 0.875rem;
+    padding: 0.8125em 1.5em;
   }
 }

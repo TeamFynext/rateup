@@ -210,7 +210,11 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
                 Status
               </Title>
               <Text c="dimmed">
-                {dayjs(campaign?.startedAt).format("DD/MM/YYYY HH:MM a")}
+                {campaign?.startedAt
+                  ? `Started at ${dayjs(campaign?.startedAt).format(
+                      "DD/MM/YYYY HH:MM a",
+                    )}`
+                  : null}
               </Text>
               <Badge
                 variant={renderBadge(campaign?.status).variant}

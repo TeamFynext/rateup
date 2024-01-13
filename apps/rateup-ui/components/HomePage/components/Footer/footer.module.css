@@ -1,5 +1,27 @@
+.footer-root-div {
+  padding: 0 10%;
+  max-width: 120rem;
+  position: relative;
+}
+
+.curved-background {
+  max-width: 120rem;
+  background-repeat: no-repeat;
+  position: absolute;
+  width: 120%;
+  height: 130%;
+  z-index: -1;
+  bottom: 0;
+  background-size: 100%;
+  border-radius: 50%;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background-image: linear-gradient(to right, #2564ae, #00397b);
+}
+
 .footer-logo {
   margin-bottom: 1.875rem;
+  z-index: 100;
 }
 
 .footer-links-container {
@@ -9,16 +31,38 @@
   border-bottom: 1px solid white;
   width: 100%;
   flex-wrap: wrap;
-  gap: 2.1875rem;
+  z-index: 100;
 }
 
 .footer-link {
   color: #e7e7e7;
   composes: header-footer-link from "../../index/index.module.css";
   margin-right: 0;
+  font-size: 1rem;
 }
 
 .copyright-para {
   margin-bottom: 1.875rem;
   color: #e7e7e7;
+  font-size: 0.875rem;
+  z-index: 100;
+}
+
+@media screen and (max-width: 768px) {
+  .curved-background {
+    width: 150%;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  .curved-background {
+    width: 200%;
+    height: 120%;
+  }
+}
+
+@media screen and (min-width: 120rem) {
+  .footer-root-div {
+    padding: 0 192px;
+  }
 }

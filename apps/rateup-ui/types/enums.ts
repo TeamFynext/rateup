@@ -1,6 +1,10 @@
 // Any modification to this file should be reflected in the frontend
 
 // to get label use utils/enums -> getQuestionTypeLabel(type: QuestionType)
+export enum SurveyType {
+  Web = "web",
+  WhatsApp = "whatsapp",
+}
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",
@@ -110,4 +114,13 @@ export enum ReviewPlatform {
 export enum SortType {
   ASC = "asc",
   DESC = "desc",
+}
+export enum SubscriptionFeaturePathName {
+  WebSurvey = "webSurvey",
+  WhatsAppSurvey = "whatsappSurvey",
+  WhatsAppCampaign = "whatsappCampaign",
+  Menu = "menu",
+  ReputationManagement = "reputationManagement",
+  Team = "team",
+  TeamMember = "team.teamMember",
 }

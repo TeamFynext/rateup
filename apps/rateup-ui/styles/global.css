@@ -1,9 +1,21 @@
 * {
   box-sizing: border-box;
 }
+
 ::-webkit-scrollbar {
-  display: none;
+  width: 10px;
+  height: 10px;
 }
+
+::-webkit-scrollbar-track {
+  background-color: rgb(223, 223, 223);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(173, 173, 173);
+  border-radius: 5px;
+}
+
 :root {
   --primary-color: #ffffff;
   --secondary-color: #000000;
@@ -11,6 +23,10 @@
   --shade-of-blue: #edf2ff;
   --shade-of-blue-2: #3f5ba9;
   --shade-of-blue-3: #00397b;
+  --shade-of-blue-4: #225fa4;
+  --shade-of-blue-5: #2564ae;
+  --shade-of-blue-6: #d6e9ff;
+  --shade-of-blue-7: #cce4ff;
   --grey-color: #494949;
   --grey-color-2: #73737a;
   --grey-color-3: #595959;
@@ -26,9 +42,25 @@
   --hover-border-color: rgba(28, 81, 142, 0.2);
   --light-grey-color-2: #efefef;
   --light-grey-color-3: #f4f4f4;
+  --light-grey-color-4: #dfdfdf;
+  --light-grey-color-5: #b7b7b7;
   --light-dark-color-2: rgba(29, 29, 29, 0.5);
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+#shipping-and-delivery::before,
+#cancellation-and-refund::before {
+  content: "";
+  display: block;
+  height: 111px;
+  margin-top: -111px;
+  visibility: hidden;
+}
+
+.about-us-landing-page-layout .home-page-mantine-container {
+  padding: 0;
+  width: 100%;
 }

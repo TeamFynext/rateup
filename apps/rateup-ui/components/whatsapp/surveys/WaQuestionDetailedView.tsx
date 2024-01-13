@@ -272,9 +272,9 @@ export function WaQuestionDetailedView({
                 leftIcon={
                   <Image
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
-                    width={30}
-                    height={30}
-                    fit="contain"
+                    w={30}
+                    h={30}
+                    fit={"contain"}
                   />
                 }
                 size="sm"
@@ -328,7 +328,7 @@ export function WaQuestionDetailedView({
           <ActionIcon
             style={{
               position: "absolute",
-              right: "-16px",
+              right: "0",
               top: "20%",
               borderRadius: "100px",
               borderTopRightRadius: "0px",
@@ -398,7 +398,7 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.WaList:
       return (
         <WaListMessageItemsCreator
-          initialSections={form.values.sections?.[selectedLanguage]}
+          initialSections={form.values.sections}
           saveSections={(sections) => {
             form.setFieldValue(`sections.${selectedLanguage}`, sections);
           }}

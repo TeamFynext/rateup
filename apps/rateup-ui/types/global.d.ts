@@ -38,6 +38,7 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
     sections?: Zod.RecordType<string, WaSectionsType>;
     id: string;
     googleReview?: GoogleReview;
@@ -165,6 +166,8 @@ declare global {
         testimonial: string;
         name?: string;
         photo?: string;
+        rating?: number;
+        jobTitle?: string;
       };
       [QuestionType.EmailPhone]?: {
         email: string;
@@ -329,6 +332,9 @@ declare global {
     menuId: string;
     image: string;
     itemOrder?: number;
+    scheduleEnabled?: boolean;
+    startTime?: string;
+    endTime?: string;
   };
 
   type MenuItem = {
@@ -336,19 +342,20 @@ declare global {
     createdAt: string;
     name: string;
     description: string;
-    images: string[];
+    images: Array<string | File>;
     videoUrl: string | null;
     price: {
       type: MenuItemPriceType;
-      price?: number;
+      price?: number | string;
       variants?: Array<{
-        price: number;
+        price: number | string;
         name: string;
       }>;
     };
     categoryId: string;
     itemOrder?: number;
     disabled?: boolean;
+    foodLabels?: Array<string>;
   };
 
   type MenuBanner = {
@@ -434,6 +441,46 @@ declare global {
       [key: number]: boolean;
     };
   }
+  type subscriptionCountRestrictionCountType = {
+    max: number;
+  };
+  type subscriptionCountRestriction = {
+    count: subscriptionCountRestrictionCountType;
+  };
+  type subscriptionActiveField = {
+    active: boolean;
+  };
+  interface SubscriptionFeatures {
+    // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
+    [sfpn.Menu]: subscriptionCountRestriction & subscriptionActiveField;
+    [sfpn.Team]: {
+      teamMember: subscriptionCountRestriction & subscriptionActiveField;
+    } & subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.WebSurvey]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.WhatsAppSurvey]: subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.WhatsAppCampaign]: subscriptionActiveField &
+      subscriptionCountRestriction;
+    [sfpn.ReputationManagement]: subscriptionActiveField &
+      subscriptionCountRestriction;
+  }
+  interface Subscription {
+    orgId: string;
+    features: SubscriptionFeatures;
+    expiresAt: Date;
+    renewedAt?: Date;
+    createdAt: Date;
+  }
+  type Org = {
+    id: string;
+    createdAt: Date;
+    name: string;
+    ownerId: string;
+    logo: string;
+    phone: string;
+    address: string;
+  };
 }
 
 export interface MenuLanding {

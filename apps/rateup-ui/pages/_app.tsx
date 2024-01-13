@@ -23,6 +23,7 @@ import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/carousel/styles.css";
 import "@mantine/nprogress/styles.css";
+import "@mantine/dropzone/styles.css";
 import "../styles/global.css";
 import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,6 +32,7 @@ import axios from "axios";
 import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
 import { lexend300 } from "../utils/fonts";
+import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -50,10 +52,14 @@ export default function App({
 }: AppPropsWithLayout) {
   const router = useRouter();
   const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
+  let showQueryDevTools = true;
   let LayoutComponent;
   // page has pre defined layout
   if (Component.getLayout !== undefined) {
     LayoutComponent = Component.getLayout;
+  } else if (appProps.router.pathname.includes("admin")) {
+    LayoutComponent = AdminPanelLayout;
+    showQueryDevTools = false;
   } else {
     // page has no pre defined layout
     if (isLayoutNeeded) {
@@ -89,7 +95,9 @@ export default function App({
                   console.log("Session Refreshed");
                 } else {
                   // user has been logged out
-                  redirectToAuth();
+                  // TODO: not working redirect in localhost when we try to access secure route without login
+                  // redirectToAuth();
+                  router.push("/login");
                 }
               }
             }
@@ -140,6 +148,10 @@ export default function App({
   if (pageProps.fromSupertokens === "needs-refresh") {
     return null;
   }
+  const canonicalUrl = (
+    `https://rateup.app` + (router.asPath === "/" ? "" : router.asPath)
+  ).split("?")[0];
+
   return (
     <>
       <Head>
@@ -149,6 +161,7 @@ export default function App({
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
         <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="canonical" href={canonicalUrl} />
       </Head>
       <main className={lexend300.className}>
         <MantineProvider theme={theme}>
@@ -176,10 +189,12 @@ export default function App({
                     </AnimatePresence>
                   </LayoutComponent>
                 </UserProvider>
-                <ReactQueryDevtools
-                  initialIsOpen={false}
-                  buttonPosition="top-right"
-                />
+                {showQueryDevTools && (
+                  <ReactQueryDevtools
+                    initialIsOpen={false}
+                    buttonPosition="top-left"
+                  />
+                )}
               </HydrationBoundary>
             </QueryClientProvider>
             <Notifications />

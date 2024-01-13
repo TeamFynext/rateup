@@ -202,7 +202,7 @@ const ResultsOverview = () => {
   return (
     <>
       <Stack h={"100%"}>
-        <Stack style={{ overflow: "scroll", height: "100%", padding: 2 }}>
+        {chartData?.length > 0 ? (
           <Stack>
             {isAllowedQnsPresent && (
               <>
@@ -273,7 +273,9 @@ const ResultsOverview = () => {
                 ))}
             </PaperLayout>
           </Stack>
-        </Stack>
+        ) : (
+          <NothingFound text="No responses yet" />
+        )}
       </Stack>
     </>
   );

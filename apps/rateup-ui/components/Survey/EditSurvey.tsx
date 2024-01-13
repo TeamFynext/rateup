@@ -2,14 +2,12 @@ import { Center, Text, Tabs, Flex } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import classes from "./EditSurvey.module.css";
-import { QuestionType } from "../../types/enums";
+import styles from "./EditSurvey.module.css";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import SelectedLanguageContext from "../../context/SelectedLanguage";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -36,8 +34,6 @@ export function EditSurvey({
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
 
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
-
   useEffect(() => {
     if (!selectedQ) return;
     if (questions && selectedQ.id) {
@@ -51,17 +47,25 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={10}>
-      <PaperLayout style={{ flex: 2 }}>
+    <Flex w={"100%"} h={"100%"} gap={10}>
+      <PaperLayout
+        style={{ flex: 2 }}
+        className={styles["questions-sidebar-container"]}
+      >
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
           setSelectedQ={setSelectedQ}
           setActiveTab={setActiveTab}
+          surveyLanguages={surveyLanguages}
+          setSelectedLanguage={setSelectedLanguage}
           addQnTrigger={addQnTrigger}
         />
       </PaperLayout>
-      <PaperLayout style={{ flex: 5 }}>
+      <PaperLayout
+        style={{ flex: 5 }}
+        className={styles["edit-question-container"]}
+      >
         <Tabs
           px={"md"}
           pb="md"
@@ -69,7 +73,7 @@ export function EditSurvey({
           onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           style={{ height: "100%" }}
           classNames={{
-            panel: classes.panel,
+            panel: styles.panel,
           }}
         >
           <Tabs.Panel value={QuestionTabsEnum.Edit} style={{ height: "100%" }}>

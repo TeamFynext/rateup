@@ -1,9 +1,14 @@
-import { QuestionType, SentimentClass } from "../../types/enums";
+import {
+  QuestionType,
+  SentimentClass,
+  SubscriptionFeaturePathName as sfpn,
+} from "../../types/enums";
 
 export const AuthMode = {
   VERIFY: "VERIFY",
   LOGIN: "LOGIN",
   SIGNUP: "SIGNUP",
+  VERIFY_PHONE_NO: "VERIFY_PHONE_NO",
 };
 
 export const UserMode = {
@@ -91,5 +96,26 @@ export function getSentimentTypeLabel(sentiment: SentimentClass) {
       return "Neutral";
     default:
       throw new Error("Invalid Sentiment Type");
+  }
+}
+
+export function getSubscriptionFeatureLabel(feature: sfpn) {
+  switch (feature) {
+    case sfpn.WebSurvey:
+      return "Web Survey";
+    case sfpn.WhatsAppSurvey:
+      return "WhatsApp Survey";
+    case sfpn.Menu:
+      return "Menu";
+    case sfpn.ReputationManagement:
+      return "Reputation Management";
+    case sfpn.Team:
+      return "Team";
+    case sfpn.Team + ".teamMember":
+      return "Team Members";
+    case sfpn.WhatsAppCampaign:
+      return "WhatsApp Campaign";
+    default:
+      throw new Error("Invalid Subscription Feature" + feature);
   }
 }

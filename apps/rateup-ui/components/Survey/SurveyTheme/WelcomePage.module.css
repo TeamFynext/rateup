@@ -23,22 +23,25 @@
 .editorBox {
   position: relative;
   height: 100%;
-  overflow: scroll !important;
+  overflow: auto !important;
+  display: flex;
+  flex-direction: column;
 }
 
 .editorSection {
   position: relative;
-  height: 85%;
-  overflow-y: scroll !important;
+  /* height: 85%; */
+  overflow-y: auto !important;
 }
 
 .saveButton {
-  position: absolute;
-  bottom: 0;
+  /* position: absolute;
+  bottom: 0; */
+  margin-top: 1rem;
   background-color: #fff;
   width: 100%;
 }
-
+/* 
 .editorSection::-webkit-scrollbar {
   width: 10px !important;
 }
@@ -53,4 +56,4 @@
 
 .editorSection::-webkit-scrollbar-thumb:hover {
   background: #555 !important;
-}
+} */

@@ -3,7 +3,7 @@ import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { updatePwdSurvey } from "./updateSettings";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUpdateSurveyPwdMutation } from "../../../backend/surveys/surveys.query";
 
 const PasswordSettings = ({ survey, surveyId }) => {
@@ -11,7 +11,16 @@ const PasswordSettings = ({ survey, surveyId }) => {
   const [passwordProtection, setPasswordProtection] = useState(
     survey?.isProtected,
   );
+  const [isPasswordInputInvalid, setIsPasswordInputInvalid] = useState<
+    boolean | string
+  >(false);
   const updateSurveyPassword = useUpdateSurveyPwdMutation(surveyId);
+
+  useEffect(() => {
+    if (survey?.password?.length) {
+      setPassword(survey.password);
+    }
+  }, [survey]);
   return (
     <PaperLayout shadow="xl" p={"xl"}>
       <Stack gap={"md"}>
@@ -21,13 +30,17 @@ const PasswordSettings = ({ survey, surveyId }) => {
             label={passwordProtection ? "Disable" : "Enable"}
             size="md"
             checked={passwordProtection}
-            onChange={() =>
+            onChange={() => {
+              if (!passwordProtection) {
+                setIsPasswordInputInvalid(false);
+                setPassword("");
+              }
               updatePwdSurvey(
                 updateSurveyPassword,
                 setPasswordProtection,
                 surveyId,
-              )
-            }
+              );
+            }}
           />
         </Group>
         {passwordProtection && (
@@ -37,6 +50,7 @@ const PasswordSettings = ({ survey, surveyId }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter new password"
+              error={isPasswordInputInvalid}
             />
             {!survey?.password?.length && (
               <Text c="var(--tertiary-color)" fz={15}>
@@ -50,7 +64,12 @@ const PasswordSettings = ({ survey, surveyId }) => {
                 }
                 radius={"xl"}
                 onClick={() => {
-                  updateSurveyPassword.mutate({ surveyId, password });
+                  if (passwordProtection && password === "") {
+                    setIsPasswordInputInvalid("Please enter a password");
+                  } else {
+                    setIsPasswordInputInvalid(false);
+                    updateSurveyPassword.mutate({ surveyId, password });
+                  }
                 }}
               />
             </Group>

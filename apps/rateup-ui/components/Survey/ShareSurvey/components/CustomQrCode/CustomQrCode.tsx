@@ -5,8 +5,7 @@ type CustomQRCodeProps = {
   textToBeEmbedded: string;
   version: number;
   errorCorrectionLevel: string;
-  size?: number;
-  className: string;
+  className?: string;
   qrColor?: string;
 };
 
@@ -84,7 +83,7 @@ function CustomQRCode({
       }
     }
     setRows(rows);
-  }, []);
+  }, [textToBeEmbedded, version, errorCorrectionLevel, qrColor]);
 
   useEffect(() => {
     drawQRModules();

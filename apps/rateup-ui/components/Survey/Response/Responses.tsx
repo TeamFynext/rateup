@@ -9,11 +9,18 @@ import {
   Badge,
   Button,
   ScrollAreaAutosize,
+  ActionIcon,
+  Popover,
+  Box,
 } from "@mantine/core";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import {
   IconEye,
   IconFileDownload,
+  IconFilter,
   IconTrashXFilled,
   IconX,
 } from "@tabler/icons-react";
@@ -44,9 +51,24 @@ import NothingFound from "../../NothingFound/NothingFound";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PreviewModal from "../../Modal/PreviewModal";
-import { ChoiceTypeQuestions } from "../../../utils/constants";
+import {
+  ChoiceTypeQuestions,
+  ContactQuestions,
+} from "../../../utils/constants";
+import { HoverCardComponent } from "../HoverCard/HoverCard";
+import styles from "./Responses.module.css";
+import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
+import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
+import { IconAdjustments } from "@tabler/icons-react";
+import { ResultFilter } from "../Result/Result";
 
-const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
+const Responses = ({
+  survey,
+  responses,
+  allResponses,
+  defaultLanguage,
+  resultFilterProps,
+}) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -58,6 +80,11 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const hasContactQuestion =
+    responses &&
+    responses.some((response) =>
+      response.responses.some((res) => ContactQuestions.includes(res.type)),
+    );
   const deleteResponse = useDeleteResponse(
     surveyId,
     surveyTeamMapId,
@@ -65,6 +92,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
     setIsDeleting,
   );
 
+  const importContactMutation = useImportContactMutation();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -79,6 +107,46 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   useEffect(() => {
     setResponseCount(responses?.length);
   }, [responses]);
+
+  function handleExportContacts() {
+    const contacts = [];
+    responses.map((response) => {
+      const teamId = response.teamId;
+      const responseArray = response.responses;
+      responseArray.map((res) => {
+        if (ContactQuestions.includes(res.type)) {
+          const contact: ICreateContact = {
+            name: "",
+            teamId: teamId,
+          };
+          switch (res.type) {
+            case QuestionType.Email:
+              contact.email = res.response?.[QuestionType.Email];
+              break;
+            case QuestionType.Phone:
+              contact.phone = res.response?.[QuestionType.Phone].slice(1);
+              break;
+            case QuestionType.EmailPhone:
+              const phone = res.response?.[QuestionType.EmailPhone]?.phone;
+              const email = res.response?.[QuestionType.EmailPhone]?.email;
+              contact.phone = phone ? phone.slice(1) : undefined;
+              contact.email = email ? email : undefined;
+              break;
+          }
+          if (
+            !contacts.some(
+              (c) =>
+                c.teamId == contact.teamId &&
+                ((c.phone && c.phone == contact.phone) ||
+                  (c.email && c.email == contact.email)),
+            )
+          )
+            contacts.push(contact);
+        }
+      });
+    });
+    importContactMutation.mutate(contacts, {});
+  }
   const handleExcelDownload = useCallback(() => {
     const responses = allResponses && allResponses[0].responses;
     if (questions && responses) {
@@ -165,91 +233,113 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   if (QError) return <Text>An error has occurred</Text>;
 
   return (
-    <Stack h="100%">
-      <PaperLayout style={{ cursor: "pointer" }}>
+    <Stack className={styles["responses-container"]}>
+      <PaperLayout
+        style={{ cursor: "pointer" }}
+        className={styles["total-responses-heading-container"]}
+      >
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
-          <RateupButtonBlue
-            onClick={handleExcelDownload}
-            title={"Download"}
-            size="md"
-            radius={"lg"}
-            disabled={responseCount > 0 ? false : true}
-            rightIcon={<IconFileDownload size="1rem" />}
-          />
+          <Group>
+            <Popover width={300} position="bottom-end">
+              <Popover.Target>
+                <ActionIcon variant="filled" aria-label="Settings">
+                  <IconFilter stroke={1.5} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown
+                classNames={{ dropdown: styles["result-filter-dropdown"] }}
+              >
+                <ResultFilter {...resultFilterProps} />
+              </Popover.Dropdown>
+            </Popover>
+
+            <RateupButtonBlue
+              onClick={handleExcelDownload}
+              title={"Download"}
+              size="md"
+              radius={"lg"}
+              disabled={responseCount > 0 ? false : true}
+              rightIcon={<IconFileDownload size="1rem" />}
+            />
+            {hasContactQuestion && (
+              <RateupButtonSecondary
+                onClick={handleExportContacts}
+                title={"Export to contacts"}
+                size="md"
+                radius={"lg"}
+                rightIcon={<IconFileDownload size="1rem" />}
+              />
+            )}
+          </Group>
         </Group>
       </PaperLayout>
       {responseCount > 0 ? (
-        <PaperLayout style={{ flex: 1 }}>
-          <>
-            <ScrollArea h={"100%"} maw={"100%"}>
-              <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
-                <TableHead questions={questions} />
-                <Table.Tbody>
-                  {responses?.map((response) => (
-                    <Table.Tr
-                      key={response?.id}
-                      style={{ alignItems: "center" }}
-                    >
-                      <Table.Td>
-                        <Text c="dark.3" p={10} miw={200}>
-                          {dayjs(response?.createdAt).format("DD-MM-YYYY")}
-                        </Text>
-                      </Table.Td>
-                      {questions?.map((q) => (
-                        <Table.Td
-                          key={q?.id}
-                          title={getResponse(q?.id, response)}
-                        >
-                          <BadgeorTextorPreview
-                            questionType={q?.type}
-                            response={getResponse(q?.id, response)}
-                          />
-                        </Table.Td>
-                      ))}
-                      <Table.Td p={10} miw={50}>
-                        <Button
-                          variant="subtle"
-                          color="red"
-                          onClick={() => {
-                            setSelectedRowId(response?.id);
-                            open();
-                          }}
-                        >
-                          <IconTrashXFilled />
-                        </Button>
-                      </Table.Td>
-                    </Table.Tr>
+        <Box className={styles["responses-table-container"]}>
+          <Table
+            ref={tableRef}
+            withRowBorders
+            stickyHeader
+            className={styles["responses-table"]}
+          >
+            <TableHead questions={questions} />
+            <Table.Tbody>
+              {responses?.map((response) => (
+                <Table.Tr key={response?.id} style={{ alignItems: "center" }}>
+                  <Table.Td>
+                    <Text c="dark.3" p={10} miw={200}>
+                      {dayjs(response?.createdAt).format("DD-MM-YYYY hh:mm A")}
+                    </Text>
+                  </Table.Td>
+                  {questions?.map((q) => (
+                    <Table.Td key={q?.id}>
+                      <BadgeorTextorPreview
+                        questionType={q?.type}
+                        response={getResponse(q?.id, response)}
+                      />
+                    </Table.Td>
                   ))}
-                </Table.Tbody>
-              </Table>
-            </ScrollArea>
-            <FormModalLayout
-              opened={opened}
-              onClose={close}
-              title="Delete Response"
-              centered
-              buttonTitle="Delete"
-              includeCancelButton
-              onSubmit={confirmDelete}
-            >
-              <Stack py={"sm"}>
-                <Text>To proceed further, verify your email id.</Text>
-                <ContainedTextField
-                  withAsterisk
-                  label="Verify email"
-                  placeholder="Enter your login email"
-                  required
-                  value={verifyEmail}
-                  onChange={(e) => setVerifyEmail(e.target.value)}
-                />
-                <Text c="red">
-                  Once deleted, response entry data will be lost.
-                </Text>
-              </Stack>
-            </FormModalLayout>
-          </>
-        </PaperLayout>
+                  <Table.Td p={10} miw={50}>
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      onClick={() => {
+                        setSelectedRowId(response?.id);
+                        open();
+                      }}
+                    >
+                      <IconTrashXFilled />
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+          <FormModalLayout
+            opened={opened}
+            onClose={close}
+            title="Delete Response"
+            centered
+            buttonTitle="Delete"
+            includeCancelButton
+            onSubmit={confirmDelete}
+          >
+            <Stack py={"sm"}>
+              <Text>To proceed further, verify your email id.</Text>
+              <ContainedTextField
+                withAsterisk
+                label="Verify email"
+                placeholder="Enter your login email"
+                required
+                value={verifyEmail}
+                onChange={(e) => setVerifyEmail(e.target.value)}
+              />
+              <Text c="red">
+                Once deleted, response entry data will be lost.
+              </Text>
+            </Stack>
+          </FormModalLayout>
+        </Box>
       ) : (
         <NothingFound text="No responses yet" />
       )}
@@ -286,21 +376,18 @@ function TableHead({ questions }: TableHeadProps) {
         </Table.Th>
         {questions?.map((q) => (
           <Table.Th key={q?.id}>
-            <Text
-              fz="lg"
-              fw="600"
-              truncate="end"
-              miw={200}
-              maw={200}
-              c="dark.3"
-            >
-              {q?.title[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
+            <HoverCardComponent
+              content={
+                q?.title[
+                  selectedLanguage ? selectedLanguage : defaultLanguage
+                ] ||
                 q?.description[
                   selectedLanguage ? selectedLanguage : defaultLanguage
-                ]}
-            </Text>
+                ]
+              }
+              fw={600}
+              fz={"lg"}
+            />
           </Table.Th>
         ))}
         <Table.Th>
@@ -365,10 +452,6 @@ function BadgeorTextorPreview({
       </Badge>
     );
   } else {
-    return (
-      <Text c="dark.3" truncate="end" miw={200} maw={200}>
-        {response}
-      </Text>
-    );
+    return <HoverCardComponent content={response} />;
   }
 }

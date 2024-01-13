@@ -98,6 +98,7 @@ export default function ({ fullMenu, menuBanner }) {
                   videoUrl: value?.videoUrl,
                   categoryId: value?.menuId,
                   createdAt: value?.createdAt,
+                  foodLabels: value?.foodLabels,
                 });
               }}
               style={{
@@ -232,6 +233,9 @@ export default function ({ fullMenu, menuBanner }) {
                 setSelectedItem={setSelectedItem}
                 category={c}
                 currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
+                hideUnavailableCategory={
+                  fullMenu?.menuLanding?.menu?.hideUnavailableCategory
+                }
               />
             ))
           : "No Categories Found"}

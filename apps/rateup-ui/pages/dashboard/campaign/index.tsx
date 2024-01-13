@@ -11,6 +11,7 @@ import {
   Title,
   Text,
   Center,
+  Container,
 } from "@mantine/core";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ import {
 import { whatsappTheme } from "../../../config/mantineTheme";
 import Heading from "../../../components/styled/Heading/Heading";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 
 export default function () {
   const [searchText, setSearchText] = useState("");
@@ -107,11 +109,9 @@ export default function () {
               ))}
             </SimpleGrid>
           ) : (
-            <Flex justify={"center"} align={"center"}>
-              <Title c="dimmed" order={3}>
-                No Campaigns Found
-              </Title>
-            </Flex>
+            <Container mt={"7%"}>
+              <NothingFound text={"No campaigns found"} />
+            </Container>
           )}
           <Modal opened={opened} onClose={close} centered size={"lg"}>
             <CreateCampaignModal close={close} isEdit={false} />

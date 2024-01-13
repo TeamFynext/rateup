@@ -25,10 +25,11 @@ import {
   ContainedSelection,
   ContainedTextArea,
 } from "../../input/ContainedInput/ContainedInput";
-import { useMediaQuery } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
+  getImageValue,
   uploadFile,
 } from "../../../utils/file-upload/upload";
 import {
@@ -48,6 +49,15 @@ import {
 } from "./Button/LandingButtons";
 import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
 import { lexend } from "../../../utils/fonts";
+import { UnsplashModal } from "../../Modal/UnsplashModal";
+import { ImageCropModal } from "../../Modal/ImageCropModal";
+import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  fallbackImage,
+} from "../../../utils/constants";
+//TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
@@ -67,13 +77,34 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   );
   const [updatingLoading, setUpdatingLoading] = useState(false);
   const logoRef = useRef<HTMLButtonElement>(null);
+  const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
+  const resetRef = useRef(null);
+  const resetLogoRef = useRef(null);
+
   const [selectedTab, setSelectedTab] = useState("Tablet");
-  const fallbackImage = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
   const [tabState, setTabState] = useState<string>("title");
   const [mainTabState, setMainTabState] = useState<string>("bg");
   const [catalogue, setCatalogue] = useState(
     editingItem?.catalogue ? "catalogue" : "menu",
   );
+  const [aspectRatio, setAspectRatio] = useState(16 / 9);
+  const [imageType, setImageType] = useState("");
+  const [selectedUnslashImage, setSelectedUnslashImage] = useState({
+    url: "",
+    name: "",
+  });
+  const [
+    openedUnsplashDialog,
+    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
+  ] = useDisclosure(false);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
+  const [
+    openedMethodSelectionDialog,
+    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
+  ] = useDisclosure(false);
   const menulandingMutation = useMenuLandingMutationById(editingItem?.menuId);
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
     editingItem?.menuId,
@@ -105,14 +136,18 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       setUpdatingLoading(true);
       backgroundImage && imageArray.push(backgroundImage);
       editingItem?.backgroundImage &&
+        backgroundImage &&
         deleteImageArray.push({ Key: editingItem.backgroundImage });
 
       mobileBackgroundImage && imageArray.push(mobileBackgroundImage);
       editingItem?.mobileBackgroundImage &&
+        mobileBackgroundImage &&
         deleteImageArray.push({ Key: editingItem.mobileBackgroundImage });
 
       logo && imageArray.push(logo);
-      editingItem?.logo && deleteImageArray.push({ Key: editingItem.logo });
+      editingItem?.logo &&
+        logo &&
+        deleteImageArray.push({ Key: editingItem.logo });
 
       let errors = [];
       if (imageArray?.length > 0) {
@@ -133,13 +168,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
           )
           .map((r) => r?.value);
         if (deleteImageArray?.length > 0) {
-          successes.pop();
+          successes?.pop();
         }
-
         if (logo) data.logo = successes.pop();
-
         if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
-
         if (backgroundImage) data.backgroundImage = successes.pop();
       }
       menulandingMutation.mutate(data);
@@ -150,6 +182,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       setUpdatingLoading(false);
     } finally {
       setUpdatingLoading(false);
+      setBackgroundImage(null);
+      setMobileBackgroundImage(null);
+      setLogo(null);
     }
   };
 
@@ -204,31 +239,96 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
     }/images/menu/${isMobileTab ? "mobileBackground" : "background"}.jpg`;
   }
-  const onChangePictureBackground = (event: File) => {
-    if (event) {
-      form.setFieldValue("backgroundImage", URL.createObjectURL(event));
-      setBackgroundImage(event);
-      setSelectedTab("Tablet");
-    }
+  const handlePictureBackground = () => {
+    setAspectRatio(8 / 3);
+    toggleMethodSelectionDialog();
+    setImageType("backgroundImage");
+    setSelectedTab("Tablet");
   };
-  const onChangePictureMobileBackground = (event: File) => {
-    if (event) {
-      form.setFieldValue("mobileBackgroundImage", URL.createObjectURL(event));
-      setMobileBackgroundImage(event);
-      setSelectedTab("Mobile");
-    }
+  const handlePictureMobileBackground = () => {
+    setAspectRatio(3 / 4);
+    toggleMethodSelectionDialog();
+    setImageType("mobileBackgroundImage");
+    setSelectedTab("Mobile");
   };
   const onChangeLogo = (event: File) => {
-    if (event) {
-      form.setFieldValue("logo", URL.createObjectURL(event));
-      setLogo(event);
+    if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
     }
+    setSelectedUnslashImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    setAspectRatio(4 / 3);
+    setImageType("logo");
+    resetLogoRef?.current?.();
+  };
+  const handleCropImageSave = (cropedImage) => {
+    if (imageType === "backgroundImage") {
+      form?.setFieldValue("backgroundImage", URL.createObjectURL(cropedImage));
+      setBackgroundImage(cropedImage);
+    } else if (imageType === "mobileBackgroundImage") {
+      form?.setFieldValue(
+        "mobileBackgroundImage",
+        URL.createObjectURL(cropedImage),
+      );
+      setMobileBackgroundImage(cropedImage);
+    } else if (imageType === "logo") {
+      form?.setFieldValue("logo", URL.createObjectURL(cropedImage));
+      setLogo(cropedImage);
+    }
+  };
+  const handleUnsplashImageSave = (
+    unsplashImage: string,
+    imageName: string,
+  ) => {
+    setSelectedUnslashImage({
+      url: unsplashImage,
+      name: imageName,
+    });
+    toggleCropDialog();
+  };
+  const handleUploadMethod = (type: string) => {
+    if (type === "unsplash") {
+      toggleUnsplashDialog();
+    } else {
+      imageUploadBtnRef?.current?.click();
+    }
+  };
+  const handleBgPick = (e: File | null) => {
+    if (!e) return;
+    if (e.size > MAX_FILE_SIZE_IN_BYTE) {
+      return showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+    }
+    handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+    resetRef.current?.();
   };
   return (
     <Grid ff={lexend.style.fontFamily} fw={300}>
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
         <PaperLayout>
           <>
+            <UnsplashModal
+              handleUnsplashImageSave={handleUnsplashImageSave}
+              opened={openedUnsplashDialog}
+              onclose={closeUnsplashDialog}
+            />
+            <ImageCropModal
+              opened={openedCropDialog}
+              onclose={closeCropDialog}
+              imageName={selectedUnslashImage.name}
+              handleCropImageSave={handleCropImageSave}
+              image={selectedUnslashImage.url}
+              aspect={aspectRatio}
+            />
+            <ImageUploadMethodModal
+              onClose={closeMethodSelectionDialog}
+              opened={openedMethodSelectionDialog}
+              handleUploadMethod={handleUploadMethod}
+            />
             <SimpleGrid p={"sm"} cols={3}>
               <TabsCommon
                 tabHeading={["Tablet", "Mobile"]}
@@ -260,7 +360,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                 <>
                   <BackgroundImage
                     src={result}
-                    radius="0px 0px 22px 22px"
+                    radius="0rem 0rem 1.375rem 1.375rem"
                     w={isMobileTab && 300}
                     bgsz={"cover"}
                     bgp={"center"}
@@ -279,11 +379,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       justify={!isMobileTab ? "space-around" : "center"}
                       h={"100%"}
                       style={{
-                        padding: !isMobileTab ? "0 20px 0 20px" : "0",
+                        padding: !isMobileTab ? "0 1.25rem 0 1.25rem" : "0",
                       }}
                     >
                       <div></div>
-                      <Stack align="center" gap={0} px={"50px"}>
+                      <Stack align="center" gap={0} px={"3.125rem"}>
                         <TooltipWithEditIcon
                           tooltipLabel="change logo"
                           handleEditIcon={(e) => {
@@ -291,13 +391,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           }}
                         >
                           <Image
-                            src={
-                              form?.values?.logo
-                                ? form?.values?.logo?.startsWith("blob")
-                                  ? form.values?.logo
-                                  : getFileUrlFromKey(form?.values?.logo)
-                                : fallbackImage
-                            }
+                            src={getImageValue(form?.values?.logo)}
                             onClick={() => {
                               logoRef?.current?.click();
                               setMainTabState("logo");
@@ -310,6 +404,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                             radius={"md"}
                             fallbackSrc={fallbackImage}
                             alt="image of logo"
+                            style={{
+                              objectFit: "contain",
+                            }}
                           />
                         </TooltipWithEditIcon>
                         <TooltipWithEditIcon
@@ -380,8 +477,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                                 <IconWorld
                                   size={
                                     isMobileTab
-                                      ? "21px"
-                                      : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                      ? "1.3125rem"
+                                      : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
                                   }
                                   color={form?.values?.otherStyle?.color}
                                 />
@@ -410,8 +507,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                                 <IconMapPin
                                   size={
                                     isMobileTab
-                                      ? "21px"
-                                      : "clamp(21.008px, 7.424px + 2.262vw, 40px)"
+                                      ? "1.3125rem"
+                                      : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
                                   }
                                   color={form?.values?.otherStyle?.color}
                                 />
@@ -445,8 +542,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           shadow={isMenuEnabled && "sm"}
                           radius={"md"}
                           p={"lg"}
-                          h={"120px"}
-                          w={"120px"}
+                          w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
                           selected={isMenuEnabled}
@@ -458,8 +554,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <PaperLayout
                           radius={"md"}
                           p={"lg"}
-                          h={"120px"}
-                          w={"120px"}
+                          w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
                           selected={isFeedbackEnabled}
@@ -468,21 +563,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         </PaperLayout>
                       </SimpleGrid>
                     </Center>
-                    <Group>
-                      <Text
-                        fz={
-                          isMobileTab
-                            ? "0.875rem"
-                            : "clamp(14px, 9.712px + 0.714vw, 20px)"
-                        }
-                      >
-                        powered by
-                      </Text>
+                    <Group justify="center">
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
-                        h={54}
-                        w={94}
+                        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits.svg`}
+                        w={"clamp(8.5625rem, 4.098rem + 11.905vw, 14.8125rem)"}
                         alt="rate-up logo"
+                        mb={"sm"}
                       />
                     </Group>
                   </Stack>
@@ -541,21 +627,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!mobileBackgroundImage,
                         )}
                       </Text>
-                      <FileButton
-                        onChange={onChangePictureMobileBackground}
-                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      <Button
+                        leftSection={<IconUpload size={16} />}
+                        size="xs"
+                        radius="1.125rem"
+                        type="button"
+                        onClick={handlePictureMobileBackground}
                       >
-                        {(props) => (
-                          <Button
-                            leftSection={<IconUpload size={16} />}
-                            size="xs"
-                            radius="18px"
-                            {...props}
-                          >
-                            Upload Mobile Image
-                          </Button>
-                        )}
-                      </FileButton>
+                        Upload Mobile Image
+                      </Button>
                       <Text>
                         {getFileNameFromUrl(
                           backgroundImage
@@ -564,19 +644,26 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!backgroundImage,
                         )}
                       </Text>
+                      <Button
+                        leftSection={<IconUpload size={16} />}
+                        size="xs"
+                        radius="1.125rem"
+                        type="button"
+                        onClick={handlePictureBackground}
+                      >
+                        Upload Tablet Image
+                      </Button>
                       <FileButton
-                        onChange={onChangePictureBackground}
+                        onChange={handleBgPick}
+                        resetRef={resetRef}
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       >
                         {(props) => (
                           <Button
-                            leftSection={<IconUpload size={16} />}
-                            size="xs"
-                            radius="18px"
+                            ref={imageUploadBtnRef}
+                            display={"none"}
                             {...props}
-                          >
-                            Upload Tablet Image
-                          </Button>
+                          />
                         )}
                       </FileButton>
                     </Stack>
@@ -595,12 +682,13 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       <FileButton
                         onChange={onChangeLogo}
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        resetRef={resetLogoRef}
                       >
                         {(props) => (
                           <Button
                             leftSection={<IconUpload size={16} />}
                             size="xs"
-                            radius="18px"
+                            radius="1.125rem"
                             ref={logoRef}
                             {...props}
                           >
@@ -640,18 +728,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       onChange={(value: string) => setTabState(value)}
                     >
                       <Tabs.Panel value="header">
-                        {/* for future implementation  */}
-                        {/* <ContainedSelection
-                          mx={"lg"}
-                          mt={"xs"}
-                          withAsterisk
-                          allowDeselect={false}
-                          label=""
-                          placeholder="Select font family"
-                          required
-                          data={fontListMenu || []}
-                          {...form.getInputProps("headerStyle.fontFamily")}
-                        /> */}
                         <SimpleGrid mx={"lg"} cols={2}>
                           <ContainedSelection
                             allowDeselect={false}

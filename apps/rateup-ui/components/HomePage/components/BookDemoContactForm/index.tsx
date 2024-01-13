@@ -14,7 +14,6 @@ type BookDemoContactFormProps = {
 };
 
 function BookDemoContactForm({ buttonProps }: BookDemoContactFormProps) {
-  console.log(buttonProps, "buttton props");
   const [opened, { open, close }] = useDisclosure(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
 
@@ -51,7 +50,7 @@ function BookDemoContactForm({ buttonProps }: BookDemoContactFormProps) {
           />
         )}
       </Modal>
-      <Button onClick={open} {...buttonProps} from="book ad demo contact form">
+      <Button onClick={open} {...buttonProps}>
         Book a Demo
       </Button>
     </Flex>

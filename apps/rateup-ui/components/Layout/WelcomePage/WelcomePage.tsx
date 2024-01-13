@@ -80,7 +80,7 @@ function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
             {surveyThemeData?.headerText}
           </Title>
 
-          <Text mt={20} style={surveyThemeData?.descStyles} tt={"capitalize"}>
+          <Text mt={20} style={surveyThemeData?.descStyles}>
             {surveyThemeData?.descText}
           </Text>
 

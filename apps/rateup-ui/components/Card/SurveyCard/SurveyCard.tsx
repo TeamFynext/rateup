@@ -27,12 +27,15 @@ export function SurveyCard({
 }: SurveyCardProps): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
-    setTimeSince(getTimeSince(survey?.createdAt));
-    const timeoutID = setInterval(
-      () => setTimeSince(getTimeSince(survey?.createdAt)),
-      5000,
-    );
-    return () => clearInterval(timeoutID);
+    if (survey?.createdAt) {
+      setTimeSince(getTimeSince(new Date(survey?.createdAt).toString()));
+      const timeoutID = setInterval(
+        () =>
+          setTimeSince(getTimeSince(new Date(survey?.createdAt).toString())),
+        5000,
+      );
+      return () => clearInterval(timeoutID);
+    }
   }, []);
 
   return (

@@ -16,6 +16,8 @@ import {
   Divider,
   Flex,
   RingProgress,
+  Box,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -69,6 +71,7 @@ import { EmailPhoneForm } from "./QuestionForms/EmailPhoneForm";
 import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
+import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 
 function TakeSurvey() {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -394,10 +397,27 @@ function TakeSurvey() {
                                         <Text fw="400">Name: </Text>{" "}
                                         <Text fw="300">{data.name}</Text>{" "}
                                       </Group>
+                                      {data.jobTitle && (
+                                        <Group mt="-10px">
+                                          <Text fw={"400"}>Job Title: </Text>
+                                          <Text fw="300">{data.jobTitle}</Text>
+                                        </Group>
+                                      )}
                                       <Group mt="-10px">
                                         <Text fw="400">Testimonial: </Text>{" "}
                                         <Text fw="300">{data.testimonial}</Text>{" "}
                                       </Group>
+                                      {data.rating && (
+                                        <Rating value={data.rating} readOnly />
+                                      )}
+                                      {data.photo && (
+                                        <Image
+                                          src={getFileUrlFromKey(data?.photo)}
+                                          radius="md"
+                                          maw={240}
+                                          mx="0px"
+                                        />
+                                      )}
                                     </Stack>
                                   );
 
@@ -465,19 +485,26 @@ function TakeSurvey() {
             </Flex>
           </Modal>
 
-          <Stack>
-            <Stack style={{ minHeight: "45vh" }} justify="center">
-              <QuestionTitle largeScreen={largeScreen} />
-              <QuestionDesc largeScreen={largeScreen} />
-              <QuestionForm />
-            </Stack>
-            <NextPrev
-              next={handleNext}
-              prev={handlePrev}
-              num={QnNo}
-              total={questionCount}
+          <Box pos="relative">
+            <LoadingOverlay
+              visible={isSavingResponses}
+              zIndex={1000}
+              overlayProps={{ radius: "sm", blur: 2 }}
             />
-          </Stack>
+            <Stack>
+              <Stack style={{ minHeight: "45vh" }} justify="center">
+                <QuestionTitle largeScreen={largeScreen} />
+                <QuestionDesc largeScreen={largeScreen} />
+                <QuestionForm />
+              </Stack>
+              <NextPrev
+                next={handleNext}
+                prev={handlePrev}
+                num={QnNo}
+                total={questionCount}
+              />
+            </Stack>
+          </Box>
         </Container>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>
@@ -500,10 +527,10 @@ function submitSurvey({
     tag: tag || null,
   })
     .then(() => {
-      notifications.show({
-        message: "Survey completed!",
-        color: "teal",
-      });
+      // notifications.show({
+      //   message: "Survey completed!",
+      //   color: "teal",
+      // });
       setIsSavingResponses(false);
     })
     .catch((e) => {
@@ -595,7 +622,9 @@ function getQuestionForm(type, selectedQ) {
     case Q.DDMS:
       return <DDMSForm key={selectedQ?.id} />;
     case Q.Testimonial:
-      return <TestimonialForm key={selectedQ?.id} />;
+      return (
+        <TestimonialForm key={selectedQ?.id} features={selectedQ?.features} />
+      );
     case Q.EmailPhone:
       return <EmailPhoneForm key={selectedQ?.id} />;
     case Q.DateTime:

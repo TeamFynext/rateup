@@ -10,12 +10,12 @@ type ShareMenuProps = {
     id: string;
     isPublished: boolean;
     surveyTeamMapId?: string;
+    name: string;
   };
 };
 
-const ShareMenu = ({
-  menu: { id, isPublished, surveyTeamMapId },
-}: ShareMenuProps) => {
+const ShareMenu = ({ menu }: ShareMenuProps) => {
+  const { id, isPublished, surveyTeamMapId, name } = menu;
   const { isPending, error, mutate } = useUpdateMenuMutation(
     id,
     () => {},
@@ -55,7 +55,14 @@ const ShareMenu = ({
               overlayProps={{ radius: "sm", blur: 2 }}
             />
           </Grid>
-          <ShareQR url={shareLink} isSurveyPublished={isPublished} />
+          <ShareQR
+            id={id}
+            url={shareLink}
+            isPublished={isPublished}
+            title={name}
+            queryKey={"menuShareSettings"}
+            resourceName={"menu"}
+          />
         </Stack>
       </Paper>
     </Stack>

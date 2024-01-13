@@ -4,7 +4,6 @@ import {
   Text,
   Box,
   useMantineTheme,
-  Dialog,
   Group,
   Image,
 } from "@mantine/core";
@@ -15,15 +14,10 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { Draggable } from "react-beautiful-dnd";
-import { useQueryClient } from "@tanstack/react-query";
 import classes from "./DraggableQuestionCard.module.css";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../Button/RateupButtons";
 import cx from "clsx";
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
@@ -51,7 +45,6 @@ export function DraggableQuestionCard({
   const { surveyId } = router.query as { surveyId: string };
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const [isLoading, setIsLoading] = useState(false);
   const theme = useMantineTheme();
 
   const questionDeleteMutation = useQuestionDeleteMutation(surveyId, (qId) => {
@@ -59,7 +52,7 @@ export function DraggableQuestionCard({
   });
 
   const handleDelete = (e, qId) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
   return (
@@ -72,7 +65,6 @@ export function DraggableQuestionCard({
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {
-          e.stopPropagation();
           handleDelete(e, question.id);
         }}
       />
@@ -101,27 +93,11 @@ export function DraggableQuestionCard({
               >
                 {index + 1}
               </Badge>
-              {/* TODO: add truncate and make height fixed*/}
-              <Text
-                px="xs"
-                fw={500}
-                maw={
-                  question?.logic?.length && question?.googleReview
-                    ? "60%"
-                    : question?.logic?.length || question?.googleReview
-                    ? "70%"
-                    : "75%"
-                }
-                truncate
-              >
+              <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
                 {question.title[selectedLanguage] ||
                   question.description[selectedLanguage]}
               </Text>
-              <Group
-                justify={"flex-end"}
-                gap={4}
-                style={{ position: "absolute", right: "5px" }}
-              >
+              <Group justify={"flex-end"} gap={4} ml={"auto"} miw={70}>
                 {question?.logic?.length && (
                   <Image
                     src={
@@ -129,23 +105,21 @@ export function DraggableQuestionCard({
                         ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
                         : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`
                     }
-                    width={30}
-                    height={30}
+                    w={30}
+                    h={30}
                     fit="contain"
                   />
                 )}
                 {question.googleReview && (
-                  <Box mr={"6px"}>
-                    <IconBrandGoogle
-                      color={
-                        isWaSurvey == true
-                          ? theme.colors["whatsapp-green"][6]
-                          : "var(--tertiary-color)"
-                      }
-                      stroke={4}
-                      size={"1rem"}
-                    />
-                  </Box>
+                  <IconBrandGoogle
+                    color={
+                      isWaSurvey == true
+                        ? theme.colors["whatsapp-green"][6]
+                        : "var(--tertiary-color)"
+                    }
+                    stroke={4}
+                    style={{ width: "2rem", height: "1rem" }}
+                  />
                 )}
                 <ActionIcon
                   onClick={() => {

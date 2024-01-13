@@ -2,6 +2,7 @@ import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient";
 
 const TEMPLATES_URL = `${WHATSAPP_URL}/templates`;
+const REDIRECT_URL = `${WHATSAPP_URL}/redirect`;
 /**
  * Fetches whatsapp templates using orgId user belongs to.
  */
@@ -30,3 +31,6 @@ export const registerTemplates = async (
 ) => {
   return axiosClient.post(`${TEMPLATES_URL}/register`, dbTemplates);
 };
+export async function tokenizeIp() {
+  return (await axiosClient.post(`${REDIRECT_URL}`)).data;
+}

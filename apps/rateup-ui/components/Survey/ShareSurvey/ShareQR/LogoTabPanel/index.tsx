@@ -1,36 +1,43 @@
-import {
-  FileInput,
-  Flex,
-  Grid,
-  Radio,
-  Slider,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { FileInput, Flex, Radio, Slider, Stack, Title } from "@mantine/core";
 import styles from "./LogoTabPanel.module.css";
 import fileInputStyles from "./FileInput.module.css";
 import radioStyles from "./Radio.module.css";
-import { RateupButtonSecondary } from "../../../../Button/RateupButtons";
 import ChipGroup from "./ChipGroup";
-import { logoFillTypes, logoFilters } from "./constants";
+import { logoFillTypes } from "./constants";
 import CustomColorPicker from "../../components/CustomColorPicker";
 import { useState } from "react";
+import { statePropertiesEnum } from "..";
+import { RateupButtonBlue } from "../../../../Button/RateupButtons";
+
+type LogoTabPanelProps = {
+  qrBgColor: string;
+  qrColor: string;
+  logoSize: number;
+  logoFillType: string;
+  logoBorderRadius: number;
+  updateStateFunc: (stateProperty: statePropertiesEnum) => (value: any) => void;
+  selectLogoFileInputValue: null | File;
+  onSelectLogoFileInputChange: (value) => void;
+};
 
 function LogoTabpanel({
-  handleLogoInputChange,
   logoFillType,
-  setLogoFillType,
   qrBgColor,
-  setQRBgColor,
   qrColor,
-  setQRColor,
   logoSize,
-  setLogoSize,
-  borderRadius,
-  setBorderRadius,
-}) {
-  const [qrBgColorType, setQRBgColorType] = useState("color");
+  logoBorderRadius,
+  updateStateFunc,
+  selectLogoFileInputValue,
+  onSelectLogoFileInputChange,
+}: LogoTabPanelProps) {
+  const {
+    LogoFile,
+    LogoSize,
+    LogoFillType,
+    LogoBorderRadius,
+    QrBgColor,
+    QrColor,
+  } = statePropertiesEnum;
 
   return (
     <Stack className={styles["panel-container"]}>
@@ -48,7 +55,8 @@ function LogoTabpanel({
               classNames={fileInputStyles}
               placeholder="Select Logo"
               accept="image/png,image/jpeg,image/svg+xml"
-              onChange={handleLogoInputChange}
+              onChange={onSelectLogoFileInputChange}
+              value={selectLogoFileInputValue}
               clearable
             />
           </Stack>
@@ -59,7 +67,7 @@ function LogoTabpanel({
             </Title>
             <Slider
               value={logoSize}
-              onChange={setLogoSize}
+              onChange={updateStateFunc(LogoSize)}
               label={(value) => value}
               step={1}
               defaultValue={70}
@@ -76,7 +84,7 @@ function LogoTabpanel({
               multiple={false}
               chipsData={logoFillTypes}
               value={logoFillType}
-              handleChange={setLogoFillType}
+              handleChange={updateStateFunc(LogoFillType)}
             />
           </Stack>
         </Stack>
@@ -87,8 +95,8 @@ function LogoTabpanel({
               Border Radius
             </Title>
             <Slider
-              value={borderRadius}
-              onChange={setBorderRadius}
+              value={logoBorderRadius}
+              onChange={updateStateFunc(LogoBorderRadius)}
               label={(value) => value}
               step={1}
               defaultValue={50}
@@ -102,14 +110,14 @@ function LogoTabpanel({
             </Title>
             <Radio.Group
               onChange={(value) => {
+                const setStateFunc = updateStateFunc(QrBgColor);
                 if (value === "transparent") {
-                  setQRBgColor("transparent");
+                  setStateFunc("transparent");
                 } else {
-                  setQRBgColor("#FFFFFF");
+                  setStateFunc("#FFFFFF");
                 }
-                setQRBgColorType(value);
               }}
-              value={qrBgColorType}
+              value={qrBgColor === "transparent" ? "transparent" : "color"}
             >
               <Stack>
                 <Radio
@@ -120,15 +128,21 @@ function LogoTabpanel({
                 <Radio classNames={radioStyles} value="color" label="Color" />
               </Stack>
             </Radio.Group>
-            {qrBgColorType === "color" && (
-              <CustomColorPicker value={qrBgColor} onChange={setQRBgColor} />
+            {qrBgColor.startsWith("#") && (
+              <CustomColorPicker
+                value={qrBgColor}
+                onChange={updateStateFunc(QrBgColor)}
+              />
             )}
           </Stack>
           <Stack className={styles["option-container"]}>
             <Title order={4} className={styles["option-heading"]}>
               Color
             </Title>
-            <CustomColorPicker value={qrColor} onChange={setQRColor} />
+            <CustomColorPicker
+              value={qrColor}
+              onChange={updateStateFunc(QrColor)}
+            />
           </Stack>
         </Stack>
       </Flex>

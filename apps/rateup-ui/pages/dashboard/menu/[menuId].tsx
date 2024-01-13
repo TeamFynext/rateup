@@ -141,7 +141,7 @@ export default ({ categories: initialCategories }) => {
                 onClick={handleCreateCategory}
               />
               <RateupButtonSecondary
-                title="Upload Csv"
+                title="Import Menu"
                 rightIcon={<IconUpload size={16} />}
                 radius="xl"
                 size="md"

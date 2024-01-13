@@ -54,14 +54,12 @@ const ValidationRulesEditor = ({
 }: IProps) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const { colors } = useMantineTheme();
 
   const [ruleList, setRuleList] = useState(["length", "wordCount", "textType"]);
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
-    setIsSaving,
   });
 
   const form = useForm<FormValues>({
@@ -352,7 +350,7 @@ const ValidationRulesEditor = ({
           title={"Save"}
           size="md"
           onClick={handleSave}
-          loading={isSaving}
+          loading={questionUpdateMutation.isPending}
         />
       </Group>
     </Stack>

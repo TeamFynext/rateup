@@ -1,4 +1,5 @@
 import axios from "axios";
+import { fallbackImage } from "../constants";
 
 export const uploadFile = async (file, withThumbnails = false) => {
   const formData = new FormData();
@@ -17,8 +18,7 @@ export const uploadFile = async (file, withThumbnails = false) => {
     );
     return response?.data?.data?.key as string;
   } catch (error) {
-    console.error(error);
-    return null;
+    throw error?.response?.data?.message;
   }
 };
 
@@ -45,4 +45,27 @@ export const getFileUrlFromKey = (key: string) => {
 
 export const getFileNameFromKey = (key: string) => {
   return key.split("-")[key.split("-").length - 1];
+};
+
+export const dataURItoBlob = (dataURI) => {
+  const byteString = atob(dataURI.split(",")[1]);
+  const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+};
+
+export const getImageValue = (image) => {
+  if (typeof image === "object") {
+    return URL.createObjectURL(image);
+  } else if (image && image.startsWith("blob")) {
+    return image;
+  } else if (image) {
+    return getFileUrlFromKey(image);
+  } else {
+    return fallbackImage;
+  }
 };

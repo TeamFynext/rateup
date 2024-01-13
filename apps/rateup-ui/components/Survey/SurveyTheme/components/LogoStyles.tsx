@@ -14,6 +14,8 @@ import { createFormContext } from "@mantine/form";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 import { getFileName } from "./BackgroundStyles";
+import { ImageCropModal } from "../../../Modal/ImageCropModal";
+import { useDisclosure } from "@mantine/hooks";
 
 const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 interface FormValues {
@@ -42,6 +44,14 @@ function LogoStyles({
   const [isFileLoading, setisFileLoading] = useState(false);
   const [logoFileName, setLogoFileName] = useState(null);
   const resetLogoRef = useRef<() => void>(null);
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
   useEffect(() => {
     setCurrentstyles({
@@ -56,10 +66,13 @@ function LogoStyles({
   };
 
   const handleFileChange = (value) => {
-    setisFileLoading(true);
-    setLogoFileName(value?.name);
-    setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: value });
-    setisFileLoading(false);
+    if (!value) return;
+    setSelectedImage({
+      url: URL.createObjectURL(value),
+      name: value.name,
+    });
+    toggleCropDialog();
+    resetLogoRef?.current?.();
   };
 
   const removeImage = () => {
@@ -67,12 +80,24 @@ function LogoStyles({
     setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: "", logoUrl: "" });
     resetLogoRef.current?.();
     // form.setValues({ logoUrl: ""})
-
-    //TODO : removed logo not able re-upload as the next
   };
 
+  const handleCropImageSave = (cropedImage) => {
+    setisFileLoading(true);
+    setLogoFileName(cropedImage?.name);
+    setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: cropedImage });
+    setisFileLoading(false);
+  };
   return (
     <Flex>
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={4 / 3}
+      />
       <Stack w={"100%"} justify={"center"}>
         <form style={{ width: "100%", justifyContent: "center" }}>
           <NumberInput
@@ -134,13 +159,13 @@ function LogoStyles({
             </FileButton>
           </SimpleGrid>
 
-          <Flex justify={"center"} mt="xl">
+          <Flex justify={"center"}>
             <Button
               radius={48}
               size={"sm"}
               pl={40}
               pr={40}
-              mt={20}
+              mt={"2rem"}
               onClick={onSubmit}
               loading={saveLoading}
             >

@@ -24,6 +24,7 @@ interface Props {
   styles?: any;
   color?: string;
   className?: string;
+  gradient?: any;
 }
 
 export const RateupButtonPrimary = ({
@@ -39,6 +40,8 @@ export const RateupButtonPrimary = ({
   rightIcon = null,
   variant,
   size,
+  color,
+  gradient,
 }: Props) => {
   return (
     <Button
@@ -56,6 +59,8 @@ export const RateupButtonPrimary = ({
       fullWidth={fullWidth}
       loading={loading}
       fw={400}
+      color={color}
+      gradient={gradient}
     >
       {title}
     </Button>
