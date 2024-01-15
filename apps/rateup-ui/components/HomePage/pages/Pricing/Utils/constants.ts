@@ -14,7 +14,7 @@ export const defaultPrices = {
   currency: "$",
 };
 export const DISCOUNT_PERCENTAGE = 2;
-export const CardWidth = "clamp(260px, 174.288px + 14.286vw, 380px)";
+export const CardWidth = "clamp(260px, 202.864px + 9.524vw, 340px)";
 export const Title1 = "clamp(34px, 22.576px + 1.905vw, 50px)";
 export const Title2 = "clamp(30px, 19.28px + 1.786vw, 45.008px)";
 export const Title3 = "clamp(20px, 12.864px + 1.19vw, 30px)";

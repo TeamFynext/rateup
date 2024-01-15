@@ -1,9 +1,10 @@
 import React from "react";
-import { Box, Card, Center, Flex, Stack, Text } from "@mantine/core";
+import { Box, Card, Center, Flex, List, Stack, Text, rem } from "@mantine/core";
 import { lexend300 } from "../../../../../utils/fonts";
 import { NumberAnimate } from "../Animate/NumberAnimate";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants";
+import { IconCircleCheck } from "@tabler/icons-react";
 
 export const SurveySection = ({ largeScreen, handlePlanSelection, plans }) => {
   const surveyPlan = plans?.filter(
@@ -17,7 +18,26 @@ export const SurveySection = ({ largeScreen, handlePlanSelection, plans }) => {
       name: "Enterprise",
     },
   });
-
+  const generateListItems = (title: string) => (
+    <List
+      spacing="xs"
+      size="md"
+      center
+      icon={
+        <IconCircleCheck
+          style={{ width: rem(16), height: rem(16), color: "green" }}
+        />
+      }
+    >
+      <List.Item>{title}</List.Item>
+      <List.Item>Unlimited Responses</List.Item>
+      <List.Item>Logic Jump</List.Item>
+      <List.Item>Google Review</List.Item>
+      <List.Item>Custom Filters</List.Item>
+      <List.Item>Location Fetching</List.Item>
+      <List.Item>Custom Welcome Page</List.Item>
+    </List>
+  );
   return (
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
       {surveyPlan?.map((data, index) => {
@@ -124,27 +144,9 @@ export const SurveySection = ({ largeScreen, handlePlanSelection, plans }) => {
                     gap={5}
                     mt={"xl"}
                   >
-                    {index === 0 ? (
-                      <>
-                        <Text>2 Surveys</Text>
-                        <Text>Unlimited Responses</Text>
-                        <Text>Logic Jump</Text>
-                        <Text>Google Review</Text>
-                        <Text>Custom Filters</Text>
-                        <Text>Location Fetching</Text>
-                        <Text>Custom Welcome Page</Text>
-                      </>
-                    ) : (
-                      <>
-                        <Text>Unlimited Surveys</Text>
-                        <Text>Unlimited Responses</Text>
-                        <Text>Logic Jump</Text>
-                        <Text>Google Review</Text>
-                        <Text>Custom Filters</Text>
-                        <Text>Location Fetching</Text>
-                        <Text>Custom Welcome Page</Text>
-                      </>
-                    )}
+                    {index === 0
+                      ? generateListItems("2 Surveys")
+                      : generateListItems("Unlimited Surveys")}
                   </Stack>
                 </>
               )}
