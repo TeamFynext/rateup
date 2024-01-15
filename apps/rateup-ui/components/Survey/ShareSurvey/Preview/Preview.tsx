@@ -3,7 +3,7 @@ import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
 import styles from "./Preview.module.css";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import { IconDownload } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
 import { getLogoSrc } from "../ShareQR/utils";
 
@@ -14,7 +14,7 @@ function Preview({
   qrBgColor = "#FFFFFF",
   qrColor = "#000000",
   surveyTitle,
-  isSurveyPublished,
+  isSurveyPublished = true,
   logoSize = 75,
   logoBorderRadius = 50,
   customAttrForDownloadedQrFileName = "",

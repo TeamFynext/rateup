@@ -16,9 +16,9 @@ interface ShareQRProps {
   sx?: any;
   title: string;
   isPublished: boolean;
-  id: string;
-  queryKey: string;
-  resourceName: string;
+  id?: string;
+  queryKey?: string;
+  resourceName?: string;
 }
 
 type ShareQRState = {
@@ -60,6 +60,7 @@ const ShareQR = ({
   // currently we are using only two resources(first arg below) survey, menu.
 
   const shareSettings = useGetShareSettings(queryKey, resourceName, id);
+  // useUpdateShareSettingsMutation can return null.
   const shareSettingsMutation = useUpdateShareSettingsMutation(
     queryKey,
     resourceName,
@@ -98,19 +99,21 @@ const ShareQR = ({
   );
 
   const handleSaveOfSurveyShareSettings = useCallback(async () => {
-    const formData = new FormData();
-    for (const property in state) {
-      let value = state[property];
-      formData.append(property, value);
-    }
+    if (shareSettingsMutation) {
+      const formData = new FormData();
+      for (const property in state) {
+        let value = state[property];
+        formData.append(property, value);
+      }
 
-    await shareSettingsMutation.mutateAsync({
-      params: {
-        resourceName,
-        id,
-      },
-      body: formData,
-    });
+      await shareSettingsMutation.mutateAsync({
+        params: {
+          resourceName,
+          id,
+        },
+        body: formData,
+      });
+    }
   }, [state]);
 
   const handleSelectLogoFileInputChange = (value) => {
@@ -161,7 +164,7 @@ const ShareQR = ({
                 logoBorderRadius={logoBorderRadius}
               />
               <RateupButtonBlue
-                loading={shareSettingsMutation.isPending}
+                loading={shareSettingsMutation?.isPending}
                 title="Save Settings"
                 onClick={handleSaveOfSurveyShareSettings}
               />

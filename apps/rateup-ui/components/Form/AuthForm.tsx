@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, Flex } from "@mantine/core";
+import { Image, Flex, ScrollArea } from "@mantine/core";
 import { useRouter } from "next/router";
 import {
   useConsumeVerificationCode,
@@ -16,6 +16,7 @@ import SignupForm from "./SignupForm";
 import VerifyEmailPage from "./VerifyEmailPage";
 import AuthTypeSignupForm from "./AuthTypeSignupForm";
 import { rateupLogoUrl } from "../HomePage/constants";
+import VerifyPhoneNumberPage from "./VerifyPhoneNumberPage";
 
 const AuthForm = ({
   mode,
@@ -50,6 +51,8 @@ const AuthForm = ({
   let jsxToReturn = <></>;
   if (mode === AuthMode.VERIFY) {
     jsxToReturn = <VerifyEmailPage sendEmail={sendEmail} />;
+  } else if (mode === AuthMode.VERIFY_PHONE_NO) {
+    jsxToReturn = <VerifyPhoneNumberPage />;
   } else {
     if (isLogin) {
       jsxToReturn = (
@@ -66,6 +69,7 @@ const AuthForm = ({
             setIsLoading={setIsLoading}
             createUserMutation={createUserMutation}
             isLoading={isLoading}
+            authType={authType}
           />
         );
       else
@@ -83,21 +87,22 @@ const AuthForm = ({
     <Flex
       className={`
           ${styles["auth-form-container"]}
-          ${styles[`${mode}-auth-form-container`]}
+          ${styles[`LOGIN-auth-form-container`]}
           ${styles[`${authType ? "auth-type-signup-form" : ""}`]}
         `}
     >
-      <Flex justify="center">
-        <Link href="/">
-          <Image
-            className={styles["rateup-logo-img"]}
-            src={rateupLogoUrl}
-            alt="RateUp Logo"
-          />
-        </Link>
-      </Flex>
-
-      {jsxToReturn}
+      <ScrollArea h={"100%"} w={"100%"} scrollbarSize={5} type="hover">
+        <Flex justify={"center"}>
+          <Link href="/">
+            <Image
+              className={styles["rateup-logo-img"]}
+              src={rateupLogoUrl}
+              alt="RateUp Logo"
+            />
+          </Link>
+        </Flex>
+        {jsxToReturn}
+      </ScrollArea>
     </Flex>
   );
 };

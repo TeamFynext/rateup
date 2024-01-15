@@ -145,7 +145,7 @@ const TeamSettings = ({
                 />
               </Grid.Col>
             </Grid>
-            <Grid justify="flex-end" pt="xl">
+            <Grid justify="flex-end" pt="xl" pb={"5px"}>
               <Grid.Col span={2}>
                 <RateupButtonSecondary
                   type="submit"
@@ -241,7 +241,7 @@ function GoogleReviewSettings({ teamId, googleLink }) {
               />
             </Grid.Col>
           </Grid>
-          <Grid justify="flex-end" pt="xl">
+          <Grid justify="flex-end" pt="xl" pb={"5px"}>
             <Grid.Col span={2}>
               <RateupButtonSecondary
                 onClick={handleSave}

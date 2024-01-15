@@ -26,6 +26,7 @@ import { UserRole } from "../../utils/enums";
 import { SurveyType } from "../../types/enums";
 import { EditWhatsappSurvey } from "../whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../config/mantineTheme";
+import styles from "./SurveyId.module.css";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -136,8 +137,9 @@ export default function SurveyID() {
           <StyledTabs
             value={activeTab}
             onChange={(tab) => setActiveTab(tab as TabEnum)}
+            className={styles["survey-tabs-and-panels-container"]}
           >
-            <Grid columns={12}>
+            <Grid columns={12} className={styles["title-tabs-container"]}>
               <Grid.Col span={3}>
                 <Title
                   styles={{

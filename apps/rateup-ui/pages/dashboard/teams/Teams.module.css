@@ -1,0 +1,10 @@
+.teams-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.team-cards-container {
+  overflow: auto;
+  flex: 1 1 auto;
+}

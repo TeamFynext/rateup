@@ -12,32 +12,38 @@ import {
   Text,
 } from "@mantine/core";
 import classes from "./Pricing.module.css";
-import { usePriceUpdater } from "./Hooks/Hooks";
 import { MenuSection } from "./Section/MenuSection";
 import { SurveySection } from "./Section/SurveySection";
 import { lexend300, lexend500 } from "../../../../utils/fonts";
-import {
-  BlueGradient,
-  defaultPrices,
-  DISCOUNT_PERCENTAGE,
-  initialPrices,
-} from "./Utils/constants";
+import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
+import { useRouter } from "next/router";
+import { useRouteAndCartStore } from "./store/RouteAndCartStore";
+import { usePricing } from "../../../../backend/pricing/pricing.query";
+import CenteredSpinner from "../../../Loaders/CenteredSpinner";
 
 const Pricing = () => {
   const [value, setValue] = useState("Surveys");
   const [checked, setChecked] = useState(true);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
+  const { updateRouteAndCart } = useRouteAndCartStore();
+  const router = useRouter();
+  const { data, isPending } = usePricing();
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const currency = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
 
-  const getPriceBasedOnLocation = () => {
-    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return userTimeZone === "Asia/Calcutta" ? initialPrices : defaultPrices;
+  const handlePlanSelection = ({ id, name }) => {
+    const route = "/dashboard/settings";
+    updateRouteAndCart(route, { id, name });
+    router.push(route);
   };
 
-  const price = usePriceUpdater(
-    initialPrices,
-    getPriceBasedOnLocation,
-    checked,
+  if (isPending) return <CenteredSpinner />;
+
+  const plans = data?.filter(
+    (item) =>
+      item?.paymentPlan?.period === (checked ? "yearly" : "monthly") &&
+      item?.paymentPlan?.currency === currency,
   );
 
   return (
@@ -96,7 +102,7 @@ const Pricing = () => {
               Subscribe Anually
             </Text>
             <Text c={"var(--shade-of-blue-5"}>
-              to Save {DISCOUNT_PERCENTAGE}%
+              to Save {DISCOUNT_PERCENTAGE} Months
             </Text>
           </Stack>
         </Flex>
@@ -113,15 +119,14 @@ const Pricing = () => {
           {value === "Surveys" ? (
             <SurveySection
               largeScreen={largeScreen}
-              price={price}
-              checked={checked}
+              handlePlanSelection={handlePlanSelection}
+              plans={plans}
             />
           ) : (
             <MenuSection
               largeScreen={largeScreen}
-              price={price}
-              BlueGradient={BlueGradient}
-              checked={checked}
+              handlePlanSelection={handlePlanSelection}
+              plans={plans}
             />
           )}
         </motion.div>

@@ -1,5 +1,5 @@
 import { Center, NavLink, Text, TextInput, Title } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { isEmail, useForm } from "@mantine/form";
 import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
 import Link from "next/link";
 import { IconArrowAutofitLeft } from "@tabler/icons";
@@ -8,14 +8,20 @@ import FormModalLayout from "../Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowNarrowRight } from "@tabler/icons-react";
 
-function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
+function AuthTypeSignupForm({
+  setIsLoading,
+  createUserMutation,
+  isLoading,
+  authType,
+}) {
   const [opened, { close, open }] = useDisclosure(true);
-
+  const isPhoneForm = authType === "phone";
   const signUpForm = useForm({
     initialValues: {
       name: "",
       orgName: "",
       inviteCode: "",
+      email: "",
     },
 
     validate: {
@@ -37,6 +43,7 @@ function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
         }
         return null; // Validation passed
       },
+      email: isPhoneForm && isEmail("Invalid email"),
     },
   });
 
@@ -46,13 +53,19 @@ function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
       name: values?.name,
       orgName: values?.orgName,
       inviteCode: values?.inviteCode,
+      email: values?.email,
+      type: authType,
     };
     createUserMutation.mutate(data);
   };
   return (
     <>
       <FormModalLayout
-        title="Google Auth Success"
+        title={
+          authType === "google"
+            ? "Google Auth Success"
+            : "Phone Number Auth Success"
+        }
         opened={opened}
         onClose={() => {
           close();
@@ -103,7 +116,14 @@ function AuthTypeSignupForm({ setIsLoading, createUserMutation, isLoading }) {
           placeholder="Invite Code *"
           {...signUpForm.getInputProps("inviteCode")}
         />
-
+        {isPhoneForm && (
+          <TextInput
+            classNames={styles}
+            withAsterisk
+            placeholder="Email"
+            {...signUpForm.getInputProps("email")}
+          />
+        )}
         <RateupButtonBlue
           type="submit"
           title="Finish SignUp"
