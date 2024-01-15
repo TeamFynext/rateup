@@ -74,7 +74,7 @@ function HeaderStyles({
     <Flex>
       <Stack w={"100%"} justify={"center"}>
         <form style={{ width: "100%", justifyContent: "center" }}>
-          <Box className={classes.editorBox}>
+          <Box className={classes.editorBox} mih={406}>
             <Box className={classes.editorSection}>
               <Group mt="xs">
                 <Select
