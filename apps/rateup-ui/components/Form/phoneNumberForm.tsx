@@ -7,6 +7,7 @@ import {
 import styles from "./AuthForm.module.css";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { IconChevronLeft } from "@tabler/icons-react";
 
 const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
   return (
@@ -44,6 +45,7 @@ const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
         title="Go Back"
         onClick={() => setSignUpTypeValue("")}
         className={styles["login-signup-form-submit-btn"]}
+        leftIcon={<IconChevronLeft size={18} />}
       />
     </>
   );

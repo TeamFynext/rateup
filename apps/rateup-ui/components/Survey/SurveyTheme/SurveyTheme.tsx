@@ -167,6 +167,7 @@ function SurveyTheme({ survey }) {
               h={"100%"}
               mah={isMobileView ? 650 : 1000}
               w={isMobileView ? 300 : "100%"}
+              mih={"60vh"}
             >
               <WelcomePageView
                 setSelectedType={setSelectedType}

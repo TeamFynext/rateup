@@ -1,4 +1,4 @@
-import { PasswordInput, TextInput, Title } from "@mantine/core";
+import { Grid, PasswordInput, TextInput, Title } from "@mantine/core";
 import LoginSignupLinks from "./LoginSignupLinks";
 import { useForm } from "@mantine/form";
 import {
@@ -11,7 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import PhoneNumberForm from "./phoneNumberForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
-import { IconMail, IconPhone } from "@tabler/icons-react";
+import { IconChevronLeft, IconMail, IconPhone } from "@tabler/icons-react";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
@@ -134,53 +134,65 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     );
   } else if (signUpTypeValue === signUpType.SIGNUP_WITH_EMAIL) {
     signupPageView = (
-      <>
-        <TextInput
-          classNames={styles}
-          withAsterisk
-          placeholder="Name"
-          {...signUpForm.getInputProps("name")}
-        />
-        <TextInput
-          classNames={styles}
-          withAsterisk
-          placeholder="Organization Name"
-          {...signUpForm.getInputProps("orgName")}
-        />
-        <TextInput
-          classNames={styles}
-          withAsterisk
-          placeholder={"Email ID"}
-          {...signUpForm.getInputProps("email")}
-        />
-
-        <PasswordInput
-          classNames={styles}
-          placeholder="Enter Password"
-          required
-          {...signUpForm.getInputProps("password")}
-        />
-
-        <TextInput
-          classNames={styles}
-          withAsterisk
-          placeholder="Invite Code *"
-          {...signUpForm.getInputProps("inviteCode")}
-        />
-
-        <RateupButtonBlue
-          type="submit"
-          title="Sign Up"
-          loading={isLoading}
-          className={styles["login-signup-form-submit-btn"]}
-        />
-        <RateupButtonSecondary
-          type="button"
-          title="Go Back"
-          onClick={() => setSignUpTypeValue("")}
-          className={styles["login-signup-form-submit-btn"]}
-        />
-      </>
+      <Grid grow>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <TextInput
+            classNames={styles}
+            withAsterisk
+            placeholder="Name"
+            {...signUpForm.getInputProps("name")}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <TextInput
+            classNames={styles}
+            withAsterisk
+            placeholder="Organization Name"
+            {...signUpForm.getInputProps("orgName")}
+          />
+        </Grid.Col>
+        <Grid.Col>
+          <TextInput
+            classNames={styles}
+            withAsterisk
+            placeholder={"Email ID"}
+            {...signUpForm.getInputProps("email")}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <PasswordInput
+            classNames={styles}
+            placeholder="Enter Password"
+            required
+            {...signUpForm.getInputProps("password")}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <TextInput
+            classNames={styles}
+            withAsterisk
+            placeholder="Invite Code *"
+            {...signUpForm.getInputProps("inviteCode")}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 2, lg: 1 }}>
+          <RateupButtonSecondary
+            type="button"
+            title="Go Back"
+            onClick={() => setSignUpTypeValue("")}
+            className={styles["login-signup-form-submit-btn"]}
+            leftIcon={<IconChevronLeft size={18} />}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 1, lg: 2 }}>
+          <RateupButtonBlue
+            type="submit"
+            title="Sign Up"
+            loading={isLoading}
+            className={styles["login-signup-form-submit-btn"]}
+          />
+        </Grid.Col>
+      </Grid>
     );
   }
   return (
