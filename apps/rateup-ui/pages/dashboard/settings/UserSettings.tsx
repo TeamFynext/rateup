@@ -36,7 +36,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 import styles from "./setting.module.css";
 import "react-phone-number-input/style.css";
-import PhoneInputWithCountrySelect from "react-phone-number-input";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
 
 const ProfileSettings = () => {
   const {
@@ -69,10 +71,7 @@ const ProfileSettings = () => {
         return null; // Validation passed
       },
       phone: (value) => {
-        const regex = /^\d{8,15}$/;
-        if (!regex.test(value?.slice(1))) {
-          return "Invalid phone";
-        }
+        if (!value || !isValidPhoneNumber(value)) return "Invalid phone number";
         return null;
       },
       existingPassword: (value, values) =>

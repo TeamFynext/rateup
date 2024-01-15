@@ -29,7 +29,9 @@ import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
 import "react-phone-number-input/style.css";
 import styles from "./setting.module.css";
-import PhoneInputWithCountrySelect from "react-phone-number-input";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -60,11 +62,7 @@ const OrgSettings = () => {
         return null; // Validation passed
       },
       phone: (value) => {
-        const regex = /^[0-9]+$/;
-        const phone = value?.slice(1);
-        if (!regex.test(phone) || phone?.length < 8 || phone?.length > 15) {
-          return "Invalid phone number";
-        }
+        if (!value || !isValidPhoneNumber(value)) return "Invalid phone number";
         return null;
       },
     },
