@@ -1,13 +1,32 @@
 import React from "react";
-import { Box, Card, Center, Flex, Stack, Text } from "@mantine/core";
+import { Box, Card, Center, Flex, List, Stack, Text, rem } from "@mantine/core";
 import { lexend300 } from "../../../../../utils/fonts";
 import { NumberAnimate } from "../Animate/NumberAnimate";
 import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { IconCircleCheck } from "@tabler/icons-react";
 
 export const MenuSection = ({ largeScreen, handlePlanSelection, plans }) => {
   const menuPlan = plans?.filter(
     (item) => item?.paymentPlan?.name?.includes("Menu"),
+  );
+  const generateListItems = (index: number) => (
+    <List
+      spacing="xs"
+      size="md"
+      center
+      icon={
+        <IconCircleCheck
+          style={{ width: rem(16), height: rem(16), color: "green" }}
+        />
+      }
+    >
+      <List.Item>Create Menu</List.Item>
+      <List.Item>Unlimited Categories</List.Item>
+      <List.Item>Special Banners</List.Item>
+      <List.Item>Custom Welcome Page</List.Item>
+      {index == 1 && <List.Item>Survey Feedbacks</List.Item>}
+    </List>
   );
   return (
     <Stack my={"lg"}>
@@ -71,11 +90,7 @@ export const MenuSection = ({ largeScreen, handlePlanSelection, plans }) => {
                 gap={5}
                 mt={"xl"}
               >
-                <Text>Create Menu</Text>
-                <Text>Unlimited Categories</Text>
-                <Text>Special Banners</Text>
-                <Text>Custom Welcome Page</Text>
-                {index == 1 && <Text>Survey Feedbacks</Text>}
+                {generateListItems(index)}
               </Stack>
             </Card>
           );
