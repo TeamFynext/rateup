@@ -16,7 +16,7 @@ const smileyEmojiMap = {
   [SmileyResponse.Sad]: "🙁",
   [SmileyResponse.VerySad]: "😠",
 };
-const ratingEmoji = '⭐️';
+export const ratingEmoji = '⭐️';
 
 export function getEventType(data: WaMessageBody) {
   if (data.object === 'whatsapp_business_account') {
@@ -319,10 +319,6 @@ export async function generateMessageDataFromQuestion(
         description,
         sections
       )
-    case Q.Testimonial:
-      const features = question.features?.[lang] || {}
-      description += "\n\nPlease share your name"
-      return createTextMessage(to, title, description);
   }
 
   if (choices.length > 0) {
@@ -344,7 +340,7 @@ export async function generateMessageDataFromQuestion(
   } else {
     // text question
     if (
-      [Q.Text, Q.Email, Q.Testimonial, Q.Photo, Q.DateTime, Q.Number].includes(
+      [Q.Text, Q.Email, Q.Photo, Q.DateTime, Q.Number].includes(
         question.type
       )
     ) {
@@ -441,12 +437,6 @@ export async function parseResponse(
         return waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id
       case Q.Rating:
         return Number.parseInt(waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id)
-      // TODO: testimonial
-      case Q.Testimonial:
-        return {
-          name: message,
-          // testimonial: message,
-        };
       case Q.DateTime:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
           return ""
@@ -507,7 +497,7 @@ export async function parseResponse(
 }
 
 /* Downloads image from whatsapp & uploads it to s3 */
-async function downloadAndUpload(session: WaSessionWithRelations, imageId: string) {
+export async function downloadAndUpload(session: WaSessionWithRelations, imageId: string) {
   const waSettings = await getWaSettings(session.orgId);
   const res = await callWhatsappApi(`/${imageId}`, 'GET', waSettings.accessToken);
   log.trace(`got image link => %o`, res.data);

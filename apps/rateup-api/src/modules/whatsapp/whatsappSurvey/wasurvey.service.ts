@@ -8,7 +8,7 @@ import { parseLogicAction } from "../../question/question.utils";
 import { createResponse } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
-import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession, createCTAButtonMessage, parseMessage } from "./wasurvey.utils";
+import { createTextMessage, generateMessageDataFromQuestion, createTemplateMessage, getQuestionByIdFromSession, createCTAButtonMessage, parseMessage, ratingEmoji, createNativeListMessage, getMessageObject, downloadAndUpload } from "./wasurvey.utils";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import { CreateResponseInput } from "../../response/response.schema";
 import { QuestionType as Q } from "../../../types/enums";
@@ -236,7 +236,12 @@ async function updateCurrentQuestion(orgId: string, from: string, newQId: string
 }
 export async function sendQuestion(question: Question, session: WaSessionWithRelations) {
   if(question.type == QuestionType.Testimonial){
-    await handleTestimonialQuestion(question, session)
+    const hasResponse = session.responses.find(s => s.questionId == question.id)
+    if(!hasResponse){
+      await startTestimonialQuestion(question,session)
+    } else {
+      await handleTestimonialQuestion(question, session)
+    }
   } else {
     const message = await generateMessageDataFromQuestion(session, question);
     await updateCurrentQuestion(session.orgId, session.phone, question.id);
@@ -319,37 +324,107 @@ export async function sendSurveyToParticipant({
   }
 }
 
-export async function handleTestimonialQuestion(question: Question, session: WaSessionWithRelations, reply ?: WaMessageBody){
-  // const message = await generateMessageDataFromQuestion(session, question);
-  // await updateCurrentQuestion(session.orgId, session.phone, question.id,);
-  // await sendMessage(session.orgId, message);
- 
-  const to = session.phone;
+export async function handleTestimonialQuestion(question: Question, session: WaSessionWithRelations){
+  const features = question.features?.[session.language];
+  const to = session.phone
+  const response = session?.responses?.find(s => s.questionId == question.id)?.response?.[QuestionType.Testimonial]
+    if(features?.hasJobTitle && !response.jobTitle) {
+      const description = "\nPlease share your job title"
+      const nextSubQuestion = createTextMessage(to,null,description)
+      await sendMessage(session.orgId, nextSubQuestion)
+    } 
+    if(!response.testimonial){
+      const description = "\nPlease share your experience briefly"
+      const nextSubQuestion = createTextMessage(to,null,description)
+      await sendMessage(session.orgId, nextSubQuestion)
+    }
+    if(features?.hasRating && !response.rating) {
+      const description = "\nPlease Rate us"
+      const sections: WaSectionsType = [{
+        rows: [1, 2, 3, 4, 5].map((i) => ({
+          id: i.toString(),
+          title: ratingEmoji.repeat(i),
+        }))
+      }]
+      const nextSubQuestion =  createNativeListMessage(
+        to,
+        null,
+        description,
+        sections
+      )
+      await sendMessage(session.orgId, nextSubQuestion)
+    }
+    if(features?.hasPhoto && !response.photo) {
+      const description = "\nPlease share your photo"
+      const nextSubQuestion = createTextMessage(to,null,description)
+      await sendMessage(session.orgId, nextSubQuestion)
+    }
+    await sendNextQuestion(session, response)
+}
+
+export async function startTestimonialQuestion(question: Question, session: WaSessionWithRelations) {
   if (!session.language) {
     log.error("No language found for session", session);
     throw new Error("No language found for session");
   }
-  const lang = session.language;
+  const title = question.title[session.language];
+  let description = question.description[session.language] + "\n\nPlease share your name";
+  const message = createTextMessage(session.phone,title, description)
+  await updateCurrentQuestion(session.orgId, session.phone, question.id);
+  await sendMessage(session.orgId, message)
+}
 
-  const title = question.title[lang];
-  let description = question.description[lang];
-
-  const buttonTitle = "View Options";
-  if(reply){
-    let message = parseMessage(reply).message;
-    const response = {
-      name: message
-    }
-    // if (!isValidResponse(response, question, session.language)) {
-    //   await sendTextMessage(session, "Invalid response. Please try again.", "");
-    //   await sendQuestion(question, session);
-    //   return;
-    // }
-
-
-  } else {
-    const message = createTextMessage(to,title, description)
-    await updateCurrentQuestion(session.orgId, session.phone, question.id);
-    await sendMessage(session.orgId, message)
+export async function handleTestimonialReply(reply: WaMessageBody, question:Question, session: WaSessionWithRelations) {
+  const features = question.features?.[session?.language]
+  let message = parseMessage(reply).message;
+  const response = session?.responses?.find(s => s.questionId == question.id)?.response?.[QuestionType.Testimonial] || {
+    name:"",
+    testimonial:""
   }
+  let isValid = true
+  if(!message) isValid = false;
+  else if(!response.name)
+  {
+    //assume its name response
+    response.name = message
+  }else if(features?.hasJobTitle && !response.jobTitle){
+    //assume its job title
+    response.jobTitle = message
+  }else if(!response.testimonial){
+    //assume its testimonial
+    response.testimonial = message
+  }else if(features?.hasRating && !response.rating){
+    //assume its rating
+    const rating = Number.parseInt(reply.entry[0].changes[0].value.messages[0].interactive.list_reply.id)
+    if(rating <1 || rating >5) isValid = false
+    else  response.rating = rating
+  }else if(features?.hasPhoto && !response.photo){
+    //assume its photo
+     const message = getMessageObject(reply);
+      const uniqueFilename = await downloadAndUpload(session, message.image.id);
+      if (!(message.type === 'image')) {
+        return undefined;
+      }
+      if(!(typeof uniqueFilename === 'string' && uniqueFilename.length > 0)) isValid = false;
+      else response.photo = uniqueFilename
+  }
+  if(!isValid){
+    await sendTextMessage(session, "Invalid response. Please try again.", "");
+    await sendQuestion(question,session)
+    return;
+  }
+  const formattedResponse: QuestionResponse = {
+    questionId: session.currentQuestionId!,
+    response: {
+      [QuestionType.Testimonial]: response,
+    },
+    type: QuestionType.Testimonial,
+  };
+  const currentResponses = (
+    session.responses as unknown as Array<QuestionResponse>
+  ).filter((r) => r.questionId !== session.currentQuestionId);
+  const updatedResponses = [...currentResponses, formattedResponse] as any;
+
+  session = await updateSession(session.orgId, session.phone, { responses: updatedResponses })
+  await handleTestimonialQuestion(question, session)
 }

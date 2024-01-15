@@ -13,6 +13,7 @@ import {
   deleteSession,
   getSession,
   handleTestimonialQuestion,
+  handleTestimonialReply,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
@@ -213,15 +214,15 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
     throw new Error("Question not found");
   }
   if(question.type == QuestionType.Testimonial){
-    await handleTestimonialQuestion(question,session,waMessage)
-  }
-  const response = await parseResponse(waMessage, question, session);
-  log.trace('parsedResponse => %o', response)
-  if (!isValidResponse(response, question, session.language)) {
-    await sendTextMessage(session, "Invalid response. Please try again.", "");
-    await sendQuestion(question, session);
-    return;
-  }
+    await handleTestimonialReply(waMessage,question,session)
+  } else {
+    const response = await parseResponse(waMessage, question, session);
+    log.trace('parsedResponse => %o', response)
+    if (!isValidResponse(response, question, session.language)) {
+      await sendTextMessage(session, "Invalid response. Please try again.", "");
+      await sendQuestion(question, session);
+      return;
+    }
   const formattedResponse: QuestionResponse = {
     questionId: session.currentQuestionId!,
     response: {
@@ -237,6 +238,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
 
   session = await updateSession(session.orgId, session.phone, { responses: updatedResponses })
   await sendNextQuestion(session, response);
+  }
 }
 
 async function handleLanguageSelection(session: WaSessionWithRelations) {
