@@ -123,3 +123,9 @@ export enum SubscriptionFeaturePathName {
   Team = "team",
   TeamMember = "team.teamMember",
 }
+
+export enum TestimonialFeatureQuestions {
+  hasJobTitle = "Please share your job Title",
+  hasRating = "Plase Rate us",
+  hasPhoto = "Please share your photo"
+}

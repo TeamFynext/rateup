@@ -12,6 +12,8 @@ import {
   createSession,
   deleteSession,
   getSession,
+  handleTestimonialQuestion,
+  handleTestimonialReply,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
@@ -19,7 +21,7 @@ import {
   sendTextMessage,
   updateSession,
 } from "./wasurvey.service";
-import { CampaignParticipantStatus, WaEvent, WaTemplateStatus } from "../../../types/enums";
+import { CampaignParticipantStatus, QuestionType, WaEvent, WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
 import { getTemplateWithHSMId, updateTemplateInDb, getDbTemplate } from "../messageTemplates/wa_templates.service";
@@ -211,14 +213,16 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   if (!question) {
     throw new Error("Question not found");
   }
-
-  const response = await parseResponse(waMessage, question, session);
-  log.trace('parsedResponse => %o', response)
-  if (!isValidResponse(response, question, session.language)) {
-    await sendTextMessage(session, "Invalid response. Please try again.", "");
-    await sendQuestion(question, session);
-    return;
-  }
+  if(question.type == QuestionType.Testimonial){
+    await handleTestimonialReply(waMessage,question,session)
+  } else {
+    const response = await parseResponse(waMessage, question, session);
+    log.trace('parsedResponse => %o', response)
+    if (!isValidResponse(response, question, session.language)) {
+      await sendTextMessage(session, "Invalid response. Please try again.", "");
+      await sendQuestion(question, session);
+      return;
+    }
   const formattedResponse: QuestionResponse = {
     questionId: session.currentQuestionId!,
     response: {
@@ -234,6 +238,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
 
   session = await updateSession(session.orgId, session.phone, { responses: updatedResponses })
   await sendNextQuestion(session, response);
+  }
 }
 
 async function handleLanguageSelection(session: WaSessionWithRelations) {
