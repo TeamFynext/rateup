@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import PhoneNumberForm from "./phoneNumberForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { IconMail, IconPhone } from "@tabler/icons-react";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
@@ -102,6 +103,8 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_EMAIL)}
         className={styles["login-signup-form-submit-btn"]}
         color="var(--shade-of-blue-5)"
+        leftIcon={<IconMail size={16} />}
+        fw={600}
       />
       <GoogleSignInButton
         className={styles["login-signup-with-google-btn"]}
@@ -115,6 +118,8 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         className={styles["login-signup-form-submit-btn"]}
         color="var(--shade-of-blue-5)"
         mt="md"
+        leftIcon={<IconPhone size={16} />}
+        fw={600}
       />
     </>
   );
