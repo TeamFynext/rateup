@@ -103,7 +103,6 @@ export function WaQuestionPreview({
     }
     case Q.Testimonial: {
       const features = question?.features?.[selectedLanguage] || {};
-      console.log("features", features);
       return (
         <>
           <WaResponseMessage
