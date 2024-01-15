@@ -404,7 +404,7 @@ declare global {
     teamId: string;
     name: string;
     phone: string;
-    email: number;
+    email: string;
     createdAt: Date;
   };
 

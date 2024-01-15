@@ -73,7 +73,8 @@ export default function Contacts() {
     ? contacts.filter((contact) => {
         return (
           contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          contact?.phone?.startsWith(searchTerm)
+          contact?.phone?.includes(searchTerm) ||
+          contact?.email?.includes(searchTerm)
         );
       })
     : contacts;
