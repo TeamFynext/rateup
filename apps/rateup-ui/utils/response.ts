@@ -17,7 +17,7 @@ import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
-  if (!qResponse) return "empty";
+  if (!qResponse) return "";
   const { type, response: responseType } = qResponse;
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
@@ -43,7 +43,7 @@ export function getResponse(qId: string, response: SurveyResponse) {
       }
       return formattedValue;
     } else {
-      return "empty";
+      return "";
     }
   } else if (type === QuestionType.WaList) {
     const { title, description } = qResponse.response[QuestionType.WaList];

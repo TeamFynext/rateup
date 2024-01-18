@@ -143,7 +143,9 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
           )}
         </Stack>
       )}
-      <RateupRedirectCard alternateLogo={!enableGoogleReview} />
+      <RateupRedirectCard
+        alternateLogo={!(myGSurveyId === sid) && !enableGoogleReview}
+      />
     </Flex>
   );
 }
