@@ -1,13 +1,13 @@
 import { useRouter } from "next/router";
 import ErrorPage from "next/error";
 import { Container, Grid } from "@mantine/core";
-import PostBody from "../../components/HomePage/pages/Blog/components/post-body";
-import PostHeader from "../../components/HomePage/pages/Blog/components/post-header";
+import PostBody from "../../components/HomePage/pages/Blog/components/PostBody";
+import PostHeader from "../../components/HomePage/pages/Blog/components/PostHeader";
 import {
   getPostBySlug,
   getAllPosts,
 } from "../../components/HomePage/pages/Blog/lib/api";
-import PostTitle from "../../components/HomePage/pages/Blog/components/post-title";
+import PostTitle from "../../components/HomePage/pages/Blog/components/PostTitle";
 import Head from "next/head";
 import markdownToHtml from "../../components/HomePage/pages/Blog/lib/markdownToHtml";
 import PostType from "../../components/HomePage/pages/Blog/interfaces/post";
@@ -34,7 +34,11 @@ export default function Post({ post, morePosts, preview }: Props) {
             <Head>
               <title>{title}</title>
             </Head>
-            <PostHeader title={post.title} coverImage={post.coverImage} />
+            <PostHeader
+              title={post.title}
+              coverImage={post.coverImage}
+              date={post.date}
+            />
             <PostBody content={post.content} />
           </Container>
         </>

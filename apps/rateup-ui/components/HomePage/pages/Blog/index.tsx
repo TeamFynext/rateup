@@ -1,14 +1,9 @@
-import MoreStories from "./components/more-stories";
-import HeroPost from "./components/hero-post";
-import Intro from "./components/intro";
+import MoreStories from "./components/MoreStories";
+import HeroPost from "./components/HeroPost";
+import Intro from "./components/Intro";
 import Head from "next/head";
-import { Container, Stack, Grid } from "@mantine/core";
+import { Container, Stack } from "@mantine/core";
 import styles from "./components/blog.module.css";
-// import Post from "./interfaces/post";
-
-// type Props = {
-//   allPosts: Post[];
-// };
 
 import React from "react";
 

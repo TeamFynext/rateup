@@ -23,7 +23,6 @@ export function getPostBySlug(slug: string, fields: string[] = []): PostType {
   };
 
   const items: Partial<PostType> = {};
-  //  const items: Items = {};
 
   fields.forEach((field) => {
     if (field === "slug") {

@@ -1,4 +1,4 @@
-import CoverImages from "./cover-image-sub";
+import CoverImages from "./CoverImageSub";
 import Link from "next/link";
 import { Stack, Title, Grid, Flex } from "@mantine/core";
 import styles from "./blog.module.css";

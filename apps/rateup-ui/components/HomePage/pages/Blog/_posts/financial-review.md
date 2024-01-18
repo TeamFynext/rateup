@@ -1,7 +1,7 @@
 ---
 title: "Transforming Financial Fortunes: The Impact of Online Reputation Management Tools"
 slug: "financial-review"
-date: "01/01/2024"
+date: "31/12/2023"
 coverImage: "/images/blog/financial-review.jpg"
 ---
 

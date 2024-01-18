@@ -1,4 +1,4 @@
-import PostPreview from "./post-preview";
+import PostPreview from "./PostPreview";
 import { Title, Stack, Grid, Flex } from "@mantine/core";
 import styles from "./blog.module.css";
 import Button from "../../../components/Button";
