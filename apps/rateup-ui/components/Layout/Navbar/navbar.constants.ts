@@ -17,7 +17,9 @@ import {
   IconComet,
   IconTerminal2,
   IconFileInfo,
+  IconPuzzle,
 } from "@tabler/icons-react";
+
 import { UserRole } from "../../../utils/enums";
 import { useUserInfo } from "../../../backend/user/user.query";
 import {
@@ -110,6 +112,11 @@ export function getNavTopData(subscription?: Subscription) {
                 Icon: IconMessage2Code,
                 label: "Templates",
                 href: "/dashboard/whatsapp/templates",
+              },
+              {
+                Icon: IconPuzzle,
+                label: "Flows",
+                href: "/dashboard/whatsapp/flows",
               },
               {
                 Icon: IconSettings,
