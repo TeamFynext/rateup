@@ -19,11 +19,12 @@ import {
   IconRefresh,
   IconWand,
 } from "@tabler/icons-react";
+import Confetti from "react-confetti";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import Link from "next/link";
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { GoogleIcon } from "../../../../components/Button/GoogleIcon";
 import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { shuffleArray } from "../../../../utils";
@@ -31,7 +32,6 @@ import { ReviewSuggestion } from "../../../../types/global";
 import { getPublicSurveyGoogleLink } from "../../../../backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
-
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
   const { msg } = context.query;
@@ -54,7 +54,7 @@ export async function getServerSideProps(context) {
 export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const router = useRouter();
-  const { k } = router.query as { k: string }; //kioskMode
+  const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
   const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
 
   useEffect(() => {
@@ -74,59 +74,72 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
 
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
+  const myGSurveyId = process.env.NEXT_PUBLIC_MY_G_SURVEY_ID;
   return (
     <Flex
       style={{
         height: "100dvh",
-        backgroundColor: theme.colors[theme.primaryColor][6],
+        backgroundColor:
+          myGSurveyId === sid ? "#fff" : theme.colors[theme.primaryColor][6],
       }}
       direction={"column"}
       justify={"center"}
     >
-      <Stack
-        c="white"
-        align="center"
-        justify="center"
-        p="sm"
-        m={"auto"}
-        h={"100%"}
-        style={{
-          flex: 0,
-        }}
-      >
-        {<IconCircleCheck size={"3rem"} />}
-        <Title
-          order={1}
-          fw={400}
-          style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}
-        >
-          Thank you!
-        </Title>
-      </Stack>
-      {enableBody && (
-        <Stack
-          align="center"
-          justify="center"
-          gap="xl"
-          style={{
-            flex: 1,
-            borderRadius: "28px 28px 0px 0px",
-            backgroundColor: "whitesmoke",
-          }}
-        >
-          {enableGoogleReview && (
-            <GoogleReview googleLink={googleLink} reviewSuggestions={reviews} />
-          )}
+      {myGSurveyId === sid && <MygCustomThankyouPage />}
+      {myGSurveyId !== sid && (
+        <Stack h="100%" w="100%">
+          <Stack
+            c="white"
+            align="center"
+            justify="center"
+            p="sm"
+            m={"auto"}
+            h={"100%"}
+            style={{
+              flex: 0,
+            }}
+          >
+            {<IconCircleCheck size={"3rem"} />}
+            <Title
+              order={1}
+              fw={400}
+              style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}
+            >
+              Thank you!
+            </Title>
+          </Stack>
+          {enableBody && (
+            <Stack
+              align="center"
+              justify="center"
+              gap="xl"
+              style={{
+                flex: 1,
+                borderRadius: "28px 28px 0px 0px",
+                backgroundColor: "whitesmoke",
+              }}
+            >
+              {enableGoogleReview && (
+                <GoogleReview
+                  googleLink={googleLink}
+                  reviewSuggestions={reviews}
+                />
+              )}
 
-          {k === "cs" && (
-            <Group m="xl" p="xl">
-              <Link
-                href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
-                target="_blank"
-              >
-                <RateupButtonBlue leftIcon={<IconHome />} title="Go to Home" />
-              </Link>
-            </Group>
+              {k === "cs" && (
+                <Group m="xl" p="xl">
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
+                    target="_blank"
+                  >
+                    <RateupButtonBlue
+                      leftIcon={<IconHome />}
+                      title="Go to Home"
+                    />
+                  </Link>
+                </Group>
+              )}
+            </Stack>
           )}
         </Stack>
       )}
@@ -135,6 +148,17 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   );
 }
 
+const MygCustomThankyouPage = () => {
+  const { height, width } = useViewportSize();
+  const desktopImage = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/temp/dektopthankyou.png`;
+  const mobileImage = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/temp/mobilethankyoupage.png`;
+  return (
+    <>
+      <Confetti width={width} height={height} />
+      <Image src={width >= 700 ? desktopImage : mobileImage} h={"90dvh"} />
+    </>
+  );
+};
 function GoogleReview({ googleLink, reviewSuggestions }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [reviewIndex, setReviewIndex] = useState<number>(null);
