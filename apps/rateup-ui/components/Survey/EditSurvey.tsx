@@ -47,11 +47,8 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} gap={10}>
-      <PaperLayout
-        style={{ flex: 2 }}
-        className={styles["questions-sidebar-container"]}
-      >
+    <Flex w={"100%"} h={"100%"} gap={12} p={"xs"}>
+      <PaperLayout style={{ flex: 2 }} p={0}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -62,10 +59,7 @@ export function EditSurvey({
           addQnTrigger={addQnTrigger}
         />
       </PaperLayout>
-      <PaperLayout
-        style={{ flex: 5 }}
-        className={styles["edit-question-container"]}
-      >
+      <PaperLayout style={{ flex: 5 }}>
         <Tabs
           px={"md"}
           pb="md"
