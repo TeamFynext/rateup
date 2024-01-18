@@ -10,6 +10,7 @@ export const allowedMimeTypes = [
   "video/mp4",
   "video/webm",
   "video/ogg",
+  "application/octet-stream",
 ];
 
 //   export const uploadFileSchema = z.object({
