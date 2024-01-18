@@ -95,9 +95,11 @@
   .illustration-txt-section {
     flex-direction: column;
   }
+
   .illustration-txt-section-video {
     height: 60vw;
   }
+
   .illustration-txt-section-video-container {
     order: 1;
   }
