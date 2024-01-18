@@ -25,6 +25,7 @@ interface Props {
   color?: string;
   className?: string;
   gradient?: any;
+  fw?: string | number;
 }
 
 export const RateupButtonPrimary = ({
@@ -115,6 +116,7 @@ export const RateupButtonSecondary = ({
   variant,
   size,
   color,
+  fw = 400,
   ...other
 }: Props) => {
   return (
@@ -132,7 +134,7 @@ export const RateupButtonSecondary = ({
       type={type}
       fullWidth={fullWidth}
       mt={mt}
-      fw={400}
+      fw={fw}
       variant={variant || "outline"}
       {...other}
     >

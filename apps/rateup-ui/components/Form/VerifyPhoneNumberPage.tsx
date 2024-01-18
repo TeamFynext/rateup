@@ -19,6 +19,7 @@ import {
 import { useRouter } from "next/router";
 import { resendOTP, showNotification } from "../../utils/auth";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
+import { fetchUserProfile } from "../../backend/user/user.api";
 
 function VerifyPhoneNumberPage() {
   const router = useRouter();
@@ -37,7 +38,8 @@ function VerifyPhoneNumberPage() {
         // we clear the login attempt info that was added when the createCode function
         // was called since the login was successful.
         await clearLoginAttemptInfo();
-        if (response?.createdNewUser && response?.user?.timeJoined) {
+        const profile = await fetchUserProfile();
+        if (Object.keys(profile?.data?.data || {}).length === 0) {
           router.push("/signup?auth=phone");
         } else {
           router.push(route);

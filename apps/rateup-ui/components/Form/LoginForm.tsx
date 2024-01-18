@@ -13,6 +13,7 @@ import { useState } from "react";
 import { signUpType } from "./SignupForm";
 import PhoneNumberForm from "./phoneNumberForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { IconPhone } from "@tabler/icons-react";
 
 function LoginForm({ setIsLoading, signIn, isLoading }) {
   const loginForm = useForm({
@@ -102,11 +103,12 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
         <RateupButtonSecondary
           type="button"
           title="Login with Phone Number"
-          loading={isLoading}
           onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_PHONE)}
           className={styles["login-signup-form-submit-btn"]}
           color="var(--shade-of-blue-5)"
           mt="md"
+          leftIcon={<IconPhone size={16} />}
+          fw={600}
         />
       </>
     );

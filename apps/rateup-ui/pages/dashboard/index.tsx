@@ -369,7 +369,7 @@ export default function DashboardHome() {
                           dataKey="date"
                           tickFormatter={(str) => dayjs(str).format("MMM DD")}
                         />
-                        <YAxis />
+                        <YAxis allowDecimals={false} />
                         <Tooltip content={<CustomTooltip />} />
                         {/* <Legend /> */}
                         <CartesianGrid stroke="#f5f5f5" />
