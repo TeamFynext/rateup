@@ -6,7 +6,11 @@ export default function RateupRedirectCard({
   alternateLogo?: boolean;
 }) {
   return (
-    <Center bg={alternateLogo ? "" : "white"}>
+    <Center
+      bg={alternateLogo ? "transparent" : "white"}
+      w={"fit-content"}
+      m={"auto"}
+    >
       <Anchor href="https://www.rateup.app">
         <Group>
           {alternateLogo ? (
