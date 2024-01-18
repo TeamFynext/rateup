@@ -27,6 +27,7 @@ const createUserGoogleSchema = z.object({
   name: z.string().min(4),
   orgName: z.string().min(4),
   type: z.string(),
+  email: z.string().optional(),
 });
 
 const changeUserPasswordSchema = z.object({
@@ -37,7 +38,7 @@ const changeUserPasswordSchema = z.object({
 const updateProfileSchema = z.object({
   title: z.string().min(3),
   name: z.string().min(4),
-  phone: z.string().min(10),
+  phone: z.string().min(8),
 });
 
 const updateProfilePhotoSchema = z.object({
