@@ -1,6 +1,6 @@
 import CoverImage from "./cover-image-hero";
 import Link from "next/link";
-//import DateFormatter from "./date-formatter";
+import DateFormatter from "./date-formatter";
 import { Flex, Stack, Title } from "@mantine/core";
 import styles from "./blog.module.css";
 import { useRouter } from "next/router";

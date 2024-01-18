@@ -10,7 +10,8 @@ import AboutUs from "../pages/AboutUs";
 import Pricing from "../pages/Pricing";
 import Blog from "../pages/Blog";
 
-function HomePage({ allPosts }) {
+// function HomePage({ allPosts }) {
+function HomePage({ allPosts }: { allPosts?: any[] }) {
   const { pathname } = useRouter();
   let componentToBeRendered: React.ReactNode;
 
