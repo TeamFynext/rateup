@@ -333,6 +333,9 @@ function TakeSurvey() {
               className: classes["modal-overlay"],
             }}
             classNames={modalStyles}
+            styles={{
+              content: { background: "white" },
+            }}
           >
             <Flex className={modalStyles["modal-body-content-container"]}>
               <Stack pb="xl">
@@ -498,7 +501,7 @@ function TakeSurvey() {
             <LoadingOverlay
               visible={isSavingResponses}
               zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 2 }}
+              overlayProps={{ radius: "sm", blur: 10 }}
             />
             <Stack>
               <Stack style={{ minHeight: "45vh" }} justify="center">
@@ -820,7 +823,7 @@ function NextPrev({ prev, next, num, total }) {
           leftIcon={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
           onClick={prev}
-          color="dark"
+          color="blue"
         />
         <Center>
           <RingProgress
@@ -854,7 +857,7 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="blue"
             rightSection={<IconChevronRight />}
           >
             Submit
@@ -869,7 +872,7 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="blue"
             rightSection={<IconChevronRight />}
           >
             Next

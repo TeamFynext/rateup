@@ -9,6 +9,7 @@ import {
   Space,
   SegmentedControl,
   Button,
+  MantineProvider,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
@@ -26,7 +27,7 @@ import { notifications } from "@mantine/notifications";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import RateupRedirectCard from "../../Card/RateupRedirectCard";
 import { IconChevronRight } from "@tabler/icons-react";
-
+import styles from "../../Survey/TakeSurvey/TakeSurveyComponent/TakeSurvey.module.css";
 export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
   const { surveyId } = useRouter().query as { surveyId: string };
   const { start } = useRouter().query as { start?: boolean };
@@ -74,148 +75,177 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     survey?.id,
     passwordInput,
     close,
-    setIsPasswordVerified,
+    setIsPasswordVerified
   );
 
   if (!selectedLanguage && survey?.languages?.length <= 1) {
     setSelectedLanguage(survey?.languages[0]);
   }
-
+  const myGSurveyId = process.env.NEXT_PUBLIC_MY_G_SURVEY_ID;
   return (
-    <QuestionCountContext.Provider
-      value={{
-        questionCount,
-        currentQuestionNo,
-        setQuestionCount,
-        setCurrentQuestionNo,
-      }}
+    // delete this after myg survey test
+    <div
+      className={myGSurveyId === survey?.id ? styles.wrapperdark : ""}
+      style={
+        myGSurveyId === survey?.id
+          ? {
+              background: "#242424",
+              color: "white",
+            }
+          : {}
+      }
     >
-      <FormModalLayout
-        opened={opened}
-        onClose={close}
-        title={"Survey Login"}
-        centered
-        onSubmit={() => {
-          notifications.show({
-            id: "load-data",
-            loading: true,
-            title: "Verifying Password..",
-            message: `Hold on, your access is getting verified.`,
-            autoClose: false,
-            withCloseButton: false,
-          });
-          verifySurveyPassword.mutate();
+      <MantineProvider
+        theme={{
+          components: {
+            Paper: {
+              styles: (theme) => ({
+                root: {
+                  backgroundColor: "transparent",
+                },
+              }),
+            },
+          },
         }}
-        buttonTitle={"Login"}
       >
-        <Text mt="lg" size="sm" c="gray">
-          Hey Welcome , <br /> You need to enter password to continue.
-        </Text>
-        <Space h="lg" />
-        <ContainedPasswordInput
-          required
-          label="Password"
-          placeholder="Enter survey password"
-          onChange={(event) => setPasswordInput(event?.target?.value)}
-          my="lg"
-        />
-      </FormModalLayout>
-
-      <Stack
-        px={largeScreen ? "10vw" : "4vw"}
-        py="3vh"
-        style={{ width: "100%", minHeight: "100dvh" }}
-        justify="space-between"
-      >
-        {/* .........Survey Header Section.......... */}
-        {survey?.isPublished == true && !!startClicked && (
-          <Group justify="center">
-            <Stack
-              style={{
-                maxHeight: isMobile ? "65px" : "100px",
-                maxWidth: "30%",
-              }}
-            >
-              <Image
-                src={
-                  survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
-                    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
-                    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-                }
-                alt="Logo"
-                w={isMobile ? 70 : 80}
-                h={isMobile ? 70 : 80}
-              />
-            </Stack>
-          </Group>
-        )}
-
-        <Paper
-          pt="-50px"
-          radius="lg"
-          style={{ padding: 0, margin: 0, flex: 1 }}
-          display={"flex"}
+        {/* //delete until here */}
+        <QuestionCountContext.Provider
+          value={{
+            questionCount,
+            currentQuestionNo,
+            setQuestionCount,
+            setCurrentQuestionNo,
+          }}
         >
-          {survey?.isPublished === true && survey?.active === true ? (
-            survey?.isProtected && isPasswordVerified === false ? null : (
-              <Paper
-                radius="lg"
-                bg={"#fff"}
-                pb={startClicked && "xl"}
-                style={{ flex: 1 }}
-                w={"100%"}
-              >
-                {startClicked &&
-                  (!selectedLanguage && survey?.languages?.length > 1 ? (
-                    <SelectLang
-                      languages={survey?.languages}
-                      selectedLanguage={selectedLanguage}
-                      setSelectedLanguage={setSelectedLanguage}
-                    />
-                  ) : (
-                    selectedLanguage && (
-                      <SelectedLanguageContext.Provider
-                        value={{
-                          selectedLanguage,
-                          defaultLanguage: survey?.languages[0],
-                        }}
-                      >
-                        {children}
-                      </SelectedLanguageContext.Provider>
-                    )
-                  ))}
+          <FormModalLayout
+            opened={opened}
+            onClose={close}
+            title={"Survey Login"}
+            centered
+            onSubmit={() => {
+              notifications.show({
+                id: "load-data",
+                loading: true,
+                title: "Verifying Password..",
+                message: `Hold on, your access is getting verified.`,
+                autoClose: false,
+                withCloseButton: false,
+              });
+              verifySurveyPassword.mutate();
+            }}
+            buttonTitle={"Login"}
+          >
+            <Text mt="lg" size="sm" c="gray">
+              Hey Welcome , <br /> You need to enter password to continue.
+            </Text>
+            <Space h="lg" />
+            <ContainedPasswordInput
+              required
+              label="Password"
+              placeholder="Enter survey password"
+              onChange={(event) => setPasswordInput(event?.target?.value)}
+              my="lg"
+            />
+          </FormModalLayout>
 
-                {!startClicked && (
-                  <WelcomePage
-                    surveyThemeData={surveyThemeData}
-                    onStart={handleStartClick}
-                    largeScreen={largeScreen}
-                  />
-                )}
-              </Paper>
-            )
-          ) : (
-            <Center style={{ flex: 1 }}>
-              {(survey?.isPublished !== true || !survey?.active) && (
-                <Group align="center" justify="center">
+          <Stack
+            px={largeScreen ? "10vw" : "4vw"}
+            py="3vh"
+            style={{ width: "100%", minHeight: "100dvh" }}
+            justify="space-between"
+          >
+            {/* .........Survey Header Section.......... */}
+            {survey?.isPublished == true && !!startClicked && (
+              <Group justify="center">
+                <Stack
+                  style={{
+                    maxHeight: isMobile ? "65px" : "100px",
+                    maxWidth: "30%",
+                  }}
+                >
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
+                    src={
+                      survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
+                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
+                        : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
+                    }
                     alt="Logo"
                     w={isMobile ? 70 : 80}
                     h={isMobile ? 70 : 80}
-                    fit={"contain"}
                   />
-                  <Text c="#CDCDCD" fw={"bold"} fz={28}>
-                    Survey is not available..!
-                  </Text>
-                </Group>
+                </Stack>
+              </Group>
+            )}
+
+            <Paper
+              pt="-50px"
+              radius="lg"
+              style={{ padding: 0, margin: 0, flex: 1 }}
+              display={"flex"}
+            >
+              {survey?.isPublished === true && survey?.active === true ? (
+                survey?.isProtected && isPasswordVerified === false ? null : (
+                  <Paper
+                    radius="lg"
+                    pb={startClicked && "xl"}
+                    style={{ flex: 1 }}
+                    w={"100%"}
+                  >
+                    {startClicked &&
+                      (!selectedLanguage && survey?.languages?.length > 1 ? (
+                        <SelectLang
+                          languages={survey?.languages}
+                          selectedLanguage={selectedLanguage}
+                          setSelectedLanguage={setSelectedLanguage}
+                        />
+                      ) : (
+                        selectedLanguage && (
+                          <SelectedLanguageContext.Provider
+                            value={{
+                              selectedLanguage,
+                              defaultLanguage: survey?.languages[0],
+                            }}
+                          >
+                            {children}
+                          </SelectedLanguageContext.Provider>
+                        )
+                      ))}
+
+                    {!startClicked && (
+                      <WelcomePage
+                        surveyThemeData={surveyThemeData}
+                        onStart={handleStartClick}
+                        largeScreen={largeScreen}
+                      />
+                    )}
+                  </Paper>
+                )
+              ) : (
+                <Center style={{ flex: 1 }}>
+                  {(survey?.isPublished !== true || !survey?.active) && (
+                    <Group align="center" justify="center">
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
+                        alt="Logo"
+                        w={isMobile ? 70 : 80}
+                        h={isMobile ? 70 : 80}
+                        fit={"contain"}
+                      />
+                      <Text c="#CDCDCD" fw={"bold"} fz={28}>
+                        Survey is not available..!
+                      </Text>
+                    </Group>
+                  )}
+                </Center>
               )}
-            </Center>
-          )}
-        </Paper>
-        {!!startClicked && <RateupRedirectCard />}
-      </Stack>
-    </QuestionCountContext.Provider>
+            </Paper>
+            {!!startClicked && (
+              <RateupRedirectCard alternateLogo={myGSurveyId === survey.id} />
+            )}
+          </Stack>
+        </QuestionCountContext.Provider>
+      </MantineProvider>
+    </div>
   );
 };
 
