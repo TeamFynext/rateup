@@ -96,16 +96,18 @@ export function QuestionsSideBar({
       } ${items?.length ? styles["with-questions"] : ""} `}
     >
       {questionsState?.length > 0 && (
-        <Stack className={styles["items-add-question-btn-container"]}>
-          <RateupButtonBlue
-            onClick={handleAddQn}
-            title={"Add Question"}
-            rightIcon={<IconPlus size="1rem" />}
-            size="md"
-            fullWidth
-          />
+        <>
+          <Stack p={"sm"}>
+            <RateupButtonBlue
+              onClick={handleAddQn}
+              title={"Add Question"}
+              rightIcon={<IconPlus size="1rem" />}
+              size="md"
+              fullWidth
+            />
+          </Stack>
           <Divider color="gray.2" />
-        </Stack>
+        </>
       )}
 
       <DragDropContext

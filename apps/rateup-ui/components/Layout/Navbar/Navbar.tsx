@@ -21,7 +21,7 @@ export const Navbar = () => {
       </Link>
       {pathParts.map((part, index) => {
         part = replaceRouteParameter(part, query, routeParams);
-
+        if (part == "dashboard") return;
         return (
           <Link
             className={classes.link}
