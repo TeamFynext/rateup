@@ -96,7 +96,7 @@ export default function Page({ survey, surveyThemeData, error_occured }) {
         <meta property="og:image:alt" content="Star Icon" />
       </Head>
       <TakeSurveyLayoutWeb survey={survey} surveyThemeData={surveyThemeData}>
-        <TakeSurvey />
+        <TakeSurvey survey={survey} />
       </TakeSurveyLayoutWeb>
     </>
   );
