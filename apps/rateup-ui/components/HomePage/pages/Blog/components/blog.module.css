@@ -20,9 +20,14 @@
 }
 
 .main-page-top-container {
-  background-image: linear-gradient(to right, #2664aa, #04438b);
-  margin-bottom: 2rem;
-  align-items: center;
+  border-radius: 25px;
+  color: white;
+  margin-bottom: 6rew;
+  margin-top: 3rem;
+  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/rateup-star-svg-path.svg"),
+    linear-gradient(90deg, #3c75b6, #0b56ac);
+  background-repeat: no-repeat, no-repeat;
+  padding: 5.25rem 1rem;
 }
 
 .image-container {
@@ -33,6 +38,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 30px;
 }
 
 .heropost-cover-image-container {
@@ -68,8 +74,6 @@
 }
 
 .main-page-featured-reads-container {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
   line-break: loose;
   font-size: 40px;
   font-weight: 700;
@@ -86,19 +90,13 @@
   margin-bottom: 3rem;
 }
 
-.sub-article-image {
-  margin-left: 0rem;
-  margin-bottom: 0rem;
-}
-
 .sub-article-titles {
   line-break: loose;
   color: black;
   margin-bottom: 4rem;
-  margin-top: 0rem;
   margin-left: 1rem;
   margin-right: 1rem;
-  font-style: initial;
+  font-size: 20px;
 }
 
 .sub-article-titles-link {

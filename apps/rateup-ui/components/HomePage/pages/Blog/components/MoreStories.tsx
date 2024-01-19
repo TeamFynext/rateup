@@ -3,6 +3,7 @@ import { Title, Stack, Grid, Flex } from "@mantine/core";
 import styles from "./blog.module.css";
 import Button from "../../../components/Button";
 import MotionButtonGesture from "../../../components/MotionButtonGesture";
+import { useRouter } from "next/router";
 type Post = {
   slug: string;
   title: string;
@@ -15,6 +16,10 @@ type Props = {
 };
 
 const MoreStories = ({ posts }: Props) => {
+  const router = useRouter();
+  const handleClick = () => {
+    router.push("/blog");
+  };
   return (
     <Stack className={styles["main-page-all-stories-container"]}>
       <Title className={styles["main-page-featured-reads-container"]}>
@@ -33,7 +38,7 @@ const MoreStories = ({ posts }: Props) => {
       </Flex>
       <div className={styles["page-last-explore-all-btn"]}>
         <MotionButtonGesture>
-          <Button>Explore All</Button>
+          <Button onClick={handleClick}>Explore All</Button>
         </MotionButtonGesture>
       </div>
     </Stack>

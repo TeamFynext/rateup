@@ -11,7 +11,7 @@ function Menus() {
         <title>Digital Menu Boards - Easy to use & share | RateUp</title>
         <meta
           name="keywords"
-          content="Digital menu, Innovative menu solutions, Personalized menu designs"
+          content="Online reputation, Google review importance, Rateup blog, Customer satisfaction "
         />
         <meta
           name="description"
