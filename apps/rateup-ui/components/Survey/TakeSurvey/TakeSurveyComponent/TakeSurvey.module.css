@@ -97,11 +97,3 @@
 .questionDesc {
   line-height: 1.2;
 }
-/*the styles below are temporary and will be removed once myg survey is completed*/
-.wrapperdark {
-  background-color: #000;
-}
-.wrapperdark input {
-  color: #fff !important;
-  background-color: transparent !important;
-}
