@@ -808,7 +808,7 @@ function NextPrev({ prev, next, num, total }) {
     >
       {selectedQ?.required && !response && (
         <Text c="gray" mb="md" size={isMobile && "sm"}>
-          Note: * Must attend to continue with next.
+          *Choose an option or answer to proceed!
         </Text>
       )}
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
