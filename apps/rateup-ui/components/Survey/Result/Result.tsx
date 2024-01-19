@@ -328,7 +328,10 @@ const ReturnSingleFilterComponent = ({
   );
   const Question = (
     <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
-      {question.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
+      {question.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+        question.description[
+          selectedLanguage ? selectedLanguage : defaultLanguage
+        ]}
     </Text>
   );
   switch (question.type) {
