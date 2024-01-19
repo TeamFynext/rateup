@@ -73,13 +73,13 @@ import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 
-function TakeSurvey() {
+function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
@@ -131,14 +131,14 @@ function TakeSurvey() {
     }
   }, [survey]);
 
-  if (isLoading) {
+  if (!survey) {
     return (
       <Center style={{ height: "100vh" }}>
         <Loader />
       </Center>
     );
   }
-  if (isError || !selectedQ) {
+  if (!selectedQ) {
     return (
       <Center style={{ height: "100vh" }}>
         <Text fw={500}>
@@ -514,6 +514,7 @@ function TakeSurvey() {
                 prev={handlePrev}
                 num={QnNo}
                 total={questionCount}
+                survey={survey}
               />
             </Stack>
           </Box>
@@ -648,9 +649,9 @@ function getQuestionForm(type, selectedQ) {
   }
 }
 
-function NextPrev({ prev, next, num, total }) {
+function NextPrev({ prev, next, num, total, survey }) {
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
 
@@ -795,7 +796,7 @@ function NextPrev({ prev, next, num, total }) {
     return completionPercentage;
   }
 
-  if (isLoading || isError) return null;
+  if (!survey) return null;
   const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
   const isLastQuestion =
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
