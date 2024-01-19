@@ -1,0 +1,18 @@
+.flows-list-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.flows-list-header {
+  flex: 0 0 auto;
+}
+
+.flows-list-div {
+  flex: 1 1 auto;
+  position: relative;
+}
+
+.flows-list-heading-h1 {
+  margin-bottom: 1rem;
+}

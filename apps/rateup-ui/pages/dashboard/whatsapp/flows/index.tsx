@@ -1,7 +1,6 @@
-import { Box, Button, Group, Title } from "@mantine/core";
-import styles from "./flows.module.css";
-import { getWaFlows } from "../../../../backend/whatsapp/flows/waFlows.api";
+import { Box, Button, Title, LoadingOverlay, MultiSelect } from "@mantine/core";
 import { useGetWaFlows } from "../../../../backend/whatsapp/flows/waFlows.query";
+import styles from "./flows.module.css";
 
 function Flows() {
   const { data, isLoading } = useGetWaFlows();
@@ -9,12 +8,19 @@ function Flows() {
   console.log(data, "flows test.....");
   return (
     <Box className={styles["flows-list-page-container"]}>
-      <Group>
-        <Title>Flows</Title>
-        <Button>Create a flow</Button>
-      </Group>
+      <Box className={styles["flows-list-header"]}>
+        <Title className={styles["flows-list-heading-h1"]}>Flows</Title>
+        <Box>
+          {/* <MultiSelect
+            
+          /> */}
+          <Button>Create a flow</Button>
+        </Box>
+      </Box>
 
-      <Box className={styles["flows-list-div"]}></Box>
+      <Box className={styles["flows-list-div"]}>
+        <LoadingOverlay visible={isLoading} />
+      </Box>
     </Box>
   );
 }
