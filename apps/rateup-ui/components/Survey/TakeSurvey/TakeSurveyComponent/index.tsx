@@ -99,7 +99,6 @@ function TakeSurvey() {
   const router = useRouter();
 
   if (!selectedLanguage) throw new Error("No language selected");
-
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
@@ -271,8 +270,20 @@ function TakeSurvey() {
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
-        ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`)
-        : router.push(`${surveyId}/end?k=${kioskMode}`);
+        ? router.push(
+            `${surveyId}/end?k=${kioskMode}${
+              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
+                ? `&sid=${survey.id}`
+                : ``
+            }&msg=thanks`,
+          )
+        : router.push(
+            `${surveyId}/end?k=${kioskMode}${
+              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
+                ? `&sid=${survey.id}`
+                : ``
+            }`,
+          );
     });
   };
 
@@ -428,12 +439,10 @@ function TakeSurvey() {
                                   return (
                                     <Stack>
                                       <Group>
-                                        {" "}
                                         <Text fw="400">Email: </Text>{" "}
                                         <Text fw="300">{contact.email}</Text>{" "}
                                       </Group>
                                       <Group mt="-10px">
-                                        {" "}
                                         <Text fw="400">Phone: </Text>{" "}
                                         <Text fw="300">{contact.phone}</Text>{" "}
                                       </Group>

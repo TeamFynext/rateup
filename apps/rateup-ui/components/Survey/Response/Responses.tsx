@@ -185,7 +185,7 @@ const Responses = ({
               responseValue = Object.values(responseValue).join(", ");
             }
           } else {
-            responseValue = "Not Answered";
+            responseValue = "";
           }
           bodyArray[answerIndex].push(responseValue);
         });
@@ -424,7 +424,7 @@ function BadgeorTextorPreview({
           leftIcon={<IconEye />}
           size="compact-xs"
           onClick={open}
-          disabled={response === "Not Answered" || !response}
+          disabled={response === "" || !response}
         />
         <PreviewModal
           headerTitle="Preview"

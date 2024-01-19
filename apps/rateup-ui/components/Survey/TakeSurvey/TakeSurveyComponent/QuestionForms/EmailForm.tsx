@@ -7,8 +7,8 @@ import { IconMail } from "@tabler/icons-react";
 export function EmailForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Stack>
-      <Paper shadow="sm" className={classes.inputBox}>
+    <Stack w={"100%"}>
+      <Paper shadow="sm" className={classes.inputBox} w={"100%"}>
         <TextInput
           placeholder="Enter email address"
           value={response || ""}

@@ -3,6 +3,8 @@ import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLay
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import { getPublicwelcomeTheme } from "../../../../backend/WelcomeTheme/welcometheme.api";
 import Head from "next/head";
+import { useEffect } from "react";
+import { error } from "console";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -11,14 +13,60 @@ type SurveyViewProp = {
 export const getServerSideProps = async (context: {
   params: SurveyViewProp;
 }) => {
-  const params = context.params;
-  const surveyData = await getPublicSurvey(params.surveyId);
-  const surveyThemeData = await getPublicwelcomeTheme(params.surveyId);
-
-  return { props: { survey: surveyData, surveyThemeData: surveyThemeData } };
+  try {
+    const params = context.params;
+    const surveyData = await getPublicSurvey(params.surveyId);
+    const surveyThemeData = await getPublicwelcomeTheme(params.surveyId);
+    return { props: { survey: surveyData, surveyThemeData: surveyThemeData } };
+  } catch (error) {
+    console.error("error in getServerSideProps");
+    console.error(error);
+    return {
+      props: { survey: null, surveyThemeData: null, error_occured: true },
+    };
+  }
 };
 
-export default function Page({ survey, surveyThemeData }) {
+export default function Page({ survey, surveyThemeData, error_occured }) {
+  useEffect(() => {
+    if (error_occured) {
+      try {
+        const last_error_time = localStorage.getItem("last_error_time");
+        localStorage.setItem("last_error_time", Date.now().toString());
+
+        // if past 1 hour then refresh
+        if (
+          last_error_time &&
+          Date.now() - parseInt(last_error_time) > 3600000
+        ) {
+          localStorage.setItem("number_of_refresh_done", "1");
+          window.location.reload();
+        } else {
+          const number_of_refresh_done = localStorage.getItem(
+            "number_of_refresh_done",
+          );
+          localStorage.setItem(
+            "number_of_refresh_done",
+            number_of_refresh_done
+              ? (parseInt(number_of_refresh_done) + 1).toString()
+              : "1",
+          );
+
+          if (number_of_refresh_done && parseInt(number_of_refresh_done) > 3) {
+            // do nothing
+          } else {
+            window.location.reload();
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [error_occured]);
+
+  if (error_occured == true) {
+    return <></>;
+  }
   return (
     <>
       <Head>

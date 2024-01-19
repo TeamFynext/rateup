@@ -10,7 +10,7 @@ import AboutUs from "../pages/AboutUs";
 import Pricing from "../pages/Pricing";
 import Blog from "../pages/Blog";
 
-function HomePage() {
+function HomePage({ allPosts }: { allPosts?: any[] }) {
   const { pathname } = useRouter();
   let componentToBeRendered: React.ReactNode;
 
@@ -51,7 +51,8 @@ function HomePage() {
       break;
     }
     case "/blog": {
-      componentToBeRendered = <Blog />;
+      componentToBeRendered = <Blog allPosts={allPosts} />;
+
       break;
     }
   }

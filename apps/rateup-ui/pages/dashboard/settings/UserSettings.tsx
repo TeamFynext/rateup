@@ -34,6 +34,11 @@ import { passwordValidation } from "../../../utils/validation";
 import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
+import styles from "./setting.module.css";
+import "react-phone-number-input/style.css";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
 
 const ProfileSettings = () => {
   const {
@@ -66,10 +71,7 @@ const ProfileSettings = () => {
         return null; // Validation passed
       },
       phone: (value) => {
-        const regex = /^\d{4,15}$/;
-        if (!regex.test(value)) {
-          return "Invalid phone";
-        }
+        if (!value || !isValidPhoneNumber(value)) return "Invalid phone number";
         return null;
       },
       existingPassword: (value, values) =>
@@ -110,7 +112,7 @@ const ProfileSettings = () => {
     const data = {
       title: values.title,
       name: mergeNames(values.firstname, values.lastname),
-      phone: values.phone,
+      phone: values.phone?.slice(1),
     };
     if (isAnyPasswordFieldDirty(values)) {
       const passwordData = {
@@ -130,11 +132,14 @@ const ProfileSettings = () => {
 
   useEffect(() => {
     if (profileData?.data?.data) {
+      const phone = profileData?.data?.data?.phone
+        ? "+" + profileData?.data?.data?.phone
+        : null;
       profileForm.setValues({
         title: profileData?.data?.data?.gender || "",
         firstname: profileData?.data?.data?.name?.split(" ")[0] || "",
         lastname: profileData?.data?.data?.name?.split(" ")[1] || "",
-        phone: profileData?.data?.data?.phone || "",
+        phone: phone || "",
       });
     }
 
@@ -308,14 +313,21 @@ const ProfileSettings = () => {
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 4 }}>
-                <ContainedTextField
-                  withAsterisk
-                  label="Phone with coutry code"
-                  placeholder="Enter your phone number with country code"
+                <Text fz={12} c={"#495057"} mt={6}>
+                  Phone Number
+                </Text>
+                <PhoneInputWithCountrySelect
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
+                  placeholder="Enter your organization phone number"
+                  value={profileForm?.values?.phone || null}
                   {...profileForm?.getInputProps("phone")}
-                  leftSection={<IconPlus size={"1rem"} color="#373A40" />}
-                  maxLength={15}
+                  className={styles.inputPhone}
                 />
+                <Text size="sm" c={"red"}>
+                  {profileForm?.errors?.phone}
+                </Text>
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 6 }}>
                 <ContainedTextField
