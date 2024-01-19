@@ -51,10 +51,10 @@ const headerNavLinks = [
     href: "/pricing",
     linkText: "Pricing",
   },
-  // {
-  //   href: "/",
-  //   linkText: "Blog",
-  // },
+  {
+    href: "/blog",
+    linkText: "Blog",
+  },
 ];
 
 const footerNavLinks = [

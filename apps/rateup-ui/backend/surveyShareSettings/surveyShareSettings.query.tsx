@@ -7,6 +7,11 @@ import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
 const useGetShareSettings = (queryKey, resourceName, id) => {
+  if (!queryKey || !resourceName || !id) {
+    return {
+      data: null,
+    };
+  }
   return useQuery({
     queryKey: [queryKey, { resourceName, id }],
     queryFn: getShareSettings,
@@ -14,6 +19,9 @@ const useGetShareSettings = (queryKey, resourceName, id) => {
 };
 
 const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
+  if (!queryKey || !resourceName || !id) {
+    return null;
+  }
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: upadateShareSettings,

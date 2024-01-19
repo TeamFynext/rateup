@@ -101,6 +101,37 @@ export function WaQuestionPreview({
         </>
       );
     }
+    case Q.Testimonial: {
+      const features = question?.features?.[selectedLanguage] || {};
+      return (
+        <>
+          <WaResponseMessage
+            header={title}
+            body={description}
+            footer="Please share your name"
+          />
+          <WaSentMessage body="John" />
+          {features?.hasJobTitle && (
+            <>
+              <WaResponseMessage body={"Please share your job title"} />
+              <WaSentMessage body="Marketing specialist" />
+            </>
+          )}
+          <WaResponseMessage body={"Please share details of your experience"} />
+          <WaSentMessage body="Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!" />
+          {features?.hasRating && (
+            <>
+              <WaListMessage body="Rate us" openList={openList} />
+            </>
+          )}
+          {features?.hasPhoto && (
+            <>
+              <WaResponseMessage body={"Please share your photo"} />
+            </>
+          )}
+        </>
+      );
+    }
     case Q.WaButtons: {
       const choices = question.choices?.[selectedLanguage] || [];
       return (

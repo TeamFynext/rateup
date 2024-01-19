@@ -10,12 +10,16 @@ export const useCheckSession = () => {
   const checkSession = useCallback(async () => {
     try {
       const doesSessionExist = await Session.doesSessionExist();
-      if (doesSessionExist) {
+      if (
+        doesSessionExist &&
+        (router.asPath?.toLowerCase() === "/login" ||
+          router.asPath?.toLowerCase() === "/signup")
+      ) {
         router.push("/dashboard");
       }
       setDoesSessionExist(doesSessionExist);
     } catch (error) {
-      console.error("Error checking session:", error);
+      setDoesSessionExist(false);
     }
   }, []);
 

@@ -3,6 +3,7 @@ import { appInfo } from "./appInfo";
 import Router from "next/router";
 import ThirdPartyEmailPassword from "supertokens-web-js/recipe/thirdpartyemailpassword";
 import EmailVerification from "supertokens-web-js/recipe/emailverification";
+import Passwordless from "supertokens-web-js/recipe/passwordless";
 
 export const frontendConfig = () => {
   return {
@@ -10,6 +11,7 @@ export const frontendConfig = () => {
     recipeList: [
       Session.init(),
       ThirdPartyEmailPassword.init(),
+      Passwordless.init(),
       EmailVerification.init(),
     ],
     windowHandler: (oI: any) => {

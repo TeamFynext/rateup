@@ -17,14 +17,12 @@ import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
-  if (!qResponse) return "Not Answered";
+  if (!qResponse) return "";
   const { type, response: responseType } = qResponse;
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
   } else if (type === QuestionType.EmailPhone) {
-    return (
-      qResponse.response[type].email + " , " + qResponse.response[type].phone
-    );
+    return Object.values(qResponse.response[type]).filter(Boolean).join(" , ");
   } else if (type === QuestionType.DateTime) {
     const dateTimeValue = qResponse.response.DateTime;
     const date = dayjs(dateTimeValue);
@@ -45,7 +43,7 @@ export function getResponse(qId: string, response: SurveyResponse) {
       }
       return formattedValue;
     } else {
-      return "Not Answered";
+      return "";
     }
   } else if (type === QuestionType.WaList) {
     const { title, description } = qResponse.response[QuestionType.WaList];
@@ -251,5 +249,10 @@ export function getFilteredResponseUsingTags(
     );
     noofResponses = filteredResponsesByTags?.length;
   }
+  filteredResponsesByTags?.sort((a, b) => {
+    const dateA = dayjs(a.createdAt);
+    const dateB = dayjs(b.createdAt);
+    return dateA.diff(dateB);
+  });
   return { filteredResponsesByTags, noofResponses };
 }

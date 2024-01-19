@@ -99,7 +99,6 @@ function TakeSurvey({ survey }) {
   const router = useRouter();
 
   if (!selectedLanguage) throw new Error("No language selected");
-
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
@@ -271,8 +270,20 @@ function TakeSurvey({ survey }) {
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
-        ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`)
-        : router.push(`${surveyId}/end?k=${kioskMode}`);
+        ? router.push(
+            `${surveyId}/end?k=${kioskMode}${
+              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
+                ? `&sid=${survey.id}`
+                : ``
+            }&msg=thanks`,
+          )
+        : router.push(
+            `${surveyId}/end?k=${kioskMode}${
+              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
+                ? `&sid=${survey.id}`
+                : ``
+            }`,
+          );
     });
   };
 
@@ -322,6 +333,9 @@ function TakeSurvey({ survey }) {
               className: classes["modal-overlay"],
             }}
             classNames={modalStyles}
+            styles={{
+              content: { background: "white" },
+            }}
           >
             <Flex className={modalStyles["modal-body-content-container"]}>
               <Stack pb="xl">
@@ -428,12 +442,10 @@ function TakeSurvey({ survey }) {
                                   return (
                                     <Stack>
                                       <Group>
-                                        {" "}
                                         <Text fw="400">Email: </Text>{" "}
                                         <Text fw="300">{contact.email}</Text>{" "}
                                       </Group>
                                       <Group mt="-10px">
-                                        {" "}
                                         <Text fw="400">Phone: </Text>{" "}
                                         <Text fw="300">{contact.phone}</Text>{" "}
                                       </Group>
@@ -489,7 +501,7 @@ function TakeSurvey({ survey }) {
             <LoadingOverlay
               visible={isSavingResponses}
               zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 2 }}
+              overlayProps={{ radius: "sm", blur: 10 }}
             />
             <Stack>
               <Stack style={{ minHeight: "45vh" }} justify="center">
@@ -800,7 +812,7 @@ function NextPrev({ prev, next, num, total, survey }) {
     >
       {selectedQ?.required && !response && (
         <Text c="gray" mb="md" size={isMobile && "sm"}>
-          Note: * Must attend to continue with next.
+          *Choose an option or answer to proceed!
         </Text>
       )}
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
@@ -812,7 +824,7 @@ function NextPrev({ prev, next, num, total, survey }) {
           leftIcon={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
           onClick={prev}
-          color="dark"
+          color="blue"
         />
         <Center>
           <RingProgress
@@ -846,7 +858,7 @@ function NextPrev({ prev, next, num, total, survey }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="blue"
             rightSection={<IconChevronRight />}
           >
             Submit
@@ -861,7 +873,7 @@ function NextPrev({ prev, next, num, total, survey }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="blue"
             rightSection={<IconChevronRight />}
           >
             Next

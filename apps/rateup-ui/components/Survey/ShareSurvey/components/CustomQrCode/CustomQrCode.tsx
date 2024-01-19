@@ -83,7 +83,7 @@ function CustomQRCode({
       }
     }
     setRows(rows);
-  }, []);
+  }, [textToBeEmbedded, version, errorCorrectionLevel, qrColor]);
 
   useEffect(() => {
     drawQRModules();

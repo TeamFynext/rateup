@@ -16,12 +16,12 @@ export const Navbar = () => {
         <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
       }
     >
-      <Link href="/" className={classes.link}>
+      <Link href="/dashboard" className={classes.link}>
         <IconHome size={23} color="var(--mantine-color-gray-6)" />
       </Link>
       {pathParts.map((part, index) => {
         part = replaceRouteParameter(part, query, routeParams);
-
+        if (part == "dashboard") return;
         return (
           <Link
             className={classes.link}

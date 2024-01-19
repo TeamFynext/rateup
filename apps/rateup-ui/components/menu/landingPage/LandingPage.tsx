@@ -246,7 +246,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     setSelectedTab("Tablet");
   };
   const handlePictureMobileBackground = () => {
-    setAspectRatio(4 / 3);
+    setAspectRatio(3 / 4);
     toggleMethodSelectionDialog();
     setImageType("mobileBackgroundImage");
     setSelectedTab("Mobile");
@@ -542,7 +542,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           shadow={isMenuEnabled && "sm"}
                           radius={"md"}
                           p={"lg"}
-                          h={"7.5rem"}
                           w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}
@@ -555,7 +554,6 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <PaperLayout
                           radius={"md"}
                           p={"lg"}
-                          h={"7.5rem"}
                           w={"7.5rem"}
                           mih={80}
                           mx={largeScreen ? "lg" : "0"}

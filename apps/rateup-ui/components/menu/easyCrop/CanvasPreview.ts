@@ -4,6 +4,7 @@ export async function canvasPreview(
   canvas: HTMLCanvasElement,
   crop: PixelCrop,
   scale = 1,
+  fileExtension = "jpg",
 ) {
   const ctx = canvas.getContext("2d");
 
@@ -26,7 +27,7 @@ export async function canvasPreview(
   const cropY = crop.y * scaleY;
   const centerX = image.naturalWidth / 2;
   const centerY = image.naturalHeight / 2;
-  ctx.fillStyle = "white";
+  ctx.fillStyle = fileExtension === "png" ? "transparent" : "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.save();
 

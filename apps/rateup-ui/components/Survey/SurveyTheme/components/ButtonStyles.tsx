@@ -8,6 +8,7 @@ import {
   ColorInput,
   Group,
   Box,
+  ScrollArea,
 } from "@mantine/core";
 import React, { useEffect } from "react";
 import classes from "../WelcomePage.module.css";
@@ -55,9 +56,9 @@ function ButtonStyles({
     }
   }, [currentStyles]);
   return (
-    <Flex>
-      <Stack w={"100%"} justify={"center"} h="100%">
-        <Box className={classes.editorBox}>
+    <Stack w={"100%"} justify={"center"} h="100%" gap={0}>
+      <ScrollArea h={"40vh"}>
+        <Box className={classes.editorBox} pr={"xs"}>
           <Box className={classes.editorSection}>
             <Group mt="xs">
               <NumberInput
@@ -107,17 +108,16 @@ function ButtonStyles({
               size={"sm"}
               pl={40}
               pr={40}
-              mt={15}
+              mt={"1rem"}
               onClick={onSubmit}
               loading={saveLoading}
             >
-              {" "}
               Save
             </Button>
           </Flex>
         </Box>
-      </Stack>
-    </Flex>
+      </ScrollArea>
+    </Stack>
   );
 }
 

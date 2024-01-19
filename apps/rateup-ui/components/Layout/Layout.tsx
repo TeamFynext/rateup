@@ -81,7 +81,7 @@ export default function Layout({ children }) {
             </Transition>
             <Flex
               className={`${styles.notinfocus} ${focus && styles.focus}`}
-              style={{ overflow: "scroll" }}
+              style={{ overflow: "auto" }}
               px="lg"
               py="sm"
               direction="column"
