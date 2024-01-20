@@ -7,11 +7,6 @@ import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
 const useGetShareSettings = (queryKey, resourceName, id) => {
-  if (!queryKey || !resourceName || !id) {
-    return {
-      data: null,
-    };
-  }
   return useQuery({
     queryKey: [queryKey, { resourceName, id }],
     queryFn: getShareSettings,
@@ -19,21 +14,20 @@ const useGetShareSettings = (queryKey, resourceName, id) => {
 };
 
 const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
-  if (!queryKey || !resourceName || !id) {
-    return null;
-  }
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: upadateShareSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [queryKey, { resourceName, id }],
-      });
-      showSuccessToast(
-        "Settigs Updated Successfully",
-        "survey-share-settings",
-        <IconCheck />,
-      );
+      if (queryKey && resourceName && id) {
+        queryClient.invalidateQueries({
+          queryKey: [queryKey, { resourceName, id }],
+        });
+        showSuccessToast(
+          "Settigs Updated Successfully",
+          "survey-share-settings",
+          <IconCheck />,
+        );
+      }
     },
     onError: (error: any) => {
       showErrorToast(

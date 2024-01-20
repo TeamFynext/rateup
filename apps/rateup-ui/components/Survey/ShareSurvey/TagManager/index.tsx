@@ -41,71 +41,56 @@ function TagManager({
   surveyTitle,
   surveyId,
 }) {
+  const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] =
+    useState(false);
+  const dataGridCompRef = useRef(null);
+
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
     useDisclosure(false);
 
-  const shareSettings = useGetShareSettings(
-    "surveyShareSettings",
-    "survey",
-    surveyId,
-  );
-
-  const settingsData = shareSettings.data ? shareSettings.data : {};
-
-  const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] =
-    useState(false);
-
-  const {
-    qrBgColor,
-    qrColor,
-    logoFile,
-    logoBorderRadius,
-    logoSize,
-    logoFillType,
-  } = settingsData;
-
-  const dataGridCompRef = useRef(null);
-
-  const downloadFiles = useCallback(async (domNodeArr) => {
-    const promises = [];
-    domNodeArr.forEach(async (qrDomNode) => {
-      const { tagname } = qrDomNode.dataset;
-      const fileName = `${surveyTitle}-${tagname}-qr`;
-      const scale = 6;
-      const promise = domtoimage.toBlob(qrDomNode, {
-        width: qrDomNode?.clientWidth * scale,
-        height: qrDomNode?.clientHeight * scale,
-        style: {
-          transform: "scale(" + scale + ")",
-          transformOrigin: "top left",
-        },
+  const downloadFiles = useCallback(
+    async (domNodeArr) => {
+      const promises = [];
+      domNodeArr.forEach(async (qrDomNode) => {
+        const { tagname } = qrDomNode.dataset;
+        const fileName = `${surveyTitle}-${tagname}-qr`;
+        const scale = 6;
+        const promise = domtoimage.toBlob(qrDomNode, {
+          width: qrDomNode?.clientWidth * scale,
+          height: qrDomNode?.clientHeight * scale,
+          style: {
+            transform: "scale(" + scale + ")",
+            transformOrigin: "top left",
+          },
+        });
+        const blobFileNamePromise = promise.then((blob) => {
+          return {
+            blob,
+            fileName,
+          };
+        });
+        promises.push(blobFileNamePromise);
       });
-      const blobFileNamePromise = promise.then((blob) => {
+      try {
+        const fileBlobAndFileNameObjsArr = await Promise.all(promises);
+        fileBlobAndFileNameObjsArr.forEach((blobAndFileNameObj) => {
+          const { blob, fileName } = blobAndFileNameObj;
+          saveAs(blob, fileName);
+        });
+      } catch (err) {
+        console.log("download files failed.");
         return {
-          blob,
-          fileName,
+          success: false,
+          message: "failed to download files",
         };
-      });
-      promises.push(blobFileNamePromise);
-    });
-    try {
-      const fileBlobAndFileNameObjsArr = await Promise.all(promises);
-      fileBlobAndFileNameObjsArr.forEach((blobAndFileNameObj) => {
-        const { blob, fileName } = blobAndFileNameObj;
-        saveAs(blob, fileName);
-      });
-    } catch (err) {
-      console.log("download files failed.");
+      }
       return {
-        success: false,
-        message: "failed to download files",
+        success: true,
+        message: "successfully downloaded files",
       };
-    }
-    return {
-      success: true,
-      message: "successfully downloaded files",
-    };
-  }, []);
+    },
+    [surveyTitle],
+  );
 
   const handleDownloadAllQrs = useCallback(async () => {
     const qrPreviewContainerClassName = `.${previewStyles["preview-container"]}`;
@@ -120,6 +105,22 @@ function TagManager({
       setIsAllQrDownloadProcessing(false);
     }
   }, []);
+
+  const shareSettings = useGetShareSettings(
+    "surveyShareSettings",
+    "survey",
+    surveyId,
+  );
+
+  const settingsData = shareSettings.data ? shareSettings.data : {};
+  const {
+    qrBgColor,
+    qrColor,
+    logoFile,
+    logoBorderRadius,
+    logoSize,
+    logoFillType,
+  } = settingsData;
 
   return (
     <>

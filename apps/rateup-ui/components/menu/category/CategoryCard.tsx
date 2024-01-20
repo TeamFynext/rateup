@@ -128,7 +128,7 @@ export function CategoryCard({
         openCreateItem={handleCreateItem}
         toggleSwapOrder={toggleSwapOrderCategory}
       />
-      <PaperLayout bg={"var(--bg-grey-color)"} p={"0 1rem"}>
+      <PaperLayout p={"0 1rem"}>
         <Table highlightOnHover horizontalSpacing="sm" verticalSpacing="xs">
           <Table.Thead>
             <Table.Tr>

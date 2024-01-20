@@ -67,6 +67,15 @@
   font-size: "16px";
 }
 
+.sgPcqlabel {
+  text-align: left;
+  min-width: 100px;
+  max-width: 300px;
+  height: 100%;
+  white-space: normal;
+  font-size: "16px";
+  padding: 4px;
+}
 @media (max-width: 480px) {
   .rating svg {
     height: 50px;
@@ -88,6 +97,15 @@
     white-space: normal;
     font-size: "16px";
   }
+  .sgPcqlabel {
+    text-align: left;
+    min-width: 100px;
+    max-width: 200px;
+    height: 100%;
+    white-space: normal;
+    font-size: "16px";
+    padding: 4px;
+  }
 }
 
 .questionTitle {
@@ -96,4 +114,13 @@
 
 .questionDesc {
   line-height: 1.2;
+}
+
+/*the styles below are temporary and will be removed once myg survey is completed*/
+.wrapperdark {
+  background-color: #000;
+}
+.wrapperdark input {
+  color: #fff !important;
+  background-color: transparent !important;
 }

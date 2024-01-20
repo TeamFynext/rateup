@@ -115,7 +115,11 @@
 
 .inputPhone {
   font-size: 16px;
-  border: none;
+}
+.inputBox {
+  border-color: var(--tertiary-color);
+  border-width: 1px;
+  border-style: solid;
 }
 .inputPhone > input {
   border: none;

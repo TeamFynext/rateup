@@ -9,7 +9,6 @@ export default BlogPage;
 
 export const getStaticProps = async () => {
   const allPosts = getAllPosts(["title", "date", "slug", "coverImage"]);
-  console.log(allPosts);
   return {
     props: { allPosts },
   };

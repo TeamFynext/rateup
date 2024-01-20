@@ -201,7 +201,7 @@ const ResultsOverview = () => {
   chartData = prepareData(questions, filteredResponsesByTeam);
   return (
     <>
-      <Stack h={"100%"}>
+      <Stack h={"100%"} p={3}>
         {chartData?.length > 0 ? (
           <Stack>
             {isAllowedQnsPresent && (
