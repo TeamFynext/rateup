@@ -72,6 +72,7 @@ import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { PCQForm } from "./QuestionForms/PCQForm";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -459,6 +460,24 @@ function TakeSurvey({ survey }) {
                                     response?.response,
                                   )[0];
                                   return <Text>{selectedChoice?.value}</Text>;
+                                case Q.PCQ:
+                                  let selectedPictureChoice = Object.values(
+                                    response?.response,
+                                  )?.[0]?.value;
+                                  return (
+                                    <Stack gap={0} align="center">
+                                      <Image
+                                        src={getFileUrlFromKey(
+                                          selectedPictureChoice?.image,
+                                        )}
+                                        w={50}
+                                        style={{ aspectRatio: 4 / 3 }}
+                                      />
+                                      <Text>
+                                        {selectedPictureChoice?.value}
+                                      </Text>
+                                    </Stack>
+                                  );
                                 default:
                                   return JSON.stringify(
                                     Object.values(response?.response)[0],
@@ -644,6 +663,8 @@ function getQuestionForm(type, selectedQ) {
       return <DateForm key={selectedQ?.id} />;
     case Q.CustomNPS:
       return <CustomNPSForm key={selectedQ?.id} />;
+    case Q.PCQ:
+      return <PCQForm key={selectedQ?.id} />;
     default:
       return <div>not implemented</div>;
   }

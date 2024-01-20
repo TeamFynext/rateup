@@ -67,6 +67,15 @@
   font-size: "16px";
 }
 
+.sgPcqlabel {
+  text-align: left;
+  min-width: 100px;
+  max-width: 300px;
+  height: 100%;
+  white-space: normal;
+  font-size: "16px";
+  padding: 4px;
+}
 @media (max-width: 480px) {
   .rating svg {
     height: 50px;
@@ -87,6 +96,15 @@
     height: auto;
     white-space: normal;
     font-size: "16px";
+  }
+  .sgPcqlabel {
+    text-align: left;
+    min-width: 100px;
+    max-width: 200px;
+    height: 100%;
+    white-space: normal;
+    font-size: "16px";
+    padding: 4px;
   }
 }
 

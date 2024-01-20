@@ -42,7 +42,7 @@ import {
   MAX_FILE_SIZE_IN_MB,
 } from "../../../utils/constants";
 import { showErrorToast } from "../../../utils/notifications";
-import { menuLabelWithText } from "../util/menuLabelData";
+import { FoodLabelSelector } from "../combobox/foodLabelSelector";
 
 export const Slide = ({
   menuId,
@@ -233,12 +233,7 @@ export const Slide = ({
               {...form.getInputProps("description")}
             />
             <PriceSection form={form} currency={currency ?? "0"} />
-            <ContainedMultiSelect
-              label="Select Food Label"
-              placeholder="Choose a label"
-              data={menuLabelWithText}
-              {...form.getInputProps("foodLabels")}
-            />
+            <FoodLabelSelector form={form} />
           </Stack>
           <Stack align="center">
             <Group w={"100%"} justify="space-between" gap={0}>
