@@ -2,7 +2,7 @@ import { Box, Button, Title, LoadingOverlay, MultiSelect } from "@mantine/core";
 import { useGetWaFlows } from "../../../../backend/whatsapp/flows/waFlows.query";
 import styles from "./flows.module.css";
 import { IconPlus } from "@tabler/icons-react";
-import CreateFlowModal from "./CreateFlowModal";
+import CreateFlowModal from "../../../../components/whatsapp/flows/CreateFlowModal";
 import { useDisclosure } from "@mantine/hooks";
 
 function Flows() {
