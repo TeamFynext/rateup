@@ -2,6 +2,7 @@
   height: 100% !important;
   display: flex;
   flex-direction: column;
+  padding: 3px;
 }
 
 .total-responses-heading-container {

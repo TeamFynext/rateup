@@ -96,7 +96,7 @@ const SurveyStats = ({ survey }) => {
     },
   ];
   return (
-    <Stack>
+    <Stack p={3}>
       <Stack mih="400px" gap={10}>
         <PaperLayout px="lg" py={"lg"}>
           <Stack gap={0}>

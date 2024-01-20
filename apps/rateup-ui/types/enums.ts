@@ -25,6 +25,7 @@ export enum QuestionType {
   Number = "Number",
   DateTime = "DateTime",
   CustomNPS = "Custom NPS",
+  PCQ = "Picture Choice",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List

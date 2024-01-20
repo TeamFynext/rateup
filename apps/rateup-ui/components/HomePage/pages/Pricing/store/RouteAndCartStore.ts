@@ -18,3 +18,21 @@ export const useRouteAndCartStore = create<Store & Actions>((set) => ({
   updateRouteAndCart: (newRoute, cart) =>
     set(() => ({ route: newRoute, cart: cart })),
 }));
+
+type ImageStore = {
+  imageToDelete: object[];
+};
+
+type ImageActions = {
+  updateImageArray: (image: object) => void;
+  resetImage: () => void;
+};
+const initalImageData = {
+  imageToDelete: [],
+};
+export const useImageStore = create<ImageStore & ImageActions>((set) => ({
+  ...initalImageData,
+  updateImageArray: (image) =>
+    set((state) => ({ imageToDelete: [...state.imageToDelete, image] })),
+  resetImage: () => set(initalImageData),
+}));

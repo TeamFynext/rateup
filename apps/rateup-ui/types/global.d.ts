@@ -150,6 +150,10 @@ declare global {
     latitude: number;
     longitude: number;
   };
+  type ChoiceWithPicture = {
+    value: string | { image: string; value: string };
+    weightage?: NPSWeightage;
+  };
   type Choice = {
     value: string;
     weightage?: NPSWeightage;
