@@ -9,9 +9,8 @@ import React from "react";
 
 const BlogAll = ({ allPosts }) => {
   const heroPost = allPosts && allPosts.length > 0 ? allPosts[0] : null;
-
-  const morePosts = heroPost ? allPosts.slice(1) : [];
-
+  const morePosts = heroPost ? allPosts.slice(1, 4) : [];
+  // const explorePosts= allPosts && allPosts.length > 0 ? allPosts:[] ;
   return (
     <>
       <Head>
@@ -38,7 +37,7 @@ const BlogAll = ({ allPosts }) => {
         <div>
           <Intro />
         </div>
-        <Stack className={styles["main-page-heropost-container"]}>
+        <Stack>
           {heroPost && (
             <HeroPost
               title={heroPost.title}
@@ -50,6 +49,7 @@ const BlogAll = ({ allPosts }) => {
         </Stack>
 
         {morePosts.length > 0 && <MoreStories posts={morePosts} />}
+        {/* {explorePosts.length > 0 && <ExplorePosts posts= {explorePosts} />} */}
       </Container>
     </>
   );

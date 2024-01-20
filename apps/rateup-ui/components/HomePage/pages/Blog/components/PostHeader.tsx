@@ -1,4 +1,4 @@
-import CoverImage from "./CoverImageHero";
+import CoverImage from "./CoverImageSub";
 import PostTitle from "./PostTitle";
 import DateFormatter from "./DateFormatter";
 

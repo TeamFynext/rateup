@@ -18,14 +18,14 @@ type Props = {
 const MoreStories = ({ posts }: Props) => {
   const router = useRouter();
   const handleClick = () => {
-    router.push("/blog");
+    router.push("/blog/explore-all");
   };
   return (
-    <Stack className={styles["main-page-all-stories-container"]}>
+    <Stack>
       <Title className={styles["main-page-featured-reads-container"]}>
         FEATURED READS
       </Title>
-      <Flex className={styles["main-page-all-stories-image-link-container"]}>
+      <Flex>
         {posts.map((post) => (
           <PostPreview
             key={post.slug}

@@ -15,6 +15,7 @@ const CoverImage = ({ title, src, slug }: Props) => {
       alt={`Cover Image for ${title}`}
       fit="contain"
       h={350}
+      w="300"
       className={styles["image-container"]}
     />
   );

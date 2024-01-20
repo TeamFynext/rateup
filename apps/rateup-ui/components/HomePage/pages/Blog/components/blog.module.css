@@ -22,12 +22,12 @@
 .main-page-top-container {
   border-radius: 25px;
   color: white;
-  margin-bottom: 6rew;
-  margin-top: 3rem;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
   background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/rateup-star-svg-path.svg"),
     linear-gradient(90deg, #3c75b6, #0b56ac);
   background-repeat: no-repeat, no-repeat;
-  padding: 5.25rem 1rem;
+  padding: 3rem 1rem;
 }
 
 .image-container {
@@ -64,13 +64,8 @@
 .heropost-title-container {
   font-size: 35px;
   color: antiquewhite;
-}
-
-.main-page-all-stories-container {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  margin-left: 0px;
-  margin-right: 0px;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 
 .main-page-featured-reads-container {
@@ -82,12 +77,8 @@
   text-align: center;
 }
 
-.main-page-all-stories-image-link-container {
-  margin: auto;
-}
-
 .sub-article-image-and-link {
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 }
 
 .sub-article-titles {
@@ -131,4 +122,37 @@ text.content {
   margin-bottom: 5rem;
   align-items: center;
   justify-content: center;
+}
+
+.explore-all-stories-container {
+  margin-top: 3rem;
+  margin-bottom: 5rem;
+  margin-left: 2rem;
+  margin-right: 10rem;
+}
+
+.explore-all-title-container {
+  margin-top: 10rem;
+  margin-bottom: 3rem;
+  line-break: loose;
+  font-size: 45px;
+  font-weight: 700;
+  line-height: 70px;
+  color: #06429c;
+  text-align: center;
+  margin-left: 6rem;
+  margin-right: 6rem;
+}
+
+.explore-all-stories-page-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-left: 8rem;
+  margin-right: 8rem;
+}
+
+.post-container {
+  width: calc(30% - 16px);
+  margin: 8px;
 }
