@@ -1,9 +1,14 @@
+import { QuestionType } from "../../types/enums";
+
 const generateListHtml = (list) => {
   return list?.map((item) => `<li>${Object.values(item)[0]}</li>`).join(" ");
 };
 
-const generateImageHtml = (imgSrc) => {
-  return `<img src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/${imgSrc}" width="200px" alt="photo-survey"/>`;
+const generateImageHtml = (imgSrc, s3Upload = false) => {
+  const url = s3Upload
+    ? process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
+    : process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL;
+  return `<img src="${url}/${imgSrc}" width="200px" alt="photo-survey"/>`;
 };
 
 export const generateAnswerHtml = (answer, type) => {
@@ -19,6 +24,10 @@ export const generateAnswerHtml = (answer, type) => {
       listHtmlString += `<li>${key}: ${processedValue}</li>`;
     }
     return `<ul>${listHtmlString}</ul>`;
+  } else if (type === QuestionType.PCQ) {
+    const item: any = Object.values(answer)[0];
+    const processedValue = generateImageHtml(item?.image, true);
+    return `<ul><div>${item?.value}</div><div>${processedValue}</div></ul>`;
   } else if (typeof answer === "object") {
     return Object.values(answer)[0];
   } else if (type === "Photo") {

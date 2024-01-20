@@ -20,6 +20,7 @@ export enum QuestionType {
   Number = "Number",
   DateTime = "DateTime",
   CustomNPS = "Custom NPS",
+  PCQ = "Picture Choice",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
@@ -127,5 +128,5 @@ export enum SubscriptionFeaturePathName {
 export enum TestimonialFeatureQuestions {
   hasJobTitle = "Please share your job Title",
   hasRating = "Plase Rate us",
-  hasPhoto = "Please share your photo"
+  hasPhoto = "Please share your photo",
 }
