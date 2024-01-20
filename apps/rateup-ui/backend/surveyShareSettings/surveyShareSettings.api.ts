@@ -23,14 +23,19 @@ const upadateShareSettings = async (obj) => {
     params: { resourceName, id },
     body,
   } = obj;
-  const url = `${settingsApiUrl}/${resourceName}/${id}`;
-  const response = await axiosClient.put(url, body, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  const data = await response.data;
-  return data;
+
+  if (resourceName && id && body) {
+    const url = `${settingsApiUrl}/${resourceName}/${id}`;
+    const response = await axiosClient.put(url, body, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    const data = await response.data;
+    return data;
+  } else {
+    return null;
+  }
 };
 
 export { getShareSettings, upadateShareSettings };
