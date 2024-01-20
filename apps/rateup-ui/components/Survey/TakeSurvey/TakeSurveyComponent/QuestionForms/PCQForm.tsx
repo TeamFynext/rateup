@@ -13,6 +13,7 @@ import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { samplePictureChoices } from "../../../../../utils/constants/forms";
 import { getImageValue } from "../../../../../utils/file-upload/upload";
 import { useRouter } from "next/router";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -25,6 +26,7 @@ export function PCQForm({ previewChoices }: MCQFormProps) {
   const [selectedOp, setSelectedOp] = useState("");
   const router = useRouter();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const largeScreen = useMediaQuery("(min-width: 40em)");
 
   const options: any = selectedQ
     ? choices
@@ -61,14 +63,14 @@ export function PCQForm({ previewChoices }: MCQFormProps) {
           w={200}
           style={{ aspectRatio: 4 / 3 }}
         />
-        <Text c={publicRoute ? "black" : "white"}>{label}</Text>
+        <Text>{label}</Text>
       </Stack>
     ),
   }));
 
   return (
-    <Stack maw={"45vw"}>
-      <ScrollArea mah={"30vh"} p={0} m={0}>
+    <Stack maw={largeScreen ? "45vw" : "100%"}>
+      <ScrollArea mah={largeScreen ? "30vh" : "100%"} p={0} m={0}>
         <Stack ml="sm" mb={"lg"}>
           <SegmentedControl
             data={designedData}
@@ -76,7 +78,10 @@ export function PCQForm({ previewChoices }: MCQFormProps) {
             onChange={handleSelectedOp}
             color="var(--tertiary-color)"
             size="md"
-            classNames={{ label: classes.sgPcqlabel }}
+            classNames={{
+              label: classes.sgPcqlabel,
+              indicator: classes.sgIndicator,
+            }}
           />
         </Stack>
       </ScrollArea>

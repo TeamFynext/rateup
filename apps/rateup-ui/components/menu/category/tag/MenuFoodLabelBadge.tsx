@@ -15,7 +15,7 @@ const MenuFoodLabelBadge = ({
       <Flex align={"center"} h={"100%"} columnGap={5}>
         <Image
           src={menuLabelWithText?.find((gr) => gr.label === data)?.image}
-          alt="it's me"
+          alt="it's menu label icon"
           h={15}
           w={15}
         />
