@@ -685,7 +685,7 @@ function NextPrev({ prev, next, num, total, survey }) {
     // TODO: check if rebase was done correctly
     if (
       ((selectedQ?.required && response) || response?.length > 0) &&
-      selectedQ?.type === Q.Email
+      selectedQ?.type === Q.Email //for email input
     ) {
       if (emailPattern.test(response)) {
         setIsErrorInput(false);
@@ -696,7 +696,7 @@ function NextPrev({ prev, next, num, total, survey }) {
       }
     } else if (
       ((selectedQ?.required && response) || response?.length > 0) &&
-      selectedQ?.type === Q.Phone
+      selectedQ?.type === Q.Phone //for phone input
     ) {
       if (isValidPhoneNumber(response)) {
         setIsErrorInput(false);
@@ -709,48 +709,38 @@ function NextPrev({ prev, next, num, total, survey }) {
       ((selectedQ?.required && response) ||
         response?.email?.length > 0 ||
         response?.phone?.length) &&
-      selectedQ?.type === Q.EmailPhone
+      selectedQ?.type === Q.EmailPhone //for contact qn - both email, phone
     ) {
       const { email, phone } = response;
+
+      const isEmailValid = emailPattern.test(email || "");
+      const isPhoneValid = isValidPhoneNumber(phone || "");
 
       if (
         selectedQ?.required &&
         (response?.email?.length < 1 || response?.phone?.length < 1)
       ) {
         setIsErrorInput(true);
-        setErrorMsg("Enter a valid email / phone");
-      }
-
-      if (selectedQ?.required || email?.length > 0 || phone?.length > 0) {
-        if (response?.email?.length > 0 || selectedQ?.required) {
-          if (email && emailPattern.test(email)) {
-            setErrorMsg("");
-            setIsErrorInput(false);
-          } else {
-            setErrorMsg("Enter a valid email");
-            setIsErrorInput(true);
-          }
+        setErrorMsg("Please input all fields");
+      } else if (selectedQ?.required && (!isEmailValid || !isPhoneValid)) {
+        setIsErrorInput(true);
+        if (!isEmailValid && !isPhoneValid) {
+          setErrorMsg("Enter a valid email and phone");
+        } else if (!isEmailValid) {
+          setErrorMsg("Enter a valid email");
+        } else {
+          setErrorMsg("Enter a valid phone number");
         }
-
-        if (phone?.length > 0 || selectedQ?.required) {
-          if (phone && isValidPhoneNumber(phone)) {
-            email?.length > 0 && !emailPattern.test(email)
-              ? setErrorMsg("Enter a valid email")
-              : setErrorMsg("");
-            email?.length > 0 && !emailPattern.test(email)
-              ? setIsErrorInput(true)
-              : setIsErrorInput(false);
-          } else {
-            if (!(email && emailPattern.test(email))) {
-              setIsErrorInput(true);
-              setErrorMsg("Enter a valid email / phone");
-            } else {
-              if (phone?.length > 0 && !isValidPhoneNumber(phone)) {
-                setIsErrorInput(true);
-                setErrorMsg("Enter a valid phone");
-              }
-            }
-          }
+      } else if (
+        !selectedQ?.required &&
+        ((email?.length > 0 && !isEmailValid) ||
+          (phone?.length > 0 && !isPhoneValid))
+      ) {
+        setIsErrorInput(true);
+        if (email?.length > 0 && !isEmailValid) {
+          setErrorMsg("Enter a valid email");
+        } else {
+          setErrorMsg("Enter a valid phone number");
         }
       } else {
         setErrorMsg("");
