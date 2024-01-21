@@ -1,0 +1,61 @@
+.flow-page-container {
+  position: relative;
+  height: 100%;
+}
+
+.flow-page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.heading-container {
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+.flow-page-heading-h1 {
+  font-size: 1.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  white-space: nowrap;
+  width: 80%;
+}
+
+.empty-div {
+  flex: 1 1 0;
+}
+
+/* Tabs Styles */
+.tabs-root-div {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+}
+
+.tabs-list-div {
+  border: 1px solid;
+  border-radius: 0.3125rem;
+  width: max-content;
+}
+
+.tabs-list-div::before {
+  display: none;
+}
+
+.tabs-tab {
+  border: 0;
+  border-radius: 0.3125rem;
+  font-size: 1.125rem;
+  padding: 0.625rem 1.25rem;
+}
+
+.tabs-tab[data-active="true"] {
+  background-color: var(--mantine-primary-color-filled);
+  color: white;
+}
+
+.tabs-tab:hover:not([data-active]) {
+  background-color: var(--mantine-primary-color-light);
+}

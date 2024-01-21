@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createWaFlow, getWaFlows } from "./waFlows.api";
+import { createWaFlow, getWaFlows, getWaSingleFlow } from "./waFlows.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
@@ -7,6 +7,13 @@ const useGetWaFlows = () => {
   return useQuery({
     queryKey: ["waFlowsList"],
     queryFn: async () => await getWaFlows(),
+  });
+};
+
+const useGetSingleFlow = (flowId) => {
+  return useQuery({
+    queryKey: ["waSingleFlow", flowId],
+    queryFn: async () => await getWaSingleFlow(flowId),
   });
 };
 
@@ -34,4 +41,4 @@ const useCreateFlowMutation = () => {
   });
 };
 
-export { useGetWaFlows, useCreateFlowMutation };
+export { useGetWaFlows, useGetSingleFlow, useCreateFlowMutation };

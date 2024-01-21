@@ -1,0 +1,50 @@
+.flow-card-div {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.flow-card-content {
+  /* border: 1px solid ; */
+  padding: 1rem;
+  box-shadow: 0 0 10px 5px rgba(72, 72, 72, 0.1);
+  border-radius: 1rem;
+}
+
+.flow-card-div:hover .flow-card-content {
+  box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
+}
+
+.flow-name-h2 {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+}
+
+.blocked-badge {
+  background-color: #ffe3e3;
+  color: #bd0000;
+}
+
+.deprecated-badge {
+  background-color: #ededed;
+  color: #808080;
+}
+
+.draft-badge {
+  background-color: #fff2da;
+  color: #ce8600;
+}
+
+.published-badge {
+  background-color: #d1ffd1;
+  color: #006f00;
+}
+
+.throttled-badge {
+  background-color: #ffffcc;
+  color: #c2c200;
+}

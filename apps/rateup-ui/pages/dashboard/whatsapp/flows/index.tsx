@@ -4,6 +4,8 @@ import styles from "./flows.module.css";
 import { IconPlus } from "@tabler/icons-react";
 import CreateFlowModal from "../../../../components/whatsapp/flows/CreateFlowModal";
 import { useDisclosure } from "@mantine/hooks";
+import FlowCardsList from "../../../../components/whatsapp/flows/FlowCardsList";
+import NothingFound from "../../../../components/NothingFound/NothingFound";
 
 function Flows() {
   const [
@@ -12,7 +14,13 @@ function Flows() {
   ] = useDisclosure(false);
   const { data, isLoading } = useGetWaFlows();
 
-  console.log(data, "flows test.....");
+  let componentToBeRendered = null;
+  if (data && data.length) {
+    componentToBeRendered = <FlowCardsList flowObjsArray={data} />;
+  } else if (data && !data.length) {
+    componentToBeRendered = <NothingFound text="No Flows Available" />;
+  }
+
   return (
     <Box className={styles["flows-list-page-container"]}>
       <Box className={styles["flows-list-header"]}>
@@ -27,6 +35,7 @@ function Flows() {
 
       <Box className={styles["flows-list-div"]}>
         <LoadingOverlay visible={isLoading} />
+        {componentToBeRendered}
       </Box>
 
       <CreateFlowModal

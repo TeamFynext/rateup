@@ -1,6 +1,6 @@
 import { Box, Button, Modal, MultiSelect, TextInput } from "@mantine/core";
 import styles from "./CreateFlowModal.module.css";
-import { flowsCategories } from "./constants";
+import { flowsCategories } from "../constants";
 import { useForm } from "@mantine/form";
 import { useCallback } from "react";
 import { useCreateFlowMutation } from "../../../../backend/whatsapp/flows/waFlows.query";

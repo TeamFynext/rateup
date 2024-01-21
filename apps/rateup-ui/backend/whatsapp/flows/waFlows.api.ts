@@ -8,6 +8,15 @@ export const getWaFlows = async () => {
   return res.data;
 };
 
+export const getWaSingleFlow = async (flowId) => {
+  if (flowId) {
+    const res = await axiosClient.get(`${flowsUrl}/${flowId}`);
+    return res.data;
+  } else {
+    return null;
+  }
+};
+
 export const createWaFlow = async (obj) => {
   const { body } = obj;
   const res = await axiosClient.post(flowsUrl, body);
