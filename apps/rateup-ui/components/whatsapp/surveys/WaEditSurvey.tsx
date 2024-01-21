@@ -48,8 +48,8 @@ export function EditWhatsappSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} gap={10} className={classes.root} p={"xs"}>
-      <PaperLayout style={{ flex: 2 }} p={0}>
+    <Flex w={"100%"} h={"100%"} p={2} gap={10} className={classes.root}>
+      <PaperLayout style={{ flex: 2 }}>
         <QuestionsSideBar
           setSelectedLanguage={setSelectedLanguage}
           surveyLanguages={surveyLanguages}

@@ -330,7 +330,7 @@ export function WaQuestionDetailedView({
           <ActionIcon
             style={{
               position: "absolute",
-              right: "0",
+              right: "-16px",
               top: "20%",
               borderRadius: "100px",
               borderTopRightRadius: "0px",
