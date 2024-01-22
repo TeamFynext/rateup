@@ -136,7 +136,7 @@ function SurveyTheme({ survey }) {
     editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
   };
   return (
-    <Flex w={"100%"} p={2} gap={5}>
+    <Flex w={"100%"} h={"100%"} p={2} gap={5}>
       <PaperLayout style={{ flex: 0.7 }}>
         <Stack h="100%">
           <LoadingOverlay visible={IsLoading} overlayProps={{ blur: 2 }} />
@@ -167,6 +167,7 @@ function SurveyTheme({ survey }) {
               h={"100%"}
               mah={isMobileView ? 650 : 1000}
               w={isMobileView ? 300 : "100%"}
+              mih={"60vh"}
             >
               <WelcomePageView
                 setSelectedType={setSelectedType}

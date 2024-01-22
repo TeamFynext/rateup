@@ -24,7 +24,7 @@ function Menus() {
         <meta property="og:title" content="Rateup - Digital Menu" />
         <meta
           property="og:description"
-          content="Rateup - Experience quick, delicious dining with our digital menus."
+          content="Digital menu, Innovative menu solutions, Personalized menu designs"
         />
         <meta
           property="og:image"

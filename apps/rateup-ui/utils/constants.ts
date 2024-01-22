@@ -42,6 +42,7 @@ export const OtherQuestions = [
   QuestionType.MSQ,
   QuestionType.DDSS,
   QuestionType.DDMS,
+  QuestionType.PCQ,
 ];
 
 export const WaOtherQuestions = [
@@ -85,6 +86,7 @@ export const mimeTypesForImage: { [key: string]: string } = {
   png: "image/png",
   gif: "image/gif",
   webp: "image/webp",
+  svg: "application/svg+xml",
 };
 
 export const MAX_FILE_SIZE_IN_MB = 10;

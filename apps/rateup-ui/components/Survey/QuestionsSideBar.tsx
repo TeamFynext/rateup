@@ -12,7 +12,6 @@ import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { IconPlus } from "@tabler/icons-react";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import styles from "./QuestionsSideBar.module.css";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -89,14 +88,9 @@ export function QuestionsSideBar({
   });
 
   return (
-    <Stack
-      style={{ height: "100%" }}
-      className={`${styles["questions-sidebar-div"]} ${
-        !items?.length ? styles["no-questions"] : ""
-      } ${items?.length ? styles["with-questions"] : ""} `}
-    >
+    <Stack style={{ height: "100%" }}>
       {questionsState?.length > 0 && (
-        <Stack className={styles["items-add-question-btn-container"]}>
+        <Stack>
           <RateupButtonBlue
             onClick={handleAddQn}
             title={"Add Question"}
@@ -104,7 +98,7 @@ export function QuestionsSideBar({
             size="md"
             fullWidth
           />
-          <Divider color="gray.2" />
+          <Divider my="sm" color="gray.2" />
         </Stack>
       )}
 
@@ -121,31 +115,28 @@ export function QuestionsSideBar({
       >
         {!questionsState?.length && (
           <Paper
-            className={styles["no-items-add-question-btn-container"]}
+            style={{ cursor: "pointer", marginTop: "200px" }}
             onClick={handleAddQn}
           >
-            <Stack
-              align="center"
-              className={styles["plus-sign-add-question-btn-container"]}
-            >
-              <IconPlus size={36} />
-              <Text size="xl" fw={700}>
-                Add Question
-              </Text>
-            </Stack>
+            <Center h="100%">
+              <Stack align="center">
+                <IconPlus size={36} />
+                <Text size="xl" fw={700}>
+                  Add Question
+                </Text>
+              </Stack>
+            </Center>
           </Paper>
         )}
 
-        <ScrollArea className={styles["questions-container"]}>
-          <Droppable droppableId="dnd-list" direction="vertical">
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef}>
-                {items}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </ScrollArea>
+        <Droppable droppableId="dnd-list" direction="vertical">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef}>
+              {items}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
       </DragDropContext>
     </Stack>
   );

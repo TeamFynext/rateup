@@ -15,8 +15,9 @@ export function EmailPhoneForm() {
   const emailRef = useRef(null);
 
   return (
-    <Stack>
+    <Stack w={"100%"}>
       <Paper
+        w="100%"
         shadow="sm"
         className={classes.inputBox}
         onClick={() => emailRef.current.focus()}
@@ -27,7 +28,6 @@ export function EmailPhoneForm() {
             ref={emailRef}
             value={response?.email}
             onChange={handleEmailChange}
-            style={{ maxWidth: "400px" }}
             variant="unstyled"
             classNames={{
               input: classes.input,
@@ -38,7 +38,7 @@ export function EmailPhoneForm() {
         </Group>
       </Paper>
 
-      <Paper mt="xs" shadow="sm" className={classes.inputBox}>
+      <Paper mt="xs" shadow="sm" className={classes.inputBox} w={"100%"}>
         <PhoneInput
           defaultCountry="IN"
           international

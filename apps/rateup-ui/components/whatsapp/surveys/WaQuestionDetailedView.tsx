@@ -48,6 +48,7 @@ import {
 } from "../../../utils/questions";
 import { WhatsappChatPreview } from "./WaChatPreview";
 import { LanguageCompletionView } from "../../Survey/Question/LanguageCompletionView";
+import TestimonialExtraProps from "../../Survey/Question/TestimonialExtraProps";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -199,6 +200,7 @@ export function WaQuestionDetailedView({
               flex: 1,
             }}
             gap={0}
+            p={"sm"}
           >
             {enableTitle && (
               <Textarea
@@ -328,7 +330,7 @@ export function WaQuestionDetailedView({
           <ActionIcon
             style={{
               position: "absolute",
-              right: "0",
+              right: "-16px",
               top: "20%",
               borderRadius: "100px",
               borderTopRightRadius: "0px",
@@ -386,6 +388,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.DDMS:
     case QuestionType.CustomNPS:
       return <ChoicesCreator qId={question.id} form={form} />;
+    case QuestionType.Testimonial:
+      return <TestimonialExtraProps qId={question.id} form={form} />;
     case QuestionType.WaButtons:
       return (
         <ChoicesCreator

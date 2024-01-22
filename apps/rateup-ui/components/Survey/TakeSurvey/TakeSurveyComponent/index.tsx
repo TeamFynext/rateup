@@ -72,14 +72,15 @@ import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { PCQForm } from "./QuestionForms/PCQForm";
 
-function TakeSurvey() {
+function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
@@ -99,7 +100,6 @@ function TakeSurvey() {
   const router = useRouter();
 
   if (!selectedLanguage) throw new Error("No language selected");
-
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
@@ -132,14 +132,14 @@ function TakeSurvey() {
     }
   }, [survey]);
 
-  if (isLoading) {
+  if (!survey) {
     return (
       <Center style={{ height: "100vh" }}>
         <Loader />
       </Center>
     );
   }
-  if (isError || !selectedQ) {
+  if (!selectedQ) {
     return (
       <Center style={{ height: "100vh" }}>
         <Text fw={500}>
@@ -271,8 +271,20 @@ function TakeSurvey() {
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
-        ? router.push(`${surveyId}/end?k=${kioskMode}&msg=thanks`)
-        : router.push(`${surveyId}/end?k=${kioskMode}`);
+        ? router.push(
+            `${surveyId}/end?k=${kioskMode}${
+              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
+                ? `&sid=${survey.id}`
+                : ``
+            }&msg=thanks`,
+          )
+        : router.push(
+            `${surveyId}/end?k=${kioskMode}${
+              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
+                ? `&sid=${survey.id}`
+                : ``
+            }`,
+          );
     });
   };
 
@@ -322,6 +334,9 @@ function TakeSurvey() {
               className: classes["modal-overlay"],
             }}
             classNames={modalStyles}
+            styles={{
+              content: { background: "white" },
+            }}
           >
             <Flex className={modalStyles["modal-body-content-container"]}>
               <Stack pb="xl">
@@ -428,12 +443,10 @@ function TakeSurvey() {
                                   return (
                                     <Stack>
                                       <Group>
-                                        {" "}
                                         <Text fw="400">Email: </Text>{" "}
                                         <Text fw="300">{contact.email}</Text>{" "}
                                       </Group>
                                       <Group mt="-10px">
-                                        {" "}
                                         <Text fw="400">Phone: </Text>{" "}
                                         <Text fw="300">{contact.phone}</Text>{" "}
                                       </Group>
@@ -447,6 +460,24 @@ function TakeSurvey() {
                                     response?.response,
                                   )[0];
                                   return <Text>{selectedChoice?.value}</Text>;
+                                case Q.PCQ:
+                                  let selectedPictureChoice = Object.values(
+                                    response?.response,
+                                  )?.[0]?.value;
+                                  return (
+                                    <Stack gap={0} align="center">
+                                      <Image
+                                        src={getFileUrlFromKey(
+                                          selectedPictureChoice?.image,
+                                        )}
+                                        w={50}
+                                        style={{ aspectRatio: 4 / 3 }}
+                                      />
+                                      <Text>
+                                        {selectedPictureChoice?.value}
+                                      </Text>
+                                    </Stack>
+                                  );
                                 default:
                                   return JSON.stringify(
                                     Object.values(response?.response)[0],
@@ -489,7 +520,7 @@ function TakeSurvey() {
             <LoadingOverlay
               visible={isSavingResponses}
               zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 2 }}
+              overlayProps={{ radius: "sm", blur: 10 }}
             />
             <Stack>
               <Stack style={{ minHeight: "45vh" }} justify="center">
@@ -502,6 +533,7 @@ function TakeSurvey() {
                 prev={handlePrev}
                 num={QnNo}
                 total={questionCount}
+                survey={survey}
               />
             </Stack>
           </Box>
@@ -631,14 +663,16 @@ function getQuestionForm(type, selectedQ) {
       return <DateForm key={selectedQ?.id} />;
     case Q.CustomNPS:
       return <CustomNPSForm key={selectedQ?.id} />;
+    case Q.PCQ:
+      return <PCQForm key={selectedQ?.id} />;
     default:
       return <div>not implemented</div>;
   }
 }
 
-function NextPrev({ prev, next, num, total }) {
+function NextPrev({ prev, next, num, total, survey }) {
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
 
@@ -651,7 +685,7 @@ function NextPrev({ prev, next, num, total }) {
     // TODO: check if rebase was done correctly
     if (
       ((selectedQ?.required && response) || response?.length > 0) &&
-      selectedQ?.type === Q.Email
+      selectedQ?.type === Q.Email //for email input
     ) {
       if (emailPattern.test(response)) {
         setIsErrorInput(false);
@@ -662,7 +696,7 @@ function NextPrev({ prev, next, num, total }) {
       }
     } else if (
       ((selectedQ?.required && response) || response?.length > 0) &&
-      selectedQ?.type === Q.Phone
+      selectedQ?.type === Q.Phone //for phone input
     ) {
       if (isValidPhoneNumber(response)) {
         setIsErrorInput(false);
@@ -675,48 +709,38 @@ function NextPrev({ prev, next, num, total }) {
       ((selectedQ?.required && response) ||
         response?.email?.length > 0 ||
         response?.phone?.length) &&
-      selectedQ?.type === Q.EmailPhone
+      selectedQ?.type === Q.EmailPhone //for contact qn - both email, phone
     ) {
       const { email, phone } = response;
+
+      const isEmailValid = emailPattern.test(email || "");
+      const isPhoneValid = isValidPhoneNumber(phone || "");
 
       if (
         selectedQ?.required &&
         (response?.email?.length < 1 || response?.phone?.length < 1)
       ) {
         setIsErrorInput(true);
-        setErrorMsg("Enter a valid email / phone");
-      }
-
-      if (selectedQ?.required || email?.length > 0 || phone?.length > 0) {
-        if (response?.email?.length > 0 || selectedQ?.required) {
-          if (email && emailPattern.test(email)) {
-            setErrorMsg("");
-            setIsErrorInput(false);
-          } else {
-            setErrorMsg("Enter a valid email");
-            setIsErrorInput(true);
-          }
+        setErrorMsg("Please input all fields");
+      } else if (selectedQ?.required && (!isEmailValid || !isPhoneValid)) {
+        setIsErrorInput(true);
+        if (!isEmailValid && !isPhoneValid) {
+          setErrorMsg("Enter a valid email and phone");
+        } else if (!isEmailValid) {
+          setErrorMsg("Enter a valid email");
+        } else {
+          setErrorMsg("Enter a valid phone number");
         }
-
-        if (phone?.length > 0 || selectedQ?.required) {
-          if (phone && isValidPhoneNumber(phone)) {
-            email?.length > 0 && !emailPattern.test(email)
-              ? setErrorMsg("Enter a valid email")
-              : setErrorMsg("");
-            email?.length > 0 && !emailPattern.test(email)
-              ? setIsErrorInput(true)
-              : setIsErrorInput(false);
-          } else {
-            if (!(email && emailPattern.test(email))) {
-              setIsErrorInput(true);
-              setErrorMsg("Enter a valid email / phone");
-            } else {
-              if (phone?.length > 0 && !isValidPhoneNumber(phone)) {
-                setIsErrorInput(true);
-                setErrorMsg("Enter a valid phone");
-              }
-            }
-          }
+      } else if (
+        !selectedQ?.required &&
+        ((email?.length > 0 && !isEmailValid) ||
+          (phone?.length > 0 && !isPhoneValid))
+      ) {
+        setIsErrorInput(true);
+        if (email?.length > 0 && !isEmailValid) {
+          setErrorMsg("Enter a valid email");
+        } else {
+          setErrorMsg("Enter a valid phone number");
         }
       } else {
         setErrorMsg("");
@@ -783,7 +807,7 @@ function NextPrev({ prev, next, num, total }) {
     return completionPercentage;
   }
 
-  if (isLoading || isError) return null;
+  if (!survey) return null;
   const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
   const isLastQuestion =
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
@@ -799,7 +823,7 @@ function NextPrev({ prev, next, num, total }) {
     >
       {selectedQ?.required && !response && (
         <Text c="gray" mb="md" size={isMobile && "sm"}>
-          Note: * Must attend to continue with next.
+          *Choose an option or answer to proceed!
         </Text>
       )}
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
@@ -811,7 +835,7 @@ function NextPrev({ prev, next, num, total }) {
           leftIcon={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
           onClick={prev}
-          color="dark"
+          color="blue"
         />
         <Center>
           <RingProgress
@@ -845,7 +869,7 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="blue"
             rightSection={<IconChevronRight />}
           >
             Submit
@@ -860,7 +884,7 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="blue"
             rightSection={<IconChevronRight />}
           >
             Next

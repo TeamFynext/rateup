@@ -1,7 +1,5 @@
 import { Paper, PaperProps } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import styles from "./PaperLayout.module.css";
-
 interface PaperLayoutProps extends PaperProps {
   hoveractive?: boolean;
   selected?: boolean;
@@ -11,18 +9,24 @@ interface PaperLayoutProps extends PaperProps {
 export default function PaperLayout(props: PaperLayoutProps) {
   const { hovered, ref } = useHover();
   let { hoveractive, selected = true, ...restProps } = props;
-
-  const propsClassname = restProps.className ? restProps.className : "";
-  const selectedClassName = selected ? styles["selected"] : "";
-  const hoveredClassName = hovered && hoveractive ? styles["hovered"] : "";
-  const className = `${propsClassname} ${styles["paper-layout-component-div"]} ${selectedClassName} ${hoveredClassName}`;
   return (
     <Paper
       ref={ref}
       radius="lg"
+      p="md"
       {...restProps}
-      className={className}
       style={{
+        boxSizing: "border-box",
+        boxShadow: selected
+          ? "rgba(0, 0, 0, 0.05) 0px 1px 0px, rgba(0, 0, 0, 0.11) 0px 0px 8px"
+          : "initial",
+        width: "100%",
+        overflow: "auto",
+        border:
+          hovered && hoveractive
+            ? "2px solid var(--hover-border-color)"
+            : "2px solid var(--primary-color)",
+        cursor: hoveractive ? "pointer" : "default",
         ...props?.style,
       }}
     />

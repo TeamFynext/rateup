@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import { Blockquote, LoadingOverlay, Stack } from "@mantine/core";
+import { Blockquote, LoadingOverlay, NavLink, Stack } from "@mantine/core";
 import { useCreateMenuItemUsingCsvMutation } from "../../../backend/menu/item/mItem.query";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import { DropZoneArea } from "./dropZone/DropZone";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 
 const CategoryItemCsvModal = ({ opened, close, menuId }) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -46,6 +47,15 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
           Utilizing CSV file uploads to generate menu items requires specific
           fields in the file: "categoryname," "name," "description," and
           "price."
+          <NavLink
+            href={getFileUrlFromKey("/File/menu/Demo.csv", false)}
+            label="Download Demo Csv File"
+            leftSection={<IconDownload size="1rem" stroke={1.5} />}
+            download
+            active
+            style={{ borderRadius: "4px" }}
+            target="_blank"
+          />
         </Blockquote>
         <DropZoneArea setCsvFile={setCsvFile} />
       </Stack>

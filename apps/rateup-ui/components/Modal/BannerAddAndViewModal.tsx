@@ -120,8 +120,8 @@ export const BannerAddAndViewModal = ({
       radius={"lg"}
       title={
         <Stack pl={"xl"} gap={0}>
-          <Title order={2}>Manage Banners</Title>
-          <Text fz={"lg"} c={"var(--grey-color-4)"}>
+          <Title order={3}>Manage Banners</Title>
+          <Text fz={"md"} c={"var(--grey-color-4)"}>
             you can add 4 Banners
           </Text>
         </Stack>
@@ -167,7 +167,7 @@ export const BannerAddAndViewModal = ({
           </Stack>
         ) : (
           <>
-            <Group justify="space-between">
+            <Group justify="space-between" mt={2}>
               <RateupButtonBlue
                 title="Add Bannerss"
                 rightIcon={<IconPlus />}

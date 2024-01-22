@@ -27,6 +27,11 @@ import { useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
+import "react-phone-number-input/style.css";
+import styles from "./setting.module.css";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -57,10 +62,7 @@ const OrgSettings = () => {
         return null; // Validation passed
       },
       phone: (value) => {
-        const regex = /^[0-9]+$/;
-        if (!regex.test(value)) {
-          return "Only numbers allowed";
-        }
+        if (!value || !isValidPhoneNumber(value)) return "Invalid phone number";
         return null;
       },
     },
@@ -70,7 +72,7 @@ const OrgSettings = () => {
     setIsLoading(true);
     const data = {
       name: values.name,
-      phone: values?.phone ?? "",
+      phone: values?.phone?.slice(1) ?? "",
       address: values?.address ?? "",
     };
     orgDetailsUpdate.mutate(data);
@@ -112,9 +114,10 @@ const OrgSettings = () => {
       setAvatarSrc("");
     }
     if (user) {
+      const phone = user?.orgPhone ? "+" + user?.orgPhone : null;
       orgForm.setValues({
         name: user?.orgName ?? "",
-        phone: user?.orgPhone ?? "",
+        phone: phone ?? "",
         address: user?.orgAddress ?? "",
       });
     }
@@ -188,7 +191,7 @@ const OrgSettings = () => {
             <Text size={"28px"} fw={500}>
               {user?.orgName ?? "Organization"}
             </Text>
-            <Text> {user?.orgPhone ?? "Phone"}</Text>
+            <Text> {user?.orgPhone ? "+" + user?.orgPhone : "Phone"}</Text>
             <Text size="sm">{user?.orgAddress ?? "Adress"}</Text>
           </Stack>
         </Flex>
@@ -218,14 +221,21 @@ const OrgSettings = () => {
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 4 }}>
-                <ContainedTextField
-                  withAsterisk
-                  label="Phone with country code"
+                <Text fz={12} c={"#495057"} mt={6}>
+                  Phone Number
+                </Text>
+                <PhoneInputWithCountrySelect
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
                   placeholder="Enter your organization phone number"
+                  value={orgForm?.values?.phone || null}
                   {...orgForm?.getInputProps("phone")}
-                  leftSection={<IconPlus size={"1rem"} color="#373A40" />}
-                  maxLength={15}
+                  className={styles.inputPhone}
                 />
+                <Text size="sm" c={"red"}>
+                  {orgForm?.errors?.phone}
+                </Text>
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 6 }}>
                 <ContainedTextField

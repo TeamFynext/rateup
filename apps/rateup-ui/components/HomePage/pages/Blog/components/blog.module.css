@@ -1,0 +1,158 @@
+.main-page-top-title-container {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-break: loose;
+  font-size: 45px;
+  font-weight: 700;
+  line-height: 70px;
+  color: #06429c;
+  text-align: center;
+}
+
+.main-page-top-subtitle-container {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: cornflowerblue;
+  margin-right: 8rem;
+  margin-left: 8rem;
+  text-align: center;
+  font-size: 20px;
+}
+
+.main-page-top-container {
+  border-radius: 25px;
+  color: white;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/homepage/rateup-star-svg-path.svg"),
+    linear-gradient(90deg, #3c75b6, #0b56ac);
+  background-repeat: no-repeat, no-repeat;
+  padding: 3rem 1rem;
+}
+
+.image-container {
+  margin-top: 5rem;
+  margin-bottom: 3rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 30px;
+}
+
+.heropost-cover-image-container {
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  margin-left: 2rem;
+  border-radius: 30px;
+  width: 100%;
+  height: 100%;
+}
+
+.heropost-left-container {
+  margin-bottom: 8rem;
+  margin-left: 2rem;
+  margin-right: 2rem;
+  margin-top: 8rem;
+}
+
+.heropost-spotlight {
+  color: antiquewhite;
+}
+
+.heropost-title-container {
+  font-size: 35px;
+  color: antiquewhite;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+}
+
+.main-page-featured-reads-container {
+  line-break: loose;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 70px;
+  color: #06429c;
+  text-align: center;
+}
+
+.sub-article-image-and-link {
+  margin-bottom: 1rem;
+}
+
+.sub-article-titles {
+  line-break: loose;
+  color: black;
+  margin-bottom: 4rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  font-size: 20px;
+}
+
+.sub-article-titles-link {
+  color: black;
+}
+
+.blog-page-main-title-container {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-break: loose;
+  font-size: 45px;
+  font-weight: 700;
+  line-height: 70px;
+  color: #06429c;
+  text-align: center;
+}
+
+text.content {
+  text-align: justify;
+  color: chocolate;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.heropost-link-bottom-container {
+  margin-bottom: 5rem;
+  margin-top: 2rem;
+}
+
+.page-last-explore-all-btn {
+  display: flex;
+  margin-bottom: 5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.explore-all-stories-container {
+  margin-top: 3rem;
+  margin-bottom: 5rem;
+  margin-left: 2rem;
+  margin-right: 10rem;
+}
+
+.explore-all-title-container {
+  margin-top: 10rem;
+  margin-bottom: 3rem;
+  line-break: loose;
+  font-size: 45px;
+  font-weight: 700;
+  line-height: 70px;
+  color: #06429c;
+  text-align: center;
+  margin-left: 6rem;
+  margin-right: 6rem;
+}
+
+.explore-all-stories-page-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-left: 8rem;
+  margin-right: 8rem;
+}
+
+.post-container {
+  width: calc(30% - 16px);
+  margin: 8px;
+}
