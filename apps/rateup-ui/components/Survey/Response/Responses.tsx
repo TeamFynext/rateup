@@ -79,6 +79,7 @@ const Responses = ({
   const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoadingResponses, setIsLoadingResponses] = useState(true);
 
   const hasContactQuestion =
     responses &&
@@ -103,6 +104,14 @@ const Responses = ({
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsLoadingResponses(false);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     setResponseCount(responses?.length);
@@ -231,6 +240,7 @@ const Responses = ({
 
   if (isQLoading) return <Loader />;
   if (QError) return <Text>An error has occurred</Text>;
+  if (isLoadingResponses) return <Loader />;
 
   return (
     <Stack className={styles["responses-container"]}>
