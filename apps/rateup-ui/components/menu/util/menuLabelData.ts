@@ -5,6 +5,7 @@ export const menuLabelWithText = [
   { label: "Gluten-free", image: "/images/menu-label/glutten.svg" },
   { label: "Meat", image: "/images/menu-label/meat.svg" },
   { label: "Milk", image: "/images/menu-label/milk_and_diary.svg" },
+  { label: "Non-Vegetarian", image: "/images/menu-label/non-veg.svg" },
   { label: "Peanut", image: "/images/menu-label/peanut.svg" },
   { label: "Pork", image: "/images/menu-label/pork.svg" },
   { label: "Poultry", image: "/images/menu-label/poultry.svg" },
@@ -12,7 +13,7 @@ export const menuLabelWithText = [
   { label: "Shellfish", image: "/images/menu-label/crustaceans.svg" },
   { label: "Soy", image: "/images/menu-label/soya.svg" },
   { label: "Tree nuts", image: "/images/menu-label/nuts.svg" },
-  { label: "Non-Vegetarian", image: "/images/menu-label/non-veg.svg" },
+  { label: "vegan", image: "/images/menu-label/vegan.svg" },
   { label: "Vegetarian", image: "/images/menu-label/veg.svg" },
   { label: "Wheat", image: "/images/menu-label/wheat.svg" },
 ];

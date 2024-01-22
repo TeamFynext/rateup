@@ -20,7 +20,7 @@ import {
 import { Data } from "../../../../../types/global";
 import Link from "next/link";
 import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
-import { lexend300 } from "../../../../../utils/fonts";
+import { lexend } from "../../../../../utils/fonts";
 import Head from "next/head";
 import { fallbackImage } from "../../../../../utils/constants";
 
@@ -64,7 +64,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     <Stack
       gap={0}
       maw={largeScreen ? "2440px" : "768px"}
-      ff={lexend300.style.fontFamily}
+      ff={lexend.style.fontFamily}
     >
       <Head>
         <title>{`Rateup - Welcome to ${menuLanding?.menu?.displayName}`}</title>
@@ -136,7 +136,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   : "clamp(15.008px, 5.008px + 1.667vw, 29.008px)"
               }
               fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
-              c={menuLanding?.headerStyle?.color ?? "inherit"}
+              c={menuLanding?.headerStyle?.color ?? "white"}
               truncate
               mt={10}
             >
@@ -149,7 +149,7 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
                   : "clamp(27.008px, -10.864px + 6.31vw,52px )"
               }
               fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
-              c={menuLanding?.titleStyle?.color ?? "inherit"}
+              c={menuLanding?.titleStyle?.color ?? "white"}
               ta={"center"}
             >
               {menuLanding?.menu?.displayName}

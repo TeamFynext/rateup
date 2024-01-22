@@ -1,5 +1,6 @@
 import React from "react";
-import { HoverCard, Text } from "@mantine/core";
+import { HoverCard, Image, Text } from "@mantine/core";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 
 export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
   return (
@@ -11,9 +12,13 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
       position="bottom-start"
     >
       <HoverCard.Target>
-        <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
-          {content}
-        </Text>
+        {typeof content === "object" ? (
+          <Image src={getFileUrlFromKey(content?.value?.image)} w={30} />
+        ) : (
+          <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
+            {content}
+          </Text>
+        )}
       </HoverCard.Target>
       <HoverCard.Dropdown>
         <Text
@@ -23,7 +28,25 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
             wordBreak: "break-word",
           }}
         >
-          {content}
+          {typeof content === "object" ? (
+            <>
+              <Image src={getFileUrlFromKey(content?.value?.image)} w={200} />
+              <Text
+                c="dark.3"
+                truncate="end"
+                miw={200}
+                maw={200}
+                fw={fw}
+                fz={fz}
+              >
+                {content?.value?.value}
+              </Text>
+            </>
+          ) : (
+            <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
+              {content}
+            </Text>
+          )}
         </Text>
       </HoverCard.Dropdown>
     </HoverCard>
