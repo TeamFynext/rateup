@@ -8,14 +8,13 @@ type Props = {
   slug?: string;
 };
 
-const CoverImages = ({ title, src, slug }: Props) => {
+const CoverImage = ({ title, src, slug }: Props) => {
   const image = (
     <Image
       src={src}
       alt={`Cover Image for ${title}`}
       fit="contain"
-      h={200}
-      w="auto"
+      h={450}
       className={styles["image-container"]}
     />
   );
@@ -32,4 +31,4 @@ const CoverImages = ({ title, src, slug }: Props) => {
   );
 };
 
-export default CoverImages;
+export default CoverImage;

@@ -31,6 +31,9 @@ export function getPostBySlug(slug: string, fields: string[] = []): PostType {
     if (field === "content") {
       items[field] = content;
     }
+    if (field === "coverImage") {
+      items[field] = data[field];
+    }
 
     if (typeof data[field] !== "undefined") {
       items[field] = data[field];
