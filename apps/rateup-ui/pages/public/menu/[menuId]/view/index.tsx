@@ -6,6 +6,8 @@ import {
   Text,
   Image,
   BackgroundImage,
+  Box,
+  ScrollArea,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -206,23 +208,19 @@ export default function ({ fullMenu, menuBanner }) {
         <ActionIcon onClick={open} variant="transparent">
           <IconMenu2 color="var(--grey-color)" />
         </ActionIcon>
-        <Group
-          wrap="nowrap"
-          style={{
-            overflowX: "scroll",
-          }}
-          gap={largeScreen ? "sm" : 0}
-        >
-          {categoryChipLabel?.map((c) => (
-            <CategoryChip
-              key={c.id}
-              categoryId={c.id}
-              name={c.name}
-              selected={selectedCategory === c.id}
-              onClick={handleCategoryChipClick}
-            />
-          ))}
-        </Group>
+        <ScrollArea h={"min-content"} w={"100vw"} py={2}>
+          <Box w={"max-content"}>
+            {categoryChipLabel?.map((c) => (
+              <CategoryChip
+                key={c.id}
+                categoryId={c.id}
+                name={c.name}
+                selected={selectedCategory === c.id}
+                onClick={handleCategoryChipClick}
+              />
+            ))}
+          </Box>
+        </ScrollArea>
       </Group>
 
       <Stack px={"5.8vw"} mih={"45vh"}>

@@ -154,7 +154,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
         </Flex>
         <Badge variant="dot">{type}</Badge>
       </Flex>
-      <Group justify="center">
+      <Group justify="space-evenly" align="center">
         <PaperLayout w={"fit-content"}>
           <Stack align="center">
             <Heading
@@ -166,7 +166,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
             </Text>
           </Stack>
         </PaperLayout>
-        <Group style={{ flex: 1 }} align="center" justify="space-evenly">
+        <Group align="center" gap={"sm"}>
           <Stack gap={0} align="center" w={250}>
             <RingProgress
               sections={[
