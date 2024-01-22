@@ -5,10 +5,12 @@ import { menuLabelWithText } from "../../util/menuLabelData";
 type MenuFoodLabelBadgeProps = {
   foodLabels: string[];
   p?: string | number;
+  label?: boolean;
 };
 const MenuFoodLabelBadge = ({
   foodLabels = [],
   p = "xs",
+  label = true,
 }: MenuFoodLabelBadgeProps) => {
   const response = foodLabels?.map((data: string) => (
     <Badge variant="light" color="blue" key={data} p={p}>
@@ -19,7 +21,7 @@ const MenuFoodLabelBadge = ({
           h={15}
           w={15}
         />
-        {data}
+        {label && data}
       </Flex>
     </Badge>
   ));

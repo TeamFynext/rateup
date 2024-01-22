@@ -105,7 +105,7 @@ export const useUpdateSortOrderMenuCategoryMutation = (
       updateSortOrderMenuCategory(menuId, menuCategory),
     onSuccess: () => {
       showSuccessToast("Menu category updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-category", menuId] });
       onSuccess();
     },
   });
