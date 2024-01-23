@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   deleteUploadedFileController,
   uploadController,
+  uploadWithThumbnailsController,
 } from "./fileUpload.controller";
 import { $Iref } from "./fileUpload.schema";
 import FastifyMultipart from "@fastify/multipart";
@@ -23,6 +24,16 @@ export async function fileUploadPublicRoutes(server: FastifyInstance) {
     },
     uploadController,
   );
+  server.post(
+    "/fileWithThumb",
+    {
+      schema: {
+        consumes: ["multipart/form-data"],
+      },
+    },
+    uploadWithThumbnailsController,
+  );
+
   server.put(
     "/file/delete",
     {
