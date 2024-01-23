@@ -125,3 +125,15 @@ export enum SubscriptionFeaturePathName {
   Team = "team",
   TeamMember = "team.teamMember",
 }
+
+export enum PaymentType {
+  BASE = "BASE",
+  ADDON = "ADDON",
+}
+
+export enum PaymentPlanStatus {
+  NULL = "NULL",
+  LIVE = "LIVE",
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}

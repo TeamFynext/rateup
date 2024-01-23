@@ -43,6 +43,7 @@ export const RateupButtonPrimary = ({
   size,
   color,
   gradient,
+  className,
 }: Props) => {
   return (
     <Button
@@ -62,6 +63,7 @@ export const RateupButtonPrimary = ({
       fw={400}
       color={color}
       gradient={gradient}
+      className={className}
     >
       {title}
     </Button>

@@ -18,6 +18,10 @@ import {
   rem,
   MultiSelect,
   MultiSelectProps,
+  TagsInputProps,
+  TagsInput,
+  JsonInputProps,
+  JsonInput,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
 import { TimeInput, TimeInputProps } from "@mantine/dates";
@@ -91,6 +95,34 @@ export function ContainedMultiSelect(props: MultiSelectProps) {
           borderRadius: "12px",
         },
       }}
+    />
+  );
+}
+
+export function ContainedTagInput(props: TagsInputProps) {
+  return (
+    <TagsInput
+      styles={{
+        input: {
+          borderRadius: "12px",
+          minHeight: "45px",
+        },
+      }}
+      {...props}
+    />
+  );
+}
+
+export function ContainedJsonInput(props: JsonInputProps) {
+  return (
+    <JsonInput
+      classNames={classes}
+      {...props}
+      validationError="Invalid JSON"
+      formatOnBlur
+      autosize
+      minRows={1.7}
+      maxRows={4}
     />
   );
 }

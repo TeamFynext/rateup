@@ -7,6 +7,17 @@ export const sampleChoices = [
   { value: "option4" },
 ];
 
+export const widgetIds = [
+  "essential-yearly",
+  "essential-monthly",
+  "plus-yearly",
+  "plus-monthly",
+  "digital-menu-monthly",
+  "digital-menu-yearly",
+  "digital-menu-pro-monthly",
+  "digital-menu-pro-yearly",
+];
+
 export const samplePictureChoices = [
   { value: { value: "option1", image: fallbackImage } },
   { value: { value: "option2", image: fallbackImage } },

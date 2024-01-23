@@ -469,12 +469,19 @@ declare global {
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
   }
+  interface SPlan {
+    id: string;
+    name: string;
+  }
   interface Subscription {
     orgId: string;
     features: SubscriptionFeatures;
     expiresAt: Date;
     renewedAt?: Date;
     createdAt: Date;
+    basePlan: SPlan;
+    id?: string;
+    paymentPlanId?: string;
   }
   type Org = {
     id: string;

@@ -1,0 +1,54 @@
+import { axiosClient } from "../apiClient";
+
+const PLAN_URL = "/payment/plans";
+const SUBSCRIPTION_URL = "/payment/subscriptions";
+const PAYMENT_URL = "/payment/";
+const PAYMENT_PUBLIC_URL = "/public/payment/";
+
+export const getAllPaymentPlans = async () =>
+  (await axiosClient.get(`${PLAN_URL}`)).data;
+
+export const getAllRateupPaymentPlans = async () =>
+  (await axiosClient.get(`${PAYMENT_PUBLIC_URL}rateup-plans`)).data;
+
+export async function syncRazorPayPlans() {
+  return (await axiosClient.post(`/payment/sync-plans`)).data;
+}
+export async function createRateupPaymentPlan(data) {
+  return await axiosClient.post(`${PAYMENT_URL}rateup-plan`, data);
+}
+export async function updateRateupPaymentPlan(data) {
+  return await axiosClient.put(`${PAYMENT_URL}rateup-plan`, data);
+}
+export async function deleteRateupPaymentPlan(id: string) {
+  return await axiosClient.delete(`${PAYMENT_URL}rateup-plan/${id}`);
+}
+export interface ICreateCheckoutType {
+  planId: string;
+  planName: string;
+  period: string;
+  orgId: string;
+}
+
+export async function createCheckoutSession(data: ICreateCheckoutType) {
+  return await axiosClient.post(`/payment/create-checkout-session`, data);
+}
+
+export async function updatePaymentPlan(data) {
+  return await axiosClient.put(`${PAYMENT_URL}updateplans`, data);
+}
+
+export async function getAllPaymentSubscription() {
+  let res = await axiosClient.get(SUBSCRIPTION_URL);
+  return res?.data;
+}
+
+export async function getAllOrdersUserOrg() {
+  let res = await axiosClient.get(`${PAYMENT_URL}org/orders`);
+  return res?.data;
+}
+
+export async function getAllPaymentOrders() {
+  let res = await axiosClient.get(`${PAYMENT_URL}orders/all`);
+  return res?.data;
+}
