@@ -7,11 +7,11 @@ function FlowPageBody(props) {
 
   return (
     <Box className={styles["flow-page-body"]}>
-      <Tabs value={tabState}>
+      <Tabs value={tabState} h={"100%"}>
         {tabPanelsList.map((obj) => {
           const { id, component: Comp, tabValue } = obj;
           return (
-            <Tabs.Panel key={id} value={tabValue}>
+            <Tabs.Panel key={id} value={tabValue} h={"100%"}>
               <Comp {...remaningProps} />
             </Tabs.Panel>
           );
