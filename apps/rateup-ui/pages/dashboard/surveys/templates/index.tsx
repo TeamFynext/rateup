@@ -5,9 +5,7 @@ import {
   Center,
   Flex,
   Group,
-  Image,
   Loader,
-  Modal,
   Paper,
   Stack,
   Text,
@@ -30,6 +28,7 @@ import { notifications } from "@mantine/notifications";
 import { Tooltip as MantineTooltip } from "@mantine/core";
 import FormModalLayout from "../../../../components/Modal/FormModalLayout";
 import { THUMBNAIL_URL } from "../../../../utils/constants";
+import { ImageWithThumb } from "../../../../components/Survey/Template/ImageWithThumb";
 
 const Templates = () => {
   const { user } = useUser();
@@ -79,12 +78,11 @@ const Templates = () => {
         }}
       >
         {survey?.WelcomeTheme?.bgUrl && (
-          <Image
+          <ImageWithThumb
             radius="md"
             fit="fill"
             h={150}
-            src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${THUMBNAIL_URL}${survey?.WelcomeTheme?.bgUrl}`}
-            fallbackSrc={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.WelcomeTheme?.bgUrl}`}
+            src={`${survey?.WelcomeTheme?.bgUrl}`}
           />
         )}
       </Paper>

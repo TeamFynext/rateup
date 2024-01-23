@@ -2,7 +2,6 @@ import {
   Box,
   Center,
   Group,
-  Image,
   Paper,
   ScrollArea,
   SimpleGrid,
@@ -19,7 +18,7 @@ import {
 } from "../Button/RateupButtons";
 import { useRouter } from "next/router";
 import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
-import { THUMBNAIL_URL } from "../../utils/constants";
+import { ImageWithThumb } from "./Template/ImageWithThumb";
 
 const SurveyTemplatesModal = ({
   opened,
@@ -125,12 +124,11 @@ const SurveyTemplatesModal = ({
                                     }}
                                   >
                                     {survey?.WelcomeTheme?.bgUrl && (
-                                      <Image
+                                      <ImageWithThumb
                                         radius="md"
                                         fit="fill"
                                         h={150}
-                                        src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${THUMBNAIL_URL}${survey?.WelcomeTheme?.bgUrl}`}
-                                        fallbackSrc={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.WelcomeTheme?.bgUrl}`}
+                                        src={`${survey?.WelcomeTheme?.bgUrl}`}
                                       />
                                     )}
                                   </Paper>
