@@ -1,0 +1,70 @@
+import { PaymentPlanStatus } from "@prisma/client";
+import { buildJsonSchemas } from "fastify-zod";
+import { z } from "zod";
+import { PaymentPlanType } from "./payment.service";
+
+const createCheckoutRequestSchema = z.object({
+  orgId: z.string({
+    required_error: "Org Id is required",
+  }),
+  planId: z.string({
+    required_error: "Plan Id is required",
+  }),
+  planName: z.string({
+    required_error: "Plan name is required",
+  }),
+  period: z.string({
+    required_error: "Plan Period is required",
+  }),
+  rateupPlanId: z.string({
+    required_error: "Rateup Plan Id is required",
+  }),
+});
+const createRateUpPlanSchema = z.object({
+  name: z.string().trim().min(1),
+  displayName: z.string().trim().min(1),
+  displayWidgetId: z.string().trim().min(1),
+  planType: z.nativeEnum(PaymentPlanType),
+  paymentPlanId: z.string().trim().min(1),
+  description: z.array(z.string()).min(1),
+  features: z.any().optional(),
+});
+
+const updateRateUpPlanSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1).optional(),
+  displayName: z.string().trim().min(1).optional(),
+  displayWidgetId: z.string().trim().min(1).optional(),
+  planType: z.nativeEnum(PaymentPlanType).optional(),
+  paymentPlanId: z.string().trim().min(1).optional(),
+  description: z.array(z.string()).min(1).optional(),
+  features: z.any().optional(),
+});
+
+const rateupPlanParamSchema = z.object({
+  id: z.string(),
+});
+
+export const { schemas: paymentSchemas, $ref: $Pref } = buildJsonSchemas(
+  {
+    createCheckoutRequestSchema,
+    createRateUpPlanSchema,
+    updateRateUpPlanSchema,
+    rateupPlanParamSchema,
+  },
+  { $id: "paymentSchema" },
+);
+
+const updatePlanSchema = z.object({
+  id: z.string(),
+  planId: z.string(),
+  data: z.object({
+    status: z.nativeEnum(PaymentPlanStatus).optional(),
+  }),
+});
+
+export type CreateCheckoutInput = z.infer<typeof createCheckoutRequestSchema>;
+export type createRateUpPlanInput = z.infer<typeof createRateUpPlanSchema>;
+export type updateRateUpPlanInput = z.infer<typeof updateRateUpPlanSchema>;
+export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
+export type rateupPlanParamInput = z.infer<typeof rateupPlanParamSchema>;

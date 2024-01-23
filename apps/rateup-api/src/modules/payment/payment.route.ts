@@ -1,0 +1,97 @@
+import { FastifyInstance } from "fastify";
+import {
+  createCheckoutSessionHandler,
+  createRateUpPlanHandler,
+  deleteRateUpPlanHandler,
+  getAllOrdersByOrg,
+  getAllPaymentOrdersHandler,
+  getAllPaymentPlansHandler,
+  getAllPaymentSubscriptionHandler,
+  syncPaymentPlansHandler,
+  updatePaymentPlanHandler,
+  updateRateUpPlanHandler,
+} from "./payment.controller";
+import { $Pref } from "./payment.schema";
+import { assertRootOrg } from "../../utils/auth";
+import { checkSession } from "../../utils/checkSession";
+
+export async function paymentRoutes(server: FastifyInstance) {
+  server.addHook("preHandler", checkSession);
+
+  server.post("/sync-plans", syncPaymentPlansHandler);
+
+  server.get(
+    "/plans",
+    {
+      preHandler: [assertRootOrg],
+    },
+    getAllPaymentPlansHandler,
+  );
+
+  server.post(
+    "/rateup-plan",
+    {
+      preHandler: [assertRootOrg],
+      schema: {
+        body: $Pref("createRateUpPlanSchema"),
+      },
+    },
+    createRateUpPlanHandler,
+  );
+
+  server.put(
+    "/rateup-plan",
+    {
+      preHandler: [assertRootOrg],
+      schema: {
+        body: $Pref("updateRateUpPlanSchema"),
+      },
+    },
+    updateRateUpPlanHandler,
+  );
+  server.delete(
+    "/rateup-plan/:id",
+    {
+      preHandler: [assertRootOrg],
+      schema: {
+        params: $Pref("rateupPlanParamSchema"),
+      },
+    },
+    deleteRateUpPlanHandler,
+  );
+  server.post(
+    "/create-checkout-session",
+    {
+      schema: {
+        body: $Pref("createCheckoutRequestSchema"),
+      },
+    },
+    createCheckoutSessionHandler,
+  );
+
+  server.put(
+    "/updateplans",
+    {
+      preHandler: [assertRootOrg],
+    },
+    updatePaymentPlanHandler,
+  );
+
+  server.get(
+    "/subscriptions",
+    {
+      preHandler: [assertRootOrg],
+    },
+    getAllPaymentSubscriptionHandler,
+  );
+
+  server.get("/org/orders", getAllOrdersByOrg);
+
+  server.get(
+    "/orders/all",
+    {
+      preHandler: [assertRootOrg],
+    },
+    getAllPaymentOrdersHandler,
+  );
+}

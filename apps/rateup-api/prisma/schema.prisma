@@ -58,6 +58,7 @@ model User {
   orgMember    OrgMember[]
   teamMember   TeamMember[]
   surveys      Survey[]
+  Order        Order[]
 }
 
 model Org {
@@ -75,6 +76,7 @@ model Org {
   whatsappSettings WhatsappSettings?
   templates        WaTemplate[]
   Subscription     Subscription?
+  Order            Order[]
 }
 
 model WhatsappSettings {
@@ -516,14 +518,15 @@ model MenuBanner {
 }
 
 model Subscription {
-  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId String @unique @db.Uuid
-
-  features Json
-
-  renewedAt DateTime?
-  expiresAt DateTime
-  createdAt DateTime  @default(now())
+  org             Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId           String      @unique @db.Uuid
+  features        Json
+  renewedAt       DateTime?
+  expiresAt       DateTime
+  createdAt       DateTime    @default(now())
+  basePlan        RateupPlan? @relation(fields: [basePlanId], references: [id])
+  basePlanId      String?     @db.Uuid
+  subscriptionRef String? //gateway Subscription id
 }
 
 // used to tokenize some data
@@ -531,4 +534,88 @@ model Temporary_Tokenization {
   token     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   data      Json
   createdAt DateTime @default(now()) // gets deleted after 24 hours. shouldn't be used for long term storage
+}
+
+enum PaymentPlanStatus {
+  NULL
+  LIVE
+  ACTIVE
+  INACTIVE
+}
+
+model PaymentPlans {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId      String
+  amount      Float
+  currency    String
+  name        String
+  description String?
+  createdAt   Int
+  period      String
+  interval    Int
+  status      PaymentPlanStatus @default(NULL)
+  RateupPlan  RateupPlan?
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Order {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  createdAt      DateTime      @default(now())
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  createdById    String        @db.Uuid
+  org            Org           @relation(fields: [orgId], references: [id])
+  orgId          String        @db.Uuid
+  status         OrderStatus   @default(PENDING)
+  planId         String
+  subscriptionId String
+  payment        Payments?     @relation("PaymentOrder")
+  paymentId      String?       @unique @db.Uuid
+  orderPayment   Payments?     @relation("OrderPayment", fields: [paymentId], references: [id])
+  paymentStatus  PaymentStatus @default(PENDING)
+}
+
+model Payments {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payId          String //gateway payment id
+  createdAt      Int
+  rateupOrderId  String  @unique @db.Uuid
+  order          Order   @relation("PaymentOrder", fields: [rateupOrderId], references: [id])
+  amount         Float
+  currency       String
+  method         String
+  description    String?
+  customer_email String?
+  customer_phone String?
+  OrderPayment   Order?  @relation("OrderPayment")
+}
+
+enum PaymentPlanType {
+  BASE
+  ADDON
+}
+
+model RateupPlan {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  displayName     String?
+  displayWidgetId String?
+  planType        PaymentPlanType
+  paymentPlan     PaymentPlans?   @relation(fields: [paymentPlanId], references: [id])
+  paymentPlanId   String?         @unique @db.Uuid
+  Subscription    Subscription[]
+  description     String[]        @default([])
+  features        Json?
+  createdAt       DateTime        @default(now())
 }

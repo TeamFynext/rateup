@@ -145,12 +145,18 @@ declare global {
       subscriptionCountRestriction;
   }
 
+  interface SPlan {
+    id: string;
+    name: string;
+  }
+
   interface Subscription {
     orgId: string;
     features: SubscriptionFeatures;
     expiresAt: Date;
     renewedAt?: Date;
     createdAt: Date;
+    basePlan: SPlan;
   }
 }
 

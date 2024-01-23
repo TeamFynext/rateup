@@ -1,0 +1,240 @@
+import { FastifyReply, FastifyRequest } from "fastify";
+import {
+  createCheckoutSession,
+  createRateUpPlan,
+  deleteRateUpPlan,
+  getAllOrgOrders,
+  getAllPaymentOrders,
+  getAllPaymentPlans,
+  getAllPaymentSubscriptions,
+  getAllRateupPaymentPlans,
+  syncPaymentPlans,
+  updatePaymentPlan,
+  updateRateUpPlan,
+  updateSubscription,
+  verifyPayment,
+} from "./payment.service";
+import {
+  CreateCheckoutInput,
+  createRateUpPlanInput,
+  rateupPlanParamInput,
+  UpdatePlanInput,
+  updateRateUpPlanInput,
+} from "./payment.schema";
+import Session from "supertokens-node/recipe/session";
+import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
+
+export async function createCheckoutSessionHandler(
+  request: FastifyRequest<{
+    Body: CreateCheckoutInput;
+  }>,
+  reply: FastifyReply,
+) {
+  const data = request.body;
+  let session = await Session.getSession(request, reply);
+  const userId = session.getUserId();
+
+  try {
+    const checkoutSession = await createCheckoutSession(userId, data);
+    reply.code(201).send(checkoutSession);
+  } catch (e) {
+    console.log(e);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function verificationHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  interface KnownProperties {
+    event?: string;
+    payload?: any;
+  }
+
+  const webhookSignature = request.headers["x-razorpay-signature"] as string;
+  const webhookBody = request.body;
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  // Verify the webhook signature
+  const isValidSignature = validateWebhookSignature(
+    JSON.stringify(webhookBody),
+    webhookSignature,
+    webhookSecret,
+  );
+
+  if (!isValidSignature) {
+    console.log("invalid signature ....");
+
+    reply.code(400).send("Invalid signature");
+    return;
+  } else {
+    console.log("signature validated....");
+  }
+
+  let data: KnownProperties = webhookBody;
+
+  if (data?.event === "payment.captured" || data?.event === "payment.failed") {
+    console.log(data?.event);
+    try {
+      const paymentPlans = await verifyPayment(
+        data?.payload?.payment?.entity,
+        data?.event,
+      );
+      reply.code(201).send(paymentPlans);
+    } catch (e) {
+      console.log(e);
+      reply.code(500).send("Failed");
+    }
+  }
+
+  if (data?.event === "subscription.charged") {
+    console.log(".....................subscription.charged");
+    try {
+      const paymentPlans = await updateSubscription(
+        data?.payload?.subscription?.entity,
+      );
+      reply.code(201).send(paymentPlans);
+    } catch (e) {
+      console.log(e);
+      reply.code(500).send("Failed");
+    }
+  }
+
+  reply.code(500).send({ success: false });
+}
+
+export async function syncPaymentPlansHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const paymentPlans = await syncPaymentPlans();
+    reply.code(201).send(paymentPlans);
+  } catch (e) {
+    console.log(e);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function getAllPaymentPlansHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const paymentPlans = await getAllPaymentPlans();
+    reply.code(201).send(paymentPlans);
+  } catch (e) {
+    console.log(e);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function getAllRateupPaymentPlansHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const paymentPlans = await getAllRateupPaymentPlans();
+    reply.code(200).send(paymentPlans);
+  } catch (error) {
+    reply.code(500).send(error);
+  }
+}
+export async function createRateUpPlanHandler(
+  request: FastifyRequest<{
+    Body: createRateUpPlanInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const newPlan = await createRateUpPlan(request?.body);
+    reply.code(newPlan.code).send(newPlan.data);
+  } catch (error) {
+    reply.code(500).send(error);
+  }
+}
+
+export async function updateRateUpPlanHandler(
+  request: FastifyRequest<{
+    Body: updateRateUpPlanInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const newPlan = await updateRateUpPlan(request?.body);
+    reply.code(newPlan.code).send(newPlan.data);
+  } catch (error) {
+    reply.code(500).send(error);
+  }
+}
+export async function deleteRateUpPlanHandler(
+  request: FastifyRequest<{
+    Params: rateupPlanParamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    await deleteRateUpPlan(request?.params);
+    reply.code(204).send();
+  } catch (error) {
+    reply.code(500).send(error);
+  }
+}
+export async function updatePaymentPlanHandler(
+  request: FastifyRequest<{
+    Body: UpdatePlanInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const paymentPlan = await updatePaymentPlan(request.body);
+    reply.code(201).send(paymentPlan);
+  } catch (error) {
+    console.log(error);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function getAllPaymentSubscriptionHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const subscriptions = await getAllPaymentSubscriptions();
+    reply.code(201).send(subscriptions);
+  } catch (error) {
+    console.log(error);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function getAllOrdersByOrg(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    const accessTokenPayload = session.getAccessTokenPayload();
+    let orgId = accessTokenPayload.orgId;
+
+    const orders = await getAllOrgOrders(orgId);
+    reply.code(201).send(orders);
+  } catch (error) {
+    console.log(error);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function getAllPaymentOrdersHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const allOrders = await getAllPaymentOrders();
+    reply.code(201).send(allOrders);
+  } catch (error) {
+    console.log(error);
+    reply.code(500).send("Failed");
+  }
+}
