@@ -1,12 +1,14 @@
 import axios from "axios";
 import { fallbackImage } from "../constants";
 
-export const uploadFile = async (file) => {
+export const uploadFile = async (file, withThumbnails = false) => {
   const formData = new FormData();
   formData.append("file", file);
   try {
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/file`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/${
+        withThumbnails ? "fileWithThumb" : "file"
+      }`,
       formData,
       {
         headers: {
