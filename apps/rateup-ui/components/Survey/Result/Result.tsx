@@ -154,6 +154,7 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           responses={filteredResponses}
           allResponses={teamWiseResponses}
           defaultLanguage={defaultLanguage}
+          isLoading={isLoading}
         />
       </Tabs.Panel>
       <Tabs.Panel value="comparison">
