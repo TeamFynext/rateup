@@ -56,7 +56,13 @@ import styles from "./Responses.module.css";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 
-const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
+const Responses = ({
+  survey,
+  responses,
+  allResponses,
+  defaultLanguage,
+  isLoading,
+}) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -67,7 +73,6 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
   const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isLoadingResponses, setIsLoadingResponses] = useState(true);
 
   const hasContactQuestion =
     responses &&
@@ -92,14 +97,6 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsLoadingResponses(false);
-    };
-    fetchData();
-  }, []);
 
   useEffect(() => {
     setResponseCount(responses?.length);
@@ -228,7 +225,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
 
   if (isQLoading) return <Loader />;
   if (QError) return <Text>An error has occurred</Text>;
-  if (isLoadingResponses) return <Loader />;
+  if (isLoading) return <Loader />;
 
   return (
     <Stack h="100%">
