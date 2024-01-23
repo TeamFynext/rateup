@@ -24,6 +24,7 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
 import styles from "./SurveyTheme.module.css";
+import { THUMBNAIL_URL } from "../../../utils/constants";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
