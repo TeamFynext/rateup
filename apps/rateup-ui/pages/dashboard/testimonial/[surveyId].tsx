@@ -41,14 +41,19 @@ import {
 import { QuestionType } from "../../../types/enums";
 import { useTestimonialSurveys } from "../../../backend/testimonials/testimonial.query";
 import { useRouter } from "next/router";
+import TestimonialSelect from "../../../components/testimonial/testimonialSelect";
+import TestimonialEdit from "../../../components/testimonial/testimonialEdit";
+import TestimonialShare from "../../../components/testimonial/TestimonialShare";
+import TestimonialFilter from "../../../components/testimonial/TestimonialFilter";
 
 enum TestimonialTabs {
-  Review = "Review",
-  Published = "Published",
+  Select = "Select",
+  Edit = "Edit",
+  Share = "Share",
 }
 export default function () {
   const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(
-    TestimonialTabs.Review,
+    TestimonialTabs.Select,
   );
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -91,85 +96,34 @@ export default function () {
         >
           <Grid columns={12}>
             <Grid.Col span={3}>
-              <MultiSelect
-                radius={"10px"}
-                searchable
-                clearable
-                data={teamsData}
-                onChange={setFilterTeams}
-                placeholder={filterTeams.length > 0 ? "" : "All Teams"}
+              <Heading
+                title={"Testimonials"}
+                titleprops={{ tt: "capitalize" }}
               />
             </Grid.Col>
             <Grid.Col span={6}>
               <Tabs.List>
-                <Tabs.Tab value={TestimonialTabs.Review}>Review</Tabs.Tab>
-                <Tabs.Tab value={TestimonialTabs.Published}>Published</Tabs.Tab>
+                <Tabs.Tab value={TestimonialTabs.Select}>Select</Tabs.Tab>
+                <Tabs.Tab value={TestimonialTabs.Edit}>Edit</Tabs.Tab>
+                <Tabs.Tab value={TestimonialTabs.Share}>Share</Tabs.Tab>
               </Tabs.List>
             </Grid.Col>
             <Grid.Col span={3}></Grid.Col>
           </Grid>
-
-          <Tabs.Panel value={TestimonialTabs.Review} p={"md"}>
-            <Stack>
-              <Flex justify={"space-between"}>
-                <Heading
-                  title={"Testimonials"}
-                  titleprops={{ tt: "capitalize" }}
-                />
-                <Group gap={"xs"}>
-                  <RateupButtonBlue
-                    title="Edit"
-                    leftIcon={<IconPencil size={18} />}
-                    variant={"subtle"}
-                    onClick={() => {}}
-                    pl="xs"
-                    pr="xs"
-                  />
-                  <RateupButtonBlue
-                    title="Embed"
-                    leftIcon={<IconHtml size={18} />}
-                    variant={"subtle"}
-                    onClick={() => {}}
-                    pl="xs"
-                    pr="xs"
-                  />
-                  <RateupButtonBlue
-                    title="Delete"
-                    leftIcon={<IconTrash size={18} />}
-                    variant={"subtle"}
-                    onClick={() => {}}
-                    pl="xs"
-                    pr="xs"
-                  />
-                  <RateupButtonBlue
-                    title="Restore"
-                    leftIcon={<IconRestore size={18} />}
-                    variant={"subtle"}
-                    onClick={() => {}}
-                    pl="xs"
-                    pr="xs"
-                  />
-                  <RateupButtonBlue
-                    title="Swap"
-                    leftIcon={<IconSwipe size={18} />}
-                    variant={"subtle"}
-                    onClick={() => {}}
-                    pl="xs"
-                    pr="xs"
-                  />
-                </Group>
-              </Flex>
-            </Stack>
-            <SimpleGrid cols={3} spacing={"xl"} mt={"lg"}>
-              <TestimonialCard />
-              <TestimonialCard />
-              <TestimonialCard />
-              <TestimonialCard />
-            </SimpleGrid>
-          </Tabs.Panel>
-          <Tabs.Panel value={TestimonialTabs.Published}>
-            <>published</>
-          </Tabs.Panel>
+          <Group justify="space-between">
+            <TestimonialFilter />
+            <>
+              <Tabs.Panel value={TestimonialTabs.Select} p={"md"}>
+                <TestimonialSelect />
+              </Tabs.Panel>
+              <Tabs.Panel value={TestimonialTabs.Edit}>
+                <TestimonialEdit />
+              </Tabs.Panel>
+              <Tabs.Panel value={TestimonialTabs.Share}>
+                <TestimonialShare />
+              </Tabs.Panel>
+            </>
+          </Group>
         </StyledTabs>
       </Stack>
     </>
