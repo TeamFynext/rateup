@@ -72,9 +72,13 @@ export function DraggableQuestionCard({
         {(provided, snapshot) => (
           <div ref={hoverRef}>
             <Box
-              className={cx(classes.item, {
-                [classes.itemDragging]: snapshot.isDragging,
-              })}
+              className={cx(
+                classes.item,
+                {
+                  [classes.itemDragging]: snapshot.isDragging,
+                },
+                classes.transition,
+              )}
               ref={provided.innerRef}
               onClick={() => handleOpenQuestion(question)}
               {...provided.draggableProps}

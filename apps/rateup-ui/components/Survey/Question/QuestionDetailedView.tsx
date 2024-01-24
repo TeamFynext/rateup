@@ -140,7 +140,7 @@ export function QuestionDetailedView({
   return (
     <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
       <Stack justify="space-between" style={{ height: "100%" }}>
-        <ScrollArea style={{ height: "80%" }}>
+        <ScrollArea style={{ height: "80%" }} scrollbarSize={0}>
           <Stack>
             <Badge variant="outline" size="lg">
               {question.type}

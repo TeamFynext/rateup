@@ -8,6 +8,7 @@ import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import classes from "./EditSurvey.module.css";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import { MotionTransition } from "../animation/MotionTransition";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -72,14 +73,16 @@ export function EditSurvey({
         >
           <Tabs.Panel value={QuestionTabsEnum.Edit} style={{ height: "100%" }}>
             {selectedQ && (
-              <QuestionDetailedView
-                question={selectedQ}
-                setSelectedQ={setSelectedQ}
-                setActiveTab={setActiveTab}
-                surveyLanguages={surveyLanguages}
-                setSelectedLanguage={setSelectedLanguage}
-                key={selectedQ.id}
-              />
+              <MotionTransition keyValue={selectedQ}>
+                <QuestionDetailedView
+                  question={selectedQ}
+                  setSelectedQ={setSelectedQ}
+                  setActiveTab={setActiveTab}
+                  surveyLanguages={surveyLanguages}
+                  setSelectedLanguage={setSelectedLanguage}
+                  key={selectedQ.id}
+                />
+              </MotionTransition>
             )}
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
