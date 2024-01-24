@@ -106,6 +106,7 @@ const CreateCampaignModal = ({
               withAsterisk
               allowDeselect={false}
               disabled={false}
+              value={form?.getInputProps("teamId")?.value || ""}
               {...form.getInputProps("teamId")}
               styles={{
                 input: { outline: "1px solid #149A8A" },
