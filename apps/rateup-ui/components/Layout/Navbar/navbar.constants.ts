@@ -17,6 +17,7 @@ import {
   IconTerminal2,
   IconFileInfo,
   IconHome,
+  IconWaveSine,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
 import { useUserInfo } from "../../../backend/user/user.query";
@@ -110,6 +111,11 @@ export function getNavTopData(subscription?: Subscription) {
                 Icon: IconMessage2Code,
                 label: "Templates",
                 href: "/dashboard/whatsapp/templates",
+              },
+              {
+                Icon: IconWaveSine,
+                label: "Flows",
+                href: "/dashboard/whatsapp/flows",
               },
               {
                 Icon: IconSettings,
