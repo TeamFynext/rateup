@@ -6,6 +6,7 @@ import {
   SegmentedControl,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
@@ -57,38 +58,44 @@ export function PCQForm({ previewChoices }: MCQFormProps) {
   const designedData = options?.map(({ value: { value: label, image } }) => ({
     value: label,
     label: (
-      <Stack maw={largeScreen ? 200 : 100} gap={0}>
+      <>
         <Image
           src={getImageValue(image, fallbackEnable)}
-          w={largeScreen ? 200 : 100}
           style={{ aspectRatio: 4 / 3 }}
         />
-        <Text>{label}</Text>
-      </Stack>
+        <Tooltip label={label}>
+          <Text
+            style={{ wordWrap: "break-word", whiteSpace: "normal" }}
+            lineClamp={2}
+          >
+            {label}
+          </Text>
+        </Tooltip>
+      </>
     ),
   }));
-  const publicRouteHeight = publicRoute ? "70vw" : "45vw";
+  const publicRouteHeight = publicRoute ? "100vw" : "45vw";
   return (
     <Stack
       maw={largeScreen ? publicRouteHeight : "100%"}
       miw={!largeScreen && "100%"}
       align={!largeScreen && "center"}
     >
-      <ScrollArea h={largeScreen ? "min-content" : "30vh"} p={0} m={0}>
-        <Stack mr="xs" mb={"xs"} h={"max-content"}>
-          <SegmentedControl
-            data={designedData}
-            value={selectedOp}
-            onChange={handleSelectedOp}
-            color="var(--tertiary-color)"
-            size="md"
-            classNames={{
-              label: classes.sgPcqlabel,
-              indicator: classes.sgIndicator,
-            }}
-            orientation={largeScreen ? "horizontal" : "vertical"}
-          />
-        </Stack>
+      <ScrollArea h={"40vh"} p={0} m={0}>
+        <SegmentedControl
+          data={designedData}
+          value={selectedOp}
+          onChange={handleSelectedOp}
+          color="var(--tertiary-color)"
+          size="md"
+          classNames={{
+            label: classes.sgPcqlabel,
+            indicator: classes.sgIndicator,
+            root: classes.sgRoot,
+            control: classes.sgControl,
+          }}
+          className={classes["sgGrid"]}
+        />
       </ScrollArea>
     </Stack>
   );
