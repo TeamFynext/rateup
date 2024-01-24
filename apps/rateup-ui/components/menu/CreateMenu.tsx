@@ -92,6 +92,7 @@ export function CreateMenuModal({
           placeholder="Select Team"
           label=""
           allowDeselect={false}
+          value={form?.getInputProps("teamId")?.value || ""}
           {...form.getInputProps("teamId")}
         />
         <ContainedTextField

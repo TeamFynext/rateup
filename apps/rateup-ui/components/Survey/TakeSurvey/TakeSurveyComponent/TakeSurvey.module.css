@@ -65,23 +65,32 @@
   height: auto;
   white-space: normal;
   font-size: "16px";
+  box-shadow:
+    2px 2px 3px rgba(0, 0, 0, 0.12),
+    -1px 0px 3px #0000003d;
+  margin-top: 5px;
 }
 
 .sgRoot {
   background-color: white;
 }
 .sgControl::before {
-  width: 0px;
+  width: 0px !important;
 }
 
 .sgPcqlabel {
   padding-top: 15px;
-  border: 1px solid var(--grey-color-4);
+  box-shadow:
+    2px 2px 3px rgba(0, 0, 0, 0.12),
+    -1px 0px 3px rgba(0, 0, 0, 0.24);
   height: 100%;
 }
 
 .sgIndicator {
   margin: 5px;
+}
+.sgMcqIndicator {
+  margin-top: 5px;
 }
 .sgGrid {
   display: grid;

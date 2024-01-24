@@ -78,6 +78,7 @@ const GeneralSettings = ({ editingItem }) => {
             defaultValue={editingItem?.teamId}
             allowDeselect={false}
             disabled={isPending}
+            value={form?.getInputProps("teamId")?.value || ""}
             {...form.getInputProps("teamId")}
             onChange={(value) => {
               form.setFieldValue("surveyTeamMapId", "");

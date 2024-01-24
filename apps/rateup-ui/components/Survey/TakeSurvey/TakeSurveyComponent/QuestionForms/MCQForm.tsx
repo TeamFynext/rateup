@@ -39,7 +39,7 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
   return (
     <Stack>
       <ScrollArea.Autosize mah={"30vh"} maw={"90vh"}>
-        <Stack ml="sm">
+        <Stack ml="sm" mr="xs">
           <SegmentedControl
             data={data}
             value={selectedOp}
@@ -47,7 +47,15 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
             orientation={"vertical"}
             color="var(--tertiary-color)"
             size="md"
-            classNames={{ label: classes.sglabel }}
+            classNames={{
+              label: classes.sglabel,
+              root: classes.sgRoot,
+              control: classes.sgControl,
+              indicator: classes.sgMcqIndicator,
+            }}
+            style={{
+              gap: "7px",
+            }}
           />
         </Stack>
       </ScrollArea.Autosize>
