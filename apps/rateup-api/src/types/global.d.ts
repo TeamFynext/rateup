@@ -10,6 +10,7 @@ import {
   WaTemplateStatus,
   NPSWeightage,
   SubscriptionFeaturePathName as sfpn,
+  WaFlowFormElementType,
 } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { toBeIncludedWaSessionRelations } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
@@ -158,6 +159,59 @@ declare global {
     createdAt: Date;
     basePlan: SPlan;
   }
+  type WaFlowWa = {
+    // wa flow type from whatsapp
+    name: string;
+    id: string;
+    status: WaFlowStatus;
+  };
+  type WaFlowJson = {
+    version: string;
+    screens: Array<WaFlowScreen>;
+  };
+  type WaFlowScreen = {
+    id: string;
+    title: string;
+    layout: WaFlowLayout;
+    data: any; // add types
+    terminal: boolean;
+  };
+
+  type WaFlowLayout = {
+    type: WaFlowLayoutType;
+    children: Array<WaFlowForm>;
+  };
+
+  type WaFlowForm = {
+    type: string; // add types
+    name: string;
+    children: Array<WaFlowFormElement>;
+  };
+
+  type WaFlowFormElement = {
+    type: WaFlowFormElementType;
+    text?: string;
+    label?: string;
+    name?: string;
+    required?: boolean;
+    "input-type"?: string; // add types
+    "on-click-action": WaFlowOnClickAction;
+    "data-source": Array<WaFlowFormChoice>;
+  };
+
+  type WaFlowFormChoice = {
+    id: string;
+    title: string;
+  };
+
+  type WaFlowOnClickAction = {
+    name: string; // add types
+    next?: {
+      type: string; // add types
+      name: string;
+    };
+    payload: any;
+  };
 }
 
 const fullWaSession = Prisma.validator<Prisma.WaSessionArgs>()({

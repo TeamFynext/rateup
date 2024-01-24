@@ -1,5 +1,14 @@
-import { WaEvent, YNResponse, LDResponse, SmileyResponse } from "../../../types/enums";
-import { WaMessageBody, WaSendMessageBody } from "../../../types/whatsapp.types";
+import {
+  WaEvent,
+  YNResponse,
+  LDResponse,
+  SmileyResponse,
+} from "../../../types/enums";
+import {
+  WaMessageBody,
+  WaMessageTypes,
+  WaSendMessageBody,
+} from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import { QuestionType as Q } from "../../../types/enums";
 import { callWhatsappApi } from "../wa_axios";
@@ -19,10 +28,13 @@ const smileyEmojiMap = {
 export const ratingEmoji = '⭐️';
 
 export function getEventType(data: WaMessageBody) {
-  if (data.object === 'whatsapp_business_account') {
+  if (data.object === "whatsapp_business_account") {
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
-    } else if (data.entry[0].changes[0].field === WaEvent.Message && data.entry[0].changes[0].value.messages?.length > 0) {
+    } else if (
+      data.entry[0].changes[0].field === WaEvent.Message &&
+      data.entry[0].changes[0].value.messages?.length > 0
+    ) {
       return WaEvent.Message;
     }
   }
@@ -32,37 +44,52 @@ export function getMessageObject(data: WaMessageBody) {
   if (data.entry[0].changes[0].value.messages.length > 1) {
     // TODO: Find out when this happens
     throw new Error(
-      "This shouldn't have occured. Multiple messages not supported"
+      "This shouldn't have occured. Multiple messages not supported",
     );
   }
   return data.entry[0].changes[0].value.messages[0];
 }
+
 export function parseMessage(data: WaMessageBody) {
   if (!getMessageObject(data)) {
     throw new Error("No messages found");
   }
   const message = getMessageObject(data);
   const { from, timestamp, type } = message;
+  let subtype = type as any;
 
+  let flowResponse;
   let body = "";
   message[type];
-  if (message.type === "interactive") {
-    body = message.interactive[message.interactive.type].title;
-  } else if (message.type === "text") {
-    body = message.text.body;
-  } else if (message.type === "image") {
-    body = message.image.id;
-  } else if (message.type === "button") {
-    body = message.button.text;
+  switch (message.type) {
+    case WaMessageTypes.interactive:
+      if (message.interactive.type === "nfm_reply") {
+        flowResponse = JSON.parse(
+          message.interactive.nfm_reply["response_json"],
+        );
+        subtype = message.interactive.type;
+      } else {
+        body = message.interactive[message.interactive.type].title;
+      }
+      break;
+    case WaMessageTypes.text:
+      body = message.text.body;
+      break;
+    case WaMessageTypes.image:
+      body = message.image.id;
+      break;
+    case WaMessageTypes.button:
+      body = message.button.text;
+      break;
   }
-  return { from, timestamp, message: body, type };
+  return { from, timestamp, message: body, flowResponse, type: subtype };
 }
 
 export function createReplyButtonsMessage(
   to: string,
   questionTitle: string,
   questionDescription: string,
-  choices: Array<string>
+  choices: Array<string>,
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -94,13 +121,12 @@ export function createReplyButtonsMessage(
 }
 
 interface createCTAButtonMessageParams {
-  to: string,
-  header?: string,
-  body: string,
-  footer?: string,
-  buttonText: string,
-  url: string,
-
+  to: string;
+  header?: string;
+  body: string;
+  footer?: string;
+  buttonText: string;
+  url: string;
 }
 export function createCTAButtonMessage({
   to,
@@ -121,25 +147,25 @@ export function createCTAButtonMessage({
         header: {
           type: "text",
           text: header,
-        }
+        },
       }),
       ...(body && {
         body: {
           text: body,
-        }
+        },
       }),
       ...(footer && {
         footer: {
           text: footer,
-        }
+        },
       }),
 
       action: {
         name: "cta_url",
         parameters: {
           display_text: buttonText,
-          url
-        }
+          url,
+        },
       },
     },
   };
@@ -148,7 +174,7 @@ export function createCTAButtonMessage({
 export function createTextMessage(
   to: string,
   title: string,
-  description = ""
+  description = "",
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -164,14 +190,14 @@ export function createTextMessage(
 
 export function createTemplateMessage(
   to: string,
-  template: any
+  template: any,
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to,
     type: "template",
-    template
+    template,
   };
 }
 
@@ -180,7 +206,7 @@ export function createListMessage(
   questionTitle: string,
   questionDescription: string,
   buttonTitle: string,
-  choices: Array<string>
+  choices: Array<string>,
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -201,7 +227,10 @@ export function createListMessage(
         sections: [
           {
             //TODO: title have a 24char limit. Description may have 200chars
-            rows: choices.map((choice, index) => ({ id: index.toString(), title: choice })),
+            rows: choices.map((choice, index) => ({
+              id: index.toString(),
+              title: choice,
+            })),
           },
         ],
       },
@@ -214,7 +243,7 @@ export function createNativeListMessage(
   header: string,
   body: string,
   sections: WaSectionsType,
-  buttonTitle: string = 'View Options',
+  buttonTitle: string = "View Options",
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -223,27 +252,25 @@ export function createNativeListMessage(
     type: "interactive",
     interactive: {
       type: "list",
-      header: header ? (
-        {
-          type: "text",
-          text: header,
-        }
-      ) : (
-        undefined
-      ),
+      header: header
+        ? {
+            type: "text",
+            text: header,
+          }
+        : undefined,
       body: {
         text: body,
       },
       action: {
         button: buttonTitle,
         // adding id to each row
-        sections: sections.map(section => ({
+        sections: sections.map((section) => ({
           title: section.title,
           rows: section.rows.map((row, index) => ({
             id: index.toString(),
-            ...row
-          }))
-        }))
+            ...row,
+          })),
+        })),
       },
     },
   };
@@ -251,7 +278,7 @@ export function createNativeListMessage(
 
 export async function generateMessageDataFromQuestion(
   session: WaSessionWithRelations,
-  question: Question
+  question: Question,
 ): Promise<WaSendMessageBody> {
   const to = session.phone;
   if (!session.language) {
@@ -278,47 +305,36 @@ export async function generateMessageDataFromQuestion(
       choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => i.toString());
       break;
     case Q.WaButtons:
-      choices = question.choices![lang]?.map(ch => ch?.value);
+      choices = question.choices![lang]?.map((ch) => ch?.value);
       break;
     case Q.DateTime:
       description += "\n\nPlease enter date in DD/MM/YYYY format";
       break;
     case Q.Rating: {
-      const sections: WaSectionsType = [{
-        rows: [1, 2, 3, 4, 5].map((i) => ({
-          id: i.toString(),
-          title: ratingEmoji.repeat(i),
-        }))
-      }]
-      return createNativeListMessage(
-        to,
-        title,
-        description,
-        sections
-      )
+      const sections: WaSectionsType = [
+        {
+          rows: [1, 2, 3, 4, 5].map((i) => ({
+            id: i.toString(),
+            title: ratingEmoji.repeat(i),
+          })),
+        },
+      ];
+      return createNativeListMessage(to, title, description, sections);
     }
     case Q.Smiley: {
-      const sections: WaSectionsType = [{
-        rows: Object.entries(smileyEmojiMap).map(([key, value]) => ({
-          id: key,
-          title: value + key,
-        }))
-      }]
-      return createNativeListMessage(
-        to,
-        title,
-        description,
-        sections
-      )
+      const sections: WaSectionsType = [
+        {
+          rows: Object.entries(smileyEmojiMap).map(([key, value]) => ({
+            id: key,
+            title: value + key,
+          })),
+        },
+      ];
+      return createNativeListMessage(to, title, description, sections);
     }
     case Q.WaList:
       const sections = question.sections?.[lang] || [];
-      return createNativeListMessage(
-        to,
-        title,
-        description,
-        sections
-      )
+      return createNativeListMessage(to, title, description, sections);
   }
 
   if (choices.length > 0) {
@@ -333,7 +349,7 @@ export async function generateMessageDataFromQuestion(
         title,
         description,
         buttonTitle,
-        choices
+        choices,
       );
       return messageData;
     }
@@ -349,16 +365,17 @@ export async function generateMessageDataFromQuestion(
       let bodyText = description;
       // Displaying choices in `index) choice` format
       const options = question
-        .choices![lang].map((choice, index) => `\n${index + 1}) ${choice.value}`)
+        .choices![lang].map(
+          (choice, index) => `\n${index + 1}) ${choice.value}`,
+        )
         .join();
 
-      bodyText =
-        bodyText +
-        options;
+      bodyText = bodyText + options;
       if (question.type === Q.MCQ || question.type === Q.CustomNPS) {
-        bodyText = bodyText + "\n\nPlease enter your choice index"
+        bodyText = bodyText + "\n\nPlease enter your choice index";
       } else if (question.type === Q.MSQ) {
-        bodyText = bodyText + "\n\nPlease enter your choice indices separated by space"
+        bodyText =
+          bodyText + "\n\nPlease enter your choice indices separated by space";
       }
       return createTextMessage(to, title, bodyText);
     } else if (question.type === Q.Phone) {
@@ -374,7 +391,7 @@ export async function generateMessageDataFromQuestion(
 export function isValidResponse(
   response: any,
   question: Question,
-  lang: string
+  lang: string,
 ): boolean {
   if (!response) return false;
   switch (question.type) {
@@ -405,9 +422,9 @@ export function isValidResponse(
       return /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(response);
     case Q.WaList:
       // Must be an object with title & optional description
-      return !!response.title
+      return !!response.title;
     case Q.Photo:
-      return typeof response === 'string' && response.length > 0; // Key of the uploaded file
+      return typeof response === "string" && response.length > 0; // Key of the uploaded file
     case Q.Email:
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(response);
     case Q.Smiley:
@@ -420,7 +437,7 @@ export function isValidResponse(
 export async function parseResponse(
   waMessage: WaMessageBody,
   question: Question,
-  session: WaSessionWithRelations
+  session: WaSessionWithRelations,
 ) {
   let message = parseMessage(waMessage).message;
   try {
@@ -434,18 +451,19 @@ export async function parseResponse(
       case Q.Opinion:
         return message;
       case Q.Smiley:
-        return waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id
+        return waMessage.entry[0].changes[0].value.messages[0].interactive
+          .list_reply.id;
       case Q.Rating:
         return Number.parseInt(waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id)
       case Q.DateTime:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
-          return ""
+          return "";
         }
-        return dayjs(message, "DD/MM/YYYY").toDate()
+        return dayjs(message, "DD/MM/YYYY").toDate();
       case Q.MSQ:
         const selectedChoices = message.split(" ").map((i) => Number(i));
         return selectedChoices.map(
-          (index) => question.choices![session.language][index - 1]
+          (index) => question.choices![session.language][index - 1],
         );
         break;
       case Q.MCQ:
@@ -453,14 +471,16 @@ export async function parseResponse(
         const index = Number(message);
         return question.choices![session.language][index - 1];
       case Q.WaButtons: {
-        const choice = question.choices[session.language].find(c => c.value === message);
+        const choice = question.choices[session.language].find(
+          (c) => c.value === message,
+        );
         if (!choice) {
           log.error("Couldn't find choice for message", message);
           return false;
         } else {
           return choice;
         }
-      };
+      }
       case Q.Phone:
         if (message === "Use this number") {
           return session.phone;
@@ -470,7 +490,7 @@ export async function parseResponse(
       case Q.WaList: {
         try {
           const message = getMessageObject(waMessage);
-          const { id, ...response } = message.interactive['list_reply']
+          const { id, ...response } = message.interactive["list_reply"];
           return response;
         } catch (error) {
           log.error(error);
@@ -479,8 +499,11 @@ export async function parseResponse(
       }
       case Q.Photo: {
         const message = getMessageObject(waMessage);
-        const uniqueFilename = await downloadAndUpload(session, message.image.id);
-        if (!(message.type === 'image')) {
+        const uniqueFilename = await downloadAndUpload(
+          session,
+          message.image.id,
+        );
+        if (!(message.type === "image")) {
           return undefined;
         }
         return uniqueFilename; // Key of the uploaded file
@@ -499,30 +522,43 @@ export async function parseResponse(
 /* Downloads image from whatsapp & uploads it to s3 */
 export async function downloadAndUpload(session: WaSessionWithRelations, imageId: string) {
   const waSettings = await getWaSettings(session.orgId);
-  const res = await callWhatsappApi(`/${imageId}`, 'GET', waSettings.accessToken);
+  const res = await callWhatsappApi(
+    `/${imageId}`,
+    "GET",
+    waSettings.accessToken,
+  );
   log.trace(`got image link => %o`, res.data);
   const { url: imageUrl, mime_type } = res.data;
   // Need auth token to download image
-  const imageResponse = await callWhatsappApi('', 'GET', waSettings.accessToken, undefined, { responseType: 'arraybuffer', url: imageUrl });
-  log.trace(`downloaded image from whatsapp`)
-  const imageBuffer = Buffer.from(imageResponse.data, 'binary');
-  const extension = mime_type.split('/')[1];
+  const imageResponse = await callWhatsappApi(
+    "",
+    "GET",
+    waSettings.accessToken,
+    undefined,
+    { responseType: "arraybuffer", url: imageUrl },
+  );
+  log.trace(`downloaded image from whatsapp`);
+  const imageBuffer = Buffer.from(imageResponse.data, "binary");
+  const extension = mime_type.split("/")[1];
   const uniqueFilename = `${Date.now()}-${imageId}.${extension}`;
   const s3Params = {
-    Bucket: process?.env?.AWS_S3_BUCKET || 'rateup-survey-uploads',
+    Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Key: uniqueFilename,
     ContentType: mime_type,
     Body: imageBuffer,
   };
   await uploadFile(s3Params);
-  log.trace('uploaded image to s3 key => %s', uniqueFilename)
+  log.trace("uploaded image to s3 key => %s", uniqueFilename);
 
   return uniqueFilename;
 }
 
-export function getQuestionByIdFromSession(session: WaSessionWithRelations, questionId: string) {
+export function getQuestionByIdFromSession(
+  session: WaSessionWithRelations,
+  questionId: string,
+) {
   const question = (session.surveyTeamMap.survey.questions as Question[]).find(
-    (q) => q.id === questionId
+    (q) => q.id === questionId,
   );
   if (!question) {
     log.fatal("Question not found");
@@ -532,47 +568,58 @@ export function getQuestionByIdFromSession(session: WaSessionWithRelations, ques
 }
 
 const _templateStatusChangeEventSampleData = {
-  "entry": [
+  entry: [
     {
-      "id": "0", "time": 1695440875, "changes": [{
-        "field": "message_template_status_update",
-        "value": {
-          "event": "APPROVED",
-          "message_template_id": 12345678,
-          "message_template_name": "my_message_template",
-          "message_template_language": "pt-BR",
-          "reason": null
-        }
-      }]
-    }],
-  "object": "whatsapp_business_account"
-}
-const messageEventSampleData = {
-  "object": "whatsapp_business_account",
-  "entry": [
-    {
-      "id": "0", "changes": [
+      id: "0",
+      time: 1695440875,
+      changes: [
         {
-          "field": "messages",
-          "value": {
-            "messaging_product": "whatsapp",
-            "metadata": {
-              "display_phone_number": "16505551111",
-              "phone_number_id": "123456123"
+          field: "message_template_status_update",
+          value: {
+            event: "APPROVED",
+            message_template_id: 12345678,
+            message_template_name: "my_message_template",
+            message_template_language: "pt-BR",
+            reason: null,
+          },
+        },
+      ],
+    },
+  ],
+  object: "whatsapp_business_account",
+};
+const messageEventSampleData = {
+  object: "whatsapp_business_account",
+  entry: [
+    {
+      id: "0",
+      changes: [
+        {
+          field: "messages",
+          value: {
+            messaging_product: "whatsapp",
+            metadata: {
+              display_phone_number: "16505551111",
+              phone_number_id: "123456123",
             },
-            "contacts": [{
-              "profile": { "name": "test user name" }, "wa_id": "16315551181"
-            }],
-            "messages": [
+            contacts: [
               {
-                "from": "16315551181",
-                "id": "ABGGFlA5Fpa",
-                "timestamp": "1504902988",
-                "type": "text",
-                "text": { "body": "this is a text message" }
-              }]
-
-          }
-        }]
-    }]
-}
+                profile: { name: "test user name" },
+                wa_id: "16315551181",
+              },
+            ],
+            messages: [
+              {
+                from: "16315551181",
+                id: "ABGGFlA5Fpa",
+                timestamp: "1504902988",
+                type: "text",
+                text: { body: "this is a text message" },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+};

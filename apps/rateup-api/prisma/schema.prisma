@@ -77,6 +77,7 @@ model Org {
   templates        WaTemplate[]
   Subscription     Subscription?
   Order            Order[]
+  WaFlow           WaFlow[]
 }
 
 model WhatsappSettings {
@@ -152,30 +153,31 @@ model Invitation {
 }
 
 model Survey {
-  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime?       @updatedAt
+  id                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime?              @updatedAt
   title                   String
-  description             String?         @default("")
-  questions               Json[]          @default([])
+  description             String?                @default("")
+  questions               Json[]                 @default([])
   languages               String[]
-  user                    User            @relation(fields: [createdBy], references: [id])
-  createdBy               String          @db.Uuid
+  user                    User                   @relation(fields: [createdBy], references: [id])
+  createdBy               String                 @db.Uuid
   teams                   SurveyTeamMap[]
-  active                  Boolean         @default(true)
-  isPublished             Boolean         @default(false)
-  isProtected             Boolean         @default(false)
-  kioskMode               Boolean         @default(false)
+  active                  Boolean                @default(true)
+  isPublished             Boolean                @default(false)
+  isProtected             Boolean                @default(false)
+  kioskMode               Boolean                @default(false)
   password                String?
-  type                    String          @default("web")
-  getLocation             Boolean         @default(false)
-  welcomePageEnabled      Boolean         @default(true)
-  tags                    String[]        @default([])
-  skipPreview             Boolean         @default(true)
-  enableNotificationEmail Boolean         @default(false)
-  notificationEmail       String          @default("")
+  type                    String                 @default("web")
+  getLocation             Boolean                @default(false)
+  welcomePageEnabled      Boolean                @default(true)
+  tags                    String[]               @default([])
+  skipPreview             Boolean                @default(true)
+  enableNotificationEmail Boolean                @default(false)
+  notificationEmail       String                 @default("")
   WelcomeTheme            WelcomeTheme?
   shareSettings           Json?
+  WaFlow                  WaFlow?
 }
 
 model SurveyTeamMap {
@@ -238,8 +240,8 @@ model WaSession {
   id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt             DateTime             @default(now())
   phone                 String
-  surveyTeamMap         SurveyTeamMap        @relation(fields: [surveyTeamMapId], references: [id])
-  surveyTeamMapId       String               @db.Uuid
+  surveyTeamMap         SurveyTeamMap?       @relation(fields: [surveyTeamMapId], references: [id])
+  surveyTeamMapId       String?              @db.Uuid
   template              WaTemplate?          @relation(fields: [templateId], references: [id])
   templateId            String?              @db.Uuid
   currentQuestionId     String?
@@ -249,6 +251,7 @@ model WaSession {
   language              String               @default("")
   orgId                 String               @db.Uuid
   ip                    String?
+  type                  String               @default("survey") // WaSessionType
 
   @@unique([phone, orgId])
 }
@@ -619,3 +622,16 @@ model RateupPlan {
   features        Json?
   createdAt       DateTime        @default(now())
 }
+model WaFlow {
+  dbFlowId  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  flowId    String   @unique
+  createdAt DateTime @default(now())
+  json      Json
+  map       Json
+
+  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId    String @db.Uuid
+  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId String @unique @db.Uuid
+}
+

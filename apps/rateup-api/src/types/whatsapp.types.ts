@@ -18,7 +18,7 @@ export type WaMessageBody = {
                   name: string;
                 };
                 wa_id: string;
-              }
+              },
             ];
             messages: [
               {
@@ -29,7 +29,7 @@ export type WaMessageBody = {
                   body: string;
                 };
                 interactive: {
-                  type: "list_reply" | "button_reply";
+                  type: "list_reply" | "button_reply" | "nfm_reply";
                   list_reply: {
                     id: string;
                     title: string;
@@ -38,6 +38,10 @@ export type WaMessageBody = {
                     id: string;
                     title: string;
                   };
+                  nfm_reply: {
+                    response_json: string;
+                    name: string;
+                  };
                 };
                 image: {
                   id: string;
@@ -45,9 +49,9 @@ export type WaMessageBody = {
                   sha256: string;
                   link?: string;
                 };
-                type: "text" | "image" | "interactive" | "button";
+                type: WaMessageTypes;
                 button?: any;
-              }
+              },
             ];
             statuses: [
               {
@@ -58,13 +62,13 @@ export type WaMessageBody = {
                 conversation: {
                   id: string;
                 };
-              }
+              },
             ];
           };
           field: string;
-        }
+        },
       ];
-    }
+    },
   ];
 };
 
@@ -73,15 +77,15 @@ export interface WaSendMessageBody {
   recipient_type: "individual";
   to: string; // PHONE_NUMBER type
   type:
-  | "text"
-  | "image"
-  | "interactive"
-  | "audio"
-  | "document"
-  | "contacts"
-  | "sticker"
-  | "location"
-  | "template";
+    | "text"
+    | "image"
+    | "interactive"
+    | "audio"
+    | "document"
+    | "contacts"
+    | "sticker"
+    | "location"
+    | "template";
   text?: {
     preview_url?: boolean;
     body: string;
@@ -89,9 +93,16 @@ export interface WaSendMessageBody {
   template?: any;
   image?: {};
   interactive?: {
-    type: "button" | "list" | "cta_url";
-    action: WaInteractiveMessageAction;
-    body: {
+    type:
+      | "button"
+      | "list"
+      | "cta_url"
+      | "flow"
+      | "catalog_message"
+      | "product"
+      | "product_list";
+    action?: WaInteractiveMessageAction;
+    body?: {
       text: string; // max 1024 chars
     };
     footer?: {
@@ -125,7 +136,27 @@ type WaInteractiveMessageAction = {
   sections?: Array<WaSection>;
   buttons?: Array<WaButton>;
   parameters?: {
-    display_text: string;
-    url: string;
-  }
+    display_text?: string;
+    url?: string;
+    flow_message_version?: number;
+    flow_token?: string;
+    flow_id?: string;
+    flow_cta?: string; // text to be displayed on the button. max 20 chars
+    flow_action_payload?: {
+      screen: string; // id of the screen
+      data?: any; // data to be sent to the screen
+    };
+  };
 };
+
+export enum WaMessageTypes {
+  text = "text",
+  image = "image",
+  interactive = "interactive",
+  button = "button",
+}
+
+export enum WaSessionType {
+  survey = "survey",
+  flow = "flow",
+}
