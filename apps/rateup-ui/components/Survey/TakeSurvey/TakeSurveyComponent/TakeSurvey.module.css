@@ -84,7 +84,6 @@
   margin: 5px;
 }
 .sgGrid {
-  width: 70vw;
   display: grid;
   grid-template-columns: repeat(
     auto-fill,
