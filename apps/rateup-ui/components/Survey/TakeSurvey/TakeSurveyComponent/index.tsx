@@ -838,7 +838,7 @@ function NextPrev({ prev, next, num, total, survey }) {
           leftIcon={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
           onClick={prev}
-          color="blue"
+          color="var(--tertiary-color)"
         />
         <Center>
           <RingProgress
@@ -872,7 +872,7 @@ function NextPrev({ prev, next, num, total, survey }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="blue"
+            color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
           >
             Submit
@@ -887,7 +887,7 @@ function NextPrev({ prev, next, num, total, survey }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="blue"
+            color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
           >
             Next
