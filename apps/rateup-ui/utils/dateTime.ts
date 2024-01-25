@@ -1,4 +1,10 @@
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+
+dayjs.extend(customParseFormat);
+dayjs.extend(advancedFormat);
+
 export function findPreviousMonday(date: Date): Date {
   const day = date.getDay();
   const difference = day === 0 ? 6 : day - 1; // if Sunday, go back 6 days to last Monday, else go back to last Monday
@@ -33,3 +39,8 @@ export const createCustomTimestamp = (customTime) => {
   const [hours, minutes] = customTime.split(":").map(Number);
   return dayjs().set("hour", hours).set("minute", minutes).toDate();
 };
+
+//Like... Output: '14th Feb, 2024'
+export function formatIsoDateString(isoDateString) {
+  return dayjs(isoDateString).format("Do MMM, YYYY");
+}

@@ -14,7 +14,7 @@ import {
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useState, useContext, useCallback, useRef } from "react";
+import { useState, useContext, useCallback, useRef, useEffect } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
   RateupButtonBlue,
@@ -66,6 +66,7 @@ export function ChoicesCreator({
   });
   const [fileError, setFileError] = useState("");
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
+  const [isSubmited, setIsSubmited] = useState(false);
   const [
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
@@ -80,6 +81,13 @@ export function ChoicesCreator({
   const { updateImageArray } = useImageStore();
 
   const hasResponse = responses?.length ? true : false;
+
+  useEffect(() => {
+    if (form?.values?.choices && isSubmited) {
+      buttonRef?.current?.click();
+      setIsSubmited(false);
+    }
+  }, [isSubmited]);
 
   const handleAddChoice = async () => {
     try {
@@ -115,7 +123,7 @@ export function ChoicesCreator({
           ],
         });
         setSelectedImageFile(null);
-        buttonRef?.current?.click();
+        setIsSubmited(true);
       } else {
         form.setFieldValue("choices", {
           ...form.values.choices,
@@ -288,12 +296,20 @@ function Choice({
   });
   const [fileError, setFileError] = useState("");
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
+  const [isSubmited, setIsSubmited] = useState(false);
   const [
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   let newWeightage = choice?.weightage;
+
+  useEffect(() => {
+    if (form?.values?.choices && isSubmited) {
+      buttonRef?.current?.click();
+      setIsSubmited(false);
+    }
+  }, [isSubmited]);
 
   const onChangePicture = (event: File | null) => {
     if (!event) return;
@@ -366,7 +382,6 @@ function Choice({
           [selectedLanguage]: updatedChoices,
         });
         setSelectedImageFile(null);
-        buttonRef?.current?.click();
       } else {
         const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
           (c, i) => {
@@ -380,6 +395,7 @@ function Choice({
           [selectedLanguage]: updatedChoices,
         });
       }
+      setIsSubmited(true);
       close();
     }
   };
@@ -417,7 +433,7 @@ function Choice({
         variant="transparent"
         onClick={open}
         size={"sm"}
-        disabled={hasResponse}
+        disabled={!hasResponse}
       >
         <IconEdit />
       </ActionIcon>

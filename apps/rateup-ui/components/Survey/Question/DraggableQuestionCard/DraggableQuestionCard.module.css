@@ -21,3 +21,6 @@
   height: 100%;
   color: var(--drag-handle-color, #666);
 }
+.transition {
+  transition: all 0.2s;
+}

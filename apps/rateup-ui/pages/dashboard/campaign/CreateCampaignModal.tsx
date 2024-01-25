@@ -7,7 +7,7 @@ import {
 } from "../../../components/input/ContainedInput/ContainedInput";
 import { DateTimePicker } from "@mantine/dates";
 import style from "./campaign.module.css";
-import { CampaignStatus, CampaignType } from "../../../types/enums";
+import { CampaignStatus, CampaignType, SurveyType } from "../../../types/enums";
 import { useWaTemplates } from "../../../backend/whatsapp/whatsapp.query";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import {
@@ -50,7 +50,9 @@ const CreateCampaignModal = ({
     };
   });
   const { data: surveys } = useSurveysByTeam(form.values.teamId, true);
-  const waSurveys = surveys?.filter((s) => s?.type === "whatsapp");
+  const waSurveys = surveys?.filter((s) =>
+    [SurveyType.WaFlow, SurveyType.WhatsApp].includes(s?.type),
+  );
   const surveyData = waSurveys?.map((s) => {
     return {
       value: s?.surveyTeamMapId,
@@ -104,6 +106,7 @@ const CreateCampaignModal = ({
               withAsterisk
               allowDeselect={false}
               disabled={false}
+              value={form?.getInputProps("teamId")?.value || ""}
               {...form.getInputProps("teamId")}
               styles={{
                 input: { outline: "1px solid #149A8A" },

@@ -168,13 +168,11 @@ const SurveyStats = ({ survey }) => {
                       coords,
                       bounds,
                     );
-                    if (zoomAction === ZoomAction.Out) {
-                      if (minZoom < zoom) {
-                        setZoom(zoom - 1);
-                        return;
-                      }
+                    if (zoomAction === ZoomAction.Out && minZoom < zoom) {
+                      setZoom(zoom - 1);
+                      return;
                     } else {
-                      setIsFindingZoomLevel(false);
+                      setIsFindingZoomLevel(false); // TODO: also set it to false if user manually zooms in/out before finding the zoom level
                       return;
                     }
                   }

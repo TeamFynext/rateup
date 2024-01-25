@@ -5,6 +5,10 @@ import {
   NPSWeightage,
   LogicCondition,
   LogicAction,
+  WaFlowLayoutType,
+  WaFlowFormElementType,
+  WaFlowStatus,
+  SurveyType,
 } from "./enums";
 
 type GoogleReview = {
@@ -63,7 +67,7 @@ declare global {
     isProtected: boolean;
     isPublished: boolean;
     kioskMode: boolean;
-    type: string;
+    type: SurveyType;
     getLocation: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
@@ -469,12 +473,19 @@ declare global {
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
   }
+  interface SPlan {
+    id: string;
+    name: string;
+  }
   interface Subscription {
     orgId: string;
     features: SubscriptionFeatures;
     expiresAt: Date;
     renewedAt?: Date;
     createdAt: Date;
+    basePlan: SPlan;
+    id?: string;
+    paymentPlanId?: string;
   }
   type Org = {
     id: string;
@@ -531,4 +542,58 @@ export type ReviewSuggestion = {
   id: string;
   teamId: string;
   review: string;
+};
+
+export type WaFlow = {
+  name: string;
+  id: string;
+  status: WaFlowStatus;
+  json: WaFlowJson;
+};
+export type WaFlowJson = {
+  version: string;
+  screens: Array<WaFlowScreen>;
+};
+export type WaFlowScreen = {
+  id: string;
+  title: string;
+  layout: WaFlowLayout;
+  data: any; // add types
+  terminal: boolean;
+};
+
+export type WaFlowLayout = {
+  type: WaFlowLayoutType;
+  children: Array<WaFlowForm>;
+};
+
+export type WaFlowForm = {
+  type: string; // add types
+  name: string;
+  children: Array<WaFlowFormElement>;
+};
+
+export type WaFlowFormElement = {
+  type: WaFlowFormElementType;
+  text?: string;
+  label?: string;
+  name?: string;
+  required?: boolean;
+  "input-type"?: string; // add types
+  "on-click-action": WaFlowOnClickAction;
+  "data-source": Array<WaFlowFormChoice>;
+};
+
+export type WaFlowFormChoice = {
+  id: string;
+  title: string;
+};
+
+export type WaFlowOnClickAction = {
+  name: string; // add types
+  next?: {
+    type: string; // add types
+    name: string;
+  };
+  payload: any;
 };

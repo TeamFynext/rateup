@@ -5,6 +5,8 @@ import { DateInput } from "@mantine/dates";
 import { FeatureCard } from "./FeatureCard";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
+import { useRouter } from "next/router";
+import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
 
 interface SubscriptionEditorModalProps {
   opened: boolean;
@@ -22,17 +24,29 @@ export function SubscriptionEditorModal({
       expiresAt: subscription.expiresAt,
     },
   });
-
+  const router = useRouter();
+  const rateupPlanEnable = router.pathname === "/admin/rateup";
   const updateMutation = useUpdateSubscriptionMutation();
+  const rateupPaymentsPlanUpdateMutation =
+    useRateupPaymentsPlanUpdateMutation(onClose);
   function handleSave() {
-    updateMutation.mutate(
-      { orgId: subscription.orgId, updatedData: subscriptionForm.values },
-      {
-        onSuccess: () => {
-          onClose();
+    if (rateupPlanEnable) {
+      const updatedData: any = {
+        id: subscription?.id,
+        paymentPlanId: subscription?.paymentPlanId,
+        features: subscription?.features,
+      };
+      rateupPaymentsPlanUpdateMutation.mutate(updatedData);
+    } else {
+      updateMutation.mutate(
+        { orgId: subscription.orgId, updatedData: subscriptionForm.values },
+        {
+          onSuccess: () => {
+            onClose();
+          },
         },
-      },
-    );
+      );
+    }
   }
   return (
     <Modal
@@ -42,7 +56,7 @@ export function SubscriptionEditorModal({
       padding="md"
       centered
       onClick={(e) => e.stopPropagation()}
-      title={`Modify Subscription`}
+      title={rateupPlanEnable ? `Modify Rateup Plan` : `Modify Subscription`}
     >
       <Stack>
         <DateInput
@@ -67,17 +81,18 @@ export function SubscriptionEditorModal({
               overflow: "auto",
             }}
           >
-            {Object.keys(subscription.features).map(
-              (feature: SubscriptionFeaturePathName) => {
-                return (
-                  <FeatureCard
-                    key={feature}
-                    featurePathName={feature}
-                    subscriptionForm={subscriptionForm}
-                  />
-                );
-              },
-            )}
+            {subscription?.features &&
+              Object.keys(subscription.features).map(
+                (feature: SubscriptionFeaturePathName) => {
+                  return (
+                    <FeatureCard
+                      key={feature}
+                      featurePathName={feature}
+                      subscriptionForm={subscriptionForm}
+                    />
+                  );
+                },
+              )}
           </Stack>
         </Box>
         <Group justify="end">

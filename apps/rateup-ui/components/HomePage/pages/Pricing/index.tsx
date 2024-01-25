@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useMediaQuery } from "@mantine/hooks";
 import {
   Box,
@@ -18,23 +17,30 @@ import { lexend300, lexend500 } from "../../../../utils/fonts";
 import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
 import { useRouter } from "next/router";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
-import { usePricing } from "../../../../backend/pricing/pricing.query";
 import CenteredSpinner from "../../../Loaders/CenteredSpinner";
+import { useCheckSession } from "../../../../hooks/checkSession";
+import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
+import { MotionTransition } from "../../../animation/MotionTransition";
 
-const Pricing = () => {
+const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const [value, setValue] = useState("Surveys");
   const [checked, setChecked] = useState(true);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
   const { updateRouteAndCart } = useRouteAndCartStore();
   const router = useRouter();
-  const { data, isPending } = usePricing();
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const currency = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const { data, isPending, isError } = useRateupPaymentsPlans();
 
-  const handlePlanSelection = ({ id, name }) => {
-    const route = "/dashboard/settings";
-    updateRouteAndCart(route, { id, name });
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const session = useCheckSession();
+
+  const handlePlanSelection = (data) => {
+    let route = "/dashboard/settings?activeTab=account";
+    updateRouteAndCart(route, data);
+    if (isAccount) return handleSelection();
+    if (!session) route = "/login";
     router.push(route);
   };
 
@@ -45,10 +51,37 @@ const Pricing = () => {
       item?.paymentPlan?.period === (checked ? "yearly" : "monthly") &&
       item?.paymentPlan?.currency === currency,
   );
+  const inversePlans = data?.filter(
+    (item) =>
+      item?.paymentPlan?.period === (!checked ? "yearly" : "monthly") &&
+      item?.paymentPlan?.currency === currency,
+  );
+
+  const updatedPlans = plans?.map((plan) => {
+    const correspondingInversePlan = inversePlans?.find(
+      (inversePlan) =>
+        inversePlan?.displayName?.toLowerCase() ===
+        plan?.displayName?.toLowerCase(),
+    );
+
+    if (correspondingInversePlan) {
+      return {
+        ...plan,
+        inverse: correspondingInversePlan?.paymentPlan?.amount,
+      };
+    }
+
+    return plan;
+  });
 
   return (
-    <Stack mt={30} align="center" ff={lexend500.style.fontFamily} mb={60}>
-      <Box ta={"center"}>
+    <Stack
+      mt={isAccount ? 0 : 30}
+      align="center"
+      ff={lexend500.style.fontFamily}
+      mb={60}
+    >
+      <Box ta={"center"} display={isAccount ? "none" : "block"}>
         <Text
           c={"var(--grey-color-4)"}
           fz={"clamp(14px, 9.008px + 0.833vw, 21.008px)"}
@@ -87,7 +120,7 @@ const Pricing = () => {
             size="lg"
           />
           <Image
-            src={"images/subscriptionArrow.png"}
+            src={"/images/subscriptionArrow.png"}
             h={32}
             w={67}
             pos={"absolute"}
@@ -102,35 +135,29 @@ const Pricing = () => {
               Subscribe Anually
             </Text>
             <Text c={"var(--shade-of-blue-5"}>
-              to Save {DISCOUNT_PERCENTAGE} Months
+              Save Upto {DISCOUNT_PERCENTAGE} Months
             </Text>
           </Stack>
         </Flex>
       </SimpleGrid>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={value ? value : null}
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -10, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {value === "Surveys" ? (
-            <SurveySection
-              largeScreen={largeScreen}
-              handlePlanSelection={handlePlanSelection}
-              plans={plans}
-            />
-          ) : (
-            <MenuSection
-              largeScreen={largeScreen}
-              handlePlanSelection={handlePlanSelection}
-              plans={plans}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">
+        {value === "Surveys" ? (
+          <SurveySection
+            largeScreen={largeScreen}
+            handlePlanSelection={handlePlanSelection}
+            plans={updatedPlans}
+            currencySymbol={currencySymbol}
+          />
+        ) : (
+          <MenuSection
+            largeScreen={largeScreen}
+            handlePlanSelection={handlePlanSelection}
+            plans={updatedPlans}
+            currencySymbol={currencySymbol}
+          />
+        )}
+      </MotionTransition>
     </Stack>
   );
 };

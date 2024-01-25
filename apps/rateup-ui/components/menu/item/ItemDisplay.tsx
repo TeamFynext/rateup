@@ -102,6 +102,7 @@ export function ItemDisplay({
                 <MenuFoodLabelBadge
                   foodLabels={item?.foodLabels ?? []}
                   p={"5px"}
+                  label={false}
                 />
               </Flex>
             </ScrollArea>

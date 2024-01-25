@@ -60,11 +60,10 @@ export default function () {
   );
 }
 
-function renderFeatures(params: GridRenderCellParams<any, Subscription>) {
+export function renderFeatures(params: GridRenderCellParams<any, any>) {
   const subscription = params.value;
   const features = subscription.features;
   const [opened, { open, close }] = useDisclosure(false);
-
   return (
     <Group
       py={"md"}
@@ -73,11 +72,12 @@ function renderFeatures(params: GridRenderCellParams<any, Subscription>) {
         cursor: "pointer",
       }}
     >
-      {Object.keys(features)
-        .filter((feature) => features[feature].active)
-        .map((feature: SubscriptionFeaturePathName) => {
-          return <FeatureBadge key={feature} featurePathName={feature} />;
-        })}
+      {features &&
+        Object.keys(features)
+          .filter((feature) => features[feature].active)
+          .map((feature: SubscriptionFeaturePathName) => {
+            return <FeatureBadge key={feature} featurePathName={feature} />;
+          })}
       <SubscriptionEditorModal
         opened={opened}
         onClose={close}

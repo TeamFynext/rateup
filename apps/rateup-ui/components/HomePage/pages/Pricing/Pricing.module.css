@@ -25,6 +25,7 @@
 
 .track {
   outline: 4px solid var(--light-grey-color-4);
+  cursor: pointer;
 }
 
 .thumb {

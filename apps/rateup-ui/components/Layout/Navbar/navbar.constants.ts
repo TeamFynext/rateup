@@ -11,12 +11,13 @@ import {
   IconMessage2Code,
   IconBrandWhatsapp,
   IconFileDescription,
-  IconLayoutDashboard,
   IconAddressBook,
   IconKeyframes,
   IconComet,
   IconTerminal2,
   IconFileInfo,
+  IconHome,
+  IconWaveSine,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
 import { useUserInfo } from "../../../backend/user/user.query";
@@ -45,8 +46,8 @@ export function getNavTopData(subscription?: Subscription) {
 
   const navTopData: Array<NavbarLinkProps> = [
     {
-      Icon: IconLayoutDashboard,
-      label: "Dashboard",
+      Icon: IconHome,
+      label: "Home",
       href: "/dashboard",
       role: "",
     },
@@ -110,6 +111,11 @@ export function getNavTopData(subscription?: Subscription) {
                 Icon: IconMessage2Code,
                 label: "Templates",
                 href: "/dashboard/whatsapp/templates",
+              },
+              {
+                Icon: IconWaveSine,
+                label: "Flows",
+                href: "/dashboard/whatsapp/flows",
               },
               {
                 Icon: IconSettings,

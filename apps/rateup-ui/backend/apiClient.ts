@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     Accept: "application/json",
   },
 });
+
 function subscriptionErrorHandler(error: AxiosError) {
   const response = error.response as AxiosResponse;
   if (response?.status === 403) {
@@ -28,4 +29,12 @@ const axiosClientIP = axios.create({
 });
 axiosClientIP.interceptors.response.use((_) => _, subscriptionErrorHandler);
 
-export { axiosClient, axiosClientIP };
+const razorpayClient = axios.create({
+  baseURL: `https://api.razorpay.com/v1`,
+  timeout: 8000,
+  headers: {
+    Accept: "application/json",
+  },
+});
+
+export { axiosClient, axiosClientIP, razorpayClient };

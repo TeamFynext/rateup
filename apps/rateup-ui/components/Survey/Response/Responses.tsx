@@ -56,7 +56,13 @@ import styles from "./Responses.module.css";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 
-const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
+const Responses = ({
+  survey,
+  responses,
+  allResponses,
+  defaultLanguage,
+  isLoading,
+}) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -219,6 +225,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
 
   if (isQLoading) return <Loader />;
   if (QError) return <Text>An error has occurred</Text>;
+  if (isLoading) return <Loader />;
 
   return (
     <Stack h="100%">
