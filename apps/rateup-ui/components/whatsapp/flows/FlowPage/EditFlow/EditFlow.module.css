@@ -1,0 +1,29 @@
+.edit-flow-root-div {
+  height: 100%;
+  display: flex;
+  gap: 1.25rem;
+}
+
+.edit-flow-root-div > div {
+  min-width: 200px;
+  height: 100%;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px 5px rgba(135, 135, 135, 0.1);
+  padding: 1rem;
+}
+
+.editor-container {
+  flex: 1.25 1 0;
+}
+
+.edit-flow-tabs-root {
+  height: 100%;
+}
+
+.edit-flow-tabs-root :global(.mantine-Tabs-panel) {
+  height: 100%;
+}
+
+.preview-container {
+  flex: 0.75 1 0;
+}
