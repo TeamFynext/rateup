@@ -52,6 +52,9 @@ import { subscriptionRoutes } from "./modules/subscription/subscription.route";
 import { unsplashRoutes } from "./modules/unsplash/unsplash.route";
 import { unsplashSchemas } from "./modules/unsplash/unsplash.schema";
 import { subscriptionSchemas } from "./modules/subscription/subscription.schema";
+import { paymentRoutes } from "./modules/payment/payment.route";
+import { paymentSchemas } from "./modules/payment/payment.schema";
+import { paymentPublicRoutes } from "./modules/payment/payment.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -74,7 +77,8 @@ export function registerRoutes(server: FastifyInstance): void {
     reviewSuggestionSchemas,
     menuBannerSchemas,
     unsplashSchemas,
-    subscriptionSchemas
+    subscriptionSchemas,
+    paymentSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -119,4 +123,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" });
   server.register(reputationManagementRoutes, { prefix: "api/rm" });
   server.register(subscriptionRoutes, { prefix: "api/subscription" });
+  server.register(paymentRoutes, { prefix: "api/payment" });
+  server.register(paymentPublicRoutes, { prefix: "api/public/payment" });
 }

@@ -5,19 +5,19 @@ import { waSettingsSchema } from "./settings/wa_settings.schema";
 import { waTemplateSchemas } from "./messageTemplates/wa_templates.schema";
 import { waWebhookRoutes } from "./whatsappSurvey/wasurvey.route";
 import { waRedirectRoutes } from "./redirect/wa_redirect.route";
+import { flowRoutes } from "./flows/flow.route";
+import { waFlowSchemas } from "./flows/flow.schema";
 
 export async function whatsappRoutes(server: FastifyInstance) {
-    const modules = [
-        waSettingsSchema,
-        waTemplateSchemas,
-    ]
-    for (const module of modules) {
-        for (const schema of module) {
-            server.addSchema(schema);
-        }
+  const modules = [waSettingsSchema, waTemplateSchemas, waFlowSchemas];
+  for (const module of modules) {
+    for (const schema of module) {
+      server.addSchema(schema);
     }
-    server.register(waTemplatesRoutes, { prefix: "/templates" })
-    server.register(waSettingsRoutes, { prefix: "/settings" })
-    server.register(waWebhookRoutes, { prefix: "/webhook" })
-    server.register(waRedirectRoutes, { prefix: "/redirect" })
+  }
+  server.register(waTemplatesRoutes, { prefix: "/templates" });
+  server.register(flowRoutes, { prefix: "/flows" });
+  server.register(waSettingsRoutes, { prefix: "/settings" });
+  server.register(waWebhookRoutes, { prefix: "/webhook" });
+  server.register(waRedirectRoutes, { prefix: "/redirect" });
 }

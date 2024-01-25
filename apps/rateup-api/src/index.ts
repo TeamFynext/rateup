@@ -9,7 +9,8 @@ import { SuperTokensConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
 import formDataPlugin from "@fastify/formbody";
 import { parseArrayString } from "./utils/array";
-
+import { sendFlow } from "./modules/whatsapp/flows/flow.service";
+import { log } from "./utils/logger";
 
 const server = Fastify({
   // logger: logOptions,
@@ -18,14 +19,24 @@ const server = Fastify({
 supertokens.init(SuperTokensConfig);
 
 server.register(cors, {
-  origin: [process.env.ELECTION_APP_URL, process.env.FRONTEND_URL, ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url))],
-  allowedHeaders: ['Content-Type', ...supertokens.getAllCORSHeaders()],
+  origin: [
+    process.env.ELECTION_APP_URL,
+    process.env.FRONTEND_URL,
+    ...parseArrayString(process.env.CORS_WHITELIST).map(
+      (url) => new RegExp(url),
+    ),
+  ],
+  allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
   credentials: true,
-})
+});
 
-server.get("/api/ping", async (req) => {
-  console.log(req.headers)
-  return { message: "pong!" };
+server.get("/api/ping", async (req, reply) => {
+  try {
+    reply.send({ message: "pong" });
+  } catch (e) {
+    log.error(e);
+    reply.status(500).send({ message: "error" });
+  }
 });
 
 registerRoutes(server);
@@ -33,7 +44,6 @@ server.register(formDataPlugin);
 server.register(plugin);
 server.setErrorHandler(errorHandler());
 async function main() {
-
   const port: number = parseInt(process.env.PORT || "3001");
   const host: string = process.env.HOST || "0.0.0.0";
   server
@@ -53,6 +63,5 @@ async function main() {
 if (require.main === module) {
   main();
 }
-
 
 export default server;

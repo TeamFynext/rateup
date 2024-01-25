@@ -1,15 +1,17 @@
-import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
-const s3 = new S3Client({
+export const s3 = new S3Client({
   region: process.env.AWS_S3_REGION,
   credentials: {
     accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_S3_SECRET_KEY,
   },
 });
-
-const CLOUDFRONT_DOMAIN = process.env.AWS_CLOUDFRONT_DOMAIN;
 
 export async function uploadFile(params) {
   try {
@@ -45,3 +47,20 @@ export async function deleteFile(params) {
     return err;
   }
 }
+
+export const getAWSObject = async (key: string) => {
+  const command = new GetObjectCommand({
+    Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
+    Key: key,
+  });
+
+  try {
+    const response = await s3.send(command);
+    // The Body object also has 'transformToByteArray' and 'transformToWebStream' methods.
+    const str = await response.Body;
+    console.log(str.transformToString());
+    return str;
+  } catch (err) {
+    console.error(err);
+  }
+};

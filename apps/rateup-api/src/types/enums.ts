@@ -1,5 +1,9 @@
 // Any modification to this file should be reflected in the frontend
-
+export enum SurveyType {
+  Web = "web",
+  WhatsApp = "whatsapp",
+  WaFlow = "waFlow",
+}
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",
@@ -78,6 +82,13 @@ export enum WaTemplateStatus {
   PENDING = "PENDING",
   REJECTED = "REJECTED",
 }
+export enum WaFlowStatus {
+  PUBLISHED = "PUBLISHED",
+  DRAFT = "DRAFT",
+  DEPRECATED = "DEPRECATED",
+  BLOCKED = "BLOCKED",
+  THROTTLED = "THROTTLED",
+}
 // changes.field
 export enum WaEvent {
   TemplateStatusChange = "message_template_status_update",
@@ -129,4 +140,21 @@ export enum TestimonialFeatureQuestions {
   hasJobTitle = "Please share your job Title",
   hasRating = "Plase Rate us",
   hasPhoto = "Please share your photo",
+}
+export enum WaFlowLayoutType {
+  scl = "SingleColumnLayout",
+}
+export enum WaFlowFormElementType {
+  textBody = "TextBody",
+  textHeading = "TextHeading",
+  textSubHeading = "TextSubHeading",
+  textCaption = "TextCaption",
+  textInput = "TextInput",
+  textArea = "TextArea",
+  datePicker = "DatePicker",
+  footer = "Footer",
+  radioButtonsGroup = "RadioButtonsGroup",
+  checkboxGroup = "CheckboxGroup",
+  dropDown = "Dropdown",
+  optIn = "OptIn",
 }

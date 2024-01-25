@@ -14,10 +14,12 @@ import { QuestionType } from "../../types/enums";
 const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
 
+// TODO: fix return type
+// should throw error on error instead of returning error message as string
 export async function createSurvey(
   data: CreateSurveyInput,
   createdBy: string,
-  notificationEmail: string,
+  notificationEmail?: string,
 ) {
   const { templateId, ...input } = data;
   const teamIds = input?.teamIds?.map((teamId) => ({ teamId }));
