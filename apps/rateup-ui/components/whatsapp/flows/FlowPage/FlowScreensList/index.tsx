@@ -7,15 +7,16 @@ import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import CreateFlowScreenModal from "./CreateFlowScreenModal";
 
-function FlowScreensList({}) {
+function FlowScreensList({
+  setActiveEditFlowTab,
+  setEditFlowScreenQsScreenId,
+}) {
   const { flowJsonObj, setFlowJsonObj } = useContext(FlowJsonObjContext);
 
   const [
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
-
-  console.log(JSON.stringify(flowJsonObj), "from flowscreens list comp");
 
   return (
     <Box className={styles["flow-screens-list-container"]}>
@@ -30,7 +31,14 @@ function FlowScreensList({}) {
       </Box>
       <Box className={styles["screens-list-div"]}>
         {flowJsonObj.screens.map(({ id }) => {
-          return <ScreenListItem key={id} screenId={id} />;
+          return (
+            <ScreenListItem
+              key={id}
+              screenId={id}
+              setActiveEditFlowTab={setActiveEditFlowTab}
+              setEditFlowScreenQsScreenId={setEditFlowScreenQsScreenId}
+            />
+          );
         })}
       </Box>
       {isCreateFlowScreenModalOpen && (

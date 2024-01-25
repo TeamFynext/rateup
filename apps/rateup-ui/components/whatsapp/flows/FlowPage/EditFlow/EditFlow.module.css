@@ -16,6 +16,14 @@
   flex: 1.25 1 0;
 }
 
+.edit-flow-tabs-root {
+  height: 100%;
+}
+
+.edit-flow-tabs-root :global(.mantine-Tabs-panel) {
+  height: 100%;
+}
+
 .preview-container {
   flex: 0.75 1 0;
 }

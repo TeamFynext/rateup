@@ -1,11 +1,15 @@
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import styles from "./FlowScreensList.module.css";
 import { useForm } from "@mantine/form";
-import { useCallback, useContext, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { FlowJsonObjContext } from "../EditFlow/FlowJsonObjContext";
-import { updateFlowJson } from "./utils";
+import {
+  getNewScreenObj,
+  getScreenObjById,
+  updateFlowJsonNavigateTerminalScreens,
+} from "./utils";
 
-function CreateFlowScreenModal({ opened, close }) {
+function CreateFlowScreenModal({ opened, close, screenId = null }) {
   const { flowJsonObj, setFlowJsonObj } = useContext(FlowJsonObjContext);
   const formElementRef = useRef(null);
 
@@ -43,15 +47,39 @@ function CreateFlowScreenModal({ opened, close }) {
 
   const handleFormSubmit = useCallback((values) => {
     setFlowJsonObj((draft) => {
-      updateFlowJson(draft, values);
+      if (!screenId) {
+        draft.screens.push(getNewScreenObj(values));
+        updateFlowJsonNavigateTerminalScreens(draft);
+      } else {
+        const screenToBeEdited = getScreenObjById(draft.screens, screenId);
+        const layoutChildren =
+          screenToBeEdited.layout["children"][0]["children"];
+        const footerObj = layoutChildren[layoutChildren.length - 1];
+        screenToBeEdited["id"] = values.screenId;
+        screenToBeEdited["title"] = values.screenTitle;
+        footerObj["label"] = values.footerBtnLabel;
+      }
     });
     close();
+  }, []);
+
+  useEffect(() => {
+    if (screenId) {
+      const screenToBeEdited = getScreenObjById(flowJsonObj.screens, screenId);
+      const layoutChildren = screenToBeEdited.layout["children"][0]["children"];
+      const footerObj = layoutChildren[layoutChildren.length - 1];
+      form.setValues({
+        screenId: screenToBeEdited.id,
+        screenTitle: screenToBeEdited.title,
+        footerBtnLabel: footerObj.label,
+      });
+    }
   }, []);
 
   return (
     <Modal
       opened={opened}
-      title={"Create Flow Screen"}
+      title={screenId ? "Edit Flow Screen" : "Create Flow Screen"}
       onClose={close}
       centered
       classNames={{ root: styles["create-flow-screen-modal-root"] }}
@@ -77,7 +105,7 @@ function CreateFlowScreenModal({ opened, close }) {
         />
 
         <Button type="submit" className={styles["create-submit-btn"]}>
-          Create
+          {screenId ? "Edit" : "Create"}
         </Button>
       </form>
     </Modal>

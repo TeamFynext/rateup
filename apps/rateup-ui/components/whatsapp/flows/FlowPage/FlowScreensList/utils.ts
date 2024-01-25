@@ -1,4 +1,14 @@
-const getNewScreenObj = (screenId, screenTitle, footerBtnLabel) => {
+type newScreenDataObj = {
+  screenId: string;
+  screenTitle: string;
+  footerBtnLabel: string;
+};
+
+const getNewScreenObj = ({
+  screenId,
+  screenTitle,
+  footerBtnLabel,
+}: newScreenDataObj) => {
   return {
     id: screenId,
     title: screenTitle,
@@ -26,20 +36,9 @@ const getNewScreenObj = (screenId, screenTitle, footerBtnLabel) => {
   };
 };
 
-type newScreenDataObj = {
-  screenId: string;
-  screenTitle: string;
-  footerBtnLabel: string;
-};
-
 // We need to pass the draft of immer(used useImmer as state in EditFlow).
-const updateFlowJson = (draft, newScreenDataObj?: newScreenDataObj) => {
+const updateFlowJsonNavigateTerminalScreens = (draft) => {
   const screens = draft.screens;
-
-  if (newScreenDataObj) {
-    const { screenId, screenTitle, footerBtnLabel } = newScreenDataObj;
-    screens.push(getNewScreenObj(screenId, screenTitle, footerBtnLabel));
-  }
   screens.forEach((screen, currentIndex) => {
     delete screen["success"];
     delete screen["terminal"];
@@ -67,4 +66,12 @@ const updateFlowJson = (draft, newScreenDataObj?: newScreenDataObj) => {
   });
 };
 
-export { updateFlowJson };
+const getScreenObjById = (screens, screenId) => {
+  return screens.find((screen) => screen.id === screenId);
+};
+
+export {
+  updateFlowJsonNavigateTerminalScreens,
+  getNewScreenObj,
+  getScreenObjById,
+};
