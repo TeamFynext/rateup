@@ -32,7 +32,7 @@ import whatsappStyles from "../whatsapp.module.css";
 import {
   useImportFlowsMutation,
   useUnsyncedFlows,
-  useWFlowJson,
+  useWaFlowJson,
 } from "../../../backend/whatsapp/flow/flow.query";
 import {
   WaFlow,
@@ -198,7 +198,7 @@ function ConfigureFlow({
   form: UseFormReturnType<any>;
   handleNext: () => void;
 }) {
-  const { data: flowJson, isLoading, error, isError } = useWFlowJson(flow.id);
+  const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
 
   useEffect(() => {
     if (flowJson) {

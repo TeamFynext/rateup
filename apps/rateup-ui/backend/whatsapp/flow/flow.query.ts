@@ -1,23 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getUnsyncedFlows,
-  getWaFlowFromDb,
-  getWaFlowFromWa,
+  getWaFlowsFromDb,
+  getWaFlowsFromWa,
   getWaFlowJson,
   importFlows,
+  getWaFlowFromDb,
 } from "./flow.api";
 import { showSuccessToast } from "../../../utils/notifications";
 
 export const useWaFlowsFromDb = () =>
   useQuery({
     queryKey: ["flow", "db"],
-    queryFn: getWaFlowFromDb,
+    queryFn: getWaFlowsFromDb,
   });
 
 export const useWaFlowsFromWa = () =>
   useQuery({
     queryKey: ["flow", "wa"],
-    queryFn: getWaFlowFromWa,
+    queryFn: getWaFlowsFromWa,
   });
 
 export const useUnsyncedFlows = (enabled: boolean) =>
@@ -27,9 +28,15 @@ export const useUnsyncedFlows = (enabled: boolean) =>
     enabled,
   });
 
-export const useWFlowJson = (flowId: string) =>
+export const useWaFlowFromDb = (flowId: string) =>
   useQuery({
-    queryKey: ["flow", flowId],
+    queryKey: ["flow", "db", flowId],
+    queryFn: () => getWaFlowFromDb(flowId),
+  });
+
+export const useWaFlowJson = (flowId: string) =>
+  useQuery({
+    queryKey: ["flow", "wa", flowId],
     queryFn: () => getWaFlowJson(flowId),
   });
 

@@ -1,6 +1,7 @@
 import { Box, Tabs } from "@mantine/core";
 import styles from "./FlowPageBody.module.css";
 import { tabPanelsList } from "../constants";
+import EditFlow from "../EditFlow/EditFlow";
 
 function FlowPageBody(props) {
   const { tabState, ...remaningProps } = props;
@@ -8,14 +9,9 @@ function FlowPageBody(props) {
   return (
     <Box className={styles["flow-page-body"]}>
       <Tabs value={tabState} h={"100%"}>
-        {tabPanelsList.map((obj) => {
-          const { id, component: Comp, tabValue } = obj;
-          return (
-            <Tabs.Panel key={id} value={tabValue} h={"100%"}>
-              <Comp {...remaningProps} />
-            </Tabs.Panel>
-          );
-        })}
+        <Tabs.Panel value="Edit" h={"100%"}>
+          <EditFlow {...remaningProps} />
+        </Tabs.Panel>
       </Tabs>
     </Box>
   );

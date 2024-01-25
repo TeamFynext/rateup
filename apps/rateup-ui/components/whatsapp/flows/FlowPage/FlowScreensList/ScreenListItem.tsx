@@ -9,7 +9,7 @@ import {
 } from "./utils";
 import { useDisclosure } from "@mantine/hooks";
 import EditFlowScreenModal from "./CreateFlowScreenModal";
-import { EditFlowTabs } from "../EditFlow";
+import { EditFlowTabs } from "../EditFlow/EditFlow";
 
 function ScreenListItem({
   screenId,

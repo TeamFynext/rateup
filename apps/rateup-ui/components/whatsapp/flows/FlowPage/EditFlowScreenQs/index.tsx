@@ -1,6 +1,6 @@
 import { ActionIcon, Box } from "@mantine/core";
 import styles from "./EditFlowScreenQs.module.css";
-import { EditFlowTabs } from "../EditFlow";
+import { EditFlowTabs } from "../EditFlow/EditFlow";
 import { IconArrowNarrowLeft } from "@tabler/icons";
 import QuestionsList from "./QuestionsList";
 

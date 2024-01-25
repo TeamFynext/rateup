@@ -4,12 +4,16 @@ import { axiosClient } from "../../apiClient";
 
 const BASE = `${WHATSAPP_URL}/flows`;
 
-export async function getWaFlowFromDb() {
+export async function getWaFlowsFromDb() {
   const res = await axiosClient.get(`${BASE}?source=db`);
   return res.data;
 }
-export async function getWaFlowFromWa() {
+export async function getWaFlowsFromWa() {
   const res = await axiosClient.get(`${BASE}?source=wa`);
+  return res.data;
+}
+export async function getWaFlowFromDb(flowId: string) {
+  const res = await axiosClient.get(`${BASE}/${flowId}`);
   return res.data;
 }
 export async function getUnsyncedFlows() {

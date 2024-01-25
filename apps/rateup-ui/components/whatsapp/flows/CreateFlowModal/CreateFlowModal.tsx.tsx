@@ -3,7 +3,6 @@ import styles from "./CreateFlowModal.module.css";
 import { flowsCategories } from "../constants";
 import { useForm } from "@mantine/form";
 import { useCallback } from "react";
-import { useCreateFlowMutation } from "../../../../backend/whatsapp/flows/waFlows.query";
 
 function CreateFlowModal({ opened, onClose }) {
   const form = useForm({
@@ -18,19 +17,15 @@ function CreateFlowModal({ opened, onClose }) {
     },
   });
 
-  const createFlowMutation = useCreateFlowMutation();
-
   const handleModalClose = useCallback(() => {
     form.reset();
     onClose();
   }, [form]);
 
-  const handleSubmitBtnClick = useCallback(async () => {
-    const data = await createFlowMutation.mutateAsync({
-      body: form.values,
-    });
-    handleModalClose();
-  }, [form]);
+  const handleSubmitBtnClick = () => {
+    console.log(form.values);
+    return;
+  };
 
   return (
     <Modal
