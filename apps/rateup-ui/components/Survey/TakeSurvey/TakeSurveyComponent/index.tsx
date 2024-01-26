@@ -73,7 +73,7 @@ import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import { PCQForm } from "./QuestionForms/PCQForm";
-import { MotionTransition } from "../../../animation/MotionTransition";
+import { motion } from "framer-motion";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -525,11 +525,16 @@ function TakeSurvey({ survey }) {
             />
             <Stack>
               <Stack style={{ minHeight: "45vh" }} justify="center">
-                <MotionTransition keyValue={{ id: QnNo }} type="bottomSlideIn">
+                <motion.div
+                  key={selectedQ.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1 }}
+                >
                   <QuestionTitle largeScreen={largeScreen} />
                   <QuestionDesc largeScreen={largeScreen} />
                   <QuestionForm />
-                </MotionTransition>
+                </motion.div>
               </Stack>
               <NextPrev
                 next={handleNext}
