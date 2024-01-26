@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useMediaQuery } from "@mantine/hooks";
 import {
   Box,
@@ -21,6 +20,7 @@ import { useRouteAndCartStore } from "./store/RouteAndCartStore";
 import CenteredSpinner from "../../../Loaders/CenteredSpinner";
 import { useCheckSession } from "../../../../hooks/checkSession";
 import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
+import { MotionTransition } from "../../../animation/MotionTransition";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const [value, setValue] = useState("Surveys");
@@ -141,31 +141,23 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
         </Flex>
       </SimpleGrid>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={value ? value : null}
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -10, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {value === "Surveys" ? (
-            <SurveySection
-              largeScreen={largeScreen}
-              handlePlanSelection={handlePlanSelection}
-              plans={updatedPlans}
-              currencySymbol={currencySymbol}
-            />
-          ) : (
-            <MenuSection
-              largeScreen={largeScreen}
-              handlePlanSelection={handlePlanSelection}
-              plans={updatedPlans}
-              currencySymbol={currencySymbol}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">
+        {value === "Surveys" ? (
+          <SurveySection
+            largeScreen={largeScreen}
+            handlePlanSelection={handlePlanSelection}
+            plans={updatedPlans}
+            currencySymbol={currencySymbol}
+          />
+        ) : (
+          <MenuSection
+            largeScreen={largeScreen}
+            handlePlanSelection={handlePlanSelection}
+            plans={updatedPlans}
+            currencySymbol={currencySymbol}
+          />
+        )}
+      </MotionTransition>
     </Stack>
   );
 };

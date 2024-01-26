@@ -1,16 +1,16 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Checkbox, Stack } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
+import { Checkbox, ScrollArea } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
+import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
 }
 
-export function MSQForm({ previewChoices }: MCQFormProps) {
+export function MSQForm({ previewChoices }: Readonly<MCQFormProps>) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
@@ -36,19 +36,14 @@ export function MSQForm({ previewChoices }: MCQFormProps) {
   };
 
   return (
-    <Checkbox.Group value={selectedOp} onChange={handleSelectedOp}>
-      <Stack>
-        {data?.map((choice) => (
-          <Checkbox
-            value={choice}
-            key={choice}
-            label={choice}
-            classNames={{
-              label: classes.input,
-            }}
-          />
-        ))}
-      </Stack>
-    </Checkbox.Group>
+    <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
+      <Checkbox.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+        <MultipleSelectCard
+          data={data}
+          checkBoxEnable
+          selectedValue={selectedOp}
+        />
+      </Checkbox.Group>
+    </ScrollArea.Autosize>
   );
 }

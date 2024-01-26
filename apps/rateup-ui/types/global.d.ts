@@ -181,6 +181,12 @@ declare global {
         email: string;
         phone: string;
       };
+      [QuestionType.Contact]?: {
+        name: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+      };
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
       [QuestionType.Rating]?: number;

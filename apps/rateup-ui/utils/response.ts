@@ -28,6 +28,11 @@ export function getResponse(qId: string, response: SurveyResponse) {
     const date = dayjs(dateTimeValue);
     const formattedDate = date.format("D, MMM YYYY");
     return `${formattedDate}`;
+  } else if (type === QuestionType.Contact) {
+    let formattedResponse = Object.entries(qResponse.response[type]).map(
+      ([key, value]) => key + ": " + value,
+    );
+    return formattedResponse.join(", ");
   } else if (ChoiceTypeQuestions.includes(type)) {
     const responseValue = responseType[type];
     if (responseValue) {
