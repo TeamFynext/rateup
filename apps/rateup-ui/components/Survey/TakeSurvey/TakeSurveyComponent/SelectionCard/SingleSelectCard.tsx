@@ -46,6 +46,7 @@ export function ImageCheckbox({
   return (
     <UnstyledButton
       {...others}
+      c={"black"}
       onClick={() => {
         handleChange(true);
         radioButtonRef?.current?.click();
