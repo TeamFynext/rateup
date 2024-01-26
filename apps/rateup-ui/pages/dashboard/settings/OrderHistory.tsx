@@ -18,13 +18,13 @@ const OrderHistory = ({ orders }) => {
       <Title order={2} style={{ minWidth: "140px" }} mt="xl">
         Order History :
       </Title>
-      <Divider />
+      <Divider m="0" p="0" />
       {(!orders || orders.length < 1) && (
         <Text m="50px" c="dimmed">
           No orders found..!
         </Text>
       )}
-      <ScrollArea h={400}>
+      <ScrollArea h={400} mt="-30px" p="0">
         {orders
           ?.sort(
             (a, b) =>
@@ -52,10 +52,13 @@ const OrderHistory = ({ orders }) => {
                     Total Amount <br /> {order?.currency === "INR" ? "₹" : "$"}{" "}
                     {order?.amount} /-
                   </Text>
-                  <Text>
-                    Order Id <br />
-                    {order?.id}
-                  </Text>
+                  <Stack gap="5px">
+                    <Text>Order Id</Text>
+                    <Text size="xs" c="dimmed">
+                      {order?.id}
+                    </Text>
+                  </Stack>
+
                   <OrderStatusBadge order={order} />
                 </Group>
                 <Group px="md" pt="sm" justify="space-between">
@@ -70,7 +73,7 @@ const OrderHistory = ({ orders }) => {
 
                     <Group mt="xl">
                       <Text fw={500} style={{ minWidth: "150px" }}>
-                        Payment by :
+                        Payment Method :
                       </Text>
                       <Text c="dimmed">
                         {order?.paymentMethod

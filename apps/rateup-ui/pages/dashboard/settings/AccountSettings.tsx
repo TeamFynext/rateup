@@ -236,21 +236,29 @@ const AccountSettings = () => {
           reset();
         }}
         centered
-        title="Order Completed 🎉"
+        title="Order Processing Started 🎉"
         buttonTitle="Continue"
         isLoading={isLoading}
         onSubmit={() => {
           closeSummary();
         }}
+        size="auto"
       >
-        <Group mt="md" justify="space-between" mb="xl">
+        <Group
+          mt="md"
+          justify="space-between"
+          mb="xl"
+          style={{ minWidth: "350px" }}
+        >
           <Stack>
             <Text c="green" fw={500}>
               Your payment was successful..!
             </Text>
             <Text>
-              Thank you for your premium plan subscription. Enjoy your Rateup
-              Premium features now.
+              Thank you for choosing Rateup Premium subscription. <br /> <br />{" "}
+              You can enjoy Rateup Premium features once your order is processed
+              successfully. <br />
+              You will be notified by email shortly.
             </Text>
           </Stack>
         </Group>
