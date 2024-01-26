@@ -43,7 +43,7 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
               </Text>
             </>
           ) : (
-            <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
+            <Text c="dark.3" miw={200} fw={fw} fz={fz}>
               {content}
             </Text>
           )}

@@ -102,7 +102,7 @@ export function SingleSelectCard({
   includeImage = false,
   fallbackEnable = true,
 }) {
-  const items = data.map((item: string | { value: string; image: string }) => (
+  const items = data?.map((item: string | { value: string; image: string }) => (
     <ImageCheckbox
       title={item}
       key={typeof item === "string" ? item : item.value}

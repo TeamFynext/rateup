@@ -14,7 +14,7 @@ interface PCQFormProps {
 export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ?.choices[selectedLanguage];
+  const choices = selectedQ?.choices?.[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
   const router = useRouter();
   const { response, updateResponse } = useContext(CurrentResponsesContext);

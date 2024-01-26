@@ -113,20 +113,26 @@ const Responses = ({
             name: "",
             teamId: teamId,
           };
+          let phone = null;
+          let email = null;
           switch (res.type) {
             case QuestionType.Email:
-              contact.email = res.response?.[QuestionType.Email];
+              email = res.response?.[QuestionType.Email];
               break;
             case QuestionType.Phone:
-              contact.phone = res.response?.[QuestionType.Phone].slice(1);
+              phone = res.response?.[QuestionType.Phone];
               break;
             case QuestionType.EmailPhone:
-              const phone = res.response?.[QuestionType.EmailPhone]?.phone;
-              const email = res.response?.[QuestionType.EmailPhone]?.email;
-              contact.phone = phone ? phone.slice(1) : undefined;
-              contact.email = email ? email : undefined;
+              phone = res.response?.[QuestionType.EmailPhone]?.phone;
+              email = res.response?.[QuestionType.EmailPhone]?.email;
               break;
+            case QuestionType.Contact:
+              phone = res.response?.[QuestionType.Contact]?.phone;
+              email = res.response?.[QuestionType.Contact]?.email;
+              contact.name = res.response?.[QuestionType.Contact]?.name;
           }
+          contact.phone = phone ? phone.slice(1) : undefined;
+          contact.email = email ? email : undefined;
           if (
             !contacts.some(
               (c) =>

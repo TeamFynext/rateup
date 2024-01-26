@@ -74,6 +74,7 @@ import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import { PCQForm } from "./QuestionForms/PCQForm";
 import { motion } from "framer-motion";
+import ContactForm from "./QuestionForms/ContactForm";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -479,6 +480,36 @@ function TakeSurvey({ survey }) {
                                       </Text>
                                     </Stack>
                                   );
+                                case Q.Contact:
+                                  const res = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  return (
+                                    <Stack>
+                                      <Group>
+                                        <Text fw="400">Name: </Text>
+                                        <Text fw="300">{res?.name}</Text>
+                                      </Group>
+                                      {res?.phone && (
+                                        <Group mt="-10px">
+                                          <Text fw="400">Phone: </Text>
+                                          <Text fw="300">{res?.phone}</Text>
+                                        </Group>
+                                      )}
+                                      {res?.email && (
+                                        <Group>
+                                          <Text fw="400">Email: </Text>
+                                          <Text fw="300">{res?.email}</Text>
+                                        </Group>
+                                      )}
+                                      {res?.address && (
+                                        <Group mt="-10px">
+                                          <Text fw="400">Address: </Text>
+                                          <Text fw="300">{res?.address}</Text>
+                                        </Group>
+                                      )}
+                                    </Stack>
+                                  );
                                 default:
                                   return JSON.stringify(
                                     Object.values(response?.response)[0],
@@ -673,6 +704,8 @@ function getQuestionForm(type, selectedQ) {
       return <CustomNPSForm key={selectedQ?.id} />;
     case Q.PCQ:
       return <PCQForm key={selectedQ?.id} />;
+    case Q.Contact:
+      return <ContactForm key={selectedQ?.id} features={selectedQ?.features} />;
     default:
       return <div>not implemented</div>;
   }
@@ -683,7 +716,7 @@ function NextPrev({ prev, next, num, total, survey }) {
   //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
-
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -769,6 +802,32 @@ function NextPrev({ prev, next, num, total, survey }) {
         setErrorMsg("");
         setIsErrorInput(false);
       }
+    } else if (selectedQ?.required && selectedQ.type == Q.Contact) {
+      if (!response?.name?.length) {
+        setErrorMsg("Please enter your name");
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.hasPhone &&
+        (!response?.phone || !isValidPhoneNumber(response?.phone))
+      ) {
+        if (!response?.phone) setErrorMsg("phone number cannot be blank");
+        else if (!isValidPhoneNumber(response?.phone))
+          setErrorMsg("Enter a valid phone number");
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.hasEmail &&
+        (!response?.email?.length || !emailPattern.test(response?.email))
+      ) {
+        if (!response?.email?.length) setErrorMsg("Email cannot be blank");
+        else if (!emailPattern.test(response?.email))
+          setErrorMsg("Enter a valid email");
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.hasAddress &&
+        !response?.address?.length
+      ) {
+        setErrorMsg("Please enter address");
+      } else {
+        setErrorMsg("");
+        setIsErrorInput(false);
+      }
     } else {
       setErrorMsg("");
       setIsErrorInput(false);
@@ -798,7 +857,8 @@ function NextPrev({ prev, next, num, total, survey }) {
       selectedQ?.type === Q.Email ||
       selectedQ?.type === Q.Phone ||
       selectedQ?.type === Q.EmailPhone ||
-      selectedQ?.type === Q.Testimonial
+      selectedQ?.type === Q.Testimonial ||
+      selectedQ.type === Q.Contact
     ) {
       if (!errorMsg) {
         next();

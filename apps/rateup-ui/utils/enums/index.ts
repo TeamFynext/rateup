@@ -83,6 +83,8 @@ export function getQuestionTypeLabel(type: QuestionType) {
       return "WhatsApp List";
     case QuestionType.WaButtons:
       return "WhatsApp Buttons";
+    case QuestionType.Contact:
+      return "Contact";
     default:
       throw new Error("Invalid Question Type");
   }
