@@ -36,7 +36,12 @@ export function MCQForm({ previewChoices }: Readonly<MCQFormProps>) {
     updateResponse(res);
   };
   return (
-    <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+    <Radio.Group
+      value={selectedOp}
+      onChange={handleSelectedOp}
+      mr={"sm"}
+      w={"100%"}
+    >
       <SingleSelectCard data={data} selectedValue={selectedOp} />
     </Radio.Group>
   );

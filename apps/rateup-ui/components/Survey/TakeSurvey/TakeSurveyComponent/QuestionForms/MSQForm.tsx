@@ -36,7 +36,12 @@ export function MSQForm({ previewChoices }: Readonly<MCQFormProps>) {
   };
 
   return (
-    <Checkbox.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+    <Checkbox.Group
+      value={selectedOp}
+      onChange={handleSelectedOp}
+      mr={"sm"}
+      w={"100%"}
+    >
       <MultipleSelectCard
         data={data}
         checkBoxEnable
