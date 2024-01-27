@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Radio, ScrollArea } from "@mantine/core";
+import { Radio } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
@@ -35,12 +35,9 @@ export function MCQForm({ previewChoices }: Readonly<MCQFormProps>) {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
   };
-
   return (
-    <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
-        <SingleSelectCard data={data} selectedValue={selectedOp} />
-      </Radio.Group>
-    </ScrollArea.Autosize>
+    <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+      <SingleSelectCard data={data} selectedValue={selectedOp} />
+    </Radio.Group>
   );
 }

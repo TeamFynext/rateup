@@ -18,6 +18,7 @@ import {
   RingProgress,
   Box,
   LoadingOverlay,
+  ScrollArea,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -25,7 +26,7 @@ import {
   usePublicSurvey,
   useUpdateCompletedMutation,
 } from "../../../../backend/surveys/surveys.query";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import dayjs from "dayjs";
 import { LogicAction, QuestionType as Q } from "../../../../types/enums";
@@ -73,11 +74,13 @@ import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import { PCQForm } from "./QuestionForms/PCQForm";
-import { motion } from "framer-motion";
 import ContactForm from "./QuestionForms/ContactForm";
+import { MotionTransition } from "../../../animation/MotionTransition";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
+  const smallScreen = useMediaQuery("(max-width: 30em)");
+
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -100,8 +103,34 @@ function TakeSurvey({ survey }) {
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
   const router = useRouter();
+  const [pageSwitchTransition, setPageSwitchTransition] = useState<
+    "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
+  >("bottomSlideIn");
+  const [boxHeight, setBoxHeight] = useState(0);
+  const boxRef = useRef(null);
 
   if (!selectedLanguage) throw new Error("No language selected");
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (boxRef.current) {
+        setBoxHeight((prevHeight) => {
+          const newHeight = boxRef.current.offsetHeight;
+          return newHeight !== prevHeight ? newHeight : prevHeight;
+        });
+      }
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [boxRef.current]);
+
+  const formMaxHeight = smallScreen
+    ? `calc(100dvh - ${boxHeight + 290}px)`
+    : `calc(100dvh - ${boxHeight + 360}px)`;
+
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
@@ -156,12 +185,14 @@ function TakeSurvey({ survey }) {
 
   const goTo = (question: Question) => {
     setSelectedQ(question);
+    setPageSwitchTransition("bottomSlideIn");
     questionsHistoryHandlers.append(question.id);
   };
 
   const goBack = () => {
     const prevQId = questionsHistory[questionsHistory.length - 2];
     setSelectedQ(survey.questions.find((q) => q.id === prevQId));
+    setPageSwitchTransition("bottomSlideOut");
     questionsHistoryHandlers.pop();
   };
 
@@ -555,17 +586,29 @@ function TakeSurvey({ survey }) {
               overlayProps={{ radius: "sm", blur: 10 }}
             />
             <Stack>
-              <Stack style={{ minHeight: "45vh" }} justify="center">
-                <motion.div
-                  key={selectedQ.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 1 }}
+              <Stack
+                justify="center"
+                mih={smallScreen ? "calc(100dvh - 290px)" : "56dvh"}
+              >
+                <MotionTransition
+                  keyValue={selectedQ}
+                  type={"fade"}
+                  apEnable={false}
+                  duration={1}
                 >
-                  <QuestionTitle largeScreen={largeScreen} />
-                  <QuestionDesc largeScreen={largeScreen} />
-                  <QuestionForm />
-                </motion.div>
+                  <Box pb={"lg"} ref={boxRef}>
+                    <QuestionTitle largeScreen={largeScreen} />
+                    <QuestionDesc largeScreen={largeScreen} />
+                  </Box>
+                  <ScrollArea.Autosize
+                    mah={formMaxHeight}
+                    p={0}
+                    m={0}
+                    w={"100%"}
+                  >
+                    <QuestionForm />
+                  </ScrollArea.Autosize>
+                </MotionTransition>
               </Stack>
               <NextPrev
                 next={handleNext}
@@ -634,7 +677,6 @@ function QuestionDesc({ largeScreen }) {
     <Text
       size={largeScreen ? "15px" : "16px"}
       c="dimmed"
-      pb={largeScreen ? 20 : 10}
       className={classes.questionTitle}
     >
       {selectedQ.description[selectedLanguage]}
@@ -881,19 +923,21 @@ function NextPrev({ prev, next, num, total, survey }) {
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
     <Stack
-      pt={40}
-      pb="md"
+      pt={"md"}
+      gap={0}
       style={{
         width: "100%",
-        minHeight: isMobile ? "143px" : "163px",
+        minHeight: "74px",
       }}
       justify="flex-end"
     >
-      {selectedQ?.required && !response && (
-        <Text c="gray" mb="md" size={isMobile && "sm"}>
-          *Choose an option or answer to proceed!
-        </Text>
-      )}
+      <Text
+        c="gray"
+        size={isMobile && "sm"}
+        style={{ opacity: selectedQ?.required && !response ? 1 : 0 }}
+      >
+        *Choose an option or answer to proceed!
+      </Text>
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
       <Group justify="space-between">
         <RateupButtonSecondary

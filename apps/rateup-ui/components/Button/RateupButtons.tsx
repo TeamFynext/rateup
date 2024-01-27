@@ -22,6 +22,7 @@ interface Props {
   pt?: string;
   ml?: string;
   styles?: any;
+  mb?: string | number;
   color?: string;
   className?: string;
   gradient?: any;
