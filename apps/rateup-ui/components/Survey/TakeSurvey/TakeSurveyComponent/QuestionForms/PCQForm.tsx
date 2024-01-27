@@ -48,7 +48,12 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const data = options?.map((op) => op?.value);
 
   return (
-    <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+    <Radio.Group
+      value={selectedOp}
+      onChange={handleSelectedOp}
+      mr={"sm"}
+      w={"100%"}
+    >
       <SingleSelectCard
         data={data}
         selectedValue={selectedOp}
