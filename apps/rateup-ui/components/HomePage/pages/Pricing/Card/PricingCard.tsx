@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { IconCircleCheck } from "@tabler/icons-react";
 import {
   Box,
@@ -6,6 +6,8 @@ import {
   Center,
   Divider,
   List,
+  LoadingOverlay,
+  Modal,
   rem,
   Stack,
   Text,
@@ -15,6 +17,8 @@ import { NumberAnimate } from "../Animate/NumberAnimate";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants";
 import ButtonStyles from "./Button.module.css";
+import { useDisclosure } from "@mantine/hooks";
+import styles from "./Modal.module.css";
 
 const PricingCard = ({
   index,
@@ -26,6 +30,17 @@ const PricingCard = ({
   handlePlanSelection,
   menuPage = false,
 }) => {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [isIframeLoading, setIsIframeLoading] = useState(false);
+
+  useEffect(() => {
+    if (opened) setIsIframeLoading(true);
+  }, [opened]);
+
+  const upadateLoadingStateOfIframe = useCallback(() => {
+    setIsIframeLoading(false);
+  }, []);
+
   let marginTop = "xl";
   if (!menuPage && index === 1) {
     marginTop = "-8px";
@@ -72,6 +87,7 @@ const PricingCard = ({
             <RateupButtonPrimary
               title="Contact Sales"
               color={mainColor}
+              onClick={open}
               radius={"xl"}
               sx={{
                 fontSize: Title4,
@@ -130,6 +146,30 @@ const PricingCard = ({
           </Stack>
         </>
       )}
+
+      <Modal
+        opened={opened}
+        classNames={styles}
+        onClose={close}
+        zIndex={400}
+        title={"Contact Sales"}
+        centered
+        size={"100vw"}
+        closeOnClickOutside={false}
+      >
+        <LoadingOverlay
+          visible={isIframeLoading}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+        />
+        {opened && (
+          <iframe
+            onLoad={upadateLoadingStateOfIframe}
+            className={styles["contact-form-iframe"]}
+            src="https://rateup.app/public/survey/89421698-e6dd-43ee-9b63-757a7614bed3"
+          />
+        )}
+      </Modal>
     </Card>
   );
 };
