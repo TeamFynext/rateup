@@ -91,9 +91,7 @@ export async function verificationHandler(
   if (data?.event === "subscription.charged") {
     console.log(".....................subscription.charged");
     try {
-      const paymentPlans = await updateSubscription(
-        data?.payload?.subscription?.entity,
-      );
+      const paymentPlans = await updateSubscription(data?.payload);
       reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);

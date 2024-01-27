@@ -8,6 +8,8 @@ import {
   updateRateUpPlanInput,
 } from "./payment.schema";
 import dayjs from "dayjs";
+import { createEmailBodySubscriptionActivated } from "../../utils/email/payments/subscriptionActivated";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 
 const prisma = new PrismaClient();
 const credentials = Buffer.from(
@@ -211,9 +213,10 @@ export async function deleteRateUpPlan(data: rateupPlanParamInput) {
 }
 
 //Webhook action On Subscription charged
-export async function updateSubscription(data) {
+export async function updateSubscription(payload) {
   try {
-    const { id, notes, current_end } = data;
+    const { subscription, payment } = payload;
+    const { id, notes, current_end } = subscription?.entity;
 
     const rateupPlan = await prisma.rateupPlan.findUnique({
       where: { id: notes?.rateupPlanId },
@@ -230,9 +233,37 @@ export async function updateSubscription(data) {
       },
     });
 
+    const updatedOrder = await prisma.order.update({
+      where: { subscriptionId: id },
+      data: {
+        status: OrderStatus.COMPLETE,
+      },
+    });
+
     console.log(
       "....................updating subscription.....................",
     );
+
+    if (updatedOrder) {
+      console.log("sending email....");
+
+      const msg = {
+        to: payment?.entity?.email, // Change to your recipient
+        // from: 'hello@rateup.app', // Change to your verified sender
+        subject: "Rateup Subscription Activated - Rateup.app",
+        text: `We have received a payment of ${payment.entity.amount / 100}`,
+        html: createEmailBodySubscriptionActivated(
+          rateupPlan?.displayName,
+          new Date(current_end * 1000),
+        ),
+      };
+      try {
+        sendAWSEmail(msg);
+      } catch (error) {
+        console.error(error);
+        throw new Error("Email sending failed. E:" + error);
+      }
+    }
 
     return { success: true, data: updatedSubscription };
   } catch (error) {
@@ -255,7 +286,6 @@ export async function verifyPayment(data, event) {
       notes,
       created_at,
     } = data;
-
     const payment = await prisma.payments.create({
       data: {
         payId: id,
@@ -284,7 +314,7 @@ export async function verifyPayment(data, event) {
         where: { id: notes?.rateupOrderId },
         data: {
           paymentStatus: PaymentStatus.SUCCESS,
-          status: OrderStatus.COMPLETE,
+          status: OrderStatus.PENDING,
         },
       });
     }
@@ -355,7 +385,23 @@ export async function getAllPaymentOrders() {
 
 //Get organization orders
 export async function getAllOrgOrders(orgId: string) {
+  const fifteenMinutesAgo = new Date();
+  fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+
   try {
+    await prisma.order.updateMany({
+      where: {
+        paymentStatus: PaymentStatus.PENDING,
+        createdAt: {
+          lte: fifteenMinutesAgo,
+        },
+      },
+      data: {
+        status: OrderStatus.FAILED,
+        paymentStatus: PaymentStatus.FAILED,
+      },
+    });
+
     const orders = await prisma.order.findMany({
       where: {
         orgId,
@@ -367,6 +413,8 @@ export async function getAllOrgOrders(orgId: string) {
         createdBy: true,
         status: true,
         planId: true,
+        paymentStatus: true,
+        payment: true,
       },
     });
 
@@ -404,6 +452,8 @@ export async function getAllOrgOrders(orgId: string) {
         planFeatures,
         planType,
         displayName,
+        paymentMethod: order?.payment?.method || "",
+        paymentStatus: order.paymentStatus,
       };
     });
 
