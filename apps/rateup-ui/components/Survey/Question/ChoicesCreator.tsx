@@ -79,7 +79,7 @@ export function ChoicesCreator({
   const { surveyTeamMapId } = useContext(SurveyContext);
   const { data: responses } = useResponses(surveyTeamMapId);
   const { updateImageArray } = useImageStore();
-
+  const [inputError, setInputError] = useState("");
   const hasResponse = responses?.length ? true : false;
 
   useEffect(() => {
@@ -91,8 +91,9 @@ export function ChoicesCreator({
 
   const handleAddChoice = async () => {
     try {
-      if (newChoice.trim().length === 0) return;
-      if (choiceWeightage.trim().length === 0) return;
+      if (newChoice.trim().length === 0) return setInputError("Text required");
+      if (choiceWeightage.trim().length === 0)
+        return setInputError("Text required");
       if (
         choices.some(
           (c) =>
@@ -102,7 +103,7 @@ export function ChoicesCreator({
             newChoice.replace(/\s+/g, ""),
         )
       )
-        return;
+        return setInputError("Option already exist");
       let choiceObj = {
         value: newChoice,
         weightage:
@@ -110,6 +111,7 @@ export function ChoicesCreator({
             ? choiceWeightage
             : undefined,
       };
+      setInputError("");
       if (image) {
         if (!selectedImageFile) return setFileError("select image");
         setFileUploadLoading(true);
@@ -208,7 +210,10 @@ export function ChoicesCreator({
           <ContainedTextField
             placeholder="Enter choice here"
             value={newChoice}
-            onChange={(e) => setNewChoice(e.currentTarget.value)}
+            onChange={(e) => {
+              setInputError("");
+              setNewChoice(e.currentTarget.value);
+            }}
             onKeyDown={handleKeyDown}
             style={{
               flexGrow: 1,
@@ -218,6 +223,7 @@ export function ChoicesCreator({
                 <LengthTracker string={newChoice} maxValue={maxCharCount} />
               )
             }
+            error={inputError}
           />
           {form?.values?.type === QuestionType.CustomNPS && (
             <Select
@@ -233,7 +239,11 @@ export function ChoicesCreator({
             />
           )}
           {image && (
-            <Stack gap={0} mt={fileError && "lg"}>
+            <Stack
+              gap={0}
+              mt={fileError && "lg"}
+              mb={inputError?.length > 0 && "lg"}
+            >
               <FileButton
                 onChange={onChangePicture}
                 accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -259,6 +269,7 @@ export function ChoicesCreator({
             leftIcon={<IconPlus size="1rem" />}
             onClick={handleAddChoice}
             loading={fileUploadLoading}
+            mb={inputError?.length > 0 && "lg"}
           />
         </Group>
       )}
