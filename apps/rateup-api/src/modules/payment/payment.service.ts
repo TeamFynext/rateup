@@ -385,7 +385,23 @@ export async function getAllPaymentOrders() {
 
 //Get organization orders
 export async function getAllOrgOrders(orgId: string) {
+  const fifteenMinutesAgo = new Date();
+  fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+
   try {
+    await prisma.order.updateMany({
+      where: {
+        paymentStatus: PaymentStatus.PENDING,
+        createdAt: {
+          lte: fifteenMinutesAgo,
+        },
+      },
+      data: {
+        status: OrderStatus.FAILED,
+        paymentStatus: PaymentStatus.FAILED,
+      },
+    });
+
     const orders = await prisma.order.findMany({
       where: {
         orgId,
