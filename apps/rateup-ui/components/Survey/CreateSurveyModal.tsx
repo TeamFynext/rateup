@@ -1,4 +1,10 @@
-import { Group, Stack, Radio, MultiSelect } from "@mantine/core";
+import {
+  Group,
+  Stack,
+  Radio,
+  MultiSelect,
+  LoadingOverlay,
+} from "@mantine/core";
 import {
   PillsInput,
   Pill,
@@ -16,6 +22,7 @@ import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
 import { useRouter } from "next/router";
 import { useQueryClient } from "@tanstack/react-query";
 import { showErrorToast } from "../../utils/notifications";
+import { useDisclosure } from "@mantine/hooks";
 
 interface FormValues {
   title: string;
@@ -144,6 +151,7 @@ export function CreateSurveyModal({
     resetForm();
   }
 
+  const [isLoading, { toggle: setIsLoading }] = useDisclosure(false);
   const createSurveyMutation = useCreateSurveyMutation();
   const queryClient = useQueryClient();
 
@@ -168,6 +176,7 @@ export function CreateSurveyModal({
           queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
           queryClient.invalidateQueries({ queryKey: ["surveys"] });
           if (data?.id) {
+            setIsLoading();
             router.push(`${router.pathname}/${data?.id}`);
           }
         },
@@ -177,7 +186,17 @@ export function CreateSurveyModal({
       },
     );
   };
-  return (
+  return isLoading ? (
+    <LoadingOverlay
+      visible={isLoading}
+      zIndex={1000}
+      overlayProps={{ radius: "sm", blur: 2 }}
+      loaderProps={{
+        type: "bars",
+        color: "var(--tertiary-color)",
+      }}
+    />
+  ) : (
     <FormModalLayout
       opened={open}
       onClose={handleClose}

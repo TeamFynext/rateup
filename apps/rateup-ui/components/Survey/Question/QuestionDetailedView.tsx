@@ -48,6 +48,7 @@ import { ChoicesCreator } from "./ChoicesCreator";
 import TestimonialExtraProps from "./TestimonialExtraProps";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
+import ContactExtraProps from "./ContactExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -321,6 +322,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
       return <ChoicesCreator qId={question?.id} form={form} image />;
     case QuestionType.Testimonial:
       return <TestimonialExtraProps qId={question.id} form={form} />;
+    case QuestionType.Contact:
+      return <ContactExtraProps form={form} />;
     default:
       return null;
   }

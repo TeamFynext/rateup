@@ -51,6 +51,12 @@ const Billing = ({ subscription, toggle, processingPayment }) => {
               </>
             )}
           </Group>
+          <Group mt="xl" ml="xl">
+            <Title order={4} style={{ minWidth: "140px" }}>
+              Addons :
+            </Title>
+            Nil
+          </Group>
         </Stack>
       )}
     </Stack>

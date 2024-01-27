@@ -9,6 +9,7 @@ export const ContactQuestions = [
   QuestionType.Email,
   QuestionType.Phone,
   QuestionType.EmailPhone,
+  QuestionType.Contact,
 ];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
