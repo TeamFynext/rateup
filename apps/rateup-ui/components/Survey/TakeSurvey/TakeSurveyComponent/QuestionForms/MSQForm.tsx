@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Checkbox, ScrollArea } from "@mantine/core";
+import { Checkbox } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
@@ -36,14 +36,12 @@ export function MSQForm({ previewChoices }: Readonly<MCQFormProps>) {
   };
 
   return (
-    <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
-      <Checkbox.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
-        <MultipleSelectCard
-          data={data}
-          checkBoxEnable
-          selectedValue={selectedOp}
-        />
-      </Checkbox.Group>
-    </ScrollArea.Autosize>
+    <Checkbox.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+      <MultipleSelectCard
+        data={data}
+        checkBoxEnable
+        selectedValue={selectedOp}
+      />
+    </Checkbox.Group>
   );
 }

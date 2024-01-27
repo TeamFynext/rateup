@@ -75,7 +75,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     survey?.id,
     passwordInput,
     close,
-    setIsPasswordVerified
+    setIsPasswordVerified,
   );
 
   if (!selectedLanguage && survey?.languages?.length <= 1) {
@@ -187,7 +187,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
                 survey?.isProtected && isPasswordVerified === false ? null : (
                   <Paper
                     radius="lg"
-                    pb={startClicked && "xl"}
+                    pb={largeScreen && startClicked && "xl"}
                     style={{ flex: 1 }}
                     w={"100%"}
                   >
