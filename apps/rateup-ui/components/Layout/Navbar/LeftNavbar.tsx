@@ -15,6 +15,7 @@ import {
   Box,
 } from "@mantine/core";
 import { useRouter } from "next/router";
+import LoggedInUserCard from "./LoggedInUserCard";
 import { useMediaQuery } from "@mantine/hooks";
 import { useUser } from "../../../context/UserContext";
 import classes from "./Navbar.module.css";
@@ -200,7 +201,6 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       );
     }
   }, [user]);
-  const navBottomData = useNavBottomData();
 
   const userInfo: {
     name: string;
@@ -259,41 +259,21 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
             />
-            <PaperLayout
-              w={"fit-content"}
-              p={2}
-              hoveractive
-              radius={"md"}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                display: "flex",
-              }}
-              className={classes["chevron-container"]}
-            >
-              <IconChevronLeft
-                size={20}
+            <div>
+              <Avatar
+                src={userInfo?.image}
+                alt={userInfo.name}
+                radius="50%"
+                size={90}
                 onClick={() => {
                   setOpened((o) => !o);
                 }}
-                style={{ cursor: "pointer" }}
               />
-            </PaperLayout>
+            </div>
           </Group>
-          <PaperLayout mt={10} w="100%">
-            {LoggedInUserCard(userInfo)}
-          </PaperLayout>
         </Stack>
       ) : (
         <>
-          <Burger
-            opened={opened}
-            onClick={() => {
-              setOpened((o) => !o);
-            }}
-            size="sm"
-            color={theme.colors.gray[6]}
-          />
           <Avatar
             onClick={() => {
               setOpened((o) => !o);
@@ -351,14 +331,6 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
         </ExpiryComponent>
       </ScrollArea>
       <Stack gap={10}>
-        <_NavbarLink
-          data={navBottomData}
-          opened={opened}
-          currentRole={userInfo.role}
-          setOpened={setOpened}
-          active={active}
-          setActive={setActive}
-        />
         <img
           src={
             opened
@@ -374,28 +346,3 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
 };
 
 export default LeftNavbar;
-
-export function LoggedInUserCard(userInfo: {
-  name: string;
-  email: string;
-  role:
-    | typeof UserRole.ADM
-    | typeof UserRole.MEMBER
-    | typeof UserRole.SUPADM
-    | "...error...";
-  image: string;
-}) {
-  return (
-    <Group gap={10} justify="flex-start">
-      <Avatar src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} />
-      <Stack gap={0}>
-        <Text size="sm" fw={500}>
-          {userInfo.name ? userInfo.name : userInfo.email}
-        </Text>
-        <Text c="dimmed" size="xs">
-          {userInfo.role}
-        </Text>
-      </Stack>
-    </Group>
-  );
-}

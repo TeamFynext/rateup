@@ -20,3 +20,32 @@
   position: absolute;
   right: 0;
 }
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  border-radius: 25px;
+  margin-inline-start: auto;
+  margin-top: 6rem;
+  margin-right: 3rem;
+}
+.top-user-icon-image-container {
+  size: 40;
+  margin-left: 1rem;
+}
+.top-user-icon-all-container {
+  gap: 0;
+  margin-left: 1rem;
+}
+.user-icon-top-text-container {
+  size: 15px;
+  margin-left: 1rem;
+}
+.Logged-in-user-card {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-right: 1rem;
+}
+.image-user-icon-container {
+  justify-content: right;
+  margin-right: 2rem;
+}

@@ -15,7 +15,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconTerminal2, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { LoggedInUserCard } from "../Navbar/LeftNavbar";
+import LoggedInUserCard from "../Navbar/LoggedInUserCard";
 import { useUserInfo } from "../../../backend/user/user.query";
 import { adminNavItems } from "./admin.nav";
 
