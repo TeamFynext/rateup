@@ -48,15 +48,19 @@ export default function () {
   } = useCampaignData();
 
   const filteredCampaignsdata =
-    selectedTeam == "all" || !selectedTeam
+    selectedTeam == "all" || !selectedTeam // filtering by team
       ? campaignData?.data
       : campaignDataByTeam?.data;
-  const filteredCampaigns = searchText
-    ? filteredCampaignsdata.filter(
-        (campaign) =>
-          campaign?.name.toLowerCase().includes(searchText.toLowerCase()),
-      )
-    : filteredCampaignsdata;
+
+  const filteredCampaigns = (
+    searchText
+      ? filteredCampaignsdata.filter(
+          // filtering by search text
+          (campaign) =>
+            campaign?.name.toLowerCase().includes(searchText.toLowerCase()),
+        )
+      : filteredCampaignsdata
+  )?.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // sorting by date
 
   return (
     <>

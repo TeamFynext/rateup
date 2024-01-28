@@ -77,10 +77,14 @@ export function getQuestionTypeLabel(type: QuestionType) {
       return "DateTime";
     case QuestionType.CustomNPS:
       return "Custom NPS";
+    case QuestionType.PCQ:
+      return "Picture Choice";
     case QuestionType.WaList:
       return "WhatsApp List";
     case QuestionType.WaButtons:
       return "WhatsApp Buttons";
+    case QuestionType.Contact:
+      return "Contact";
     default:
       throw new Error("Invalid Question Type");
   }

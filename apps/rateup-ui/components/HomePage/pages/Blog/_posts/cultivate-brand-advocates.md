@@ -2,7 +2,7 @@
 title: "Cultivate positive brand advocates: A Puma Case Study"
 date: "10/01/2024"
 slug: "cultivate-brand-advocates"
-coverImage: "/images/blog/cultivate-positive-brand-advocate.jpg"
+coverImage: "https://source.unsplash.com/a-view-of-a-clock-tower-through-a-window-EMzVcmsxmQA"
 ---
 
 # Strategies for Building a Devoted Community: Unraveling the Puma Success Story in Brand Advocacy

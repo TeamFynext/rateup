@@ -182,6 +182,8 @@ const questionIcons = {
   [QuestionType.DDSS]: IconCaretDownFilled,
   [QuestionType.DDMS]: IconCaretUpDown,
   [QuestionType.CustomNPS]: IconAdjustmentsQuestion,
+  [QuestionType.PCQ]: IconAdjustmentsQuestion,
+  [QuestionType.Contact]: IconAddressBook,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
 };

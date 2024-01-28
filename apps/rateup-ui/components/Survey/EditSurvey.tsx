@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import styles from "./EditSurvey.module.css";
+import classes from "./EditSurvey.module.css";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import { MotionTransition } from "../animation/MotionTransition";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -47,8 +48,8 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} gap={12} p={"xs"}>
-      <PaperLayout style={{ flex: 2 }} p={0}>
+    <Flex w={"100%"} h={"100%"} p={2} gap={10}>
+      <PaperLayout style={{ flex: 2 }}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -67,19 +68,21 @@ export function EditSurvey({
           onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           style={{ height: "100%" }}
           classNames={{
-            panel: styles.panel,
+            panel: classes.panel,
           }}
         >
           <Tabs.Panel value={QuestionTabsEnum.Edit} style={{ height: "100%" }}>
             {selectedQ && (
-              <QuestionDetailedView
-                question={selectedQ}
-                setSelectedQ={setSelectedQ}
-                setActiveTab={setActiveTab}
-                surveyLanguages={surveyLanguages}
-                setSelectedLanguage={setSelectedLanguage}
-                key={selectedQ.id}
-              />
+              <MotionTransition keyValue={selectedQ}>
+                <QuestionDetailedView
+                  question={selectedQ}
+                  setSelectedQ={setSelectedQ}
+                  setActiveTab={setActiveTab}
+                  surveyLanguages={surveyLanguages}
+                  setSelectedLanguage={setSelectedLanguage}
+                  key={selectedQ.id}
+                />
+              </MotionTransition>
             )}
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>

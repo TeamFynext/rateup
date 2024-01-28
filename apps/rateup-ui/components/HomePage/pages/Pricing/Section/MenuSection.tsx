@@ -1,98 +1,37 @@
 import React from "react";
-import { Box, Card, Center, Flex, List, Stack, Text, rem } from "@mantine/core";
-import { lexend300 } from "../../../../../utils/fonts";
-import { NumberAnimate } from "../Animate/NumberAnimate";
-import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants";
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import { IconCircleCheck } from "@tabler/icons-react";
+import { Flex, Stack } from "@mantine/core";
+import PricingCard from "../Card/PricingCard";
 
-export const MenuSection = ({ largeScreen, handlePlanSelection, plans }) => {
-  const menuPlan = plans?.filter(
-    (item) => item?.paymentPlan?.name?.includes("Menu"),
-  );
-  const generateListItems = (index: number) => (
-    <List
-      spacing="xs"
-      size="md"
-      center
-      icon={
-        <IconCircleCheck
-          style={{ width: rem(16), height: rem(16), color: "green" }}
-        />
-      }
-    >
-      <List.Item>Create Menu</List.Item>
-      <List.Item>Unlimited Categories</List.Item>
-      <List.Item>Special Banners</List.Item>
-      <List.Item>Custom Welcome Page</List.Item>
-      {index == 1 && <List.Item>Survey Feedbacks</List.Item>}
-    </List>
-  );
+export const MenuSection = ({
+  largeScreen,
+  handlePlanSelection,
+  plans,
+  currencySymbol,
+}) => {
+  const menuPlan = plans
+    ?.filter((item) => item?.name?.includes("Menu"))
+    ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
+
+  const inversePeriod =
+    menuPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
   return (
     <Stack my={"lg"}>
-      <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
+      <Flex justify={"center"} gap={"xl"} wrap={"wrap"}>
         {menuPlan?.map((data, index) => {
           const mainColor =
             index === 0 ? "var(--grey-color-4)" : "var(--shade-of-blue-5)";
           return (
-            <Card
-              shadow="sm"
-              padding="lg"
-              radius="lg"
-              w={CardWidth}
-              mt={"xl"}
-              key={data?.paymentPlan?.name}
-              mih={"clamp(390px, 318.576px + 11.905vw, 490px)"}
-            >
-              <Card.Section>
-                <Box h={22} bg={mainColor} />
-              </Card.Section>
-              <Stack align="center" mt={"md"}>
-                <Text fz={Title4} c={"var(--grey-color)"} tt={"capitalize"}>
-                  {data?.paymentPlan?.name}
-                </Text>
-              </Stack>
-              <Center c={mainColor} my={largeScreen ? "lg" : "xs"}>
-                <Text fz={Title1}>
-                  <sup
-                    style={{
-                      fontSize: Title3,
-                    }}
-                  >
-                    {data?.paymentPlan?.currency}
-                  </sup>
-                  <NumberAnimate value={data?.paymentPlan?.amount} />
-                </Text>
-                <Text>/{data?.paymentPlan?.period}</Text>
-              </Center>
-              <Center>
-                <RateupButtonPrimary
-                  title={
-                    index === 0 ? `Buy Rateup Menu` : "Buy Rateup Menu pro"
-                  }
-                  color={mainColor}
-                  radius={"xl"}
-                  sx={{
-                    fontSize: Title4,
-                    height: Title2,
-                  }}
-                  onClick={() =>
-                    handlePlanSelection({
-                      id: "_ae71uwlj3" + index,
-                      name: data?.paymentPlan?.name,
-                    })
-                  }
-                />
-              </Center>
-              <Stack
-                align="center"
-                ff={lexend300.style.fontFamily}
-                gap={5}
-                mt={"xl"}
-              >
-                {generateListItems(index)}
-              </Stack>
-            </Card>
+            <PricingCard
+              currencySymbol={currencySymbol}
+              data={data}
+              handlePlanSelection={handlePlanSelection}
+              index={index}
+              inversePeriod={inversePeriod}
+              largeScreen={largeScreen}
+              mainColor={mainColor}
+              key={data.id}
+              menuPage={true}
+            />
           );
         })}
       </Flex>

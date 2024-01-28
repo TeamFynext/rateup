@@ -106,16 +106,15 @@
 .inputBox {
   background-color: var(--input-background-color, white);
   color: var(--input-text-color, black);
-  border-radius: var(--input-border-radius, 8px);
+  border-radius: 1rem;
   padding: 6px var(--input-padding, 12px);
-  border-color: var(--light-grey-color);
+  border-color: var(--mantine-color-gray-4);
   border-width: 1px;
   border-style: solid;
 }
 
 .inputPhone {
   font-size: 16px;
-  border: none;
 }
 .inputPhone > input {
   border: none;

@@ -11,6 +11,8 @@ import {
   Tooltip,
   Divider,
   ScrollArea,
+  Anchor,
+  Box,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useMediaQuery } from "@mantine/hooks";
@@ -25,6 +27,7 @@ import {
 import { UserRole } from "../../../utils/enums";
 import { IconChevronLeft } from "@tabler/icons-react";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
+import ExpiryComponent from "../../Premium/ExpiryComponent";
 interface _NavbarLinkProps {
   data: Array<NavbarLinkProps>;
   opened: boolean;
@@ -326,6 +329,26 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
           active={active}
           setActive={setActive}
         />
+
+        <ExpiryComponent expiryDate={subscription?.expiresAt}>
+          <Tooltip
+            label={!opened ? "Buy Rateup Premium" : ""}
+            position="right"
+            styles={{ tooltip: { display: opened && "none" } }}
+          >
+            <Box mt="sm" ml="1px">
+              <Anchor href="/dashboard/settings?activeTab=account">
+                <img
+                  src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/${
+                    opened ? "rateup-pro-ad.png" : "premium-icon.svg"
+                  }`}
+                  alt=""
+                  height={opened ? 180 : 20}
+                />
+              </Anchor>
+            </Box>
+          </Tooltip>
+        </ExpiryComponent>
       </ScrollArea>
       <Stack gap={10}>
         <_NavbarLink

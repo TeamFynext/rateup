@@ -14,6 +14,10 @@
   border-bottom: 1px solid var(--mantine-color-gray-5);
 }
 
+.sgIndicator {
+  color: "white";
+}
+
 .title {
   font-size: 1.225rem;
   font-weight: bold;

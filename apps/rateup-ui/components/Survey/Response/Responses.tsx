@@ -9,9 +9,6 @@ import {
   Badge,
   Button,
   ScrollAreaAutosize,
-  ActionIcon,
-  Popover,
-  Box,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -20,7 +17,6 @@ import {
 import {
   IconEye,
   IconFileDownload,
-  IconFilter,
   IconTrashXFilled,
   IconX,
 } from "@tabler/icons-react";
@@ -59,15 +55,13 @@ import { HoverCardComponent } from "../HoverCard/HoverCard";
 import styles from "./Responses.module.css";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
-import { IconAdjustments } from "@tabler/icons-react";
-import { ResultFilter } from "../Result/Result";
 
 const Responses = ({
   survey,
   responses,
   allResponses,
   defaultLanguage,
-  resultFilterProps,
+  isLoading,
 }) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
@@ -119,20 +113,26 @@ const Responses = ({
             name: "",
             teamId: teamId,
           };
+          let phone = null;
+          let email = null;
           switch (res.type) {
             case QuestionType.Email:
-              contact.email = res.response?.[QuestionType.Email];
+              email = res.response?.[QuestionType.Email];
               break;
             case QuestionType.Phone:
-              contact.phone = res.response?.[QuestionType.Phone].slice(1);
+              phone = res.response?.[QuestionType.Phone];
               break;
             case QuestionType.EmailPhone:
-              const phone = res.response?.[QuestionType.EmailPhone]?.phone;
-              const email = res.response?.[QuestionType.EmailPhone]?.email;
-              contact.phone = phone ? phone.slice(1) : undefined;
-              contact.email = email ? email : undefined;
+              phone = res.response?.[QuestionType.EmailPhone]?.phone;
+              email = res.response?.[QuestionType.EmailPhone]?.email;
               break;
+            case QuestionType.Contact:
+              phone = res.response?.[QuestionType.Contact]?.phone;
+              email = res.response?.[QuestionType.Contact]?.email;
+              contact.name = res.response?.[QuestionType.Contact]?.name;
           }
+          contact.phone = phone ? phone.slice(1) : undefined;
+          contact.email = email ? email : undefined;
           if (
             !contacts.some(
               (c) =>
@@ -231,9 +231,10 @@ const Responses = ({
 
   if (isQLoading) return <Loader />;
   if (QError) return <Text>An error has occurred</Text>;
+  if (isLoading) return <Loader />;
 
   return (
-    <Stack className={styles["responses-container"]}>
+    <Stack h="100%">
       <PaperLayout
         style={{ cursor: "pointer" }}
         className={styles["total-responses-heading-container"]}
@@ -241,19 +242,6 @@ const Responses = ({
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <Group>
-            <Popover width={300} position="bottom-end">
-              <Popover.Target>
-                <ActionIcon variant="filled" aria-label="Settings">
-                  <IconFilter stroke={1.5} />
-                </ActionIcon>
-              </Popover.Target>
-              <Popover.Dropdown
-                classNames={{ dropdown: styles["result-filter-dropdown"] }}
-              >
-                <ResultFilter {...resultFilterProps} />
-              </Popover.Dropdown>
-            </Popover>
-
             <RateupButtonBlue
               onClick={handleExcelDownload}
               title={"Download"}
@@ -275,71 +263,75 @@ const Responses = ({
         </Group>
       </PaperLayout>
       {responseCount > 0 ? (
-        <Box className={styles["responses-table-container"]}>
-          <Table
-            ref={tableRef}
-            withRowBorders
-            stickyHeader
-            className={styles["responses-table"]}
-          >
-            <TableHead questions={questions} />
-            <Table.Tbody>
-              {responses?.map((response) => (
-                <Table.Tr key={response?.id} style={{ alignItems: "center" }}>
-                  <Table.Td>
-                    <Text c="dark.3" p={10} miw={200}>
-                      {dayjs(response?.createdAt).format("DD-MM-YYYY hh:mm A")}
-                    </Text>
-                  </Table.Td>
-                  {questions?.map((q) => (
-                    <Table.Td key={q?.id}>
-                      <BadgeorTextorPreview
-                        questionType={q?.type}
-                        response={getResponse(q?.id, response)}
-                      />
-                    </Table.Td>
-                  ))}
-                  <Table.Td p={10} miw={50}>
-                    <Button
-                      variant="subtle"
-                      color="red"
-                      onClick={() => {
-                        setSelectedRowId(response?.id);
-                        open();
-                      }}
+        <PaperLayout style={{ flex: 1 }}>
+          <>
+            <ScrollArea mah={"100%"} maw={"100%"}>
+              <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
+                <TableHead questions={questions} />
+                <Table.Tbody>
+                  {responses?.map((response) => (
+                    <Table.Tr
+                      key={response?.id}
+                      style={{ alignItems: "center" }}
                     >
-                      <IconTrashXFilled />
-                    </Button>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-          <FormModalLayout
-            opened={opened}
-            onClose={close}
-            title="Delete Response"
-            centered
-            buttonTitle="Delete"
-            includeCancelButton
-            onSubmit={confirmDelete}
-          >
-            <Stack py={"sm"}>
-              <Text>To proceed further, verify your email id.</Text>
-              <ContainedTextField
-                withAsterisk
-                label="Verify email"
-                placeholder="Enter your login email"
-                required
-                value={verifyEmail}
-                onChange={(e) => setVerifyEmail(e.target.value)}
-              />
-              <Text c="red">
-                Once deleted, response entry data will be lost.
-              </Text>
-            </Stack>
-          </FormModalLayout>
-        </Box>
+                      <Table.Td>
+                        <Text c="dark.3" p={10} miw={200}>
+                          {dayjs(response?.createdAt).format(
+                            "DD-MM-YYYY hh:mm A",
+                          )}
+                        </Text>
+                      </Table.Td>
+                      {questions?.map((q) => (
+                        <Table.Td key={q?.id}>
+                          <BadgeorTextorPreview
+                            questionType={q?.type}
+                            response={getResponse(q?.id, response)}
+                          />
+                        </Table.Td>
+                      ))}
+                      <Table.Td p={10} miw={50}>
+                        <Button
+                          variant="subtle"
+                          color="red"
+                          onClick={() => {
+                            setSelectedRowId(response?.id);
+                            open();
+                          }}
+                        >
+                          <IconTrashXFilled />
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
+            <FormModalLayout
+              opened={opened}
+              onClose={close}
+              title="Delete Response"
+              centered
+              buttonTitle="Delete"
+              includeCancelButton
+              onSubmit={confirmDelete}
+            >
+              <Stack py={"sm"}>
+                <Text>To proceed further, verify your email id.</Text>
+                <ContainedTextField
+                  withAsterisk
+                  label="Verify email"
+                  placeholder="Enter your login email"
+                  required
+                  value={verifyEmail}
+                  onChange={(e) => setVerifyEmail(e.target.value)}
+                />
+                <Text c="red">
+                  Once deleted, response entry data will be lost.
+                </Text>
+              </Stack>
+            </FormModalLayout>
+          </>
+        </PaperLayout>
       ) : (
         <NothingFound text="No responses yet" />
       )}

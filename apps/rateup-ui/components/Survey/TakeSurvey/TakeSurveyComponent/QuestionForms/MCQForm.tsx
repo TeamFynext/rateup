@@ -1,16 +1,16 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { ScrollArea, SegmentedControl, Stack } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
+import { Radio } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
+import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
 }
 
-export function MCQForm({ previewChoices }: MCQFormProps) {
+export function MCQForm({ previewChoices }: Readonly<MCQFormProps>) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
@@ -35,22 +35,14 @@ export function MCQForm({ previewChoices }: MCQFormProps) {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
   };
-
   return (
-    <Stack>
-      <ScrollArea.Autosize mah={"30vh"} maw={"90vh"}>
-        <Stack ml="sm">
-          <SegmentedControl
-            data={data}
-            value={selectedOp}
-            onChange={handleSelectedOp}
-            orientation={"vertical"}
-            color="var(--tertiary-color)"
-            size="md"
-            classNames={{ label: classes.sglabel }}
-          />
-        </Stack>
-      </ScrollArea.Autosize>
-    </Stack>
+    <Radio.Group
+      value={selectedOp}
+      onChange={handleSelectedOp}
+      mr={"sm"}
+      w={"100%"}
+    >
+      <SingleSelectCard data={data} selectedValue={selectedOp} />
+    </Radio.Group>
   );
 }

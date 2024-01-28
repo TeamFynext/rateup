@@ -18,6 +18,7 @@ import {
   RingProgress,
   Box,
   LoadingOverlay,
+  ScrollArea,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -25,7 +26,7 @@ import {
   usePublicSurvey,
   useUpdateCompletedMutation,
 } from "../../../../backend/surveys/surveys.query";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import dayjs from "dayjs";
 import { LogicAction, QuestionType as Q } from "../../../../types/enums";
@@ -72,14 +73,19 @@ import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { PCQForm } from "./QuestionForms/PCQForm";
+import ContactForm from "./QuestionForms/ContactForm";
+import { MotionTransition } from "../../../animation/MotionTransition";
 
-function TakeSurvey() {
+function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
+  const smallScreen = useMediaQuery("(max-width: 30em)");
+
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
@@ -97,8 +103,34 @@ function TakeSurvey() {
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
   const router = useRouter();
+  const [pageSwitchTransition, setPageSwitchTransition] = useState<
+    "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
+  >("bottomSlideIn");
+  const [boxHeight, setBoxHeight] = useState(0);
+  const boxRef = useRef(null);
 
   if (!selectedLanguage) throw new Error("No language selected");
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (boxRef.current) {
+        setBoxHeight((prevHeight) => {
+          const newHeight = boxRef.current.offsetHeight;
+          return newHeight !== prevHeight ? newHeight : prevHeight;
+        });
+      }
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [boxRef.current]);
+
+  const formMaxHeight = smallScreen
+    ? `calc(100dvh - ${boxHeight + 290}px)`
+    : `calc(100dvh - ${boxHeight + 360}px)`;
+
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       setSelectedQ(survey.questions[0]);
@@ -131,14 +163,14 @@ function TakeSurvey() {
     }
   }, [survey]);
 
-  if (isLoading) {
+  if (!survey) {
     return (
       <Center style={{ height: "100vh" }}>
         <Loader />
       </Center>
     );
   }
-  if (isError || !selectedQ) {
+  if (!selectedQ) {
     return (
       <Center style={{ height: "100vh" }}>
         <Text fw={500}>
@@ -153,12 +185,14 @@ function TakeSurvey() {
 
   const goTo = (question: Question) => {
     setSelectedQ(question);
+    setPageSwitchTransition("bottomSlideIn");
     questionsHistoryHandlers.append(question.id);
   };
 
   const goBack = () => {
     const prevQId = questionsHistory[questionsHistory.length - 2];
     setSelectedQ(survey.questions.find((q) => q.id === prevQId));
+    setPageSwitchTransition("bottomSlideOut");
     questionsHistoryHandlers.pop();
   };
 
@@ -333,6 +367,9 @@ function TakeSurvey() {
               className: classes["modal-overlay"],
             }}
             classNames={modalStyles}
+            styles={{
+              content: { background: "white" },
+            }}
           >
             <Flex className={modalStyles["modal-body-content-container"]}>
               <Stack pb="xl">
@@ -456,6 +493,54 @@ function TakeSurvey() {
                                     response?.response,
                                   )[0];
                                   return <Text>{selectedChoice?.value}</Text>;
+                                case Q.PCQ:
+                                  let selectedPictureChoice = Object.values(
+                                    response?.response,
+                                  )?.[0]?.value;
+                                  return (
+                                    <Stack gap={0} align="center">
+                                      <Image
+                                        src={getFileUrlFromKey(
+                                          selectedPictureChoice?.image,
+                                        )}
+                                        w={50}
+                                        style={{ aspectRatio: 4 / 3 }}
+                                      />
+                                      <Text>
+                                        {selectedPictureChoice?.value}
+                                      </Text>
+                                    </Stack>
+                                  );
+                                case Q.Contact:
+                                  const res = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  return (
+                                    <Stack>
+                                      <Group>
+                                        <Text fw="400">Name: </Text>
+                                        <Text fw="300">{res?.name}</Text>
+                                      </Group>
+                                      {res?.phone && (
+                                        <Group mt="-10px">
+                                          <Text fw="400">Phone: </Text>
+                                          <Text fw="300">{res?.phone}</Text>
+                                        </Group>
+                                      )}
+                                      {res?.email && (
+                                        <Group>
+                                          <Text fw="400">Email: </Text>
+                                          <Text fw="300">{res?.email}</Text>
+                                        </Group>
+                                      )}
+                                      {res?.address && (
+                                        <Group mt="-10px">
+                                          <Text fw="400">Address: </Text>
+                                          <Text fw="300">{res?.address}</Text>
+                                        </Group>
+                                      )}
+                                    </Stack>
+                                  );
                                 default:
                                   return JSON.stringify(
                                     Object.values(response?.response)[0],
@@ -498,19 +583,39 @@ function TakeSurvey() {
             <LoadingOverlay
               visible={isSavingResponses}
               zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 2 }}
+              overlayProps={{ radius: "sm", blur: 10 }}
             />
             <Stack>
-              <Stack style={{ minHeight: "45vh" }} justify="center">
-                <QuestionTitle largeScreen={largeScreen} />
-                <QuestionDesc largeScreen={largeScreen} />
-                <QuestionForm />
+              <Stack
+                justify="center"
+                mih={smallScreen ? "calc(100dvh - 290px)" : "56dvh"}
+              >
+                <MotionTransition
+                  keyValue={selectedQ}
+                  type={"fade"}
+                  apEnable={false}
+                  duration={1}
+                >
+                  <Box pb={"lg"} ref={boxRef}>
+                    <QuestionTitle largeScreen={largeScreen} />
+                    <QuestionDesc largeScreen={largeScreen} />
+                  </Box>
+                  <ScrollArea.Autosize
+                    mah={formMaxHeight}
+                    p={0}
+                    m={0}
+                    w={"100%"}
+                  >
+                    <QuestionForm />
+                  </ScrollArea.Autosize>
+                </MotionTransition>
               </Stack>
               <NextPrev
                 next={handleNext}
                 prev={handlePrev}
                 num={QnNo}
                 total={questionCount}
+                survey={survey}
               />
             </Stack>
           </Box>
@@ -572,7 +677,6 @@ function QuestionDesc({ largeScreen }) {
     <Text
       size={largeScreen ? "15px" : "16px"}
       c="dimmed"
-      pb={largeScreen ? 20 : 10}
       className={classes.questionTitle}
     >
       {selectedQ.description[selectedLanguage]}
@@ -640,17 +744,21 @@ function getQuestionForm(type, selectedQ) {
       return <DateForm key={selectedQ?.id} />;
     case Q.CustomNPS:
       return <CustomNPSForm key={selectedQ?.id} />;
+    case Q.PCQ:
+      return <PCQForm key={selectedQ?.id} />;
+    case Q.Contact:
+      return <ContactForm key={selectedQ?.id} features={selectedQ?.features} />;
     default:
       return <div>not implemented</div>;
   }
 }
 
-function NextPrev({ prev, next, num, total }) {
+function NextPrev({ prev, next, num, total, survey }) {
   const { surveyId } = useRouter().query as { surveyId: string };
-  const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
-
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -660,7 +768,7 @@ function NextPrev({ prev, next, num, total }) {
     // TODO: check if rebase was done correctly
     if (
       ((selectedQ?.required && response) || response?.length > 0) &&
-      selectedQ?.type === Q.Email
+      selectedQ?.type === Q.Email //for email input
     ) {
       if (emailPattern.test(response)) {
         setIsErrorInput(false);
@@ -671,7 +779,7 @@ function NextPrev({ prev, next, num, total }) {
       }
     } else if (
       ((selectedQ?.required && response) || response?.length > 0) &&
-      selectedQ?.type === Q.Phone
+      selectedQ?.type === Q.Phone //for phone input
     ) {
       if (isValidPhoneNumber(response)) {
         setIsErrorInput(false);
@@ -684,48 +792,38 @@ function NextPrev({ prev, next, num, total }) {
       ((selectedQ?.required && response) ||
         response?.email?.length > 0 ||
         response?.phone?.length) &&
-      selectedQ?.type === Q.EmailPhone
+      selectedQ?.type === Q.EmailPhone //for contact qn - both email, phone
     ) {
       const { email, phone } = response;
+
+      const isEmailValid = emailPattern.test(email || "");
+      const isPhoneValid = isValidPhoneNumber(phone || "");
 
       if (
         selectedQ?.required &&
         (response?.email?.length < 1 || response?.phone?.length < 1)
       ) {
         setIsErrorInput(true);
-        setErrorMsg("Enter a valid email / phone");
-      }
-
-      if (selectedQ?.required || email?.length > 0 || phone?.length > 0) {
-        if (response?.email?.length > 0 || selectedQ?.required) {
-          if (email && emailPattern.test(email)) {
-            setErrorMsg("");
-            setIsErrorInput(false);
-          } else {
-            setErrorMsg("Enter a valid email");
-            setIsErrorInput(true);
-          }
+        setErrorMsg("Please input all fields");
+      } else if (selectedQ?.required && (!isEmailValid || !isPhoneValid)) {
+        setIsErrorInput(true);
+        if (!isEmailValid && !isPhoneValid) {
+          setErrorMsg("Enter a valid email and phone");
+        } else if (!isEmailValid) {
+          setErrorMsg("Enter a valid email");
+        } else {
+          setErrorMsg("Enter a valid phone number");
         }
-
-        if (phone?.length > 0 || selectedQ?.required) {
-          if (phone && isValidPhoneNumber(phone)) {
-            email?.length > 0 && !emailPattern.test(email)
-              ? setErrorMsg("Enter a valid email")
-              : setErrorMsg("");
-            email?.length > 0 && !emailPattern.test(email)
-              ? setIsErrorInput(true)
-              : setIsErrorInput(false);
-          } else {
-            if (!(email && emailPattern.test(email))) {
-              setIsErrorInput(true);
-              setErrorMsg("Enter a valid email / phone");
-            } else {
-              if (phone?.length > 0 && !isValidPhoneNumber(phone)) {
-                setIsErrorInput(true);
-                setErrorMsg("Enter a valid phone");
-              }
-            }
-          }
+      } else if (
+        !selectedQ?.required &&
+        ((email?.length > 0 && !isEmailValid) ||
+          (phone?.length > 0 && !isPhoneValid))
+      ) {
+        setIsErrorInput(true);
+        if (email?.length > 0 && !isEmailValid) {
+          setErrorMsg("Enter a valid email");
+        } else {
+          setErrorMsg("Enter a valid phone number");
         }
       } else {
         setErrorMsg("");
@@ -742,6 +840,32 @@ function NextPrev({ prev, next, num, total }) {
           "Name - min 3 characters, and \n testimonial - min 5 characters",
         );
         setIsErrorInput(true);
+      } else {
+        setErrorMsg("");
+        setIsErrorInput(false);
+      }
+    } else if (selectedQ?.required && selectedQ.type == Q.Contact) {
+      if (!response?.name?.length) {
+        setErrorMsg("Please enter your name");
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.hasPhone &&
+        (!response?.phone || !isValidPhoneNumber(response?.phone))
+      ) {
+        if (!response?.phone) setErrorMsg("phone number cannot be blank");
+        else if (!isValidPhoneNumber(response?.phone))
+          setErrorMsg("Enter a valid phone number");
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.hasEmail &&
+        (!response?.email?.length || !emailPattern.test(response?.email))
+      ) {
+        if (!response?.email?.length) setErrorMsg("Email cannot be blank");
+        else if (!emailPattern.test(response?.email))
+          setErrorMsg("Enter a valid email");
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.hasAddress &&
+        !response?.address?.length
+      ) {
+        setErrorMsg("Please enter address");
       } else {
         setErrorMsg("");
         setIsErrorInput(false);
@@ -775,7 +899,8 @@ function NextPrev({ prev, next, num, total }) {
       selectedQ?.type === Q.Email ||
       selectedQ?.type === Q.Phone ||
       selectedQ?.type === Q.EmailPhone ||
-      selectedQ?.type === Q.Testimonial
+      selectedQ?.type === Q.Testimonial ||
+      selectedQ.type === Q.Contact
     ) {
       if (!errorMsg) {
         next();
@@ -792,25 +917,27 @@ function NextPrev({ prev, next, num, total }) {
     return completionPercentage;
   }
 
-  if (isLoading || isError) return null;
+  if (!survey) return null;
   const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
   const isLastQuestion =
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
     <Stack
-      pt={40}
-      pb="md"
+      pt={"md"}
+      gap={0}
       style={{
         width: "100%",
-        minHeight: isMobile ? "143px" : "163px",
+        minHeight: "74px",
       }}
       justify="flex-end"
     >
-      {selectedQ?.required && !response && (
-        <Text c="gray" mb="md" size={isMobile && "sm"}>
-          Note: * Must attend to continue with next.
-        </Text>
-      )}
+      <Text
+        c="gray"
+        size={isMobile && "sm"}
+        style={{ opacity: selectedQ?.required && !response ? 1 : 0 }}
+      >
+        *Choose an option or answer to proceed!
+      </Text>
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
       <Group justify="space-between">
         <RateupButtonSecondary
@@ -820,7 +947,7 @@ function NextPrev({ prev, next, num, total }) {
           leftIcon={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
           onClick={prev}
-          color="dark"
+          color="var(--tertiary-color)"
         />
         <Center>
           <RingProgress
@@ -854,7 +981,7 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
           >
             Submit
@@ -869,7 +996,7 @@ function NextPrev({ prev, next, num, total }) {
             }
             size={isMobile ? "sm" : "lg"}
             onClick={handleNextClick}
-            color="dark"
+            color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
           >
             Next

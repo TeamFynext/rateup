@@ -60,6 +60,7 @@ import IFrameModal from "./IFrameModal";
 import NothingFound from "../../NothingFound/NothingFound";
 import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
 import TagManager from "./TagManager";
+import { SurveyType } from "../../../types/enums";
 
 const ShareSurvey = ({
   survey,
@@ -87,7 +88,10 @@ const ShareSurvey = ({
 
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
-    if (survey.type === "whatsapp") {
+    if (
+      survey.type === SurveyType.WhatsApp ||
+      survey.type === SurveyType.WaFlow
+    ) {
       // TODO: get phone number from phone id (add phone number field)
       if (survey.getLocation) {
         // redirecting through our page to fetch ip

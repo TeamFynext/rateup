@@ -1,20 +1,61 @@
 import { create } from "zustand";
 
-type Store = {
+type Cart = {
+  id: string;
+  name: string;
+  currency: string;
+  description: string[];
+  amount: string;
+  currencySymbol: string;
+  period: string;
+  planId: string;
+};
+export type Store = {
   route: string;
-  cart: { id: string; name: string };
+  cart: Cart;
 };
 
 type Actions = {
-  updateRouteAndCart: (
-    newRoute: string,
-    cart: { id: string; name: string },
-  ) => void;
+  updateRouteAndCart: (newRoute: string, cart: Cart) => void;
+  reset: () => void;
+};
+const initialState = {
+  route: "/dashboard",
+  cart: {
+    id: "",
+    name: "",
+    currency: "USD",
+    description: [""],
+    amount: "0",
+    currencySymbol: "$",
+    period: "",
+    planId: "",
+  },
 };
 
 export const useRouteAndCartStore = create<Store & Actions>((set) => ({
-  route: "/dashboard",
-  cart: { id: "", name: "" },
+  ...initialState,
   updateRouteAndCart: (newRoute, cart) =>
     set(() => ({ route: newRoute, cart: cart })),
+  reset: () => {
+    set(initialState);
+  },
+}));
+
+type ImageStore = {
+  imageToDelete: object[];
+};
+
+type ImageActions = {
+  updateImageArray: (image: object) => void;
+  resetImage: () => void;
+};
+const initalImageData = {
+  imageToDelete: [],
+};
+export const useImageStore = create<ImageStore & ImageActions>((set) => ({
+  ...initalImageData,
+  updateImageArray: (image) =>
+    set((state) => ({ imageToDelete: [...state.imageToDelete, image] })),
+  resetImage: () => set(initalImageData),
 }));
