@@ -76,6 +76,7 @@ import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import { PCQForm } from "./QuestionForms/PCQForm";
 import ContactForm from "./QuestionForms/ContactForm";
 import { MotionTransition } from "../../../animation/MotionTransition";
+import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -748,6 +749,10 @@ function getQuestionForm(type, selectedQ) {
       return <PCQForm key={selectedQ?.id} />;
     case Q.Contact:
       return <ContactForm key={selectedQ?.id} features={selectedQ?.features} />;
+    case Q.TnC:
+      return (
+        <TermsNConditionsForm key={selectedQ?.id} tncData={selectedQ?.tnc} />
+      );
     default:
       return <div>not implemented</div>;
   }

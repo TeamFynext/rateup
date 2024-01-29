@@ -16,7 +16,7 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
           <Image src={getFileUrlFromKey(content?.value?.image)} w={30} />
         ) : (
           <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
-            {content}
+            {typeof content === "boolean" ? content.toString() : content}
           </Text>
         )}
       </HoverCard.Target>
@@ -44,7 +44,7 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
             </>
           ) : (
             <Text c="dark.3" miw={200} fw={fw} fz={fz}>
-              {content}
+              {typeof content === "boolean" ? content.toString() : content}
             </Text>
           )}
         </Text>

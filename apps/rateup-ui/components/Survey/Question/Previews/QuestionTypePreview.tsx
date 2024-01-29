@@ -19,11 +19,11 @@ import { TestimonialForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionFo
 import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailPhoneForm";
 import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
 import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
-import TrustedBy from "../../../HomePage/pages/Home/OursolutionsSection/TrustedBy";
 import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQForm";
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
+import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
 
-const QuestionTypePreview = ({ type, choices, features }) => {
+const QuestionTypePreview = ({ type, choices, features, tnc }) => {
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -67,6 +67,8 @@ const QuestionTypePreview = ({ type, choices, features }) => {
       return <PCQForm previewChoices={choices} />;
     case Q.Contact:
       return <ContactForm features={features} />;
+    case Q.TnC:
+      return <TermsNConditionsForm tncData={tnc} />;
     default:
       return <div>not implemented</div>;
   }
