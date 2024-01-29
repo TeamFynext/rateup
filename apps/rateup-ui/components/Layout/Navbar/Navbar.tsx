@@ -1,8 +1,7 @@
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
-import { Breadcrumbs, Image, Flex, Text, Menu, Container } from "@mantine/core";
+import { Breadcrumbs, Flex, Text, Menu, Container } from "@mantine/core";
 import Link from "next/link";
-import classes from "./Navbar.module.css";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { IconChevronRight, IconHome, IconChevronDown } from "@tabler/icons";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -73,7 +72,7 @@ export const Navbar = ({ name, role, image, email }) => {
           <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
         }
       >
-        <Link href="/dashboard" className={classes.link}>
+        <Link href="/dashboard" className={styles["link"]}>
           <IconHome size={23} color="var(--mantine-color-gray-6)" />
         </Link>
         {pathParts.map((part, index) => {
@@ -81,7 +80,7 @@ export const Navbar = ({ name, role, image, email }) => {
           if (part == "dashboard") return;
           return (
             <Link
-              className={classes.link}
+              className={styles["link"]}
               href={`/${pathParts.slice(0, index + 1).join("/")}`}
               key={index}
             >
@@ -109,7 +108,6 @@ export const Navbar = ({ name, role, image, email }) => {
                 display: "flex",
                 position: "relative",
               }}
-              className={classes["chevron-container"]}
               onClick={handlePaperLayoutClick}
             >
               <Flex
@@ -117,21 +115,24 @@ export const Navbar = ({ name, role, image, email }) => {
                 className={styles["Logged-in-user-card"]}
               >
                 {LoggedInUserCard(userInfo)}
-                {isDropdownOpen ? <IconChevronDown /> : <IconChevronRight />}
+                {isDropdownOpen ? (
+                  <IconChevronDown style={{ marginTop: "1rem" }} />
+                ) : (
+                  <IconChevronRight style={{ marginTop: "1rem" }} />
+                )}
               </Flex>
             </PaperLayout>
           </Menu.Target>
-          <Menu.Dropdown className={styles["dropdownMenu"]}>
+          <Menu.Dropdown
+            className={styles["dropdown-menu"]}
+            style={{ width: "250px" }}
+          >
             <Menu.Label>Manage your Account</Menu.Label>
             {navBottomData.map((item, index) => (
-              <Menu.Item
-                key={index}
-                className={styles["user-icon-top-container"]}
-                onClick={() => handleItemClick(item)}
-              >
-                <Flex>
+              <Menu.Item key={index} onClick={() => handleItemClick(item)}>
+                <Flex style={{ marginLeft: "1rem", marginTop: "0.5rem" }}>
                   {item.Icon && <item.Icon size={30} />}
-                  <Text className={styles["user-icon-top-text-container"]}>
+                  <Text style={{ fontSize: "20px", marginLeft: "1rem" }}>
                     {item.label}
                   </Text>
                 </Flex>
