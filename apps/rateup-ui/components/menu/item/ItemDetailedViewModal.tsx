@@ -159,6 +159,7 @@ export function ItemDetailedViewModal({
             wrap={"wrap"}
             w={"clamp(220px, 163.6624px + 15.0235vw, 380px)"}
             my={4}
+            justify={"center"}
           >
             <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
           </Flex>

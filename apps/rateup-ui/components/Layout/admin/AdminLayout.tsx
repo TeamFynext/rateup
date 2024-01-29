@@ -1,32 +1,19 @@
 import {
-  ActionIcon,
   Anchor,
   AppShell,
-  Box,
-  Breadcrumbs,
   Burger,
   Button,
   Group,
-  MantineProvider,
-  MantineThemeProvider,
   NavLink,
   ScrollArea,
   Skeleton,
   Stack,
-  Text,
   Title,
   Tooltip,
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconArrowLeft,
-  IconChevronLeft,
-  IconChevronRight,
-  IconTerminal,
-  IconTerminal2,
-  IconX,
-} from "@tabler/icons-react";
+import { IconArrowLeft, IconTerminal2, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { LoggedInUserCard } from "../Navbar/LeftNavbar";
 import { useUserInfo } from "../../../backend/user/user.query";

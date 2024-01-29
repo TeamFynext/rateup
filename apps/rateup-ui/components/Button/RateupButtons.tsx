@@ -22,9 +22,11 @@ interface Props {
   pt?: string;
   ml?: string;
   styles?: any;
+  mb?: string | number;
   color?: string;
   className?: string;
   gradient?: any;
+  fw?: string | number;
 }
 
 export const RateupButtonPrimary = ({
@@ -42,6 +44,7 @@ export const RateupButtonPrimary = ({
   size,
   color,
   gradient,
+  className,
 }: Props) => {
   return (
     <Button
@@ -61,6 +64,7 @@ export const RateupButtonPrimary = ({
       fw={400}
       color={color}
       gradient={gradient}
+      className={className}
     >
       {title}
     </Button>
@@ -115,6 +119,7 @@ export const RateupButtonSecondary = ({
   variant,
   size,
   color,
+  fw = 400,
   ...other
 }: Props) => {
   return (
@@ -132,7 +137,7 @@ export const RateupButtonSecondary = ({
       type={type}
       fullWidth={fullWidth}
       mt={mt}
-      fw={400}
+      fw={fw}
       variant={variant || "outline"}
       {...other}
     >

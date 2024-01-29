@@ -17,7 +17,7 @@ import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(qId: string, response: SurveyResponse) {
   const qResponse = response.responses.find((r) => r.questionId === qId);
-  if (!qResponse) return "Not Answered";
+  if (!qResponse) return "";
   const { type, response: responseType } = qResponse;
   if (type === QuestionType.Testimonial) {
     return qResponse.response[type].testimonial;
@@ -28,6 +28,11 @@ export function getResponse(qId: string, response: SurveyResponse) {
     const date = dayjs(dateTimeValue);
     const formattedDate = date.format("D, MMM YYYY");
     return `${formattedDate}`;
+  } else if (type === QuestionType.Contact) {
+    let formattedResponse = Object.entries(qResponse.response[type]).map(
+      ([key, value]) => key + ": " + value,
+    );
+    return formattedResponse.join(", ");
   } else if (ChoiceTypeQuestions.includes(type)) {
     const responseValue = responseType[type];
     if (responseValue) {
@@ -43,7 +48,7 @@ export function getResponse(qId: string, response: SurveyResponse) {
       }
       return formattedValue;
     } else {
-      return "Not Answered";
+      return "";
     }
   } else if (type === QuestionType.WaList) {
     const { title, description } = qResponse.response[QuestionType.WaList];

@@ -1,0 +1,11 @@
+.link-input-copy-btn-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.link-input-wrapper {
+  min-width: 300px;
+  max-width: 100%;
+  width: 600px;
+}

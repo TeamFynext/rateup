@@ -99,7 +99,11 @@ export function ItemDisplay({
               w={"clamp(100px, 28.576px + 11.905vw, 200px)"}
             >
               <Flex gap={4}>
-                <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} p={0} />
+                <MenuFoodLabelBadge
+                  foodLabels={item?.foodLabels ?? []}
+                  p={"5px"}
+                  label={false}
+                />
               </Flex>
             </ScrollArea>
             <Text

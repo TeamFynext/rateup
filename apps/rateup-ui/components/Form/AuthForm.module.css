@@ -103,6 +103,25 @@
   background-color: var(--light-grey-color);
 }
 
+.inputBox {
+  background-color: var(--input-background-color, white);
+  color: var(--input-text-color, black);
+  border-radius: 1rem;
+  padding: 6px var(--input-padding, 12px);
+  border-color: var(--mantine-color-gray-4);
+  border-width: 1px;
+  border-style: solid;
+}
+
+.inputPhone {
+  font-size: 16px;
+}
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
+}
+
 /* Media Queries */
 @media screen and (max-width: 768px) {
   .auth-form-container {

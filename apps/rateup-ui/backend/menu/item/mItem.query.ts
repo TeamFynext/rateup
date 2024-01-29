@@ -50,7 +50,7 @@ export const useCreateMenuItemUsingCsvMutation = (
     mutationFn: createMenuItemUsingCsv,
     onSuccess: () => {
       showSuccessToast("Menu items created successfully");
-      queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-category", menuId] });
       onSuccess();
     },
     onError: () => {

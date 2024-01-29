@@ -1,18 +1,28 @@
 import React from "react";
-import { Badge } from "@mantine/core";
+import { Badge, Flex, Image } from "@mantine/core";
 import { menuLabelWithText } from "../../util/menuLabelData";
 
 type MenuFoodLabelBadgeProps = {
   foodLabels: string[];
   p?: string | number;
+  label?: boolean;
 };
 const MenuFoodLabelBadge = ({
   foodLabels = [],
   p = "xs",
+  label = true,
 }: MenuFoodLabelBadgeProps) => {
   const response = foodLabels?.map((data: string) => (
     <Badge variant="light" color="blue" key={data} p={p}>
-      {menuLabelWithText.find((item) => item.value === data)?.label}
+      <Flex align={"center"} h={"100%"} columnGap={5}>
+        <Image
+          src={menuLabelWithText?.find((gr) => gr.label === data)?.image}
+          alt="it's menu label icon"
+          h={15}
+          w={15}
+        />
+        {label && data}
+      </Flex>
     </Badge>
   ));
 

@@ -50,10 +50,13 @@ const GeneralSettings = ({ editingItem }) => {
 
   if (surveyIsPending) return <CenteredSpinner />;
 
-  const surveyFormatedData = surveys?.map((survey) => ({
-    value: survey.surveyTeamMapId,
-    label: survey.title,
-  }));
+  const surveyFormatedData = surveys
+    ?.filter((survey) => survey?.type === "web")
+    .map((survey) => ({
+      value: survey.surveyTeamMapId,
+      label: survey.title,
+    }));
+
   const onSubmit = (values: any) => {
     let changedValue = values;
     changedValue.hideUnavailableCategory =
@@ -75,6 +78,7 @@ const GeneralSettings = ({ editingItem }) => {
             defaultValue={editingItem?.teamId}
             allowDeselect={false}
             disabled={isPending}
+            value={form?.getInputProps("teamId")?.value || ""}
             {...form.getInputProps("teamId")}
             onChange={(value) => {
               form.setFieldValue("surveyTeamMapId", "");
@@ -122,7 +126,7 @@ const GeneralSettings = ({ editingItem }) => {
           </SimpleGrid>
           <SimpleGrid cols={2} spacing="md">
             <ContainedSelection
-              label="Choose a survey to display in the menu pagel"
+              label="Choose a survey to display in the menu page"
               placeholder={
                 surveyFormatedData?.length === 0
                   ? "There is no published survay"

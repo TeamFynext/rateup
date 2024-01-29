@@ -46,6 +46,9 @@ import { LanguageCompletionView } from "./LanguageCompletionView";
 
 import { ChoicesCreator } from "./ChoicesCreator";
 import TestimonialExtraProps from "./TestimonialExtraProps";
+import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
+import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
+import ContactExtraProps from "./ContactExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -69,7 +72,7 @@ export function QuestionDetailedView({
   const textInputRef = useRef(null);
 
   const [currentResponse, updateResponse] = useState(null || []); //temp state for preview
-
+  const [deleteFileLoading, setDeleteFileLoading] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
@@ -86,42 +89,59 @@ export function QuestionDetailedView({
     surveyLanguages,
     ["title", "choices"],
   );
-  const handleSave = () => {
-    if (
-      !form.values.title[selectedLanguage] ||
-      form.values.title[selectedLanguage] == ""
-    ) {
-      showErrorToast("Question title is missing");
-      return "error";
-    } else {
-      if (incompleteLanguages.length > 0) {
-        setSelectedLanguage(incompleteLanguages[0]);
+  const { imageToDelete, resetImage } = useImageStore();
+
+  const handleSave = async () => {
+    try {
+      if (
+        !form.values.title[selectedLanguage] ||
+        form.values.title[selectedLanguage] == ""
+      ) {
+        showErrorToast("Question title is missing");
         return "error";
-      }
-
-      // Checking if its a new question
-      if (!question.id) {
-        // Creating new question
-        questionCreateMutation.mutate(form.values, {
-          onSuccess: (r) => {
-            setSelectedQ(r.data);
-          },
-        });
       } else {
-        // Updating existing question
-        questionUpdateMutation.mutate({ qId: question.id, data: form.values });
+        if (incompleteLanguages.length > 0) {
+          setSelectedLanguage(incompleteLanguages[0]);
+          return "error";
+        }
+        if (imageToDelete?.length > 0) {
+          setDeleteFileLoading(true);
+          await deleteUploadedFiles({ fileKeyArray: imageToDelete });
+          setDeleteFileLoading(false);
+          resetImage();
+        }
+        // Checking if its a new question
+        if (!question.id) {
+          // Creating new question
+          questionCreateMutation.mutate(form.values, {
+            onSuccess: (r) => {
+              setSelectedQ(r.data);
+            },
+          });
+        } else {
+          // Updating existing question
+          questionUpdateMutation.mutate({
+            qId: question.id,
+            data: form.values,
+          });
+        }
       }
-    }
 
-    return "saved";
+      return "saved";
+    } catch (error) {
+      setDeleteFileLoading(false);
+      return "no saved";
+    }
   };
 
   const isSaving =
-    questionCreateMutation.isPending || questionUpdateMutation.isPending;
+    questionCreateMutation.isPending ||
+    questionUpdateMutation.isPending ||
+    deleteFileLoading;
   return (
     <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
       <Stack justify="space-between" style={{ height: "100%" }}>
-        <ScrollArea style={{ height: "80%" }}>
+        <ScrollArea style={{ height: "80%" }} scrollbarSize={0}>
           <Stack>
             <Badge variant="outline" size="lg">
               {question.type}
@@ -218,8 +238,8 @@ export function QuestionDetailedView({
                     />
                   }
                   size="sm"
-                  onClick={() => {
-                    let save = handleSave();
+                  onClick={async () => {
+                    let save = await handleSave();
                     save === "saved" &&
                       setActiveTab(QuestionTabsEnum.LogicEditor);
                   }}
@@ -230,8 +250,8 @@ export function QuestionDetailedView({
                   title={"Google Review"}
                   leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
                   size="sm"
-                  onClick={() => {
-                    let save = handleSave();
+                  onClick={async () => {
+                    let save = await handleSave();
                     save === "saved" &&
                       setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
                   }}
@@ -242,8 +262,8 @@ export function QuestionDetailedView({
                   title={"Custom Validation"}
                   leftIcon={<IconEdit />}
                   size="sm"
-                  onClick={() => {
-                    let save = handleSave();
+                  onClick={async () => {
+                    let save = await handleSave();
                     save === "saved" &&
                       setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
                   }}
@@ -298,8 +318,12 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.DDMS:
     case QuestionType.CustomNPS:
       return <ChoicesCreator qId={question?.id} form={form} />;
+    case QuestionType.PCQ:
+      return <ChoicesCreator qId={question?.id} form={form} image />;
     case QuestionType.Testimonial:
       return <TestimonialExtraProps qId={question.id} form={form} />;
+    case QuestionType.Contact:
+      return <ContactExtraProps form={form} />;
     default:
       return null;
   }

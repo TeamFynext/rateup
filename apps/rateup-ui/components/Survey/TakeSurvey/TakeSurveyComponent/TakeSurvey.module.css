@@ -1,5 +1,5 @@
 .inputBox {
-  width: 90vw;
+  width: 100%;
   max-width: 500px;
   color: var(--input-text-color, black);
   border-radius: var(--input-border-radius, 8px);
@@ -65,6 +65,10 @@
   height: auto;
   white-space: normal;
   font-size: "16px";
+  box-shadow:
+    2px 2px 3px rgba(0, 0, 0, 0.12),
+    -1px 0px 3px #0000003d;
+  margin-top: 5px;
 }
 
 @media (max-width: 480px) {
@@ -96,4 +100,13 @@
 
 .questionDesc {
   line-height: 1.2;
+}
+
+/*the styles below are temporary and will be removed once myg survey is completed*/
+.wrapperdark {
+  background-color: #000;
+}
+.wrapperdark input {
+  color: #fff !important;
+  background-color: transparent !important;
 }

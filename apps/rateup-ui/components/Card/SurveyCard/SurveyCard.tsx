@@ -14,6 +14,7 @@ interface SurveyCardProps {
   isChecked: any;
   selectedTeamId: string;
   teamsData: any;
+  route?: string;
 }
 /**
  * The SurveyCard component used to display a survey in the surveys page (dashboard/surveys)
@@ -24,6 +25,7 @@ export function SurveyCard({
   isChecked,
   selectedTeamId,
   teamsData,
+  route,
 }: SurveyCardProps): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
@@ -50,9 +52,10 @@ export function SurveyCard({
       onClick={(e) => {
         e.stopPropagation();
         router.push(
-          `${router.pathname}/${survey?.id}${
-            survey?.isPublished ? `?tab=Result` : ""
-          }`,
+          route ||
+            `${router.pathname}/${survey?.id}${
+              survey?.isPublished ? `?tab=Result` : ""
+            }`,
         );
       }}
     >

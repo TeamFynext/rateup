@@ -20,6 +20,8 @@ import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionFor
 import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
 import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
 import TrustedBy from "../../../HomePage/pages/Home/OursolutionsSection/TrustedBy";
+import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQForm";
+import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
 
 const QuestionTypePreview = ({ type, choices, features }) => {
   switch (type) {
@@ -61,6 +63,10 @@ const QuestionTypePreview = ({ type, choices, features }) => {
       return <DateForm isPreview={true} />;
     case Q.CustomNPS:
       return <CustomNPSForm previewChoices={choices} />;
+    case Q.PCQ:
+      return <PCQForm previewChoices={choices} />;
+    case Q.Contact:
+      return <ContactForm features={features} />;
     default:
       return <div>not implemented</div>;
   }

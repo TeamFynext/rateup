@@ -56,7 +56,13 @@ import styles from "./Responses.module.css";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 
-const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
+const Responses = ({
+  survey,
+  responses,
+  allResponses,
+  defaultLanguage,
+  isLoading,
+}) => {
   const [responseCount, setResponseCount] = useState(0);
   const tableRef = useRef(null);
   const router = useRouter();
@@ -107,20 +113,26 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
             name: "",
             teamId: teamId,
           };
+          let phone = null;
+          let email = null;
           switch (res.type) {
             case QuestionType.Email:
-              contact.email = res.response?.[QuestionType.Email];
+              email = res.response?.[QuestionType.Email];
               break;
             case QuestionType.Phone:
-              contact.phone = res.response?.[QuestionType.Phone].slice(1);
+              phone = res.response?.[QuestionType.Phone];
               break;
             case QuestionType.EmailPhone:
-              const phone = res.response?.[QuestionType.EmailPhone]?.phone;
-              const email = res.response?.[QuestionType.EmailPhone]?.email;
-              contact.phone = phone ? phone.slice(1) : undefined;
-              contact.email = email ? email : undefined;
+              phone = res.response?.[QuestionType.EmailPhone]?.phone;
+              email = res.response?.[QuestionType.EmailPhone]?.email;
               break;
+            case QuestionType.Contact:
+              phone = res.response?.[QuestionType.Contact]?.phone;
+              email = res.response?.[QuestionType.Contact]?.email;
+              contact.name = res.response?.[QuestionType.Contact]?.name;
           }
+          contact.phone = phone ? phone.slice(1) : undefined;
+          contact.email = email ? email : undefined;
           if (
             !contacts.some(
               (c) =>
@@ -173,7 +185,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
               responseValue = Object.values(responseValue).join(", ");
             }
           } else {
-            responseValue = "Not Answered";
+            responseValue = "";
           }
           bodyArray[answerIndex].push(responseValue);
         });
@@ -219,6 +231,7 @@ const Responses = ({ survey, responses, allResponses, defaultLanguage }) => {
 
   if (isQLoading) return <Loader />;
   if (QError) return <Text>An error has occurred</Text>;
+  if (isLoading) return <Loader />;
 
   return (
     <Stack h="100%">
@@ -403,7 +416,7 @@ function BadgeorTextorPreview({
           leftIcon={<IconEye />}
           size="compact-xs"
           onClick={open}
-          disabled={response === "Not Answered" || !response}
+          disabled={response === "" || !response}
         />
         <PreviewModal
           headerTitle="Preview"

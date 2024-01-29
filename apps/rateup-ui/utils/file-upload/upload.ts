@@ -1,12 +1,14 @@
 import axios from "axios";
 import { fallbackImage } from "../constants";
 
-export const uploadFile = async (file) => {
+export const uploadFile = async (file, withThumbnails = false) => {
   const formData = new FormData();
   formData.append("file", file);
   try {
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/file`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/${
+        withThumbnails ? "fileWithThumb" : "file"
+      }`,
       formData,
       {
         headers: {
@@ -36,8 +38,10 @@ export const deleteUploadedFiles = async (data) => {
     return error?.data;
   }
 };
-export const getFileUrlFromKey = (key: string) => {
-  const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
+export const getFileUrlFromKey = (key: string, s3Upload = true) => {
+  const imgUrl = s3Upload
+    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`
+    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}${key}`;
   return imgUrl;
 };
 
@@ -56,10 +60,10 @@ export const dataURItoBlob = (dataURI) => {
   return new Blob([ab], { type: mimeString });
 };
 
-export const getImageValue = (image) => {
+export const getImageValue = (image, fallback = false) => {
   if (typeof image === "object") {
     return URL.createObjectURL(image);
-  } else if (image && image.startsWith("blob")) {
+  } else if (fallback || (image && image.startsWith("blob"))) {
     return image;
   } else if (image) {
     return getFileUrlFromKey(image);

@@ -18,14 +18,16 @@ const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
   return useMutation({
     mutationFn: upadateShareSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [queryKey, { resourceName, id }],
-      });
-      showSuccessToast(
-        "Settigs Updated Successfully",
-        "survey-share-settings",
-        <IconCheck />,
-      );
+      if (queryKey && resourceName && id) {
+        queryClient.invalidateQueries({
+          queryKey: [queryKey, { resourceName, id }],
+        });
+        showSuccessToast(
+          "Settigs Updated Successfully",
+          "survey-share-settings",
+          <IconCheck />,
+        );
+      }
     },
     onError: (error: any) => {
       showErrorToast(

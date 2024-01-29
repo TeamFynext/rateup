@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import {
   ActionIcon,
+  Box,
   Checkbox,
   Group,
   Loader,
@@ -153,6 +154,7 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           responses={filteredResponses}
           allResponses={teamWiseResponses}
           defaultLanguage={defaultLanguage}
+          isLoading={isLoading}
         />
       </Tabs.Panel>
       <Tabs.Panel value="comparison">
@@ -339,7 +341,10 @@ const ReturnSingleFilterComponent = ({
   );
   const Question = (
     <Text size="xs" c={"dark.3"} fw={"bold"} maw={130} truncate>
-      {question.title[selectedLanguage ? selectedLanguage : defaultLanguage]}
+      {question.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+        question.description[
+          selectedLanguage ? selectedLanguage : defaultLanguage
+        ]}
     </Text>
   );
   switch (question.type) {

@@ -24,6 +24,7 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
 import styles from "./SurveyTheme.module.css";
+import { THUMBNAIL_URL } from "../../../utils/constants";
 
 function SurveyTheme({ survey }) {
   const [selectedType, setSelectedType] = useState("header");
@@ -77,8 +78,8 @@ function SurveyTheme({ survey }) {
   }, [welcomeTheme?.mobileBgUrl]);
 
   //----------------upload image file ------------
-  const uploadImage = async (value) => {
-    const fileKey = await uploadFile(value);
+  const uploadImage = async (value, withThumbnails = false) => {
+    const fileKey = await uploadFile(value, withThumbnails);
     if (typeof fileKey === "string") {
       return fileKey;
     }
@@ -94,12 +95,12 @@ function SurveyTheme({ survey }) {
       currentStyles.logoUrl = logo;
     }
     if (currentStyles?.bgUrlNotUploaded) {
-      let logo = await uploadImage(currentStyles?.bgUrlNotUploaded);
-      currentStyles.bgUrl = logo;
+      let bg = await uploadImage(currentStyles?.bgUrlNotUploaded, true);
+      currentStyles.bgUrl = bg;
     }
     if (currentStyles?.mobileBgUrlNotUploaded) {
-      let logo = await uploadImage(currentStyles?.mobileBgUrlNotUploaded);
-      currentStyles.mobileBgUrl = logo;
+      let mbg = await uploadImage(currentStyles?.mobileBgUrlNotUploaded);
+      currentStyles.mobileBgUrl = mbg;
     }
 
     if (currentStyles?.id) {
@@ -167,6 +168,7 @@ function SurveyTheme({ survey }) {
               h={"100%"}
               mah={isMobileView ? 650 : 1000}
               w={isMobileView ? 300 : "100%"}
+              mih={"60vh"}
             >
               <WelcomePageView
                 setSelectedType={setSelectedType}

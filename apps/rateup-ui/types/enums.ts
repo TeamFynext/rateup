@@ -4,6 +4,7 @@
 export enum SurveyType {
   Web = "web",
   WhatsApp = "whatsapp",
+  WaFlow = "waFlow",
 }
 export enum QuestionType {
   Rating = "Rating",
@@ -25,6 +26,8 @@ export enum QuestionType {
   Number = "Number",
   DateTime = "DateTime",
   CustomNPS = "Custom NPS",
+  PCQ = "Picture Choice",
+  Contact = "Contact",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
@@ -67,6 +70,13 @@ export enum WaTemplateStatus {
   APPROVED = "APPROVED",
   PENDING = "PENDING",
   REJECTED = "REJECTED",
+}
+export enum WaFlowStatus {
+  PUBLISHED = "PUBLISHED",
+  DRAFT = "DRAFT",
+  DEPRECATED = "DEPRECATED",
+  BLOCKED = "BLOCKED",
+  THROTTLED = "THROTTLED",
 }
 
 export enum SurveyTypeFilters {
@@ -123,4 +133,33 @@ export enum SubscriptionFeaturePathName {
   ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
+}
+
+export enum PaymentType {
+  BASE = "BASE",
+  ADDON = "ADDON",
+}
+
+export enum PaymentPlanStatus {
+  NULL = "NULL",
+  LIVE = "LIVE",
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
+export enum WaFlowLayoutType {
+  scl = "SingleColumnLayout",
+}
+export enum WaFlowFormElementType {
+  textBody = "TextBody",
+  textHeading = "TextHeading",
+  textSubHeading = "TextSubHeading",
+  textCaption = "TextCaption",
+  textInput = "TextInput",
+  textArea = "TextArea",
+  datePicker = "DatePicker",
+  footer = "Footer",
+  radioButtonsGroup = "RadioButtonsGroup",
+  checkboxGroup = "CheckboxGroup",
+  dropDown = "Dropdown",
+  optIn = "OptIn",
 }

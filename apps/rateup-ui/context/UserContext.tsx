@@ -6,6 +6,7 @@ interface User {
   userName: string;
   email: string;
   profilePhoto: string;
+  orgId: string;
   orgName: string;
   orgLogo: string;
   orgPhone: string;

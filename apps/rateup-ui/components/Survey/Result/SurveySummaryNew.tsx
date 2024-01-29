@@ -5,6 +5,7 @@ import {
   ScrollArea,
   Badge,
   SimpleGrid,
+  Tooltip,
 } from "@mantine/core";
 import { IconThumbUpFilled, IconThumbDownFilled } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
@@ -117,9 +118,11 @@ const SurveySummaryNew = ({
               );
               return (
                 <Group pb="sm" key={choice?.value}>
-                  <Badge color="indigo" variant="light" w={100}>
-                    {choice?.value}
-                  </Badge>
+                  <Tooltip label={choice?.value}>
+                    <Badge color="indigo" variant="light" w={100}>
+                      {choice?.value}
+                    </Badge>
+                  </Tooltip>
                   :
                   <Text maw={150}>
                     {resObj

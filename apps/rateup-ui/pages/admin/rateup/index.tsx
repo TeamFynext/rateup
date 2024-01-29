@@ -1,0 +1,171 @@
+import { Box, Stack, Title, Group } from "@mantine/core";
+import React, { useState } from "react";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import {
+  usePaymentsPlans,
+  useRateupPaymentsPlanDeleteMutation,
+  useRateupPaymentsPlanMutation,
+  useRateupPaymentsPlanUpdateMutation,
+  useRateupPaymentsPlans,
+} from "../../../backend/payment/payment.query";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import { IconPlus } from "@tabler/icons-react";
+import RateupPlanModal from "../../../components/Modal/RateupPlanModal";
+import { useDisclosure } from "@mantine/hooks";
+import { showLoadingToast } from "../../../utils/notifications";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { ContainedTagInput } from "../../../components/input/ContainedInput/ContainedInput";
+import { generateColumns } from "../../../components/adminPanel/RateUpPlans/RateUpPlanColumn";
+
+const RateupPlan = () => {
+  const [opened, { toggle, close }] = useDisclosure(false);
+  const [updatedField, setUpdatedField] = useState<any>("");
+  const [
+    openedDescriptonModal,
+    { toggle: toggleDescriptonModal, close: closeDescriptonModal },
+  ] = useDisclosure(false);
+
+  const { data: plans, isPending, isError } = useRateupPaymentsPlans();
+  const {
+    data: razorPayPlans,
+    isPending: isRazorPayPlansLoading,
+    isError: isRazorPayPlansError,
+  } = usePaymentsPlans();
+  const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
+  const rateupPaymentsPlanUpdateMutation =
+    useRateupPaymentsPlanUpdateMutation(closeDescriptonModal);
+  const rateupPaymentsPlanDelete = useRateupPaymentsPlanDeleteMutation();
+
+  if (isError || isRazorPayPlansError) return <div>error occured</div>;
+  if (isPending || isRazorPayPlansLoading) return <div>loading...</div>;
+
+  const razorPayPlanFiltered =
+    razorPayPlans?.data
+      // ?.filter(
+      //   (razorPlan) =>
+      //     !plans.some((plan) => plan.paymentPlanId === razorPlan.id)
+      // )
+      .map((filteredPlan) => ({
+        value: filteredPlan.id,
+        label: filteredPlan.name,
+      })) ?? [];
+  const handleCellEditStopUpdate = (cellData) => {
+    if (cellData?.colDef?.type === "singleSelect" || !updatedField) return;
+
+    const updatedData: any = {
+      id: cellData?.row?.id,
+      paymentPlanId: cellData?.row?.paymentPlanId,
+      [cellData.field]: updatedField,
+    };
+    handleMutation(updatedData);
+  };
+
+  const handleDoubleClick = (params) => {
+    if (params?.field === "description") {
+      toggleDescriptonModal();
+      setUpdatedField({
+        id: params?.row?.id,
+        paymentPlanId: params?.row?.paymentPlanId,
+        [params.field]: params?.value,
+      });
+    }
+  };
+  const rows = plans?.map((plan) => {
+    return {
+      id: plan.id,
+      displayName: plan.displayName,
+      name: plan.name,
+      description: plan.description,
+      displayWidgetId: plan.displayWidgetId,
+      features: plan,
+      planType: plan.planType,
+      paymentPlanId: plan.paymentPlanId,
+      createdAt: plan?.createdAt,
+    };
+  });
+  const handleMutation = (updatedData) => {
+    rateupPaymentsPlanUpdateMutation.mutate(updatedData);
+    showLoadingToast(
+      "Hold.. your data is getting updated...",
+      "load-data",
+      true,
+      "Updating RateUp Plan",
+    );
+    setUpdatedField("");
+  };
+
+  return (
+    <Stack mah={"100%"}>
+      <Group gap={"md"} justify="space-between" mr={"xl"}>
+        <Title order={2}>Rateup Plans</Title>
+        <RateupButtonPrimary
+          title={"Create A Plan"}
+          rightIcon={<IconPlus size={16} />}
+          onClick={toggle}
+        />
+        <RateupPlanModal
+          opened={opened}
+          close={close}
+          razorPayPlanFiltered={razorPayPlanFiltered}
+          rateupPaymentsPlanMutation={rateupPaymentsPlanMutation}
+        />
+      </Group>
+      <Box h="75vh">
+        <DataGrid
+          rows={rows}
+          columns={generateColumns(
+            razorPayPlanFiltered,
+            handleMutation,
+            setUpdatedField,
+            rateupPaymentsPlanDelete,
+          )}
+          getRowHeight={() => "auto"}
+          disableColumnSelector
+          disableDensitySelector
+          slots={{
+            toolbar: GridToolbar,
+          }}
+          slotProps={{
+            toolbar: {
+              showQuickFilter: true,
+            },
+          }}
+          onCellEditStop={handleCellEditStopUpdate}
+          onCellDoubleClick={handleDoubleClick}
+        />
+      </Box>
+      <FormModalLayout
+        opened={openedDescriptonModal}
+        onClose={() => {
+          closeDescriptonModal();
+          setUpdatedField("");
+        }}
+        centered
+        title="Update Description"
+        buttonTitle="Update"
+        includeCancelButton
+        onSubmit={() => {
+          handleMutation(updatedField);
+        }}
+      >
+        <Group mt="md" justify="space-between">
+          <ContainedTagInput
+            label="Description"
+            placeholder="Type Description and press enter"
+            withAsterisk
+            value={updatedField?.description ?? []}
+            onChange={(e) => {
+              if (!e) return;
+              setUpdatedField({
+                ...updatedField,
+                description: e,
+              });
+            }}
+          />
+        </Group>
+      </FormModalLayout>
+    </Stack>
+  );
+};
+
+export default RateupPlan;

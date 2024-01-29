@@ -35,17 +35,15 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   };
   return (
     <Stack ml="sm">
-      <ScrollArea.Autosize mah={"30vh"} maw={"90vh"}>
-        <SegmentedControl
-          data={data}
-          value={selectedOp}
-          onChange={handleSelectedOp}
-          orientation={"vertical"}
-          color={"var(--tertiary-color)"}
-          size="md"
-          classNames={{ label: classes.sglabel }}
-        />
-      </ScrollArea.Autosize>
+      <SegmentedControl
+        data={data}
+        value={selectedOp}
+        onChange={handleSelectedOp}
+        orientation={"vertical"}
+        color={"var(--tertiary-color)"}
+        size="md"
+        classNames={{ label: classes.sglabel }}
+      />
     </Stack>
   );
 }
