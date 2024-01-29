@@ -40,7 +40,14 @@ function ReportBug() {
               className={styles["report-bug-button"]}
               onClick={toggle}
             >
-              <IconBug />
+              <IconBug
+                style={{
+                  position: "fixed",
+                  bottom: 0,
+                  right: 0,
+                  margin: "10px",
+                }}
+              />
             </ActionIcon>
           </Tooltip>
         </Flex>
