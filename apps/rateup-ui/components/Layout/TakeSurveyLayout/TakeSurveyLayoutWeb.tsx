@@ -170,7 +170,6 @@ export const TakeSurveyLayoutWeb = ({
                   )
                 : ""
             }
-            bg={"red"}
           >
             {/* .........Survey Header Section.......... */}
             {survey?.isPublished == true && !!startClicked && (
