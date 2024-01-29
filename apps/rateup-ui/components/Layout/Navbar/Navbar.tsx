@@ -7,7 +7,6 @@ import { IconChevronRight, IconHome, IconChevronDown } from "@tabler/icons";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import LoggedInUserCard from "./LoggedInUserCard";
 import { useUser } from "../../../context/UserContext";
-import { UserRole } from "../../../utils/enums";
 import styles from "./Navbar.module.css";
 import { useNavBottomData, NavbarLinkProps } from "./navbar.constants";
 
@@ -43,22 +42,6 @@ export const Navbar = ({ name, role, image, email }) => {
     } else if (item.label === "Logout") {
       router.push(`/logout`);
     }
-  };
-
-  const userInfo: {
-    name: string;
-    email: string;
-    role:
-      | typeof UserRole.ADM
-      | typeof UserRole.MEMBER
-      | typeof UserRole.SUPADM
-      | "...error...";
-    image: string;
-  } = {
-    name: user?.userName,
-    email: user?.email,
-    role: !user?.role ? "...error..." : user?.role,
-    image: userProfileAvatar,
   };
 
   const handlePaperLayoutClick = () => {
@@ -114,7 +97,7 @@ export const Navbar = ({ name, role, image, email }) => {
                 justify={"space-between"}
                 className={styles["Logged-in-user-card"]}
               >
-                {LoggedInUserCard(userInfo)}
+                <LoggedInUserCard />
                 {isDropdownOpen ? (
                   <IconChevronDown style={{ marginTop: "1rem" }} />
                 ) : (

@@ -2,7 +2,6 @@ import { CSSProperties } from "react";
 
 import classes from "./Header.module.css";
 import { Navbar } from "../Navbar/Navbar";
-import { userAgent } from "next/server";
 
 interface iHeaderTabProps {
   opened?: boolean;

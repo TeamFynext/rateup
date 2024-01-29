@@ -66,16 +66,7 @@ export function AdminPanelLayout({ children }) {
           </AppShell.Section>
           <AppShell.Section>
             <Stack p="sm">
-              {userInfo ? (
-                LoggedInUserCard({
-                  name: userInfo.data.userName,
-                  role: userInfo.data.role,
-                  email: userInfo.data.email,
-                  image: userInfo.data.profilePhoto,
-                })
-              ) : (
-                <Skeleton height={60} />
-              )}
+              {userInfo ? <LoggedInUserCard /> : <Skeleton height={60} />}
               <Button
                 variant="outline"
                 leftSection={<IconArrowLeft />}
