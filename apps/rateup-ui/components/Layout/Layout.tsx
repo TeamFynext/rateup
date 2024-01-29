@@ -81,7 +81,14 @@ export default function Layout({ children }) {
           >
             <Transition mounted={!focus} transition="slide-down">
               {(transitionStyle) => (
-                <HeaderTabs opened={opened} style={transitionStyle} />
+                <HeaderTabs
+                  name={userQueryData?.data?.userName}
+                  role={userQueryData?.data?.role}
+                  image={userQueryData?.data?.profilePhoto}
+                  email={userQueryData?.data?.email}
+                  opened={opened}
+                  style={transitionStyle}
+                />
               )}
             </Transition>
             <Flex
