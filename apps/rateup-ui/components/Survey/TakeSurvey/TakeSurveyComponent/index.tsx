@@ -22,10 +22,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
-import {
-  usePublicSurvey,
-  useUpdateCompletedMutation,
-} from "../../../../backend/surveys/surveys.query";
+import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useRef, useState } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import dayjs from "dayjs";
@@ -42,7 +39,6 @@ import { createResponsePublic } from "../../../../backend/surveys/response/respo
 import {
   RateupButtonBlackOutline,
   RateupButtonBlue,
-  RateupButtonSecondary,
 } from "../../../Button/RateupButtons";
 import QuestionCountContext from "../../../../context/QuestionCountContext";
 import classes from "./TakeSurvey.module.css";
@@ -55,8 +51,6 @@ import { emailPattern } from "../../../../utils/constants";
 import { TextForm } from "./QuestionForms/TextForm";
 import { TextAreaForm } from "./QuestionForms/TextAreaForm";
 import { NumberForm } from "./QuestionForms/NumberForm";
-import { PhoneForm } from "./QuestionForms/PhoneForm";
-import { EmailForm } from "./QuestionForms/EmailForm";
 import { RatingForm } from "./QuestionForms/RatingForm";
 import { LDForm } from "./QuestionForms/LDForm";
 import { YNForm } from "./QuestionForms/YNForm";
@@ -73,6 +67,8 @@ import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
+import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import { PCQForm } from "./QuestionForms/PCQForm";
 import { MotionTransition } from "../../../animation/MotionTransition";
 import ContactForm from "./QuestionForms/ContactForm";
@@ -85,7 +81,12 @@ function TakeSurvey({ survey }) {
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { surveyId } = useRouter().query as { surveyId: string };
-  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
+  const { data: surveyThemeData, isLoading: IsLoading } = useSurveyTheme(
+    survey?.id,
+  ) as {
+    data: SurveyTheme;
+    isLoading: boolean;
+  };
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [opened, { open, close }] = useDisclosure(false);
@@ -305,19 +306,9 @@ function TakeSurvey({ survey }) {
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
         ? router.push(
-            `${surveyId}/end?k=${kioskMode}${
-              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
-                ? `&sid=${survey.id}`
-                : ``
-            }&msg=thanks`,
+            `${surveyId}/end?k=${kioskMode}&sid=${survey.id}&msg=thanks`,
           )
-        : router.push(
-            `${surveyId}/end?k=${kioskMode}${
-              process.env.NEXT_PUBLIC_MY_G_SURVEY_ID === survey.id
-                ? `&sid=${survey.id}`
-                : ``
-            }`,
-          );
+        : router.push(`${surveyId}/end?k=${kioskMode}&sid=${survey.id}`);
     });
   };
 
@@ -347,7 +338,14 @@ function TakeSurvey({ survey }) {
     const value = item.response[key];
     return value;
   });
-
+  if (IsLoading) return <div>Loading...</div>;
+  const { surveyTheme } = surveyThemeData;
+  const {
+    button: { label, styles: buttonStyles },
+    subtitle: { subtitle, styles: subtitleStyles },
+    title: { title, styles: titleStyles },
+    input: { primaryColor },
+  } = surveyTheme;
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
@@ -400,6 +398,7 @@ function TakeSurvey({ survey }) {
                                 case Q.Smiley:
                                   return mapSmileyIcon(
                                     Object.values(response?.response)[0],
+                                    primaryColor,
                                   );
                                 case Q.Photo:
                                   const img = Object.values(
@@ -595,8 +594,14 @@ function TakeSurvey({ survey }) {
                   duration={1}
                 >
                   <Box pb={"lg"} ref={boxRef}>
-                    <QuestionTitle largeScreen={largeScreen} />
-                    <QuestionDesc largeScreen={largeScreen} />
+                    <QuestionTitle
+                      largeScreen={largeScreen}
+                      themeStyles={titleStyles}
+                    />
+                    <QuestionDesc
+                      largeScreen={largeScreen}
+                      themeStyles={subtitleStyles}
+                    />
                   </Box>
                   <ScrollArea.Autosize
                     mah={formMaxHeight}
@@ -614,6 +619,7 @@ function TakeSurvey({ survey }) {
                 num={QnNo}
                 total={questionCount}
                 survey={survey}
+                themeStyles={buttonStyles}
               />
             </Stack>
           </Box>
@@ -655,7 +661,7 @@ function submitSurvey({
     });
 }
 
-function QuestionTitle({ largeScreen }) {
+function QuestionTitle({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
@@ -663,12 +669,13 @@ function QuestionTitle({ largeScreen }) {
       fw={400}
       size={largeScreen ? "30px" : "20px"}
       className={classes.questionTitle}
+      style={themeStyles}
     >
       {selectedQ.title[selectedLanguage]}
     </Text>
   );
 }
-function QuestionDesc({ largeScreen }) {
+function QuestionDesc({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
@@ -676,6 +683,7 @@ function QuestionDesc({ largeScreen }) {
       size={largeScreen ? "15px" : "16px"}
       c="dimmed"
       className={classes.questionTitle}
+      style={themeStyles}
     >
       {selectedQ.description[selectedLanguage]}
     </Text>
@@ -751,7 +759,7 @@ function getQuestionForm(type, selectedQ) {
   }
 }
 
-function NextPrev({ prev, next, num, total, survey }) {
+function NextPrev({ prev, next, num, total, themeStyles, survey }) {
   const { surveyId } = useRouter().query as { surveyId: string };
   //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
@@ -940,28 +948,33 @@ function NextPrev({ prev, next, num, total, survey }) {
       </Text>
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
       <Group justify="space-between">
-        <RateupButtonSecondary
+        <Button
           radius={"xl"}
           title=""
           disabled={isFirstQuestion}
-          leftIcon={<IconChevronLeft />}
+          leftSection={<IconChevronLeft />}
           size={isMobile ? "sm" : "lg"}
+          variant="outlined"
           onClick={prev}
-          color="var(--tertiary-color)"
+          style={themeStyles}
         />
         <Center>
           <RingProgress
             sections={[
               {
                 value: parseInt(getCompletionRate(num, total)),
-                color: "dark.2",
+                color: themeStyles?.backgroundColor ?? "dark.2",
+              },
+              {
+                value: 100 - parseInt(getCompletionRate(num, total)),
+                color: themeStyles?.color ?? "dark",
               },
             ]}
             size={isMobile ? 55 : 80}
             thickness={isMobile ? 4 : 8}
             label={
               <Text
-                c="dark.2"
+                c={themeStyles?.backgroundColor ?? "dark.2"}
                 fw={700}
                 ta="center"
                 size={isMobile ? "xs" : "sm"}
@@ -983,6 +996,7 @@ function NextPrev({ prev, next, num, total, survey }) {
             onClick={handleNextClick}
             color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
+            style={themeStyles}
           >
             Submit
           </Button>
@@ -998,6 +1012,7 @@ function NextPrev({ prev, next, num, total, survey }) {
             onClick={handleNextClick}
             color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
+            style={themeStyles}
           >
             Next
           </Button>

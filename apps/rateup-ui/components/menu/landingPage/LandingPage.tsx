@@ -37,7 +37,6 @@ import {
   useUpdateMenuLandingPageOptionById,
 } from "../../../backend/menu/LandingPage/landingpage.query";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { FontWeights } from "../../Survey/SurveyTheme/fontStyleComponents/FontWeights";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TabsCommon from "./Tabs/TabsCommon";
 import { showErrorToast } from "../../../utils/notifications";
@@ -57,6 +56,7 @@ import {
   MAX_FILE_SIZE_IN_MB,
   fallbackImage,
 } from "../../../utils/constants";
+import { FontWeights } from "../../Survey/SurveyTheme/SurveyTheme.constants";
 //TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");

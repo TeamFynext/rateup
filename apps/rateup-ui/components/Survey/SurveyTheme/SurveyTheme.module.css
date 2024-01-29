@@ -8,3 +8,31 @@
 .styles-component-container {
   flex: 1 1 auto;
 }
+
+/* styles for different preview view components */
+.parentContainer {
+  position: relative;
+  padding: 25px;
+}
+
+.titleBox {
+  position: relative;
+  padding: 5px;
+}
+
+.buttonBox {
+  position: relative;
+  padding: 0 23px;
+}
+
+.actionIcon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--grey-color-4);
+}
+.saveButton {
+  margin-top: 1rem;
+  background-color: #fff;
+  width: 100%;
+}

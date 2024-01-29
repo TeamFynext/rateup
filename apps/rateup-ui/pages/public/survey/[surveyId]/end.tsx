@@ -32,6 +32,9 @@ import { ReviewSuggestion } from "../../../../types/global";
 import { getPublicSurveyGoogleLink } from "../../../../backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
+import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
+import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
+import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
   const { msg } = context.query;
@@ -53,10 +56,11 @@ export async function getServerSideProps(context) {
 
 export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
   const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
   const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
-
+  const { height, width } = useViewportSize();
   useEffect(() => {
     //kioskMode redirect
     if ((k === "y" || k === "cs") && !!!enableGoogleReview) {
@@ -71,96 +75,123 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
       };
     }
   }, [k]);
-
+  const { data: surveyThemeData, isLoading } = useSurveyTheme(sid) as {
+    data: SurveyTheme;
+    isLoading: boolean;
+  };
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
-  const myGSurveyId = process.env.NEXT_PUBLIC_MY_G_SURVEY_ID;
+  if (isLoading) return <div>Loading...</div>;
+  const { thankyouTheme } = surveyThemeData;
+  const {
+    bg: { styles: bgStyles },
+    logo: { logo, styles: logoStyles },
+    subtitle: { subtitle, styles: subtitleStyles },
+    title: { title, styles: titleStyles },
+    confettiEnabled,
+  } = thankyouTheme;
   return (
     <Flex
       style={{
-        height: "100dvh",
-        backgroundColor:
-          myGSurveyId === sid ? "#fff" : theme.colors[theme.primaryColor][6],
+        ...bgStyles,
+        ...{
+          height: "100dvh",
+          backgroundColor: bgStyles?.backgroundColor
+            ? bgStyles?.backgroundColor
+            : theme.colors[theme.primaryColor][6],
+          backgroundImage:
+            thankyouTheme?.bg?.desktopbg || thankyouTheme?.bg?.mobilebg
+              ? `url(${getImageUrl(
+                  isMobile && thankyouTheme?.bg?.mobilebg
+                    ? thankyouTheme?.bg?.mobilebg
+                    : thankyouTheme?.bg?.desktopbg,
+                )})`
+              : "",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        },
       }}
       direction={"column"}
       justify={"center"}
     >
-      {myGSurveyId === sid && <MygCustomThankyouPage />}
-      {myGSurveyId !== sid && (
-        <Stack h="100%" w="100%">
-          <Stack
-            c="white"
-            align="center"
-            justify="center"
-            p="sm"
-            m={"auto"}
-            h={"100%"}
+      <Stack h="100%" w="100%">
+        {confettiEnabled && <Confetti width={width} height={height} />}
+        <Stack
+          align="center"
+          justify="center"
+          p="sm"
+          m={"auto"}
+          h={"100%"}
+          style={{
+            flex: 0,
+          }}
+        >
+          {logo ? (
+            <Image
+              src={getImageUrl(logo)}
+              alt="Rateup"
+              height={"auto"}
+              style={logoStyles}
+            />
+          ) : (
+            <IconCircleCheck
+              size={"3rem"}
+              style={logoStyles}
+              color={titleStyles?.color ?? "#fff"}
+            />
+          )}
+          <Title
+            order={1}
+            fw={400}
             style={{
-              flex: 0,
+              ...titleStyles,
+              ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
             }}
           >
-            {<IconCircleCheck size={"3rem"} />}
-            <Title
-              order={1}
-              fw={400}
-              style={{ fontSize: largeScreen ? "3rem" : "1.25rem" }}
-            >
-              Thank you!
-            </Title>
-          </Stack>
-          {enableBody && (
-            <Stack
-              align="center"
-              justify="center"
-              gap="xl"
-              style={{
-                flex: 1,
-                borderRadius: "28px 28px 0px 0px",
-                backgroundColor: "whitesmoke",
-              }}
-            >
-              {enableGoogleReview && (
-                <GoogleReview
-                  googleLink={googleLink}
-                  reviewSuggestions={reviews}
-                />
-              )}
-
-              {k === "cs" && (
-                <Group m="xl" p="xl">
-                  <Link
-                    href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
-                    target="_blank"
-                  >
-                    <RateupButtonBlue
-                      leftIcon={<IconHome />}
-                      title="Go to Home"
-                    />
-                  </Link>
-                </Group>
-              )}
-            </Stack>
-          )}
+            {title}
+          </Title>
+          {subtitle && <Text style={subtitleStyles}>{subtitle}</Text>}
         </Stack>
-      )}
-      <RateupRedirectCard
-        alternateLogo={!(myGSurveyId === sid) && !enableGoogleReview}
-      />
+        {enableBody && (
+          <Stack
+            align="center"
+            justify="center"
+            gap="xl"
+            style={{
+              flex: 1,
+              borderRadius: "28px 28px 0px 0px",
+              backgroundColor: "whitesmoke",
+            }}
+          >
+            {enableGoogleReview && (
+              <GoogleReview
+                googleLink={googleLink}
+                reviewSuggestions={reviews}
+              />
+            )}
+
+            {k === "cs" && (
+              <Group m="xl" p="xl">
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
+                  target="_blank"
+                >
+                  <RateupButtonBlue
+                    leftIcon={<IconHome />}
+                    title="Go to Home"
+                  />
+                </Link>
+              </Group>
+            )}
+          </Stack>
+        )}
+      </Stack>
+      <RateupRedirectCard />
     </Flex>
   );
 }
 
-const MygCustomThankyouPage = () => {
-  const { height, width } = useViewportSize();
-  const desktopImage = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/temp/dektopthankyou.png`;
-  const mobileImage = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/temp/mobilethankyoupage.png`;
-  return (
-    <>
-      <Confetti width={width} height={height} />
-      <Image src={width >= 700 ? desktopImage : mobileImage} h={"90dvh"} />
-    </>
-  );
-};
 function GoogleReview({ googleLink, reviewSuggestions }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [reviewIndex, setReviewIndex] = useState<number>(null);

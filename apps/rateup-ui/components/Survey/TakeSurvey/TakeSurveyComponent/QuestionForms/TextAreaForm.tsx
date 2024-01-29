@@ -1,13 +1,14 @@
 import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Paper, Textarea } from "@mantine/core";
+import { Textarea, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-
+  const theme = useMantineTheme();
   return (
-    <Paper shadow="sm" className={classes.inputBox}>
+    <FormPaperLayout>
       <Textarea
         placeholder="Enter your answer"
         value={response?.length > 0 ? response?.replace(", ", "\n") : ""}
@@ -22,6 +23,6 @@ export function TextAreaForm() {
           input: classes.input,
         }}
       />
-    </Paper>
+    </FormPaperLayout>
   );
 }

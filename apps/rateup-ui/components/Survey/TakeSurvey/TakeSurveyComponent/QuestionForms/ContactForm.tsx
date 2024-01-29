@@ -1,22 +1,29 @@
-import { Stack, Paper, Group, TextInput, Textarea, Text } from "@mantine/core";
+import { Stack, TextInput, Text, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import classes from "../TakeSurvey.module.css";
 import "react-phone-number-input/style.css";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import FormPaperLayout from "./layout/FormPaperLayout";
+import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
+import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
 
 const ContactForm = ({ features }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];
+  const theme = useMantineTheme();
+  console.log(features);
   return (
     <Stack w={"100%"} gap={"lg"}>
       {selectedFeature?.name.isEnabled && (
         <Stack gap={"xs"}>
-          <Text>{selectedFeature.name.headText}</Text>
-          <Paper w="100%" shadow="sm" className={classes.inputBox}>
+          <Text c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}>
+            {selectedFeature.name.headText}
+          </Text>
+          <FormPaperLayout>
             <TextInput
               placeholder="Enter name"
               value={response?.name || ""}
@@ -29,13 +36,15 @@ const ContactForm = ({ features }) => {
                 root: classes.textRoot,
               }}
             />
-          </Paper>
+          </FormPaperLayout>
         </Stack>
       )}
       {selectedFeature?.phone.isEnabled && (
         <Stack gap={"xs"}>
-          <Text>{selectedFeature.phone.headText}</Text>
-          <Paper shadow="sm" className={classes.inputBox} w={"100%"}>
+          <Text c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}>
+            {selectedFeature.phone.headText}
+          </Text>
+          <FormPaperLayout>
             <PhoneInputWithCountrySelect
               defaultCountry="IN"
               international
@@ -47,13 +56,15 @@ const ContactForm = ({ features }) => {
               }
               className={classes.inputPhone}
             />
-          </Paper>
+          </FormPaperLayout>
         </Stack>
       )}
       {selectedFeature?.email.isEnabled && (
         <Stack gap={"xs"}>
-          <Text>{selectedFeature.email.headText}</Text>
-          <Paper w="100%" shadow="sm" className={classes.inputBox}>
+          <Text c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}>
+            {selectedFeature.email.headText}
+          </Text>
+          <FormPaperLayout>
             <TextInput
               placeholder="Enter email"
               value={response?.email || ""}
@@ -65,9 +76,17 @@ const ContactForm = ({ features }) => {
                 input: classes.input,
                 root: classes.textRoot,
               }}
-              leftSection={<IconMail size="1.2rem" color="gray" />}
+              leftSection={
+                <IconMail
+                  size="1.2rem"
+                  color={returnColorsForTheme(
+                    styleAttributeTypesEnum.TEXT,
+                    theme,
+                  )}
+                />
+              }
             />
-          </Paper>
+          </FormPaperLayout>
         </Stack>
       )}
     </Stack>

@@ -48,7 +48,6 @@ function ShareQRPage() {
         setResource={setResource}
         onGenerateBtnClick={handleGenerateBtnClick}
       />
-
       {link && (
         <div>
           <LinkWithCopyBtn link={link} />
