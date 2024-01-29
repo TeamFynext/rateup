@@ -58,7 +58,7 @@ const questionCore = {
       ),
     )
     .optional(),
-  features: z.record(z.string(), z.record(z.string(), z.boolean())).optional(),
+  features: z.record(z.string(), z.record(z.string(), z.any())).optional(),
   sections: z
     .record(
       z.string(),
