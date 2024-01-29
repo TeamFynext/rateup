@@ -1,15 +1,12 @@
 import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
-  CreateSurveyLandingInput,
   DeleteTeamSurveyInput,
   UpdateGoogleLinkInput,
-  UpdateLandingPageInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
-import defaultTheme from "../welcomeTheme/defaultTheme";
 import { QuestionType } from "../../types/enums";
 const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
@@ -40,84 +37,10 @@ export async function createSurvey(
         },
       },
     });
-
-    //-------------create a default landing page theme todo-------------
-
-    let landingData = defaultTheme;
-
-    let LandingPage = await prisma.welcomeTheme.create({
-      data: {
-        ...landingData,
-        headerText: landingData.headerText,
-        descText: landingData.descText,
-        buttonText: landingData.buttonText,
-        headerStyles: landingData.headerStyles,
-        descStyles: landingData.descStyles,
-        buttonStyles: landingData.buttonStyles,
-        bgStyles: landingData.bgStyles,
-        logoStyles: landingData.logoStyles,
-        surveyId: survey.id,
-        bgUrl: landingData.bgUrl,
-        mobileBgUrl: landingData.mobileBgUrl,
-        bgType: landingData.bgType,
-      },
-    });
-
     let surveyRes = { ...survey, teamIds: input?.teamIds };
 
     return surveyRes;
   }
-}
-
-//----------------create survey landing-----------------
-export async function createSurveyLanding(
-  input: CreateSurveyLandingInput,
-  createdBy: string,
-) {
-  const Landing = await prisma.surveyLanding.create({
-    data: {
-      ...input,
-      title: input.title,
-      // teamId: input.teamId,
-      createdBy,
-    },
-  });
-  //-------------create a default landing page theme todo-------------
-
-  let landingData = defaultTheme;
-
-  let LandingPage = await prisma.welcomeTheme.create({
-    data: {
-      ...landingData,
-      headerText: landingData.headerText,
-      descText: landingData.descText,
-      buttonText: landingData.buttonText,
-      headerStyles: landingData.headerStyles,
-      descStyles: landingData.descStyles,
-      buttonStyles: landingData.buttonStyles,
-      bgStyles: landingData.bgStyles,
-      logoStyles: landingData.logoStyles,
-      landingId: Landing.id,
-      bgUrl: landingData.bgUrl,
-      mobileBgUrl: landingData.mobileBgUrl,
-      bgType: landingData.bgType,
-    },
-  });
-  return Landing;
-}
-//----------------update survey landing page details-----------------
-export async function updateSurveyLanding(
-  id,
-  input: UpdateLandingPageInput,
-  // createdBy: string
-) {
-  const Landing = await prisma.surveyLanding.update({
-    where: {
-      id,
-    },
-    data: input,
-  });
-  return Landing;
 }
 
 export async function cloneSurvey(

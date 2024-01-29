@@ -11,6 +11,7 @@ import formDataPlugin from "@fastify/formbody";
 import { parseArrayString } from "./utils/array";
 import { sendFlow } from "./modules/whatsapp/flows/flow.service";
 import { log } from "./utils/logger";
+import { exportData } from "./modules/surveyTheme/surveyTheme.service";
 
 const server = Fastify({
   // logger: logOptions,
@@ -58,6 +59,7 @@ async function main() {
       console.error(e);
       process.exit(1);
     });
+  // exportData();
 }
 
 if (require.main === module) {
