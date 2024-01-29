@@ -115,24 +115,22 @@ const Responses = ({
           };
           let phone = null;
           let email = null;
+          let name = "";
           switch (res.type) {
-            case QuestionType.Email:
-              email = res.response?.[QuestionType.Email];
-              break;
-            case QuestionType.Phone:
-              phone = res.response?.[QuestionType.Phone];
-              break;
             case QuestionType.EmailPhone:
               phone = res.response?.[QuestionType.EmailPhone]?.phone;
               email = res.response?.[QuestionType.EmailPhone]?.email;
               break;
+            case QuestionType.Email:
+            case QuestionType.Phone:
             case QuestionType.Contact:
-              phone = res.response?.[QuestionType.Contact]?.phone;
-              email = res.response?.[QuestionType.Contact]?.email;
-              contact.name = res.response?.[QuestionType.Contact]?.name;
+              phone = res.response?.[res.type]?.phone;
+              email = res.response?.[res.type]?.email;
+              name = res.response?.[res.type]?.name;
           }
           contact.phone = phone ? phone.slice(1) : undefined;
           contact.email = email ? email : undefined;
+          contact.name = name ? name : "";
           if (
             !contacts.some(
               (c) =>
