@@ -28,13 +28,13 @@ const QuestionTypePreview = ({ type, choices, features }) => {
     case Q.Text:
       return <TextForm />;
     case Q.Phone:
-      return <PhoneForm />;
+      return <ContactForm features={features} />;
     case Q.Number:
       return <NumberForm />;
     case Q.TextArea:
       return <TextAreaForm />;
     case Q.Email:
-      return <EmailForm />;
+      return <ContactForm features={features} />;
     case Q.Rating:
       return <RatingForm />;
     case Q.LD:
