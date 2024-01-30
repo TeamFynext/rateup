@@ -16,8 +16,6 @@ const TncExtraProps = ({ form }) => {
   const [content, setContent] = useState(tnc?.content);
 
   useEffect(() => {
-    console.log(title);
-    console.log(form);
     form.setFieldValue("tnc", {
       ...form.values.tnc,
       [selectedLanguage]: { title, urlTitle, content },
