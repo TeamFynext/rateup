@@ -38,7 +38,12 @@ export function TermsNConditionsForm({ tncData }) {
         />
       </Paper>
 
-      <Modal opened={opened} onClose={close} title="Terms & Conditions">
+      <Modal
+        opened={opened}
+        onClose={close}
+        title="Terms & Conditions"
+        centered
+      >
         <Text pb="50px">{tnc?.content}</Text>
 
         <Group justify="flex-end">
