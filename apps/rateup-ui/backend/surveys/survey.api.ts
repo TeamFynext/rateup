@@ -60,15 +60,10 @@ export async function getSurveys() {
 }
 
 export async function getActiveSurveysSummary() {
-  try {
-    let surveysSummary: SurveySummaryData = (
-      await axiosClient.get(`${SURVEYURL}/summary/active`)
-    ).data;
-    return surveysSummary;
-  } catch (e) {
-    console.error(e);
-    return { error: "Error Occured!" };
-  }
+  let surveysSummary: SurveySummaryData = (
+    await axiosClient.get(`${SURVEYURL}/summary/active`)
+  ).data;
+  return surveysSummary;
 }
 
 export const getSurveysList = () =>

@@ -71,6 +71,7 @@ import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.quer
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import { PCQForm } from "./QuestionForms/PCQForm";
 import { MotionTransition } from "../../../animation/MotionTransition";
+import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
 
 function TakeSurvey({ survey }) {
@@ -754,6 +755,10 @@ function getQuestionForm(type, selectedQ) {
       return <PCQForm key={selectedQ?.id} />;
     case Q.Contact:
       return <ContactForm key={selectedQ?.id} features={selectedQ?.features} />;
+    case Q.TnC:
+      return (
+        <TermsNConditionsForm key={selectedQ?.id} tncData={selectedQ?.tnc} />
+      );
     default:
       return <div>not implemented</div>;
   }
