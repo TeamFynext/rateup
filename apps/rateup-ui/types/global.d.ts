@@ -17,6 +17,12 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
+type TNC = {
+  title: string;
+  urlTitle: string;
+  content: string;
+};
+
 type ValidationRules = {
   length?: {
     min: string;
@@ -48,6 +54,7 @@ declare global {
     googleReview?: GoogleReview;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
+    tnc?: TNC;
   };
   type WaSectionsType = Array<{
     title?: string;
@@ -207,6 +214,7 @@ declare global {
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
       [QuestionType.CustomNPS]?: Choice;
+      [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };
     };
   };

@@ -1,10 +1,13 @@
 import { useContext, useRef } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Group, Paper, Stack, TextInput } from "@mantine/core";
+import { Stack, TextInput, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { IconMail } from "@tabler/icons-react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
+import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function EmailPhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -13,32 +16,29 @@ export function EmailPhoneForm() {
   };
 
   const emailRef = useRef(null);
-
+  const theme = useMantineTheme();
   return (
-    <Stack w={"100%"}>
-      <Paper
-        w="100%"
-        shadow="sm"
-        className={classes.inputBox}
-        onClick={() => emailRef.current.focus()}
-      >
-        <Group>
-          <TextInput
-            placeholder="Enter your email"
-            ref={emailRef}
-            value={response?.email}
-            onChange={handleEmailChange}
-            variant="unstyled"
-            classNames={{
-              input: classes.input,
-              root: classes.textRoot,
-            }}
-            leftSection={<IconMail size="1.2rem" color="gray" />}
-          />
-        </Group>
-      </Paper>
-
-      <Paper mt="xs" shadow="sm" className={classes.inputBox} w={"100%"}>
+    <Stack>
+      <FormPaperLayout onClick={() => emailRef.current.focus()}>
+        <TextInput
+          placeholder="Enter your email"
+          ref={emailRef}
+          value={response?.email}
+          onChange={handleEmailChange}
+          variant="unstyled"
+          classNames={{
+            input: classes.input,
+            root: classes.textRoot,
+          }}
+          leftSection={
+            <IconMail
+              size="1.2rem"
+              color={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+            />
+          }
+        />
+      </FormPaperLayout>
+      <FormPaperLayout>
         <PhoneInput
           defaultCountry="IN"
           international
@@ -48,7 +48,7 @@ export function EmailPhoneForm() {
           onChange={(value) => updateResponse({ ...response, phone: value })}
           className={classes.inputPhone}
         />
-      </Paper>
+      </FormPaperLayout>
     </Stack>
   );
 }

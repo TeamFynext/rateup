@@ -44,6 +44,7 @@ export const OtherQuestions = [
   QuestionType.DDSS,
   QuestionType.DDMS,
   QuestionType.PCQ,
+  QuestionType.TnC,
 ];
 
 export const WaOtherQuestions = [

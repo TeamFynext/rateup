@@ -1,132 +1,80 @@
 import {
   Select,
   Stack,
-  Flex,
   Text,
-  ColorPicker,
   NumberInput,
-  Button,
-  ColorInput,
-  Group,
-  Box,
+  ScrollArea,
+  Divider,
 } from "@mantine/core";
 
-import React, { useEffect } from "react";
-import { createFormContext } from "@mantine/form";
-import { FontWeights } from "../fontStyleComponents/FontWeights";
-import classes from "../WelcomePage.module.css";
+import React from "react";
+import { Subtitle } from "../surveyTheme.types";
+import { FontWeights } from "../SurveyTheme.constants";
+import CustomColorPicker from "./customelements/CustomColorPicker";
+import CustomColorInput from "./customelements/CustomColorInput";
 
-interface FormValues {
-  name: string;
-  descText?: string;
-  descStyles: {
-    color: string;
-    fontSize: number;
-    fontWeight: number;
-    textAlign: string;
-  };
-}
-const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
 function DescStyles({
-  saveStyles,
   currentStyles,
   setCurrentstyles,
-  saveLoading,
+}: {
+  currentStyles: Subtitle;
+  setCurrentstyles: (key: string, value: any) => void;
 }) {
-  const form = useForm({
-    initialValues: {
-      name: "description",
-
-      descStyles: currentStyles?.descStyles,
-    },
-  });
-
-  //----------font loading--------
-  useEffect(() => {
-    if (
-      JSON.stringify(form?.values?.descStyles) !==
-      JSON.stringify(currentStyles?.descStyles)
-    ) {
-      setCurrentstyles({
-        ...currentStyles,
-        descStyles: form?.values?.descStyles,
-      });
-    }
-  }, [form?.values, currentStyles]);
-
-  useEffect(() => {
-    if (!form.isDirty()) {
-      form.setValues({
-        name: "description",
-        descStyles: currentStyles?.descStyles,
-      });
-    }
-  }, [currentStyles]);
-
-  //----------onsubmit form -------------
-  const onSubmit = (e) => {
-    e.preventDefault();
-
-    saveStyles(form?.values);
-  };
-
   return (
-    <Flex>
-      <Stack w={"100%"}>
-        <form>
-          <Box className={classes.editorBox}>
-            <Box className={classes.editorSection}>
-              <Group mt="xs">
-                <Select
-                  label="Font weight"
-                  data={FontWeights}
-                  style={{ maxWidth: "150px" }}
-                  {...form.getInputProps("descStyles.fontWeight")}
-                />
-                <NumberInput
-                  min={10}
-                  max={100}
-                  defaultValue={18}
-                  placeholder="size"
-                  label="Font Size"
-                  name="fontSize"
-                  style={{ maxWidth: "150px" }}
-                  {...form.getInputProps("descStyles.fontSize")}
-                />
-              </Group>
-              <Text mt={10} fw={500}>
-                Choose text color
-              </Text>
-              <ColorPicker
-                fullWidth
-                format="rgba"
-                {...form.getInputProps("descStyles.color")}
-              />
-              <ColorInput
-                mt="sm"
-                {...form.getInputProps("descStyles.color")}
-                placeholder="Select description color"
-              />
-            </Box>
-
-            <Flex justify={"center"} className={classes.saveButton}>
-              <Button
-                radius={48}
-                size={"sm"}
-                pl={40}
-                pr={40}
-                mt={12}
-                onClick={onSubmit}
-                loading={saveLoading}
-              >
-                {" "}
-                Save
-              </Button>
-            </Flex>
-          </Box>
-        </form>
+    <ScrollArea h={"40vh"} w={"100%"}>
+      <Stack align="center" w={"100%"}>
+        <Divider label="Styles" variant="dashed" w={"100%"} />
+        <Select
+          label="Font weight"
+          data={FontWeights}
+          style={{ maxWidth: "150px" }}
+          value={currentStyles?.styles?.fontWeight}
+          onChange={(e) => {
+            setCurrentstyles("subtitle", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, fontWeight: e },
+            });
+          }}
+        />
+        <NumberInput
+          min={10}
+          max={100}
+          defaultValue={18}
+          placeholder="size"
+          label="Font Size"
+          name="fontSize"
+          style={{ maxWidth: "150px" }}
+          value={currentStyles?.styles?.fontSize}
+          onChange={(e) => {
+            setCurrentstyles("subtitle", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, fontSize: e },
+            });
+          }}
+        />
+        <Text mt={10} fw={500}>
+          Choose text color
+        </Text>
+        <CustomColorPicker
+          value={currentStyles?.styles?.color}
+          onChange={(e) => {
+            setCurrentstyles("subtitle", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, color: e },
+            });
+          }}
+        />
+        <CustomColorInput
+          value={currentStyles?.styles?.color}
+          onChange={(e) => {
+            setCurrentstyles("subtitle", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, color: e },
+            });
+          }}
+        />
       </Stack>
-    </Flex>
+    </ScrollArea>
   );
 }
 

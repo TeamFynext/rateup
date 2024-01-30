@@ -49,6 +49,7 @@ import TestimonialExtraProps from "./TestimonialExtraProps";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import ContactExtraProps from "./ContactExtraProps";
+import TncExtraProps from "./TncExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -208,6 +209,7 @@ export function QuestionDetailedView({
                   type={question?.type}
                   choices={form.values.choices}
                   features={form.values.features}
+                  tnc={form.values.tnc}
                 />
               </CurrentResponsesContext.Provider>
             </Center>
@@ -326,6 +328,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.Email:
     case QuestionType.Phone:
       return <ContactExtraProps form={form} />;
+    case QuestionType.TnC:
+      return <TncExtraProps form={form} />;
     default:
       return null;
   }

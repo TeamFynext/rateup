@@ -1,0 +1,62 @@
+//element types
+export interface Bg {
+  desktopbg?: string;
+  mobilebg?: string;
+  styles: {
+    backgroundColor: string;
+  };
+}
+export interface Logo {
+  logo?: string;
+  styles?: any;
+}
+export interface Title {
+  title: string;
+  styles?: any;
+}
+export interface Subtitle {
+  subtitle: string;
+  styles?: any;
+}
+export interface Button {
+  label: string;
+  styles?: any;
+}
+
+export interface Input {
+  primaryColor: string;
+}
+
+//theme types
+export interface WelcomeTheme {
+  bg: Bg;
+  logo: Logo;
+  title: Title;
+  subtitle: Subtitle;
+  button: Button;
+}
+export interface _SurveyTheme {
+  bg: Bg;
+  title: Title;
+  subtitle: Subtitle;
+  button: Button;
+  input: Input;
+}
+export interface ThankyouTheme {
+  bg: Bg;
+  logo: Logo;
+  title: Title;
+  subtitle: Subtitle;
+  confettiEnabled: boolean;
+}
+
+//overall theme
+export interface SurveyTheme {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  surveyId: string;
+  welcomeTheme: WelcomeTheme;
+  surveyTheme: _SurveyTheme;
+  thankyouTheme: ThankyouTheme;
+}

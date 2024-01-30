@@ -12,6 +12,7 @@ import {
   Button,
   Divider,
   Tooltip,
+  useMantineTheme,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -179,7 +180,7 @@ const GoogleReviewEditor = ({
     setActiveTab(QuestionTabsEnum.Edit);
     setLinkUpdateStatus(false);
   };
-
+  const { primaryColor } = useMantineTheme();
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Title order={3}>Google Reviews Setup</Title>
@@ -231,7 +232,7 @@ const GoogleReviewEditor = ({
                                     maxWidth: "70px",
                                   }}
                                 >
-                                  {mapSmileyIcon(value)}
+                                  {mapSmileyIcon(value, primaryColor)}
                                 </Button>
                               ))}
                             </Group>

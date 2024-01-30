@@ -1,13 +1,14 @@
 import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { NumberInput, Paper } from "@mantine/core";
+import { NumberInput, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-
+  const theme = useMantineTheme();
   return (
-    <Paper shadow="sm" className={classes.inputBox}>
+    <FormPaperLayout>
       <NumberInput
         size="sm"
         placeholder="Enter number input"
@@ -18,6 +19,6 @@ export function NumberForm() {
           input: classes.input,
         }}
       />
-    </Paper>
+    </FormPaperLayout>
   );
 }
