@@ -26,7 +26,7 @@ function ReportBug() {
 
   return (
     <Popover
-      position="bottom-end"
+      position="top-end"
       withArrow
       shadow="md"
       classNames={popoverStyles}
@@ -40,14 +40,7 @@ function ReportBug() {
               className={styles["report-bug-button"]}
               onClick={toggle}
             >
-              <IconBug
-                style={{
-                  position: "fixed",
-                  bottom: 0,
-                  right: 0,
-                  margin: "10px",
-                }}
-              />
+              <IconBug />
             </ActionIcon>
           </Tooltip>
         </Flex>

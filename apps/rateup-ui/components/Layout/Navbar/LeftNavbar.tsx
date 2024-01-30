@@ -15,7 +15,7 @@ import {
   Box,
 } from "@mantine/core";
 import { useRouter } from "next/router";
-import LoggedInUserCard from "./LoggedInUserCard";
+import { IconChevronLeft } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks";
 import { useUser } from "../../../context/UserContext";
 import styles from "./Navbar.module.css";
@@ -243,10 +243,13 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
                   : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
-              radius="10px"
+            />
+            <IconChevronLeft
+              size={25}
               onClick={() => {
                 setOpened((o) => !o);
               }}
+              style={{ cursor: "pointer" }}
             />
           </Group>
         </Stack>
