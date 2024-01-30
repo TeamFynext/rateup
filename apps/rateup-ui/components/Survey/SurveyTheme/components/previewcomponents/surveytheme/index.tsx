@@ -136,6 +136,12 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                       questionTypeEnumArray[currentQuestionTypeCount],
                     )}
                     type={questionTypeEnumArray[currentQuestionTypeCount]}
+                    tnc={{
+                      title: "I agree",
+                      content:
+                        "Terms & conditions.... \n conditions 1....\n conditions 3.... \n conditions 3....",
+                      urlTitle: "terms and conditions",
+                    }}
                   />
                 </CurrentResponsesContext.Provider>
               </MantineProvider>
