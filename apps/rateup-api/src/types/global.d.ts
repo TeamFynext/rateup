@@ -21,6 +21,12 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
+type TNC = {
+  title: string;
+  urlTitle: string;
+  content: string;
+};
+
 type ValidationRules = {
   length?: {
     min: string;
@@ -56,6 +62,7 @@ declare global {
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
     sections?: Zod.RecordType<string, WaSectionsType>; // for Wa_List
+    tnc?: TNC;
   };
   type WaSectionsType = Array<{
     title?: string;
@@ -108,6 +115,7 @@ declare global {
       };
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
+      [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };
     };
   };

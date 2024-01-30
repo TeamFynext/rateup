@@ -87,6 +87,15 @@ const questionCore = {
     .optional(),
   logic: z.array(logicJumpSchema).optional(),
   validationRules: z.union([z.null(), validationRulesSchema]).optional(),
+  tnc: z
+    .record(
+      z.object({
+        title: z.string(),
+        urlTitle: z.string(),
+        content: z.string(),
+      }),
+    )
+    .optional(),
 };
 
 export const questionSchema = z.object({
