@@ -1,5 +1,5 @@
 import React from "react";
-import { HoverCard, Image, Text } from "@mantine/core";
+import { Box, HoverCard, Image, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 
 export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
@@ -21,7 +21,7 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
         )}
       </HoverCard.Target>
       <HoverCard.Dropdown>
-        <Text
+        <Box
           c="dark.3"
           size="sm"
           style={{
@@ -47,7 +47,7 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
               {content}
             </Text>
           )}
-        </Text>
+        </Box>
       </HoverCard.Dropdown>
     </HoverCard>
   );
