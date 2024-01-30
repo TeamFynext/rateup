@@ -177,6 +177,7 @@ model Survey {
   notificationEmail       String          @default("")
   WelcomeTheme            WelcomeTheme?
   shareSettings           Json?
+  surveyTheme             SurveyTheme?
   WaFlow                  WaFlow?
 }
 
@@ -193,6 +194,7 @@ model SurveyTeamMap {
   menuLanding MenuLanding[]
 }
 
+//this is the model for grouped surveys
 model SurveyLanding {
   id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt          DateTime  @default(now())
@@ -360,6 +362,17 @@ model WelcomeTheme {
   bgUrl        String?
   mobileBgUrl  String?
   bgType       String?   @default("bgcolor")
+}
+
+model SurveyTheme {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
+  surveyId      String    @unique @db.Uuid
+  survey        Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  welcomeTheme  Json
+  surveyTheme   Json
+  thankyouTheme Json
 }
 
 model Menu {

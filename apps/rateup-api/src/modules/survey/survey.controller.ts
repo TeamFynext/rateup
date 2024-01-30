@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   cloneSurvey,
   createSurvey,
-  createSurveyLanding,
   deleteSurveyById,
   deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
@@ -21,7 +20,6 @@ import {
   updateGoogleLink,
   updateStartedSurvey,
   updateSurveyById,
-  updateSurveyLanding,
   updateSurveyPassword,
   updateVisitedSurvey,
   verifySurveyPassword,
@@ -29,7 +27,6 @@ import {
 import {
   CloneSurveyInput,
   CreateSurveyInput,
-  CreateSurveyLandingInput,
   DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   GetSurveyTemplatesParams,
@@ -43,55 +40,23 @@ import { Prisma } from "@prisma/client";
 import { getLandingPageById } from "../landingPage/landingpage.service";
 import { BySurveyTeamMapIdParams } from "../team/team.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
+import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
     Body: CreateSurveyInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const data = request.body;
   try {
-    const survey = await createSurvey(data, request.userId,request.user.email);
-    reply.code(201).send(survey);
-  } catch (e) {
-    console.error(e);
-    reply.code(500).send();
-  }
-}
-
-//------------create survey landing handler--------------
-export async function createSurveyLandingHandler(
-  request: FastifyRequest<{
-    Body: CreateSurveyLandingInput;
-  }>,
-  reply: FastifyReply
-) {
-  const data = request.body;
-
-  // console.log("caretesurvye--213", data);
-  try {
-    const survey = await createSurveyLanding(data, request.userId);
-    reply.code(201).send(survey);
-  } catch (e) {
-    console.error(e);
-    reply.code(500).send();
-  }
-}
-//------------update survey landing handler--------------
-export async function updateSurveyLandingHandler(
-  request: FastifyRequest<{
-    Body: CreateSurveyLandingInput;
-    Params: GetSurveyByIdParams;
-  }>,
-  reply: FastifyReply
-) {
-  const data = request.body;
-
-  try {
-    let landingId = request.params.id;
-
-    const survey = await updateSurveyLanding(landingId, data);
+    const survey = await createSurvey(data, request.userId, request.user.email);
+    //creating a default survey theme once the survey is created
+    if (typeof survey === "object" && survey !== null) {
+      console.log(survey);
+      await createDefaultSurveyTheme(survey.id);
+      reply.code(201).send(survey);
+    }
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);
@@ -103,7 +68,7 @@ export async function getSurveyByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let session = await Session.getSession(request, reply);
@@ -124,7 +89,7 @@ export async function getPublicSurveyByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getPublicSurveyById(request.params.id);
@@ -143,7 +108,7 @@ export async function getLandingPageByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getLandingPageById(request.params.id);
@@ -162,7 +127,7 @@ export async function getSurveyBylandingIdhandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getSurveyBylandingId(request.params.id);
@@ -180,7 +145,7 @@ export async function fetchGoogleUrlBySurveyIdHandler(
   request: FastifyRequest<{
     Params: BySurveyTeamMapIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     return await getGoogleUrlBySurveyTeamMapId(request.params.surveyTeamMapId);
@@ -196,7 +161,7 @@ export async function cloneSurveyHandler(
     Params: GetSurveyByIdParams;
     Body: CloneSurveyInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   let teamIds = request?.body?.teamIds;
   let survey;
@@ -221,7 +186,7 @@ export async function getSurveyByTeamHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getSurveysByTeam(request.params.id);
@@ -239,10 +204,12 @@ export async function getSurveyStatsBySurveyTeamMapIdHandler(
   request: FastifyRequest<{
     Params: { surveyTeamMapId: string };
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
-    const survey = await getSurveyStatsBySurveyTeamMapId(request.params.surveyTeamMapId);
+    const survey = await getSurveyStatsBySurveyTeamMapId(
+      request.params.surveyTeamMapId,
+    );
     if (!survey) {
       reply.code(404);
     } else {
@@ -254,7 +221,7 @@ export async function getSurveyStatsBySurveyTeamMapIdHandler(
 }
 export async function getSurveysHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveys = await getSurveysByUserId(request.userId);
@@ -266,7 +233,7 @@ export async function getSurveysHandler(
 }
 export async function getWebSurveysHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveys = await getWebSurveysByUserId(request.userId);
@@ -279,7 +246,7 @@ export async function getWebSurveysHandler(
 
 export async function getActiveSurveysSummaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const userId = request.userId;
@@ -294,7 +261,7 @@ export async function getActiveSurveysSummaryHandler(
 //----------get survey landing -----------
 export async function getSurveysLandingHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let session = await Session.getSession(request, reply);
@@ -310,7 +277,7 @@ export async function getSurveysLandingHandler(
 //--------@author:harshad
 export async function getWhatsappSurveysHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let type = "whatsapp";
@@ -343,7 +310,7 @@ export async function deleteSurveyByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getSurveyById(request.params.id);
@@ -376,7 +343,7 @@ export async function deleteTeamSurveyHandler(
     Params: GetSurveyByIdParams;
     Body: DeleteTeamSurveyInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     let response = await deleteSurveyFromTeam(request.params.id, request.body);
@@ -399,7 +366,7 @@ export async function updateSurveyByIdHandler(
     Params: GetSurveyByIdParams;
     Body: UpdateSurveyInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     // TODO: By using prisma error codes, we can return 404 if the survey doesn't exist.
@@ -416,17 +383,18 @@ export async function updateSurveyPasswordHandler(
     Params: GetSurveyByIdParams;
     Body: UpdateSurveyPassword;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getSurveyById(request.params.id);
     if (!survey) {
       reply.code(404);
     } else {
-    const res = await updateSurveyPassword(request.params.id, request.body);
-      reply
-        .code(200)
-        .send({ message: "Password Changes Updated successfully." ,isProtected: res?.isProtected});
+      const res = await updateSurveyPassword(request.params.id, request.body);
+      reply.code(200).send({
+        message: "Password Changes Updated successfully.",
+        isProtected: res?.isProtected,
+      });
     }
   } catch (e) {
     console.log(e);
@@ -439,12 +407,12 @@ export async function verifySurveyPasswordHandler(
     Params: GetSurveyByIdParams;
     Body: UpdateSurveyPassword;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const verifyPassword = await verifySurveyPassword(
       request.params.id,
-      request.body
+      request.body,
     );
     if (!verifyPassword) {
       reply.code(404);
@@ -460,7 +428,7 @@ export async function visitedSurveyHandler(
   request: FastifyRequest<{
     Params: IdParamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const updateVisited = await updateVisitedSurvey(request.params.id);
@@ -478,7 +446,7 @@ export async function startedSurveyHandler(
   request: FastifyRequest<{
     Params: IdParamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const updateStarted = await updateStartedSurvey(request.params.id);
@@ -496,7 +464,7 @@ export async function completedSurveyHandler(
   request: FastifyRequest<{
     Params: IdParamInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const updateCompleted = await updateCompletedSurvey(request.params.id);
@@ -515,7 +483,7 @@ export async function updateGoogleLinkHandler(
     Params: IdParamInput;
     Body: UpdateGoogleLinkInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const survey = await getSurveyById(request.params.id);

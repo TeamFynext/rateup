@@ -137,11 +137,13 @@ export function parseFlowResponse({
   const qType = flowMap[elementName].type;
   switch (qType) {
     case qt.Email:
-    case qt.Phone:
+      return { email: response };
     case qt.Text:
     case qt.TextArea:
     case qt.Number:
       return response;
+    case qt.Phone:
+      return { phone: response };
     case qt.DateTime:
       return new Date(parseInt(response));
     case qt.YN:

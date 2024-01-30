@@ -18,11 +18,8 @@ import { userRoutes } from "./modules/user/user.route";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
 import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
 import { userSchemas } from "./modules/user/user.schema";
-import { WelcomeThemeSchema } from "./modules/welcomeTheme/welcometheme.schema";
 import { LandingThemeSchema } from "./modules/landingWelcomeTheme/landingTheme.schema";
 import { LandingPageRoutes } from "./modules/landingPage/landingpage.route";
-import { WelcomeThemeRoutes } from "./modules/welcomeTheme/welcometheme.route";
-import { WelcomeThemePublicRoutes } from "./modules/welcomeTheme/welcometheme.public.routes";
 import { LandingThemeRoutes } from "./modules/landingWelcomeTheme/landingTheme.routes";
 import { LandingThemePublicRoutes } from "./modules/landingWelcomeTheme/landingTheme.public.routes";
 import { menuSchemas } from "./modules/menu/menu.schema";
@@ -52,6 +49,8 @@ import { subscriptionRoutes } from "./modules/subscription/subscription.route";
 import { unsplashRoutes } from "./modules/unsplash/unsplash.route";
 import { unsplashSchemas } from "./modules/unsplash/unsplash.schema";
 import { subscriptionSchemas } from "./modules/subscription/subscription.schema";
+import { surveyThemeRoutes } from "./modules/surveyTheme/surveyTheme.routes";
+import { surveyThemeSchemas } from "./modules/surveyTheme/surveyTheme.schema";
 import { paymentRoutes } from "./modules/payment/payment.route";
 import { paymentSchemas } from "./modules/payment/payment.schema";
 import { paymentPublicRoutes } from "./modules/payment/payment.public.route";
@@ -66,7 +65,6 @@ export function registerRoutes(server: FastifyInstance): void {
     uploadSchemas,
     userSchemas,
     landingPageSchemas,
-    WelcomeThemeSchema,
     LandingThemeSchema,
     menuSchemas,
     menuCategorySchemas,
@@ -78,6 +76,7 @@ export function registerRoutes(server: FastifyInstance): void {
     menuBannerSchemas,
     unsplashSchemas,
     subscriptionSchemas,
+    surveyThemeSchemas,
     paymentSchemas,
   ];
   for (const module of modules) {
@@ -87,8 +86,6 @@ export function registerRoutes(server: FastifyInstance): void {
   }
   server.register(surveyRoutes, { prefix: "api/survey" });
   server.register(LandingPageRoutes, { prefix: "api/landingpage" });
-  server.register(WelcomeThemeRoutes, { prefix: "api/welcome" });
-  server.register(WelcomeThemePublicRoutes, { prefix: "api/public/welcome" });
   server.register(surveyMenuShareSettingsRoutes, {
     prefix: "api/shareSettings",
   });
@@ -125,4 +122,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(subscriptionRoutes, { prefix: "api/subscription" });
   server.register(paymentRoutes, { prefix: "api/payment" });
   server.register(paymentPublicRoutes, { prefix: "api/public/payment" });
+  server.register(surveyThemeRoutes, { prefix: "api/surveyTheme" });
 }

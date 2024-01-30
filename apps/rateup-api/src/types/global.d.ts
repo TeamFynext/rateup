@@ -56,7 +56,7 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
-    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
     id: string;
     googleReview?: GoogleReview;
     logic?: Array<LogicJump>;
@@ -77,7 +77,11 @@ declare global {
       [QuestionType.Text]?: string;
       [QuestionType.TextArea]?: string;
       [QuestionType.Number]?: number;
-      [QuestionType.Email]?: string;
+      [QuestionType.Email]?: {
+        name?: string;
+        phone?: string;
+        email: string;
+      };
       [QuestionType.Testimonial]?: {
         testimonial: string;
         name?: string;
@@ -90,10 +94,9 @@ declare global {
         phone: string;
       };
       [QuestionType.Contact]?: {
-        name: string;
-        email?: string;
+        name?: string;
         phone?: string;
-        address?: string;
+        email?: string;
       };
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
@@ -105,7 +108,11 @@ declare global {
       [QuestionType.DDSS]?: Choice;
       [QuestionType.DDMS]?: Array<Choice>;
       [QuestionType.CustomNPS]?: Choice;
-      [QuestionType.Phone]?: string;
+      [QuestionType.Phone]?: {
+        name?: string;
+        phone: string;
+        email?: string;
+      };
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
       [QuestionType.TnC]?: boolean;
