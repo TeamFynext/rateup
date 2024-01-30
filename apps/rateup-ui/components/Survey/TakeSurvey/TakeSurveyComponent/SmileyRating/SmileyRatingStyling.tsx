@@ -33,37 +33,37 @@ export const getIconStyle = (color?: string, iconType?: string) => {
   };
 };
 
-export const getEmptyIcon = (value: number) => {
+export const getEmptyIcon = (value: number, color: string) => {
   const iconStyle = getIconStyle();
 
   switch (value) {
     case 1:
-      return <IconMoodCry style={getIconStyle("red", "empty")} />;
+      return <IconMoodCry style={getIconStyle(color, "empty")} />;
     case 2:
-      return <IconMoodSad style={getIconStyle("orange", "empty")} />;
+      return <IconMoodSad style={getIconStyle(color, "empty")} />;
     case 3:
-      return <IconMoodSmile style={getIconStyle("yellow", "empty")} />;
+      return <IconMoodSmile style={getIconStyle(color, "empty")} />;
     case 4:
-      return <IconMoodSmileBeam style={getIconStyle("lime", "empty")} />;
+      return <IconMoodSmileBeam style={getIconStyle(color, "empty")} />;
     case 5:
-      return <IconMoodCrazyHappy style={getIconStyle("green", "empty")} />;
+      return <IconMoodCrazyHappy style={getIconStyle(color, "empty")} />;
     default:
       return null;
   }
 };
 
-export const getFullIcon = (value: number) => {
+export const getFullIcon = (value: number, color: string) => {
   switch (value) {
     case 1:
-      return <IconMoodCry style={getIconStyle("red", "full")} />;
+      return <IconMoodCry style={getIconStyle(color, "full")} />;
     case 2:
-      return <IconMoodSad style={getIconStyle("orange", "full")} />;
+      return <IconMoodSad style={getIconStyle(color, "full")} />;
     case 3:
-      return <IconMoodSmile style={getIconStyle("yellow", "full")} />;
+      return <IconMoodSmile style={getIconStyle(color, "full")} />;
     case 4:
-      return <IconMoodSmileBeam style={getIconStyle("lime", "full")} />;
+      return <IconMoodSmileBeam style={getIconStyle(color, "full")} />;
     case 5:
-      return <IconMoodCrazyHappy style={getIconStyle("green", "full")} />;
+      return <IconMoodCrazyHappy style={getIconStyle(color, "full")} />;
     default:
       return null;
   }

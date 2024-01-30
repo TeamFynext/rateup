@@ -1,10 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { MultiSelect, Paper, Select } from "@mantine/core";
+import { MultiSelect, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
+import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
+import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -36,8 +39,9 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
     const res = options?.filter((op) => values?.includes(op?.value));
     updateResponse(res);
   };
+  const theme = useMantineTheme();
   return (
-    <Paper shadow="sm" className={classes.inputBox}>
+    <FormPaperLayout>
       <MultiSelect
         style={{ minWidth: "300px", maxWidth: "500px" }}
         data={data}
@@ -48,8 +52,30 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
           input: classes.selectBox,
           root: classes.input,
         }}
+        styles={{
+          input: {
+            backgroundColor: "transparent",
+          },
+          dropdown: {
+            backgroundColor: returnColorsForTheme(
+              styleAttributeTypesEnum.BACKGROUND,
+              theme,
+            ),
+            borderColor: returnColorsForTheme(
+              styleAttributeTypesEnum.BORDER,
+              theme,
+            ),
+          },
+          pill: {
+            color: returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme),
+            backgroundColor: returnColorsForTheme(
+              styleAttributeTypesEnum.BACKGROUND,
+              theme,
+            ),
+          },
+        }}
         searchable
       />
-    </Paper>
+    </FormPaperLayout>
   );
 }

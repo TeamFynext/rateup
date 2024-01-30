@@ -1,17 +1,9 @@
-import {
-  Title,
-  Text,
-  Stack,
-  Image,
-  Button,
-  Flex,
-  BackgroundImage,
-} from "@mantine/core";
+import { Title, Text, Stack, Image, Button, Flex } from "@mantine/core";
 import React from "react";
-import { useMediaQuery } from "@mantine/hooks";
 import { lexend300 } from "../../../utils/fonts";
+import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 
-const buttonStyles = {
+const _buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
   borderRadius: "48px",
   padding: "10px",
@@ -19,86 +11,67 @@ const buttonStyles = {
   paddingRight: "20px",
 };
 
-function WelcomePage({ surveyThemeData, onStart, largeScreen }) {
-  const isMobile = useMediaQuery("(max-width: 480px)");
-
+function WelcomePage({
+  surveyThemeData,
+  onStart,
+  largeScreen,
+}: {
+  surveyThemeData: WelcomeTheme;
+  onStart: any;
+  largeScreen: any;
+}) {
+  const {
+    button: { label, styles: buttonStyles },
+    logo: { logo, styles: logoStyles },
+    subtitle: { subtitle, styles: subtitleStyles },
+    title: { title, styles: titleStyles },
+  } = surveyThemeData;
   return (
     <Stack
       align="center"
       justify="center"
       gap="xl"
       style={{
-        height: "100%",
-        borderRadius: 18,
-        ...surveyThemeData?.bgStyles,
+        minHeight: "100dvh",
       }}
       ff={lexend300.style.fontFamily}
     >
-      <BackgroundImage
-        h={"100%"}
-        style={{
-          flex: 1,
-          height: "100%",
-          objectFit: "contain",
-          borderRadius: 18,
-        }}
-        src={
-          (surveyThemeData?.bgUrl || surveyThemeData?.mobileBgUrl) &&
-          surveyThemeData?.bgType != "bgcolor"
-            ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${
-                isMobile && surveyThemeData?.mobileBgUrl
-                  ? surveyThemeData?.mobileBgUrl
-                  : surveyThemeData?.bgUrl
-              }`
-            : ""
-        }
-      >
-        <Flex
-          justify={"center"}
-          align={"center"}
-          h={"100%"}
-          direction={"column"}
+      <Flex justify={"center"} align={"center"} h={"100%"} direction={"column"}>
+        {logo && (
+          <Image
+            fit="contain"
+            src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`}
+            alt=" Logoss "
+            style={logoStyles}
+          />
+        )}
+        <Title
+          order={1}
+          style={{
+            fontSize: largeScreen ? "4rem" : "3rem",
+            ...titleStyles,
+          }}
+          tt={"capitalize"}
+          mt={25}
+          ff={"inherit"}
         >
-          {surveyThemeData?.logoUrl && (
-            <Image
-              fit="contain"
-              src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData?.logoUrl}`}
-              alt=" Logoss "
-              style={surveyThemeData?.logoStyles}
-            />
-          )}
-          <Title
-            order={1}
-            style={{
-              fontSize: largeScreen ? "4rem" : "3rem",
-              ...surveyThemeData?.headerStyles,
-            }}
-            tt={"capitalize"}
-            mt={25}
-            ff={"inherit"}
-          >
-            {surveyThemeData?.headerText}
-          </Title>
+          {title}
+        </Title>
 
-          <Text mt={20} style={surveyThemeData?.descStyles}>
-            {surveyThemeData?.descText}
-          </Text>
+        <Text mt={20} style={subtitleStyles}>
+          {subtitle}
+        </Text>
 
-          <Button
-            mt={20}
-            style={
-              surveyThemeData?.buttonStyles
-                ? { ...surveyThemeData.buttonStyles }
-                : { ...buttonStyles }
-            }
-            onClick={onStart}
-            miw={150}
-            ff={"inherit"}
-          >
-            {surveyThemeData?.buttonText}
-          </Button>
-        </Flex>
-      </BackgroundImage>
+        <Button
+          mt={20}
+          style={buttonStyles ? { ...buttonStyles } : { ..._buttonStyles }}
+          onClick={onStart}
+          miw={150}
+          ff={"inherit"}
+        >
+          {label}
+        </Button>
+      </Flex>
     </Stack>
   );
 }

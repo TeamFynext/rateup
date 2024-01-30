@@ -1,10 +1,8 @@
 import React from "react";
 import { QuestionType as Q } from "../../../../types/enums";
 import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextForm";
-import { PhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PhoneForm";
 import { NumberForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/NumberForm";
 import { TextAreaForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextAreaForm";
-import { EmailForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailForm";
 import { RatingForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/RatingForm";
 import { LDForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/LDForm";
 import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm";
@@ -28,13 +26,13 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
     case Q.Text:
       return <TextForm />;
     case Q.Phone:
-      return <PhoneForm />;
+      return <ContactForm features={features} />;
     case Q.Number:
       return <NumberForm />;
     case Q.TextArea:
       return <TextAreaForm />;
     case Q.Email:
-      return <EmailForm />;
+      return <ContactForm features={features} />;
     case Q.Rating:
       return <RatingForm />;
     case Q.LD:

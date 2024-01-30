@@ -325,6 +325,8 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
     case QuestionType.Testimonial:
       return <TestimonialExtraProps qId={question.id} form={form} />;
     case QuestionType.Contact:
+    case QuestionType.Email:
+    case QuestionType.Phone:
       return <ContactExtraProps form={form} />;
     case QuestionType.TnC:
       return <TncExtraProps form={form} />;

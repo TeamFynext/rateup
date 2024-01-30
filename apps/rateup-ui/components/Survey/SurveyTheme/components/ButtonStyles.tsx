@@ -1,123 +1,91 @@
 import {
   Stack,
-  Flex,
   Text,
-  ColorPicker,
   NumberInput,
-  Button,
-  ColorInput,
   Group,
-  Box,
   ScrollArea,
+  Divider,
 } from "@mantine/core";
-import React, { useEffect } from "react";
-import classes from "../WelcomePage.module.css";
-import { useForm } from "@mantine/form";
+import React from "react";
+import { Button as ButtonType } from "../surveyTheme.types";
+import CustomColorPicker from "./customelements/CustomColorPicker";
+import CustomColorInput from "./customelements/CustomColorInput";
 
 function ButtonStyles({
-  saveStyles,
   currentStyles,
   setCurrentstyles,
-  saveLoading,
+}: {
+  currentStyles: ButtonType;
+  setCurrentstyles: (key: string, value: any) => void;
 }) {
-  const form = useForm({
-    initialValues: {
-      name: "button",
-
-      buttonStyles: currentStyles?.buttonStyles,
-    },
-  });
-  //----------onsubmit form -------------
-  const onSubmit = (e) => {
-    e.preventDefault();
-
-    saveStyles(form?.values);
-  };
-
-  //----------font loading--------
-  useEffect(() => {
-    if (
-      JSON.stringify(form?.values?.buttonStyles) !==
-      JSON.stringify(currentStyles?.buttonStyles)
-    ) {
-      setCurrentstyles({
-        ...currentStyles,
-        buttonStyles: form?.values?.buttonStyles,
-      });
-    }
-  }, [form?.values, currentStyles]);
-
-  useEffect(() => {
-    if (!form.isDirty()) {
-      form.setValues({
-        name: "button",
-        buttonStyles: currentStyles?.buttonStyles,
-      });
-    }
-  }, [currentStyles]);
   return (
-    <Stack w={"100%"} justify={"center"} h="100%" gap={0}>
-      <ScrollArea h={"40vh"}>
-        <Box className={classes.editorBox} pr={"xs"}>
-          <Box className={classes.editorSection}>
-            <Group mt="xs">
-              <NumberInput
-                min={0}
-                max={50}
-                // mt={"xs"}
-                defaultValue={18}
-                placeholder="radius"
-                label="Border Radius"
-                name="borderRadius"
-                {...form.getInputProps("buttonStyles.borderRadius")}
-                style={{ maxWidth: "100px" }}
-              />
-            </Group>
+    <ScrollArea h={"40vh"} w={"100%"}>
+      <Stack align="center" w={"100%"}>
+        <Divider label="Styles" variant="dashed" w={"100%"} />
+        <Group>
+          <NumberInput
+            min={0}
+            max={50}
+            defaultValue={18}
+            placeholder="radius"
+            label="Border Radius"
+            name="borderRadius"
+            value={currentStyles?.styles?.borderRadius}
+            onChange={(e) => {
+              setCurrentstyles("button", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, borderRadius: e },
+              });
+            }}
+            style={{ maxWidth: "100px" }}
+          />
+        </Group>
 
-            <Text mt={10} fw={500}>
-              Choose background color
-            </Text>
-            <ColorPicker
-              fullWidth
-              format="rgba"
-              {...form.getInputProps("buttonStyles.backgroundColor")}
-            />
-            <ColorInput
-              mt="sm"
-              {...form.getInputProps("buttonStyles.backgroundColor")}
-              placeholder="Select description color"
-            />
+        <Text mt={10} fw={500}>
+          Choose background color
+        </Text>
+        <CustomColorPicker
+          value={currentStyles?.styles?.backgroundColor}
+          onChange={(e) => {
+            setCurrentstyles("button", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, backgroundColor: e },
+            });
+          }}
+        />
+        <CustomColorInput
+          value={currentStyles?.styles?.backgroundColor}
+          onChange={(e) => {
+            setCurrentstyles("button", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, backgroundColor: e },
+            });
+          }}
+        />
 
-            <Text mt={10} fw={500}>
-              Choose text color
-            </Text>
-            <ColorPicker
-              fullWidth
-              format="rgba"
-              {...form.getInputProps("buttonStyles.color")}
-            />
-            <ColorInput
-              mt="sm"
-              {...form.getInputProps("buttonStyles.color")}
-              placeholder="Select text color"
-            />
-          </Box>
-          <Flex justify={"center"}>
-            <Button
-              radius={48}
-              size={"sm"}
-              pl={40}
-              pr={40}
-              mt={"1rem"}
-              onClick={onSubmit}
-              loading={saveLoading}
-            >
-              Save
-            </Button>
-          </Flex>
-        </Box>
-      </ScrollArea>
-    </Stack>
+        <Text mt={10} fw={500}>
+          Choose text color
+        </Text>
+        <CustomColorPicker
+          value={currentStyles?.styles?.color}
+          onChange={(e) => {
+            setCurrentstyles("button", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, color: e },
+            });
+          }}
+        />
+        <CustomColorInput
+          value={currentStyles?.styles?.color}
+          onChange={(e) => {
+            setCurrentstyles("button", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, color: e },
+            });
+          }}
+        />
+      </Stack>
+    </ScrollArea>
   );
 }
 
