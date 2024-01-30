@@ -25,7 +25,11 @@ export function getResponse(type: any, response: any) {
     const date = dayjs(response);
     const formattedDate = date.format("DD, MMM YYYY");
     return `${formattedDate}`;
-  } else if (type === QuestionType.Contact) {
+  } else if (
+    [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
+      type,
+    )
+  ) {
     let formattedResponse = Object.entries(response).map(
       ([key, value]) => key + ": " + value,
     );

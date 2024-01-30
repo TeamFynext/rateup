@@ -1,13 +1,14 @@
 import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Input, Paper } from "@mantine/core";
+import { Input, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-
+  const theme = useMantineTheme();
   return (
-    <Paper shadow="sm" className={classes.inputBox}>
+    <FormPaperLayout>
       <Input
         placeholder="Enter your answer"
         value={response || ""}
@@ -20,6 +21,6 @@ export function TextForm() {
         }}
         style={{ maxWidth: "400px" }}
       />
-    </Paper>
+    </FormPaperLayout>
   );
 }

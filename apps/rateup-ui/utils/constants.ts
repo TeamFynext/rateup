@@ -6,10 +6,10 @@ export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const ContactQuestions = [
+  QuestionType.Contact,
   QuestionType.Email,
   QuestionType.Phone,
-  QuestionType.EmailPhone,
-  QuestionType.Contact,
+  // QuestionType.EmailPhone,
 ];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
@@ -44,6 +44,7 @@ export const OtherQuestions = [
   QuestionType.DDSS,
   QuestionType.DDMS,
   QuestionType.PCQ,
+  QuestionType.TnC,
 ];
 
 export const WaOtherQuestions = [

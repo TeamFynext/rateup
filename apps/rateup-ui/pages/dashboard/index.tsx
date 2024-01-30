@@ -11,6 +11,7 @@ import {
   Stack,
   SimpleGrid,
   ActionIcon,
+  Blockquote,
 } from "@mantine/core";
 import { Tooltip as MantineTooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -27,6 +28,8 @@ import {
   IconSocial,
   IconReload,
   IconSquareRoundedPlusFilled,
+  IconShoppingCart,
+  IconCloudExclamation,
 } from "@tabler/icons-react";
 import { useSurveysSummary } from "../../backend/surveys/surveys.query";
 import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
@@ -61,7 +64,7 @@ export default function DashboardHome() {
 
   const {
     isLoading: isLoadingSummary,
-    error: isErrorSummary,
+    error: summaryError,
     data: surveysSummary,
     refetch,
     fetchStatus,
@@ -260,32 +263,35 @@ export default function DashboardHome() {
                     },
                   }}
                 />
-                {summaryArray.map(({ summaryname, summaryvalue, route }) => (
-                  <PaperLayout
-                    hoveractive
-                    style={{ height: "105px", cursor: "pointer" }}
-                    py={"xl"}
-                    onClick={() => router.push(route)}
-                  >
-                    <Stack gap={0} justify="center" h={"100%"}>
-                      <Title
-                        style={{ textAlign: "center", color: "#1C518E" }}
-                        order={2}
-                        size="36px"
-                      >
-                        {summaryvalue ? summaryvalue : 0}
-                      </Title>
-                      <Text
-                        className={lexend400.className}
-                        style={{ textAlign: "center" }}
-                        fz="xl"
-                        c="#595959"
-                      >
-                        {summaryname}
-                      </Text>
-                    </Stack>
-                  </PaperLayout>
-                ))}
+                {summaryArray.map(
+                  ({ summaryname, summaryvalue, route }, index) => (
+                    <PaperLayout
+                      hoveractive
+                      style={{ height: "105px", cursor: "pointer" }}
+                      py={"xl"}
+                      key={index}
+                      onClick={() => router.push(route)}
+                    >
+                      <Stack gap={0} justify="center" h={"100%"}>
+                        <Title
+                          style={{ textAlign: "center", color: "#1C518E" }}
+                          order={2}
+                          size="36px"
+                        >
+                          {summaryvalue ? summaryvalue : 0}
+                        </Title>
+                        <Text
+                          className={lexend400.className}
+                          style={{ textAlign: "center" }}
+                          fz="xl"
+                          c="#595959"
+                        >
+                          {summaryname}
+                        </Text>
+                      </Stack>
+                    </PaperLayout>
+                  ),
+                )}
               </Stack>
 
               <PaperLayout
@@ -502,17 +508,36 @@ export default function DashboardHome() {
             )}
           </Stack>
         </Container>
-      ) : !surveysSummary?.error ? (
+      ) : !summaryError ? (
         <Loading h={300} />
       ) : (
         <Stack p="xl">
-          <Text mb="lg"> An error occured..!</Text>
-          <RateupButtonSecondary
-            size="md"
-            leftIcon={<IconReload />}
-            title="Try again"
-            onClick={refetch}
-          />
+          {summaryError?.response?.data?.message === "Subscription expired" ? (
+            <>
+              <Blockquote color="red" icon={<IconCloudExclamation />}>
+                Your don't have an active Subscription..!
+              </Blockquote>
+              <Text mb="lg"> </Text>
+              <RateupButtonSecondary
+                size="md"
+                leftIcon={<IconShoppingCart />}
+                title="Go to Billing Section"
+                onClick={() => {
+                  router.push("/dashboard/settings?activeTab=account");
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <Text mb="lg"> An error occured..!</Text>
+              <RateupButtonSecondary
+                size="md"
+                leftIcon={<IconReload />}
+                title="Try again"
+                onClick={refetch}
+              />
+            </>
+          )}
         </Stack>
       )}
     </>

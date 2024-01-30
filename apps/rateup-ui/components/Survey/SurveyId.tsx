@@ -20,7 +20,6 @@ import SurveySettings from "./Settings/SurveySettings";
 import Result from "./Result/Result";
 import { useUser } from "../../context/UserContext";
 import SurveyTheme from "./SurveyTheme/SurveyTheme";
-import { ContainedSelection } from "../../components/input/ContainedInput/ContainedInput";
 import SurveyContext from "../../context/SurveyContext";
 import { UserRole } from "../../utils/enums";
 import { SurveyType } from "../../types/enums";
@@ -160,7 +159,7 @@ export default function SurveyID() {
                   <Tabs.List>
                     <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
                     {survey?.type !== SurveyType.WhatsApp && (
-                      <Tabs.Tab value={TabEnum.Theme}>Welcome Page</Tabs.Tab>
+                      <Tabs.Tab value={TabEnum.Theme}>Theme</Tabs.Tab>
                     )}
                     <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
                     <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
@@ -184,7 +183,7 @@ export default function SurveyID() {
             <Space h="md" />
             <Tabs.Panel
               value={TabEnum.Edit}
-              style={{ background: "white", width: "100%" }}
+              style={{ background: "white", width: "100%", maxHeight: "100%" }}
             >
               {survey?.type === SurveyType.WhatsApp ? (
                 <EditWhatsappSurvey

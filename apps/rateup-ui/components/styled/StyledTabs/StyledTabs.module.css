@@ -30,13 +30,13 @@
 
 /* Style for the active tab */
 .tab[data-active] {
-  background-color: var(--mantine-primary-color-filled);
+  background-color: var(--tertiary-color);
   color: var(--mantine-color-white);
 }
 
 /* Hover style for inactive tabs */
 .tab:hover:not([data-active]) {
-  background-color: var(--mantine-primary-color-light);
+  background-color: var(--shade-of-blue);
 }
 
 /* Style for the content panel */
