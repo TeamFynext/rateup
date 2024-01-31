@@ -547,9 +547,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           mx={largeScreen ? "lg" : "0"}
                           selected={isMenuEnabled}
                         >
-                          {isMenuEnabled && catalogue === "catalogue"
-                            ? CatalogueButton(!isMobileTab)
-                            : MenuButton(!isMobileTab)}
+                          {isMenuEnabled &&
+                            (catalogue === "catalogue"
+                              ? CatalogueButton(!isMobileTab)
+                              : MenuButton(!isMobileTab))}
                         </PaperLayout>
                         <PaperLayout
                           radius={"md"}
