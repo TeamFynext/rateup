@@ -1,9 +1,11 @@
 .link {
   text-decoration: none;
 }
+
 .link:hover {
   text-decoration: underline;
 }
+
 .navbar {
   z-index: 1;
   box-shadow:
@@ -14,9 +16,32 @@
 .icon-and-chevraon-container {
   justify-content: center;
   position: relative;
+  margin-top: 1rem;
 }
 
 .chevron-container {
+  position: relative;
+}
+
+.dropdown-menu {
   position: absolute;
-  right: 0;
+  left: 0;
+  top: 0;
+  gap: 1rem;
+  border-radius: 15px;
+  text-align: center;
+}
+
+.Logged-in-user-card {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-right: 1rem;
+}
+
+.user-icon-arrow-circle {
+  color: mediumblue;
+  border-radius: 50%;
+  border: 2px solid rgb(224, 221, 221);
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
 }
