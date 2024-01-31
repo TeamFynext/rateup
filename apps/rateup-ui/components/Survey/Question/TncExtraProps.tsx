@@ -25,35 +25,41 @@ const TncExtraProps = ({ form }) => {
   return (
     <Stack>
       <Group>
-        <Text className={classes["labels"]}>Title: </Text>
+        <Text className={classes["labels"]} fw={600}>
+          Title :{" "}
+        </Text>
         <Input
           placeholder="eg:  I agree to"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           radius="sm"
           size="sm"
-          style={{ maxWidth: "400px" }}
+          className={classes["inputs"]}
         />
       </Group>
       <Group>
-        <Text className={classes["labels"]}>Url Text: </Text>
+        <Text className={classes["labels"]} fw={600}>
+          Url Text :{" "}
+        </Text>
         <Input
           placeholder="eg:  terms and conditions"
           value={urlTitle}
           onChange={(e) => setUrlTitle(e.target.value)}
           radius="sm"
           size="sm"
-          style={{ maxWidth: "400px" }}
+          className={classes["inputs"]}
         />
       </Group>
 
       <Group>
-        <Text className={classes["labels"]}>Terms Content: </Text>
+        <Text className={classes["labels"]} fw={600}>
+          Terms Content :{" "}
+        </Text>
         <Textarea
           placeholder="Terms & Conditions .........."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          style={{ maxWidth: "400px" }}
+          className={classes["inputs"]}
           size="sm"
         />
       </Group>

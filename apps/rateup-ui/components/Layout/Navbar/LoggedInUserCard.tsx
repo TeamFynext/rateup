@@ -5,7 +5,7 @@ const LoggedInUserCard = () => {
   const { user } = useUser();
 
   return (
-    <Group gap={10} style={{ width: "200px" }}>
+    <Group gap={10} style={{ width: "140px" }}>
       <Avatar
         src={
           user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
@@ -13,14 +13,14 @@ const LoggedInUserCard = () => {
             : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`
         }
         alt={user.userName}
-        radius="xl"
-        style={{ size: "40px", marginLeft: "1rem" }}
+        radius="lg"
+        style={{ size: "40px" }}
       />
       <Stack style={{ gap: 0 }}>
-        <Text size="lg" fw={500}>
+        <Text size="sm" fw={500}>
           {user.userName ? user.userName : user.email}
         </Text>
-        <Text c="dimmed" size="sm">
+        <Text c="dimmed" size="xs">
           {user.role}
         </Text>
       </Stack>
