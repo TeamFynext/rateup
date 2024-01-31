@@ -9,10 +9,11 @@ import {
 import { returnColorsForTheme } from "../Survey/SurveyTheme/SurveyTheme.utils";
 import { styleAttributeTypesEnum } from "../Survey/SurveyTheme/SurveyTheme.enums";
 
-export default function RateupRedirectCard() {
+export default function RateupRedirectCard({ className = "" }) {
   const theme = useMantineTheme();
   return (
     <Center
+      className={className}
       bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
       w={"fit-content"}
       m={"auto"}

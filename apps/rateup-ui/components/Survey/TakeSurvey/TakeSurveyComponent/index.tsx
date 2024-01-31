@@ -306,9 +306,7 @@ function TakeSurvey({ survey }) {
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
-        ? router.push(
-            `${surveyId}/end?k=${kioskMode}&sid=${survey.id}&msg=thanks`,
-          )
+        ? router.push(`${surveyId}/review-us-on-google`)
         : router.push(`${surveyId}/end?k=${kioskMode}&sid=${survey.id}`);
     });
   };
