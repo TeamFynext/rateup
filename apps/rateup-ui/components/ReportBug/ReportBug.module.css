@@ -25,3 +25,9 @@
   height: 100%;
   border: 0;
 }
+
+.report-bug-container-wrapper {
+  position: fixed;
+  bottom: 0;
+  right: 3rem;
+}
