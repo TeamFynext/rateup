@@ -146,7 +146,7 @@ export default function LandingPagesList() {
       </Group>
       {isLoading ? (
         <Group m="100px">
-          <Loader color="blue" />
+          <Loader color="blue" type="bars" />
         </Group>
       ) : (
         <SimpleGrid

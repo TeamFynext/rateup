@@ -93,7 +93,7 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
     setFilteredResponses(filteredResponsesByTags);
   }, [teamWiseResponses, filterTeams, selectedLanguage, filterTags]);
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return <Loader type="bars" />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
   return (
     <StyledTabs

@@ -126,7 +126,7 @@ export default function SurveyLandingList() {
     });
   }, [selectedTeamId]);
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return <Loader type="bars" />;
   if (error || !Array.isArray(surveys)) {
     console.error(surveys, error);
     return "An error has occurred";

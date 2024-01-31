@@ -162,7 +162,7 @@ export default function Contacts() {
         <Tabs.Panel value="customers">
           {isLoadingContacts ? (
             <Center pt="xl">
-              <Loader></Loader>
+              <Loader type="bars" />
             </Center>
           ) : filteredContacts?.length > 0 ? (
             <SimpleGrid
@@ -184,7 +184,7 @@ export default function Contacts() {
         <Tabs.Panel value="groups">
           {isLoadingContactgroup ? (
             <Center pt="xl">
-              <Loader></Loader>
+              <Loader type="bars" />
             </Center>
           ) : filteredGroups?.length > 0 ? (
             <SimpleGrid

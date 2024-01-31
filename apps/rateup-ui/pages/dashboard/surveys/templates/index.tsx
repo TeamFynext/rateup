@@ -190,7 +190,7 @@ const Templates = () => {
       {isLoading && (
         <Box m="200px">
           {" "}
-          <Loader />{" "}
+          <Loader type="bars" />{" "}
         </Box>
       )}
 

@@ -133,7 +133,7 @@ const ProfileSettings = () => {
   useEffect(() => {
     if (profileData?.data?.data) {
       const phone = profileData?.data?.data?.phone
-        ? "+" + profileData?.data?.data?.phone
+        ? profileData?.data?.data?.phone
         : null;
       profileForm.setValues({
         title: profileData?.data?.data?.gender || "",

@@ -82,7 +82,10 @@ export const BannerAddAndViewModal = ({
   };
 
   const bannerForm = data?.map((value, index) => (
-    <Carousel.Slide key={value.id}>
+    <Carousel.Slide
+      key={value.id}
+      maw={largeScreen ? "min(59vw , 1000px)" : "90vw"}
+    >
       <Slide
         key={value?.id ?? index}
         menuId={menuId}
@@ -116,13 +119,14 @@ export const BannerAddAndViewModal = ({
       centered
       opened={opened}
       onClose={onClose}
-      size={largeScreen ? "70vw" : "90vw"}
+      size={largeScreen ? "min(70vw , 1000px)" : "90vw"}
       radius={"lg"}
       title={
         <Stack pl={"xl"} gap={0}>
           <Title order={3}>Manage Banners</Title>
           <Text fz={"md"} c={"var(--grey-color-4)"}>
-            you can add 4 Banners
+            Sliding banners to be shown in top of menu. You can add upto 4
+            banners.
           </Text>
         </Stack>
       }

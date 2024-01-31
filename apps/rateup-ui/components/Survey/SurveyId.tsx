@@ -113,7 +113,7 @@ export default function SurveyID() {
     }
   }, [selectedTeamId]);
 
-  if (isLoading || isSurveyLoading || !activeTab) return <Loader />;
+  if (isLoading || isSurveyLoading || !activeTab) return <Loader type="bars" />;
   if (error || surveyError) {
     return <p>An error has occurred</p>;
   }
