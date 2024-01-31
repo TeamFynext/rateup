@@ -1,16 +1,24 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Anchor, Checkbox, Group, Modal, Paper, Text } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
+import {
+  Anchor,
+  Checkbox,
+  Group,
+  Modal,
+  Text,
+  useMantineTheme,
+} from "@mantine/core";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function TermsNConditionsForm({ tncData }) {
   const [opened, { open, close }] = useDisclosure(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const theme = useMantineTheme();
+  const primaryColor = theme.colors[theme.primaryColor][8];
 
   const tnc = tncData?.[selectedLanguage] || {
     title: "I agree to",
@@ -21,7 +29,7 @@ export function TermsNConditionsForm({ tncData }) {
 
   return (
     <>
-      <Paper shadow="sm" className={classes.inputBox}>
+      <FormPaperLayout>
         <Checkbox
           p="sm"
           labelPosition="right"
@@ -29,15 +37,22 @@ export function TermsNConditionsForm({ tncData }) {
           onChange={(e) => updateResponse(e.currentTarget.checked)}
           label={
             <>
-              {tnc?.title}&nbsp;
-              <Anchor underline="always" href="#" onClick={open} inherit>
-                {tnc?.urlTitle}
-              </Anchor>
+              <Group mt="-2px" p="0" gap={0}>
+                <Text c={primaryColor}>{tnc?.title} </Text>
+                <Anchor
+                  ml="6px"
+                  underline="always"
+                  href="#"
+                  onClick={open}
+                  inherit
+                >
+                  {tnc?.urlTitle}
+                </Anchor>
+              </Group>
             </>
           }
         />
-      </Paper>
-
+      </FormPaperLayout>
       <Modal
         opened={opened}
         onClose={close}

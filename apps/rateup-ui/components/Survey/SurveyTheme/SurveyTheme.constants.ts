@@ -96,4 +96,5 @@ export const questionTypeEnumArray = [
   QuestionType.DateTime,
   QuestionType.CustomNPS,
   QuestionType.PCQ,
+  QuestionType.TnC,
 ];
