@@ -23,8 +23,15 @@ export const formatedTime = (category) => {
   );
   const formattedEndTime = dayjs(category?.endTime).format("HH:mm");
   const formattedEndTimeWithAmPm = dayjs(category?.endTime).format("hh:mm A");
-  const withinTimeRange =
-    formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+  let withinTimeRange;
+  formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+  if (formattedStartTime > formattedEndTime) {
+    withinTimeRange =
+      formattedStartTime <= currentTime || formattedEndTime >= currentTime;
+  } else {
+    withinTimeRange =
+      formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+  }
   let categoryDisabled = category?.scheduleEnabled && !withinTimeRange;
   return {
     formattedEndTimeWithAmPm,
@@ -54,5 +61,7 @@ export const isCategoryActive = (item) => {
   }
   const startTime = dayjs(item.startTime).format("HH:mm");
   const endTime = dayjs(item.endTime).format("HH:mm");
-  return startTime <= currentTime && endTime >= currentTime;
+  if (startTime > endTime)
+    return currentTime >= startTime || currentTime <= endTime;
+  else return startTime <= currentTime && endTime >= currentTime;
 };
