@@ -12,6 +12,7 @@ import { Role } from "../../utils/enums";
 import supertokens from "supertokens-node";
 import { log } from "../../utils/logger";
 import { createTrialSubscription } from "../subscription/subscription.service";
+import PasswordLess from "supertokens-node/recipe/passwordless";
 
 const prisma = new PrismaClient();
 
@@ -169,8 +170,12 @@ export async function getLoggedUserProfile(
   let profile = await prisma.user.findUnique({
     where: { id: userId },
   });
-
-  let userProfileData = { role, ...profile };
+  let passwordlessLogin = await PasswordLess.getUserById({ userId });
+  let userProfileData = {
+    role,
+    ...profile,
+    passwordlessLogin: !!passwordlessLogin,
+  };
 
   return userProfileData;
 }
