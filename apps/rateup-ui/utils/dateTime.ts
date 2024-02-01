@@ -47,12 +47,12 @@ export function formatIsoDateString(isoDateString) {
   return dayjs(isoDateString).format("Do MMM, YYYY");
 }
 
-const currentTime = dayjs();
+const currentTime = dayjs().format("HH:mm");
 export const isCategoryActive = (item) => {
   if (!item.startTime || !item.endTime || !item.scheduleEnabled) {
     return true;
   }
-  const startTime = dayjs(item.startTime);
-  const endTime = dayjs(item.endTime);
-  return currentTime.isBetween(startTime, endTime, null, "[]");
+  const startTime = dayjs(item.startTime).format("HH:mm");
+  const endTime = dayjs(item.endTime).format("HH:mm");
+  return startTime <= currentTime && endTime >= currentTime;
 };

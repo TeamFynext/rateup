@@ -63,7 +63,7 @@ export const dataURItoBlob = (dataURI) => {
 export const getImageValue = (image, fallback = false) => {
   if (typeof image === "object") {
     return URL.createObjectURL(image);
-  } else if (fallback || (image && image.startsWith("blob"))) {
+  } else if (fallback || (image && image.startsWith("blob:"))) {
     return image;
   } else if (image) {
     return getFileUrlFromKey(image);

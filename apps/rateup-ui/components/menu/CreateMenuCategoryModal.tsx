@@ -73,17 +73,6 @@ export function CreateMenuCategoryModal({
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
-      endTime: (value: string, values: any) => {
-        const startTime = values.startTime;
-        const scheduleEnabled = values.scheduleEnabled;
-        return (
-          scheduleEnabled &&
-          (value?.length === 0 ||
-            startTime?.length === 0 ||
-            value < startTime) &&
-          "End time cannot be before start time"
-        );
-      },
     },
   });
 

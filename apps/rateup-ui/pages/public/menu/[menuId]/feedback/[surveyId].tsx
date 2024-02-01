@@ -99,14 +99,14 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
       <BackgroundImage
         src={bgSrc}
         radius="sm"
-        h={largeScreen ? "50vh" : "40vh"}
+        h={"45dvh"}
         maw={largeScreen ? "2440px" : "768px"}
         bgsz={"cover"}
         bgp={"center"}
         style={{
           borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
           backgroundColor: "var(--orange-400)",
-          aspectRatio: "16 / 6",
+          aspectRatio: "8 / 3",
         }}
       >
         <Stack

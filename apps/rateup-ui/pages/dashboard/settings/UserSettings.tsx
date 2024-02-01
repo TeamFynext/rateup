@@ -339,7 +339,13 @@ const ProfileSettings = () => {
                 />
               </Grid.Col>
             </Grid>
-            <Flex direction={"column"} gap="md">
+            <Flex
+              direction={"column"}
+              gap="md"
+              display={
+                profileData?.data?.data?.passwordlessLogin ? "none" : "block"
+              }
+            >
               <Stack>
                 <Title size="lg" fw={500}>
                   Change Password

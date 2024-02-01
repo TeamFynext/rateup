@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
 import {
+  ActionIcon,
   BackgroundImage,
   Button,
   Center,
@@ -17,46 +17,55 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconMapPin, IconUpload, IconWorld } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
-import {
-  ContainedColorInput,
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextArea,
-} from "../../input/ContainedInput/ContainedInput";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import {
+  IconMapPin,
+  IconTrash,
+  IconUpload,
+  IconWorld,
+} from "@tabler/icons-react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  useMenuLandingMutationById,
+  useUpdateMenuLandingPageOptionById,
+} from "../../../backend/menu/LandingPage/landingpage.query";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  fallbackImage,
+} from "../../../utils/constants";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
   getImageValue,
   uploadFile,
 } from "../../../utils/file-upload/upload";
-import {
-  useMenuLandingMutationById,
-  useUpdateMenuLandingPageOptionById,
-} from "../../../backend/menu/LandingPage/landingpage.query";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import TabsCommon from "./Tabs/TabsCommon";
+import { lexend } from "../../../utils/fonts";
 import { showErrorToast } from "../../../utils/notifications";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+} from "../../Button/RateupButtons";
+import { ImageCropModal } from "../../Modal/ImageCropModal";
+import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
+import { UnsplashModal } from "../../Modal/UnsplashModal";
+import { FontWeights } from "../../Survey/SurveyTheme/SurveyTheme.constants";
+import {
+  ContainedColorInput,
+  ContainedNumberInput,
+  ContainedSelection,
+  ContainedTextArea,
+} from "../../input/ContainedInput/ContainedInput";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import {
   CatalogueButton,
   FeedbackButton,
   LogoSelectCard,
   MenuButton,
 } from "./Button/LandingButtons";
+import TabsCommon from "./Tabs/TabsCommon";
 import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
-import { lexend } from "../../../utils/fonts";
-import { UnsplashModal } from "../../Modal/UnsplashModal";
-import { ImageCropModal } from "../../Modal/ImageCropModal";
-import { ImageUploadMethodModal } from "../../Modal/ImageUploadMethodModal";
-import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-  fallbackImage,
-} from "../../../utils/constants";
-import { FontWeights } from "../../Survey/SurveyTheme/SurveyTheme.constants";
 //TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
@@ -89,6 +98,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   );
   const [aspectRatio, setAspectRatio] = useState(16 / 9);
   const [imageType, setImageType] = useState("");
+  const [imageToDelete, setImageToDelete] = useState([]);
   const [selectedUnslashImage, setSelectedUnslashImage] = useState({
     url: "",
     name: "",
@@ -173,6 +183,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         if (logo) data.logo = successes.pop();
         if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
         if (backgroundImage) data.backgroundImage = successes.pop();
+      } else if (imageToDelete?.length > 0) {
+        await deleteUploadedFiles({
+          fileKeyArray: imageToDelete,
+        });
       }
       menulandingMutation.mutate(data);
       for (const imageUploadError of errors) {
@@ -184,6 +198,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
       setUpdatingLoading(false);
       setBackgroundImage(null);
       setMobileBackgroundImage(null);
+      setImageToDelete([]);
       setLogo(null);
     }
   };
@@ -306,6 +321,19 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     handleUnsplashImageSave(URL.createObjectURL(e), e.name);
     resetRef.current?.();
   };
+  const resetImage = (type: string) => {
+    if (type === "backgroundImage") {
+      setBackgroundImage(null);
+    } else if (type === "mobileBackgroundImage") {
+      setMobileBackgroundImage(null);
+    } else if (type === "logo") {
+      setLogo(null);
+    }
+    if (!form?.values?.[type]?.startsWith("blob:")) {
+      setImageToDelete((prev) => [...prev, { Key: form?.values?.[type] }]);
+    }
+    form.setFieldValue(type, "");
+  };
   return (
     <Grid ff={lexend.style.fontFamily} fw={300}>
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
@@ -369,7 +397,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     <TooltipWithEditIcon
                       tooltipLabel="Edit Background Image"
                       handleEditIcon={(e) => {
-                        e.stopPropagation(), setMainTabState("bg");
+                        e.stopPropagation();
+                        setMainTabState("bg");
                       }}
                     >
                       <></>
@@ -387,7 +416,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <TooltipWithEditIcon
                           tooltipLabel="change logo"
                           handleEditIcon={(e) => {
-                            e.stopPropagation(), setMainTabState("logo");
+                            e.stopPropagation();
+                            setMainTabState("logo");
                           }}
                         >
                           <Image
@@ -412,7 +442,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <TooltipWithEditIcon
                           tooltipLabel="Edit Header"
                           handleEditIcon={(e) => {
-                            e.stopPropagation(), setMainTabState("text");
+                            e.stopPropagation();
+                            setMainTabState("text");
                           }}
                         >
                           <ContainedTextArea
@@ -435,7 +466,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                         <TooltipWithEditIcon
                           tooltipLabel="Edit Title"
                           handleEditIcon={(e) => {
-                            e.stopPropagation(), setMainTabState("text");
+                            e.stopPropagation();
+                            setMainTabState("text");
                           }}
                         >
                           <ContainedTextArea
@@ -468,7 +500,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           <TooltipWithEditIcon
                             tooltipLabel="Edit Website Text"
                             handleEditIcon={(e) => {
-                              e.stopPropagation(), setMainTabState("text");
+                              e.stopPropagation();
+                              setMainTabState("text");
                             }}
                           >
                             <ContainedTextArea
@@ -498,7 +531,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           <TooltipWithEditIcon
                             tooltipLabel="Edit Location Name"
                             handleEditIcon={(e) => {
-                              e.stopPropagation(), setMainTabState("text");
+                              e.stopPropagation();
+                              setMainTabState("text");
                             }}
                           >
                             <ContainedTextArea
@@ -628,15 +662,23 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!mobileBackgroundImage,
                         )}
                       </Text>
-                      <Button
-                        leftSection={<IconUpload size={16} />}
-                        size="xs"
-                        radius="1.125rem"
-                        type="button"
-                        onClick={handlePictureMobileBackground}
-                      >
-                        Upload Mobile Image
-                      </Button>
+                      <Group wrap="nowrap" w={"100%"}>
+                        <RateupButtonPrimary
+                          leftIcon={<IconUpload size={16} />}
+                          title="Upload Mobile Image"
+                          size="sm"
+                          onClick={handlePictureMobileBackground}
+                          fullWidth
+                        />
+                        <ActionIcon
+                          color={"red"}
+                          radius={"xl"}
+                          disabled={!form?.values?.mobileBackgroundImage}
+                          onClick={() => resetImage("mobileBackgroundImage")}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
                       <Text>
                         {getFileNameFromUrl(
                           backgroundImage
@@ -645,15 +687,23 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!backgroundImage,
                         )}
                       </Text>
-                      <Button
-                        leftSection={<IconUpload size={16} />}
-                        size="xs"
-                        radius="1.125rem"
-                        type="button"
-                        onClick={handlePictureBackground}
-                      >
-                        Upload Tablet Image
-                      </Button>
+                      <Group wrap="nowrap" w={"100%"}>
+                        <RateupButtonPrimary
+                          leftIcon={<IconUpload size={16} />}
+                          title="Upload Tablet Image"
+                          size="sm"
+                          onClick={handlePictureBackground}
+                          fullWidth
+                        />
+                        <ActionIcon
+                          color={"red"}
+                          radius={"xl"}
+                          disabled={!form?.values?.backgroundImage}
+                          onClick={() => resetImage("backgroundImage")}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
                       <FileButton
                         onChange={handleBgPick}
                         resetRef={resetRef}
@@ -680,23 +730,35 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           !!logo,
                         )}
                       </Text>
-                      <FileButton
-                        onChange={onChangeLogo}
-                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                        resetRef={resetLogoRef}
-                      >
-                        {(props) => (
-                          <Button
-                            leftSection={<IconUpload size={16} />}
-                            size="xs"
-                            radius="1.125rem"
-                            ref={logoRef}
-                            {...props}
-                          >
-                            Upload logo
-                          </Button>
-                        )}
-                      </FileButton>
+                      <Group wrap="nowrap" w={"100%"}>
+                        <FileButton
+                          onChange={onChangeLogo}
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          resetRef={resetLogoRef}
+                        >
+                          {(props) => (
+                            <Button
+                              leftSection={<IconUpload size={16} />}
+                              size="sm"
+                              radius="1.125rem"
+                              ref={logoRef}
+                              {...props}
+                              w={"100%"}
+                            >
+                              Upload logo
+                            </Button>
+                          )}
+                        </FileButton>
+                        <ActionIcon
+                          color={"red"}
+                          radius={"xl"}
+                          ml={2}
+                          disabled={!form?.values?.logo}
+                          onClick={() => resetImage("logo")}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
                     </Stack>
                   </Tabs.Panel>
                   <Tabs.Panel value="type">
