@@ -134,6 +134,7 @@ export default function WelcomePageThemeView({
                   input: {
                     ...titleStyles,
                     fontFamily: "inherit",
+                    height: "fit-content",
                   },
                 }}
                 value={title}
@@ -150,8 +151,6 @@ export default function WelcomePageThemeView({
 
           <Textarea
             className={lexend.className}
-            // onChange={handleChange}
-            value={subtitle}
             placeholder={"Please fill the survey"}
             variant="unstyled"
             onClick={(e) => e.stopPropagation()}
@@ -168,6 +167,13 @@ export default function WelcomePageThemeView({
             mt="lg"
             w={"80%"}
             ta={"center"}
+            value={subtitle}
+            onChange={(e) =>
+              updateThemeText("subtitle", {
+                ...welcomeTheme.subtitle,
+                subtitle: e.target.value,
+              })
+            }
           />
 
           <Box className={classes.buttonBox}>

@@ -4,7 +4,6 @@ import {
   NumberInput,
   Button,
   FileButton,
-  SimpleGrid,
   ActionIcon,
   Group,
   Text,
@@ -12,7 +11,6 @@ import {
   Divider,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
-import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 import { getFileName } from "./BackgroundStyles";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
@@ -101,47 +99,50 @@ function LogoStyles({
           }}
         />
         <Divider label="Upload Logo" variant="dashed" w={"100%"} />
-        <Group w={"100%"}>
-          <ActionIcon variant="filled" aria-label="Settings">
-            <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
-          </ActionIcon>
-          <Text fw={100} c={"dark"} size="xs">
-            Logo :{" "}
-          </Text>
-          <Text ml="md">
-            {getFileName(
-              currentStyles?.logo || logoFileName,
-              !currentStyles?.logo,
-            )}
-          </Text>
-        </Group>
-
-        <SimpleGrid cols={2} mt="lg">
-          <RateupButtonSecondary
-            onClick={removeImage}
-            title="Remove Image"
-            size="xs"
-            disabled={!currentStyles?.logo && !logoFileName}
-            leftIcon={<IconTrash size={16} />}
-          />
-          <FileButton
-            onChange={handleFileChange}
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
-            resetRef={resetLogoRef}
-          >
-            {(props) => (
-              <Button
-                leftSection={<IconUpload size={16} />}
-                radius="18px"
-                size="xs"
-                {...props}
-                loading={isFileLoading}
-              >
-                Upload Image
-              </Button>
-            )}
-          </FileButton>
-        </SimpleGrid>
+        <Stack w={"100%"}>
+          <Group>
+            <ActionIcon variant="filled" aria-label="Settings">
+              <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
+            </ActionIcon>
+            <Text fw={100} c={"dark"} size="xs">
+              Logo :{" "}
+            </Text>
+            <Text ml="md">
+              {getFileName(
+                currentStyles?.logo || logoFileName,
+                !currentStyles?.logo,
+              )}
+            </Text>
+          </Group>
+          <Stack>
+            <FileButton
+              onChange={handleFileChange}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              resetRef={resetLogoRef}
+            >
+              {(props) => (
+                <Button
+                  leftSection={<IconUpload size={16} />}
+                  radius="18px"
+                  size="xs"
+                  {...props}
+                  loading={isFileLoading}
+                >
+                  Upload Image
+                </Button>
+              )}
+            </FileButton>
+            <Button
+              onClick={removeImage}
+              size="xs"
+              disabled={!currentStyles?.logo && !logoFileName}
+              leftSection={<IconTrash size={16} />}
+              radius="18px"
+            >
+              RemoveLogo
+            </Button>
+          </Stack>
+        </Stack>
       </Stack>
     </ScrollArea>
   );

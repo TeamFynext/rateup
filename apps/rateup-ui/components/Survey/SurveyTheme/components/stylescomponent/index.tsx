@@ -106,6 +106,10 @@ function StylesComponent({
     }
   }, [selectedType]);
 
+  useEffect(() => {
+    setTabState(SelectedItemEnum.BACKGROUND);
+  }, [selectedTab]);
+
   function updateSelectedTabStyle(key: string, value: any) {
     switch (selectedTab) {
       case ThemeTabEnum.WELCOME:

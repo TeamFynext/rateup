@@ -28,7 +28,7 @@ export default function SurveyThemePreviewLayout({
   const { mobileOrDesktop, setMobileOrDesktop } =
     useContext(SurveyThemeContext);
   return (
-    <Stack h="100%">
+    <Stack h="100%" w={"100%"}>
       <LoadingOverlay visible={isLoading} overlayProps={{ blur: 2 }} />
       <Group justify="space-between" px={10} pb={10}>
         <Group>

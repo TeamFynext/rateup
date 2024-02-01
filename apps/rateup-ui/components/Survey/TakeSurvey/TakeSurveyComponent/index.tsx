@@ -73,6 +73,7 @@ import { PCQForm } from "./QuestionForms/PCQForm";
 import { MotionTransition } from "../../../animation/MotionTransition";
 import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
+import { lexend } from "../../../../utils/fonts";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -592,7 +593,7 @@ function TakeSurvey({ survey }) {
                   apEnable={false}
                   duration={1}
                 >
-                  <Box pb={"lg"} ref={boxRef}>
+                  <Box pb={"lg"} ref={boxRef} className={lexend.className}>
                     <QuestionTitle
                       largeScreen={largeScreen}
                       themeStyles={titleStyles}
@@ -665,7 +666,6 @@ function QuestionTitle({ largeScreen, themeStyles }) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
     <Text
-      fw={400}
       size={largeScreen ? "30px" : "20px"}
       className={classes.questionTitle}
       style={themeStyles}
@@ -677,10 +677,10 @@ function QuestionTitle({ largeScreen, themeStyles }) {
 function QuestionDesc({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  console.log(themeStyles);
   return (
     <Text
       size={largeScreen ? "15px" : "16px"}
-      c="dimmed"
       className={classes.questionTitle}
       style={themeStyles}
     >

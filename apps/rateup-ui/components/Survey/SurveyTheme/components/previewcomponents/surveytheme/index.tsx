@@ -120,6 +120,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                 justifyContent: "center",
                 overflow: "auto",
               }}
+              p={"md"}
             >
               <MantineProvider
                 theme={{
@@ -156,6 +157,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                   onClick={() => {
                     if (currentQuestionTypeCount === 0) return;
                     setCurrentQuestionTypeCount(currentQuestionTypeCount - 1);
+                    updateResponse(null);
                   }}
                 >
                   <IconChevronLeft />
@@ -175,6 +177,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                     )
                       return;
                     setCurrentQuestionTypeCount(currentQuestionTypeCount + 1);
+                    updateResponse(null);
                   }}
                 >
                   <IconChevronRight />
