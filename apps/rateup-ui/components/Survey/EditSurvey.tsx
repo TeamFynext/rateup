@@ -48,7 +48,7 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={10}>
+    <Flex w={"100%"} mah={"100%"} p={2} gap={10} style={{ overflow: "auto" }}>
       <PaperLayout style={{ flex: 2 }}>
         <QuestionsSideBar
           questions={questions}

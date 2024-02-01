@@ -5,6 +5,8 @@ import {
   Burger,
   useMantineTheme,
   Text,
+  Flex,
+  Menu,
   Group,
   Avatar,
   NavLink,
@@ -13,19 +15,22 @@ import {
   ScrollArea,
   Anchor,
   Box,
+  Combobox,
 } from "@mantine/core";
+import LoggedInUserCard from "./LoggedInUserCard";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useRouter } from "next/router";
+import { IconChevronLeft } from "@tabler/icons-react";
+import { IconChevronUp, IconChevronDown } from "@tabler/icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { useUser } from "../../../context/UserContext";
-import classes from "./Navbar.module.css";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
+import styles from "./Navbar.module.css";
 import {
   NavbarLinkProps,
   getNavTopData,
   useNavBottomData,
 } from "./navbar.constants";
 import { UserRole } from "../../../utils/enums";
-import { IconChevronLeft } from "@tabler/icons-react";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import ExpiryComponent from "../../Premium/ExpiryComponent";
 interface _NavbarLinkProps {
@@ -184,12 +189,13 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   const theme = useMantineTheme();
   const router = useRouter();
   const [active, setActive] = useState(0);
+  const navBottomData = useNavBottomData();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { user } = useUser();
   const [userProfileAvatar, setUserProfileAvatar] = useState(
     `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user.png`,
   );
-
   useEffect(() => {
     if (user?.profilePhoto && user?.profilePhoto !== "REMOVED_PHOTO") {
       const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user?.profilePhoto}`;
@@ -200,8 +206,20 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       );
     }
   }, [user]);
-  const navBottomData = useNavBottomData();
 
+  const handleItemClick = (item: NavbarLinkProps) => {
+    if (item.label === "Admin") {
+      router.push(`/admin`);
+    } else if (item.label === "Settings") {
+      router.push(`/dashboard/settings`);
+    } else if (item.label === "Logout") {
+      router.push(`/logout`);
+    }
+  };
+
+  const handlePaperLayoutClick = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
   const userInfo: {
     name: string;
     email: string;
@@ -225,7 +243,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
 
   return (
     <Stack
-      className={classes.navbar}
+      className={styles["navbar"]}
       p="lg"
       gap={0}
       style={style}
@@ -247,60 +265,38 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
               color={theme.colors.gray[6]}
             />
           )}
-          <Group w={"100%"} className={classes["icon-and-chevraon-container"]}>
+          <Group className={styles["icon-and-chevraon-container"]}>
             <Image
-              radius={10}
-              onClick={() => router.replace("/dashboard")}
-              h={user?.orgLogo ? 70 : 70}
-              w={user?.orgLogo ? 110 : 110}
+              h={user?.orgLogo ? 100 : 100}
+              w={user?.orgLogo ? 100 : 100}
               src={
                 user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
                   ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
                   : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
             />
-            <PaperLayout
-              w={"fit-content"}
-              p={2}
-              hoveractive
-              radius={"md"}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                display: "flex",
+            <IconChevronLeft
+              size={25}
+              onClick={() => {
+                setOpened((o) => !o);
               }}
-              className={classes["chevron-container"]}
-            >
-              <IconChevronLeft
-                size={20}
-                onClick={() => {
-                  setOpened((o) => !o);
-                }}
-                style={{ cursor: "pointer" }}
-              />
-            </PaperLayout>
+              style={{ cursor: "pointer" }}
+            />
           </Group>
-          <PaperLayout mt={10} w="100%">
-            {LoggedInUserCard(userInfo)}
-          </PaperLayout>
         </Stack>
       ) : (
         <>
-          <Burger
-            opened={opened}
-            onClick={() => {
-              setOpened((o) => !o);
-            }}
-            size="sm"
-            color={theme.colors.gray[6]}
-          />
           <Avatar
             onClick={() => {
               setOpened((o) => !o);
             }}
             style={{ cursor: "pointer" }}
-            src={userInfo?.image}
-            alt={userInfo.name}
+            src={
+              user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
+                ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
+                : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
+            }
+            alt={"Organization Name"}
             radius="xl"
             size={30}
             mt={50}
@@ -351,14 +347,63 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
         </ExpiryComponent>
       </ScrollArea>
       <Stack gap={10}>
-        <_NavbarLink
-          data={navBottomData}
-          opened={opened}
-          currentRole={userInfo.role}
-          setOpened={setOpened}
-          active={active}
-          setActive={setActive}
-        />
+        <Combobox>
+          <Menu shadow="md">
+            <Menu.Target>
+              <Box>
+                {opened ? (
+                  <PaperLayout
+                    p={3}
+                    hoveractive
+                    left={0}
+                    radius={"lg"}
+                    onClick={handlePaperLayoutClick}
+                  >
+                    <Flex
+                      justify={"space-between"}
+                      className={styles["Logged-in-user-card"]}
+                    >
+                      <LoggedInUserCard />
+                      {isDropdownOpen ? (
+                        <IconChevronDown
+                          className={styles["user-icon-arrow-circle"]}
+                        />
+                      ) : (
+                        <IconChevronUp
+                          className={styles["user-icon-arrow-circle"]}
+                        />
+                      )}
+                    </Flex>
+                  </PaperLayout>
+                ) : (
+                  <Avatar
+                    src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`}
+                    alt=""
+                    radius="xl"
+                    size={30}
+                    mt={50}
+                  />
+                )}{" "}
+              </Box>
+            </Menu.Target>
+            <Menu.Dropdown
+              className={styles["dropdown-menu"]}
+              style={{ width: "190px" }}
+            >
+              <Menu.Label>Manage your Account</Menu.Label>
+              {navBottomData.map((item, index) => (
+                <Menu.Item key={index} onClick={() => handleItemClick(item)}>
+                  <Flex style={{ marginLeft: "1rem", marginTop: "0.5rem" }}>
+                    {item.Icon && <item.Icon size={30} />}
+                    <Text style={{ fontSize: "20px", marginLeft: "1rem" }}>
+                      {item.label}
+                    </Text>
+                  </Flex>
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+        </Combobox>
         <img
           src={
             opened
@@ -374,28 +419,3 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
 };
 
 export default LeftNavbar;
-
-export function LoggedInUserCard(userInfo: {
-  name: string;
-  email: string;
-  role:
-    | typeof UserRole.ADM
-    | typeof UserRole.MEMBER
-    | typeof UserRole.SUPADM
-    | "...error...";
-  image: string;
-}) {
-  return (
-    <Group gap={10} justify="flex-start">
-      <Avatar src={userInfo?.image} alt={userInfo.name} radius="xl" size={30} />
-      <Stack gap={0}>
-        <Text size="sm" fw={500}>
-          {userInfo.name ? userInfo.name : userInfo.email}
-        </Text>
-        <Text c="dimmed" size="xs">
-          {userInfo.role}
-        </Text>
-      </Stack>
-    </Group>
-  );
-}

@@ -121,7 +121,7 @@ const Invite = () => {
                 {updateInviteMutation?.isPending ||
                 !updateInviteMutation.data ? (
                   type === "team" && token ? (
-                    <Loader />
+                    <Loader type="bars" />
                   ) : (
                     "Error"
                   )

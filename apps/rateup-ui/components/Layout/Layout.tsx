@@ -5,7 +5,7 @@ import {
   IUserInfoApiResponse,
   fetchUserInfo,
 } from "../../backend/user/user.api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "../../context/UserContext";
 import { RouteParamsProvider } from "../../context/RouteParamsContext";
 import SessionAuth from "../SuperToken/SessionAuth";

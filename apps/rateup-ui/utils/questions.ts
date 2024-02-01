@@ -71,6 +71,7 @@ export const getInitialQuestionValues = (
     choices: question?.choices,
     features: question?.features,
     sections: type === "whatsapp" ? question?.sections || {} : undefined,
+    tnc: question?.tnc,
   };
 };
 

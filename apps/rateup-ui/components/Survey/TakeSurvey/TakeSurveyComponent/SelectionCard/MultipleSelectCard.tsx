@@ -1,7 +1,15 @@
 import React, { useRef } from "react";
-import { UnstyledButton, Checkbox, Text, SimpleGrid } from "@mantine/core";
+import {
+  UnstyledButton,
+  Checkbox,
+  Text,
+  SimpleGrid,
+  useMantineTheme,
+} from "@mantine/core";
 import { useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
+import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
+import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -30,6 +38,7 @@ export function ImageCheckbox({
     onChange,
   });
   const checkBoxRef = useRef(null);
+  const theme = useMantineTheme();
   return (
     <UnstyledButton
       {...others}
@@ -39,6 +48,14 @@ export function ImageCheckbox({
       }}
       data-checked={selectedValue.includes(title) || undefined}
       className={classes.button}
+      c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+      bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
+      style={{
+        borderColor: returnColorsForTheme(
+          styleAttributeTypesEnum.BORDER,
+          theme,
+        ),
+      }}
     >
       <Checkbox
         ref={checkBoxRef}

@@ -1,4 +1,4 @@
-import { Rating } from "@mantine/core";
+import { Rating, useMantineTheme } from "@mantine/core";
 import {
   IconMoodCry,
   IconMoodSad,
@@ -50,12 +50,13 @@ const SmileyRating = ({ updateResponse, response }) => {
         return -1;
     }
   };
-
+  const theme = useMantineTheme();
   return (
     <Rating
+      color="cyan"
       value={getNumericValue(response)}
-      emptySymbol={getEmptyIcon}
-      fullSymbol={getFullIcon}
+      emptySymbol={(number) => getEmptyIcon(number, theme.primaryColor)}
+      fullSymbol={(number) => getFullIcon(number, theme.primaryColor)}
       highlightSelectedOnly
       onChange={(value) => {
         updateStringResponse(value);
@@ -66,22 +67,22 @@ const SmileyRating = ({ updateResponse, response }) => {
 
 export default SmileyRating;
 
-export function mapSmileyIcon(value) {
+export function mapSmileyIcon(value, color) {
   switch (value) {
     case SmileyResponse.VeryHappy: {
-      return <IconMoodCrazyHappy style={getIconStyle("green")} />;
+      return <IconMoodCrazyHappy style={getIconStyle(color)} />;
     }
     case SmileyResponse.Happy: {
-      return <IconMoodSmileBeam style={getIconStyle("lime")} />;
+      return <IconMoodSmileBeam style={getIconStyle(color)} />;
     }
     case SmileyResponse.Neutral: {
-      return <IconMoodSmile style={getIconStyle("yellow")} />;
+      return <IconMoodSmile style={getIconStyle(color)} />;
     }
     case SmileyResponse.Sad: {
-      return <IconMoodSad style={getIconStyle("orange")} />;
+      return <IconMoodSad style={getIconStyle(color)} />;
     }
     case SmileyResponse.VerySad: {
-      return <IconMoodCry style={getIconStyle("red")} />;
+      return <IconMoodCry style={getIconStyle(color)} />;
     }
     default:
       return null;

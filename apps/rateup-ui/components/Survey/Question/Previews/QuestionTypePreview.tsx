@@ -1,10 +1,8 @@
 import React from "react";
 import { QuestionType as Q } from "../../../../types/enums";
 import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextForm";
-import { PhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PhoneForm";
 import { NumberForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/NumberForm";
 import { TextAreaForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextAreaForm";
-import { EmailForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailForm";
 import { RatingForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/RatingForm";
 import { LDForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/LDForm";
 import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm";
@@ -19,21 +17,22 @@ import { TestimonialForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionFo
 import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailPhoneForm";
 import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
 import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
-import TrustedBy from "../../../HomePage/pages/Home/OursolutionsSection/TrustedBy";
 import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQForm";
+import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
+import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
 
-const QuestionTypePreview = ({ type, choices, features }) => {
+const QuestionTypePreview = ({ type, choices, features, tnc }) => {
   switch (type) {
     case Q.Text:
       return <TextForm />;
     case Q.Phone:
-      return <PhoneForm />;
+      return <ContactForm features={features} />;
     case Q.Number:
       return <NumberForm />;
     case Q.TextArea:
       return <TextAreaForm />;
     case Q.Email:
-      return <EmailForm />;
+      return <ContactForm features={features} />;
     case Q.Rating:
       return <RatingForm />;
     case Q.LD:
@@ -64,6 +63,10 @@ const QuestionTypePreview = ({ type, choices, features }) => {
       return <CustomNPSForm previewChoices={choices} />;
     case Q.PCQ:
       return <PCQForm previewChoices={choices} />;
+    case Q.Contact:
+      return <ContactForm features={features} />;
+    case Q.TnC:
+      return <TermsNConditionsForm tncData={tnc} />;
     default:
       return <div>not implemented</div>;
   }

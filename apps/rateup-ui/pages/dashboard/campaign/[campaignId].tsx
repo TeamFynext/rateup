@@ -73,7 +73,7 @@ export default () => {
       <MantineProvider theme={whatsappTheme}>
         {isLoading && (
           <Center>
-            <Loader />
+            <Loader type="bars" />
           </Center>
         )}
         <Stack p={"md"} gap={"md"}>

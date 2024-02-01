@@ -1,8 +1,14 @@
 import React from "react";
-import { HoverCard, Image, Text } from "@mantine/core";
+import { Box, HoverCard, Image, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 
-export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
+export const HoverCardComponent = ({
+  content,
+  fw = 300,
+  fz = "md",
+  c = "dark.3",
+  lineClamp = 1,
+}) => {
   return (
     <HoverCard
       width={"fit-content"}
@@ -15,14 +21,14 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
         {typeof content === "object" ? (
           <Image src={getFileUrlFromKey(content?.value?.image)} w={30} />
         ) : (
-          <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
-            {content}
+          <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
+            {typeof content === "boolean" ? content.toString() : content}
           </Text>
         )}
       </HoverCard.Target>
       <HoverCard.Dropdown>
-        <Text
-          c="dark.3"
+        <Box
+          c={c}
           size="sm"
           style={{
             wordBreak: "break-word",
@@ -31,23 +37,16 @@ export const HoverCardComponent = ({ content, fw = 300, fz = "md" }) => {
           {typeof content === "object" ? (
             <>
               <Image src={getFileUrlFromKey(content?.value?.image)} w={200} />
-              <Text
-                c="dark.3"
-                truncate="end"
-                miw={200}
-                maw={200}
-                fw={fw}
-                fz={fz}
-              >
+              <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
                 {content?.value?.value}
               </Text>
             </>
           ) : (
-            <Text c="dark.3" truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
-              {content}
+            <Text c={c} miw={200} fw={fw} fz={fz}>
+              {typeof content === "boolean" ? content.toString() : content}
             </Text>
           )}
-        </Text>
+        </Box>
       </HoverCard.Dropdown>
     </HoverCard>
   );

@@ -153,13 +153,14 @@ export function getNavTopData(subscription?: Subscription) {
             href: "/dashboard/rm",
           },
         ]),
+    { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
   ];
   return navTopData;
 }
 
 //data Array consisting of NavbarBottomData
 const navBottomData: Array<NavbarLinkProps> = [
-  { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
+  { Icon: IconTerminal2, label: "Admin", href: "/admin" },
   { Icon: IconSettings, label: "Settings", href: "/dashboard/settings" },
   { Icon: IconLogout, label: "Logout", href: "/logout" },
 ];

@@ -10,6 +10,7 @@ import {
   SegmentedControl,
   Button,
   MantineProvider,
+  BackgroundImage,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
@@ -27,8 +28,20 @@ import { notifications } from "@mantine/notifications";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import RateupRedirectCard from "../../Card/RateupRedirectCard";
 import { IconChevronRight } from "@tabler/icons-react";
-import styles from "../../Survey/TakeSurvey/TakeSurveyComponent/TakeSurvey.module.css";
-export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
+import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
+import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
+import { getImageUrl } from "../../Survey/SurveyTheme/SurveyTheme.utils";
+export const TakeSurveyLayoutWeb = ({
+  survey,
+  children,
+}: {
+  survey: any;
+  children: any;
+}) => {
+  const { data: surveyThemeData, isLoading } = useSurveyTheme(survey?.id) as {
+    data: SurveyTheme;
+    isLoading: boolean;
+  };
   const { surveyId } = useRouter().query as { surveyId: string };
   const { start } = useRouter().query as { start?: boolean };
 
@@ -75,88 +88,92 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
     survey?.id,
     passwordInput,
     close,
-    setIsPasswordVerified
+    setIsPasswordVerified,
   );
 
   if (!selectedLanguage && survey?.languages?.length <= 1) {
     setSelectedLanguage(survey?.languages[0]);
   }
-  const myGSurveyId = process.env.NEXT_PUBLIC_MY_G_SURVEY_ID;
+  if (isLoading) return <div>Loading...</div>;
+  const { surveyTheme, welcomeTheme } = surveyThemeData;
   return (
-    // delete this after myg survey test
-    <div
-      className={myGSurveyId === survey?.id ? styles.wrapperdark : ""}
-      style={
-        myGSurveyId === survey?.id
-          ? {
-              background: "#242424",
-              color: "white",
-            }
-          : {}
-      }
-    >
-      <MantineProvider
-        theme={{
-          components: {
-            Paper: {
-              styles: (theme) => ({
-                root: {
-                  backgroundColor: "transparent",
-                },
-              }),
-            },
-          },
+    <MantineProvider theme={{ primaryColor: surveyTheme.input.primaryColor }}>
+      <QuestionCountContext.Provider
+        value={{
+          questionCount,
+          currentQuestionNo,
+          setQuestionCount,
+          setCurrentQuestionNo,
         }}
       >
-        {/* //delete until here */}
-        <QuestionCountContext.Provider
-          value={{
-            questionCount,
-            currentQuestionNo,
-            setQuestionCount,
-            setCurrentQuestionNo,
+        <FormModalLayout
+          opened={opened}
+          onClose={close}
+          title={"Survey Login"}
+          centered
+          onSubmit={() => {
+            notifications.show({
+              id: "load-data",
+              loading: true,
+              title: "Verifying Password..",
+              message: `Hold on, your access is getting verified.`,
+              autoClose: false,
+              withCloseButton: false,
+            });
+            verifySurveyPassword.mutate();
           }}
+          buttonTitle={"Login"}
         >
-          <FormModalLayout
-            opened={opened}
-            onClose={close}
-            title={"Survey Login"}
-            centered
-            onSubmit={() => {
-              notifications.show({
-                id: "load-data",
-                loading: true,
-                title: "Verifying Password..",
-                message: `Hold on, your access is getting verified.`,
-                autoClose: false,
-                withCloseButton: false,
-              });
-              verifySurveyPassword.mutate();
-            }}
-            buttonTitle={"Login"}
-          >
-            <Text mt="lg" size="sm" c="gray">
-              Hey Welcome , <br /> You need to enter password to continue.
-            </Text>
-            <Space h="lg" />
-            <ContainedPasswordInput
-              required
-              label="Password"
-              placeholder="Enter survey password"
-              onChange={(event) => setPasswordInput(event?.target?.value)}
-              my="lg"
-            />
-          </FormModalLayout>
+          <Text mt="lg" size="sm" c="gray">
+            Hey Welcome , <br /> You need to enter password to continue.
+          </Text>
+          <Space h="lg" />
+          <ContainedPasswordInput
+            required
+            label="Password"
+            placeholder="Enter survey password"
+            onChange={(event) => setPasswordInput(event?.target?.value)}
+            my="lg"
+          />
+        </FormModalLayout>
 
-          <Stack
-            px={largeScreen ? "10vw" : "4vw"}
-            py="3vh"
-            style={{ width: "100%", minHeight: "100dvh" }}
-            justify="space-between"
+        <Stack
+          w={"100%"}
+          mih={"100dvh"}
+          style={
+            !startClicked ? welcomeTheme?.bg?.styles : surveyTheme?.bg?.styles
+          }
+        >
+          <BackgroundImage
+            mih={"100dvh"}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              objectFit: "contain",
+            }}
+            src={
+              !startClicked
+                ? welcomeTheme?.bg?.desktopbg || welcomeTheme?.bg?.mobilebg
+                  ? getImageUrl(
+                      isMobile && welcomeTheme?.bg?.mobilebg
+                        ? welcomeTheme?.bg?.mobilebg
+                        : welcomeTheme?.bg?.desktopbg,
+                    )
+                  : ""
+                : surveyTheme?.bg?.desktopbg || surveyTheme?.bg?.mobilebg
+                ? getImageUrl(
+                    isMobile && surveyTheme?.bg?.mobilebg
+                      ? surveyTheme?.bg?.mobilebg
+                      : surveyTheme?.bg?.desktopbg,
+                  )
+                : ""
+            }
           >
             {/* .........Survey Header Section.......... */}
             {survey?.isPublished == true && !!startClicked && (
-              <Group justify="center">
+              <Group justify="center" mt={"3vh"}>
                 <Stack
                   style={{
                     maxHeight: isMobile ? "65px" : "100px",
@@ -179,17 +196,18 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
 
             <Paper
               pt="-50px"
-              radius="lg"
+              radius={0}
+              bg="transparent"
               style={{ padding: 0, margin: 0, flex: 1 }}
               display={"flex"}
             >
               {survey?.isPublished === true && survey?.active === true ? (
                 survey?.isProtected && isPasswordVerified === false ? null : (
                   <Paper
-                    radius="lg"
-                    pb={startClicked && "xl"}
-                    style={{ flex: 1 }}
+                    radius={0}
+                    pb={largeScreen && startClicked && "xl"}
                     w={"100%"}
+                    bg={"transparent"}
                   >
                     {startClicked &&
                       (!selectedLanguage && survey?.languages?.length > 1 ? (
@@ -213,7 +231,7 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
 
                     {!startClicked && (
                       <WelcomePage
-                        surveyThemeData={surveyThemeData}
+                        surveyThemeData={welcomeTheme}
                         onStart={handleStartClick}
                         largeScreen={largeScreen}
                       />
@@ -239,13 +257,12 @@ export const TakeSurveyLayoutWeb = ({ survey, surveyThemeData, children }) => {
                 </Center>
               )}
             </Paper>
-            {!!startClicked && (
-              <RateupRedirectCard alternateLogo={myGSurveyId === survey.id} />
-            )}
-          </Stack>
-        </QuestionCountContext.Provider>
-      </MantineProvider>
-    </div>
+
+            {!!startClicked && <RateupRedirectCard />}
+          </BackgroundImage>
+        </Stack>
+      </QuestionCountContext.Provider>
+    </MantineProvider>
   );
 };
 

@@ -1,5 +1,5 @@
 .inputBox {
-  width: 90vw;
+  width: 100%;
   max-width: 500px;
   color: var(--input-text-color, black);
   border-radius: var(--input-border-radius, 8px);
@@ -9,6 +9,7 @@
   border-color: var(--light-grey-color);
   border-width: 1px;
   border-style: solid;
+  font-size: 16px;
 }
 
 .input {
@@ -27,9 +28,11 @@
   border: none;
   font-size: 16px;
   outline: none;
+  background-color: transparent;
 }
 .inputPhone {
   margin: 5px;
+  background-color: transparent;
 }
 
 .selectBox {
@@ -100,13 +103,4 @@
 
 .questionDesc {
   line-height: 1.2;
-}
-
-/*the styles below are temporary and will be removed once myg survey is completed*/
-.wrapperdark {
-  background-color: #000;
-}
-.wrapperdark input {
-  color: #fff !important;
-  background-color: transparent !important;
 }

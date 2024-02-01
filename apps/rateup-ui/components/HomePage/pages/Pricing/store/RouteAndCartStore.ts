@@ -59,3 +59,25 @@ export const useImageStore = create<ImageStore & ImageActions>((set) => ({
     set((state) => ({ imageToDelete: [...state.imageToDelete, image] })),
   resetImage: () => set(initalImageData),
 }));
+
+type VisibleColumnStore = {
+  visibleColumn: string[];
+};
+
+type VisibleColumnActions = {
+  updateVisibleColumnArray: (VisibleColumn: string[]) => void;
+  resetVisibleColumn: () => void;
+};
+const initalVisibleColumnData = {
+  visibleColumn: [],
+};
+export const useVisibleColumnStore = create<
+  VisibleColumnStore & VisibleColumnActions
+>((set) => ({
+  ...initalVisibleColumnData,
+  updateVisibleColumnArray: (VisibleColumn) =>
+    set((state) => ({
+      visibleColumn: VisibleColumn,
+    })),
+  resetVisibleColumn: () => set(initalVisibleColumnData),
+}));

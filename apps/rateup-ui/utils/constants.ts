@@ -6,9 +6,10 @@ export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const ContactQuestions = [
+  QuestionType.Contact,
   QuestionType.Email,
   QuestionType.Phone,
-  QuestionType.EmailPhone,
+  // QuestionType.EmailPhone,
 ];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
@@ -43,6 +44,7 @@ export const OtherQuestions = [
   QuestionType.DDSS,
   QuestionType.DDMS,
   QuestionType.PCQ,
+  QuestionType.TnC,
 ];
 
 export const WaOtherQuestions = [
@@ -92,3 +94,5 @@ export const mimeTypesForImage: { [key: string]: string } = {
 export const MAX_FILE_SIZE_IN_MB = 10;
 export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;
 export const THUMBNAIL_URL = "thumb300x200-";
+
+export const PAGE_SIZE = ["10", "20", "30", "40", "50"];

@@ -1,16 +1,14 @@
-import { Space } from "@mantine/core";
-
+import { CSSProperties } from "react";
 import classes from "./Header.module.css";
 import { Navbar } from "../Navbar/Navbar";
-
-interface iProps {
+interface iHeaderTabProps {
   opened?: boolean;
-  style?: any;
+  style?: CSSProperties;
 }
 
-export function HeaderTabs({ opened, style }: iProps) {
+export function HeaderTabs({}: iHeaderTabProps) {
   return (
-    <div className={classes.header} style={style}>
+    <div className={classes.header}>
       <Navbar />
     </div>
   );

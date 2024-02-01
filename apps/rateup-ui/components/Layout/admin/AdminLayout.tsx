@@ -15,7 +15,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconTerminal2, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { LoggedInUserCard } from "../Navbar/LeftNavbar";
+import LoggedInUserCard from "../Navbar/LoggedInUserCard";
 import { useUserInfo } from "../../../backend/user/user.query";
 import { adminNavItems } from "./admin.nav";
 
@@ -66,16 +66,7 @@ export function AdminPanelLayout({ children }) {
           </AppShell.Section>
           <AppShell.Section>
             <Stack p="sm">
-              {userInfo ? (
-                LoggedInUserCard({
-                  name: userInfo.data.userName,
-                  role: userInfo.data.role,
-                  email: userInfo.data.email,
-                  image: userInfo.data.profilePhoto,
-                })
-              ) : (
-                <Skeleton height={60} />
-              )}
+              {userInfo ? <LoggedInUserCard /> : <Skeleton height={60} />}
               <Button
                 variant="outline"
                 leftSection={<IconArrowLeft />}

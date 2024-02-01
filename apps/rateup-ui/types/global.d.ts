@@ -17,6 +17,12 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
+type TNC = {
+  title: string;
+  urlTitle: string;
+  content: string;
+};
+
 type ValidationRules = {
   length?: {
     min: string;
@@ -42,12 +48,13 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
-    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
     sections?: Zod.RecordType<string, WaSectionsType>;
     id: string;
     googleReview?: GoogleReview;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
+    tnc?: TNC;
   };
   type WaSectionsType = Array<{
     title?: string;
@@ -169,7 +176,11 @@ declare global {
       [QuestionType.Text]?: string;
       [QuestionType.TextArea]?: string;
       [QuestionType.Number]?: number;
-      [QuestionType.Email]?: string;
+      [QuestionType.Email]?: {
+        name?: string;
+        phone?: string;
+        email: string;
+      };
       [QuestionType.Testimonial]?: {
         testimonial: string;
         name?: string;
@@ -181,6 +192,11 @@ declare global {
         email: string;
         phone: string;
       };
+      [QuestionType.Contact]?: {
+        name?: string;
+        phone?: string;
+        email?: string;
+      };
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
       [QuestionType.Rating]?: number;
@@ -190,10 +206,15 @@ declare global {
       [QuestionType.MSQ]?: Array<Choice>;
       [QuestionType.DDSS]?: Choice;
       [QuestionType.DDMS]?: Array<Choice>;
-      [QuestionType.Phone]?: string;
+      [QuestionType.Phone]?: {
+        name?: string;
+        phone: string;
+        email?: string;
+      };
       [QuestionType.Photo]?: string;
       [QuestionType.DateTime]?: Date;
       [QuestionType.CustomNPS]?: Choice;
+      [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };
     };
   };

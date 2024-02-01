@@ -1,6 +1,5 @@
 import { Flex, Stack, Text } from "@mantine/core";
 import { ItemDisplay } from "../item/ItemDisplay";
-import { lexend300, lexend500 } from "../../../utils/fonts";
 import { formatedTime } from "../../../utils/dateTime";
 
 export function CategoryDisplay({
@@ -15,14 +14,13 @@ export function CategoryDisplay({
     formattedEndTimeWithAmPm,
   } = formatedTime(category);
   return (
-    <Stack id={category?.id} ff={lexend300.style.fontFamily} pb={"lg"}>
+    <Stack id={category?.id} fw={300} pb={"lg"}>
       <Stack gap={0}>
         <Text
           c="var(--grey-color)"
           fz="clamp(20px, 11.424px + 1.429vw, 32px)"
           tt={"capitalize"}
           fw={500}
-          className={lexend500.className}
         >
           {category?.name}
         </Text>

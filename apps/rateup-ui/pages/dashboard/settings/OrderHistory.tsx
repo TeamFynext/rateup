@@ -18,13 +18,13 @@ const OrderHistory = ({ orders }) => {
       <Title order={2} style={{ minWidth: "140px" }} mt="xl">
         Order History :
       </Title>
-      <Divider />
+      <Divider m="0" p="0" />
       {(!orders || orders.length < 1) && (
         <Text m="50px" c="dimmed">
           No orders found..!
         </Text>
       )}
-      <ScrollArea h={400}>
+      <ScrollArea h={400} mt="-30px" p="0">
         {orders
           ?.sort(
             (a, b) =>
@@ -35,7 +35,7 @@ const OrderHistory = ({ orders }) => {
               shadow="xl"
               p="xl"
               mt="md"
-              style={{ maxWidth: "600px" }}
+              style={{ maxWidth: "1000px" }}
               key={order.id}
             >
               <Stack>
@@ -52,12 +52,14 @@ const OrderHistory = ({ orders }) => {
                     Total Amount <br /> {order?.currency === "INR" ? "₹" : "$"}{" "}
                     {order?.amount} /-
                   </Text>
-                  <Badge
-                    color={order?.status === "PENDING" ? "yellow" : "green"}
-                    size="lg"
-                  >
-                    {order?.status}
-                  </Badge>
+                  <Stack gap="5px">
+                    <Text>Order Id</Text>
+                    <Text size="xs" c="dimmed">
+                      {order?.id}
+                    </Text>
+                  </Stack>
+
+                  <OrderStatusBadge order={order} />
                 </Group>
                 <Group px="md" pt="sm" justify="space-between">
                   <Stack>
@@ -65,7 +67,26 @@ const OrderHistory = ({ orders }) => {
                       {" "}
                       {order?.displayName || "Plan Name"}{" "}
                     </Title>
-                    <Title order={5}> {order?.amount}/-</Title>
+                    <Title order={5}>
+                      {order?.currency === "INR" ? "₹" : "$"} {order?.amount}/-
+                    </Title>
+
+                    <Group mt="xl">
+                      <Text fw={500} style={{ minWidth: "150px" }}>
+                        Payment Method :
+                      </Text>
+                      <Text c="dimmed">
+                        {order?.paymentMethod
+                          ? order.paymentMethod.toUpperCase()
+                          : "Not available"}
+                      </Text>
+                    </Group>
+                    <Group>
+                      <Text fw={500} style={{ minWidth: "150px" }}>
+                        Payment Status :
+                      </Text>
+                      <Text c="dimmed">{order?.paymentStatus} </Text>
+                    </Group>
                   </Stack>
                   <Stack mr="xl">
                     <Title order={5}> Plan Features </Title>
@@ -85,3 +106,35 @@ const OrderHistory = ({ orders }) => {
 };
 
 export default OrderHistory;
+
+export const OrderStatusBadge = ({ order }) => {
+  let color, statusText;
+
+  switch (order?.status) {
+    case "PENDING":
+      if (order?.paymentStatus === "SUCCESS") {
+        color = "blue";
+        statusText = "PROCESSING";
+      } else if (order?.paymentStatus === "FAILED") {
+        color = "red";
+        statusText = "FAILED";
+      } else {
+        color = "yellow";
+        statusText = order?.status;
+      }
+      break;
+    case "FAILED":
+      color = "red";
+      statusText = order?.status;
+      break;
+    default:
+      color = "green";
+      statusText = order?.status;
+  }
+
+  return (
+    <Badge color={color} size="lg">
+      {statusText}
+    </Badge>
+  );
+};

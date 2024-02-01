@@ -19,7 +19,7 @@ const Billing = ({ subscription, toggle, processingPayment }) => {
       <Divider mb="md" />
 
       {processingPayment ? (
-        <Loader color="blue" />
+        <Loader color="blue" type="bars" />
       ) : (
         <Stack>
           <Group ml="xl">
@@ -50,6 +50,12 @@ const Billing = ({ subscription, toggle, processingPayment }) => {
                 <Badge color="green">Active</Badge>
               </>
             )}
+          </Group>
+          <Group mt="xl" ml="xl">
+            <Title order={4} style={{ minWidth: "140px" }}>
+              Addons :
+            </Title>
+            Nil
           </Group>
         </Stack>
       )}

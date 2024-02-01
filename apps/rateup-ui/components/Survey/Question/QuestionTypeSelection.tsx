@@ -30,6 +30,7 @@ import {
   IconCaretUpDown,
   IconAdjustmentsQuestion,
   IconAddressBook,
+  IconCheckbox,
 } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
 import { useContext, useState } from "react";
@@ -183,6 +184,8 @@ const questionIcons = {
   [QuestionType.DDMS]: IconCaretUpDown,
   [QuestionType.CustomNPS]: IconAdjustmentsQuestion,
   [QuestionType.PCQ]: IconAdjustmentsQuestion,
+  [QuestionType.Contact]: IconAddressBook,
+  [QuestionType.TnC]: IconCheckbox,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
 };

@@ -141,7 +141,7 @@ const AddParticipantModal = ({ close, campaign }) => {
             />
             <ScrollArea h={200}>
               <Paper shadow="xl" p={"lg"}>
-                {contactIsLoading || (groupIsLoading && <Loader />)}
+                {contactIsLoading || (groupIsLoading && <Loader type="bars" />)}
                 {selectedTab == CampaignParticipantSource.INDIVIDUAL &&
                   (filteredContacts?.length > 0 ? (
                     filteredContacts.map((contact) => (

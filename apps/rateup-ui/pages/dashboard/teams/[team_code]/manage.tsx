@@ -32,7 +32,7 @@ export default function () {
       <Button variant="light" onClick={openReviewModal}>
         Manage review suggestions
         {isLoading || !(typeof count === "number") ? (
-          <Loader size={"xs"} ml="xs" />
+          <Loader size={"xs"} ml="xs" type="bars" />
         ) : (
           <Badge ml="xs">{count}</Badge>
         )}

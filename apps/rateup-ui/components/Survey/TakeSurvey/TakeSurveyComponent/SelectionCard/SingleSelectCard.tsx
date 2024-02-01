@@ -7,11 +7,14 @@ import {
   Radio,
   Image,
   Stack,
+  useMantineTheme,
 } from "@mantine/core";
 import { useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
 import { getImageValue } from "../../../../../utils/file-upload/upload";
 import cx from "clsx";
+import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
+import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -43,10 +46,21 @@ export function ImageCheckbox({
   });
   const radioButtonRef = useRef(null);
   const titleTypeString = typeof title === "string";
+  const theme = useMantineTheme();
   return (
     <UnstyledButton
       {...others}
       c={"black"}
+      bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
+      style={{
+        borderColor: (
+          titleTypeString
+            ? selectedValue === title
+            : selectedValue === title?.value
+        )
+          ? returnColorsForTheme(styleAttributeTypesEnum.BORDER, theme)
+          : undefined,
+      }}
       onClick={() => {
         handleChange(true);
         radioButtonRef?.current?.click();
@@ -102,7 +116,7 @@ export function SingleSelectCard({
   includeImage = false,
   fallbackEnable = true,
 }) {
-  const items = data.map((item: string | { value: string; image: string }) => (
+  const items = data?.map((item: string | { value: string; image: string }) => (
     <ImageCheckbox
       title={item}
       key={typeof item === "string" ? item : item.value}

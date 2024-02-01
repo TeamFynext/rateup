@@ -217,7 +217,7 @@ const TeamDetails = () => {
                 <Group p="xl"> {teamsMembersData?.members}</Group>
               )
             ) : isLoadingMembers ? (
-              <Loader />
+              <Loader type="bars" />
             ) : (
               // TODO: handle error
               <Group p="xl">"No other members in this team!"</Group>

@@ -1,60 +1,35 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Loader,
-  Table,
-  Text,
-  Group,
-  Stack,
-  ScrollArea,
-  Badge,
-  Button,
-  ScrollAreaAutosize,
-} from "@mantine/core";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import {
-  IconEye,
-  IconFileDownload,
-  IconTrashXFilled,
-  IconX,
-} from "@tabler/icons-react";
-import { useContext } from "react";
-import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import { useRouter } from "next/router";
-import dayjs from "dayjs";
-import {
-  getResponse,
-  getResponseArrayByQuestionType,
-} from "../../../utils/response";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { useDownloadExcel, downloadExcel } from "react-export-table-to-excel";
-import { useDeleteResponse } from "../../../backend/surveys/response/response.query";
+import { Group, Loader, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { useUser } from "../../../context/UserContext";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import Heading from "../../styled/Heading/Heading";
-import {
-  LDResponse,
-  QuestionType,
-  SmileyResponse,
-  YNResponse,
-} from "../../../types/enums";
+import { IconFileDownload, IconX } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { useRouter } from "next/router";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { downloadExcel } from "react-export-table-to-excel";
+import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
+import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
+import { useQuestions } from "../../../backend/surveys/questions/questions.query";
+import { useDeleteResponse } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
-import NothingFound from "../../NothingFound/NothingFound";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import PreviewModal from "../../Modal/PreviewModal";
+import { useUser } from "../../../context/UserContext";
+import { QuestionType } from "../../../types/enums";
 import {
   ChoiceTypeQuestions,
   ContactQuestions,
 } from "../../../utils/constants";
-import { HoverCardComponent } from "../HoverCard/HoverCard";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import NothingFound from "../../NothingFound/NothingFound";
+import TanstackTable from "../../Table/TanstackTable";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import Heading from "../../styled/Heading/Heading";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
-import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
-import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
+import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 
 const Responses = ({
   survey,
@@ -64,7 +39,6 @@ const Responses = ({
   isLoading,
 }) => {
   const [responseCount, setResponseCount] = useState(0);
-  const tableRef = useRef(null);
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const { surveyTeamMapId } = useContext(SurveyContext);
@@ -77,7 +51,7 @@ const Responses = ({
   const hasContactQuestion =
     responses &&
     responses.some((response) =>
-      response.responses.some((res) => ContactQuestions.includes(res.type)),
+      response.responses.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -113,20 +87,24 @@ const Responses = ({
             name: "",
             teamId: teamId,
           };
+          let phone = null;
+          let email = null;
+          let name = "";
           switch (res.type) {
-            case QuestionType.Email:
-              contact.email = res.response?.[QuestionType.Email];
-              break;
-            case QuestionType.Phone:
-              contact.phone = res.response?.[QuestionType.Phone].slice(1);
-              break;
             case QuestionType.EmailPhone:
-              const phone = res.response?.[QuestionType.EmailPhone]?.phone;
-              const email = res.response?.[QuestionType.EmailPhone]?.email;
-              contact.phone = phone ? phone.slice(1) : undefined;
-              contact.email = email ? email : undefined;
+              phone = res.response?.[QuestionType.EmailPhone]?.phone;
+              email = res.response?.[QuestionType.EmailPhone]?.email;
               break;
+            case QuestionType.Email:
+            case QuestionType.Phone:
+            case QuestionType.Contact:
+              phone = res.response?.[res.type]?.phone;
+              email = res.response?.[res.type]?.email;
+              name = res.response?.[res.type]?.name;
           }
+          contact.phone = phone ? phone.slice(1) : undefined;
+          contact.email = email ? email : undefined;
+          contact.name = name ? name : "";
           if (
             !contacts.some(
               (c) =>
@@ -143,12 +121,17 @@ const Responses = ({
   }
   const handleExcelDownload = useCallback(() => {
     const responses = allResponses && allResponses[0].responses;
-    if (questions && responses) {
-      const headerArray = questions.map((question) => {
+    const filteredSecondArray = questions.filter((item) =>
+      useVisibleColumnStore
+        .getState()
+        .visibleColumn.includes(item.title.English),
+    );
+    if (filteredSecondArray && responses) {
+      const headerArray = filteredSecondArray.map((question) => {
         return question.title[defaultLanguage];
       });
       const bodyArray = [];
-      questions.forEach((question) => {
+      filteredSecondArray.forEach((question) => {
         const questionId = question.id;
         responses.forEach((response, answerIndex) => {
           bodyArray.push([]);
@@ -176,7 +159,9 @@ const Responses = ({
                 : responseValue?.value;
             }
             if (typeof responseValue === "object") {
-              responseValue = Object.values(responseValue).join(", ");
+              responseValue = responseValue?.value
+                ? Object.values(responseValue?.value).join(", ")
+                : Object.values(responseValue).join(", ");
             }
           } else {
             responseValue = "";
@@ -223,9 +208,15 @@ const Responses = ({
     }
   };
 
-  if (isQLoading) return <Loader />;
+  if (isQLoading) return <Loader type="bars" />;
   if (QError) return <Text>An error has occurred</Text>;
-  if (isLoading) return <Loader />;
+  if (isLoading) return <Loader type="bars" />;
+
+  const columns = useSurveyResponseColumns({
+    questions,
+    defaultLanguage,
+    setSelectedRowId,
+  });
 
   return (
     <Stack h="100%">
@@ -257,49 +248,9 @@ const Responses = ({
         </Group>
       </PaperLayout>
       {responseCount > 0 ? (
-        <PaperLayout style={{ flex: 1 }}>
+        <PaperLayout>
           <>
-            <ScrollArea mah={"100%"} maw={"100%"}>
-              <Table ref={tableRef} withRowBorders w={"100%"} h={"100%"}>
-                <TableHead questions={questions} />
-                <Table.Tbody>
-                  {responses?.map((response) => (
-                    <Table.Tr
-                      key={response?.id}
-                      style={{ alignItems: "center" }}
-                    >
-                      <Table.Td>
-                        <Text c="dark.3" p={10} miw={200}>
-                          {dayjs(response?.createdAt).format(
-                            "DD-MM-YYYY hh:mm A",
-                          )}
-                        </Text>
-                      </Table.Td>
-                      {questions?.map((q) => (
-                        <Table.Td key={q?.id}>
-                          <BadgeorTextorPreview
-                            questionType={q?.type}
-                            response={getResponse(q?.id, response)}
-                          />
-                        </Table.Td>
-                      ))}
-                      <Table.Td p={10} miw={50}>
-                        <Button
-                          variant="subtle"
-                          color="red"
-                          onClick={() => {
-                            setSelectedRowId(response?.id);
-                            open();
-                          }}
-                        >
-                          <IconTrashXFilled />
-                        </Button>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </ScrollArea>
+            <TanstackTable data={responses} columns={columns} />
             <FormModalLayout
               opened={opened}
               onClose={close}
@@ -334,110 +285,3 @@ const Responses = ({
 };
 
 export default Responses;
-
-interface TableHeadProps {
-  questions: Array<Question>;
-}
-function TableHead({ questions }: TableHeadProps) {
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
-
-  const stickyHeaderStyles: React.CSSProperties = {
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
-    backgroundColor: "white",
-    minHeight: 100,
-  };
-
-  if (!questions?.length) return <>No Responses.</>;
-  return (
-    <Table.Thead style={stickyHeaderStyles}>
-      <Table.Tr mih={50}>
-        <Table.Th>
-          <Text fz="lg" fw="600" p={10} c="dark.3">
-            Date
-          </Text>
-        </Table.Th>
-        {questions?.map((q) => (
-          <Table.Th key={q?.id}>
-            <HoverCardComponent
-              content={
-                q?.title[
-                  selectedLanguage ? selectedLanguage : defaultLanguage
-                ] ||
-                q?.description[
-                  selectedLanguage ? selectedLanguage : defaultLanguage
-                ]
-              }
-              fw={600}
-              fz={"lg"}
-            />
-          </Table.Th>
-        ))}
-        <Table.Th>
-          <Text fz="lg" fw="600" p={10} c="dark.3">
-            Delete
-          </Text>
-        </Table.Th>
-      </Table.Tr>
-    </Table.Thead>
-  );
-}
-
-const previewRequired = [QuestionType.Photo];
-const badgeRequired = [
-  QuestionType.Rating,
-  QuestionType.Smiley,
-  QuestionType.LD,
-  QuestionType.YN,
-  QuestionType.Opinion,
-];
-function BadgeorTextorPreview({
-  questionType,
-  response,
-}: {
-  questionType: QuestionType;
-  response: string;
-}) {
-  const [previewModalopened, { open, close }] = useDisclosure(false);
-  if (previewRequired.includes(questionType)) {
-    return (
-      <>
-        <RateupButtonBlue
-          title="Preview"
-          leftIcon={<IconEye />}
-          size="compact-xs"
-          onClick={open}
-          disabled={response === "" || !response}
-        />
-        <PreviewModal
-          headerTitle="Preview"
-          onClose={close}
-          imgObject={response}
-          opened={previewModalopened}
-        />
-      </>
-    );
-  } else if (badgeRequired.includes(questionType)) {
-    return (
-      <Badge
-        size="lg"
-        fw={600}
-        radius={10}
-        color={
-          getResponseArrayByQuestionType(questionType)?.find(
-            (res) => res.value === response,
-          )?.color
-        }
-        miw={100}
-        variant="light"
-      >
-        {response}
-      </Badge>
-    );
-  } else {
-    return <HoverCardComponent content={response} />;
-  }
-}

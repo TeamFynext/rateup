@@ -15,41 +15,42 @@ import {
 } from "@tabler/icons-react";
 import { ChoiceTypeQuestions } from "./constants";
 
-export function getResponse(qId: string, response: SurveyResponse) {
-  const qResponse = response.responses.find((r) => r.questionId === qId);
-  if (!qResponse) return "";
-  const { type, response: responseType } = qResponse;
+export function getResponse(type: any, response: any) {
+  if (!response) return "";
   if (type === QuestionType.Testimonial) {
-    return qResponse.response[type].testimonial;
+    return response.testimonial;
   } else if (type === QuestionType.EmailPhone) {
-    return Object.values(qResponse.response[type]).filter(Boolean).join(" , ");
+    return Object.values(response).filter(Boolean).join(" , ");
   } else if (type === QuestionType.DateTime) {
-    const dateTimeValue = qResponse.response.DateTime;
-    const date = dayjs(dateTimeValue);
-    const formattedDate = date.format("D, MMM YYYY");
+    const date = dayjs(response);
+    const formattedDate = date.format("DD, MMM YYYY");
     return `${formattedDate}`;
+  } else if (type === QuestionType.Contact) {
+    let formattedResponse = Object.entries(response).map(
+      ([key, value]) => key + ": " + value,
+    );
+    return formattedResponse.join(", ");
   } else if (ChoiceTypeQuestions.includes(type)) {
-    const responseValue = responseType[type];
-    if (responseValue) {
+    if (response) {
       let formattedValue = "";
       if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
-        formattedValue = responseValue
+        formattedValue = response
           .map((item) => {
             return item?.value?.trim();
           })
           .join(", ");
       } else {
-        formattedValue = responseValue?.value;
+        formattedValue = response?.value;
       }
       return formattedValue;
     } else {
       return "";
     }
   } else if (type === QuestionType.WaList) {
-    const { title, description } = qResponse.response[QuestionType.WaList];
+    const { title, description } = response[QuestionType.WaList];
     return description ? `${title}: ${description}` : title;
   }
-  return qResponse.response[type];
+  return response;
 }
 
 export function filterResponses(

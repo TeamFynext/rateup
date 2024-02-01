@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Radio, ScrollArea } from "@mantine/core";
+import { Radio } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { samplePictureChoices } from "../../../../../utils/constants/forms";
@@ -14,7 +14,7 @@ interface PCQFormProps {
 export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ?.choices[selectedLanguage];
+  const choices = selectedQ?.choices?.[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
   const router = useRouter();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -48,15 +48,18 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const data = options?.map((op) => op?.value);
 
   return (
-    <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
-        <SingleSelectCard
-          data={data}
-          selectedValue={selectedOp}
-          includeImage
-          fallbackEnable={fallbackEnable}
-        />
-      </Radio.Group>
-    </ScrollArea.Autosize>
+    <Radio.Group
+      value={selectedOp}
+      onChange={handleSelectedOp}
+      mr={"sm"}
+      w={"100%"}
+    >
+      <SingleSelectCard
+        data={data}
+        selectedValue={selectedOp}
+        includeImage
+        fallbackEnable={fallbackEnable}
+      />
+    </Radio.Group>
   );
 }
