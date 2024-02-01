@@ -23,6 +23,7 @@ import { lexend } from "../../../../../utils/fonts";
 import { Carousel } from "@mantine/carousel";
 import { getMenuBannerByMenuId } from "../../../../../backend/menu/Banner/banner.api";
 import Autoplay from "embla-carousel-autoplay";
+import { isCategoryActive } from "../../../../../utils/dateTime";
 
 type MenuViewProp = {
   menuId: string;
@@ -75,6 +76,31 @@ export default function ({ fullMenu, menuBanner }) {
   const backgroundImageFallback = largeScreen
     ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
+  const hideUnavailableCategory = fullMenu?.menuLanding?.menu
+    ?.hideUnavailableCategory as boolean;
+
+  let fullCategory = fullMenu?.categories;
+
+  const { successData, failedData } = catagories.reduce(
+    (acc, item) => {
+      if (isCategoryActive(item)) {
+        acc.successData.push(item);
+      } else {
+        acc.failedData.push(item);
+      }
+      return acc;
+    },
+    { successData: [], failedData: [] },
+  );
+
+  const filteredData = hideUnavailableCategory
+    ? successData
+    : [...successData, ...failedData];
+
+  if (hideUnavailableCategory) {
+    fullCategory = fullCategory?.filter(isCategoryActive);
+    categoryChipLabel = [{ id: "1", name: "all" }].concat(fullCategory);
+  }
 
   return (
     <Paper mih={"100vh"} ff={lexend.style.fontFamily}>
@@ -224,8 +250,8 @@ export default function ({ fullMenu, menuBanner }) {
       </Group>
 
       <Stack px={"5.8vw"} mih={"45vh"}>
-        {catagories?.length > 0
-          ? catagories?.map((c) => (
+        {filteredData?.length > 0
+          ? filteredData?.map((c) => (
               <CategoryDisplay
                 key={c.id}
                 setSelectedItem={setSelectedItem}
@@ -241,7 +267,7 @@ export default function ({ fullMenu, menuBanner }) {
       <CategoriesDrawer
         opened={drawerOpen}
         close={close}
-        categories={fullMenu?.categories}
+        categories={fullCategory}
         handleCategoryChipClick={handleCategoryChipClick}
       />
       {selectedItem && (

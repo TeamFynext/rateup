@@ -1,20 +1,21 @@
 import {
-  BackgroundImage,
+  Box,
   Center,
   Flex,
   Group,
+  Image,
   Paper,
   ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { useMediaQuery } from "@mantine/hooks";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { lexend } from "../../../utils/fonts";
-import { currencyLabel } from "../util/currencyData";
 import { fallbackImage } from "../../../utils/constants";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import { lexend } from "../../../utils/fonts";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
+import { currencyLabel } from "../util/currencyData";
 
 interface ItemDisplayProps {
   readonly item: any;
@@ -43,9 +44,19 @@ export function ItemDisplay({
         !(item?.disabled || categoryDisabled) && setSelectedItem(item)
       }
     >
-      <Flex h={"100%"} ff={lexend.style.fontFamily}>
-        <Group style={{ display: "flex", flex: 0.8 }}>
-          <BackgroundImage
+      <Flex
+        h={"100%"}
+        ff={lexend.style.fontFamily}
+        style={{ userSelect: "none" }}
+      >
+        <Group
+          style={{
+            display: "grid",
+            flex: 0.8,
+            gridTemplateRows: "auto min-content 16px",
+          }}
+        >
+          <Image
             w={"100%"}
             h={"100%"}
             miw={smallScreen ? "120px" : "164px"}
@@ -57,26 +68,32 @@ export function ItemDisplay({
             }
             style={{
               backgroundColor: "var(--orange-400)",
+              gridArea: "1 / 1 / 4 / 2",
+              filter:
+                item?.disabled || categoryDisabled
+                  ? "grayscale(1)"
+                  : "grayscale(0)",
             }}
             opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
-          >
-            {item?.disabled ||
-              (categoryDisabled && (
-                <Center h={"100%"}>
-                  <Paper
-                    fz={smallScreen ? "xs" : "md"}
-                    c={"var(--orange-400)"}
-                    fw={600}
-                    w={"max-content"}
-                    radius={"sm"}
-                    px={"sm"}
-                    py={5}
-                  >
-                    Not Available
-                  </Paper>
-                </Center>
-              ))}
-          </BackgroundImage>
+          />
+          {(item?.disabled || categoryDisabled) && (
+            <Center h={"100%"} style={{ gridArea: "1 / 1 / 4" }}>
+              <Paper
+                fz={smallScreen ? "xs" : "md"}
+                c={"var(--orange-400)"}
+                fw={600}
+                w={"max-content"}
+                radius={"sm"}
+                px={"sm"}
+                py={5}
+                style={{
+                  zIndex: 1,
+                }}
+              >
+                Not Available
+              </Paper>
+            </Center>
+          )}
         </Group>
 
         <Flex
@@ -84,6 +101,12 @@ export function ItemDisplay({
           fw={"600"}
           w={smallScreen ? "134px" : "100%"}
           opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
+          style={{
+            filter:
+              item?.disabled || categoryDisabled
+                ? "grayscale(1)"
+                : "grayscale(0)",
+          }}
         >
           <Stack p={smallScreen ? "10px" : "14px"} gap={0}>
             <Text
@@ -106,13 +129,14 @@ export function ItemDisplay({
                 />
               </Flex>
             </ScrollArea>
-            <Text
-              fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
-              lineClamp={3}
-              mih={item?.price?.variants?.length > 0 ? "65px" : "70px"}
-            >
-              {item?.description}
-            </Text>
+            <Box mih={item?.price?.variants?.length > 0 ? "65px" : "70px"}>
+              <Text
+                fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
+                lineClamp={3}
+              >
+                {item?.description}
+              </Text>
+            </Box>
             <Flex justify="space-evenly" gap={"sm"}>
               {item?.price?.variants?.length > 0 ? (
                 item?.price?.variants.map((varient, index) => (
@@ -127,7 +151,7 @@ export function ItemDisplay({
                     <Text fz="clamp(14px, 11.136px + 0.476vw, 18px)" fw={500}>
                       {varient?.price && (
                         <>
-                          {currencyLabel[currency]?.symbol}&nbsp;
+                          {currencyLabel[currency]?.symbol}
                           {varient?.price}
                         </>
                       )}
@@ -142,7 +166,7 @@ export function ItemDisplay({
                 >
                   {item?.price?.price && (
                     <>
-                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {currencyLabel[currency]?.symbol}
                       {item?.price?.price}
                     </>
                   )}

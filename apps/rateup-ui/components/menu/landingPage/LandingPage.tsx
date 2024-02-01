@@ -547,9 +547,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           mx={largeScreen ? "lg" : "0"}
                           selected={isMenuEnabled}
                         >
-                          {isMenuEnabled && catalogue === "catalogue"
-                            ? CatalogueButton(!isMobileTab)
-                            : MenuButton(!isMobileTab)}
+                          {isMenuEnabled &&
+                            (catalogue === "catalogue"
+                              ? CatalogueButton(!isMobileTab)
+                              : MenuButton(!isMobileTab))}
                         </PaperLayout>
                         <PaperLayout
                           radius={"md"}
@@ -602,7 +603,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
             <form onSubmit={form.onSubmit(handleSubmit)}>
               <Stack gap={"5"} mx="xs">
                 <TabsCommon
-                  tabHeading={["bg", "logo", "icon", "text"]}
+                  tabHeading={["bg", "logo", "type", "text"]}
                   value={mainTabState}
                   radius={"xl"}
                   onChange={(value: string) => setMainTabState(value)}
@@ -698,7 +699,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       </FileButton>
                     </Stack>
                   </Tabs.Panel>
-                  <Tabs.Panel value="icon">
+                  <Tabs.Panel value="type">
                     <Text mb={"sm"} fz={"lg"} fw={"500"}>
                       Select Your Icon
                     </Text>

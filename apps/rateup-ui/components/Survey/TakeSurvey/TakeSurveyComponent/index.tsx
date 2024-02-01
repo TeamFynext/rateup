@@ -168,7 +168,7 @@ function TakeSurvey({ survey }) {
   if (!survey) {
     return (
       <Center style={{ height: "100vh" }}>
-        <Loader />
+        <Loader type="bars" />
       </Center>
     );
   }

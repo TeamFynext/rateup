@@ -1,9 +1,11 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import advancedFormat from "dayjs/plugin/advancedFormat";
+import isBetween from "dayjs/plugin/isBetween";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(advancedFormat);
+dayjs.extend(isBetween);
 
 export function findPreviousMonday(date: Date): Date {
   const day = date.getDay();
@@ -44,3 +46,13 @@ export const createCustomTimestamp = (customTime) => {
 export function formatIsoDateString(isoDateString) {
   return dayjs(isoDateString).format("Do MMM, YYYY");
 }
+
+const currentTime = dayjs();
+export const isCategoryActive = (item) => {
+  if (!item.startTime || !item.endTime || !item.scheduleEnabled) {
+    return true;
+  }
+  const startTime = dayjs(item.startTime);
+  const endTime = dayjs(item.endTime);
+  return currentTime.isBetween(startTime, endTime, null, "[]");
+};

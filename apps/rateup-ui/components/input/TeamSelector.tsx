@@ -38,7 +38,7 @@ export function TeamSelector({
     return <Text>Something went wrong!</Text>;
   }
   if (teamsLoading) {
-    return <Loader />;
+    return <Loader type="bars" />;
   }
   const teams = teamRes?.data;
   if (!teams) {

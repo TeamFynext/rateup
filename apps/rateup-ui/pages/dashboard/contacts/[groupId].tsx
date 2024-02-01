@@ -120,7 +120,7 @@ export default function () {
     <>
       {isLoading ? (
         <Center>
-          <Loader></Loader>
+          <Loader type="bars" />
         </Center>
       ) : (
         <Box p="lg" pr={150}>
