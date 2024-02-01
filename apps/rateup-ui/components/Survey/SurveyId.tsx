@@ -6,6 +6,7 @@ import {
   MultiSelect,
   Title,
   MantineProvider,
+  Box,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
@@ -181,62 +182,64 @@ export default function SurveyID() {
               </Grid.Col>
             </Grid>
             <Space h="md" />
-            <Tabs.Panel
-              value={TabEnum.Edit}
-              style={{ background: "white", width: "100%", maxHeight: "100%" }}
-            >
-              {survey?.type === SurveyType.WhatsApp ? (
-                <EditWhatsappSurvey
-                  questions={questions}
-                  addQnTrigger={addQnTrigger}
-                  surveyLanguages={survey?.languages}
-                  setSelectedLanguage={setSelectedLanguage}
-                />
-              ) : (
-                <EditSurvey
-                  questions={questions}
-                  addQnTrigger={addQnTrigger}
-                  surveyLanguages={survey?.languages}
-                  setSelectedLanguage={setSelectedLanguage}
-                />
-              )}
-            </Tabs.Panel>
-            <Tabs.Panel value={TabEnum.Settings}>
-              <SurveySettings
-                surveyId={surveyId}
-                survey={survey}
-                enabledModules={
-                  survey?.type === SurveyType.WhatsApp
-                    ? ["name", "language", "teams", "location"]
-                    : [
-                        "name",
-                        "password",
-                        "language",
-                        "kiosk",
-                        "teams",
-                        "preview",
-                        "location",
-                        "enableNotificationEmail",
-                        "notificationEmail",
-                      ]
-                }
-              />
-            </Tabs.Panel>
-            <Tabs.Panel value={TabEnum.Result}>
-              <Result
-                survey={survey}
-                setSelectedLanguage={setSelectedLanguage}
-                setFilterTags={setFilterTags}
-              />
-            </Tabs.Panel>
-            <Tabs.Panel value={TabEnum.Share}>
-              <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
-            </Tabs.Panel>
-            {survey?.type !== SurveyType.WhatsApp && (
-              <Tabs.Panel value={TabEnum.Theme}>
-                <SurveyTheme survey={survey} />
+            <Box className={styles["tab-panel-container"]}>
+              <Tabs.Panel
+                value={TabEnum.Edit}
+                style={{ background: "white", width: "100%", height: "100%" }}
+              >
+                {survey?.type === SurveyType.WhatsApp ? (
+                  <EditWhatsappSurvey
+                    questions={questions}
+                    addQnTrigger={addQnTrigger}
+                    surveyLanguages={survey?.languages}
+                    setSelectedLanguage={setSelectedLanguage}
+                  />
+                ) : (
+                  <EditSurvey
+                    questions={questions}
+                    addQnTrigger={addQnTrigger}
+                    surveyLanguages={survey?.languages}
+                    setSelectedLanguage={setSelectedLanguage}
+                  />
+                )}
               </Tabs.Panel>
-            )}
+              <Tabs.Panel value={TabEnum.Settings}>
+                <SurveySettings
+                  surveyId={surveyId}
+                  survey={survey}
+                  enabledModules={
+                    survey?.type === SurveyType.WhatsApp
+                      ? ["name", "language", "teams", "location"]
+                      : [
+                          "name",
+                          "password",
+                          "language",
+                          "kiosk",
+                          "teams",
+                          "preview",
+                          "location",
+                          "enableNotificationEmail",
+                          "notificationEmail",
+                        ]
+                  }
+                />
+              </Tabs.Panel>
+              <Tabs.Panel value={TabEnum.Result}>
+                <Result
+                  survey={survey}
+                  setSelectedLanguage={setSelectedLanguage}
+                  setFilterTags={setFilterTags}
+                />
+              </Tabs.Panel>
+              <Tabs.Panel value={TabEnum.Share}>
+                <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
+              </Tabs.Panel>
+              {survey?.type !== SurveyType.WhatsApp && (
+                <Tabs.Panel value={TabEnum.Theme}>
+                  <SurveyTheme survey={survey} />
+                </Tabs.Panel>
+              )}
+            </Box>
           </StyledTabs>
         </SurveyContext.Provider>
       </SelectedLanguageContext.Provider>

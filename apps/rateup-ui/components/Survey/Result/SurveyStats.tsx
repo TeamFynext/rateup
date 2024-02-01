@@ -121,9 +121,9 @@ const SurveyStats = ({ survey }) => {
             </Group>
           </Stack>
         </PaperLayout>
-        <Grid columns={10} p={2}>
+        <Grid columns={10} p={2} gutter={"10px"} grow>
           {/* Location-wise response frequency */}
-          <Grid.Col span={{ xs: 10, md: 4 }}>
+          <Grid.Col span={{ xs: 10, md: 3 }}>
             <PaperLayout miw={300} h="350px">
               <Stack>
                 <Group justify="space-between">
@@ -142,7 +142,7 @@ const SurveyStats = ({ survey }) => {
             </PaperLayout>
           </Grid.Col>
           {/* MAP Component */}
-          <Grid.Col span={{ xs: 10, md: 6 }}>
+          <Grid.Col span={{ xs: 10, md: 5 }}>
             <PaperLayout
               style={{ overflow: "hidden" }}
               p={0}

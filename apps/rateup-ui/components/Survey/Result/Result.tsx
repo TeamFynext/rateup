@@ -7,6 +7,7 @@ import {
   Group,
   Loader,
   MultiSelect,
+  Popover,
   Radio,
   ScrollArea,
   Stack,
@@ -32,6 +33,7 @@ import {
   IconMoodHappy,
   IconMoodCrazyHappy,
   IconInfoCircle,
+  IconFilter,
 } from "@tabler/icons-react";
 import { useImmer } from "use-immer";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
@@ -48,12 +50,15 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
+import styles from "./Result.module.css";
+
 enum ResultTab {
   OverView = "overview",
   Analytics = "analytics",
   Responses = "responses",
   Comparison = "comparison",
 }
+
 const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -101,16 +106,16 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
       onChange={(value) => setActiveResultTab(value as ResultTab)}
       defaultValue="overview"
       placement="left"
-      orientation="vertical"
+      orientation="horizontal"
       styles={{
         root: {
-          flexDirection: "row",
+          flexDirection: "column",
           flexWrap: "wrap",
         },
         list: {
           position: "sticky",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           borderBottomLeftRadius: 10,
           borderBottomRightRadius: 10,
           height: "fit-content",
@@ -126,22 +131,41 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
         },
       }}
     >
-      <Stack maw={200} p={2} h={"100%"}>
+      <Box className={styles["result-page-tabs-filter-btn-container"]}>
         <Tabs.List>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
         </Tabs.List>
-        <ResultFilter
-          activeTab={resultTab}
-          survey={survey}
-          responses={filteredResponsesByTags}
-          setFilteredResponses={setFilteredResponses}
-          setSelectedLanguage={setSelectedLanguage}
-          setFilterTags={setFilterTags}
-        />
-      </Stack>
+        <Popover
+          width={300}
+          position="bottom-start"
+          withArrow
+          shadow="md"
+          classNames={{
+            dropdown: styles["filters-popover-dropdown-div"],
+          }}
+        >
+          <Popover.Target>
+            <ActionIcon
+              className={styles["filter-icon-to-open-filter-popover"]}
+            >
+              <IconFilter />
+            </ActionIcon>
+          </Popover.Target>
+          <Popover.Dropdown>
+            <ResultFilter
+              activeTab={resultTab}
+              survey={survey}
+              responses={filteredResponsesByTags}
+              setFilteredResponses={setFilteredResponses}
+              setSelectedLanguage={setSelectedLanguage}
+              setFilterTags={setFilterTags}
+            />
+          </Popover.Dropdown>
+        </Popover>
+      </Box>
       <Tabs.Panel value="overview">
         <SurveyStats survey={survey} />
       </Tabs.Panel>
