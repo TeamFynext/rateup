@@ -25,7 +25,7 @@ const smileyEmojiMap = {
   [SmileyResponse.Sad]: "🙁",
   [SmileyResponse.VerySad]: "😠",
 };
-export const ratingEmoji = '⭐️';
+export const ratingEmoji = "⭐️";
 
 export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {
@@ -356,9 +356,7 @@ export async function generateMessageDataFromQuestion(
   } else {
     // text question
     if (
-      [Q.Text, Q.Email, Q.Photo, Q.DateTime, Q.Number].includes(
-        question.type
-      )
+      [Q.Text, Q.Email, Q.Photo, Q.DateTime, Q.Number].includes(question.type)
     ) {
       return createTextMessage(to, title, description);
     } else if ([Q.MSQ, Q.MCQ, Q.CustomNPS].includes(question.type)) {
@@ -447,14 +445,18 @@ export async function parseResponse(
       case Q.Text:
       case Q.TextArea:
       case Q.Number:
-      case Q.Email:
       case Q.Opinion:
         return message;
+      case Q.Email:
+        return { email: message };
       case Q.Smiley:
         return waMessage.entry[0].changes[0].value.messages[0].interactive
           .list_reply.id;
       case Q.Rating:
-        return Number.parseInt(waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply.id)
+        return Number.parseInt(
+          waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply
+            .id,
+        );
       case Q.DateTime:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
           return "";
@@ -483,9 +485,9 @@ export async function parseResponse(
       }
       case Q.Phone:
         if (message === "Use this number") {
-          return session.phone;
+          return { phone: session.phone };
         } else {
-          return message;
+          return { phone: message };
         }
       case Q.WaList: {
         try {
@@ -520,7 +522,10 @@ export async function parseResponse(
 }
 
 /* Downloads image from whatsapp & uploads it to s3 */
-export async function downloadAndUpload(session: WaSessionWithRelations, imageId: string) {
+export async function downloadAndUpload(
+  session: WaSessionWithRelations,
+  imageId: string,
+) {
   const waSettings = await getWaSettings(session.orgId);
   const res = await callWhatsappApi(
     `/${imageId}`,

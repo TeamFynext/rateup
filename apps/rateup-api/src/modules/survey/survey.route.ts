@@ -10,11 +10,9 @@ import {
   updateSurveyPasswordHandler,
   getWhatsappSurveysHandler,
   updateGoogleLinkHandler,
-  createSurveyLandingHandler,
   getSurveysLandingHandler,
   getSurveyBylandingIdhandler,
   getLandingPageByIdHandler,
-  updateSurveyLandingHandler,
   getActiveSurveysSummaryHandler,
   getWebSurveysHandler,
   deleteTeamSurveyHandler,
@@ -50,33 +48,6 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     createSurveyHandler,
   );
-  // ----------create survey landing page ---------
-  server.post(
-    "/createlanding",
-    {
-      schema: {
-        body: $Sref("createSurveyLandingRequestSchema"),
-        response: {
-          201: $Sref("createSurveyLandingResponseSchema"),
-        },
-      },
-    },
-    createSurveyLandingHandler,
-  );
-  // ----------create survey landing page ---------
-  server.post(
-    "/updatelanding/:id",
-    {
-      schema: {
-        body: $Sref("createSurveyLandingRequestSchema"),
-        response: {
-          201: $Sref("createSurveyLandingResponseSchema"),
-        },
-      },
-    },
-    updateSurveyLandingHandler,
-  );
-
   // get all surveys from user
   server.get("/", getSurveysHandler);
 

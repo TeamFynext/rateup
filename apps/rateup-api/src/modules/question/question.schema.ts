@@ -58,7 +58,7 @@ const questionCore = {
       ),
     )
     .optional(),
-  features: z.record(z.string(), z.record(z.string(), z.boolean())).optional(),
+  features: z.record(z.string(), z.record(z.string(), z.any())).optional(),
   sections: z
     .record(
       z.string(),
@@ -87,6 +87,15 @@ const questionCore = {
     .optional(),
   logic: z.array(logicJumpSchema).optional(),
   validationRules: z.union([z.null(), validationRulesSchema]).optional(),
+  tnc: z
+    .record(
+      z.object({
+        title: z.string(),
+        urlTitle: z.string(),
+        content: z.string(),
+      }),
+    )
+    .optional(),
 };
 
 export const questionSchema = z.object({
