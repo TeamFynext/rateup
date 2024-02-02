@@ -50,8 +50,14 @@ export function ImageCheckbox({
   return (
     <UnstyledButton
       {...others}
-      c={"black"}
-      bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
+      c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+      bg={
+        !(titleTypeString
+          ? selectedValue === title
+          : selectedValue === title?.value)
+          ? returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)
+          : returnColorsForTheme(styleAttributeTypesEnum.ANSWEREDBG, theme)
+      }
       style={{
         borderColor: (
           titleTypeString

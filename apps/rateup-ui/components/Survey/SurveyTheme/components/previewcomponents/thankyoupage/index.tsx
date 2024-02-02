@@ -43,10 +43,8 @@ export default function ThankyouPageThemeView({
   }
   return (
     <Flex
-      w={"100%"}
       align={"center"}
-      mih="100%"
-      style={{ ...styles, flex: 1 }}
+      style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
       }}

@@ -13,16 +13,13 @@ import {
   Center,
   Image,
   Tooltip,
-  Badge,
 } from "@mantine/core";
 import {
   IconCheck,
   IconChevronLeft,
   IconCopy,
-  IconDownload,
   IconPlayerPause,
   IconPlayerPlay,
-  IconTags,
   IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -32,14 +29,8 @@ import {
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import {
-  DataGrid,
   GridPrintGetRowsToExportParams,
   GridRowId,
-  GridToolbarColumnsButton,
-  GridToolbarContainer,
-  GridToolbarExport,
-  GridToolbarFilterButton,
-  GridToolbarQuickFilter,
   gridFilteredSortedRowIdsSelector,
   selectedGridRowsSelector,
 } from "@mui/x-data-grid";
@@ -206,7 +197,7 @@ const ShareSurvey = ({
     return gridFilteredSortedRowIdsSelector(apiRef);
   };
   return (
-    <Stack p={2}>
+    <Stack p={2} h={"fit-content"}>
       <PaperLayout
         p="30px"
         style={{

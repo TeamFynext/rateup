@@ -1,5 +1,6 @@
 import {
   Badge,
+  Box,
   Group,
   LoadingOverlay,
   Stack,
@@ -55,17 +56,22 @@ export default function SurveyThemePreviewLayout({
           </Group>
         )}
       </Group>
-      <Group justify="center" h="100%">
+      <Box
+        style={{
+          display: "flex",
+          justifyContent: "center",
+        }}
+        h={"100%"}
+      >
         <PaperLayout
           p={0}
           h={"100%"}
           mah={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 650 : 1000}
-          w={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 300 : "100%"}
-          mih={"60vh"}
+          w={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 380 : "100%"}
         >
           {children}
         </PaperLayout>
-      </Group>
+      </Box>
     </Stack>
   );
 }

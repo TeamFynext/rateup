@@ -13,6 +13,7 @@ import {
   Group,
   MantineProvider,
   RingProgress,
+  ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
@@ -48,10 +49,8 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
   } = _surveyTheme;
   return (
     <Flex
-      w={"100%"}
       align={"center"}
-      mih="100%"
-      style={{ ...styles, flex: 1 }}
+      style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
       }}
@@ -112,15 +111,15 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
             </Text>
           </Box>
           <Stack align="center" style={{ flex: 1 }} mt={"lg"}>
-            <Flex
+            <ScrollArea
+              offsetScrollbars
+              scrollbarSize={5}
+              m="auto"
               style={{
                 width: "100%",
-                maxHeight: "250px",
-                flex: 1,
-                justifyContent: "center",
-                overflow: "auto",
+                maxHeight: "220px",
               }}
-              p={"md"}
+              p={"xs"}
             >
               <MantineProvider
                 theme={{
@@ -146,7 +145,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                   />
                 </CurrentResponsesContext.Provider>
               </MantineProvider>
-            </Flex>
+            </ScrollArea>
             <Group mt="auto" justify="right" w={"100%"} align="center">
               <Badge>{questionTypeEnumArray[currentQuestionTypeCount]}</Badge>
               <Group>
@@ -206,7 +205,7 @@ function NextPrev({ isMobile, buttonStyles }) {
       }}
       justify="flex-end"
     >
-      <Text c="gray" mb="md" size={isMobile && "sm"}>
+      <Text c={buttonStyles.backgroundColor} mb="md" size={isMobile && "sm"}>
         *Choose an option or answer to proceed!
       </Text>
       <Group justify="space-between">

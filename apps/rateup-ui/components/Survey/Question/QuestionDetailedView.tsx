@@ -12,9 +12,6 @@ import {
   Badge,
   Textarea,
   Image,
-  Switch,
-  Paper,
-  Flex,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { NPSWeightage, QuestionType } from "../../../types/enums";
@@ -34,7 +31,7 @@ import {
   logicSupportedTypes,
   validationSupportedTypes,
 } from "../../../utils/data";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { showErrorToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
@@ -141,82 +138,89 @@ export function QuestionDetailedView({
     deleteFileLoading;
   return (
     <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
-      <Stack justify="space-between" style={{ height: "100%" }}>
-        <ScrollArea style={{ height: "80%" }} scrollbarSize={0}>
-          <Stack>
-            <Badge variant="outline" size="lg">
-              {question.type}
-            </Badge>
-            <Group justify="space-between" p={2} gap={2}>
-              <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
-                <Textarea
-                  fw={800}
-                  fz="lg"
-                  ref={textInputRef}
-                  styles={{
-                    input: {
-                      fontSize: titleFontSize,
-                      fontWeight: 700, // set custom font size for this TextInput
-                    },
-                  }}
-                  style={{
-                    marginBottom: "20px", // add 30px bottom margin
-                  }}
-                  variant="unstyled"
-                  autosize
-                  maxRows={3}
-                  placeholder="Enter question title here *"
-                  {...form.getInputProps(`title.${selectedLanguage}`)}
-                  value={form.values.title[selectedLanguage]}
-                />
-                <Textarea
-                  variant="unstyled"
-                  placeholder="Enter question description here"
-                  {...form.getInputProps(`description.${selectedLanguage}`)}
-                  value={form.values.description[selectedLanguage]}
-                  styles={{
-                    input: {
-                      fontSize: "1.1rem",
-                      fontWeight: 400, // set custom font size for this TextInput
-                    },
-                  }}
-                />
-                <ExtraProps form={form} question={question} />
-              </Stack>
-              <LanguageCompletionView
-                selectedLanguage={selectedLanguage}
-                setSelectedLanguage={setSelectedLanguage}
-                languages={surveyLanguages}
-                notCompletedLanguages={incompleteLanguages}
+      <Stack style={{ height: "100%" }}>
+        <ScrollArea
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: "1 1 0",
+            overflow: "auto",
+          }}
+          scrollbarSize={5}
+          offsetScrollbars
+        >
+          <Badge variant="outline" size="lg">
+            {question.type}
+          </Badge>
+          <Group justify="space-between" p={2} gap={2}>
+            <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
+              <Textarea
+                fw={800}
+                fz="lg"
+                ref={textInputRef}
+                styles={{
+                  input: {
+                    fontSize: titleFontSize,
+                    fontWeight: 700, // set custom font size for this TextInput
+                  },
+                }}
+                style={{
+                  marginBottom: "20px", // add 30px bottom margin
+                }}
+                variant="unstyled"
+                autosize
+                maxRows={3}
+                placeholder="Enter question title here *"
+                {...form.getInputProps(`title.${selectedLanguage}`)}
+                value={form.values.title[selectedLanguage]}
               />
-            </Group>
-            <Divider
-              my="xs"
-              variant="dashed"
-              labelPosition="center"
-              label={
-                <>
-                  <IconEye size={12} />
-                  <Box ml={5}>Preview</Box>
-                </>
-              }
+              <Textarea
+                variant="unstyled"
+                placeholder="Enter question description here"
+                {...form.getInputProps(`description.${selectedLanguage}`)}
+                value={form.values.description[selectedLanguage]}
+                styles={{
+                  input: {
+                    fontSize: "1.1rem",
+                    fontWeight: 400, // set custom font size for this TextInput
+                  },
+                }}
+              />
+              <ExtraProps form={form} question={question} />
+            </Stack>
+            <LanguageCompletionView
+              selectedLanguage={selectedLanguage}
+              setSelectedLanguage={setSelectedLanguage}
+              languages={surveyLanguages}
+              notCompletedLanguages={incompleteLanguages}
             />
-            <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
-              <CurrentResponsesContext.Provider
-                value={{ response: currentResponse, updateResponse }}
-              >
-                <QuestionTypePreview
-                  type={question?.type}
-                  choices={form.values.choices}
-                  features={form.values.features}
-                  tnc={form.values.tnc}
-                />
-              </CurrentResponsesContext.Provider>
-            </Center>
-          </Stack>
+          </Group>
+          <Divider
+            my="xs"
+            variant="dashed"
+            labelPosition="center"
+            label={
+              <>
+                <IconEye size={12} />
+                <Box ml={5}>Preview</Box>
+              </>
+            }
+          />
+          <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
+            <CurrentResponsesContext.Provider
+              value={{ response: currentResponse, updateResponse }}
+            >
+              <QuestionTypePreview
+                type={question?.type}
+                choices={form.values.choices}
+                features={form.values.features}
+                tnc={form.values.tnc}
+              />
+            </CurrentResponsesContext.Provider>
+          </Center>
         </ScrollArea>
 
-        <Stack>
+        <Stack mt={"auto"}>
           <Divider />
 
           <Group mt="sm" justify="space-between" gap="sm">

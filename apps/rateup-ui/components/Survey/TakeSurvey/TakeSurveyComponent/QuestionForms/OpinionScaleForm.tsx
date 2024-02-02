@@ -27,6 +27,10 @@ export function OpinionScaleForm() {
         styleAttributeTypesEnum.BACKGROUND,
         theme,
       );
+      const borderColor = returnColorsForTheme(
+        styleAttributeTypesEnum.BORDER,
+        theme,
+      );
       const button = (
         <Button
           className={classes["opinion-scale-interval-btn"]}
@@ -41,7 +45,7 @@ export function OpinionScaleForm() {
             root: {
               backgroundColor:
                 response !== i && isHovered !== i ? bgColor : color,
-              borderColor: response !== i && color,
+              borderColor: response !== i && borderColor,
               borderWidth: "1px",
               color: response !== i && isHovered !== i ? color : "white",
             },

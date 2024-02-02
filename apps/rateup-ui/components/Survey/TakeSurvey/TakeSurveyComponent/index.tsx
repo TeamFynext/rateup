@@ -943,8 +943,8 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
       justify="flex-end"
     >
       <Text
-        c="gray"
         size={isMobile && "sm"}
+        c={themeStyles?.backgroundColor}
         style={{ opacity: selectedQ?.required && !response ? 1 : 0 }}
       >
         *Choose an option or answer to proceed!
@@ -959,7 +959,7 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
           size={isMobile ? "sm" : "lg"}
           variant="outlined"
           onClick={prev}
-          style={themeStyles}
+          style={!isFirstQuestion && themeStyles}
         />
         <Center>
           <RingProgress
@@ -999,7 +999,13 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
             onClick={handleNextClick}
             color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
-            style={themeStyles}
+            style={
+              !(
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              ) && themeStyles
+            }
           >
             Submit
           </Button>
@@ -1015,7 +1021,13 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
             onClick={handleNextClick}
             color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
-            style={themeStyles}
+            style={
+              !(
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              ) && themeStyles
+            }
           >
             Next
           </Button>

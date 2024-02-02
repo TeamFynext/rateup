@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import styles from "./SurveyTheme.module.css";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
@@ -12,7 +11,6 @@ import { Stack, Flex, Switch, Group, Tabs } from "@mantine/core";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import { SelectedItemEnum, ThemeTabEnum } from "./SurveyTheme.enums";
-import { useDisclosure } from "@mantine/hooks";
 
 function SurveyTheme({ survey }) {
   const [activeThemeTab, setActiveThemeTab] = useState<ThemeTabEnum>(
@@ -23,7 +21,6 @@ function SurveyTheme({ survey }) {
   );
   const { data: surveyTheme, isLoading } = useSurveyTheme(survey?.id);
   const editSurvey = useEditSurveyMutation(survey?.id);
-  const [opened, { open, close }] = useDisclosure(false);
   function availableThemeStyleComponents(): Array<SelectedItemEnum> {
     const common = [
       SelectedItemEnum.BACKGROUND,
@@ -50,38 +47,40 @@ function SurveyTheme({ survey }) {
       <StyledTabs
         value={activeThemeTab}
         onChange={(value) => setActiveThemeTab(value as ThemeTabEnum)}
-        styles={{ root: { flex: 1 } }}
+        styles={{
+          panel: {
+            height: "100%",
+          },
+        }}
       >
         <Tabs.List ml={"auto"} mr={"auto"}>
           <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>
           <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey Theme</Tabs.Tab>
           <Tabs.Tab value={ThemeTabEnum.THANKYOU}>Thankyou Page</Tabs.Tab>
         </Tabs.List>
-        <Flex justify={"space-between"}>
+        <Flex h={"calc(100% - 60px)"} p={"sm"}>
           <SurveyThemePreviewLayout
             isLoading={isLoading}
             survey={survey}
             themeType={activeThemeTab}
           >
-            <Tabs.Panel value={ThemeTabEnum.WELCOME} h="100%">
+            <Tabs.Panel value={ThemeTabEnum.WELCOME}>
               <WelcomePageThemeView {...{ selectedType, setSelectedType }} />
             </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.SURVEY} h={"100%"}>
+            <Tabs.Panel value={ThemeTabEnum.SURVEY}>
               <SurveyThemeView {...{ selectedType, setSelectedType }} />
             </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.THANKYOU} h={"100%"}>
+            <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
               <ThankyouPageThemeView {...{ selectedType, setSelectedType }} />
             </Tabs.Panel>
           </SurveyThemePreviewLayout>
-          <Stack style={{ flex: 0.3 }} miw={300} ml="xs">
+          <Stack h="100%" miw={300} ml="xs" gap={5} style={{ flex: 0.3 }}>
             {activeThemeTab === ThemeTabEnum.WELCOME && (
-              <PaperLayout
-                className={styles["enable-welcome-page-switch-container"]}
-              >
-                <Group justify="center">
+              <PaperLayout h={"60px"}>
+                <Group justify="center" h="100%" w="100%">
                   <Switch
                     fw={400}
-                    size="lg"
+                    size="sm"
                     label="Enable Welcome page"
                     checked={survey?.welcomePageEnabled}
                     color="var(--tertiary-color)"

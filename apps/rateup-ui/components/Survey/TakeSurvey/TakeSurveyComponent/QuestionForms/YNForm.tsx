@@ -7,7 +7,7 @@ import { YNResponse } from "../../../../../types/enums";
 export function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Group>
+    <Group p={"xs"}>
       <Box w={100}>
         <RateupButtonBlue
           size="md"
