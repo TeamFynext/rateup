@@ -50,10 +50,11 @@ export function ItemDetailedViewModal({
       <YoutubeEmbed
         embedId={extractVideoId(item?.videoUrl)}
         sx={{
-          width: "clamp(220px, 163.6624px + 15.0235vw, 380px)",
           aspectRatio: "4 / 3",
           borderRadius: "12px",
           border: "unset",
+          height: "100%",
+          width: "100%",
         }}
       />
     </Carousel.Slide>
@@ -102,10 +103,10 @@ export function ItemDetailedViewModal({
         <Stack align="center" c={"var(--grey-color)"} gap={0}>
           <Box
             style={{
-              maxWidth: "clamp(220px, 163.6624px + 15.0235vw, 380px)",
+              maxWidth: smallScreen
+                ? "80vw"
+                : "clamp(220px, 163.6624px + 15.0235vw, 380px)",
               minHeight: "180px",
-              minWidth: "180px",
-
               overflow: "clip",
             }}
           >
