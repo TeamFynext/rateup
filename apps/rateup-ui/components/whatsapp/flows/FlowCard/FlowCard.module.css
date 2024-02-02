@@ -20,8 +20,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   margin: 0;
-  margin-bottom: 1rem;
   font-size: 1.125rem;
+  flex: 1;
 }
 
 .blocked-badge {

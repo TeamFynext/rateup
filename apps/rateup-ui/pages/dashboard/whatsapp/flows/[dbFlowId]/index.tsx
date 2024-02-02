@@ -1,4 +1,4 @@
-import WhatsappFlowPage from "../../../../components/whatsapp/flows/FlowPage";
+import WhatsappFlowPage from "../../../../../components/whatsapp/flows/FlowPage";
 
 function FlowPage() {
   return <WhatsappFlowPage />;

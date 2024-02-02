@@ -39,6 +39,7 @@ import {
   WaFlowFormChoice,
   WaFlowFormElement,
   WaFlowJson,
+  WaFlowWa,
 } from "../../../types/global";
 import {
   getQuestionResponses,
@@ -99,7 +100,7 @@ export function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
 }
 
 interface ImportFlowsProps {
-  flows: Array<WaFlow>;
+  flows: Array<WaFlowWa>;
   handleClose: () => void;
 }
 /**
@@ -194,7 +195,7 @@ function ConfigureFlow({
   form,
   handleNext,
 }: {
-  flow: WaFlow;
+  flow: WaFlowWa;
   form: UseFormReturnType<any>;
   handleNext: () => void;
 }) {

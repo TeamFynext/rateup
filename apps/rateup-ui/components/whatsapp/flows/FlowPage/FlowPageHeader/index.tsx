@@ -1,15 +1,28 @@
-import { Box, Tabs } from "@mantine/core";
+import { Box, MultiSelect, Tabs } from "@mantine/core";
 import styles from "./FlowPageHeader.module.css";
-import { headerTabsList } from "../constants";
+import { useContext } from "react";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import SurveyContext from "../../../../../context/SurveyContext";
 
-function FlowPageHeader({ name, setTabState }) {
+export enum FlowTabEnum {
+  Edit = "Edit",
+  Settings = "Settings",
+  Share = "Share",
+  Result = "Result",
+}
+function FlowPageHeader({ name, tab, setTabState }) {
+  const { survey } = useContext(EditFlowContext);
+  const { filterTeams, setFilterTeams } = useContext(SurveyContext);
+  const multiSelectOptions = survey?.teams?.map((team) => {
+    return { value: team?.mapId, label: team?.name };
+  });
   return (
     <Box className={styles["flow-page-header"]}>
       <Box className={styles["heading-container"]}>
         <h1 className={styles["flow-page-heading-h1"]}>{name}</h1>
       </Box>
       <Tabs
-        defaultValue={headerTabsList[0]}
+        defaultValue={FlowTabEnum.Edit}
         classNames={{
           root: styles["tabs-root-div"],
           tab: styles["tabs-tab"],
@@ -18,7 +31,7 @@ function FlowPageHeader({ name, setTabState }) {
         onChange={setTabState}
       >
         <Tabs.List>
-          {headerTabsList.map((tabNameString) => {
+          {Object.values(FlowTabEnum).map((tabNameString) => {
             return (
               <Tabs.Tab key={tabNameString} value={tabNameString}>
                 {tabNameString}
@@ -27,7 +40,26 @@ function FlowPageHeader({ name, setTabState }) {
           })}
         </Tabs.List>
       </Tabs>
-      <Box className={styles["empty-div"]}></Box>
+      <Box
+        style={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        {tab === FlowTabEnum.Result ? (
+          <MultiSelect
+            w={"75%"}
+            radius={"10px"}
+            searchable
+            clearable
+            data={multiSelectOptions}
+            value={filterTeams}
+            onChange={setFilterTeams}
+            placeholder={filterTeams.length > 0 ? "" : "All Teams"}
+          />
+        ) : null}
+      </Box>
     </Box>
   );
 }

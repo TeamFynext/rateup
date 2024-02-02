@@ -2,31 +2,48 @@ import { Box, Button, Modal, TextInput } from "@mantine/core";
 import styles from "./FlowScreensList.module.css";
 import { useForm } from "@mantine/form";
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { FlowJsonObjContext } from "../EditFlow/FlowJsonObjContext";
 import {
   getNewScreenObj,
   getScreenObjById,
-  updateFlowJsonNavigateTerminalScreens,
-} from "./utils";
+  updateFlowJsonNavigationAndDataPassing,
+} from "../../../../../utils/whatsapp/flow.utils";
+import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
+import { showErrorToast } from "../../../../../utils/notifications";
+import { WaFlowJson } from "../../../../../types/global";
+import { Updater } from "use-immer";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
 
-function CreateFlowScreenModal({ opened, close, screenId = null }) {
-  const { flowJsonObj, setFlowJsonObj } = useContext(FlowJsonObjContext);
+function getInitialValues(screens) {
+  return {
+    screenId: getUniqueRandomAlphaId(
+      6,
+      screens.map(({ id }) => id),
+    ),
+    screenTitle: "",
+    footerBtnLabel: "Next",
+  };
+}
+interface CreateFlowScreenModalProps {
+  opened: boolean;
+  close: () => void;
+  screenId?: string;
+}
+function CreateFlowScreenModal({
+  opened,
+  close,
+  screenId = null,
+}: CreateFlowScreenModalProps) {
   const formElementRef = useRef(null);
+  const { flowJson, updateFlowJson } = useContext(EditFlowContext);
 
   const form = useForm({
-    initialValues: {
-      screenId: "",
-      screenTitle: "",
-      footerBtnLabel: "",
-    },
+    initialValues: getInitialValues(flowJson.screens),
     validate: {
       screenId: (value) => {
-        const isDuplicateId = flowJsonObj.screens.find(
-          ({ id }) => id === value,
-        );
-        if (isDuplicateId) {
-          return "A Screen with given id already exist.";
-        } else if (!/^[a-zA-Z,_]*$/.test(value)) {
+        if (!/^[a-zA-Z,_]*$/.test(value)) {
+          showErrorToast(
+            "Error Occured. Please report this bug to the developer. code: #flowsidval",
+          );
           return "Id should contain only alphabets and _";
         } else if (value === "") {
           return "Screen Id is required";
@@ -45,27 +62,23 @@ function CreateFlowScreenModal({ opened, close, screenId = null }) {
     },
   });
 
-  const handleFormSubmit = useCallback((values) => {
-    setFlowJsonObj((draft) => {
+  const handleCreate = useCallback((values) => {
+    updateFlowJson((draft) => {
       if (!screenId) {
         draft.screens.push(getNewScreenObj(values));
-        updateFlowJsonNavigateTerminalScreens(draft);
+        updateFlowJsonNavigationAndDataPassing(draft);
       } else {
         const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-        const layoutChildren =
-          screenToBeEdited.layout["children"][0]["children"];
-        const footerObj = layoutChildren[layoutChildren.length - 1];
-        screenToBeEdited["id"] = values.screenId;
         screenToBeEdited["title"] = values.screenTitle;
-        footerObj["label"] = values.footerBtnLabel;
       }
+      form.setValues(getInitialValues(draft.screens));
     });
     close();
   }, []);
 
   useEffect(() => {
     if (screenId) {
-      const screenToBeEdited = getScreenObjById(flowJsonObj.screens, screenId);
+      const screenToBeEdited = getScreenObjById(flowJson.screens, screenId);
       const layoutChildren = screenToBeEdited.layout["children"][0]["children"];
       const footerObj = layoutChildren[layoutChildren.length - 1];
       form.setValues({
@@ -85,23 +98,13 @@ function CreateFlowScreenModal({ opened, close, screenId = null }) {
       classNames={{ root: styles["create-flow-screen-modal-root"] }}
     >
       <form
-        onSubmit={form.onSubmit(handleFormSubmit)}
+        onSubmit={form.onSubmit(handleCreate)}
         className={styles["create-flow-screen-modal-form"]}
         ref={formElementRef}
       >
         <TextInput
-          placeholder="Enter Screen Id"
-          {...form.getInputProps("screenId")}
-        />
-
-        <TextInput
           placeholder="Enter Screen Title"
           {...form.getInputProps("screenTitle")}
-        />
-
-        <TextInput
-          placeholder="Enter Footer Button Label"
-          {...form.getInputProps("footerBtnLabel")}
         />
 
         <Button type="submit" className={styles["create-submit-btn"]}>

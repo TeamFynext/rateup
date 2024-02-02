@@ -20,7 +20,12 @@ export async function deleteQuestion(surveyId: string, questionId: string) {
 export async function reorderQuestions(surveyId: string, newOrder: string[]) {
   return axiosClient.put(`${QUESTION_URL}/${surveyId}/reorder`, newOrder);
 }
-
+export async function replaceQuestions(
+  surveyId: string,
+  questions: Question[],
+) {
+  return axiosClient.put(`${QUESTION_URL}/${surveyId}/replace`, questions);
+}
 export async function updateQuestion(
   surveyId: string,
   questionId: string,

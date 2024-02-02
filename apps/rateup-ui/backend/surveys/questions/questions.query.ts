@@ -3,6 +3,7 @@ import {
   createQuestion,
   deleteQuestion,
   getQuestions,
+  replaceQuestions,
   updateQuestion,
 } from "./questions.api";
 import { notifications } from "@mantine/notifications";
@@ -23,7 +24,6 @@ interface QuestionUpdateMutationArgs {
 
 interface iProps {
   surveyId: string;
-  setIsSaving?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
   const queryClient = useQueryClient();
@@ -34,6 +34,7 @@ export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
         message: "Question created",
       });
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
     onError: (e) => {
       console.error(e);
@@ -97,4 +98,21 @@ export const useQuestionDeleteMutation = (
   });
 
   return questionDeleteMutation;
+};
+
+export const useReplaceQuestionsMutation = (surveyId: string) => {
+  const queryClient = useQueryClient();
+  const replaceMutation = useMutation({
+    mutationFn: (questions: Question[]) => {
+      return replaceQuestions(surveyId, questions);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
+    onError: (e) => {
+      console.error(e);
+    },
+  });
+  return replaceMutation;
 };

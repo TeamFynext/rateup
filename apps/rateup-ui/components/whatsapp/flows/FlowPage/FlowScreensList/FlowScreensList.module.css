@@ -2,10 +2,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding-top: 8px;
+}
+.flow-screens-list-container > * {
+  margin: 0px 12px;
 }
 
 .heading-h1 {
-  margin: 0;
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
@@ -28,7 +31,8 @@
   flex: 1 1;
   flex-basis: 0;
   overflow: auto;
-  padding: 0 0.625rem;
+  margin: 0;
+  padding: 12px;
 }
 
 /* ScreenListItem styles */

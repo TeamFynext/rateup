@@ -12,9 +12,9 @@ import inputStyles from "./InputStyles.module.css";
 
 interface EditableTextProps {
   text: string;
-  setText: any;
+  setText: (text: string) => void;
   id: string;
-  setEditingItem: any;
+  setEditingItem: (id: any) => void;
   placeholder?: string;
   label?: string;
   editMode?: boolean;

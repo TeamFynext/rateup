@@ -1,8 +1,11 @@
 import {
   QuestionType,
   SentimentClass,
+  WaFlowFormElementType,
+  WaFlowFormNonInputElementType,
   SubscriptionFeaturePathName as sfpn,
 } from "../../types/enums";
+import { WaFlowFormElement } from "../../types/global";
 
 export const AuthMode = {
   VERIFY: "VERIFY",
@@ -37,7 +40,9 @@ export const importMethod = {
   CSV: "CSV",
 };
 
-export function getQuestionTypeLabel(type: QuestionType) {
+export function getQuestionTypeLabel(
+  type: QuestionType | WaFlowFormNonInputElementType,
+) {
   switch (type) {
     case QuestionType.Rating:
       return "Rating";
@@ -83,6 +88,14 @@ export function getQuestionTypeLabel(type: QuestionType) {
       return "WhatsApp List";
     case QuestionType.WaButtons:
       return "WhatsApp Buttons";
+    case WaFlowFormNonInputElementType.textBody:
+      return "Text Body";
+    case WaFlowFormNonInputElementType.textCaption:
+      return "Text Caption";
+    case WaFlowFormNonInputElementType.textHeading:
+      return "Text Heading";
+    case WaFlowFormNonInputElementType.textSubHeading:
+      return "Text Sub Heading";
     default:
       throw new Error("Invalid Question Type");
   }
@@ -119,5 +132,32 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "WhatsApp Campaign";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
+  }
+}
+
+export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
+  switch (type) {
+    case WaFlowFormElementType.textInput:
+      return "Text Input";
+    case WaFlowFormElementType.textArea:
+      return "Text Area";
+    case WaFlowFormElementType.datePicker:
+      return "Date Picker";
+    case WaFlowFormElementType.dropDown:
+      return "Drop Down";
+    case WaFlowFormElementType.radioButtonsGroup:
+      return "Radio Buttons Group";
+    case WaFlowFormElementType.checkboxGroup:
+      return "Checkbox Group";
+    case WaFlowFormElementType.textBody:
+      return "Text: Body";
+    case WaFlowFormElementType.textCaption:
+      return "Text: Caption";
+    case WaFlowFormElementType.textHeading:
+      return "Text: Heading";
+    case WaFlowFormElementType.textSubHeading:
+      return "Text: Sub Heading";
+    default:
+      throw new Error("Invalid WaFlowFormElementType" + type);
   }
 }

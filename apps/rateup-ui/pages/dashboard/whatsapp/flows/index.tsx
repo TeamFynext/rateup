@@ -20,13 +20,16 @@ function Flows() {
     isCreateFlowModalOpened,
     { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
   ] = useDisclosure(false);
-  const { data, isLoading } = useWaFlowsFromDb();
-  console.log(data);
+  let { data: flows, isLoading } = useWaFlowsFromDb();
 
   let componentToBeRendered = null;
-  if (data && data.length) {
-    componentToBeRendered = <FlowCardsList flows={data} />;
-  } else if (data && !data.length) {
+  if (flows && flows.length) {
+    flows = flows.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    componentToBeRendered = <FlowCardsList flows={flows} />;
+  } else if (flows && !flows.length) {
     componentToBeRendered = <NothingFound text="No Flows Available" />;
   }
 

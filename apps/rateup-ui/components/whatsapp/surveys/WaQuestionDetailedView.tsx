@@ -27,7 +27,7 @@ import {
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { QuestionType } from "../../../types/enums";
+import { QuestionType, SurveyType } from "../../../types/enums";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
@@ -77,7 +77,8 @@ export function WaQuestionDetailedView({
     if (!enableTitle) {
       form.setFieldValue(
         "title",
-        getInitialQuestionValues(question, surveyLanguages, "whatsapp").title,
+        getInitialQuestionValues(question, surveyLanguages, SurveyType.WhatsApp)
+          .title, // TODO: FIXME: this doesn't remove the title
       );
     }
   }, [enableTitle]);
@@ -93,7 +94,7 @@ export function WaQuestionDetailedView({
     initialValues: getInitialQuestionValues(
       question,
       surveyLanguages,
-      "whatsapp",
+      SurveyType.WhatsApp,
     ),
     validate: {
       description: (desc) => {
@@ -248,7 +249,7 @@ export function WaQuestionDetailedView({
               {...form.getInputProps(`description.${selectedLanguage}`)}
               value={form.values.description[selectedLanguage]}
             />
-            <ExtraProps form={form} question={question} />
+            <WaQuestionExtraProps form={form} question={question} />
           </Stack>
           <LanguageCompletionView
             selectedLanguage={selectedLanguage}
@@ -379,7 +380,7 @@ interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
 }
-function ExtraProps({ form, question }: ExtraPropsProps) {
+export function WaQuestionExtraProps({ form, question }: ExtraPropsProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   switch (question.type) {
     case QuestionType.MCQ:

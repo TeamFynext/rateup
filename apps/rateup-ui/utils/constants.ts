@@ -30,7 +30,13 @@ export const WaNPSQuestions = [
   QuestionType.Opinion,
   QuestionType.CustomNPS,
 ];
-
+export const FlowNpsQ = [
+  QuestionType.Rating,
+  QuestionType.Smiley,
+  QuestionType.LD,
+  QuestionType.YN,
+  QuestionType.Opinion,
+];
 export const OtherQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
@@ -53,6 +59,13 @@ export const WaOtherQuestions = [
   QuestionType.Photo,
   QuestionType.Testimonial,
 ];
+const FlowOtherQuestions = [
+  QuestionType.Text,
+  QuestionType.MCQ,
+  QuestionType.MSQ,
+  QuestionType.DDSS,
+  QuestionType.DateTime,
+];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
@@ -67,6 +80,19 @@ export const WaSurveyQuestionTypes = [
   { title: "NPS Questions", questionTypes: WaNPSQuestions },
   { title: "Other Questions", questionTypes: WaOtherQuestions },
   { title: "WhatsApp Exclusive Questions", questionTypes: WaExclusive },
+];
+const flowNonInputElements = [
+  wft.textHeading,
+  wft.textSubHeading,
+  wft.textBody,
+  wft.textCaption,
+];
+export const FlowQuestionTypes = [
+  // also includes non-input elements like text & links
+  { title: "Contact Questions", questionTypes: WaContactQuestions },
+  { title: "NPS Questions", questionTypes: FlowNpsQ },
+  { title: "Other Questions", questionTypes: FlowOtherQuestions },
+  { title: "Non-Input Elements", questionTypes: flowNonInputElements },
 ];
 
 export const ChoiceTypeQuestions = [

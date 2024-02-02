@@ -57,6 +57,7 @@ interface QuestionDetailedViewProps {
   setActiveTab: (tab: QuestionTabsEnum) => void;
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
+  surveyId?: string;
 }
 export function QuestionDetailedView({
   question,
@@ -64,9 +65,10 @@ export function QuestionDetailedView({
   setActiveTab,
   surveyLanguages,
   setSelectedLanguage,
+  surveyId,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
+  surveyId = surveyId || (router.query?.surveyId as string);
   const [titleFontSize, setTitleFontSize] = useState("2rem");
   const textInputRef = useRef(null);
 

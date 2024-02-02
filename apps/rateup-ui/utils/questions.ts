@@ -1,4 +1,4 @@
-import { QuestionType } from "../types/enums";
+import { QuestionType, SurveyType } from "../types/enums";
 import { ChoiceTypeQuestions } from "./constants";
 
 export function reorder<T>(
@@ -15,6 +15,7 @@ export function reorder<T>(
 export function createBlankQuestion(
   type: QuestionType,
   language: string,
+  surveyType = SurveyType.Web,
 ): Question {
   return {
     // TODO: only set id when saving to db?
@@ -25,6 +26,12 @@ export function createBlankQuestion(
     description: {
       [language]: "",
     },
+    label:
+      surveyType === SurveyType.WaFlow
+        ? {
+            [language]: "",
+          }
+        : undefined,
     required: true,
     type,
   };
@@ -57,7 +64,7 @@ export function validateAllLanguagesArePopulated(
 export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,
-  type = "web",
+  type = SurveyType.Web,
 ): Omit<Question, "id"> => {
   const emptyText = {};
   languages.forEach((lang) => {
@@ -66,11 +73,16 @@ export const getInitialQuestionValues = (
   return {
     title: { ...emptyText, ...question?.title },
     description: { ...emptyText, ...question?.description },
+    label:
+      type === SurveyType.WaFlow
+        ? { ...emptyText, ...question?.label }
+        : undefined,
     required: question?.required,
     type: question?.type,
     choices: question?.choices,
     features: question?.features,
-    sections: type === "whatsapp" ? question?.sections || {} : undefined,
+    sections:
+      type === SurveyType.WhatsApp ? question?.sections || {} : undefined,
   };
 };
 
@@ -99,3 +111,7 @@ export function validateChoices(
     );
   }
 }
+
+export const OpinionResponses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+export const RatingResponses = [1, 2, 3, 4, 5];
+export const ratingEmoji = "⭐️";

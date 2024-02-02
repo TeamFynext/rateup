@@ -36,19 +36,23 @@ type ValidationRules = {
 
 export {};
 declare global {
-  type Question = {
+  interface Question {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
     features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
-    sections?: Zod.RecordType<string, WaSectionsType>;
+    sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
+    label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;
     googleReview?: GoogleReview;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
-  };
+  }
+  interface FlowQuestion extends Question {
+    label: Zod.RecordType<string, string>;
+  }
   type WaSectionsType = Array<{
     title?: string;
     rows: Array<{ title: string; description: string }>;
@@ -496,6 +500,17 @@ declare global {
     phone: string;
     address: string;
   };
+  type DbFlow = {
+    dbFlowId: string;
+    createdAt: Date;
+    flowId: string;
+    name: string;
+    status: string;
+    json: WaFlowJson;
+    map: any;
+    orgId: string;
+    surveyId: string;
+  };
 }
 
 export interface MenuLanding {
@@ -546,9 +561,15 @@ export type ReviewSuggestion = {
 
 export type WaFlow = {
   name: string;
-  id: string;
   status: WaFlowStatus;
   json: WaFlowJson;
+  dbFlowId: string;
+  createdAt: Date;
+  flowId: string | null;
+  name: string;
+  map: any;
+  orgId: string;
+  surveyId: string;
 };
 export type WaFlowJson = {
   version: string;
@@ -558,10 +579,15 @@ export type WaFlowScreen = {
   id: string;
   title: string;
   layout: WaFlowLayout;
-  data: any; // add types
+  data?: any; // add types
   terminal: boolean;
 };
-
+export type WaFlowWa = {
+  // wa flow type from whatsapp
+  name: string;
+  id: string;
+  status: WaFlowStatus;
+};
 export type WaFlowLayout = {
   type: WaFlowLayoutType;
   children: Array<WaFlowForm>;
@@ -574,14 +600,23 @@ export type WaFlowForm = {
 };
 
 export type WaFlowFormElement = {
+  id: string; // for internal use only
   type: WaFlowFormElementType;
   text?: string;
   label?: string;
   name?: string;
   required?: boolean;
   "input-type"?: string; // add types
-  "on-click-action": WaFlowOnClickAction;
-  "data-source": Array<WaFlowFormChoice>;
+  "on-click-action"?: WaFlowOnClickAction;
+  "data-source"?: Array<WaFlowFormChoice>;
+};
+
+export type WaFlowMap = {
+  [flowElementName: string]: {
+    questionId: string;
+    type: QuestionType;
+    [key: string]: any; // Choices. add types
+  };
 };
 
 export type WaFlowFormChoice = {

@@ -6,8 +6,16 @@ import {
   getWaFlowJson,
   importFlows,
   getWaFlowFromDb,
+  createFlowInput,
+  createFlow,
+  updateFlow,
+  getFlowPreview,
+  deleteFlow,
+  publishFlow,
+  deprecateFlow,
 } from "./flow.api";
 import { showSuccessToast } from "../../../utils/notifications";
+import { WaFlow } from "../../../types/global";
 
 export const useWaFlowsFromDb = () =>
   useQuery({
@@ -28,16 +36,25 @@ export const useUnsyncedFlows = (enabled: boolean) =>
     enabled,
   });
 
-export const useWaFlowFromDb = (flowId: string) =>
+export const useWaFlowFromDb = (dbFlowId: string) =>
   useQuery({
-    queryKey: ["flow", "db", flowId],
-    queryFn: () => getWaFlowFromDb(flowId),
+    queryKey: ["flow", "db", dbFlowId],
+    queryFn: () => getWaFlowFromDb(dbFlowId),
+    enabled: !!dbFlowId,
   });
 
 export const useWaFlowJson = (flowId: string) =>
   useQuery({
     queryKey: ["flow", "wa", flowId],
     queryFn: () => getWaFlowJson(flowId),
+    enabled: !!flowId,
+  });
+
+export const useWaFlowPreview = (dbFlowId: string) =>
+  useQuery({
+    queryKey: ["flow", "preview", dbFlowId],
+    queryFn: () => getFlowPreview(dbFlowId),
+    enabled: !!dbFlowId,
   });
 
 export const useImportFlowsMutation = () => {
@@ -59,6 +76,80 @@ export const useImportFlowsMutation = () => {
     },
     onError: () => {
       showSuccessToast("Error importing flows");
+    },
+  });
+};
+
+export const useCreateFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: createFlowInput) => createFlow(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: ["surveys"] });
+      showSuccessToast("Flow Created Successfully");
+    },
+    onError: () => {
+      showSuccessToast("Error creating flows");
+    },
+  });
+};
+export const useUpdateFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      dbFlowId: string;
+      data: Partial<Omit<WaFlow, "dbFlowId">>;
+    }) => updateFlow(data.dbFlowId, data.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: ["surveys"] });
+    },
+    onError: () => {
+      showSuccessToast("Error saving flows");
+    },
+  });
+};
+
+export const useDeleteFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteFlow,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: ["surveys"] });
+      showSuccessToast("Flow Deleted Successfully");
+    },
+    onError: () => {
+      showSuccessToast("Error deleting flows");
+    },
+  });
+};
+
+export const usePublishFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: publishFlow,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      showSuccessToast("Flow Published Successfully");
+    },
+    onError: () => {
+      showSuccessToast("Error publishing flows");
+    },
+  });
+};
+
+export const useDeprecateFlowMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deprecateFlow,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      showSuccessToast("Flow Deprecated Successfully");
+    },
+    onError: () => {
+      showSuccessToast("Error deprecating flows");
     },
   });
 };

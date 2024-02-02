@@ -1,0 +1,96 @@
+.TextHeading {
+  font-weight: 700;
+  padding: unset;
+  line-height: 1.43;
+  font-size: 24px;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  text-align: start;
+  color: rgb(17, 27, 33);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.TextSubHeading {
+  line-height: 1.3;
+  font-size: 20px;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  text-align: start;
+  color: rgb(17, 27, 33);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.TextCaption {
+  padding: unset;
+  transform: translateY(calc(0.2275em));
+  line-height: 1.755;
+  font-size: 14px;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  text-align: start;
+  color: rgb(102, 119, 129);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.TextBody {
+  padding: unset;
+  transform: translateY(calc(0.182em));
+  line-height: 1.664;
+  font-size: 16px;
+  text-align: start;
+  color: rgb(17, 27, 33);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.textInput {
+  border-bottom: 1px solid #9faab0;
+  cursor: pointer;
+}
+
+.font {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+.datePicker {
+  border: "unset";
+}
+.inputLabel {
+  line-height: 1.586;
+  font-size: 14px;
+  text-align: start;
+  color: rgb(102, 119, 129) !important;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
