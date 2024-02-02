@@ -14,14 +14,14 @@ const TabsCommon = (props: TabsProps & TabsCommonProps) => {
           </Tabs.Tab>
         ))}
       </Tabs.List>
-      <MotionTransition
+      {/* <MotionTransition
         keyValue={{ id: restData.value ? restData.value : null }}
         duration={0.6}
         apEnable={false}
         type="fade"
-      >
-        {children}
-      </MotionTransition>
+      > */}
+      {children}
+      {/* </MotionTransition> */}
     </Tabs>
   );
 };

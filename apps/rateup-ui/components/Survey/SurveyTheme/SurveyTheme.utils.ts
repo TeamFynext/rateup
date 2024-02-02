@@ -95,24 +95,18 @@ export function returnColorsForTheme(
   styleAttrubute: styleAttributeTypesEnum,
   mantineTheme: MantineTheme,
 ): string {
-  if (mantineTheme.primaryColor === defaultThemeName.RATEUP_BLUE) {
-    switch (styleAttrubute) {
-      case styleAttributeTypesEnum.BACKGROUND:
+  switch (styleAttrubute) {
+    case styleAttributeTypesEnum.BACKGROUND:
+      if (mantineTheme.primaryColor === defaultThemeName.RATEUP_BLUE) {
         return "#FFFFFF";
-      case styleAttributeTypesEnum.TEXT:
-        return "#2E2E2E";
-      case styleAttributeTypesEnum.BORDER:
-        return "#FFFFFF";
-    }
-  } else {
-    switch (styleAttrubute) {
-      case styleAttributeTypesEnum.BACKGROUND:
-        return mantineTheme.colors[mantineTheme.primaryColor][1];
-      case styleAttributeTypesEnum.TEXT:
-        return mantineTheme.colors[mantineTheme.primaryColor][9];
-      case styleAttributeTypesEnum.BORDER:
-        return mantineTheme.colors[mantineTheme.primaryColor][9];
-    }
+      }
+      return mantineTheme.colors[mantineTheme.primaryColor][0];
+    case styleAttributeTypesEnum.TEXT:
+      return mantineTheme.colors[mantineTheme.primaryColor][9];
+    case styleAttributeTypesEnum.BORDER:
+      return mantineTheme.colors[mantineTheme.primaryColor][9];
+    case styleAttributeTypesEnum.ANSWEREDBG:
+      return mantineTheme.colors[mantineTheme.primaryColor][1];
   }
 }
 

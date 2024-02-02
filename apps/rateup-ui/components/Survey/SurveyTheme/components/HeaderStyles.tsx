@@ -1,11 +1,4 @@
-import {
-  Select,
-  Stack,
-  Text,
-  NumberInput,
-  ScrollArea,
-  Divider,
-} from "@mantine/core";
+import { Select, Stack, Text, NumberInput, Divider } from "@mantine/core";
 import { Title } from "../surveyTheme.types";
 import { FontWeights } from "../SurveyTheme.constants";
 import CustomColorPicker from "./customelements/CustomColorPicker";
@@ -19,7 +12,7 @@ function HeaderStyles({
   setCurrentstyles: (key: string, value: any) => void;
 }) {
   return (
-    <ScrollArea h={"40vh"} w={"100%"}>
+    <>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
         <Select
@@ -73,7 +66,7 @@ function HeaderStyles({
           }}
         />
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 

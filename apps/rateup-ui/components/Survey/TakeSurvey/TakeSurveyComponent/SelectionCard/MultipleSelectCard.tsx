@@ -39,6 +39,8 @@ export function ImageCheckbox({
   });
   const checkBoxRef = useRef(null);
   const theme = useMantineTheme();
+  console.log(theme);
+  console.log(title === selectedValue[0]);
   return (
     <UnstyledButton
       {...others}
@@ -49,12 +51,15 @@ export function ImageCheckbox({
       data-checked={selectedValue.includes(title) || undefined}
       className={classes.button}
       c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
-      bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
+      bg={
+        selectedValue.includes(title)
+          ? returnColorsForTheme(styleAttributeTypesEnum.ANSWEREDBG, theme)
+          : returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)
+      }
       style={{
-        borderColor: returnColorsForTheme(
-          styleAttributeTypesEnum.BORDER,
-          theme,
-        ),
+        borderColor: selectedValue.includes(title)
+          ? returnColorsForTheme(styleAttributeTypesEnum.BORDER, theme)
+          : undefined,
       }}
     >
       <Checkbox
