@@ -4,8 +4,6 @@ import { useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { DateInput } from "@mantine/dates";
 import { IconCalendarEvent } from "@tabler/icons-react";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function DateForm({ isPreview }: { isPreview?: boolean }) {
@@ -24,7 +22,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
         leftSection={
           <IconCalendarEvent
             size="1.2rem"
-            color={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+            color={`var(--mantine-color-${theme.primaryColor}-outline)`}
           />
         }
         classNames={{

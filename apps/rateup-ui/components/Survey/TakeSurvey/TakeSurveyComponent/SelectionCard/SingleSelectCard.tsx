@@ -9,12 +9,10 @@ import {
   Stack,
   useMantineTheme,
 } from "@mantine/core";
-import { useUncontrolled } from "@mantine/hooks";
+import { useHover, useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
 import { getImageValue } from "../../../../../utils/file-upload/upload";
 import cx from "clsx";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -47,25 +45,36 @@ export function ImageCheckbox({
   const radioButtonRef = useRef(null);
   const titleTypeString = typeof title === "string";
   const theme = useMantineTheme();
+  const { hovered, ref } = useHover() as {
+    hovered: boolean;
+    ref: React.RefObject<HTMLButtonElement>;
+  };
   return (
     <UnstyledButton
       {...others}
-      c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
-      bg={
-        !(titleTypeString
-          ? selectedValue === title
-          : selectedValue === title?.value)
-          ? returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)
-          : returnColorsForTheme(styleAttributeTypesEnum.ANSWEREDBG, theme)
-      }
-      style={{
-        borderColor: (
+      ref={ref}
+      c={
+        (
           titleTypeString
             ? selectedValue === title
             : selectedValue === title?.value
         )
-          ? returnColorsForTheme(styleAttributeTypesEnum.BORDER, theme)
-          : undefined,
+          ? "var(--mantine-color-white)"
+          : `var(--mantine-color-${theme.primaryColor}-outline)`
+      }
+      bg={
+        (
+          titleTypeString
+            ? selectedValue === title
+            : selectedValue === title?.value
+        )
+          ? `var(--mantine-color-${theme.primaryColor}-filled)`
+          : !hovered
+          ? ""
+          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+      }
+      style={{
+        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
       }}
       onClick={() => {
         handleChange(true);

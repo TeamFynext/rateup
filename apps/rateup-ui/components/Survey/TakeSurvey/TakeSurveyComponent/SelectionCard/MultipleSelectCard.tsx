@@ -6,10 +6,8 @@ import {
   SimpleGrid,
   useMantineTheme,
 } from "@mantine/core";
-import { useUncontrolled } from "@mantine/hooks";
+import { useHover, useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -39,27 +37,34 @@ export function ImageCheckbox({
   });
   const checkBoxRef = useRef(null);
   const theme = useMantineTheme();
-  console.log(theme);
-  console.log(title === selectedValue[0]);
+  const { hovered, ref } = useHover() as {
+    hovered: boolean;
+    ref: React.RefObject<HTMLButtonElement>;
+  };
   return (
     <UnstyledButton
       {...others}
+      ref={ref}
       onClick={() => {
         handleChange(!value);
         checkBoxRef?.current?.click();
       }}
       data-checked={selectedValue.includes(title) || undefined}
       className={classes.button}
-      c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+      c={
+        selectedValue.includes(title)
+          ? "var(--mantine-color-white)"
+          : `var(--mantine-color-${theme.primaryColor}-outline)`
+      }
       bg={
         selectedValue.includes(title)
-          ? returnColorsForTheme(styleAttributeTypesEnum.ANSWEREDBG, theme)
-          : returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)
+          ? `var(--mantine-color-${theme.primaryColor}-filled)`
+          : !hovered
+          ? ""
+          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
       }
       style={{
-        borderColor: selectedValue.includes(title)
-          ? returnColorsForTheme(styleAttributeTypesEnum.BORDER, theme)
-          : undefined,
+        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
       }}
     >
       <Checkbox

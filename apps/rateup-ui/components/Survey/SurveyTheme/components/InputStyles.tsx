@@ -1,8 +1,9 @@
-import { Stack, Text, ScrollArea, Divider } from "@mantine/core";
+import { Stack, Text, Divider, Button, Group } from "@mantine/core";
 
 import React from "react";
 import { Input } from "../surveyTheme.types";
 import CustomColorSwatch from "./customelements/CustomColorSwatch";
+import { defaultThemeName } from "../SurveyTheme.enums";
 
 function InputStyles({
   currentStyles,
@@ -12,12 +13,28 @@ function InputStyles({
   setCurrentstyles: (key: string, value: any) => void;
 }) {
   return (
-    <ScrollArea h={"40vh"} w={"100%"}>
+    <>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
-        <Text mt={10} fw={500}>
-          Choose component color
-        </Text>
+        <Group justify="space-between" w={"100%"}>
+          <Text c={"dimmed"} fz="xs">
+            Choose component color
+          </Text>
+          <Button
+            bg={"var(--tertiary-color)"}
+            size="compact-sm"
+            fz={"xs"}
+            onClick={() => {
+              setCurrentstyles("input", {
+                ...currentStyles,
+                primaryColor: defaultThemeName.RATEUP_BLUE,
+              });
+            }}
+          >
+            Reset
+          </Button>
+        </Group>
+
         <CustomColorSwatch
           value={currentStyles?.primaryColor}
           onChange={(e) => {
@@ -28,7 +45,7 @@ function InputStyles({
           }}
         />
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 

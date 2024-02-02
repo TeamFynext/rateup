@@ -2,9 +2,6 @@ import { useContext, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { Button, Flex, Group, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
-
 export function OpinionScaleForm() {
   const theme = useMantineTheme();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -22,15 +19,6 @@ export function OpinionScaleForm() {
     const oneToFive = [];
     const fiveToTen = [];
     for (let i = 1; i <= 10; i++) {
-      const color = returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme);
-      const bgColor = returnColorsForTheme(
-        styleAttributeTypesEnum.BACKGROUND,
-        theme,
-      );
-      const borderColor = returnColorsForTheme(
-        styleAttributeTypesEnum.BORDER,
-        theme,
-      );
       const button = (
         <Button
           className={classes["opinion-scale-interval-btn"]}
@@ -39,15 +27,22 @@ export function OpinionScaleForm() {
           onMouseLeave={handleLeave}
           radius="xs"
           onClick={() => updateResponse(i)}
-          color={"var(--tertiary-color)"}
           variant={response === i ? "filled" : "outline"}
           styles={{
             root: {
               backgroundColor:
-                response !== i && isHovered !== i ? bgColor : color,
-              borderColor: response !== i && borderColor,
-              borderWidth: "1px",
-              color: response !== i && isHovered !== i ? color : "white",
+                response === i
+                  ? `var(--mantine-color-${theme.primaryColor}-filled)`
+                  : isHovered !== i
+                  ? ""
+                  : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+              borderColor:
+                response !== i &&
+                `var(--mantine-color-${theme.primaryColor}-outline)`,
+              color:
+                response === i
+                  ? "var(--mantine-color-white)"
+                  : `var(--mantine-color-${theme.primaryColor}-outline)`,
             },
           }}
         >

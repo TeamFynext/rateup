@@ -7,20 +7,17 @@ import classes from "../TakeSurvey.module.css";
 import "react-phone-number-input/style.css";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import FormPaperLayout from "./layout/FormPaperLayout";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
 
 const ContactForm = ({ features }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];
   const theme = useMantineTheme();
-  console.log(features);
   return (
     <Stack w={"100%"} gap={"lg"}>
       {selectedFeature?.name.isEnabled && (
         <Stack gap={"xs"}>
-          <Text c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}>
+          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
             {selectedFeature.name.headText}
           </Text>
           <FormPaperLayout>
@@ -41,7 +38,7 @@ const ContactForm = ({ features }) => {
       )}
       {selectedFeature?.phone.isEnabled && (
         <Stack gap={"xs"}>
-          <Text c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}>
+          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
             {selectedFeature.phone.headText}
           </Text>
           <FormPaperLayout>
@@ -61,7 +58,7 @@ const ContactForm = ({ features }) => {
       )}
       {selectedFeature?.email.isEnabled && (
         <Stack gap={"xs"}>
-          <Text c={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}>
+          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
             {selectedFeature.email.headText}
           </Text>
           <FormPaperLayout>
@@ -79,10 +76,7 @@ const ContactForm = ({ features }) => {
               leftSection={
                 <IconMail
                   size="1.2rem"
-                  color={returnColorsForTheme(
-                    styleAttributeTypesEnum.TEXT,
-                    theme,
-                  )}
+                  color={`var(--mantine-color-${theme.primaryColor}-outline)`}
                 />
               }
             />

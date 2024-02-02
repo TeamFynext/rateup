@@ -3,8 +3,6 @@ import { CurrentResponsesContext } from "../../../../../context/ResponseContext"
 import { TextInput, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { IconMail } from "@tabler/icons-react";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function EmailForm() {
@@ -20,7 +18,7 @@ export function EmailForm() {
         leftSection={
           <IconMail
             size="1.2rem"
-            color={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+            color={`var(--mantine-color-${theme.primaryColor}-outline)`}
           />
         }
         variant="unstyled"

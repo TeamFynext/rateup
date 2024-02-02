@@ -94,7 +94,6 @@ function GoogleReview({ googleLink, reviewSuggestions, orgLogoUrl }) {
         <h2 className={lexend500.className}>Make us more happy!</h2>
         <Box className={styles["leave-review-paras-container"]}>
           <p>Leave us a review on Google.</p>
-          <p>That is all you need to do.</p>
         </Box>
       </Box>
       {reviewSuggestions?.length >= 3 && (

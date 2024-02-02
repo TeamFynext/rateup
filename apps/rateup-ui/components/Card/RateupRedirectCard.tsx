@@ -6,15 +6,13 @@ import {
   Text,
   useMantineTheme,
 } from "@mantine/core";
-import { returnColorsForTheme } from "../Survey/SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../Survey/SurveyTheme/SurveyTheme.enums";
 
 export default function RateupRedirectCard({ className = "" }) {
   const theme = useMantineTheme();
   return (
     <Center
       className={className}
-      bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
+      bg={`var(--mantine-color-${theme.primaryColor}-outline-hover)`}
       w={"fit-content"}
       m={"auto"}
       px={"sm"}
