@@ -275,13 +275,25 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
               }
             />
-            <IconChevronLeft
-              size={25}
-              onClick={() => {
-                setOpened((o) => !o);
+            <PaperLayout
+              w={"fit-content"}
+              p={2}
+              hoveractive
+              radius={"md"}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                display: "flex",
               }}
-              style={{ cursor: "pointer" }}
-            />
+            >
+              <IconChevronLeft
+                size={25}
+                onClick={() => {
+                  setOpened((o) => !o);
+                }}
+                style={{ cursor: "pointer" }}
+              />
+            </PaperLayout>
           </Group>
         </Stack>
       ) : (
@@ -348,7 +360,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       </ScrollArea>
       <Stack gap={10}>
         <Combobox>
-          <Menu shadow="md">
+          <Menu shadow="md" onClose={() => setIsDropdownOpen(false)}>
             <Menu.Target>
               <Box>
                 {opened ? (
@@ -377,7 +389,14 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                   </PaperLayout>
                 ) : (
                   <Avatar
-                    src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`}
+                    onClick={() => {
+                      setOpened((o) => !o);
+                    }}
+                    src={
+                      user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
+                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`
+                        : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
+                    }
                     alt=""
                     radius="xl"
                     size={30}
@@ -395,7 +414,13 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
                 <Menu.Item key={index} onClick={() => handleItemClick(item)}>
                   <Flex style={{ marginLeft: "1rem", marginTop: "0.5rem" }}>
                     {item.Icon && <item.Icon size={30} />}
-                    <Text style={{ fontSize: "20px", marginLeft: "1rem" }}>
+                    <Text
+                      style={{
+                        fontSize: "15px",
+                        marginLeft: "1rem",
+                        color: "grey",
+                      }}
+                    >
                       {item.label}
                     </Text>
                   </Flex>
