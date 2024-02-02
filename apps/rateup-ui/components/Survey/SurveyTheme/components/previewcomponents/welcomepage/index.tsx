@@ -41,10 +41,8 @@ export default function WelcomePageThemeView({
   } = welcomeTheme;
   return (
     <Flex
-      w={"100%"}
       align={"center"}
-      mih="100%"
-      style={{ ...styles, flex: 1 }}
+      style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
       }}
@@ -197,9 +195,9 @@ export default function WelcomePageThemeView({
               </ActionIcon>
               <TextInput
                 onChange={(e) =>
-                  updateThemeText("subtitle", {
-                    ...welcomeTheme.subtitle,
-                    subtitle: e.target.value,
+                  updateThemeText("button", {
+                    ...welcomeTheme.button,
+                    label: e.target.value,
                   })
                 }
                 value={label}

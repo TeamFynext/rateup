@@ -6,7 +6,6 @@ import {
   Group,
   ActionIcon,
   Divider,
-  ScrollArea,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, ReactNode } from "react";
@@ -119,7 +118,7 @@ function BackgroundStyles({
 
   const [bgTab, setBgTab] = useState<BgTab>(BgTab.BGCOLOR);
   return (
-    <ScrollArea h={"40vh"} w={"100%"}>
+    <>
       <Stack align="center" w={"100%"}>
         <UnsplashModal
           handleUnsplashImageSave={handleUnsplashImageSave}
@@ -271,7 +270,7 @@ function BackgroundStyles({
           </Stack>
         </Stack>
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 

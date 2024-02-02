@@ -20,6 +20,7 @@ export enum styleAttributeTypesEnum {
   BACKGROUND = "background",
   TEXT = "text",
   BORDER = "border",
+  ANSWEREDBG = "answered",
 }
 
 export enum PreviewTypeEnum {

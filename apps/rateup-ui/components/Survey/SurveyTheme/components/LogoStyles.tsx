@@ -7,7 +7,6 @@ import {
   ActionIcon,
   Group,
   Text,
-  ScrollArea,
   Divider,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
@@ -57,7 +56,7 @@ function LogoStyles({
     setisFileLoading(false);
   };
   return (
-    <ScrollArea h={"40vh"} w={"100%"}>
+    <>
       <ImageCropModal
         opened={openedCropDialog}
         onclose={closeCropDialog}
@@ -144,7 +143,7 @@ function LogoStyles({
           </Stack>
         </Stack>
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 
