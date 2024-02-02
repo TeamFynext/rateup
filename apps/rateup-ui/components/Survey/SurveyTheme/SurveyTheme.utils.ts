@@ -2,8 +2,6 @@ import { produce } from "immer";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { SelectedItemEnum } from "./SurveyTheme.enums";
 import { SurveyTheme } from "./surveyTheme.types";
-import { MantineTheme } from "@mantine/core";
-import { defaultThemeName, styleAttributeTypesEnum } from "./SurveyTheme.enums";
 import { QuestionType } from "../../../types/enums";
 
 export function getImageUrl(imageObject: string | Blob) {
@@ -89,25 +87,6 @@ export async function destructureThemeAndUploadImagesIfAny(
     ] = urls;
   });
   return newSurveyTheme;
-}
-
-export function returnColorsForTheme(
-  styleAttrubute: styleAttributeTypesEnum,
-  mantineTheme: MantineTheme,
-): string {
-  switch (styleAttrubute) {
-    case styleAttributeTypesEnum.BACKGROUND:
-      if (mantineTheme.primaryColor === defaultThemeName.RATEUP_BLUE) {
-        return "#FFFFFF";
-      }
-      return mantineTheme.colors[mantineTheme.primaryColor][0];
-    case styleAttributeTypesEnum.TEXT:
-      return mantineTheme.colors[mantineTheme.primaryColor][9];
-    case styleAttributeTypesEnum.BORDER:
-      return mantineTheme.colors[mantineTheme.primaryColor][9];
-    case styleAttributeTypesEnum.ANSWEREDBG:
-      return mantineTheme.colors[mantineTheme.primaryColor][1];
-  }
 }
 
 export function getFeaturesBasedOnQuestionType(

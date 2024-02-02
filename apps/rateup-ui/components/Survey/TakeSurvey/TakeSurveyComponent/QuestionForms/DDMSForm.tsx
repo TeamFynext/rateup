@@ -5,8 +5,6 @@ import classes from "../TakeSurvey.module.css";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 interface MCQFormProps {
@@ -57,21 +55,12 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
             backgroundColor: "transparent",
           },
           dropdown: {
-            backgroundColor: returnColorsForTheme(
-              styleAttributeTypesEnum.BACKGROUND,
-              theme,
-            ),
-            borderColor: returnColorsForTheme(
-              styleAttributeTypesEnum.BORDER,
-              theme,
-            ),
+            backgroundColor: `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+            borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
           },
           pill: {
-            color: returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme),
-            backgroundColor: returnColorsForTheme(
-              styleAttributeTypesEnum.BACKGROUND,
-              theme,
-            ),
+            color: "var(--mantine-color-white)",
+            backgroundColor: `var(--mantine-color-${theme.primaryColor}-filled)`,
           },
         }}
         searchable

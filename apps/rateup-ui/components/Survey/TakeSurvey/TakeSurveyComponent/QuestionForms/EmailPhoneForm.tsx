@@ -5,8 +5,6 @@ import classes from "../TakeSurvey.module.css";
 import { IconMail } from "@tabler/icons-react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { returnColorsForTheme } from "../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../SurveyTheme/SurveyTheme.enums";
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function EmailPhoneForm() {
@@ -33,7 +31,7 @@ export function EmailPhoneForm() {
           leftSection={
             <IconMail
               size="1.2rem"
-              color={returnColorsForTheme(styleAttributeTypesEnum.TEXT, theme)}
+              color={`var(--mantine-color-${theme.primaryColor}-outline)`}
             />
           }
         />
