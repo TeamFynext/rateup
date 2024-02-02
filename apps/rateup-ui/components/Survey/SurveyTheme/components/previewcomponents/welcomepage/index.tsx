@@ -41,10 +41,8 @@ export default function WelcomePageThemeView({
   } = welcomeTheme;
   return (
     <Flex
-      w={"100%"}
       align={"center"}
-      mih="100%"
-      style={{ ...styles, flex: 1 }}
+      style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
       }}
@@ -134,6 +132,7 @@ export default function WelcomePageThemeView({
                   input: {
                     ...titleStyles,
                     fontFamily: "inherit",
+                    height: "fit-content",
                   },
                 }}
                 value={title}
@@ -150,8 +149,6 @@ export default function WelcomePageThemeView({
 
           <Textarea
             className={lexend.className}
-            // onChange={handleChange}
-            value={subtitle}
             placeholder={"Please fill the survey"}
             variant="unstyled"
             onClick={(e) => e.stopPropagation()}
@@ -168,6 +165,13 @@ export default function WelcomePageThemeView({
             mt="lg"
             w={"80%"}
             ta={"center"}
+            value={subtitle}
+            onChange={(e) =>
+              updateThemeText("subtitle", {
+                ...welcomeTheme.subtitle,
+                subtitle: e.target.value,
+              })
+            }
           />
 
           <Box className={classes.buttonBox}>
@@ -191,9 +195,9 @@ export default function WelcomePageThemeView({
               </ActionIcon>
               <TextInput
                 onChange={(e) =>
-                  updateThemeText("subtitle", {
-                    ...welcomeTheme.subtitle,
-                    subtitle: e.target.value,
+                  updateThemeText("button", {
+                    ...welcomeTheme.button,
+                    label: e.target.value,
                   })
                 }
                 value={label}

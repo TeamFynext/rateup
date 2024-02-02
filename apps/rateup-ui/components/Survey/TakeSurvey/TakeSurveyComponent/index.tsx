@@ -73,6 +73,7 @@ import { PCQForm } from "./QuestionForms/PCQForm";
 import { MotionTransition } from "../../../animation/MotionTransition";
 import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
+import { lexend } from "../../../../utils/fonts";
 
 function TakeSurvey({ survey }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -168,7 +169,7 @@ function TakeSurvey({ survey }) {
   if (!survey) {
     return (
       <Center style={{ height: "100vh" }}>
-        <Loader />
+        <Loader type="bars" />
       </Center>
     );
   }
@@ -306,9 +307,7 @@ function TakeSurvey({ survey }) {
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
-        ? router.push(
-            `${surveyId}/end?k=${kioskMode}&sid=${survey.id}&msg=thanks`,
-          )
+        ? router.push(`${surveyId}/review-us-on-google`)
         : router.push(`${surveyId}/end?k=${kioskMode}&sid=${survey.id}`);
     });
   };
@@ -594,7 +593,7 @@ function TakeSurvey({ survey }) {
                   apEnable={false}
                   duration={1}
                 >
-                  <Box pb={"lg"} ref={boxRef}>
+                  <Box pb={"lg"} ref={boxRef} className={lexend.className}>
                     <QuestionTitle
                       largeScreen={largeScreen}
                       themeStyles={titleStyles}
@@ -667,7 +666,6 @@ function QuestionTitle({ largeScreen, themeStyles }) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
     <Text
-      fw={400}
       size={largeScreen ? "30px" : "20px"}
       className={classes.questionTitle}
       style={themeStyles}
@@ -679,10 +677,10 @@ function QuestionTitle({ largeScreen, themeStyles }) {
 function QuestionDesc({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  console.log(themeStyles);
   return (
     <Text
       size={largeScreen ? "15px" : "16px"}
-      c="dimmed"
       className={classes.questionTitle}
       style={themeStyles}
     >
@@ -945,8 +943,8 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
       justify="flex-end"
     >
       <Text
-        c="gray"
         size={isMobile && "sm"}
+        c={themeStyles?.backgroundColor}
         style={{ opacity: selectedQ?.required && !response ? 1 : 0 }}
       >
         *Choose an option or answer to proceed!
@@ -961,7 +959,7 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
           size={isMobile ? "sm" : "lg"}
           variant="outlined"
           onClick={prev}
-          style={themeStyles}
+          style={!isFirstQuestion && themeStyles}
         />
         <Center>
           <RingProgress
@@ -1001,7 +999,13 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
             onClick={handleNextClick}
             color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
-            style={themeStyles}
+            style={
+              !(
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              ) && themeStyles
+            }
           >
             Submit
           </Button>
@@ -1017,7 +1021,13 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
             onClick={handleNextClick}
             color="var(--tertiary-color)"
             rightSection={<IconChevronRight />}
-            style={themeStyles}
+            style={
+              !(
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              ) && themeStyles
+            }
           >
             Next
           </Button>

@@ -13,10 +13,10 @@ import {
   Badge,
   Paper,
   Stack,
+  ScrollArea,
 } from "@mantine/core";
 import LogoStyles from "../LogoStyles";
 import TabsCommon from "../../../../menu/landingPage/Tabs/TabsCommon";
-import styles from "./StylesComponent.module.css";
 import { SelectedItemEnum, ThemeTabEnum } from "../../SurveyTheme.enums";
 import { SurveyThemeContext } from "../../SurveyThemeContext";
 import {
@@ -106,6 +106,10 @@ function StylesComponent({
     }
   }, [selectedType]);
 
+  useEffect(() => {
+    setTabState(SelectedItemEnum.BACKGROUND);
+  }, [selectedTab]);
+
   function updateSelectedTabStyle(key: string, value: any) {
     switch (selectedTab) {
       case ThemeTabEnum.WELCOME:
@@ -149,9 +153,24 @@ function StylesComponent({
   }
   return (
     <>
-      <PaperLayout style={{ flex: 1 }}>
+      <PaperLayout
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height:
+            selectedTab === ThemeTabEnum.WELCOME
+              ? "calc(100% - 140px)"
+              : "calc(100% - 60px)",
+          overflow: "auto",
+        }}
+      >
         <TabsCommon
           styles={{
+            root: {
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            },
             list: {
               fontSize: "10px",
               gap: 2,
@@ -165,12 +184,15 @@ function StylesComponent({
               borderRadius: 5,
               padding: 5,
             },
+            panel: {
+              flex: 1,
+              overflow: "auto",
+              display: "flex",
+            },
           }}
           tabHeading={availableStyleComponents}
           value={tabState}
-          radius={"xl"}
           onChange={(value: string) => setTabState(value as SelectedItemEnum)}
-          className={styles["tabs-common-div"]}
         >
           <Divider
             label={
@@ -182,96 +204,100 @@ function StylesComponent({
             mt="sm"
             mb="md"
           />
-          {availableStyleComponents.includes(SelectedItemEnum.BACKGROUND) && (
-            <Tabs.Panel value={SelectedItemEnum.BACKGROUND}>
-              <Stack>
-                {selectedTab === ThemeTabEnum.THANKYOU && (
-                  <>
-                    <Divider label="Confetti" variant="dashed" w={"100%"} />
-                    <Paper m={"auto"} w={"fit-content"}>
-                      <Switch
-                        h={"fit-content"}
-                        fw={400}
-                        size="sm"
-                        label="Enable Confetti"
-                        checked={
-                          (selectedTabStyles as ThankyouTheme)?.confettiEnabled
-                        }
-                        color="var(--tertiary-color)"
-                        onChange={() =>
-                          updateSelectedTabStyle(
-                            "confettiEnabled",
-                            !(selectedTabStyles as ThankyouTheme)
-                              ?.confettiEnabled,
-                          )
-                        }
-                      />
-                    </Paper>
-                  </>
-                )}
-                <BackgroundStyles
-                  currentStyles={selectedTabStyles?.bg}
+          <ScrollArea scrollbarSize={5} offsetScrollbars>
+            {availableStyleComponents.includes(SelectedItemEnum.BACKGROUND) && (
+              <Tabs.Panel value={SelectedItemEnum.BACKGROUND}>
+                <Stack w="100%">
+                  {selectedTab === ThemeTabEnum.THANKYOU && (
+                    <>
+                      <Divider label="Confetti" variant="dashed" w={"100%"} />
+                      <Paper m={"auto"} w={"fit-content"}>
+                        <Switch
+                          h={"fit-content"}
+                          fw={400}
+                          size="sm"
+                          label="Enable Confetti"
+                          checked={
+                            (selectedTabStyles as ThankyouTheme)
+                              ?.confettiEnabled
+                          }
+                          color="var(--tertiary-color)"
+                          onChange={() =>
+                            updateSelectedTabStyle(
+                              "confettiEnabled",
+                              !(selectedTabStyles as ThankyouTheme)
+                                ?.confettiEnabled,
+                            )
+                          }
+                        />
+                      </Paper>
+                    </>
+                  )}
+                  <BackgroundStyles
+                    currentStyles={selectedTabStyles?.bg}
+                    setCurrentstyles={updateSelectedTabStyle}
+                  />
+                </Stack>
+              </Tabs.Panel>
+            )}
+
+            {availableStyleComponents.includes(SelectedItemEnum.LOGO) && (
+              <Tabs.Panel value={SelectedItemEnum.LOGO}>
+                <LogoStyles
+                  currentStyles={
+                    (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.logo
+                  }
                   setCurrentstyles={updateSelectedTabStyle}
                 />
-              </Stack>
-            </Tabs.Panel>
-          )}
+              </Tabs.Panel>
+            )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.LOGO) && (
-            <Tabs.Panel value={SelectedItemEnum.LOGO}>
-              <LogoStyles
-                currentStyles={
-                  (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.logo
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-              />
-            </Tabs.Panel>
-          )}
+            {availableStyleComponents.includes(SelectedItemEnum.TITLE) && (
+              <Tabs.Panel value={SelectedItemEnum.TITLE}>
+                <HeaderStyles
+                  currentStyles={
+                    (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.title
+                  }
+                  setCurrentstyles={updateSelectedTabStyle}
+                />
+              </Tabs.Panel>
+            )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.TITLE) && (
-            <Tabs.Panel value={SelectedItemEnum.TITLE}>
-              <HeaderStyles
-                currentStyles={
-                  (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.title
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-              />
-            </Tabs.Panel>
-          )}
+            {availableStyleComponents.includes(SelectedItemEnum.SUBTITLE) && (
+              <Tabs.Panel value={SelectedItemEnum.SUBTITLE}>
+                <DescStyles
+                  currentStyles={
+                    (selectedTabStyles as ThankyouTheme | WelcomeTheme)
+                      ?.subtitle
+                  }
+                  setCurrentstyles={updateSelectedTabStyle}
+                />
+              </Tabs.Panel>
+            )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.SUBTITLE) && (
-            <Tabs.Panel value={SelectedItemEnum.SUBTITLE}>
-              <DescStyles
-                currentStyles={
-                  (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.subtitle
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-              />
-            </Tabs.Panel>
-          )}
-
-          {availableStyleComponents.includes(SelectedItemEnum.BUTTON) && (
-            <Tabs.Panel value={SelectedItemEnum.BUTTON}>
-              <ButtonStyles
-                currentStyles={
-                  (selectedTabStyles as _SurveyTheme | WelcomeTheme)?.button
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-              />
-            </Tabs.Panel>
-          )}
-          {availableStyleComponents.includes(SelectedItemEnum.INPUT) && (
-            <Tabs.Panel value={SelectedItemEnum.INPUT}>
-              <InputStyles
-                currentStyles={(selectedTabStyles as _SurveyTheme)?.input}
-                setCurrentstyles={updateSelectedTabStyle}
-              />
-            </Tabs.Panel>
-          )}
+            {availableStyleComponents.includes(SelectedItemEnum.BUTTON) && (
+              <Tabs.Panel value={SelectedItemEnum.BUTTON}>
+                <ButtonStyles
+                  currentStyles={
+                    (selectedTabStyles as _SurveyTheme | WelcomeTheme)?.button
+                  }
+                  setCurrentstyles={updateSelectedTabStyle}
+                />
+              </Tabs.Panel>
+            )}
+            {availableStyleComponents.includes(SelectedItemEnum.INPUT) && (
+              <Tabs.Panel value={SelectedItemEnum.INPUT}>
+                <InputStyles
+                  currentStyles={(selectedTabStyles as _SurveyTheme)?.input}
+                  setCurrentstyles={updateSelectedTabStyle}
+                />
+              </Tabs.Panel>
+            )}
+          </ScrollArea>
         </TabsCommon>
       </PaperLayout>
-      <PaperLayout>
-        <Group justify="space-between">
+      <PaperLayout h="70px">
+        <Group justify="space-between" h="100%">
           <Text
             c={
               compareTwoObjects(_savedSurveyTheme, surveyTheme)

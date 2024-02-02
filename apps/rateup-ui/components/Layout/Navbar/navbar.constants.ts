@@ -160,7 +160,6 @@ export function getNavTopData(subscription?: Subscription) {
 
 //data Array consisting of NavbarBottomData
 const navBottomData: Array<NavbarLinkProps> = [
-  { Icon: IconTerminal2, label: "Admin", href: "/admin" },
   { Icon: IconSettings, label: "Settings", href: "/dashboard/settings" },
   { Icon: IconLogout, label: "Logout", href: "/logout" },
 ];

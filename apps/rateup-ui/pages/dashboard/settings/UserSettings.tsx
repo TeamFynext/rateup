@@ -133,7 +133,7 @@ const ProfileSettings = () => {
   useEffect(() => {
     if (profileData?.data?.data) {
       const phone = profileData?.data?.data?.phone
-        ? "+" + profileData?.data?.data?.phone
+        ? profileData?.data?.data?.phone
         : null;
       profileForm.setValues({
         title: profileData?.data?.data?.gender || "",
@@ -339,7 +339,13 @@ const ProfileSettings = () => {
                 />
               </Grid.Col>
             </Grid>
-            <Flex direction={"column"} gap="md">
+            <Flex
+              direction={"column"}
+              gap="md"
+              display={
+                profileData?.data?.data?.passwordlessLogin ? "none" : "block"
+              }
+            >
               <Stack>
                 <Title size="lg" fw={500}>
                   Change Password

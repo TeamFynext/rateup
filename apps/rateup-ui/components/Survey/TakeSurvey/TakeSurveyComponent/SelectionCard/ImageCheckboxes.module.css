@@ -6,7 +6,8 @@
     border-color 150ms ease;
   border-radius: var(--mantine-radius-sm);
   padding: var(--mantine-spacing-sm);
-  border: 1px solid var(--mantine-color-gray-3);
+  border-width: 1px;
+  border-style: solid;
   background-color: var(--mantine-color-white);
   box-shadow:
     rgba(0, 0, 0, 0.05) 0px 1px 0px,
@@ -18,7 +19,6 @@
 }
 
 .button[data-checked] {
-  border-color: var(--tertiary-color);
   background-color: var(--mantine-color-blue-light);
 }
 .button:hover {

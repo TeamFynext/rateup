@@ -101,43 +101,41 @@ export function QuestionsSideBar({
           <Divider my="sm" color="gray.2" />
         </Stack>
       )}
-
-      <DragDropContext
-        onDragEnd={({ destination, source }) => {
-          const reorderedQuestions = reorder(
-            questionsState,
-            source.index,
-            destination?.index || 0,
-          );
-          handlers.setState(reorderedQuestions);
-          questionsReorderMutation.mutate(reorderedQuestions);
-        }}
-      >
-        {!questionsState?.length && (
-          <Paper
-            style={{ cursor: "pointer", marginTop: "200px" }}
-            onClick={handleAddQn}
-          >
-            <Center h="100%">
-              <Stack align="center">
-                <IconPlus size={36} />
-                <Text size="xl" fw={700}>
-                  Add Question
-                </Text>
-              </Stack>
-            </Center>
-          </Paper>
-        )}
-
-        <Droppable droppableId="dnd-list" direction="vertical">
-          {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef}>
-              {items}
-              {provided.placeholder}
-            </div>
+      <ScrollArea h={"100%"} scrollbarSize={5} offsetScrollbars>
+        <DragDropContext
+          onDragEnd={({ destination, source }) => {
+            const reorderedQuestions = reorder(
+              questionsState,
+              source.index,
+              destination?.index || 0,
+            );
+            handlers.setState(reorderedQuestions);
+            questionsReorderMutation.mutate(reorderedQuestions);
+          }}
+        >
+          {!questionsState?.length && (
+            <Paper h={"100%"} onClick={handleAddQn}>
+              <Center h="100%">
+                <Stack align="center">
+                  <IconPlus size={36} />
+                  <Text size="xl" fw={700}>
+                    Add Question
+                  </Text>
+                </Stack>
+              </Center>
+            </Paper>
           )}
-        </Droppable>
-      </DragDropContext>
+
+          <Droppable droppableId="dnd-list" direction="vertical">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {items}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </ScrollArea>
     </Stack>
   );
 }

@@ -1,5 +1,5 @@
-import React from "react";
 import { Tabs, TabsProps } from "@mantine/core";
+import { MotionTransition } from "../../../animation/MotionTransition";
 interface TabsCommonProps {
   tabHeading: string[];
 }
@@ -14,7 +14,14 @@ const TabsCommon = (props: TabsProps & TabsCommonProps) => {
           </Tabs.Tab>
         ))}
       </Tabs.List>
+      {/* <MotionTransition
+        keyValue={{ id: restData.value ? restData.value : null }}
+        duration={0.6}
+        apEnable={false}
+        type="fade"
+      > */}
       {children}
+      {/* </MotionTransition> */}
     </Tabs>
   );
 };

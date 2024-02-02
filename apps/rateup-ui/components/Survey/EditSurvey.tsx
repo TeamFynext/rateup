@@ -48,8 +48,8 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={10}>
-      <PaperLayout style={{ flex: 2 }}>
+    <Flex w={"100%"} mah={"100%"} p={2} gap={10} style={{ overflow: "auto" }}>
+      <PaperLayout style={{ flex: 0.3 }}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -60,7 +60,7 @@ export function EditSurvey({
           addQnTrigger={addQnTrigger}
         />
       </PaperLayout>
-      <PaperLayout style={{ flex: 5 }}>
+      <PaperLayout style={{ flex: 0.7 }}>
         <Tabs
           px={"md"}
           pb="md"
@@ -71,7 +71,10 @@ export function EditSurvey({
             panel: classes.panel,
           }}
         >
-          <Tabs.Panel value={QuestionTabsEnum.Edit} style={{ height: "100%" }}>
+          <Tabs.Panel
+            value={QuestionTabsEnum.Edit}
+            className={classes["edit-survey-panel"]}
+          >
             {selectedQ && (
               <MotionTransition keyValue={selectedQ}>
                 <QuestionDetailedView

@@ -1,14 +1,3 @@
-.enable-welcome-page-switch-container {
-  height: 6.25rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.styles-component-container {
-  flex: 1 1 auto;
-}
-
 /* styles for different preview view components */
 .parentContainer {
   position: relative;

@@ -2,12 +2,10 @@ import {
   Stack,
   Button,
   FileButton,
-  SimpleGrid,
   Text,
   Group,
   ActionIcon,
   Divider,
-  ScrollArea,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, ReactNode } from "react";
@@ -120,7 +118,7 @@ function BackgroundStyles({
 
   const [bgTab, setBgTab] = useState<BgTab>(BgTab.BGCOLOR);
   return (
-    <ScrollArea h={"40vh"} w={"100%"}>
+    <>
       <Stack align="center" w={"100%"}>
         <UnsplashModal
           handleUnsplashImageSave={handleUnsplashImageSave}
@@ -162,7 +160,7 @@ function BackgroundStyles({
         />
         {/* //------------BGIMAGE------------ */}
         <Divider label="Background Image" variant="dashed" w={"100%"} />
-        <Stack>
+        <Stack w={"100%"}>
           <Group>
             <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
               <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
@@ -177,14 +175,7 @@ function BackgroundStyles({
               )}
             </Text>
           </Group>
-          <SimpleGrid cols={2}>
-            <RateupButtonSecondary
-              onClick={removeBg}
-              title="Remove Image"
-              size="xs"
-              disabled={currentStyles?.desktopbg === ""}
-              leftIcon={<IconTrash size={16} />}
-            />
+          <Stack>
             <Button
               leftSection={<IconUpload size={16} />}
               size="xs"
@@ -196,6 +187,13 @@ function BackgroundStyles({
             >
               Upload Image
             </Button>
+            <RateupButtonSecondary
+              onClick={removeBg}
+              title="Remove Image"
+              size="xs"
+              disabled={currentStyles?.desktopbg === ""}
+              leftIcon={<IconTrash size={16} />}
+            />
             <FileButton
               resetRef={resetBgRef}
               onChange={(e) => {
@@ -211,10 +209,10 @@ function BackgroundStyles({
                 </Button>
               )}
             </FileButton>
-          </SimpleGrid>
+          </Stack>
         </Stack>
 
-        <Stack>
+        <Stack w={"100%"}>
           <Group>
             <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
               <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
@@ -229,24 +227,26 @@ function BackgroundStyles({
               )}
             </Text>
           </Group>
-          <SimpleGrid cols={2}>
-            <RateupButtonSecondary
-              onClick={removeMobileBg}
-              title="Remove Image"
-              size="xs"
-              disabled={currentStyles?.mobilebg === ""}
-              leftIcon={<IconTrash size={15} />}
-            />
+          <Stack>
             <Button
               leftSection={<IconUpload size={15} />}
               size="xs"
               radius="18px"
-              type="button"
               onClick={handleMobileBgFileChange}
               loading={isFileLoading}
               bg={"var(--tertiary-color)"}
             >
               Upload Image
+            </Button>
+            <Button
+              leftSection={<IconTrash size={15} />}
+              disabled={currentStyles?.mobilebg === ""}
+              size="xs"
+              p={0}
+              radius="18px"
+              onClick={removeMobileBg}
+            >
+              Remove Image
             </Button>
             <FileButton
               resetRef={resetMobileBgRef}
@@ -267,10 +267,10 @@ function BackgroundStyles({
                 </Button>
               )}
             </FileButton>
-          </SimpleGrid>
+          </Stack>
         </Stack>
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 

@@ -10,7 +10,7 @@ export function LDForm() {
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Group>
+    <Group p={"xs"}>
       <Box w={150}>
         <RateupButtonBlue
           size="md"

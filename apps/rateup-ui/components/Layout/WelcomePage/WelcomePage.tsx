@@ -1,6 +1,6 @@
-import { Title, Text, Stack, Image, Button, Flex } from "@mantine/core";
+import { Text, Stack, Image, Button } from "@mantine/core";
 import React from "react";
-import { lexend300 } from "../../../utils/fonts";
+import { lexend } from "../../../utils/fonts";
 import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 
 const _buttonStyles = {
@@ -30,48 +30,29 @@ function WelcomePage({
     <Stack
       align="center"
       justify="center"
-      gap="xl"
       style={{
         minHeight: "100dvh",
       }}
-      ff={lexend300.style.fontFamily}
+      className={lexend.className}
     >
-      <Flex justify={"center"} align={"center"} h={"100%"} direction={"column"}>
-        {logo && (
-          <Image
-            fit="contain"
-            src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`}
-            alt=" Logoss "
-            style={logoStyles}
-          />
-        )}
-        <Title
-          order={1}
-          style={{
-            fontSize: largeScreen ? "4rem" : "3rem",
-            ...titleStyles,
-          }}
-          tt={"capitalize"}
-          mt={25}
-          ff={"inherit"}
-        >
-          {title}
-        </Title>
-
-        <Text mt={20} style={subtitleStyles}>
-          {subtitle}
-        </Text>
-
-        <Button
-          mt={20}
-          style={buttonStyles ? { ...buttonStyles } : { ..._buttonStyles }}
-          onClick={onStart}
-          miw={150}
-          ff={"inherit"}
-        >
-          {label}
-        </Button>
-      </Flex>
+      {logo && (
+        <Image
+          fit="contain"
+          src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`}
+          alt=" Logoss "
+          style={logoStyles}
+        />
+      )}
+      <Text style={titleStyles}>{title}</Text>
+      <Text style={subtitleStyles}>{subtitle}</Text>
+      <Button
+        style={buttonStyles ? { ...buttonStyles } : { ..._buttonStyles }}
+        onClick={onStart}
+        miw={150}
+        ff={"inherit"}
+      >
+        {label}
+      </Button>
     </Stack>
   );
 }

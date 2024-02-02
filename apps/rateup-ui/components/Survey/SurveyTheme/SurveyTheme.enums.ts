@@ -16,11 +16,6 @@ export enum SelectedItemEnum {
 export enum defaultThemeName {
   RATEUP_BLUE = "rateup-blue",
 }
-export enum styleAttributeTypesEnum {
-  BACKGROUND = "background",
-  TEXT = "text",
-  BORDER = "border",
-}
 
 export enum PreviewTypeEnum {
   MOBILE = "mobile",

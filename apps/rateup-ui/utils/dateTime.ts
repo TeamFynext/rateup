@@ -1,9 +1,11 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import advancedFormat from "dayjs/plugin/advancedFormat";
+import isBetween from "dayjs/plugin/isBetween";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(advancedFormat);
+dayjs.extend(isBetween);
 
 export function findPreviousMonday(date: Date): Date {
   const day = date.getDay();
@@ -21,8 +23,15 @@ export const formatedTime = (category) => {
   );
   const formattedEndTime = dayjs(category?.endTime).format("HH:mm");
   const formattedEndTimeWithAmPm = dayjs(category?.endTime).format("hh:mm A");
-  const withinTimeRange =
-    formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+  let withinTimeRange;
+  formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+  if (formattedStartTime > formattedEndTime) {
+    withinTimeRange =
+      formattedStartTime <= currentTime || formattedEndTime >= currentTime;
+  } else {
+    withinTimeRange =
+      formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+  }
   let categoryDisabled = category?.scheduleEnabled && !withinTimeRange;
   return {
     formattedEndTimeWithAmPm,
@@ -44,3 +53,15 @@ export const createCustomTimestamp = (customTime) => {
 export function formatIsoDateString(isoDateString) {
   return dayjs(isoDateString).format("Do MMM, YYYY");
 }
+
+const currentTime = dayjs().format("HH:mm");
+export const isCategoryActive = (item) => {
+  if (!item.startTime || !item.endTime || !item.scheduleEnabled) {
+    return true;
+  }
+  const startTime = dayjs(item.startTime).format("HH:mm");
+  const endTime = dayjs(item.endTime).format("HH:mm");
+  if (startTime > endTime)
+    return currentTime >= startTime || currentTime <= endTime;
+  else return startTime <= currentTime && endTime >= currentTime;
+};

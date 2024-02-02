@@ -1,6 +1,4 @@
 import { Paper, useMantineTheme } from "@mantine/core";
-import { returnColorsForTheme } from "../../../../SurveyTheme/SurveyTheme.utils";
-import { styleAttributeTypesEnum } from "../../../../SurveyTheme/SurveyTheme.enums";
 import classes from "../../TakeSurvey.module.css";
 export default function FormPaperLayout(props: any) {
   const theme = useMantineTheme();
@@ -10,12 +8,8 @@ export default function FormPaperLayout(props: any) {
       h={"fit-content"}
       shadow="sm"
       className={classes.inputBox}
-      bg={returnColorsForTheme(styleAttributeTypesEnum.BACKGROUND, theme)}
       style={{
-        borderColor: returnColorsForTheme(
-          styleAttributeTypesEnum.BORDER,
-          theme,
-        ),
+        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
       }}
     >
       {props.children}

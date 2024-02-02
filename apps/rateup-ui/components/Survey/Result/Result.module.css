@@ -1,0 +1,15 @@
+.result-page-tabs-filter-btn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filters-popover-dropdown-div {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.filters-popover-dropdown-div > div {
+  box-shadow: none !important;
+}
