@@ -413,7 +413,9 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
               {navBottomData.map((item, index) => (
                 <Menu.Item key={index} onClick={() => handleItemClick(item)}>
                   <Flex style={{ marginLeft: "1rem", marginTop: "0.5rem" }}>
-                    {item.Icon && <item.Icon size={30} />}
+                    {item.Icon && (
+                      <item.Icon size={21} style={{ color: "grey" }} />
+                    )}
                     <Text
                       style={{
                         fontSize: "15px",
