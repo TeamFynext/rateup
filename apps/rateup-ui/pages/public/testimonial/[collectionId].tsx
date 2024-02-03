@@ -1,7 +1,6 @@
 import { useRouter } from "next/router";
 import React from "react";
 import { useGetAllTestimonialsByCollection } from "../../../backend/testimonials/testimonial.query";
-import { TestimonialAlignment } from "../../../types/enums";
 import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 import Head from "next/head";

@@ -19,7 +19,7 @@ import {
   ContainedNumberInput,
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput";
-import { FontWeights } from "../Survey/SurveyTheme/fontStyleComponents/FontWeights";
+
 import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "./TestimonialCard";
 import {
@@ -30,6 +30,7 @@ import {
 import FormModalLayout from "../Modal/FormModalLayout";
 import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
 import { TestimonialStyleType } from "../../types/global";
+import { FontWeights } from "../Survey/SurveyTheme/SurveyTheme.constants";
 
 interface TestimonialEditModalProps {
   opened;
