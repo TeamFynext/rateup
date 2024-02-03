@@ -19,7 +19,7 @@ const Billing = ({ subscription, toggle, processingPayment }) => {
       <Divider mb="md" />
 
       {processingPayment ? (
-        <Loader color="blue" />
+        <Loader color="blue" type="bars" />
       ) : (
         <Stack>
           <Group ml="xl">

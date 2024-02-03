@@ -1,6 +1,12 @@
 import React, { useRef } from "react";
-import { UnstyledButton, Checkbox, Text, SimpleGrid } from "@mantine/core";
-import { useUncontrolled } from "@mantine/hooks";
+import {
+  UnstyledButton,
+  Checkbox,
+  Text,
+  SimpleGrid,
+  useMantineTheme,
+} from "@mantine/core";
+import { useHover, useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
 
 interface ImageCheckboxProps {
@@ -30,15 +36,36 @@ export function ImageCheckbox({
     onChange,
   });
   const checkBoxRef = useRef(null);
+  const theme = useMantineTheme();
+  const { hovered, ref } = useHover() as {
+    hovered: boolean;
+    ref: React.RefObject<HTMLButtonElement>;
+  };
   return (
     <UnstyledButton
       {...others}
+      ref={ref}
       onClick={() => {
         handleChange(!value);
         checkBoxRef?.current?.click();
       }}
       data-checked={selectedValue.includes(title) || undefined}
       className={classes.button}
+      c={
+        selectedValue.includes(title)
+          ? "var(--mantine-color-white)"
+          : `var(--mantine-color-${theme.primaryColor}-outline)`
+      }
+      bg={
+        selectedValue.includes(title)
+          ? `var(--mantine-color-${theme.primaryColor}-filled)`
+          : !hovered
+          ? ""
+          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+      }
+      style={{
+        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
+      }}
     >
       <Checkbox
         ref={checkBoxRef}

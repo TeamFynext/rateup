@@ -36,16 +36,13 @@
 
 /* Hover style for inactive tabs */
 .tab:hover:not([data-active]) {
-  background-color: var(--mantine-primary-color-light);
+  background-color: var(--mantine-primary-color-light-hover);
 }
 
 /* Style for the content panel */
 .panel {
   flex: 1 0 0;
+  height: 100%;
   /* overflow: auto; */
   margin-top: 0 !important;
-}
-
-.panel > div {
-  height: 100%;
 }

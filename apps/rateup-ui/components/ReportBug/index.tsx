@@ -25,42 +25,44 @@ function ReportBug() {
   }, []);
 
   return (
-    <Popover
-      position="bottom-end"
-      withArrow
-      shadow="md"
-      classNames={popoverStyles}
-      opened={opened}
-      onChange={toggle}
-    >
-      <Popover.Target>
-        <Flex className={styles["report-bug-container"]}>
-          <Tooltip label="Report Bug" position="left">
-            <ActionIcon
-              className={styles["report-bug-button"]}
-              onClick={toggle}
-            >
-              <IconBug />
-            </ActionIcon>
-          </Tooltip>
-        </Flex>
-      </Popover.Target>
+    <div className={styles["report-bug-container-wrapper"]}>
+      <Popover
+        position="top-end"
+        withArrow
+        shadow="md"
+        classNames={popoverStyles}
+        opened={opened}
+        onChange={toggle}
+      >
+        <Popover.Target>
+          <Flex className={styles["report-bug-container"]}>
+            <Tooltip label="Report Bug" position="left">
+              <ActionIcon
+                className={styles["report-bug-button"]}
+                onClick={toggle}
+              >
+                <IconBug />
+              </ActionIcon>
+            </Tooltip>
+          </Flex>
+        </Popover.Target>
 
-      <Popover.Dropdown>
-        <LoadingOverlay
-          visible={isIframeLoading}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-        />
-        {opened && (
-          <iframe
-            onLoad={upadateLoadingStateOfIframe}
-            className={styles["bug-report-form-iframe"]}
-            src="https://rateup.app/public/survey/98c9d3a7-d335-4f03-989d-287588a2e536"
+        <Popover.Dropdown>
+          <LoadingOverlay
+            visible={isIframeLoading}
+            zIndex={1000}
+            overlayProps={{ radius: "sm", blur: 2 }}
           />
-        )}
-      </Popover.Dropdown>
-    </Popover>
+          {opened && (
+            <iframe
+              onLoad={upadateLoadingStateOfIframe}
+              className={styles["bug-report-form-iframe"]}
+              src="https://rateup.app/public/survey/98c9d3a7-d335-4f03-989d-287588a2e536"
+            />
+          )}
+        </Popover.Dropdown>
+      </Popover>
+    </div>
   );
 }
 

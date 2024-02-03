@@ -1,46 +1,28 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Stack,
-  Flex,
   NumberInput,
   Button,
   FileButton,
-  SimpleGrid,
   ActionIcon,
   Group,
   Text,
+  Divider,
+  ScrollArea,
 } from "@mantine/core";
-import { createFormContext } from "@mantine/form";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
-import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 import { getFileName } from "./BackgroundStyles";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
+import { Logo } from "../surveyTheme.types";
 
-const [FormProvider, useFormContext, useForm] = createFormContext<FormValues>();
-interface FormValues {
-  name: string;
-  logoUrl: string;
-
-  logoStyles: {
-    height: number;
-    width: number;
-  };
-}
 function LogoStyles({
-  saveStyles,
   currentStyles,
   setCurrentstyles,
-  saveLoading,
+}: {
+  currentStyles: Logo;
+  setCurrentstyles: (key: string, value: any) => void;
 }) {
-  const form = useForm({
-    initialValues: {
-      name: "logo",
-      logoUrl: currentStyles?.logoUrl,
-      logoStyles: currentStyles?.logoStyles,
-    },
-  });
-
   const [isFileLoading, setisFileLoading] = useState(false);
   const [logoFileName, setLogoFileName] = useState(null);
   const resetLogoRef = useRef<() => void>(null);
@@ -52,19 +34,6 @@ function LogoStyles({
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
-
-  useEffect(() => {
-    setCurrentstyles({
-      ...currentStyles,
-      logoStyles: form?.values?.logoStyles,
-    });
-  }, [form.values]);
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-    saveStyles(form.values);
-  };
-
   const handleFileChange = (value) => {
     if (!value) return;
     setSelectedImage({
@@ -77,19 +46,18 @@ function LogoStyles({
 
   const removeImage = () => {
     setLogoFileName("");
-    setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: "", logoUrl: "" });
+    setCurrentstyles("logo", { ...currentStyles, logo: "" });
     resetLogoRef.current?.();
-    // form.setValues({ logoUrl: ""})
   };
 
   const handleCropImageSave = (cropedImage) => {
     setisFileLoading(true);
     setLogoFileName(cropedImage?.name);
-    setCurrentstyles({ ...currentStyles, logoUrlNotUploaded: cropedImage });
+    setCurrentstyles("logo", { ...currentStyles, logo: cropedImage });
     setisFileLoading(false);
   };
   return (
-    <Flex>
+    <ScrollArea h={"51vh"} w={"100%"}>
       <ImageCropModal
         opened={openedCropDialog}
         onclose={closeCropDialog}
@@ -98,48 +66,55 @@ function LogoStyles({
         image={selectedImage.url}
         aspect={4 / 3}
       />
-      <Stack w={"100%"} justify={"center"}>
-        <form style={{ width: "100%", justifyContent: "center" }}>
-          <NumberInput
-            min={10}
-            max={100}
-            placeholder="height"
-            label="Height (px)"
-            name="height"
-            mt={"xs"}
-            {...form.getInputProps("logoStyles.height")}
-          />
-          <NumberInput
-            min={10}
-            max={100}
-            mt={"xs"}
-            placeholder="Width"
-            label="Width (px)"
-            name="Width"
-            {...form.getInputProps("logoStyles.width")}
-          />
-
-          <Group mt="xl">
+      <Stack align="center" w={"100%"}>
+        <Divider label="Styles" variant="dashed" w={"100%"} />
+        <NumberInput
+          min={10}
+          max={100}
+          placeholder="height"
+          label="Height (px)"
+          name="height"
+          mt={"xs"}
+          value={currentStyles?.styles?.height}
+          onChange={(e) => {
+            setCurrentstyles("logo", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, height: e },
+            });
+          }}
+        />
+        <NumberInput
+          min={10}
+          max={100}
+          mt={"xs"}
+          placeholder="Width"
+          label="Width (px)"
+          name="Width"
+          value={currentStyles?.styles?.width}
+          onChange={(e) => {
+            setCurrentstyles("logo", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, width: e },
+            });
+          }}
+        />
+        <Divider label="Upload Logo" variant="dashed" w={"100%"} />
+        <Stack w={"100%"}>
+          <Group>
             <ActionIcon variant="filled" aria-label="Settings">
               <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
             </ActionIcon>
-            <Text fw={600}>Logo : </Text>
+            <Text fw={100} c={"dark"} size="xs">
+              Logo :{" "}
+            </Text>
             <Text ml="md">
               {getFileName(
-                currentStyles?.logoUrl || logoFileName,
-                !currentStyles?.logoUrl,
+                currentStyles?.logo || logoFileName,
+                !currentStyles?.logo,
               )}
             </Text>
           </Group>
-
-          <SimpleGrid cols={2} mt="lg">
-            <RateupButtonSecondary
-              onClick={removeImage}
-              title="Remove Image"
-              size="xs"
-              disabled={!currentStyles?.logoUrl && !logoFileName}
-              leftIcon={<IconTrash size={16} />}
-            />
+          <Stack>
             <FileButton
               onChange={handleFileChange}
               accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -157,25 +132,19 @@ function LogoStyles({
                 </Button>
               )}
             </FileButton>
-          </SimpleGrid>
-
-          <Flex justify={"center"}>
             <Button
-              radius={48}
-              size={"sm"}
-              pl={40}
-              pr={40}
-              mt={"2rem"}
-              onClick={onSubmit}
-              loading={saveLoading}
+              onClick={removeImage}
+              size="xs"
+              disabled={!currentStyles?.logo && !logoFileName}
+              leftSection={<IconTrash size={16} />}
+              radius="18px"
             >
-              {" "}
-              Save
+              RemoveLogo
             </Button>
-          </Flex>
-        </form>
+          </Stack>
+        </Stack>
       </Stack>
-    </Flex>
+    </ScrollArea>
   );
 }
 

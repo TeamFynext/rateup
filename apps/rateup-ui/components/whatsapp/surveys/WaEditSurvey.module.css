@@ -2,6 +2,6 @@
   height: 100%;
 }
 
-.root > * {
-  border: 1px solid gray;
+.wa-que-sidebar-container {
+  padding: 0;
 }

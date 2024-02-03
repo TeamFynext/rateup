@@ -1,5 +1,9 @@
 import { Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
-import { IconChevronDown, IconPlus } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconLayersSubtract,
+  IconPlus,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
 import { useEffect, useState } from "react";
@@ -27,6 +31,7 @@ import MenuAnalytics from "../../../components/menu/analytics/MenuAnalytics";
 import CategoryItemCsvModal from "../../../components/menu/category/CategoryItemCsvModal";
 import { IconUpload } from "@tabler/icons-react";
 import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
+import { MotionTransition } from "../../../components/animation/MotionTransition";
 
 enum TabEnum {
   Menu = "Menu",
@@ -130,106 +135,115 @@ export default ({ categories: initialCategories }) => {
             </Tabs.List>
           </Grid.Col>
         </Grid>
-        <Tabs.Panel value={TabEnum.Menu}>
-          <Flex justify={"space-between"} wrap={"wrap"}>
-            <Group>
-              <RateupButtonBlue
-                title="Add Category"
-                rightIcon={<IconPlus />}
-                radius="xl"
-                size="md"
-                onClick={handleCreateCategory}
-              />
-              <RateupButtonSecondary
-                title="Import Menu"
-                rightIcon={<IconUpload size={16} />}
-                radius="xl"
-                size="md"
-                onClick={toggle}
-              />
-            </Group>
+        <MotionTransition
+          keyValue={{ id: activeTab ? activeTab : null }}
+          duration={0.6}
+          apEnable={false}
+          type="fade"
+        >
+          <Tabs.Panel value={TabEnum.Menu}>
+            <Flex justify={"space-between"} wrap={"wrap"}>
+              <Group>
+                <RateupButtonBlue
+                  title="Add Category"
+                  rightIcon={<IconPlus />}
+                  radius="xl"
+                  size="md"
+                  onClick={handleCreateCategory}
+                />
+                <RateupButtonSecondary
+                  title="Import Menu"
+                  rightIcon={<IconUpload size={16} />}
+                  radius="xl"
+                  size="md"
+                  onClick={toggle}
+                />
+              </Group>
 
-            <SearchBox
-              searchText={searchText}
-              setSearchText={setSearchText}
-              sx={{
-                // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
-                display: "none",
-              }}
-            />
-            <RateupButtonBlue
-              title="Manage Banners"
-              rightIcon={
-                <IconChevronDown
-                  style={{ width: rem(18), height: rem(18) }}
-                  stroke={1.5}
-                />
-              }
-              radius="xl"
-              size="md"
-              onClick={toggleBannerModal}
-              color={"var(--light-blue-4)"}
-              sx={{
-                borderColor: "var(--tertiary-color)",
-                color: "var(--tertiary-color)",
-              }}
-            />
-            <BannerAddAndViewModal
+              <SearchBox
+                searchText={searchText}
+                setSearchText={setSearchText}
+                sx={{
+                  // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
+                  display: "none",
+                }}
+              />
+              <RateupButtonBlue
+                title="Manage Banners"
+                rightIcon={
+                  <IconLayersSubtract
+                    style={{ width: rem(18), height: rem(18) }}
+                    stroke={1.5}
+                  />
+                }
+                radius="xl"
+                size="md"
+                onClick={toggleBannerModal}
+                color={"var(--light-blue-4)"}
+                sx={{
+                  borderColor: "var(--tertiary-color)",
+                  color: "var(--tertiary-color)",
+                }}
+              />
+              <BannerAddAndViewModal
+                menuId={menuId}
+                opened={openBanner}
+                onClose={closeBanner}
+                currency={menu?.currency}
+              />
+            </Flex>
+            <Stack mt="sm">
+              {filteredCategory?.length === 0 ? (
+                <NothingFound text="No Category available." />
+              ) : (
+                filteredCategory?.map((category) => (
+                  <CategoryCard
+                    key={category.id}
+                    category={category}
+                    handleDelete={deleteMutation}
+                    handleEdit={handleEditCategory}
+                    searchText={searchText}
+                    currency={menu?.currency}
+                    headerOrder={filteredCategory?.map(
+                      ({ id, name, image }) => ({
+                        id,
+                        name,
+                        image,
+                      }),
+                    )}
+                  />
+                ))
+              )}
+            </Stack>
+            <CategoryItemCsvModal
+              opened={openUploadCsv}
+              close={closeUploadCsv}
               menuId={menuId}
-              opened={openBanner}
-              onClose={closeBanner}
-              currency={menu?.currency}
             />
-          </Flex>
-          <Stack mt="sm">
-            {filteredCategory?.length === 0 ? (
-              <NothingFound text="No Category available." />
-            ) : (
-              filteredCategory?.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  handleDelete={deleteMutation}
-                  handleEdit={handleEditCategory}
-                  searchText={searchText}
-                  currency={menu?.currency}
-                  headerOrder={filteredCategory?.map(({ id, name, image }) => ({
-                    id,
-                    name,
-                    image,
-                  }))}
-                />
-              ))
-            )}
-          </Stack>
-          <CategoryItemCsvModal
-            opened={openUploadCsv}
-            close={closeUploadCsv}
-            menuId={menuId}
-          />
-          <CreateMenuCategoryModal
-            opened={openCreateModal}
-            close={handleClose}
-            menuId={menuId}
-            editingItem={editingCategory}
-          />
-        </Tabs.Panel>
-        <Tabs.Panel value={TabEnum.Settings}>
-          <MenuSettings menu={menu} />
-        </Tabs.Panel>
-        <Tabs.Panel value={TabEnum.LandingPage}>
-          <LandingPage editingItem={transformedData} />
-        </Tabs.Panel>
-        <Tabs.Panel value={TabEnum.Share}>
-          {menu && <ShareMenu menu={menu} />}
-        </Tabs.Panel>
-        <Tabs.Panel value={TabEnum.Analytics}>
-          <MenuAnalytics
-            surveyTeamMapId={menuLandingData?.surveyTeamMapId}
-            visited={menuLandingData?.visited}
-            surveyId={menuLandingData?.surveyTeamMap?.surveyId}
-          />
-        </Tabs.Panel>
+            <CreateMenuCategoryModal
+              opened={openCreateModal}
+              close={handleClose}
+              menuId={menuId}
+              editingItem={editingCategory}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Settings}>
+            <MenuSettings menu={menu} />
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.LandingPage}>
+            <LandingPage editingItem={transformedData} />
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Share}>
+            {menu && <ShareMenu menu={menu} />}
+          </Tabs.Panel>
+          <Tabs.Panel value={TabEnum.Analytics}>
+            <MenuAnalytics
+              surveyTeamMapId={menuLandingData?.surveyTeamMapId}
+              visited={menuLandingData?.visited}
+              surveyId={menuLandingData?.surveyTeamMap?.surveyId}
+            />
+          </Tabs.Panel>
+        </MotionTransition>
       </StyledTabs>
     </Group>
   );

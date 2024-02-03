@@ -1,33 +1,35 @@
-import { Anchor, Center, Group, Image, Text } from "@mantine/core";
+import {
+  Anchor,
+  Center,
+  Group,
+  Image,
+  Text,
+  useMantineTheme,
+} from "@mantine/core";
 
-export default function RateupRedirectCard({
-  alternateLogo,
-}: {
-  alternateLogo?: boolean;
-}) {
+export default function RateupRedirectCard({ className = "" }) {
+  const theme = useMantineTheme();
   return (
     <Center
-      bg={alternateLogo ? "transparent" : "white"}
+      className={className}
+      bg={`var(--mantine-color-${theme.primaryColor}-outline-hover)`}
       w={"fit-content"}
       m={"auto"}
+      px={"sm"}
+      pt={5}
+      style={{ borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
     >
       <Anchor href="https://www.rateup.app">
-        <Group>
-          {alternateLogo ? (
-            <Image
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits-white.svg`}
-              height={30}
-              width={30}
-              fit="contain"
-            />
-          ) : (
-            <Image
-              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits.svg`}
-              height={30}
-              width={30}
-              fit="contain"
-            />
-          )}
+        <Group gap={0} align="flex-end">
+          <Text fz={10} mb={2}>
+            Powered By
+          </Text>
+          <Image
+            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
+            height={30}
+            width={30}
+            fit="contain"
+          />
         </Group>
       </Anchor>
     </Center>

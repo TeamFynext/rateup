@@ -6,10 +6,10 @@ export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const ContactQuestions = [
+  QuestionType.Contact,
   QuestionType.Email,
   QuestionType.Phone,
-  QuestionType.EmailPhone,
-  QuestionType.Contact,
+  // QuestionType.EmailPhone,
 ];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
@@ -31,7 +31,13 @@ export const WaNPSQuestions = [
   QuestionType.Opinion,
   QuestionType.CustomNPS,
 ];
-
+export const FlowNpsQ = [
+  QuestionType.Rating,
+  QuestionType.Smiley,
+  QuestionType.LD,
+  QuestionType.YN,
+  QuestionType.Opinion,
+];
 export const OtherQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
@@ -44,6 +50,7 @@ export const OtherQuestions = [
   QuestionType.DDSS,
   QuestionType.DDMS,
   QuestionType.PCQ,
+  QuestionType.TnC,
 ];
 
 export const WaOtherQuestions = [
@@ -53,6 +60,13 @@ export const WaOtherQuestions = [
   QuestionType.DateTime,
   QuestionType.Photo,
   QuestionType.Testimonial,
+];
+const FlowOtherQuestions = [
+  QuestionType.Text,
+  QuestionType.MCQ,
+  QuestionType.MSQ,
+  QuestionType.DDSS,
+  QuestionType.DateTime,
 ];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
@@ -68,6 +82,19 @@ export const WaSurveyQuestionTypes = [
   { title: "NPS Questions", questionTypes: WaNPSQuestions },
   { title: "Other Questions", questionTypes: WaOtherQuestions },
   { title: "WhatsApp Exclusive Questions", questionTypes: WaExclusive },
+];
+const flowNonInputElements = [
+  wft.textHeading,
+  wft.textSubHeading,
+  wft.textBody,
+  wft.textCaption,
+];
+export const FlowQuestionTypes = [
+  // also includes non-input elements like text & links
+  { title: "Contact Questions", questionTypes: WaContactQuestions },
+  { title: "NPS Questions", questionTypes: FlowNpsQ },
+  { title: "Other Questions", questionTypes: FlowOtherQuestions },
+  { title: "Non-Input Elements", questionTypes: flowNonInputElements },
 ];
 
 export const ChoiceTypeQuestions = [
@@ -93,3 +120,5 @@ export const mimeTypesForImage: { [key: string]: string } = {
 export const MAX_FILE_SIZE_IN_MB = 10;
 export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;
 export const THUMBNAIL_URL = "thumb300x200-";
+
+export const PAGE_SIZE = ["10", "20", "30", "40", "50"];

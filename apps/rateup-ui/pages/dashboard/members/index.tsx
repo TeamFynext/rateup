@@ -59,7 +59,7 @@ const Members = () => {
       </Group>
       <PaperLayout>
         {isLoadingTeamsUser ? (
-          <Loader />
+          <Loader type="bars" />
         ) : (
           <Stack>
             {membersData?.data?.map(

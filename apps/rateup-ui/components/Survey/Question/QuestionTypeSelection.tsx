@@ -30,58 +30,37 @@ import {
   IconCaretUpDown,
   IconAdjustmentsQuestion,
   IconAddressBook,
+  IconCheckbox,
 } from "@tabler/icons-react";
-import { QuestionType } from "../../../types/enums";
-import { useContext, useState } from "react";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { createBlankQuestion } from "../../../utils/questions";
-import { QuestionTabsEnum } from "../EditSurvey";
+import {
+  QuestionType,
+  WaFlowFormNonInputElementType,
+} from "../../../types/enums";
+import { useState } from "react";
 import { IconPhoneFilled } from "@tabler/icons-react";
 import { IconScaleOutline } from "@tabler/icons";
-import {
-  QuestionTypesGroup,
-  WaSurveyQuestionTypes,
-} from "../../../utils/constants";
 import { useHover } from "@mantine/hooks";
 import { GoogleIcon } from "../../Button/GoogleIcon";
 import { googleReviewSupportedTypes } from "../../../utils/data";
 import { getQuestionTypeLabel } from "../../../utils/enums";
-import { useRouter } from "next/router";
-import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
 
 interface QuestionTypeSelectionProps {
-  setSelectedQ: (q: Question) => void;
-  setActiveTab: (tab: QuestionTabsEnum) => void;
-  isWaSurvey?: boolean;
+  questionTypeGroups: Array<{
+    title: string;
+    questionTypes: Array<any>;
+  }>;
+  handleTypeSelection: (type: QuestionType) => void;
 }
 export function QuestionTypeSelection({
-  setSelectedQ,
-  setActiveTab,
-  isWaSurvey,
+  questionTypeGroups,
+  handleTypeSelection,
 }: QuestionTypeSelectionProps) {
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
-  const [isSaving, setIsSaving] = useState(false);
-  const questionCreateMutation = useQuestionCreateMutation({
-    surveyId,
-    setIsSaving,
-  });
-  const handleTypeSelection = (type: QuestionType) => {
-    const newQ = createBlankQuestion(type, selectedLanguage);
-    const { id, ...restData } = newQ;
-    const saveQ = { ...restData };
-    questionCreateMutation.mutateAsync(saveQ).then((r) => {
-      setSelectedQ(r.data);
-      setActiveTab(QuestionTabsEnum.Edit);
-      setIsGoogleReviewSupported(false);
-    });
-  };
-  const filteredQuestionTypes = isWaSurvey
-    ? WaSurveyQuestionTypes
-    : QuestionTypesGroup;
-
   const [IsGoogleReviewSupported, setIsGoogleReviewSupported] = useState(false);
+
+  const handleQuestionTypeClick = (type) => {
+    handleTypeSelection(type);
+    setIsGoogleReviewSupported(false);
+  };
   const QuestionButton = ({ type }) => {
     const { hovered, ref } = useHover();
     const Icon = questionIcons[type];
@@ -98,7 +77,7 @@ export function QuestionTypeSelection({
             },
           }}
           p={15}
-          onClick={() => handleTypeSelection(type as QuestionType)}
+          onClick={() => handleQuestionTypeClick(type as QuestionType)}
           onMouseOver={() => {
             if (googleReviewSupportedTypes.includes(type))
               setIsGoogleReviewSupported(true);
@@ -114,8 +93,8 @@ export function QuestionTypeSelection({
     );
   };
   return (
-    <ScrollArea>
-      <Flex justify={"flex-end"}>
+    <Flex direction={"column"} h={"100%"}>
+      <Flex justify={"flex-end"} py="sm">
         {IsGoogleReviewSupported ? (
           <Badge
             leftSection={<GoogleIcon width={"1.3rem"} height={"1.3rem"} />}
@@ -135,29 +114,33 @@ export function QuestionTypeSelection({
           <Box h={"xl"}></Box>
         )}
       </Flex>
-      <Center style={{ height: "100%" }}>
-        <Stack gap={"md"}>
-          {filteredQuestionTypes?.map((qtype, i) => {
-            return (
-              <Stack gap={"sm"} key={i}>
-                <Title order={4} c="dimmed">
-                  {qtype?.title}
-                </Title>
-                <Grid px={"lg"}>
-                  {qtype?.questionTypes?.map((type, index) => {
-                    return (
-                      <Grid.Col span="content" key={index} p={"sm"}>
-                        <QuestionButton type={type} />
-                      </Grid.Col>
-                    );
-                  })}
-                </Grid>
-              </Stack>
-            );
-          })}
-        </Stack>
-      </Center>
-    </ScrollArea>
+      <Stack
+        gap={"md"}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+        }}
+      >
+        {questionTypeGroups?.map((qtype, i) => {
+          return (
+            <Stack gap={"sm"} key={i}>
+              <Title order={4} c="dimmed">
+                {qtype?.title}
+              </Title>
+              <Grid px={"lg"}>
+                {qtype?.questionTypes?.map((type, index) => {
+                  return (
+                    <Grid.Col span="content" key={index} p={"sm"}>
+                      <QuestionButton type={type} />
+                    </Grid.Col>
+                  );
+                })}
+              </Grid>
+            </Stack>
+          );
+        })}
+      </Stack>
+    </Flex>
   );
 }
 
@@ -184,6 +167,11 @@ const questionIcons = {
   [QuestionType.CustomNPS]: IconAdjustmentsQuestion,
   [QuestionType.PCQ]: IconAdjustmentsQuestion,
   [QuestionType.Contact]: IconAddressBook,
+  [QuestionType.TnC]: IconCheckbox,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
+  [WaFlowFormNonInputElementType.textBody]: IconTextSize,
+  [WaFlowFormNonInputElementType.textCaption]: IconTextSize,
+  [WaFlowFormNonInputElementType.textHeading]: IconTextSize,
+  [WaFlowFormNonInputElementType.textSubHeading]: IconTextSize,
 };

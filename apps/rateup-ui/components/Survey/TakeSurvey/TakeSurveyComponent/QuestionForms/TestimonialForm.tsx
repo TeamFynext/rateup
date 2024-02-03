@@ -5,15 +5,13 @@ import {
   FileButton,
   Group,
   Image,
-  Paper,
   Skeleton,
   Stack,
   TextInput,
   Textarea,
-  Title,
   Text,
   Rating,
-  closeOnEscape,
+  useMantineTheme,
 } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import {
@@ -25,10 +23,11 @@ import { showErrorToast } from "../../../../../utils/notifications";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import WebcamCapture from "../../../../input/WebCamCapture";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../../Modal/FormModalLayout";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal";
 import { fallbackImage } from "../../../../../utils/constants";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 interface TestimonialProps {
   features;
@@ -97,7 +96,8 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     setSelectedImage(event);
     toggleCropDialog();
   };
-
+  const theme = useMantineTheme();
+  console.log(features);
   return (
     <Stack>
       {selectedImage && (
@@ -110,7 +110,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           aspect={4 / 3}
         />
       )}
-      <Paper shadow="sm" className={classes.inputBox}>
+      <FormPaperLayout>
         <TextInput
           placeholder="Enter your name"
           value={response?.name}
@@ -121,9 +121,9 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             input: classes.input,
           }}
         />
-      </Paper>
+      </FormPaperLayout>
       {features?.[selectedLanguage]?.hasJobTitle && (
-        <Paper shadow="sm" className={classes.inputBox}>
+        <FormPaperLayout>
           <TextInput
             placeholder="Enter your job title"
             value={response?.jobTitle}
@@ -134,9 +134,9 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
               input: classes.input,
             }}
           />
-        </Paper>
+        </FormPaperLayout>
       )}
-      <Paper shadow="sm" className={classes.inputBox}>
+      <FormPaperLayout>
         <Textarea
           placeholder="Enter your testimonial"
           value={response?.testimonial}
@@ -147,7 +147,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             input: classes.input,
           }}
         />
-      </Paper>
+      </FormPaperLayout>
       {features?.[selectedLanguage]?.hasRating && (
         <>
           <Text>Rate Us Now</Text>
@@ -155,7 +155,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             value={response?.rating}
             onChange={(value) => updateResponse({ ...response, rating: value })}
             size={"xl"}
-            color="var(--tertiary-color)"
+            color={theme.primaryColor}
           />
         </>
       )}

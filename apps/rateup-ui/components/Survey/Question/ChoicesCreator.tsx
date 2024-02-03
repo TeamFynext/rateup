@@ -356,6 +356,7 @@ function Choice({
 
   const handleEditChoice = async () => {
     const isExist = form.values.choices?.[selectedLanguage]?.some((c, i) => {
+      if (i === index) return;
       return (
         (image ? c.value?.value?.trim() : c.value?.trim()) ==
         choiceValue?.trim()

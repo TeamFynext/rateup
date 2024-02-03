@@ -20,6 +20,7 @@ import {
   IconWaveSine,
   IconMessageChatbot,
 } from "@tabler/icons-react";
+
 import { UserRole } from "../../../utils/enums";
 import { useUserInfo } from "../../../backend/user/user.query";
 import {
@@ -154,6 +155,7 @@ export function getNavTopData(subscription?: Subscription) {
             href: "/dashboard/rm",
           },
         ]),
+    { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
     ...(hiddenModules.includes("testimonial")
       ? []
       : [
@@ -169,7 +171,6 @@ export function getNavTopData(subscription?: Subscription) {
 
 //data Array consisting of NavbarBottomData
 const navBottomData: Array<NavbarLinkProps> = [
-  { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
   { Icon: IconSettings, label: "Settings", href: "/dashboard/settings" },
   { Icon: IconLogout, label: "Logout", href: "/logout" },
 ];

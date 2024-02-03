@@ -174,7 +174,7 @@ export default function Teams() {
       </Group>
       <Space h="lg" />
       {isLoadingTeamsUser ? (
-        <Loader />
+        <Loader type="bars" />
       ) : (
         <>
           <Grid columns={9} p={10} className={styles["team-cards-container"]}>

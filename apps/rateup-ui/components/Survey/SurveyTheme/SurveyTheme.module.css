@@ -1,10 +1,40 @@
 .enable-welcome-page-switch-container {
-  height: 6.25rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  height: fit-content;
+  padding: 0.625rem;
+}
+
+.enable-welcome-page-switch-container :global(.mantine-Switch-label) {
+  font-size: 1rem;
 }
 
 .styles-component-container {
   flex: 1 1 auto;
+}
+
+/* styles for different preview view components */
+.parentContainer {
+  position: relative;
+  padding: 25px;
+}
+
+.titleBox {
+  position: relative;
+  padding: 5px;
+}
+
+.buttonBox {
+  position: relative;
+  padding: 0 23px;
+}
+
+.actionIcon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--grey-color-4);
+}
+.saveButton {
+  margin-top: 1rem;
+  background-color: #fff;
+  width: 100%;
 }

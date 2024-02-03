@@ -1,10 +1,8 @@
 import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
-import { getPublicwelcomeTheme } from "../../../../backend/WelcomeTheme/welcometheme.api";
 import Head from "next/head";
 import { useEffect } from "react";
-import { error } from "console";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -16,18 +14,17 @@ export const getServerSideProps = async (context: {
   try {
     const params = context.params;
     const surveyData = await getPublicSurvey(params.surveyId);
-    const surveyThemeData = await getPublicwelcomeTheme(params.surveyId);
-    return { props: { survey: surveyData, surveyThemeData: surveyThemeData } };
+    return { props: { survey: surveyData } };
   } catch (error) {
     console.error("error in getServerSideProps");
     console.error(error);
     return {
-      props: { survey: null, surveyThemeData: null, error_occured: true },
+      props: { survey: null, error_occured: true },
     };
   }
 };
 
-export default function Page({ survey, surveyThemeData, error_occured }) {
+export default function Page({ survey, error_occured }) {
   useEffect(() => {
     if (error_occured) {
       try {
@@ -95,7 +92,7 @@ export default function Page({ survey, surveyThemeData, error_occured }) {
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Star Icon" />
       </Head>
-      <TakeSurveyLayoutWeb survey={survey} surveyThemeData={surveyThemeData}>
+      <TakeSurveyLayoutWeb survey={survey}>
         <TakeSurvey survey={survey} />
       </TakeSurveyLayoutWeb>
     </>

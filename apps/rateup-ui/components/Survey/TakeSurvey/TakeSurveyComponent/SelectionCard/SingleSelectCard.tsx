@@ -7,8 +7,9 @@ import {
   Radio,
   Image,
   Stack,
+  useMantineTheme,
 } from "@mantine/core";
-import { useUncontrolled } from "@mantine/hooks";
+import { useHover, useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
 import { getImageValue } from "../../../../../utils/file-upload/upload";
 import cx from "clsx";
@@ -43,10 +44,38 @@ export function ImageCheckbox({
   });
   const radioButtonRef = useRef(null);
   const titleTypeString = typeof title === "string";
+  const theme = useMantineTheme();
+  const { hovered, ref } = useHover() as {
+    hovered: boolean;
+    ref: React.RefObject<HTMLButtonElement>;
+  };
   return (
     <UnstyledButton
       {...others}
-      c={"black"}
+      ref={ref}
+      c={
+        (
+          titleTypeString
+            ? selectedValue === title
+            : selectedValue === title?.value
+        )
+          ? "var(--mantine-color-white)"
+          : `var(--mantine-color-${theme.primaryColor}-outline)`
+      }
+      bg={
+        (
+          titleTypeString
+            ? selectedValue === title
+            : selectedValue === title?.value
+        )
+          ? `var(--mantine-color-${theme.primaryColor}-filled)`
+          : !hovered
+          ? ""
+          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+      }
+      style={{
+        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
+      }}
       onClick={() => {
         handleChange(true);
         radioButtonRef?.current?.click();

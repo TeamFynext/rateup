@@ -89,7 +89,7 @@ export default function () {
             />
           </Flex>
           <Center>
-            {isLoading && isAllCampaignLoading ? <Loader /> : <></>}
+            {isLoading && isAllCampaignLoading ? <Loader type="bars" /> : <></>}
             {isError && isAllCampaignError ? (
               <Stack>
                 <Text>Something went wrong</Text>

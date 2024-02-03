@@ -1,0 +1,15 @@
+.styles-component-div {
+  height: 100%;
+}
+
+.tabs-common-div :global(.mantine-Tabs-panel) {
+  flex: 1 1 auto;
+}
+
+.tabs-common-div :global(.mantine-Tabs-panel) > div {
+  height: 100%;
+}
+
+.tabs-common-div :global(.mantine-Tabs-panel) form {
+  height: 100%;
+}

@@ -85,16 +85,18 @@ export function ContainedTimeInput(props: Readonly<TimeInputProps>) {
   );
 }
 export function ContainedMultiSelect(props: MultiSelectProps) {
+  const { styles, ...restProps } = props;
   return (
     <MultiSelect
       searchable
       hidePickedOptions
-      {...props}
       styles={{
         input: {
           borderRadius: "12px",
         },
+        ...styles,
       }}
+      {...restProps}
     />
   );
 }

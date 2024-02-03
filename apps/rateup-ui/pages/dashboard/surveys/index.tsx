@@ -13,7 +13,7 @@ export default function Surveys() {
     refetch,
   } = useSurveys(!!selectedTeamId);
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return <Loader type="bars" />;
   if (error || !Array.isArray(allSurveys)) {
     console.error(allSurveys, error);
     return <SurveysPageError refetch={refetch} />;

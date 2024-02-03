@@ -44,7 +44,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   if (isLoading)
     return (
       <>
-        <Loader />
+        <Loader type="bars" />
       </>
     );
   if (error || !Array.isArray(surveys)) {

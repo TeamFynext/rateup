@@ -25,6 +25,7 @@ import { notifications } from "@mantine/notifications";
 import { currencyLabel } from "../../util/currencyData";
 import { fallbackImage } from "../../../../utils/constants";
 import MenuFoodLabelBadge from "../tag/MenuFoodLabelBadge";
+import { HoverCardComponent } from "../../../Survey/HoverCard/HoverCard";
 
 const TableRow = ({
   item,
@@ -58,7 +59,7 @@ const TableRow = ({
           <Text>
             {item?.price?.price && (
               <>
-                {currencyLabel[currency]?.symbol}&nbsp;
+                {currencyLabel[currency]?.symbol}
                 {item?.price?.price}
               </>
             )}
@@ -73,7 +74,7 @@ const TableRow = ({
                 <Text>
                   {element?.price && (
                     <>
-                      {currencyLabel[currency]?.symbol}&nbsp;
+                      {currencyLabel[currency]?.symbol}
                       {element?.price}
                     </>
                   )}
@@ -85,13 +86,11 @@ const TableRow = ({
       </Table.Td>
       <Table.Td>
         <Text>
-          <Spoiler
-            showLabel="Show more"
-            hideLabel="Hide"
-            transitionDuration={0}
-          >
-            {item?.description}
-          </Spoiler>
+          <HoverCardComponent
+            content={item?.description}
+            lineClamp={3}
+            c={"dark"}
+          />
         </Text>
       </Table.Td>
       <Table.Td>
