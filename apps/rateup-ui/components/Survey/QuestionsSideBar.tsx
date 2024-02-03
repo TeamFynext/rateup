@@ -1,6 +1,14 @@
 //TODO: refactor drag and drop
 
-import { Center, Paper, Stack, Text, Divider, ScrollArea } from "@mantine/core";
+import {
+  Center,
+  Paper,
+  Stack,
+  Text,
+  Divider,
+  ScrollArea,
+  Box,
+} from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -12,6 +20,7 @@ import { reorder } from "../../utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { IconPlus } from "@tabler/icons-react";
 import { RateupButtonBlue } from "../Button/RateupButtons";
+import styles from "./QuestionsSideBar.module.css";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -88,9 +97,9 @@ export function QuestionsSideBar({
   });
 
   return (
-    <Stack style={{ height: "100%" }}>
+    <Stack className={styles["add-question-btn-questions-list-container"]}>
       {questionsState?.length > 0 && (
-        <Stack>
+        <Box className={styles["add-question-btn-more-than-1-que"]}>
           <RateupButtonBlue
             onClick={handleAddQn}
             title={"Add Question"}
@@ -98,10 +107,14 @@ export function QuestionsSideBar({
             size="md"
             fullWidth
           />
-          <Divider my="sm" color="gray.2" />
-        </Stack>
+        </Box>
       )}
-      <ScrollArea h={"100%"} scrollbarSize={5} offsetScrollbars>
+
+      <ScrollArea
+        className={styles["questions-list-container"]}
+        scrollbarSize={10}
+        scrollbars={"y"}
+      >
         <DragDropContext
           onDragEnd={({ destination, source }) => {
             const reorderedQuestions = reorder(
@@ -114,7 +127,10 @@ export function QuestionsSideBar({
           }}
         >
           {!questionsState?.length && (
-            <Paper h={"100%"} onClick={handleAddQn}>
+            <Paper
+              style={{ cursor: "pointer", marginTop: "200px" }}
+              onClick={handleAddQn}
+            >
               <Center h="100%">
                 <Stack align="center">
                   <IconPlus size={36} />

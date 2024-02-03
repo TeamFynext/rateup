@@ -1,4 +1,4 @@
-import { Group, Loader, Stack, Text } from "@mantine/core";
+import { Box, Group, Loader, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconFileDownload, IconX } from "@tabler/icons-react";
@@ -219,11 +219,10 @@ const Responses = ({
   });
 
   return (
-    <Stack h="100%">
-      <PaperLayout
-        style={{ cursor: "pointer" }}
-        className={styles["total-responses-heading-container"]}
-      >
+    <Stack
+      className={styles["total-responses-header-and-responses-table-wrapper"]}
+    >
+      <PaperLayout className={styles["total-responses-heading-container"]}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <Group>
@@ -247,36 +246,35 @@ const Responses = ({
           </Group>
         </Group>
       </PaperLayout>
+
       {responseCount > 0 ? (
-        <PaperLayout>
-          <>
-            <TanstackTable data={responses} columns={columns} />
-            <FormModalLayout
-              opened={opened}
-              onClose={close}
-              title="Delete Response"
-              centered
-              buttonTitle="Delete"
-              includeCancelButton
-              onSubmit={confirmDelete}
-            >
-              <Stack py={"sm"}>
-                <Text>To proceed further, verify your email id.</Text>
-                <ContainedTextField
-                  withAsterisk
-                  label="Verify email"
-                  placeholder="Enter your login email"
-                  required
-                  value={verifyEmail}
-                  onChange={(e) => setVerifyEmail(e.target.value)}
-                />
-                <Text c="red">
-                  Once deleted, response entry data will be lost.
-                </Text>
-              </Stack>
-            </FormModalLayout>
-          </>
-        </PaperLayout>
+        <Box className={styles["responses-table-container"]}>
+          <TanstackTable data={responses} columns={columns} />
+          <FormModalLayout
+            opened={opened}
+            onClose={close}
+            title="Delete Response"
+            centered
+            buttonTitle="Delete"
+            includeCancelButton
+            onSubmit={confirmDelete}
+          >
+            <Stack py={"sm"}>
+              <Text>To proceed further, verify your email id.</Text>
+              <ContainedTextField
+                withAsterisk
+                label="Verify email"
+                placeholder="Enter your login email"
+                required
+                value={verifyEmail}
+                onChange={(e) => setVerifyEmail(e.target.value)}
+              />
+              <Text c="red">
+                Once deleted, response entry data will be lost.
+              </Text>
+            </Stack>
+          </FormModalLayout>
+        </Box>
       ) : (
         <NothingFound text="No responses yet" />
       )}

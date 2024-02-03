@@ -296,8 +296,8 @@ function StylesComponent({
           </ScrollArea>
         </TabsCommon>
       </PaperLayout>
-      <PaperLayout h="70px">
-        <Group justify="space-between" h="100%">
+      <PaperLayout style={{ padding: "0.625rem 1rem" }}>
+        <Group justify="space-between">
           <Text
             c={
               compareTwoObjects(_savedSurveyTheme, surveyTheme)

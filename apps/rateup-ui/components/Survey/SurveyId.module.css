@@ -1,5 +1,6 @@
 .title-tabs-container {
   flex: 0 0 auto;
+  margin-bottom: 10px;
 }
 
 .tab-panel-container {

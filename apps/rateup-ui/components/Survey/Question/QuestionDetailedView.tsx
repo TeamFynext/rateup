@@ -47,6 +47,7 @@ import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartSt
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import ContactExtraProps from "./ContactExtraProps";
 import TncExtraProps from "./TncExtraProps";
+import styles from "./QuestionDetailedView.module.css";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -139,17 +140,8 @@ export function QuestionDetailedView({
   return (
     <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
       <Stack style={{ height: "100%" }}>
-        <ScrollArea
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: "1 1 0",
-            overflow: "auto",
-          }}
-          scrollbarSize={5}
-          offsetScrollbars
-        >
-          <Badge variant="outline" size="lg">
+        <ScrollArea style={{ flex: "1 1 0", overflow: "auto" }}>
+          <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
             {question.type}
           </Badge>
           <Group justify="space-between" p={2} gap={2}>
@@ -220,80 +212,78 @@ export function QuestionDetailedView({
           </Center>
         </ScrollArea>
 
-        <Stack mt={"auto"}>
-          <Divider />
+        <Divider />
 
-          <Group mt="sm" justify="space-between" gap="sm">
-            <Group justify="flex-start" gap="md">
-              <Checkbox
-                label="Required"
-                color="var(--tertiary-color)"
-                fw={600}
-                mr="100px"
-                {...form.getInputProps("required", { type: "checkbox" })}
-              />
-              {logicSupportedTypes.includes(question?.type) && (
-                <RateupButtonSecondary
-                  title={"Logic Jump"}
-                  leftIcon={
-                    <Image
-                      src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                      h={30}
-                      w={30}
-                      fit="contain"
-                    />
-                  }
-                  size="sm"
-                  onClick={async () => {
-                    let save = await handleSave();
-                    save === "saved" &&
-                      setActiveTab(QuestionTabsEnum.LogicEditor);
-                  }}
-                />
-              )}
-              {googleReviewSupportedTypes.includes(question?.type) && (
-                <RateupButtonSecondary
-                  title={"Google Review"}
-                  leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
-                  size="sm"
-                  onClick={async () => {
-                    let save = await handleSave();
-                    save === "saved" &&
-                      setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
-                  }}
-                />
-              )}
-              {validationSupportedTypes.includes(question?.type) && (
-                <RateupButtonSecondary
-                  title={"Custom Validation"}
-                  leftIcon={<IconEdit />}
-                  size="sm"
-                  onClick={async () => {
-                    let save = await handleSave();
-                    save === "saved" &&
-                      setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
-                  }}
-                />
-              )}
-            </Group>
-
-            <Group>
-              <RateupButtonBlue
-                title={
-                  incompleteLanguages.length > 1 ||
-                  (incompleteLanguages.length > 0 &&
-                    incompleteLanguages[0] !== selectedLanguage)
-                    ? "Fill Next Language"
-                    : "Save"
+        <Group mt="sm" justify="space-between" gap="sm">
+          <Group justify="flex-start" gap="md">
+            <Checkbox
+              label="Required"
+              color="var(--tertiary-color)"
+              fw={600}
+              mr="100px"
+              {...form.getInputProps("required", { type: "checkbox" })}
+            />
+            {logicSupportedTypes.includes(question?.type) && (
+              <RateupButtonSecondary
+                title={"Logic Jump"}
+                leftIcon={
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                    h={30}
+                    w={30}
+                    fit="contain"
+                  />
                 }
-                size="md"
-                onClick={handleSave}
-                leftIcon={<IconDeviceSdCard />}
-                loading={isSaving}
+                size="sm"
+                onClick={async () => {
+                  let save = await handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.LogicEditor);
+                }}
               />
-            </Group>
+            )}
+            {googleReviewSupportedTypes.includes(question?.type) && (
+              <RateupButtonSecondary
+                title={"Google Review"}
+                leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
+                size="sm"
+                onClick={async () => {
+                  let save = await handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                }}
+              />
+            )}
+            {validationSupportedTypes.includes(question?.type) && (
+              <RateupButtonSecondary
+                title={"Custom Validation"}
+                leftIcon={<IconEdit />}
+                size="sm"
+                onClick={async () => {
+                  let save = await handleSave();
+                  save === "saved" &&
+                    setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                }}
+              />
+            )}
           </Group>
-        </Stack>
+
+          <Group>
+            <RateupButtonBlue
+              title={
+                incompleteLanguages.length > 1 ||
+                (incompleteLanguages.length > 0 &&
+                  incompleteLanguages[0] !== selectedLanguage)
+                  ? "Fill Next Language"
+                  : "Save"
+              }
+              size="md"
+              onClick={handleSave}
+              leftIcon={<IconDeviceSdCard />}
+              loading={isSaving}
+            />
+          </Group>
+        </Group>
       </Stack>
     </form>
   );
