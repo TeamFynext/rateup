@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
 import {
-  PillsInput,
-  Pill,
-  Combobox,
   CheckIcon,
-  Group,
-  useCombobox,
-  Image,
+  Combobox,
   Flex,
+  Group,
+  Image,
+  Pill,
+  PillsInput,
+  ScrollAreaAutosize,
+  Text,
+  useCombobox,
 } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { menuLabelWithText } from "../util/menuLabelData";
 
 export function FoodLabelSelector({ form }) {
@@ -72,15 +74,23 @@ export function FoodLabelSelector({ form }) {
   return (
     <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
       <Combobox.DropdownTarget>
-        <PillsInput onClick={() => combobox.openDropdown()}>
-          <Pill.Group>
+        <PillsInput
+          onClick={() => combobox.openDropdown()}
+          radius={"md"}
+          label={
+            <Text c={"var(--mantine-color-gray-7)"} fz={"xs"}>
+              Allergen Info
+            </Text>
+          }
+        >
+          <Pill.Group mih={31}>
             {values}
             <Combobox.EventsTarget>
               <PillsInput.Field
                 onFocus={() => combobox.openDropdown()}
                 onBlur={() => combobox.closeDropdown()}
                 value={search}
-                placeholder="Search values"
+                placeholder="Search Values"
                 onChange={(event) => {
                   combobox.updateSelectedOptionIndex();
                   setSearch(event.currentTarget.value);
@@ -98,13 +108,15 @@ export function FoodLabelSelector({ form }) {
       </Combobox.DropdownTarget>
 
       <Combobox.Dropdown>
-        <Combobox.Options>
-          {options.length > 0 ? (
-            options
-          ) : (
-            <Combobox.Empty>Nothing found...</Combobox.Empty>
-          )}
-        </Combobox.Options>
+        <ScrollAreaAutosize mah={300}>
+          <Combobox.Options>
+            {options.length > 0 ? (
+              options
+            ) : (
+              <Combobox.Empty>Nothing found...</Combobox.Empty>
+            )}
+          </Combobox.Options>
+        </ScrollAreaAutosize>
       </Combobox.Dropdown>
     </Combobox>
   );

@@ -1,14 +1,9 @@
 import { ActionIcon, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
-import {
-  IconEdit,
-  IconReplace,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
-import React from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { IconEdit, IconPlus, IconReplace } from "@tabler/icons-react";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
 interface CategoryCardHeaderProps {
   readonly category: MenuCategory;
@@ -79,11 +74,8 @@ export function CategoryCardHeader({
             <IconEdit />
           </Tooltip>
         </ActionIcon>
-        <ActionIcon c={"red"} bg={"white"} radius={"md"} onClick={toggle}>
-          <Tooltip label="Delete">
-            <IconTrash />
-          </Tooltip>
-        </ActionIcon>
+        <ActionIconCommon handleClick={toggle} />
+
         <Stack pr={"sm"}>
           <ActionIcon
             variant={"transparent"}

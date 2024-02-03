@@ -202,17 +202,16 @@ const Responses = ({
       });
     }
   };
-
-  if (isQLoading) return <Loader type="bars" />;
-  if (QError) return <Text>An error has occurred</Text>;
-  if (isLoading) return <Loader type="bars" />;
-
   const columns = useSurveyResponseColumns({
     questions,
     defaultLanguage,
     setSelectedRowId,
+    open,
   });
 
+  if (isQLoading) return <Loader type="bars" />;
+  if (QError) return <Text>An error has occurred</Text>;
+  if (isLoading) return <Loader type="bars" />;
   const responseCount = responses?.length;
 
   return (

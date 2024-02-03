@@ -11,6 +11,7 @@ import {
   Stack,
   Table,
   Text,
+  Tooltip,
   UnstyledButton,
   rem,
 } from "@mantine/core";
@@ -46,13 +47,13 @@ function TanstackTable({
   enableFilter = true,
   enablePagination = true,
   enableColumnSelection = true,
-}: {
+}: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
   enableFilter?: boolean;
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
-}) {
+}>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [filterVisibility, setFilterVisibility] = React.useState(false);
@@ -99,7 +100,7 @@ function TanstackTable({
         {enableFilter && (
           <ActionIcon
             onClick={() => setFilterVisibility((el) => !el)}
-            variant="outline"
+            variant={filterVisibility ? "filled" : "outline"}
           >
             <IconFilter
               style={{ width: rem(16), height: rem(16) }}
@@ -153,14 +154,16 @@ function TanstackTable({
           </Popover>
         )}
         {enableFilter && (
-          <RateupButtonSecondary
-            onClick={() => table.resetColumnFilters()}
-            title="Reset"
-          />
+          <Tooltip label="Clear the filtered values">
+            <RateupButtonSecondary
+              onClick={() => table.resetColumnFilters()}
+              title="Reset"
+            />
+          </Tooltip>
         )}
       </Flex>
-      <ScrollArea className={"table-container"} scrollbarSize={"0.625rem"}>
-        <Stack justify="space-between" mih={"min(60dvh,440px)"} mah={"60dvh"}>
+      <ScrollArea scrollbarSize={"0.625rem"}>
+        <Stack justify="space-between" mih={"min(60dvh,440px)"}>
           <Table withRowBorders>
             <Table.Thead className={styles["table-thead"]}>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -282,6 +285,7 @@ function TanstackTable({
             }}
             value={String(table.getState().pagination.pageSize)}
             data={PAGE_SIZE}
+            allowDeselect={false}
             styles={{
               input: {
                 height: 10,

@@ -17,38 +17,57 @@ import { ChoiceTypeQuestions } from "./constants";
 
 export function getResponse(type: any, response: any) {
   if (!response) return "";
-  if (type === QuestionType.Testimonial) {
-    return response.testimonial;
-  } else if (type === QuestionType.EmailPhone) {
-    return Object.values(response).filter(Boolean).join(" , ");
-  } else if (type === QuestionType.DateTime) {
-    const date = dayjs(response);
-    const formattedDate = date.format("DD, MMM YYYY");
-    return `${formattedDate}`;
-  } else if (type === QuestionType.Contact) {
-    let formattedResponse = Object.entries(response).map(
-      ([key, value]) => key + ": " + value,
-    );
-    return formattedResponse.join(", ");
-  } else if (ChoiceTypeQuestions.includes(type)) {
-    if (response) {
-      let formattedValue = "";
-      if (type === QuestionType.DDMS || type === QuestionType.MSQ) {
-        formattedValue = response
-          .map((item) => {
-            return item?.value?.trim();
-          })
-          .join(", ");
-      } else {
-        formattedValue = response?.value;
-      }
-      return formattedValue;
-    } else {
-      return "";
-    }
-  } else if (type === QuestionType.WaList) {
-    const { title, description } = response[QuestionType.WaList];
-    return description ? `${title}: ${description}` : title;
+
+  switch (type) {
+    case QuestionType.Testimonial:
+      return response.testimonial;
+    case QuestionType.DateTime:
+      return formatDateTime(response);
+    case QuestionType.Contact:
+    case QuestionType.Phone:
+    case QuestionType.Email:
+    case QuestionType.EmailPhone:
+      return formatContactInfo(response);
+    case QuestionType.DDMS:
+    case QuestionType.MSQ:
+      return formatChoiceTypeQuestions(response);
+    case QuestionType.WaList:
+      return formatWaList(response);
+    default:
+      return formatDefaultResponse(type, response);
+  }
+}
+
+function formatDateTime(response) {
+  const date = dayjs(response);
+  return date.format("DD, MMM YYYY");
+}
+
+function formatContactInfo(response) {
+  if (typeof response === "string") return response;
+  return Object.entries(response)
+    .filter(Boolean)
+    .map(([key, value]) => `${key}: ${String(value)}`)
+    .join(", ");
+}
+
+function formatChoiceTypeQuestions(response) {
+  let formattedValue = "";
+  if (response) {
+    formattedValue = response.map((item) => item?.value?.trim()).join(", ");
+  }
+  return formattedValue;
+}
+
+function formatWaList(response) {
+  const { title, description } = response[QuestionType.WaList];
+  return description ? `${title}: ${description}` : title;
+}
+
+function formatDefaultResponse(type, response) {
+  // Handle other types or default case
+  if (ChoiceTypeQuestions.includes(type)) {
+    return response ? response.value : "";
   }
   return response;
 }

@@ -1,6 +1,9 @@
+import { useEffect, useRef, useState } from "react";
+
+import { useCounter, useMediaQuery } from "@mantine/hooks";
+import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
 import {
   ActionIcon,
-  Box,
   Group,
   Image,
   Modal,
@@ -9,8 +12,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import React, { useEffect, useRef, useState } from "react";
-import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
 import {
   IconBookmark,
   IconChevronLeft,
@@ -18,24 +19,20 @@ import {
   IconInfoCircle,
   IconPlus,
 } from "@tabler/icons-react";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { useCounter, useMediaQuery } from "@mantine/hooks";
-import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
+
 import { Slide } from "../menu/slide/Slide";
+import { MenuItemPriceType } from "../../types/enums";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import CenteredSpinner from "../Loaders/CenteredSpinner";
+import { showErrorToast } from "../../utils/notifications";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
+import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
 import {
   useCreateMenuBannerMutation,
   useDeleteMenuBannerMutation,
   useMenuBannerQuery,
   useUpdateMenuBannerMutation,
 } from "../../backend/menu/Banner/banner.query";
-import CenteredSpinner from "../Loaders/CenteredSpinner";
-import { MenuItemPriceType } from "../../types/enums";
-import { showErrorToast } from "../../utils/notifications";
-import {
-  getFileNameFromKey,
-  getFileUrlFromKey,
-  getImageValue,
-} from "../../utils/file-upload/upload";
 
 type BannerAddAndViewModalProps = {
   opened: boolean;
