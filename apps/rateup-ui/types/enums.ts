@@ -163,3 +163,8 @@ export enum WaFlowFormElementType {
   dropDown = "Dropdown",
   optIn = "OptIn",
 }
+
+export enum TestimonialAlignment {
+  Horizontal = "horizontal",
+  Vertical = "vertical",
+}

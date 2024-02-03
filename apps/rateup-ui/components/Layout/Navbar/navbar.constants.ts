@@ -18,6 +18,7 @@ import {
   IconFileInfo,
   IconHome,
   IconWaveSine,
+  IconMessageChatbot,
 } from "@tabler/icons-react";
 import { UserRole } from "../../../utils/enums";
 import { useUserInfo } from "../../../backend/user/user.query";
@@ -151,6 +152,15 @@ export function getNavTopData(subscription?: Subscription) {
             Icon: IconComet,
             label: "Reputation",
             href: "/dashboard/rm",
+          },
+        ]),
+    ...(hiddenModules.includes("testimonial")
+      ? []
+      : [
+          {
+            Icon: IconMessageChatbot,
+            label: "Testimonial",
+            href: "/dashboard/testimonial",
           },
         ]),
   ];

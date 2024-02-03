@@ -23,6 +23,7 @@ import {
   deleteSurvey,
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
+  getSurveyWithQuestions,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -114,6 +115,14 @@ export const useSurveys = (specificTeamIsSelected: boolean) => {
     enabled: !specificTeamIsSelected,
     queryKey: ["surveys"],
     queryFn: getSurveys,
+  });
+};
+
+export const useSurveysWithQuestions = (specificTeamIsSelected: boolean) => {
+  return useQuery({
+    enabled: !specificTeamIsSelected,
+    queryKey: ["surveyswithquestions"],
+    queryFn: getSurveyWithQuestions,
   });
 };
 
