@@ -1,8 +1,15 @@
-.result-page-tabs-filter-btn-container {
+.result-page-tabs-and-filter-btn-container {
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
+}
+
+.panels-container {
+  flex: 1 1 0;
+  overflow: auto;
+  width: 100%;
 }
 
 .filters-popover-dropdown-div {

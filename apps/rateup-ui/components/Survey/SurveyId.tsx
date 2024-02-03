@@ -7,6 +7,7 @@ import {
   Title,
   MantineProvider,
   Box,
+  ScrollAreaAutosize,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
@@ -181,7 +182,6 @@ export default function SurveyID() {
                 ) : null}
               </Grid.Col>
             </Grid>
-            <Space h="md" />
             <Box className={styles["tab-panel-container"]}>
               <Tabs.Panel
                 value={TabEnum.Edit}
@@ -204,25 +204,27 @@ export default function SurveyID() {
                 )}
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Settings}>
-                <SurveySettings
-                  surveyId={surveyId}
-                  survey={survey}
-                  enabledModules={
-                    survey?.type === SurveyType.WhatsApp
-                      ? ["name", "language", "teams", "location"]
-                      : [
-                          "name",
-                          "password",
-                          "language",
-                          "kiosk",
-                          "teams",
-                          "preview",
-                          "location",
-                          "enableNotificationEmail",
-                          "notificationEmail",
-                        ]
-                  }
-                />
+                <ScrollAreaAutosize scrollbarSize={0}>
+                  <SurveySettings
+                    surveyId={surveyId}
+                    survey={survey}
+                    enabledModules={
+                      survey?.type === SurveyType.WhatsApp
+                        ? ["name", "language", "teams", "location"]
+                        : [
+                            "name",
+                            "password",
+                            "language",
+                            "kiosk",
+                            "teams",
+                            "preview",
+                            "location",
+                            "enableNotificationEmail",
+                            "notificationEmail",
+                          ]
+                    }
+                  />
+                </ScrollAreaAutosize>
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Result}>
                 <Result

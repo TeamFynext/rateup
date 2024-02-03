@@ -1,4 +1,11 @@
-import { Stack, Text, NumberInput, Group, Divider } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  NumberInput,
+  Group,
+  Divider,
+  ScrollArea,
+} from "@mantine/core";
 import React from "react";
 import { Button as ButtonType } from "../surveyTheme.types";
 import CustomColorPicker from "./customelements/CustomColorPicker";
@@ -12,7 +19,7 @@ function ButtonStyles({
   setCurrentstyles: (key: string, value: any) => void;
 }) {
   return (
-    <>
+    <ScrollArea h={"51vh"} w={"100%"}>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
         <Group>
@@ -78,7 +85,7 @@ function ButtonStyles({
           }}
         />
       </Stack>
-    </>
+    </ScrollArea>
   );
 }
 

@@ -1,4 +1,11 @@
-import { Select, Stack, Text, NumberInput, Divider } from "@mantine/core";
+import {
+  Select,
+  Stack,
+  Text,
+  NumberInput,
+  Divider,
+  ScrollArea,
+} from "@mantine/core";
 
 import React from "react";
 import { Subtitle } from "../surveyTheme.types";
@@ -14,7 +21,7 @@ function DescStyles({
   setCurrentstyles: (key: string, value: any) => void;
 }) {
   return (
-    <>
+    <ScrollArea h={"51vh"} w={"100%"}>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
         <Select
@@ -67,7 +74,7 @@ function DescStyles({
           }}
         />
       </Stack>
-    </>
+    </ScrollArea>
   );
 }
 

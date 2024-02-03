@@ -38,6 +38,7 @@ import { Filter } from "./Filter/Filter";
 import { fuzzyFilter } from "../Survey/Response/Filter";
 import { PAGE_SIZE } from "../../utils/constants";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
+import styles from "./TanstackTable.module.css";
 
 function TanstackTable({
   data,
@@ -89,7 +90,12 @@ function TanstackTable({
 
   return (
     <>
-      <Flex gap={"md"} justify={"end"} align={"center"}>
+      <Flex
+        gap={"md"}
+        justify={"end"}
+        align={"center"}
+        className={"actions-container"}
+      >
         {enableFilter && (
           <ActionIcon
             onClick={() => setFilterVisibility((el) => !el)}
@@ -153,10 +159,10 @@ function TanstackTable({
           />
         )}
       </Flex>
-      <ScrollArea maw={"80vw"}>
+      <ScrollArea className={"table-container"} scrollbarSize={"0.625rem"}>
         <Stack justify="space-between" mih={"min(60dvh,440px)"} mah={"60dvh"}>
           <Table withRowBorders>
-            <Table.Thead>
+            <Table.Thead className={styles["table-thead"]}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -253,7 +259,7 @@ function TanstackTable({
           </Table>
         </Stack>
       </ScrollArea>
-      <Flex gap={"xl"}>
+      <Flex gap={"xl"} className={"pagination-container"}>
         {enablePagination && (
           <Pagination.Root
             total={table.getPageCount()}

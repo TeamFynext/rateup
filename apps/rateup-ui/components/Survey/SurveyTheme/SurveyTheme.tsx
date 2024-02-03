@@ -7,10 +7,11 @@ import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 import SurveyThemeContextProvider from "./SurveyThemeContext";
-import { Stack, Flex, Switch, Group, Tabs } from "@mantine/core";
+import { Stack, Flex, Switch, Group, Tabs, Box } from "@mantine/core";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import { SelectedItemEnum, ThemeTabEnum } from "./SurveyTheme.enums";
+import styles from "./SurveyTheme.module.css";
 
 function SurveyTheme({ survey }) {
   const [activeThemeTab, setActiveThemeTab] = useState<ThemeTabEnum>(
@@ -45,6 +46,7 @@ function SurveyTheme({ survey }) {
   return (
     <SurveyThemeContextProvider surveyTheme={surveyTheme}>
       <StyledTabs
+        className={styles["theme-page-div"]}
         value={activeThemeTab}
         onChange={(value) => setActiveThemeTab(value as ThemeTabEnum)}
         styles={{
@@ -58,7 +60,8 @@ function SurveyTheme({ survey }) {
           <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey Theme</Tabs.Tab>
           <Tabs.Tab value={ThemeTabEnum.THANKYOU}>Thankyou Page</Tabs.Tab>
         </Tabs.List>
-        <Flex h={"calc(100% - 60px)"} p={"sm"}>
+
+        <Flex>
           <SurveyThemePreviewLayout
             isLoading={isLoading}
             survey={survey}
@@ -74,7 +77,8 @@ function SurveyTheme({ survey }) {
               <ThankyouPageThemeView {...{ selectedType, setSelectedType }} />
             </Tabs.Panel>
           </SurveyThemePreviewLayout>
-          <Stack h="100%" miw={300} ml="xs" gap={5} style={{ flex: 0.3 }}>
+
+          <Stack style={{ flex: 0.27 }} miw={300} p={"0.4375rem"}>
             {activeThemeTab === ThemeTabEnum.WELCOME && (
               <PaperLayout h={"60px"}>
                 <Group justify="center" h="100%" w="100%">

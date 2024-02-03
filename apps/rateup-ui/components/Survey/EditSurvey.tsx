@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import classes from "./EditSurvey.module.css";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { MotionTransition } from "../animation/MotionTransition";
+import styles from "./EditSurvey.module.css";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -48,8 +48,15 @@ export function EditSurvey({
   }, [questions]);
 
   return (
-    <Flex w={"100%"} mah={"100%"} p={2} gap={10} style={{ overflow: "auto" }}>
-      <PaperLayout style={{ flex: 0.3 }}>
+    <Flex
+      w={"100%"}
+      h={"100%"}
+      mah={"100%"}
+      p={2}
+      gap={10}
+      style={{ overflow: "auto" }}
+    >
+      <PaperLayout className={styles["question-sidebar-container"]}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -60,20 +67,18 @@ export function EditSurvey({
           addQnTrigger={addQnTrigger}
         />
       </PaperLayout>
-      <PaperLayout style={{ flex: 0.7 }}>
+      <PaperLayout className={styles["question-editor-container"]}>
         <Tabs
-          px={"md"}
-          pb="md"
           value={activeTab}
           onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           style={{ height: "100%" }}
           classNames={{
-            panel: classes.panel,
+            panel: styles["panel"],
           }}
         >
           <Tabs.Panel
             value={QuestionTabsEnum.Edit}
-            className={classes["edit-survey-panel"]}
+            className={styles["question-detailed-view-panel"]}
           >
             {selectedQ && (
               <MotionTransition keyValue={selectedQ}>
