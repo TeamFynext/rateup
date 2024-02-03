@@ -2,8 +2,18 @@ import axios from "axios";
 import prisma from "../../../utils/prisma";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
-import { generateFlowMessageData } from "./flow.utils";
+import {
+  generateFlowMessageData,
+  getFlowJsonWithTitleAndDescription,
+  injectIdToFlowJson,
+  removeIdFromFlowJson,
+  waFlowFormElementIterator,
+} from "./flow.utils";
 import { WaFlow } from "@prisma/client";
+import { UpdateFlowInput } from "./flow.schema";
+import FormData from "form-data";
+import { log } from "../../../utils/logger";
+import { WaFlowStatus } from "../../../types/enums";
 
 /**
  * Get flows from whatsapp
@@ -32,16 +42,60 @@ export async function getFlowsFromWa(orgId: string) {
  */
 export async function getFlowFromWa(orgId: string, flowId: string) {
   const waSettings = await getWaSettings(orgId);
+  //query: fields=id,name,categories,preview,status,validation_errors,json_version,data_api_version,data_channel_uri,whatsapp_business_account,application
 
   const res = await callWhatsappApi(
-    `/${waSettings.businessId}/flows/${flowId}`,
+    `/${flowId}`,
     "GET",
     waSettings.accessToken,
   );
 
-  const flow = res.data.data as WaFlowWa;
+  const flow = res.data as WaFlowWa;
 
   return flow;
+}
+
+type WaFlowPreview = { preview_url: string; expires_at: string };
+export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
+  const waSettings = await getWaSettings(orgId);
+
+  const res = await callWhatsappApi(
+    `/${waFlowId}?fields=preview`,
+    "GET",
+    waSettings.accessToken,
+  );
+
+  return res.data.preview as WaFlowPreview;
+}
+
+export async function getFlowPreviewFromDb(dbFlowId: string) {
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      dbFlowId,
+    },
+  });
+  return flow.preview;
+}
+
+export async function getFlowPreview(orgId: string, dbFlowId: string) {
+  const flow = await getFlowFromDb(dbFlowId);
+  if (
+    flow?.preview?.expires_at &&
+    new Date(flow.preview.expires_at) > new Date()
+  ) {
+    return flow.preview;
+  } else {
+    const preview = await getFlowPreviewFromWa(orgId, flow.flowId);
+    await prisma.waFlow.update({
+      where: {
+        dbFlowId,
+      },
+      data: {
+        preview,
+      },
+    });
+    return preview;
+  }
 }
 
 /**
@@ -67,14 +121,16 @@ export async function getFlowsFromDb(orgId: string) {
  * @param dbFlowId
  * @returns
  */
-export async function getFlowFromDb(orgId: string, dbFlowId: string) {
+export async function getFlowFromDb(dbFlowId: string) {
   const flow = await prisma.waFlow.findFirst({
     where: {
-      orgId,
       dbFlowId,
     },
   });
-  return flow as unknown as WaFlow & { json: WaFlowJson };
+  return flow as unknown as WaFlow & {
+    json: WaFlowJson;
+    preview: WaFlowPreview;
+  };
 }
 
 export async function getUnsyncedFlows(orgId: string) {
@@ -88,14 +144,15 @@ export async function getUnsyncedFlows(orgId: string) {
   return unsyncedFlows;
 }
 
-export async function getFlowJson(orgId: string, waFlowId: string) {
+export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
   const assets = await getFlowAssets(orgId, waFlowId);
   const jsonAssetLink = assets.find(
     (asset) => asset.asset_type === "FLOW_JSON",
   ).download_url;
 
   const res = await axios.get(jsonAssetLink);
-  return res.data;
+  const json = injectIdToFlowJson(res.data);
+  return json;
 }
 
 /**
@@ -121,25 +178,47 @@ interface sendFlowProps {
   orgId: string;
   dbFlowId: string;
   phone: string;
+  mode: WaFlowStatus.PUBLISHED | WaFlowStatus.DRAFT;
 }
-export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
-  const waSettings = await getWaSettings(orgId);
-  const flow = await getFlowFromDb(orgId, dbFlowId);
-  const messageData = generateFlowMessageData({
-    to: phone,
-    flow_id: flow.flowId,
-    flow_cta: "Start",
-    screen_id: (flow.json as any).screens[0].id,
-    body: "Would you like to start the survey?", // TODO: make this configurable
-    // TODO: look into flow_token. this could be used to track the flow
-  });
+export async function sendFlow({
+  orgId,
+  dbFlowId,
+  phone,
+  mode,
+}: sendFlowProps) {
+  try {
+    const waSettings = await getWaSettings(orgId);
+    const flow = await getFlowFromDb(dbFlowId);
+    const messageData = generateFlowMessageData({
+      to: phone,
+      flow_id: flow.flowId,
+      flow_cta: "Start",
+      screen_id: (flow.json as any).screens[0].id,
+      body: "Would you like to start the survey?", // TODO: make this configurable
+      mode: mode.toLocaleLowerCase() as any,
+      // TODO: look into flow_token. this could be used to track the flow
+    });
 
-  await callWhatsappApi(
-    `/${waSettings.phoneId}/messages`,
-    "POST",
-    waSettings.accessToken,
-    messageData,
-  );
+    await callWhatsappApi(
+      `/${waSettings.phoneId}/messages`,
+      "POST",
+      waSettings.accessToken,
+      messageData,
+    );
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}
+interface CreateFlowCopyInDbArgs {
+  orgId: string;
+  flowId: string;
+  json: WaFlowJson;
+  flowMap: any;
+  surveyId: string;
+  status: string;
+  name: string;
 }
 
 export async function createFlowCopyInDb({
@@ -148,13 +227,9 @@ export async function createFlowCopyInDb({
   json,
   flowMap,
   surveyId,
-}: {
-  orgId: string;
-  flowId: string;
-  json: WaFlowJson;
-  flowMap: any;
-  surveyId: string;
-}) {
+  status,
+  name,
+}: CreateFlowCopyInDbArgs) {
   const flow = await prisma.waFlow.create({
     data: {
       orgId,
@@ -162,8 +237,143 @@ export async function createFlowCopyInDb({
       json,
       map: flowMap,
       surveyId: surveyId,
+      status: status,
+      name: name,
     },
   });
 
   return flow;
+}
+
+/**
+ * Creates flow in whatsapp
+ * @param req
+ * @param rep
+ */
+export async function createFlowInWa(
+  orgId: string,
+  createFlowInput: { name: string; categories: string[] },
+) {
+  const { businessId, accessToken } = await getWaSettings(orgId);
+  const { data } = await callWhatsappApi(
+    `/${businessId}/flows`,
+    "POST",
+    accessToken,
+    createFlowInput,
+  );
+  return data as { id: string };
+}
+
+export async function updateFlowInDb(
+  orgId: string,
+  dbFlowId: string,
+  data: UpdateFlowInput,
+) {
+  return prisma.waFlow.update({
+    where: {
+      dbFlowId: dbFlowId,
+    },
+    data: data,
+    include: {
+      survey: true,
+    },
+  });
+}
+export async function updateFlowMetaDataInWa(
+  orgId: string,
+  flowId: string,
+  name: string,
+  categories: string[],
+) {
+  const { accessToken } = await getWaSettings(orgId);
+  const { data } = await callWhatsappApi(`/${flowId}`, "PUT", accessToken, {
+    name,
+    categories,
+  });
+  return data as { id: string };
+}
+
+/**
+ * Updates flowjson in whatsapp server.
+ * Strips the id from the json before sending it to whatsapp server
+ *
+ * !!! Don't forget to add title and description, if any, to the json before sending it to this function
+ * @param orgId
+ * @param waFlowId
+ * @param json
+ */
+export async function updateFlowJsonInWa(
+  orgId: string,
+  waFlowId: string,
+  json: WaFlowJson,
+) {
+  const { accessToken } = await getWaSettings(orgId);
+  json = removeIdFromFlowJson(json);
+
+  // converting to file
+  const formData = new FormData();
+  const buffer = Buffer.from(JSON.stringify(json), "utf-8");
+  formData.append("file", buffer, {
+    contentType: "application/json",
+    filename: "flow.json",
+  });
+  formData.append("asset_type", "FLOW_JSON");
+  formData.append("name", "flow.json");
+
+  try {
+    const res = await axios.post(
+      `https://graph.facebook.com/v18.0/${waFlowId}/assets`,
+      formData, // Upload the FormData
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          ...formData.getHeaders(), // Add the form-data headers
+        },
+      },
+    );
+    log.trace("Updated flow json in wa %s", waFlowId);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+export async function deleteFlowInWa(orgId: string, waFlowId: string) {
+  const { accessToken } = await getWaSettings(orgId);
+  const res = await callWhatsappApi(`/${waFlowId}`, "DELETE", accessToken);
+  return res.data;
+}
+
+export async function deleteFlowInDb(dbFlowId: string) {
+  return prisma.waFlow.delete({
+    where: {
+      dbFlowId,
+    },
+  });
+}
+
+export async function deprecateFlowInWa(orgId: string, waFlowId: string) {
+  const { accessToken } = await getWaSettings(orgId);
+  const res = await callWhatsappApi(
+    `/${waFlowId}/deprecate`,
+    "POST",
+    accessToken,
+  );
+  return res.data;
+}
+
+export async function publishFlowInWa(orgId: string, waFlowId: string) {
+  const { accessToken } = await getWaSettings(orgId);
+  const res = await callWhatsappApi(
+    `/${waFlowId}/publish`,
+    "POST",
+    accessToken,
+  );
+  return res.data;
+}
+export async function getFlowBySurveyId(surveyId: string) {
+  return prisma.waFlow.findFirst({
+    where: {
+      surveyId,
+    },
+  });
 }

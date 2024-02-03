@@ -562,9 +562,9 @@ export function getQuestionByIdFromSession(
   session: WaSessionWithRelations,
   questionId: string,
 ) {
-  const question = (session.surveyTeamMap.survey.questions as Question[]).find(
-    (q) => q.id === questionId,
-  );
+  const question = (
+    session.surveyTeamMap.survey.questions as unknown as Question[]
+  ).find((q) => q.id === questionId);
   if (!question) {
     log.fatal("Question not found");
     throw new Error("Question not found");

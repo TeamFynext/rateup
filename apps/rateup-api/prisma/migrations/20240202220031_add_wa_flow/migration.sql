@@ -8,9 +8,12 @@ ALTER COLUMN "surveyTeamMapId" DROP NOT NULL;
 -- CreateTable
 CREATE TABLE "WaFlow" (
     "dbFlowId" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "flowId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "flowId" TEXT,
+    "name" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
     "json" JSONB NOT NULL,
+    "preview" JSONB,
     "map" JSONB NOT NULL,
     "orgId" UUID NOT NULL,
     "surveyId" UUID NOT NULL,

@@ -28,6 +28,7 @@ import {
   WaEvent,
   WaTemplateStatus,
   QuestionType,
+  WaFlowStatus,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
@@ -165,9 +166,12 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
         dbTemplate.acceptButton.toLocaleLowerCase()
       ) {
         log.trace("User consented to survey");
-        updateStartedSurvey(session.surveyTeamMap.id).catch((e) =>
-          log.error(e),
-        ); // increment started survey count
+
+        updateStartedSurvey(session.surveyTeamMap.id)
+          .then(() => {
+            log.trace("started-survey-count incremented");
+          })
+          .catch((e) => log.error(e)); // increment started survey count
 
         if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
           // if flow, send flow
@@ -175,6 +179,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
             orgId,
             phone: from,
             dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
+            mode: session.surveyTeamMap.survey.WaFlow.status as any,
           });
         } else {
           // if survey, send first question
@@ -182,7 +187,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
             // if multiple languages, show language selection
             updateSession(orgId, from, {
               currentQuestionId: (
-                session.surveyTeamMap.survey.questions[0] as Question
+                session.surveyTeamMap.survey.questions[0] as unknown as Question
               ).id,
             });
             await handleLanguageSelection(session);
@@ -221,6 +226,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
 
 async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   const { from, message } = parseMessage(waMessage);
+  log.trace("handling start message");
   // delete any existing session if any
   await deleteSession(orgId, from);
   // create new session
@@ -238,22 +244,30 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
     orgId,
     ip,
   });
-  updateVisitedSurvey(session.surveyTeamMap.id).catch((e) => log.error(e)); // increment visited survey count
-  updateStartedSurvey(session.surveyTeamMap.id).catch((e) => log.error(e)); // increment started survey count
+  updateVisitedSurvey(session.surveyTeamMap.id)
+    .then(() => {})
+    .catch((e) => log.error(e)); // increment visited survey count
+  updateStartedSurvey(session.surveyTeamMap.id)
+    .then(() => {})
+    .catch((e) => log.error(e)); // increment started survey count
 
   if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
+    session = await updateSession(orgId, from, {
+      language: session.surveyTeamMap.survey.languages[0],
+    });
     // FLOW
     await sendFlow({
       dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
       orgId,
       phone: from,
+      mode: session.surveyTeamMap.survey.WaFlow.status as any,
     });
   } else {
     // WaSurvey
     if (session.surveyTeamMap.survey.languages.length > 1) {
       updateSession(orgId, from, {
         currentQuestionId: (
-          session.surveyTeamMap.survey.questions[0] as Question
+          session.surveyTeamMap.survey.questions[0] as unknown as Question
         ).id,
       });
       await handleLanguageSelection(session);
@@ -268,7 +282,8 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
 }
 
 async function sendFirstQuestion(session: WaSessionWithRelations) {
-  const firstQuestion = session.surveyTeamMap.survey.questions[0] as Question;
+  const firstQuestion = session.surveyTeamMap.survey
+    .questions[0] as unknown as Question;
   await sendQuestion(firstQuestion!, session);
 }
 
@@ -322,7 +337,7 @@ async function handleFlowReply(orgId: string, waMessage: WaMessageBody) {
   const { from, flowResponse } = parseMessage(waMessage);
   let session = await getSession(orgId, from);
   const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
-  const flow = await getFlowFromDb(orgId, dbFlowId);
+  const flow = await getFlowFromDb(dbFlowId);
 
   const questionResponses = generateQuestionResponsesFromFlowResponse({
     flow,
@@ -379,7 +394,23 @@ export async function sendSurveyToParticipants(campaignId: string) {
             contact: true,
           },
         },
-        surveyTeamMap: true,
+        surveyTeamMap: {
+          select: {
+            id: true,
+            survey: {
+              select: {
+                WaFlow: {
+                  select: {
+                    dbFlowId: true,
+                    orgId: true,
+                  },
+                },
+                languages: true,
+                type: true,
+              },
+            },
+          },
+        },
       },
     });
     const dbTemplate = await getDbTemplate(campaign.waTemplateId);
@@ -395,14 +426,23 @@ export async function sendSurveyToParticipants(campaignId: string) {
       }
       // TODO: add rate limiting
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      if (
-        !(await sendSurveyToParticipant({
+      let success = false;
+      if (campaign.surveyTeamMap.survey.type === SurveyType.WaFlow) {
+        success = await sendFlow({
+          orgId: campaign.surveyTeamMap.survey.WaFlow.orgId,
+          dbFlowId: campaign.surveyTeamMap.survey.WaFlow.dbFlowId,
+          phone: contact.phone,
+          mode: WaFlowStatus.PUBLISHED, // only allow published flows to be sent in campaign mode
+        });
+      } else {
+        success = await sendSurveyToParticipant({
           campaignParticipantId: id,
           phone: contact.phone,
           surveyTeamMapId: campaign.surveyTeamMap.id,
           dbTemplate,
-        }))
-      ) {
+        });
+      }
+      if (!success) {
         log.error("Error sending survey to participant %o", contact);
       } else {
         log.trace("Survey sent to participant %o", contact);

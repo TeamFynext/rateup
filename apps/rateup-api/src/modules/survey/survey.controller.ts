@@ -41,6 +41,13 @@ import { getLandingPageById } from "../landingPage/landingpage.service";
 import { BySurveyTeamMapIdParams } from "../team/team.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
+import { SurveyType, WaFlowStatus } from "../../types/enums";
+import {
+  getFlowBySurveyId,
+  publishFlowInWa,
+  updateFlowInDb,
+} from "../whatsapp/flows/flow.service";
+import { log } from "../../utils/logger";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -370,6 +377,21 @@ export async function updateSurveyByIdHandler(
 ) {
   try {
     // TODO: By using prisma error codes, we can return 404 if the survey doesn't exist.
+    const survey = await getSurveyById(request.params.id);
+
+    // If the survey is a WaFlow, and it's being published, we need to publish the flow in WA as well
+    // TODO: create a separate api to publish flows
+    if (survey.type === SurveyType.WaFlow) {
+      if (survey.isPublished === false && request.body.isPublished === true) {
+        const flow = await getFlowBySurveyId(request.params.id);
+        const { orgId } = request.user;
+        log.trace("Publishing flow");
+        await publishFlowInWa(orgId, flow.flowId);
+        await updateFlowInDb(orgId, flow.dbFlowId, {
+          status: WaFlowStatus.PUBLISHED,
+        });
+      }
+    }
     let response = await updateSurveyById(request.params.id, request.body);
     reply.code(200).send(response);
   } catch (e) {

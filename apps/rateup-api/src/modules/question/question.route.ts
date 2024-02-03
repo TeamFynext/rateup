@@ -5,6 +5,7 @@ import {
   getQuestionByIdHandler,
   getQuestionsBySurveyIdHandler,
   reorderQuestionsHandler,
+  replaceQuestionsHandler,
   updateQuestionHandler,
 } from "./question.controller";
 import { $Qref } from "./question.schema";
@@ -28,7 +29,7 @@ export async function questionRoutes(server: FastifyInstance) {
         },
       },
     },
-    createQuestionHandler
+    createQuestionHandler,
   );
 
   // gets a question by id
@@ -39,7 +40,7 @@ export async function questionRoutes(server: FastifyInstance) {
         params: $Qref("questionRouteParamsSchema"),
       },
     },
-    getQuestionByIdHandler
+    getQuestionByIdHandler,
   );
 
   // gets all questions for a survey
@@ -50,7 +51,7 @@ export async function questionRoutes(server: FastifyInstance) {
         params: $Qref("questionsRouteParamsSchema"),
       },
     },
-    getQuestionsBySurveyIdHandler
+    getQuestionsBySurveyIdHandler,
   );
 
   // deletes a question by id
@@ -61,7 +62,7 @@ export async function questionRoutes(server: FastifyInstance) {
         params: $Qref("questionRouteParamsSchema"),
       },
     },
-    deleteQuestionByIdHandler
+    deleteQuestionByIdHandler,
   );
 
   // updates the order of questions. Accepts an array of question ids
@@ -73,7 +74,7 @@ export async function questionRoutes(server: FastifyInstance) {
         params: $Qref("questionsRouteParamsSchema"),
       },
     },
-    reorderQuestionsHandler
+    reorderQuestionsHandler,
   );
 
   // updates a question by id
@@ -85,6 +86,8 @@ export async function questionRoutes(server: FastifyInstance) {
         body: $Qref("updateQuestionRequestSchema"),
       },
     },
-    updateQuestionHandler
+    updateQuestionHandler,
   );
+
+  server.put("/replace", replaceQuestionsHandler);
 }

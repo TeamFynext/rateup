@@ -1,19 +1,43 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createFlowCopyInDb,
-  getFlowJson,
+  createFlowInWa,
+  deleteFlowInDb,
+  deleteFlowInWa,
+  deprecateFlowInWa,
+  getFlowFromDb,
+  getFlowFromWa,
+  getFlowJsonFromWa,
+  getFlowPreview,
   getFlowsFromDb,
   getFlowsFromWa,
   getUnsyncedFlows,
+  publishFlowInWa,
+  updateFlowInDb,
+  updateFlowJsonInWa,
 } from "./flow.service";
 import {
+  ByDbFlowIdParams,
   ByWaFlowIdParams,
+  CreateFlowInput,
   ImportFlowsBody,
+  UpdateFlowInput,
   WaFlowSourceQuery,
 } from "./flow.schema";
-import { createSurveyFromFlow } from "./flow.utils";
+import {
+  createSurveyFromFlow,
+  getFlowJsonWithTitleAndDescription,
+} from "./flow.utils";
 import { log } from "../../../utils/logger";
+import { SurveyType, WaFlowStatus } from "../../../types/enums";
+import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
+import { Survey, WaFlow } from "@prisma/client";
 
+/**
+ * Get flows from whatsapp api or our database.
+ * @param req
+ * @param res
+ */
 export async function getFlowsHandler(
   req: FastifyRequest<{
     Querystring: WaFlowSourceQuery;
@@ -28,6 +52,20 @@ export async function getFlowsHandler(
     const flows = await getFlowsFromDb(orgId);
     res.send(flows);
   }
+}
+
+export async function getFlowHandler(
+  req: FastifyRequest<{
+    Params: ByWaFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { waFlowId } = req.params;
+
+  const flow = await getFlowFromDb(waFlowId);
+
+  res.send(flow);
 }
 
 export async function getUnsyncedFlowsHandler(
@@ -46,7 +84,7 @@ export async function getFlowJsonHandler(
   const { orgId } = req.user;
   const { waFlowId } = req.params;
 
-  const json = await getFlowJson(orgId, waFlowId);
+  const json = await getFlowJsonFromWa(orgId, waFlowId);
 
   res.send(json);
 }
@@ -62,8 +100,10 @@ export async function importFlowsHandler(
   // TODO: convert to prisma transaction
   log.trace("Importing flows: %o", waFlowIds);
   for (const waFlowId of waFlowIds) {
+    log.trace("fetching flow from wa %s", waFlowId);
+    const waFlow = await getFlowFromWa(orgId, waFlowId);
     log.trace("fetching flow json %s", waFlowId);
-    const json = await getFlowJson(orgId, waFlowId); // TODO: cache?
+    const json = await getFlowJsonFromWa(orgId, waFlowId); // TODO: cache?
     log.trace("creating survey from flow %s", waFlowId);
     const { survey, flowMap: flowMapWithQuestionId } =
       await createSurveyFromFlow({
@@ -77,11 +117,146 @@ export async function importFlowsHandler(
     const dbFlow = await createFlowCopyInDb({
       orgId,
       flowId: waFlowId,
+      name: waFlow.name,
+      status: waFlow.status,
       surveyId: survey.id,
       json,
       flowMap: flowMapWithQuestionId,
     });
   }
-
   log.trace("Imported flows successfully!");
+}
+
+export async function createFlowHandler(
+  req: FastifyRequest<{
+    Body: CreateFlowInput;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { name, categories, teamIds } = req.body;
+  log.trace("creating flow in wa %s", name);
+  const { id: flowId } = await createFlowInWa(orgId, { name, categories });
+  log.trace("creating survey from flow %s", name);
+  const survey = (await createSurvey(
+    {
+      title: name,
+      teamIds,
+      type: SurveyType.WaFlow,
+      languages: ["en"],
+    },
+    req.user.userId,
+  )) as Survey;
+  log.trace("creating flow copy in db %s", name);
+  await createFlowCopyInDb({
+    orgId,
+    flowId,
+    json: {
+      version: "3.1",
+      screens: [],
+    } as WaFlowJson,
+    flowMap: {},
+    surveyId: survey.id,
+    status: WaFlowStatus.DRAFT,
+    name: name,
+  });
+}
+
+export async function updateFlowHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+    Body: UpdateFlowInput;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { dbFlowId } = req.params;
+
+  const updatedFlow = await updateFlowInDb(orgId, dbFlowId, req.body);
+  const jsonWithTitle = getFlowJsonWithTitleAndDescription(
+    updatedFlow.json as unknown as WaFlowJson,
+    updatedFlow.map,
+    updatedFlow.survey,
+  );
+  const response = await updateFlowJsonInWa(
+    orgId,
+    updatedFlow.flowId,
+    jsonWithTitle as WaFlowJson,
+  );
+  res.status(201).send();
+}
+
+export async function getFlowPreviewHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { dbFlowId } = req.params;
+
+  const preview = await getFlowPreview(orgId, dbFlowId);
+  res.send(preview);
+}
+
+export async function deleteFlowHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { dbFlowId } = req.params;
+
+  const flow = await getFlowFromDb(dbFlowId);
+  if (flow.status === WaFlowStatus.PUBLISHED) {
+    throw new Error("Cannot delete a published flow. Deprecate it instead.");
+  }
+
+  log.trace("deleting flow in wa %s", flow.flowId);
+  await deleteFlowInWa(orgId, flow.flowId);
+
+  if (flow.surveyId) {
+    log.trace("deleting survey %s", flow.surveyId);
+    await deleteSurveyById(flow.surveyId);
+    // Deleting the survey will delete the flow from db as well
+  } else {
+    log.trace("deleting flow in db %s", dbFlowId);
+    await deleteFlowInDb(dbFlowId);
+  }
+
+  res.status(204).send();
+}
+
+export async function deprecateFlowHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { dbFlowId } = req.params;
+
+  const flow = await getFlowFromDb(dbFlowId);
+  if (flow.status === WaFlowStatus.DRAFT) {
+    throw new Error("Cannot deprecate a draft flow. Delete it instead.");
+  }
+
+  await deprecateFlowInWa(orgId, flow.flowId);
+  await updateFlowInDb(orgId, dbFlowId, { status: WaFlowStatus.DEPRECATED });
+}
+
+export async function publishFlowHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  const { orgId } = req.user;
+  const { dbFlowId } = req.params;
+
+  const flow = await getFlowFromDb(dbFlowId);
+
+  await publishFlowInWa(orgId, flow.flowId);
+  await updateFlowInDb(orgId, dbFlowId, { status: WaFlowStatus.PUBLISHED });
 }

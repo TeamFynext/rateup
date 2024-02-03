@@ -8,6 +8,7 @@ import {
 } from "./survey.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
+import { log } from "../../utils/logger";
 const CryptoJS = require("crypto-js");
 const secretPassphrase = "rateup-#$%^@#-passphrase";
 
@@ -901,6 +902,7 @@ export async function updateStartedSurvey(id: string) {
       data: { started: { increment: 1 } },
     });
   } catch (error: any) {
+    log.error(error);
     if (error?.code === "P2025") {
       // Record not found error
       surveyStats = await prisma.surveyStats.create({

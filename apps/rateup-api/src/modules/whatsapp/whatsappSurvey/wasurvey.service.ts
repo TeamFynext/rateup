@@ -180,7 +180,8 @@ export async function sendNextQuestion(
     log.error("CurrentQuestionId is null");
     throw new Error("CurrentQuestionId is null");
   }
-  const questions = surveyTeamMap.survey.questions as Array<Question>;
+  const questions = surveyTeamMap.survey
+    .questions as unknown as Array<Question>;
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
   if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found");
@@ -381,7 +382,7 @@ export async function sendSurveyToParticipant({
 
     // TODO: send error if sending template failed
     await sendMessage(session.orgId, consentTemplateMessage);
-    updateVisitedSurvey(session.surveyTeamMapId);
+    updateVisitedSurvey(session.surveyTeamMapId).then(() => {});
     return true;
   } catch (e) {
     log.error(e);

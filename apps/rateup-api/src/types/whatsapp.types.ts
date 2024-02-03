@@ -146,6 +146,7 @@ type WaInteractiveMessageAction = {
       screen: string; // id of the screen
       data?: any; // data to be sent to the screen
     };
+    mode?: "draft" | "published";
   };
 };
 
