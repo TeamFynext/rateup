@@ -16,10 +16,11 @@ import FocusMode from "../Switch/Focusmode";
 import ReportBug from "../ReportBug";
 import styles from "./Layout.module.css";
 import { useUserInfo } from "../../backend/user/user.query";
+import { NavControlContext } from "../../context/NavControlContext";
 // @ts-ignore
 export default function Layout({ children }) {
   const router = useRouter();
-  const [opened, setOpened] = useState(true);
+  const [navOpened, setNavOpened] = useState(true);
   const [focus, toggleFocus] = useState(false);
   const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
     "userInfo",
@@ -63,8 +64,8 @@ export default function Layout({ children }) {
           <Transition mounted={!focus} transition="slide-right">
             {(transitionStyle) => (
               <LeftNavbar
-                opened={opened}
-                setOpened={setOpened}
+                opened={navOpened}
+                setOpened={setNavOpened}
                 style={transitionStyle}
               />
             )}
@@ -81,7 +82,7 @@ export default function Layout({ children }) {
           >
             <Transition mounted={!focus} transition="slide-down">
               {(transitionStyle) => (
-                <HeaderTabs opened={opened} style={transitionStyle} />
+                <HeaderTabs opened={navOpened} style={transitionStyle} />
               )}
             </Transition>
             <Flex
@@ -92,7 +93,9 @@ export default function Layout({ children }) {
               direction="column"
               m="auto"
             >
-              {children}
+              <NavControlContext.Provider value={{ navOpened, setNavOpened }}>
+                {children}
+              </NavControlContext.Provider>
             </Flex>
           </Flex>
           <FocusMode focus={focus} toggleFocus={toggleFocus} />

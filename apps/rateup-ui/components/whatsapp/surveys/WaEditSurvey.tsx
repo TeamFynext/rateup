@@ -7,9 +7,13 @@ import ValidationRulesEditor from "../../Survey/Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "../../Survey/QuestionsSideBar";
 import classes from "./WaEditSurvey.module.css";
 import { WaQuestionDetailedView } from "./WaQuestionDetailedView";
-import { QuestionType as Q } from "../../../types/enums";
+import { QuestionType as Q, QuestionType } from "../../../types/enums";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { WaSurveyQuestionTypes } from "../../../utils/constants";
+import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
+import { createBlankQuestion } from "../../../utils/questions";
+import SurveyContext from "../../../context/SurveyContext";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -46,6 +50,20 @@ export function EditWhatsappSurvey({
       }
     }
   }, [questions]);
+  const { surveyId } = useContext(SurveyContext);
+
+  const questionCreateMutation = useQuestionCreateMutation({
+    surveyId,
+  });
+  const handleTypeSelection = (type: QuestionType) => {
+    const newQ = createBlankQuestion(type, selectedLanguage);
+    const { id, ...restData } = newQ;
+    const saveQ = { ...restData };
+    questionCreateMutation.mutateAsync(saveQ).then((r) => {
+      setSelectedQ(r.data);
+      setActiveTab(QuestionTabsEnum.Edit);
+    });
+  };
 
   return (
     <Flex w={"100%"} h={"100%"} p={2} gap={10} className={classes.root}>
@@ -88,9 +106,8 @@ export function EditWhatsappSurvey({
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
             <QuestionTypeSelection
-              setSelectedQ={setSelectedQ}
-              setActiveTab={setActiveTab}
-              isWaSurvey={true}
+              questionTypeGroups={WaSurveyQuestionTypes}
+              handleTypeSelection={handleTypeSelection}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>

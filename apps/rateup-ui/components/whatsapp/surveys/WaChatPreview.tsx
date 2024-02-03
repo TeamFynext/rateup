@@ -9,10 +9,10 @@ import {
   ActionIcon,
   Text,
   ScrollArea,
+  Overlay,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-import { Overlay } from "pigeon-maps";
 import { useContext } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { SendMessageMock } from "../MessageComponents";
