@@ -132,7 +132,9 @@ export default function SurveyID() {
             surveyTeamMapId,
             selectedTeamName,
             filterTeams,
+            setFilterTeams,
             filterTags,
+            surveyId,
           }}
         >
           <StyledTabs

@@ -38,9 +38,8 @@ const Responses = ({
   defaultLanguage,
   isLoading,
 }) => {
-  const [responseCount, setResponseCount] = useState(0);
   const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
+  const surveyId = survey?.id;
   const { surveyTeamMapId } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
@@ -71,10 +70,6 @@ const Responses = ({
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
-
-  useEffect(() => {
-    setResponseCount(responses?.length);
-  }, [responses]);
 
   function handleExportContacts() {
     const contacts = [];
@@ -207,16 +202,18 @@ const Responses = ({
       });
     }
   };
+  const columns = useSurveyResponseColumns({
+    questions,
+    defaultLanguage,
+    setSelectedRowId,
+    open,
+  });
 
   if (isQLoading) return <Loader type="bars" />;
   if (QError) return <Text>An error has occurred</Text>;
   if (isLoading) return <Loader type="bars" />;
 
-  const columns = useSurveyResponseColumns({
-    questions,
-    defaultLanguage,
-    setSelectedRowId,
-  });
+  const responseCount = responses?.length;
 
   return (
     <Stack

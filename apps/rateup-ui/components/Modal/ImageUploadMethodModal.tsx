@@ -1,8 +1,9 @@
 import React from "react";
 import FormModalLayout from "./FormModalLayout";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { Center, Group, Text } from "@mantine/core";
-import { IconPhotoSearch, IconUpload } from "@tabler/icons-react";
+import { Center, Group, Image, Text } from "@mantine/core";
+import { IconUpload } from "@tabler/icons-react";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 
 interface ImageUploadMethodModalProps {
   onClose: () => void;
@@ -46,7 +47,16 @@ export const ImageUploadMethodModal = ({
           >
             <Group my={"md"}>
               <Text>{data}</Text>
-              {index === 1 ? <IconPhotoSearch /> : <IconUpload />}
+              {index === 1 ? (
+                <Image
+                  src={getFileUrlFromKey("/images/menu/unsplash.png", false)}
+                  w={18}
+                  h={18}
+                  alt="banner demo gif"
+                />
+              ) : (
+                <IconUpload />
+              )}
             </Group>
           </PaperLayout>
         ))}

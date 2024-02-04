@@ -1,6 +1,7 @@
 import { Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
 import {
   IconChevronDown,
+  IconFileImport,
   IconLayersSubtract,
   IconPlus,
 } from "@tabler/icons-react";
@@ -153,7 +154,7 @@ export default ({ categories: initialCategories }) => {
                 />
                 <RateupButtonSecondary
                   title="Import Menu"
-                  rightIcon={<IconUpload size={16} />}
+                  rightIcon={<IconFileImport size={16} />}
                   radius="xl"
                   size="md"
                   onClick={toggle}

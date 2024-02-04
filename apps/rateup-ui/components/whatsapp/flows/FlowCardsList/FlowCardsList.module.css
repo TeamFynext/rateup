@@ -1,0 +1,4 @@
+.flows-cards-div {
+  display: flex;
+  flex-wrap: wrap;
+}

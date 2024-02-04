@@ -56,11 +56,13 @@ import { SurveyType } from "../../../types/enums";
 const ShareSurvey = ({
   survey,
   setActiveTab,
+  allowUnpublishedShare = false,
 }: {
   survey: Survey;
   setActiveTab: (tab: any) => void;
+  allowUnpublishedShare?: boolean;
 }) => {
-  const { surveyId } = useRouter().query as { surveyId: string };
+  const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
   const [tag, setTag] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(
@@ -196,6 +198,8 @@ const ShareSurvey = ({
 
     return gridFilteredSortedRowIdsSelector(apiRef);
   };
+
+  const disableShare = !(isPublished || allowUnpublishedShare);
   return (
     <Stack p={2} h={"fit-content"}>
       <PaperLayout
@@ -234,7 +238,7 @@ const ShareSurvey = ({
             )}
           </Group>
           <RateupButtonSecondary
-            disabled={!isPublished}
+            disabled={disableShare}
             title={survey?.active ? "Pause" : "Resume"}
             leftIcon={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
             onClick={() =>
@@ -294,14 +298,14 @@ const ShareSurvey = ({
           />
         </Center>
       </FormModalLayout>
-      <PaperLayout p="md" shadow="lg" opacity={!isPublished ? 0.5 : 1}>
+      <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>
         <Group gap="lg">
           <Stack style={{ minWidth: 300, flex: 1 }} p="md">
             <Title order={4}>Share Survey</Title>
             <Group>
               <ContainedSelection
                 style={{ flex: 1 }}
-                disabled={!isPublished}
+                disabled={disableShare}
                 label="Select Team"
                 allowDeselect={false}
                 miw={150}
@@ -312,7 +316,7 @@ const ShareSurvey = ({
 
               <Group gap={2} align="flex-start" style={{ flex: 1 }}>
                 <ContainedSelection
-                  disabled={!isPublished || tagSelectData.length === 0}
+                  disabled={disableShare || tagSelectData.length === 0}
                   label="Select Tag"
                   placeholder="select a single Tag"
                   miw={150}
@@ -332,7 +336,7 @@ const ShareSurvey = ({
                 />
               </Group>
             </Group>
-            <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
+            <CopyLinkComponent value={shareUrl} disabled={disableShare} />
           </Stack>
 
           <Stack style={{ minWidth: 300, flex: 1 }} p="md">
@@ -341,7 +345,7 @@ const ShareSurvey = ({
             </Title>
             <Group justify="center" gap="xl">
               <ActionIcon
-                disabled={!isPublished}
+                disabled={disableShare}
                 size="xl"
                 variant="light"
                 onClick={() => shareButtonAction("mail")}
@@ -355,7 +359,7 @@ const ShareSurvey = ({
                   styles={{ tooltip: { color: "grey" } }}
                 >
                   <Image
-                    opacity={isPublished ? 1 : 0.5}
+                    opacity={!disableShare ? 1 : 0.5}
                     alt="mail icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
                     w={40}
@@ -365,7 +369,7 @@ const ShareSurvey = ({
                 </Tooltip>
               </ActionIcon>
               <ActionIcon
-                disabled={!isPublished}
+                disabled={disableShare}
                 size="xl"
                 variant="light"
                 onClick={() => shareButtonAction("whatsapp")}
@@ -379,7 +383,7 @@ const ShareSurvey = ({
                   styles={{ tooltip: { color: "grey" } }}
                 >
                   <Image
-                    opacity={isPublished ? 1 : 0.5}
+                    opacity={!disableShare ? 1 : 0.5}
                     alt="whatsapp icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
                     w={40}
@@ -389,7 +393,7 @@ const ShareSurvey = ({
                 </Tooltip>
               </ActionIcon>
               <ActionIcon
-                disabled={!isPublished}
+                disabled={disableShare}
                 size="xl"
                 variant="light"
                 onClick={() => shareButtonAction("fb")}
@@ -403,7 +407,7 @@ const ShareSurvey = ({
                   styles={{ tooltip: { color: "grey" } }}
                 >
                   <Image
-                    opacity={isPublished ? 1 : 0.5}
+                    opacity={!disableShare ? 1 : 0.5}
                     alt="facebook icon"
                     src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
                     w={40}
@@ -412,30 +416,32 @@ const ShareSurvey = ({
                   />
                 </Tooltip>
               </ActionIcon>
-              <ActionIcon
-                disabled={!isPublished}
-                size="xl"
-                variant="light"
-                onClick={openIframe}
-                style={{ background: "none" }}
-              >
-                <Tooltip
-                  label="Embed as iframe"
-                  withArrow
-                  color="var(--light-grey-color)"
-                  position="bottom"
-                  styles={{ tooltip: { color: "grey" } }}
+              {survey?.type === SurveyType.Web && (
+                <ActionIcon
+                  disabled={disableShare}
+                  size="xl"
+                  variant="light"
+                  onClick={openIframe}
+                  style={{ background: "none" }}
                 >
-                  <Image
-                    opacity={isPublished ? 1 : 0.5}
-                    alt="iframe icon"
-                    src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
-                    w={40}
-                    h={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </Tooltip>
-              </ActionIcon>
+                  <Tooltip
+                    label="Embed as iframe"
+                    withArrow
+                    color="var(--light-grey-color)"
+                    position="bottom"
+                    styles={{ tooltip: { color: "grey" } }}
+                  >
+                    <Image
+                      opacity={!disableShare ? 1 : 0.5}
+                      alt="iframe icon"
+                      src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
+                      w={40}
+                      h={40}
+                      style={{ objectFit: "contain" }}
+                    />
+                  </Tooltip>
+                </ActionIcon>
+              )}
             </Group>
           </Stack>
         </Group>
@@ -444,7 +450,7 @@ const ShareSurvey = ({
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
         title={survey.title}
-        isPublished={isPublished}
+        isPublished={!disableShare}
         id={surveyId}
         queryKey={"surveyShareSettings"}
         resourceName={"survey"}

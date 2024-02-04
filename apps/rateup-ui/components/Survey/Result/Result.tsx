@@ -100,6 +100,7 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
 
   if (isLoading) return <Loader type="bars" />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
+
   return (
     <StyledTabs
       value={resultTab}

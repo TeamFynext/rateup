@@ -66,6 +66,7 @@ import {
 } from "./Button/LandingButtons";
 import TabsCommon from "./Tabs/TabsCommon";
 import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
+import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 //TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
@@ -183,7 +184,8 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
         if (logo) data.logo = successes.pop();
         if (mobileBackgroundImage) data.mobileBackgroundImage = successes.pop();
         if (backgroundImage) data.backgroundImage = successes.pop();
-      } else if (imageToDelete?.length > 0) {
+      }
+      if (imageToDelete?.length > 0) {
         await deleteUploadedFiles({
           fileKeyArray: imageToDelete,
         });
@@ -670,14 +672,12 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           onClick={handlePictureMobileBackground}
                           fullWidth
                         />
-                        <ActionIcon
-                          color={"red"}
-                          radius={"xl"}
+                        <ActionIconCommon
+                          handleClick={() =>
+                            resetImage("mobileBackgroundImage")
+                          }
                           disabled={!form?.values?.mobileBackgroundImage}
-                          onClick={() => resetImage("mobileBackgroundImage")}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
+                        />
                       </Group>
                       <Text>
                         {getFileNameFromUrl(
@@ -695,14 +695,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                           onClick={handlePictureBackground}
                           fullWidth
                         />
-                        <ActionIcon
-                          color={"red"}
-                          radius={"xl"}
+                        <ActionIconCommon
+                          handleClick={() => resetImage("backgroundImage")}
                           disabled={!form?.values?.backgroundImage}
-                          onClick={() => resetImage("backgroundImage")}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
+                        />
                       </Group>
                       <FileButton
                         onChange={handleBgPick}
@@ -749,15 +745,10 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                             </Button>
                           )}
                         </FileButton>
-                        <ActionIcon
-                          color={"red"}
-                          radius={"xl"}
-                          ml={2}
+                        <ActionIconCommon
+                          handleClick={() => resetImage("logo")}
                           disabled={!form?.values?.logo}
-                          onClick={() => resetImage("logo")}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
+                        />
                       </Group>
                     </Stack>
                   </Tabs.Panel>

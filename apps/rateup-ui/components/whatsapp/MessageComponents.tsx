@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Box,
+  BoxComponentProps,
   Container,
   Group,
   MantineStyleProp,
@@ -63,8 +64,13 @@ export function SentMessageContainer({
 interface QuickReplyButtonProps {
   text: string;
   style?: MantineStyleProp;
+  onClick?: any;
 }
-export function QuickReplyButton({ text, style = {} }: QuickReplyButtonProps) {
+export function QuickReplyButton({
+  text,
+  style,
+  onClick,
+}: QuickReplyButtonProps) {
   const theme = useMantineTheme();
   return (
     <Box
@@ -76,6 +82,7 @@ export function QuickReplyButton({ text, style = {} }: QuickReplyButtonProps) {
         zIndex: 1,
         ...style,
       }}
+      onClick={onClick || (() => {})}
       p="6px"
     >
       <Text style={{ textAlign: "center" }} c={theme.colors.blue[5]}>
@@ -122,7 +129,7 @@ export function WaListButton({
 
 export function SendMessageMock() {
   return (
-    <Group p="sm" wrap="nowrap">
+    <Group p="sm" wrap="nowrap" bg="white">
       <ActionIcon variant="transparent" c="dimmed">
         <IconMoodHappy />
       </ActionIcon>
