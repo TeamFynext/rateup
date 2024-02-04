@@ -13,6 +13,7 @@ import {
   getQuestionsBySurveyId,
   reorderQuestions,
   updateQuestion,
+  updateQuestionsOnSurvey,
 } from "./question.service";
 import { hasAccessToSurvey } from "../../utils/auth";
 
@@ -21,7 +22,7 @@ export async function createQuestionHandler(
     Body: CreateQuestionInput;
     Params: QuestionsRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body;
   try {
@@ -38,7 +39,7 @@ export async function getQuestionByIdHandler(
   request: FastifyRequest<{
     Params: QuestionRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveyId = request.params.surveyId;
@@ -59,7 +60,7 @@ export async function getQuestionsBySurveyIdHandler(
   request: FastifyRequest<{
     Params: QuestionsRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const questions = await getQuestionsBySurveyId(request.params.surveyId);
@@ -74,7 +75,7 @@ export async function deleteQuestionByIdHandler(
   request: FastifyRequest<{
     Params: QuestionRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveyId = request.params.surveyId;
@@ -96,7 +97,7 @@ export async function reorderQuestionsHandler(
     Body: UpdateQuestionsOrderInput;
     Params: QuestionsRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveyId = request.params.surveyId;
@@ -113,7 +114,7 @@ export async function updateQuestionHandler(
     Body: UpdateQuestionInput;
     Params: QuestionRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const surveyId = request.params.surveyId;
@@ -127,6 +128,24 @@ export async function updateQuestionHandler(
       await updateQuestion(surveyId, id, request.body);
       reply.code(200).send();
     }
+  } catch (e) {
+    console.log(e);
+    reply.code(500);
+  }
+}
+
+export async function replaceQuestionsHandler(
+  request: FastifyRequest<{
+    Body: Array<Question>;
+    Params: QuestionsRouteParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const surveyId = request.params.surveyId;
+    const questions = request.body;
+    await updateQuestionsOnSurvey(surveyId, questions);
+    reply.code(200).send();
   } catch (e) {
     console.log(e);
     reply.code(500);

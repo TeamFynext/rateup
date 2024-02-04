@@ -638,10 +638,15 @@ model RateupPlan {
 
 model WaFlow {
   dbFlowId  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  flowId    String   @unique
   createdAt DateTime @default(now())
-  json      Json
-  map       Json
+
+  flowId  String? @unique
+  name    String
+  status  String
+  json    Json
+  preview Json?
+
+  map Json
 
   org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId    String @db.Uuid

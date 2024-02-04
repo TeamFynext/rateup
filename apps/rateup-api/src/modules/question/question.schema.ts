@@ -39,6 +39,7 @@ const validationRulesSchema = z.object({
 const questionCore = {
   title: z.record(z.string(), z.string()),
   description: z.record(z.string(), z.string()),
+  label: z.record(z.string(), z.string()).optional(),
   required: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
   choices: z
@@ -128,6 +129,7 @@ const updateQuestionRequestSchema = z.object({
   ...questionCore,
   title: z.record(z.string(), z.string()).optional(),
   description: z.record(z.string(), z.string()).optional(),
+  label: z.record(z.string(), z.string()).optional(),
   required: z.boolean().optional(),
   // Type cannot be changed. Throws error if 'type' is provided
   type: z.never().optional(),

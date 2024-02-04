@@ -50,18 +50,19 @@ declare global {
     value: string;
     weightage?: NPSWeightage;
   };
-  type Question = {
+  interface Question {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
-    features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
+    sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
+    label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;
     googleReview?: GoogleReview;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
-    sections?: Zod.RecordType<string, WaSectionsType>; // for Wa_List
     tnc?: TNC;
   };
   type WaSectionsType = Array<{
@@ -210,14 +211,15 @@ declare global {
   };
 
   type WaFlowFormElement = {
+    id: string; // for internal use only. Should be removed before sending to whatsapp server
     type: WaFlowFormElementType;
     text?: string;
     label?: string;
     name?: string;
     required?: boolean;
     "input-type"?: string; // add types
-    "on-click-action": WaFlowOnClickAction;
-    "data-source": Array<WaFlowFormChoice>;
+    "on-click-action"?: WaFlowOnClickAction;
+    "data-source"?: Array<WaFlowFormChoice>;
   };
 
   type WaFlowFormChoice = {

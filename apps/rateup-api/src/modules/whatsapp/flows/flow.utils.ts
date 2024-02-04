@@ -1,18 +1,20 @@
-import { Survey, SurveyResponse, WaFlow } from "@prisma/client";
+import { Survey, WaFlow } from "@prisma/client";
 import { WaSendMessageBody } from "../../../types/whatsapp.types";
 import {
+  LDResponse,
   QuestionType as qt,
+  SmileyResponse,
   SurveyType,
   WaFlowFormElementType,
+  YNResponse,
 } from "../../../types/enums";
 import { CreateSurveyInput } from "../../survey/survey.schema";
 import { CreateQuestionInput } from "../../question/question.schema";
 import { ChoiceTypeQuestions } from "../../../utils/survey/question/question.utils";
 import { createSurvey, getSurveyById } from "../../survey/survey.service";
 import { createQuestion } from "../../question/question.service";
-import prisma from "../../../utils/prisma";
-import { CreateResponseInput } from "../../response/response.schema";
 import { log } from "../../../utils/logger";
+import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
 
 interface generateFlowMessageDataProps {
   to: string;
@@ -20,6 +22,7 @@ interface generateFlowMessageDataProps {
   flow_cta: string;
   screen_id: string;
   body: string;
+  mode: "draft" | "published";
 }
 export function generateFlowMessageData({
   to,
@@ -27,6 +30,7 @@ export function generateFlowMessageData({
   flow_cta,
   screen_id,
   body,
+  mode,
 }: generateFlowMessageDataProps): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -41,6 +45,7 @@ export function generateFlowMessageData({
       action: {
         name: "flow",
         parameters: {
+          mode,
           flow_message_version: 3,
           flow_token: flow_id,
           flow_id,
@@ -53,6 +58,9 @@ export function generateFlowMessageData({
     },
   };
 }
+export const OpinionResponses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+export const RatingResponses = [1, 2, 3, 4, 5];
+export const ratingEmoji = "⭐️";
 
 interface generateSurveyMessageDataProps {
   flow: WaFlow;
@@ -170,7 +178,7 @@ export function parseFlowResponse({
 }
 
 export function getElementJson(flowJson: WaFlowJson, elementName: string) {
-  for (const formElement of waFlowFormElementIterator(flowJson, false)) {
+  for (const formElement of waFlowFormElementIterator({ flowJson })) {
     if (formElement.name === elementName) {
       return formElement;
     }
@@ -181,7 +189,11 @@ export function findElementNameFromPayloadName(
   payloadName: string,
   flowJson: WaFlowJson,
 ) {
-  for (const formElement of waFlowFormElementIterator(flowJson, false)) {
+  for (const formElement of waFlowFormElementIterator({
+    flowJson,
+    onlyInteractive: false,
+    includeFooter: true,
+  })) {
     if (formElement && formElement.type === WaFlowFormElementType.footer) {
       const { payload } = formElement["on-click-action"];
 
@@ -218,17 +230,19 @@ export async function createSurveyFromFlow({
 
   const surveyRes = (await createSurvey(survey, userId)) as Survey;
 
-  for (const formElement of waFlowFormElementIterator(flowJson)) {
-    console.log(formElement);
-    console.log("fmap", flowMap);
-    console.log(flowMap[formElement.name]);
+  for (const formElement of waFlowFormElementIterator({
+    flowJson,
+  })) {
     const qType = flowMap[formElement.name].type;
     const question: CreateQuestionInput = {
       title: {
-        [lang]: formElement.label,
+        [lang]: "",
       },
       description: {
         [lang]: "",
+      },
+      label: {
+        [lang]: formElement.label,
       },
       type: qType,
       required: formElement.required,
@@ -256,19 +270,292 @@ export async function createSurveyFromFlow({
  * @param onlyInteractive set to false to include all form elements, including
  * those that are not interactive (e.g. TextBody, TextHeading, etc..)
  */
-export function* waFlowFormElementIterator(
-  flowJson: WaFlowJson,
+interface waFlowFormElementIteratorProps {
+  flowJson: WaFlowJson;
+  onlyInteractive?: boolean;
+  includeFooter?: boolean;
+}
+export function* waFlowFormElementIterator({
+  flowJson,
   onlyInteractive = true,
-) {
+  includeFooter = true,
+}: waFlowFormElementIteratorProps) {
   for (const screen of flowJson.screens) {
     for (const screenElement of screen.layout.children) {
       if (screenElement.type === "Form") {
         for (const formElement of screenElement.children) {
           if (!onlyInteractive || formElement.name !== undefined) {
-            yield formElement;
+            // if onlyInteractive is true, only include interactive elements
+            if (
+              includeFooter ||
+              formElement.type !== WaFlowFormElementType.footer
+            ) {
+              // if includeFooter is false, exclude footer element
+              yield formElement;
+            }
           }
         }
       }
     }
   }
+}
+
+/**
+ * Injects title & description for each question in the flowJson from the Survey.Question
+ *
+ * We represent flows as a Survey. Since our questions have title & description and flowElements don't,
+ *  we need to add title & description as separate flowElements (textHeading, textBody etc...).
+ * If we add them separately & show user then it would be confusing to the user.
+ * Therefore we don't add title&description at the time of creating flow and only adds them to the json
+ * just before sending the flowjson to whatsapp.
+ * @param flowJson
+ * @param map
+ * @param survey
+ * @returns
+ */
+export function getFlowJsonWithTitleAndDescription(
+  flowJson: WaFlowJson,
+  map: any,
+  survey: Survey,
+): WaFlowJson {
+  let fj = JSON.parse(JSON.stringify(flowJson));
+  for (const screen of fj.screens) {
+    for (const screenElement of screen.layout.children) {
+      if (screenElement.type === "Form") {
+        for (let i = 0; i < screenElement.children.length; i++) {
+          const formElement = screenElement.children[i];
+          if (
+            formElement.name !== undefined &&
+            formElement.type !== WaFlowFormElementType.footer
+          ) {
+            const question = getQuestionFromFlowFormElementName(
+              formElement.name,
+              survey.questions as unknown as Question[],
+              map,
+            );
+            const {
+              formElements: { titleElement, descriptionElement },
+            } = getFlowElementJsonFromQuestion(question);
+            if (titleElement) {
+              screenElement.children.splice(i, 0, titleElement);
+              i++;
+            }
+            if (descriptionElement) {
+              screenElement.children.splice(i, 0, descriptionElement);
+              i++;
+            }
+          }
+        }
+      }
+    }
+  }
+  return fj;
+}
+const lang = "en";
+export function getQuestionIdFromFlowFormElementName(
+  name: string,
+  map: any,
+): string {
+  return map[name]?.questionId;
+}
+export function getQuestionFromFlowFormElementName(
+  name: string,
+  questions: Question[],
+  map: any,
+): Question {
+  const questionId = getQuestionIdFromFlowFormElementName(name, map);
+  return questions.find((q) => q.id === questionId);
+}
+
+export function getQuestionFromFlowElementId(
+  id: string,
+  flowJson: WaFlowJson,
+  questions: Question[],
+  map: any,
+) {
+  const formElement = getFlowFormElementById(id, flowJson);
+  return getQuestionFromFlowFormElementName(formElement.name, questions, map);
+}
+
+export function getFlowFormElementById(id: string, flowJson: WaFlowJson) {
+  for (const screen of flowJson.screens) {
+    const form = screen.layout.children.find((se) => se.type === "Form");
+    for (const fe of form.children) {
+      if (fe.id === id) return fe;
+    }
+  }
+}
+
+/**
+ * Generates the flow-json representation of our question
+ * @returns
+ */
+export function getFlowElementJsonFromQuestion(question: Question) {
+  const { dataSource, mapData } = generateDataSourceFromQuestion(question);
+  const type = questionTypeToFlowFormElementType(question.type);
+  const questionElement: WaFlowFormElement = {
+    label: question.label[lang],
+    name: question.id,
+    id: question.id,
+    type,
+    "data-source": dataSource.length ? dataSource : undefined,
+    required: !!question.required,
+  };
+  let titleElement: WaFlowFormElement | undefined;
+  let descriptionElement: WaFlowFormElement | undefined;
+
+  if (question.title[lang]) {
+    titleElement = {
+      text: question.title[lang],
+      type: WaFlowFormElementType.textHeading,
+      id: `${question.id}_title`,
+    };
+  }
+  if (question.description[lang]) {
+    descriptionElement = {
+      id: `${question.id}_description`,
+      text: question.description[lang],
+      type: WaFlowFormElementType.textBody,
+    };
+  }
+
+  mapData.type = question.type;
+  mapData.questionId = question.id;
+
+  return {
+    formElements: {
+      questionElement,
+      titleElement,
+      descriptionElement,
+    },
+    map: {
+      [question.id]: mapData,
+    },
+  };
+}
+
+export function questionTypeToFlowFormElementType(
+  qtype: qt,
+): WaFlowFormElementType {
+  switch (qtype) {
+    case qt.Text:
+    case qt.Email:
+    case qt.Phone:
+    case qt.Number:
+      return WaFlowFormElementType.textInput;
+    case qt.TextArea:
+      return WaFlowFormElementType.textArea;
+    case qt.DateTime:
+      return WaFlowFormElementType.datePicker;
+    case qt.DDSS:
+      return WaFlowFormElementType.dropDown;
+    case qt.MCQ:
+    case qt.YN:
+    case qt.LD:
+    case qt.Rating:
+    case qt.Opinion:
+    case qt.Smiley:
+      return WaFlowFormElementType.radioButtonsGroup;
+    case qt.MSQ:
+      return WaFlowFormElementType.checkboxGroup;
+    default:
+      throw Error("Not implemented");
+  }
+}
+/**
+ * Converts choices of question to 'data-source' json
+ * FlowFormElement has a 'data-source' property containing data for the 'options' or 'choices'.
+ * @returns DataSource[] | undefined
+ */
+export function generateDataSourceFromQuestion(q: Question) {
+  let choices: string[] = [];
+
+  if (q.type === qt.Rating) {
+    choices = Object.values(RatingResponses)
+      .map((v) => ratingEmoji.repeat(v))
+      .reverse();
+    const dataSource: WaFlowFormChoice[] = choices.map((c, index) => ({
+      id: index.toString(),
+      title: c,
+    }));
+    const mapData: any = choices.reduce(
+      (prev, _choice, index) => ({ ...prev, [index]: `${5 - index}` }),
+      {},
+    );
+
+    return { dataSource, mapData };
+  } else {
+    switch (q.type) {
+      case qt.YN:
+        choices = Object.values(YNResponse);
+        break;
+      case qt.LD:
+        choices = Object.values(LDResponse);
+        break;
+      case qt.Opinion:
+        choices = Object.values(OpinionResponses).map((v) => v.toString());
+        break;
+      case qt.Smiley:
+        choices = Object.values(SmileyResponse);
+        break;
+      case qt.MCQ:
+      case qt.MSQ:
+      case qt.DDMS:
+      case qt.DDSS:
+        choices = q.choices?.[lang] ? q.choices[lang].map((c) => c.value) : [];
+        break;
+    }
+
+    const dataSource: WaFlowFormChoice[] = choices.map((c, index) => ({
+      id: index.toString(),
+      title: c,
+    }));
+    const mapData: any = choices.reduce(
+      (prev, choice, index) => ({ ...prev, [index]: choice }),
+      {},
+    );
+
+    return { dataSource, mapData };
+  }
+}
+
+/** Injects unique ids to formElements in the flowJson
+ *
+ * Since only some elements have unique identifiers(element.name) (why Meta, why?),
+ * in the Form.children in flowJson, we are adding unique ids to each formElement.
+ * This is done to make things easier in the ui for actions like drag & drop, updating, etc...
+ *
+ * These ids must be removed before sending the flowJson to whatsapp
+ */
+export function injectIdToFlowJson(json: WaFlowJson) {
+  const ids = [];
+  for (const element of waFlowFormElementIterator({
+    flowJson: json,
+    includeFooter: true,
+    onlyInteractive: false,
+  })) {
+    if (!element.id) {
+      element.id = getUniqueRandomAlphaId(6, ids);
+      ids.push(element.id);
+    } else {
+      ids.push(element.id);
+    }
+  }
+  return json;
+}
+
+/**
+ * Removes auto-generated (by us for internal use) ids from flowJson
+ */
+export function removeIdFromFlowJson(json: WaFlowJson) {
+  for (const element of waFlowFormElementIterator({
+    flowJson: json,
+    includeFooter: true,
+    onlyInteractive: false,
+  })) {
+    if (element.id) {
+      delete element.id;
+    }
+  }
+  return json;
 }

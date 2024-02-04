@@ -3,10 +3,17 @@ import { getFlowsFromWa } from "./flow.service";
 import { checkSession } from "../../../utils/checkSession";
 import { $waFlow } from "./flow.schema";
 import {
+  createFlowHandler,
+  deleteFlowHandler,
+  deprecateFlowHandler,
+  getFlowHandler,
   getFlowJsonHandler,
+  getFlowPreviewHandler,
   getFlowsHandler,
   getUnsyncedFlowsHandler,
   importFlowsHandler,
+  publishFlowHandler,
+  updateFlowHandler,
 } from "./flow.controller";
 import { log } from "../../../utils/logger";
 
@@ -28,6 +35,15 @@ export async function flowRoutes(server: FastifyInstance) {
     getFlowsHandler,
   );
   server.get(
+    "/:waFlowId",
+    {
+      schema: {
+        params: $waFlow("byWaFlowIdParams"),
+      },
+    },
+    getFlowHandler,
+  );
+  server.get(
     "/:waFlowId/json",
     {
       schema: {
@@ -47,5 +63,65 @@ export async function flowRoutes(server: FastifyInstance) {
       },
     },
     importFlowsHandler,
+  );
+
+  server.post(
+    "/",
+    {
+      schema: {
+        body: $waFlow("createFlowInput"),
+      },
+    },
+    createFlowHandler,
+  );
+  server.put(
+    "/:dbFlowId",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+        body: $waFlow("updateFlowInput"),
+      },
+    },
+    updateFlowHandler,
+  );
+
+  server.get(
+    "/:dbFlowId/preview",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    getFlowPreviewHandler,
+  );
+
+  server.delete(
+    "/:dbFlowId",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    deleteFlowHandler,
+  );
+
+  server.post(
+    "/:dbFlowId/deprecate",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    deprecateFlowHandler,
+  );
+
+  server.post(
+    "/:dbFlowId/publish",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    publishFlowHandler,
   );
 }
