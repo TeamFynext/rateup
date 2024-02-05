@@ -76,7 +76,7 @@ export function FoodLabelSelector({ form }) {
       <Combobox.DropdownTarget>
         <PillsInput
           onClick={() => combobox.openDropdown()}
-          radius={"md"}
+          radius={"12px"}
           label={
             <Text c={"var(--mantine-color-gray-7)"} fz={"xs"}>
               Allergen Info
