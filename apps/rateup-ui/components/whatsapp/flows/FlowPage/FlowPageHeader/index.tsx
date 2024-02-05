@@ -1,0 +1,67 @@
+import { Box, MultiSelect, Tabs } from "@mantine/core";
+import styles from "./FlowPageHeader.module.css";
+import { useContext } from "react";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import SurveyContext from "../../../../../context/SurveyContext";
+
+export enum FlowTabEnum {
+  Edit = "Edit",
+  Settings = "Settings",
+  Share = "Share",
+  Result = "Result",
+}
+function FlowPageHeader({ name, tab, setTabState }) {
+  const { survey } = useContext(EditFlowContext);
+  const { filterTeams, setFilterTeams } = useContext(SurveyContext);
+  const multiSelectOptions = survey?.teams?.map((team) => {
+    return { value: team?.mapId, label: team?.name };
+  });
+  return (
+    <Box className={styles["flow-page-header"]}>
+      <Box className={styles["heading-container"]}>
+        <h1 className={styles["flow-page-heading-h1"]}>{name}</h1>
+      </Box>
+      <Tabs
+        defaultValue={FlowTabEnum.Edit}
+        classNames={{
+          root: styles["tabs-root-div"],
+          tab: styles["tabs-tab"],
+          list: styles["tabs-list-div"],
+        }}
+        onChange={setTabState}
+      >
+        <Tabs.List>
+          {Object.values(FlowTabEnum).map((tabNameString) => {
+            return (
+              <Tabs.Tab key={tabNameString} value={tabNameString}>
+                {tabNameString}
+              </Tabs.Tab>
+            );
+          })}
+        </Tabs.List>
+      </Tabs>
+      <Box
+        style={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        {tab === FlowTabEnum.Result ? (
+          <MultiSelect
+            w={"75%"}
+            radius={"10px"}
+            searchable
+            clearable
+            data={multiSelectOptions}
+            value={filterTeams}
+            onChange={setFilterTeams}
+            placeholder={filterTeams.length > 0 ? "" : "All Teams"}
+          />
+        ) : null}
+      </Box>
+    </Box>
+  );
+}
+
+export default FlowPageHeader;

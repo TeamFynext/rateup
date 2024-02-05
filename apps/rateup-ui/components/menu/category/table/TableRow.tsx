@@ -4,28 +4,26 @@ import {
   Box,
   Flex,
   Image,
-  Spoiler,
   Stack,
   Table,
   Text,
   Tooltip,
 } from "@mantine/core";
-import React from "react";
-import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconCircleCheckFilled,
   IconEdit,
-  IconTrash,
-  IconWashDrycleanOff,
   IconReplace,
+  IconWashDrycleanOff,
 } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../../../Modal/ConfirmationModal";
-import { notifications } from "@mantine/notifications";
-import { currencyLabel } from "../../util/currencyData";
 import { fallbackImage } from "../../../../utils/constants";
-import MenuFoodLabelBadge from "../tag/MenuFoodLabelBadge";
+import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { HoverCardComponent } from "../../../Survey/HoverCard/HoverCard";
+import { ActionIconCommon } from "../../ActionIcon/ActionIconCommon";
+import { currencyLabel } from "../../util/currencyData";
+import MenuFoodLabelBadge from "../tag/MenuFoodLabelBadge";
 
 const TableRow = ({
   item,
@@ -164,11 +162,7 @@ const TableRow = ({
               </Tooltip>
             )}
           </ActionIcon>
-          <ActionIcon c={"black"} bg={"white"} radius={"md"} onClick={toggle}>
-            <Tooltip label="Delete">
-              <IconTrash />
-            </Tooltip>
-          </ActionIcon>
+          <ActionIconCommon handleClick={toggle} />
         </Flex>
       </Table.Td>
       <Table.Td>

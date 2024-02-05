@@ -1,9 +1,17 @@
 .panel {
   height: 100%;
 }
-.edit-survey-panel {
-  height: 100%;
+
+.question-sidebar-container {
+  flex: 2;
+  padding: 0;
 }
-.edit-survey-panel > div {
+
+.question-editor-container {
+  flex: 5;
+  padding: 1.5rem;
+}
+
+.question-detailed-view-panel > div {
   height: 100%;
 }

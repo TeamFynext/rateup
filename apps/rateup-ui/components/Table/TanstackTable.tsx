@@ -11,6 +11,7 @@ import {
   Stack,
   Table,
   Text,
+  Tooltip,
   UnstyledButton,
   rem,
 } from "@mantine/core";
@@ -38,6 +39,7 @@ import { Filter } from "./Filter/Filter";
 import { fuzzyFilter } from "../Survey/Response/Filter";
 import { PAGE_SIZE } from "../../utils/constants";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
+import styles from "./TanstackTable.module.css";
 
 function TanstackTable({
   data,
@@ -45,13 +47,13 @@ function TanstackTable({
   enableFilter = true,
   enablePagination = true,
   enableColumnSelection = true,
-}: {
+}: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
   enableFilter?: boolean;
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
-}) {
+}>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [filterVisibility, setFilterVisibility] = React.useState(false);
@@ -89,11 +91,16 @@ function TanstackTable({
 
   return (
     <>
-      <Flex gap={"md"} justify={"end"} align={"center"}>
+      <Flex
+        gap={"md"}
+        justify={"end"}
+        align={"center"}
+        className={"actions-container"}
+      >
         {enableFilter && (
           <ActionIcon
             onClick={() => setFilterVisibility((el) => !el)}
-            variant="outline"
+            variant={filterVisibility ? "filled" : "outline"}
           >
             <IconFilter
               style={{ width: rem(16), height: rem(16) }}
@@ -147,16 +154,20 @@ function TanstackTable({
           </Popover>
         )}
         {enableFilter && (
-          <RateupButtonSecondary
-            onClick={() => table.resetColumnFilters()}
-            title="Reset"
-          />
+          <Tooltip label="Clear the filtered values">
+            <Box>
+              <RateupButtonSecondary
+                onClick={() => table.resetColumnFilters()}
+                title="Reset"
+              />
+            </Box>
+          </Tooltip>
         )}
       </Flex>
-      <ScrollArea maw={"80vw"}>
-        <Stack justify="space-between" mih={"min(60dvh,440px)"} mah={"60dvh"}>
+      <ScrollArea scrollbarSize={"0.625rem"}>
+        <Stack justify="space-between" mih={"min(60dvh,440px)"}>
           <Table withRowBorders>
-            <Table.Thead>
+            <Table.Thead className={styles["table-thead"]}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -253,7 +264,7 @@ function TanstackTable({
           </Table>
         </Stack>
       </ScrollArea>
-      <Flex gap={"xl"}>
+      <Flex gap={"xl"} className={"pagination-container"}>
         {enablePagination && (
           <Pagination.Root
             total={table.getPageCount()}
@@ -276,6 +287,7 @@ function TanstackTable({
             }}
             value={String(table.getState().pagination.pageSize)}
             data={PAGE_SIZE}
+            allowDeselect={false}
             styles={{
               input: {
                 height: 10,

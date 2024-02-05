@@ -1,4 +1,4 @@
-import { Stack, Text, Divider, Button, Group } from "@mantine/core";
+import { Stack, Text, Divider, Button, Group, ScrollArea } from "@mantine/core";
 
 import React from "react";
 import { Input } from "../surveyTheme.types";
@@ -13,7 +13,7 @@ function InputStyles({
   setCurrentstyles: (key: string, value: any) => void;
 }) {
   return (
-    <>
+    <ScrollArea h={"51vh"} w={"100%"}>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
         <Group justify="space-between" w={"100%"}>
@@ -45,7 +45,7 @@ function InputStyles({
           }}
         />
       </Stack>
-    </>
+    </ScrollArea>
   );
 }
 

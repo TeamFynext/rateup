@@ -132,7 +132,9 @@ export default function SurveyID() {
             surveyTeamMapId,
             selectedTeamName,
             filterTeams,
+            setFilterTeams,
             filterTags,
+            surveyId,
           }}
         >
           <StyledTabs
@@ -182,7 +184,6 @@ export default function SurveyID() {
                 ) : null}
               </Grid.Col>
             </Grid>
-            <Space h="md" />
             <Box className={styles["tab-panel-container"]}>
               <Tabs.Panel
                 value={TabEnum.Edit}

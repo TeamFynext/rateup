@@ -15,6 +15,7 @@
   flex: 1 1 0;
   overflow: "auto";
   flex-grow: 1;
+  background-color: white;
 }
 
 .chatBg::before {

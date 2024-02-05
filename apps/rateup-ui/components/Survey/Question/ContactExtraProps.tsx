@@ -36,7 +36,7 @@ const ContactExtraProps = ({ form }) => {
   }
   useEffect(() => {
     updateFeatures(features);
-  });
+  }, [features]);
   return (
     <Stack gap={"xl"}>
       <Flex justify={"flex-start"} columnGap={"lg"}>

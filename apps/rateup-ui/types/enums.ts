@@ -153,8 +153,9 @@ export enum WaFlowLayoutType {
 export enum WaFlowFormElementType {
   textBody = "TextBody",
   textHeading = "TextHeading",
-  textSubHeading = "TextSubHeading",
+  textSubHeading = "TextSubheading",
   textCaption = "TextCaption",
+
   textInput = "TextInput",
   textArea = "TextArea",
   datePicker = "DatePicker",
@@ -163,4 +164,20 @@ export enum WaFlowFormElementType {
   checkboxGroup = "CheckboxGroup",
   dropDown = "Dropdown",
   optIn = "OptIn",
+}
+export enum WaFlowFormInputElementType {
+  textInput = "TextInput",
+  textArea = "TextArea",
+  datePicker = "DatePicker",
+  footer = "Footer",
+  radioButtonsGroup = "RadioButtonsGroup",
+  checkboxGroup = "CheckboxGroup",
+  dropDown = "Dropdown",
+  optIn = "OptIn",
+}
+export enum WaFlowFormNonInputElementType {
+  textBody = "TextBody",
+  textHeading = "TextHeading",
+  textSubHeading = "TextSubheading",
+  textCaption = "TextCaption",
 }

@@ -100,6 +100,7 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
 
   if (isLoading) return <Loader type="bars" />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
+
   return (
     <StyledTabs
       value={resultTab}
@@ -127,11 +128,12 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           minWidth: "300px",
           padding: 2,
           height: "100%",
+          width: "100%",
           overflow: "auto",
         },
       }}
     >
-      <Box className={styles["result-page-tabs-filter-btn-container"]}>
+      <Box className={styles["result-page-tabs-and-filter-btn-container"]}>
         <Tabs.List>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
@@ -166,24 +168,26 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           </Popover.Dropdown>
         </Popover>
       </Box>
-      <Tabs.Panel value="overview">
-        <SurveyStats survey={survey} />
-      </Tabs.Panel>
-      <Tabs.Panel value="analytics">
-        <ResultsOverview />
-      </Tabs.Panel>
-      <Tabs.Panel value="responses">
-        <Responses
-          survey={survey}
-          responses={filteredResponses}
-          allResponses={teamWiseResponses}
-          defaultLanguage={defaultLanguage}
-          isLoading={isLoading}
-        />
-      </Tabs.Panel>
-      <Tabs.Panel value="comparison">
-        <ResultComparison />
-      </Tabs.Panel>
+      <Box className={styles["panels-container"]}>
+        <Tabs.Panel value="overview">
+          <SurveyStats survey={survey} />
+        </Tabs.Panel>
+        <Tabs.Panel value="analytics">
+          <ResultsOverview />
+        </Tabs.Panel>
+        <Tabs.Panel value="responses">
+          <Responses
+            survey={survey}
+            responses={filteredResponses}
+            allResponses={teamWiseResponses}
+            defaultLanguage={defaultLanguage}
+            isLoading={isLoading}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value="comparison">
+          <ResultComparison />
+        </Tabs.Panel>
+      </Box>
     </StyledTabs>
   );
 };

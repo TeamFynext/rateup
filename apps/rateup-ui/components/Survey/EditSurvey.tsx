@@ -2,13 +2,23 @@ import { Center, Text, Tabs, Flex } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import LogicEditor from "./Question/LogicEditor";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import classes from "./EditSurvey.module.css";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { MotionTransition } from "../animation/MotionTransition";
+import styles from "./EditSurvey.module.css";
+import { useSurvey } from "../../backend/surveys/surveys.query";
+import SurveyContext from "../../context/SurveyContext";
+import { QuestionType, SurveyType } from "../../types/enums";
+import {
+  QuestionTypesGroup,
+  WaSurveyQuestionTypes,
+} from "../../utils/constants";
+import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
+import { createBlankQuestion } from "../../utils/questions";
+import SelectedLanguageContext from "../../context/SelectedLanguage";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -34,6 +44,9 @@ export function EditSurvey({
     QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const { surveyId } = useContext(SurveyContext);
+  const { data: survey } = useSurvey(surveyId);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   useEffect(() => {
     if (!selectedQ) return;
@@ -47,9 +60,28 @@ export function EditSurvey({
     }
   }, [questions]);
 
+  const questionCreateMutation = useQuestionCreateMutation({
+    surveyId,
+  });
+  const handleTypeSelection = (type: QuestionType) => {
+    const newQ = createBlankQuestion(type, selectedLanguage);
+    const { id, ...restData } = newQ;
+    const saveQ = { ...restData };
+    questionCreateMutation.mutateAsync(saveQ).then((r) => {
+      setSelectedQ(r.data);
+      setActiveTab(QuestionTabsEnum.Edit);
+    });
+  };
   return (
-    <Flex w={"100%"} mah={"100%"} p={2} gap={10} style={{ overflow: "auto" }}>
-      <PaperLayout style={{ flex: 0.3 }}>
+    <Flex
+      w={"100%"}
+      h={"100%"}
+      mah={"100%"}
+      p={2}
+      gap={10}
+      style={{ overflow: "auto" }}
+    >
+      <PaperLayout className={styles["question-sidebar-container"]}>
         <QuestionsSideBar
           questions={questions}
           selectedQ={selectedQ}
@@ -60,20 +92,18 @@ export function EditSurvey({
           addQnTrigger={addQnTrigger}
         />
       </PaperLayout>
-      <PaperLayout style={{ flex: 0.7 }}>
+      <PaperLayout className={styles["question-editor-container"]}>
         <Tabs
-          px={"md"}
-          pb="md"
           value={activeTab}
           onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
           style={{ height: "100%" }}
           classNames={{
-            panel: classes.panel,
+            panel: styles["panel"],
           }}
         >
           <Tabs.Panel
             value={QuestionTabsEnum.Edit}
-            className={classes["edit-survey-panel"]}
+            className={styles["question-detailed-view-panel"]}
           >
             {selectedQ && (
               <MotionTransition keyValue={selectedQ}>
@@ -90,8 +120,12 @@ export function EditSurvey({
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
             <QuestionTypeSelection
-              setSelectedQ={setSelectedQ}
-              setActiveTab={setActiveTab}
+              questionTypeGroups={
+                survey?.type === SurveyType.WhatsApp
+                  ? WaSurveyQuestionTypes
+                  : QuestionTypesGroup
+              }
+              handleTypeSelection={handleTypeSelection}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>

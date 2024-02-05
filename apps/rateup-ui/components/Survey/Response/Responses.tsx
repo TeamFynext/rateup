@@ -1,4 +1,4 @@
-import { Group, Loader, Stack, Text } from "@mantine/core";
+import { Box, Group, Loader, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconFileDownload, IconX } from "@tabler/icons-react";
@@ -38,9 +38,8 @@ const Responses = ({
   defaultLanguage,
   isLoading,
 }) => {
-  const [responseCount, setResponseCount] = useState(0);
   const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
+  const surveyId = survey?.id;
   const { surveyTeamMapId } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
@@ -71,10 +70,6 @@ const Responses = ({
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
-
-  useEffect(() => {
-    setResponseCount(responses?.length);
-  }, [responses]);
 
   function handleExportContacts() {
     const contacts = [];
@@ -207,23 +202,24 @@ const Responses = ({
       });
     }
   };
+  const columns = useSurveyResponseColumns({
+    questions,
+    defaultLanguage,
+    setSelectedRowId,
+    open,
+  });
 
   if (isQLoading) return <Loader type="bars" />;
   if (QError) return <Text>An error has occurred</Text>;
   if (isLoading) return <Loader type="bars" />;
 
-  const columns = useSurveyResponseColumns({
-    questions,
-    defaultLanguage,
-    setSelectedRowId,
-  });
+  const responseCount = responses?.length;
 
   return (
-    <Stack h="100%">
-      <PaperLayout
-        style={{ cursor: "pointer" }}
-        className={styles["total-responses-heading-container"]}
-      >
+    <Stack
+      className={styles["total-responses-header-and-responses-table-wrapper"]}
+    >
+      <PaperLayout className={styles["total-responses-heading-container"]}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <Group>
@@ -247,36 +243,35 @@ const Responses = ({
           </Group>
         </Group>
       </PaperLayout>
+
       {responseCount > 0 ? (
-        <PaperLayout>
-          <>
-            <TanstackTable data={responses} columns={columns} />
-            <FormModalLayout
-              opened={opened}
-              onClose={close}
-              title="Delete Response"
-              centered
-              buttonTitle="Delete"
-              includeCancelButton
-              onSubmit={confirmDelete}
-            >
-              <Stack py={"sm"}>
-                <Text>To proceed further, verify your email id.</Text>
-                <ContainedTextField
-                  withAsterisk
-                  label="Verify email"
-                  placeholder="Enter your login email"
-                  required
-                  value={verifyEmail}
-                  onChange={(e) => setVerifyEmail(e.target.value)}
-                />
-                <Text c="red">
-                  Once deleted, response entry data will be lost.
-                </Text>
-              </Stack>
-            </FormModalLayout>
-          </>
-        </PaperLayout>
+        <Box className={styles["responses-table-container"]}>
+          <TanstackTable data={responses} columns={columns} />
+          <FormModalLayout
+            opened={opened}
+            onClose={close}
+            title="Delete Response"
+            centered
+            buttonTitle="Delete"
+            includeCancelButton
+            onSubmit={confirmDelete}
+          >
+            <Stack py={"sm"}>
+              <Text>To proceed further, verify your email id.</Text>
+              <ContainedTextField
+                withAsterisk
+                label="Verify email"
+                placeholder="Enter your login email"
+                required
+                value={verifyEmail}
+                onChange={(e) => setVerifyEmail(e.target.value)}
+              />
+              <Text c="red">
+                Once deleted, response entry data will be lost.
+              </Text>
+            </Stack>
+          </FormModalLayout>
+        </Box>
       ) : (
         <NothingFound text="No responses yet" />
       )}

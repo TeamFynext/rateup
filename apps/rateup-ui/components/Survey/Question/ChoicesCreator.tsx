@@ -482,7 +482,7 @@ function Choice({
                 resetRef={resetRef}
               >
                 {(props) => (
-                  <Button {...props}>
+                  <Button {...props} radius={"lg"}>
                     <Text fz="sm" mr={4}>
                       {selectedImageFile?.name ?? "Edit Image"}
                     </Text>
@@ -494,7 +494,7 @@ function Choice({
             </Stack>
           )}
           <RateupButtonBlue
-            title="Edit choice"
+            title="Update Choice"
             onClick={handleEditChoice}
             loading={fileUploadLoading}
           />
