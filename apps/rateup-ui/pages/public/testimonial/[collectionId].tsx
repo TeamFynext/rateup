@@ -4,14 +4,13 @@ import { useGetAllTestimonialsByCollection } from "../../../backend/testimonials
 import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 import Head from "next/head";
-import { Flex } from "@mantine/core";
+import { Flex, SimpleGrid } from "@mantine/core";
 
 const Collections = () => {
   const router = useRouter();
   const { collectionId } = router.query;
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   const testimonials = collection?.testimonials?.map((t) => t?.testimonial);
-  // const alignment = collection?.theme?.alignment
 
   return (
     <>
@@ -42,28 +41,39 @@ const Collections = () => {
         <meta property="og:image:alt" content="Star Icon" />
       </Head>
       <Flex justify={"center"} align={"center"} m={"xl"} bg={"transparent"}>
-        <Carousel
-          align="start"
-          slideSize={{ base: "270px", xs: "320px" }}
-          slideGap={{ base: "md", xs: "sm", sm: "md", md: "lg" }}
-          slidesToScroll={1}
-          loop
-          speed={5}
-          controlsOffset={"xs"}
-        >
-          {testimonials?.map((testimonial) => {
-            return (
-              <>
-                <Carousel.Slide key={testimonial.id}>
-                  <TestimonialCard
-                    testimonial={testimonial}
-                    currentStyle={collection?.theme}
-                  />
-                </Carousel.Slide>
-              </>
-            );
-          })}
-        </Carousel>
+        {collection?.theme.layout == "horizontal" ? (
+          <Carousel
+            align="start"
+            slideSize={{ base: "270px", xs: "320px" }}
+            slideGap={{ base: "md", xs: "sm", sm: "md", md: "lg" }}
+            slidesToScroll={1}
+            loop
+            speed={5}
+            controlsOffset={"xs"}
+          >
+            {testimonials?.map((testimonial) => {
+              return (
+                <>
+                  <Carousel.Slide key={testimonial.id}>
+                    <TestimonialCard
+                      testimonial={testimonial}
+                      currentStyle={collection?.theme}
+                    />
+                  </Carousel.Slide>
+                </>
+              );
+            })}
+          </Carousel>
+        ) : (
+          <SimpleGrid cols={3}>
+            {testimonials?.map((testimonial) => (
+              <TestimonialCard
+                testimonial={testimonial}
+                currentStyle={collection?.theme}
+              />
+            ))}
+          </SimpleGrid>
+        )}
       </Flex>
     </>
   );

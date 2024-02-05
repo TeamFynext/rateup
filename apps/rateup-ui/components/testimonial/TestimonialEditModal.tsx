@@ -11,8 +11,8 @@ import {
   SimpleGrid,
   Grid,
   Flex,
+  Modal,
 } from "@mantine/core";
-import React, { Dispatch, useContext, useState } from "react";
 
 import {
   ContainedColorInput,
@@ -202,16 +202,18 @@ const TestimonialEditModal = ({
   };
 
   return (
-    <FormModalLayout
+    <Modal
       opened={opened}
       onClose={onClose}
-      title=""
       centered
       size={"1000px"}
+      padding={0}
+      withCloseButton={false}
+      radius={"md"}
     >
-      <Grid columns={10}>
-        <Grid.Col span={6}>
-          <ScrollArea h={"70%"}>
+      <Grid columns={10} p={"xs"}>
+        <Grid.Col span={6} p={"xl"}>
+          <ScrollArea h={430}>
             <Stack justify="flex-start">
               <Stack w={300}>
                 <Title order={3}>Change Color</Title>
@@ -228,7 +230,7 @@ const TestimonialEditModal = ({
                   </Group>
                 ))}
               </Stack>
-              <Stack>
+              <Stack w={470}>
                 <Title order={3}>Change Font</Title>
                 {fonts.map((f) => (
                   <Group justify="space-between">
@@ -236,14 +238,14 @@ const TestimonialEditModal = ({
                     <Group gap={"xs"}>
                       <ContainedColorInput
                         value={f.color}
-                        w={150}
+                        w={130}
                         onChange={(value) => {
                           handleFontColorChange(value, f.name);
                         }}
                       />
                       <ContainedSelection
                         data={FontWeights}
-                        style={{ maxWidth: "115px" }}
+                        style={{ maxWidth: "110px" }}
                         onChange={(value) =>
                           handleFontWeightChange(value, f.name)
                         }
@@ -265,7 +267,7 @@ const TestimonialEditModal = ({
                   </Group>
                 ))}
               </Stack>
-              <Stack w={500}>
+              <Stack w={450}>
                 <Title order={3}>Change Layout</Title>
                 <Radio.Group
                   value={currentStyle?.layout}
@@ -302,11 +304,11 @@ const TestimonialEditModal = ({
                         label="Vertical"
                       />
                       <SimpleGrid
-                        cols={5}
-                        spacing={"xl"}
+                        cols={4}
+                        spacing={"md"}
                         verticalSpacing={"sm"}
                       >
-                        {Array.apply(null, { length: 10 }).map((e) => (
+                        {Array.apply(null, { length: 8 }).map((e) => (
                           <Box
                             bg={"#E2E5ED"}
                             h={80}
@@ -321,14 +323,14 @@ const TestimonialEditModal = ({
               </Stack>
             </Stack>
           </ScrollArea>
-          <Flex justify={"flex-end"} gap={"sm"} mt={"md"}>
-            <RateupButtonSecondary title="cancel" />
+          <Flex gap={"sm"} mt={"xl"}>
+            <RateupButtonSecondary title="cancel" onClick={onClose} />
             <RateupButtonBlue title="Save" />
           </Flex>
         </Grid.Col>
 
-        <Grid.Col span={4}>
-          <Stack bg={"#E2E5ED"} justify="center" align="center" px={"xl"}>
+        <Grid.Col span={4} bg={"#E2E5ED"} p={"xl"}>
+          <Stack justify="center" align="center">
             <TestimonialCard
               testimonial={testimonialSample}
               currentStyle={currentStyle}
@@ -387,7 +389,7 @@ const TestimonialEditModal = ({
           </Stack>
         </Grid.Col>
       </Grid>
-    </FormModalLayout>
+    </Modal>
   );
 };
 

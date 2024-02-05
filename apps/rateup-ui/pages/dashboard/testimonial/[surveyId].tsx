@@ -67,7 +67,13 @@ export default function () {
       fontWeight: "400",
       isRemoved: false,
     },
-    layout: "vertical",
+    layout: "horizontal",
+  });
+
+  const [filters, setFilters] = useState({
+    date: "new",
+    rating: null,
+    testimonialLength: "longest",
   });
 
   return (
@@ -82,6 +88,8 @@ export default function () {
               surveyId={surveyId}
               selectedCollectionId={selectedCollectionId}
               setSelectedCollection={setSelectedCollectionId}
+              filters={filters}
+              setFilters={setFilters}
             />
           </Stack>
           <StyledTabs
@@ -107,6 +115,7 @@ export default function () {
                 setActiveTab={setActiveTab}
                 selectedTestimonials={selectedTestimonials}
                 selectedTestimonialHandler={selectedTestimonialHandler}
+                filters={filters}
               />
             </Tabs.Panel>
             <Tabs.Panel value={TestimonialTabs.Edit}>
@@ -118,7 +127,7 @@ export default function () {
               />
             </Tabs.Panel>
             <Tabs.Panel value={TestimonialTabs.Share}>
-              <TestimonialShare />
+              <TestimonialShare filters={filters} />
             </Tabs.Panel>
           </StyledTabs>
         </Flex>

@@ -5,12 +5,15 @@ import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useGetAllTestimonials } from "../../backend/testimonials/testimonial.query";
 import { TestimonialTabs } from "../../pages/dashboard/testimonial/[surveyId]";
+import { getFilteredTestimonials } from "../../utils/testimonial";
+import { useEffect, useState } from "react";
 
 const TestimonialSelect = ({
   survey,
   setActiveTab,
   selectedTestimonials,
   selectedTestimonialHandler,
+  filters,
 }) => {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -18,8 +21,13 @@ const TestimonialSelect = ({
   const { data: testimonials, isLoading } = useGetAllTestimonials(surveyId);
   console.log("testimonials", testimonials);
   const isAllSelected = testimonials === selectedTestimonials;
+  const [filteredTestimonials, setFilteredTestimonials] = useState([]);
   //get testimonials from testimonials using surveyTeamMapId
   //get surveyTeamMapid from
+
+  useEffect(() => {
+    setFilteredTestimonials(getFilteredTestimonials(testimonials, filters));
+  }, [filters]);
 
   const handleNext = () => {
     setActiveTab(TestimonialTabs.Edit);
@@ -53,7 +61,7 @@ const TestimonialSelect = ({
       </Grid>
 
       <SimpleGrid cols={3} mt={"lg"}>
-        {testimonials?.map((testimonial, index) => {
+        {filteredTestimonials?.map((testimonial, index) => {
           const isSelected = selectedTestimonials.some(
             (t) => t?.id === testimonial?.id,
           );

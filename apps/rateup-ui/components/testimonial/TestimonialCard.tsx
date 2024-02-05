@@ -75,11 +75,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
       </Stack>
       {!currentStyle?.ratingBlock.isRemoved && (
         <Stack py={"xs"} bg={currentStyle?.ratingBlock.bg} pl={"md"}>
-          <Rating
-            defaultValue={testimonial?.testimonial.rating}
-            readOnly
-            size="lg"
-          />
+          <Rating value={testimonial?.testimonial.rating} readOnly size="lg" />
         </Stack>
       )}
       {!currentStyle?.date.isRemoved && (

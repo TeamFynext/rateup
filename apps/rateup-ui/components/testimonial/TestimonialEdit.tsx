@@ -74,9 +74,10 @@ const TestimonialEdit = ({
           <RateupButtonBlue
             title="Delete"
             leftIcon={<IconTrash size={18} />}
-            variant={"subtle"}
+            variant={action == actionTab.Delete ? "filled" : "subtle"}
             onClick={() => {
-              setAction(actionTab.Delete);
+              if (action !== null) setAction(null);
+              else setAction(actionTab.Delete);
             }}
             pl="xs"
             pr="xs"
@@ -86,7 +87,8 @@ const TestimonialEdit = ({
             leftIcon={<IconSwipe size={18} />}
             variant={action == actionTab.Swap ? "filled" : "subtle"}
             onClick={() => {
-              setAction(actionTab.Swap);
+              if (action !== null) setAction(null);
+              else setAction(actionTab.Swap);
             }}
             pl="xs"
             pr="xs"
