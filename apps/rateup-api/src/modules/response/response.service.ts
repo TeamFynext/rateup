@@ -137,6 +137,7 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
           notificationEmail: true,
           enableNotificationEmail: true,
           id: true,
+          title: true,
         },
       },
     },
@@ -184,6 +185,7 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
       html: createEmailBodySurveyResponse(
         `${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,
         bodyJsx,
+        survey?.title,
       ),
     };
     await sendAWSEmail(msg);
