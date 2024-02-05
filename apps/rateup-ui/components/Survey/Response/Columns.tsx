@@ -17,9 +17,10 @@ import { RateupButtonBlue } from "../../Button/RateupButtons";
 import PreviewModal from "../../Modal/PreviewModal";
 
 export const useSurveyResponseColumns = ({
-  questions,
+  questions = [],
   defaultLanguage,
   setSelectedRowId,
+  open,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
@@ -38,40 +39,46 @@ export const useSurveyResponseColumns = ({
         </Text>
       ),
     },
-    ...questions?.map((q) => {
-      const content =
-        q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
-        q?.description[selectedLanguage ? selectedLanguage : defaultLanguage];
-      return {
-        ...(![
-          QuestionType.Rating,
-          QuestionType.Opinion,
-          QuestionType.Number,
-        ].includes(q?.type) && {
-          filterFn: fuzzyFilter,
-        }),
-        accessorFn: (row) =>
-          row?.responses?.find((item) => item?.type === q.type)?.response[
-            q.type
-          ],
-        id: content + "_,_" + q.type,
-        header: () => (
-          <HoverCardComponent content={content} fw={600} fz={"lg"} />
-        ),
-        enableColumnFilter: ![QuestionType.Photo, QuestionType.PCQ].includes(
-          q.type,
-        ),
-        enableSorting: ![QuestionType.Photo, QuestionType.PCQ].includes(q.type),
-        cell: (info) => {
-          return (
-            <BadgeorTextorPreview
-              questionType={q?.type}
-              response={getResponse(q.type, info.getValue())}
-            />
-          );
-        },
-      };
-    }),
+    ...(questions?.length > 0 &&
+      questions.map((q) => {
+        const content =
+          q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+          q?.description[
+            selectedLanguage ? selectedLanguage : defaultLanguage
+          ] ||
+          "";
+        return {
+          ...(![
+            QuestionType.Rating,
+            QuestionType.Opinion,
+            QuestionType.Number,
+          ].includes(q?.type) && {
+            filterFn: fuzzyFilter,
+          }),
+          accessorFn: (row) =>
+            row?.responses?.find((item) => item?.type === q.type)?.response[
+              q.type
+            ],
+          id: content + "_,_" + q.type,
+          header: () => (
+            <HoverCardComponent content={content} fw={600} fz={"lg"} />
+          ),
+          enableColumnFilter: ![QuestionType.Photo, QuestionType.PCQ].includes(
+            q.type,
+          ),
+          enableSorting: ![QuestionType.Photo, QuestionType.PCQ].includes(
+            q.type,
+          ),
+          cell: (info) => {
+            return (
+              <BadgeorTextorPreview
+                questionType={q?.type}
+                response={getResponse(q.type, info.getValue())}
+              />
+            );
+          },
+        };
+      })),
     {
       header: () => (
         <Text c="dark.3" truncate="end" fw={600} fz={"lg"}>
@@ -111,10 +118,10 @@ const badgeRequired = [
 function BadgeorTextorPreview({
   questionType,
   response,
-}: {
+}: Readonly<{
   questionType: QuestionType;
   response: string;
-}) {
+}>) {
   const [previewModalopened, { open, close }] = useDisclosure(false);
   if (previewRequired.includes(questionType)) {
     return (

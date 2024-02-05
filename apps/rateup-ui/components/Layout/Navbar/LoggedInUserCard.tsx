@@ -4,6 +4,7 @@ import { useUser } from "../../../context/UserContext";
 const LoggedInUserCard = () => {
   const { user } = useUser();
 
+  if (!user) return null;
   return (
     <Group gap={10} style={{ width: "140px" }}>
       <Avatar
