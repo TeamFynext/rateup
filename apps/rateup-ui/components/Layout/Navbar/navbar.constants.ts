@@ -101,27 +101,27 @@ export function getNavTopData(subscription?: Subscription) {
       ? [
           {
             Icon: IconBrandWhatsapp,
-            label: "WhatsApp Survey",
+            label: "WhatsApp",
             submenus: [
               {
                 Icon: IconFileDescription,
                 label: "Surveys",
-                href: "/dashboard/whatsapp-surveys",
+                href: "/dashboard/WhatsApp",
               },
               {
                 Icon: IconMessage2Code,
                 label: "Templates",
-                href: "/dashboard/whatsapp-surveys/templates",
+                href: "/dashboard/WhatsApp/templates",
               },
               {
                 Icon: IconWaveSine,
                 label: "Flows",
-                href: "/dashboard/whatsapp-surveys/flows",
+                href: "/dashboard/WhatsApp/flows",
               },
               {
                 Icon: IconSettings,
                 label: "Settings",
-                href: "/dashboard/whatsapp-surveys/settings",
+                href: "/dashboard/WhatsApp/settings",
               },
             ],
           },

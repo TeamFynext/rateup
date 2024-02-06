@@ -2,6 +2,7 @@ import {
   Badge,
   ActionIcon,
   Text,
+  Flex,
   Box,
   useMantineTheme,
   Group,
@@ -14,7 +15,8 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useContext } from "react";
+import { questionIcons } from "../QuestionTypeSelection";
+import React, { useContext } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { Draggable } from "react-beautiful-dnd";
 import classes from "./DraggableQuestionCard.module.css";
@@ -95,7 +97,15 @@ export function DraggableQuestionCard({
                 c={"white"}
                 variant={selected ? "filled" : "filled"}
               >
-                {index + 1}
+                <Flex style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
+                  {questionIcons[question.type] &&
+                    React.createElement(questionIcons[question.type], {
+                      size: 15,
+                      strokeWidth: 2,
+                      style: { marginRight: "0.5rem" },
+                    })}
+                  {index + 1}
+                </Flex>
               </Badge>
               <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
                 {question.title[selectedLanguage] ||
