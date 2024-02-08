@@ -24,6 +24,7 @@ export async function surveyThemeRoutes(server: FastifyInstance) {
       preHandler: checkSession,
       schema: {
         params: $surveyThemeRef("bySurveyThemeIdSchema"),
+        body: $surveyThemeRef("surveyThemeSchemaCore"),
       },
     },
     updateSurveyThemeHandler,

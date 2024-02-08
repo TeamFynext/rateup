@@ -411,18 +411,19 @@ model MenuCategory {
 }
 
 model MenuItem {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime     @default(now())
-  name        String
-  description String
-  images      String[]
-  videoUrl    String?
-  price       Json
-  itemOrder   Int          @default(0)
-  disabled    Boolean      @default(false)
-  category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  categoryId  String       @db.Uuid
-  foodLabels  String[]     @default([])
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now())
+  name          String
+  description   String
+  images        String[]
+  videoUrl      String?
+  price         Json
+  itemOrder     Int          @default(0)
+  disabled      Boolean      @default(false)
+  category      MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId    String       @db.Uuid
+  foodLabels    String[]     @default([])
+  unsplashImage String[]     @default([])
 }
 
 //homepage contact form
@@ -474,6 +475,7 @@ model MenuLanding {
   menuId                String         @unique @db.Uuid
   surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId       String?        @db.Uuid
+  unsplashImage         Json?
 }
 
 model ReviewSuggestion {
