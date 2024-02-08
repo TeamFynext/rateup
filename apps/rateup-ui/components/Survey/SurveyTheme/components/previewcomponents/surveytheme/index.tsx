@@ -41,7 +41,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
   const [currentResponse, updateResponse] = useState(null || []);
   //here subtitle, title and label are not customisable, its only added to preserve the consistency of the schema and ease of implementation.
   const {
-    bg: { styles, desktopbg, mobilebg },
+    bg: { styles, desktopbg, mobilebg, unsplashImage },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
     button: { styles: buttonStyles, label },
@@ -61,6 +61,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
         style={{ height: "100%", width: "100%", objectFit: "contain" }}
         src={getImageUrl(
           mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
+          unsplashImage?.[mobileOrDesktop],
         )}
       >
         <ActionIcon
