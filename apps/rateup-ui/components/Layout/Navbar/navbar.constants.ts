@@ -106,22 +106,22 @@ export function getNavTopData(subscription?: Subscription) {
               {
                 Icon: IconFileDescription,
                 label: "Surveys",
-                href: "/dashboard/WhatsApp",
+                href: "/dashboard/whatsapp",
               },
               {
                 Icon: IconMessage2Code,
                 label: "Templates",
-                href: "/dashboard/WhatsApp/templates",
+                href: "/dashboard/whatsapp/templates",
               },
               {
                 Icon: IconWaveSine,
                 label: "Flows",
-                href: "/dashboard/WhatsApp/flows",
+                href: "/dashboard/whatsapp/flows",
               },
               {
                 Icon: IconSettings,
                 label: "Settings",
-                href: "/dashboard/WhatsApp/settings",
+                href: "/dashboard/whatsapp/settings",
               },
             ],
           },

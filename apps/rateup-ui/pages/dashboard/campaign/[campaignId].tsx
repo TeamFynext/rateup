@@ -106,7 +106,7 @@ export default () => {
             </Button>
             <Anchor
               size="xl"
-              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/WhatsApp/${selectedSurvey}?tab=Result`}
+              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/${selectedSurvey}?tab=Result`}
             >
               <Title order={3}>Results</Title>
             </Anchor>
