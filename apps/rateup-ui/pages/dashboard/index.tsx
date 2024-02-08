@@ -201,7 +201,7 @@ export default function DashboardHome() {
     {
       Icon: IconBrandWhatsapp,
       title: "WhatsApp Survey",
-      routerPath: "/dashboard/WhatsApp?action=create",
+      routerPath: "/dashboard/whatsapp?action=create",
     },
     {
       Icon: IconPageBreak,
