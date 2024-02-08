@@ -63,7 +63,15 @@ export function ItemDisplay({
             maw={smallScreen ? "120px" : "164px"}
             src={
               item?.images?.length > 0
-                ? encodeURI(getFileUrlFromKey(item?.images[0]))
+                ? encodeURI(
+                    getFileUrlFromKey(
+                      item?.images[0],
+                      true,
+                      item?.unsplashImage?.find(
+                        (data) => data === item?.images[0],
+                      )?.length > 0,
+                    ),
+                  )
                 : fallbackImage
             }
             style={{
@@ -75,6 +83,7 @@ export function ItemDisplay({
                   : "grayscale(0)",
             }}
             opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
+            fallbackSrc={fallbackImage}
           />
           {(item?.disabled || categoryDisabled) && (
             <Center h={"100%"} style={{ gridArea: "1 / 1 / 4" }}>

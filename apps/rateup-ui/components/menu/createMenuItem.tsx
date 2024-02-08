@@ -99,6 +99,7 @@ export function CreateMenuItemModal({
         type: MenuItemPriceType.FIXED,
       },
       foodLabels: [],
+      unsplashImage: [],
     },
     validate: {
       name: (value) => (value.length ? null : "Cannot be empty"),
@@ -251,7 +252,13 @@ export function CreateMenuItemModal({
     toggleCropDialog();
     resetRef?.current?.();
   };
-  const handleCropImageSave = (cropedImage: File) => {
+  const handleCropImageSave = (cropedImage: File | string) => {
+    if (typeof cropedImage === "string") {
+      form.setFieldValue("unsplashImage", [
+        ...form?.values?.unsplashImage,
+        cropedImage,
+      ]);
+    }
     form.setFieldValue("images", [...form.values.images, cropedImage]);
   };
   const handleUnsplashImageSave = (
@@ -330,7 +337,13 @@ export function CreateMenuItemModal({
             {form?.values?.images?.length > 0 ? (
               <Box>
                 <Image
-                  src={getImageValue(selectedImage)}
+                  src={getImageValue(
+                    selectedImage,
+                    false,
+                    form?.values?.unsplashImage?.find(
+                      (data) => data === selectedImage,
+                    )?.length > 0,
+                  )}
                   {...imageProps}
                   alt="image of menu"
                   style={{
@@ -371,7 +384,12 @@ export function CreateMenuItemModal({
                     ? (image as File).name + index
                     : String(image)
                 }
-                src={getImageValue(image)}
+                src={getImageValue(
+                  image,
+                  false,
+                  form?.values?.unsplashImage?.find((data) => data === image)
+                    ?.length > 0,
+                )}
                 h={50}
                 fallbackSrc={fallbackImage}
                 alt="thumbnail image of menu item"

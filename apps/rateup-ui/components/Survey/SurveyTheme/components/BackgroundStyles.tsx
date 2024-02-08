@@ -19,6 +19,7 @@ import { Bg } from "../surveyTheme.types";
 import CustomColorPicker from "./customelements/CustomColorPicker";
 import CustomColorInput from "./customelements/CustomColorInput";
 import { BgTab } from "../SurveyTheme.enums";
+import { PreviewTypeEnum } from "../SurveyTheme.enums";
 
 interface BackgroundStylesProps {
   currentStyles: Bg;
@@ -102,16 +103,21 @@ function BackgroundStyles({
     toggleCropDialog();
   };
   const handleCropImageSave = (cropedImage) => {
+    const unsplashOrNot = typeof cropedImage === "string";
     if (imageType === "backgroundImage") {
       setisFileLoading(true);
-      setCurrentstyles("bg", { ...currentStyles, desktopbg: cropedImage });
-      let url = URL.createObjectURL(cropedImage);
+      setCurrentstyles("bg", {
+        ...currentStyles,
+        desktopbg: cropedImage,
+        unsplashImage: {
+          [PreviewTypeEnum.DESKTOP]: unsplashOrNot,
+        },
+      });
       setBgFileName(cropedImage?.name);
       setisFileLoading(false);
     } else if (imageType === "mobileBackgroundImage") {
       setisFileLoading(true);
       setCurrentstyles("bg", { ...currentStyles, mobilebg: cropedImage });
-      let url = URL.createObjectURL(cropedImage);
       setMobileBgFileName(cropedImage?.name);
       setisFileLoading(false);
     }

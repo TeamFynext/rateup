@@ -4,11 +4,17 @@ import { SelectedItemEnum } from "./SurveyTheme.enums";
 import { SurveyTheme } from "./surveyTheme.types";
 import { QuestionType } from "../../../types/enums";
 
-export function getImageUrl(imageObject: string | Blob) {
+export function getImageUrl(
+  imageObject: string | Blob,
+  unsplashImage: boolean = false,
+) {
   if (imageObject instanceof Blob) {
     let url = URL.createObjectURL(imageObject);
     return url;
   }
+  if (unsplashImage)
+    return `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${imageObject}`;
+
   if (imageObject) {
     return `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${imageObject}`;
   }
