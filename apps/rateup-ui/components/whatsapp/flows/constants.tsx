@@ -1,4 +1,4 @@
-const flowsCategories = [
+export const flowsCategories = [
   {
     label: "Sign Up",
     value: "SIGN_UP",
@@ -32,5 +32,3 @@ const flowsCategories = [
     value: "OTHER",
   },
 ];
-
-export { flowsCategories };
