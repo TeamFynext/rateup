@@ -175,3 +175,5 @@ const questionIcons = {
   [WaFlowFormNonInputElementType.textHeading]: IconTextSize,
   [WaFlowFormNonInputElementType.textSubHeading]: IconTextSize,
 };
+
+export { questionIcons };

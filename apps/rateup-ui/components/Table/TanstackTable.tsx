@@ -155,10 +155,12 @@ function TanstackTable({
         )}
         {enableFilter && (
           <Tooltip label="Clear the filtered values">
-            <RateupButtonSecondary
-              onClick={() => table.resetColumnFilters()}
-              title="Reset"
-            />
+            <Box>
+              <RateupButtonSecondary
+                onClick={() => table.resetColumnFilters()}
+                title="Reset"
+              />
+            </Box>
           </Tooltip>
         )}
       </Flex>
