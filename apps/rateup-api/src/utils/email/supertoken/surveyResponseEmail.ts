@@ -1,4 +1,8 @@
-export function createEmailBodySurveyResponse(invite_link: string, body: any) {
+export function createEmailBodySurveyResponse(
+  invite_link: string,
+  body: any,
+  name: string,
+) {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -132,6 +136,11 @@ export function createEmailBodySurveyResponse(invite_link: string, body: any) {
                       height="144"
                     />
                   </td>
+                </tr>
+                <tr>
+                <td>
+                <h1>${name}</h1>
+                </td>
                 </tr>
                 ${body}
                 <tr>
