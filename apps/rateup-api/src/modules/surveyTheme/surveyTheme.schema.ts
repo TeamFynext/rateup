@@ -7,6 +7,13 @@ const welcomeThemeSchema = z.object({
       desktopbg: z.string(),
       mobilebg: z.string(),
       styles: z.any().optional(),
+      unsplashImage: z
+        .object({
+          mobile: z.boolean().optional(),
+          desktop: z.boolean().optional(),
+        })
+        .optional()
+        .nullable(),
     })
     .optional(),
   logo: z
@@ -41,6 +48,13 @@ const surveyThemeSchema = z.object({
       desktopbg: z.string(),
       mobilebg: z.string(),
       styles: z.any().optional(),
+      unsplashImage: z
+        .object({
+          mobile: z.boolean().optional(),
+          desktop: z.boolean().optional(),
+        })
+        .optional()
+        .nullable(),
     })
     .optional(),
   title: z
@@ -74,6 +88,13 @@ const thankyouThemeSchema = z.object({
       desktopbg: z.string(),
       mobilebg: z.string(),
       styles: z.any().optional(),
+      unsplashImage: z
+        .object({
+          mobile: z.boolean().optional(),
+          desktop: z.boolean().optional(),
+        })
+        .optional()
+        .nullable(),
     })
     .optional(),
   logo: z

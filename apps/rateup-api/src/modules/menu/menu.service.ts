@@ -1,3 +1,4 @@
+import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import { deleteFile } from "../../utils/upload/s3Upload";
 import {
@@ -63,6 +64,7 @@ export async function getFullMenu(menuId: string) {
           backgroundImage: true,
           mobileBackgroundImage: true,
           surveyTeamMapId: true,
+          unsplashImage: true,
           menu: {
             select: {
               currency: true,
@@ -227,6 +229,7 @@ export async function getMenuLanding(id: string) {
       },
     },
   });
+
   if (!menu) {
     menu = await prisma.menu.findFirst({
       where: {
@@ -278,6 +281,7 @@ export async function updateMenuLanding(
     mobileBackgroundImage: body.mobileBackgroundImage,
     catalogue: body.catalogue,
     menu: { connect: { id: id } },
+    unsplashImage: body.unsplashImage,
   };
   const menuLanding = await prisma.menuLanding.findFirst({
     where: {

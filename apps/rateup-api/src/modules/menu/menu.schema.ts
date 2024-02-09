@@ -71,6 +71,7 @@ const fullMenuPublicResponseSchema = z.object({
           price: z.any(),
           disabled: z.boolean()?.optional(),
           foodLabels: z.array(z.string()).optional(),
+          unsplashImage: z.array(z.string()).optional().nullable(),
         }),
       ),
     }),
@@ -108,6 +109,13 @@ const fullMenuPublicResponseSchema = z.object({
         currency: z.string().optional(),
         hideUnavailableCategory: z.boolean().optional(),
       }),
+      unsplashImage: z
+        .object({
+          mobileBackgroundImage: z.boolean().optional(),
+          backgroundImage: z.boolean().optional(),
+        })
+        .optional()
+        .nullable(),
     })
     .nullable(),
 });
@@ -136,6 +144,12 @@ const updateMenuLandingInputSchema = z.object({
   backgroundImage: z.string().optional(),
   mobileBackgroundImage: z.string().optional(),
   catalogue: z.boolean().optional(),
+  unsplashImage: z
+    .object({
+      mobileBackgroundImage: z.boolean(),
+      backgroundImage: z.boolean(),
+    })
+    .optional(),
 });
 
 const atLeastOneDefined = (obj: Record<string, unknown>) =>
