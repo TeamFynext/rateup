@@ -6,21 +6,26 @@ import {
   Text,
   useMantineTheme,
 } from "@mantine/core";
-
 export default function RateupRedirectCard({ className = "" }) {
   const theme = useMantineTheme();
   return (
     <Center
       className={className}
-      bg={`var(--mantine-color-${theme.primaryColor}-outline-hover)`}
-      w={"fit-content"}
+      bg={`var(--mantine-color-${theme.primaryColor}-light-hover)`}
+      w={150}
       m={"auto"}
       px={"sm"}
       pt={5}
-      style={{ borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+      style={{
+        borderTopRightRadius: 10,
+        borderTopLeftRadius: 10,
+      }}
     >
-      <Anchor href="https://www.rateup.app">
-        <Group gap={0} align="flex-end">
+      <Anchor
+        href="https://www.rateup.app"
+        styles={{ root: { width: "fit-content" } }}
+      >
+        <Group gap={0} align="flex-end" justify="center">
           <Text fz={10} mb={2}>
             Powered By
           </Text>

@@ -57,7 +57,7 @@ function LogoStyles({
     setisFileLoading(false);
   };
   return (
-    <ScrollArea h={"51vh"} w={"100%"}>
+    <>
       <ImageCropModal
         opened={openedCropDialog}
         onclose={closeCropDialog}
@@ -138,13 +138,14 @@ function LogoStyles({
               disabled={!currentStyles?.logo && !logoFileName}
               leftSection={<IconTrash size={16} />}
               radius="18px"
+              bg={!currentStyles?.logo && !logoFileName ? "" : "red"}
             >
               RemoveLogo
             </Button>
           </Stack>
         </Stack>
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 

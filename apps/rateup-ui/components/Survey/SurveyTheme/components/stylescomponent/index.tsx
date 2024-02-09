@@ -157,11 +157,7 @@ function StylesComponent({
         style={{
           display: "flex",
           flexDirection: "column",
-          height:
-            selectedTab === ThemeTabEnum.WELCOME
-              ? "calc(100% - 140px)"
-              : "calc(100% - 60px)",
-          overflow: "auto",
+          height: "100%",
         }}
       >
         <TabsCommon
@@ -186,7 +182,6 @@ function StylesComponent({
             },
             panel: {
               flex: 1,
-              overflow: "auto",
               display: "flex",
             },
           }}
@@ -296,8 +291,21 @@ function StylesComponent({
           </ScrollArea>
         </TabsCommon>
       </PaperLayout>
-      <PaperLayout style={{ padding: "0.625rem 1rem" }}>
-        <Group justify="space-between">
+      <PaperLayout
+        style={{ overflow: "hidden" }}
+        mah={70}
+        mih={70}
+        p={"sm"}
+        mt={"auto"}
+        styles={{
+          root: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+        }}
+      >
+        <Group justify="space-between" w="100%">
           <Text
             c={
               compareTwoObjects(_savedSurveyTheme, surveyTheme)

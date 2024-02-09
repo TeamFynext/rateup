@@ -33,7 +33,7 @@ export default function WelcomePageThemeView({
     );
   }
   const {
-    bg: { styles, desktopbg, mobilebg },
+    bg: { styles, desktopbg, mobilebg, unsplashImage },
     button: { styles: buttonStyles, label },
     logo: { styles: logoStyles, logo },
     subtitle: { styles: subtitleStyles, subtitle },
@@ -42,6 +42,7 @@ export default function WelcomePageThemeView({
   return (
     <Flex
       align={"center"}
+      h="100%"
       style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
@@ -53,6 +54,7 @@ export default function WelcomePageThemeView({
         style={{ height: "100%", width: "100%", objectFit: "contain" }}
         src={getImageUrl(
           mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
+          unsplashImage?.[mobileOrDesktop],
         )}
       >
         <ActionIcon

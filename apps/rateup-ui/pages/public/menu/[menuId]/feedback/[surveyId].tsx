@@ -57,7 +57,13 @@ export default function ({ menuLanding }: { menuLanding: Data }) {
     : menuLanding?.mobileBackgroundImage;
 
   const bgSrc = backgroundImage
-    ? getFileUrlFromKey(encodeURI(backgroundImage))
+    ? getFileUrlFromKey(
+        encodeURI(backgroundImage),
+        true,
+        !!menuLanding?.unsplashImage[
+          largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+        ],
+      )
     : fallbackImageBackround;
 
   return (

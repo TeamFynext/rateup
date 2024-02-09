@@ -21,6 +21,10 @@ export function transformData(inputData: any) {
     locationText: inputData?.menu?.locationText || "",
     websiteText: inputData?.menu?.websiteText || "",
     logo: inputData?.menu?.logo || "",
+    unsplashImage: inputData?.unsplashImage ?? {
+      mobileBackgroundImage: false,
+      backgroundImage: false,
+    },
   };
 
   if (inputData?.landingData) {

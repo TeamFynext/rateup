@@ -28,7 +28,7 @@ export default function ThankyouPageThemeView({
   const { thankyouTheme } = surveyTheme;
   const { ref, width, height } = useElementSize();
   const {
-    bg: { styles, desktopbg, mobilebg },
+    bg: { styles, desktopbg, mobilebg, unsplashImage },
     logo: { styles: logoStyles, logo },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
@@ -44,6 +44,7 @@ export default function ThankyouPageThemeView({
   return (
     <Flex
       align={"center"}
+      h="100%"
       style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
@@ -56,6 +57,7 @@ export default function ThankyouPageThemeView({
         style={{ height: "100%", width: "100%", objectFit: "contain" }}
         src={getImageUrl(
           mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
+          unsplashImage?.[mobileOrDesktop],
         )}
       >
         {confettiEnabled && <Confetti width={width} height={height} />}
@@ -139,6 +141,7 @@ export default function ThankyouPageThemeView({
                   styles={{
                     input: {
                       ...titleStyles,
+                      height: "fit-content",
                       fontFamily: "inherit",
                     },
                   }}

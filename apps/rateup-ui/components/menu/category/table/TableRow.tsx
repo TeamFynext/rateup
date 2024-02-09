@@ -18,7 +18,7 @@ import {
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
 import { fallbackImage } from "../../../../utils/constants";
-import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { getImageValue } from "../../../../utils/file-upload/upload";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { HoverCardComponent } from "../../../Survey/HoverCard/HoverCard";
 import { ActionIconCommon } from "../../ActionIcon/ActionIconCommon";
@@ -44,7 +44,12 @@ const TableRow = ({
           style={{ borderRadius: "4px", aspectRatio: "4/3" }}
           src={
             item?.images?.length > 0
-              ? getFileUrlFromKey(item?.images[0])
+              ? getImageValue(
+                  item?.images[0],
+                  false,
+                  item?.unsplashImage?.find((data) => data === item?.images[0])
+                    ?.length > 0,
+                )
               : fallbackImage
           }
           alt={item?.name}

@@ -105,6 +105,9 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
                   isMobile && thankyouTheme?.bg?.mobilebg
                     ? thankyouTheme?.bg?.mobilebg
                     : thankyouTheme?.bg?.desktopbg,
+                  isMobile
+                    ? thankyouTheme?.bg?.unsplashImage?.mobile
+                    : thankyouTheme?.bg?.unsplashImage?.desktop,
                 )})`
               : "",
           backgroundRepeat: "no-repeat",

@@ -5,6 +5,10 @@ export interface Bg {
   styles: {
     backgroundColor: string;
   };
+  unsplashImage?: {
+    desktop: boolean;
+    mobile: boolean;
+  };
 }
 export interface Logo {
   logo?: string;

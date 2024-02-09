@@ -677,7 +677,6 @@ function QuestionTitle({ largeScreen, themeStyles }) {
 function QuestionDesc({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  console.log(themeStyles);
   return (
     <Text
       size={largeScreen ? "15px" : "16px"}
@@ -960,7 +959,9 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
           variant="outlined"
           onClick={prev}
           style={!isFirstQuestion && themeStyles}
-        />
+        >
+          Prev
+        </Button>
         <Center>
           <RingProgress
             sections={[

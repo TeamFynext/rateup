@@ -386,6 +386,7 @@ declare global {
     itemOrder?: number;
     disabled?: boolean;
     foodLabels?: Array<string>;
+    unsplashImage?: Array<string>;
   };
 
   type MenuBanner = {
@@ -556,6 +557,10 @@ export interface Data {
   visited?: number;
   surveyTeamMap?: {
     surveyId?: string;
+  };
+  unsplashImage?: {
+    backgroundImage: boolean;
+    mobileBackgroundImage: boolean;
   };
 }
 
