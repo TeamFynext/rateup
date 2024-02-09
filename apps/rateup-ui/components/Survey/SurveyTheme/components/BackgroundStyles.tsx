@@ -117,7 +117,13 @@ function BackgroundStyles({
       setisFileLoading(false);
     } else if (imageType === "mobileBackgroundImage") {
       setisFileLoading(true);
-      setCurrentstyles("bg", { ...currentStyles, mobilebg: cropedImage });
+      setCurrentstyles("bg", {
+        ...currentStyles,
+        mobilebg: cropedImage,
+        unsplashImage: {
+          [PreviewTypeEnum.MOBILE]: unsplashOrNot,
+        },
+      });
       setMobileBgFileName(cropedImage?.name);
       setisFileLoading(false);
     }
