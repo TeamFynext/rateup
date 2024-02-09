@@ -143,5 +143,9 @@ export function SingleSelectCard({
   const colsCount = includeImage
     ? { base: 2, xs: 3, sm: 4, md: 5 }
     : { base: 1, xs: 2, sm: 3, md: 4 };
-  return <SimpleGrid cols={colsCount}>{items}</SimpleGrid>;
+  return (
+    <SimpleGrid cols={colsCount} spacing={2}>
+      {items}
+    </SimpleGrid>
+  );
 }

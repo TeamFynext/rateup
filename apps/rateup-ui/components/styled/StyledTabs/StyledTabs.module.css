@@ -30,7 +30,7 @@
 
 /* Style for the active tab */
 .tab[data-active] {
-  background-color: var(--mantine-primary-color-filled);
+  background-color: var(--tertiary-color);
   color: var(--mantine-color-white);
 }
 

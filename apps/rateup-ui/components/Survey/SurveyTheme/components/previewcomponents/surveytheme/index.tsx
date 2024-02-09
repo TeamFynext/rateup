@@ -50,6 +50,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
   return (
     <Flex
       align={"center"}
+      h="100%"
       style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
@@ -217,7 +218,9 @@ function NextPrev({ isMobile, buttonStyles }) {
           size={isMobile ? "sm" : "lg"}
           variant="outlined"
           style={buttonStyles}
-        />
+        >
+          Prev
+        </Button>
         <Center>
           <RingProgress
             sections={[

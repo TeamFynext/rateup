@@ -19,7 +19,7 @@ function HeaderStyles({
   setCurrentstyles: (key: string, value: any) => void;
 }) {
   return (
-    <ScrollArea h={"51vh"} w={"100%"}>
+    <>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
         <Select
@@ -73,7 +73,7 @@ function HeaderStyles({
           }}
         />
       </Stack>
-    </ScrollArea>
+    </>
   );
 }
 

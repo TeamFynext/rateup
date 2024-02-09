@@ -44,6 +44,7 @@ export default function ThankyouPageThemeView({
   return (
     <Flex
       align={"center"}
+      h="100%"
       style={styles}
       onClick={(e) => {
         e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
@@ -140,6 +141,7 @@ export default function ThankyouPageThemeView({
                   styles={{
                     input: {
                       ...titleStyles,
+                      height: "fit-content",
                       fontFamily: "inherit",
                     },
                   }}

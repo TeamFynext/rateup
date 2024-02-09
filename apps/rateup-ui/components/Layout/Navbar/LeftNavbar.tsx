@@ -267,8 +267,9 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
           )}
           <Group className={styles["icon-and-chevraon-container"]}>
             <Image
-              h={user?.orgLogo ? 100 : 100}
-              w={user?.orgLogo ? 100 : 100}
+              h={user?.orgLogo ? 150 : 150}
+              w={user?.orgLogo ? 150 : 150}
+              fit="contain"
               src={
                 user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
                   ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
@@ -281,6 +282,7 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
               hoveractive
               radius={"md"}
               style={{
+                justifySelf: "flex-end",
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
