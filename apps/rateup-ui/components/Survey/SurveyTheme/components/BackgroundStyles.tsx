@@ -231,6 +231,12 @@ function BackgroundStyles({
           <Text fw={100} c={"dark"} size="xs">
             Mobile :{" "}
           </Text>
+          <Text fz={10}>
+            {getFileName(
+              currentStyles?.mobilebg || mobileBgFileName,
+              !currentStyles?.mobilebg,
+            )}
+          </Text>
         </Group>
         <Stack>
           <Button
@@ -246,7 +252,6 @@ function BackgroundStyles({
           <Button
             leftSection={<IconTrash size={15} />}
             disabled={currentStyles?.mobilebg === ""}
-            bg={currentStyles?.mobilebg === "" ? "" : "red"}
             size="xs"
             p={0}
             radius="18px"
