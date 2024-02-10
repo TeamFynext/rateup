@@ -6,11 +6,9 @@ import {
   Group,
   ActionIcon,
   Divider,
-  ScrollArea,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, ReactNode } from "react";
-import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 import { UnsplashModal } from "../../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../../Modal/ImageUploadMethodModal";
@@ -110,6 +108,7 @@ function BackgroundStyles({
         ...currentStyles,
         desktopbg: cropedImage,
         unsplashImage: {
+          ...currentStyles.unsplashImage,
           [PreviewTypeEnum.DESKTOP]: unsplashOrNot,
         },
       });
@@ -121,6 +120,7 @@ function BackgroundStyles({
         ...currentStyles,
         mobilebg: cropedImage,
         unsplashImage: {
+          ...currentStyles.unsplashImage,
           [PreviewTypeEnum.MOBILE]: unsplashOrNot,
         },
       });
@@ -180,12 +180,6 @@ function BackgroundStyles({
           <Text fw={100} c={"dark"} size="xs">
             Desktop :{" "}
           </Text>
-          <Text ml="md" fz={10}>
-            {getFileName(
-              currentStyles?.desktopbg || bgFileName,
-              !currentStyles?.desktopbg,
-            )}
-          </Text>
         </Group>
         <Stack>
           <Button
@@ -204,7 +198,7 @@ function BackgroundStyles({
             size="xs"
             radius="18px"
             type="button"
-            onClick={handleFileChange}
+            onClick={removeBg}
             loading={isFileLoading}
             bg={currentStyles?.desktopbg === "" ? "" : "red"}
             disabled={currentStyles?.desktopbg === ""}
@@ -236,12 +230,6 @@ function BackgroundStyles({
           </ActionIcon>
           <Text fw={100} c={"dark"} size="xs">
             Mobile :{" "}
-          </Text>
-          <Text fz={10}>
-            {getFileName(
-              currentStyles?.mobilebg || mobileBgFileName,
-              !currentStyles?.mobilebg,
-            )}
           </Text>
         </Group>
         <Stack>

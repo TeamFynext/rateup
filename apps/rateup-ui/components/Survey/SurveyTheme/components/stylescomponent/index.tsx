@@ -137,12 +137,10 @@ function StylesComponent({
         break;
     }
   }
-
   async function saveStyles() {
     setSaveLoading(true);
     const newSurveyTheme =
       await destructureThemeAndUploadImagesIfAny(surveyTheme);
-    setSurveyTheme(newSurveyTheme);
     updateSurveyTheme.mutate({
       surveyThemeId: id,
       body: newSurveyTheme,
@@ -151,6 +149,9 @@ function StylesComponent({
       setSaveLoading(false);
     }, 1000);
   }
+  useEffect(() => {
+    setSurveyTheme(_savedSurveyTheme);
+  }, [_savedSurveyTheme]);
   return (
     <>
       <PaperLayout

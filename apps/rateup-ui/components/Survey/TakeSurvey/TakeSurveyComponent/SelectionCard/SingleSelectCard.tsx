@@ -144,7 +144,7 @@ export function SingleSelectCard({
     ? { base: 2, xs: 3, sm: 4, md: 5 }
     : { base: 1, xs: 2, sm: 3, md: 4 };
   return (
-    <SimpleGrid cols={colsCount} spacing={2}>
+    <SimpleGrid cols={colsCount} spacing={10}>
       {items}
     </SimpleGrid>
   );

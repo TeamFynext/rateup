@@ -267,8 +267,8 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
           )}
           <Group className={styles["icon-and-chevraon-container"]}>
             <Image
-              h={user?.orgLogo ? 150 : 150}
-              w={user?.orgLogo ? 150 : 150}
+              h={user?.orgLogo ? 120 : 120}
+              w={user?.orgLogo ? 120 : 120}
               fit="contain"
               src={
                 user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"

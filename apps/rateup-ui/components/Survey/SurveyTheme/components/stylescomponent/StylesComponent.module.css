@@ -13,3 +13,8 @@
 .tabs-common-div :global(.mantine-Tabs-panel) form {
   height: 100%;
 }
+
+.label {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-gray-7);
+}

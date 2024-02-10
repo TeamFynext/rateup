@@ -8,13 +8,12 @@ import {
   Group,
   Text,
   Divider,
-  ScrollArea,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
-import { getFileName } from "./BackgroundStyles";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
 import { Logo } from "../surveyTheme.types";
+import styles from "./stylescomponent/StylesComponent.module.css";
 
 function LogoStyles({
   currentStyles,
@@ -68,36 +67,40 @@ function LogoStyles({
       />
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
-        <NumberInput
-          min={10}
-          max={100}
-          placeholder="height"
-          label="Height (px)"
-          name="height"
-          mt={"xs"}
-          value={currentStyles?.styles?.height}
-          onChange={(e) => {
-            setCurrentstyles("logo", {
-              ...currentStyles,
-              styles: { ...currentStyles.styles, height: e },
-            });
-          }}
-        />
-        <NumberInput
-          min={10}
-          max={100}
-          mt={"xs"}
-          placeholder="Width"
-          label="Width (px)"
-          name="Width"
-          value={currentStyles?.styles?.width}
-          onChange={(e) => {
-            setCurrentstyles("logo", {
-              ...currentStyles,
-              styles: { ...currentStyles.styles, width: e },
-            });
-          }}
-        />
+        <Group wrap="nowrap" gap="xs">
+          <NumberInput
+            min={10}
+            max={100}
+            placeholder="height"
+            label="Height (px)"
+            name="height"
+            maw={120}
+            classNames={{ label: styles["label"] }}
+            value={currentStyles?.styles?.height}
+            onChange={(e) => {
+              setCurrentstyles("logo", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, height: e },
+              });
+            }}
+          />
+          <NumberInput
+            min={10}
+            max={100}
+            placeholder="Width"
+            label="Width (px)"
+            name="Width"
+            maw={120}
+            classNames={{ label: styles["label"] }}
+            value={currentStyles?.styles?.width}
+            onChange={(e) => {
+              setCurrentstyles("logo", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, width: e },
+              });
+            }}
+          />
+        </Group>
         <Divider label="Upload Logo" variant="dashed" w={"100%"} />
         <Stack w={"100%"}>
           <Group>
@@ -106,12 +109,6 @@ function LogoStyles({
             </ActionIcon>
             <Text fw={100} c={"dark"} size="xs">
               Logo :{" "}
-            </Text>
-            <Text ml="md">
-              {getFileName(
-                currentStyles?.logo || logoFileName,
-                !currentStyles?.logo,
-              )}
             </Text>
           </Group>
           <Stack>
