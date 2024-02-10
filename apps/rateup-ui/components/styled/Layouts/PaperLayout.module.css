@@ -17,6 +17,6 @@
   border: 2px solid var(--hover-border-color);
 }
 
-.paper-layout.hover-active {
+.paper-layout-div.hover-active {
   cursor: pointer;
 }

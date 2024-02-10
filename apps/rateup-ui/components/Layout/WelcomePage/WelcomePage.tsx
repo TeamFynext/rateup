@@ -33,7 +33,9 @@ function WelcomePage({
       style={{
         minHeight: "100dvh",
       }}
+      p={"lg"}
       className={lexend.className}
+      gap={largeScreen ? "xl" : "sm"}
     >
       {logo && (
         <Image
@@ -44,7 +46,9 @@ function WelcomePage({
         />
       )}
       <Text style={titleStyles}>{title}</Text>
-      <Text style={subtitleStyles}>{subtitle}</Text>
+      <Text style={{ ...subtitleStyles, wordBreak: "break-all" }}>
+        {subtitle}
+      </Text>
       <Button
         style={buttonStyles ? { ...buttonStyles } : { ..._buttonStyles }}
         onClick={onStart}

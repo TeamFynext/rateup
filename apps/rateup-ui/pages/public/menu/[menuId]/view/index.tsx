@@ -162,7 +162,13 @@ export default function ({ fullMenu, menuBanner }) {
             py="3vh"
             src={
               backgroundImage
-                ? encodeURI(getFileUrlFromKey(backgroundImage))
+                ? getFileUrlFromKey(
+                    encodeURI(backgroundImage),
+                    true,
+                    !!fullMenu.menuLanding?.unsplashImage[
+                      largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+                    ],
+                  )
                 : backgroundImageFallback
             }
             style={{
@@ -194,7 +200,7 @@ export default function ({ fullMenu, menuBanner }) {
                   src={getFileUrlFromKey(fullMenu?.logo)}
                 />
               )}
-              <Stack>
+              <Stack gap={0}>
                 <Text
                   ta={"center"}
                   fz={

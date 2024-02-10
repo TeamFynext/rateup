@@ -97,6 +97,8 @@ export function MultipleSelectCard({
     />
   ));
   return (
-    <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }}>{items}</SimpleGrid>
+    <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }} spacing={2}>
+      {items}
+    </SimpleGrid>
   );
 }

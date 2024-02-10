@@ -6,11 +6,9 @@ import {
   Group,
   ActionIcon,
   Divider,
-  ScrollArea,
 } from "@mantine/core";
 import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
 import React, { useState, useRef, ReactNode } from "react";
-import { RateupButtonSecondary } from "../../../Button/RateupButtons";
 import { UnsplashModal } from "../../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../../Modal/ImageUploadMethodModal";
@@ -19,6 +17,7 @@ import { Bg } from "../surveyTheme.types";
 import CustomColorPicker from "./customelements/CustomColorPicker";
 import CustomColorInput from "./customelements/CustomColorInput";
 import { BgTab } from "../SurveyTheme.enums";
+import { PreviewTypeEnum } from "../SurveyTheme.enums";
 
 interface BackgroundStylesProps {
   currentStyles: Bg;
@@ -102,16 +101,29 @@ function BackgroundStyles({
     toggleCropDialog();
   };
   const handleCropImageSave = (cropedImage) => {
+    const unsplashOrNot = typeof cropedImage === "string";
     if (imageType === "backgroundImage") {
       setisFileLoading(true);
-      setCurrentstyles("bg", { ...currentStyles, desktopbg: cropedImage });
-      let url = URL.createObjectURL(cropedImage);
+      setCurrentstyles("bg", {
+        ...currentStyles,
+        desktopbg: cropedImage,
+        unsplashImage: {
+          ...currentStyles.unsplashImage,
+          [PreviewTypeEnum.DESKTOP]: unsplashOrNot,
+        },
+      });
       setBgFileName(cropedImage?.name);
       setisFileLoading(false);
     } else if (imageType === "mobileBackgroundImage") {
       setisFileLoading(true);
-      setCurrentstyles("bg", { ...currentStyles, mobilebg: cropedImage });
-      let url = URL.createObjectURL(cropedImage);
+      setCurrentstyles("bg", {
+        ...currentStyles,
+        mobilebg: cropedImage,
+        unsplashImage: {
+          ...currentStyles.unsplashImage,
+          [PreviewTypeEnum.MOBILE]: unsplashOrNot,
+        },
+      });
       setMobileBgFileName(cropedImage?.name);
       setisFileLoading(false);
     }
@@ -119,159 +131,151 @@ function BackgroundStyles({
 
   const [bgTab, setBgTab] = useState<BgTab>(BgTab.BGCOLOR);
   return (
-    <ScrollArea h={"51vh"} w={"100%"}>
-      <Stack align="center" w={"100%"}>
-        <UnsplashModal
-          handleUnsplashImageSave={handleUnsplashImageSave}
-          opened={openedUnsplashDialog}
-          onclose={closeUnsplashDialog}
-        />
-        <ImageCropModal
-          opened={openedCropDialog}
-          onclose={closeCropDialog}
-          imageName={selectedImage.name}
-          handleCropImageSave={handleCropImageSave}
-          image={selectedImage.url}
-          aspect={aspectRatio}
-        />
-        <ImageUploadMethodModal
-          onClose={closeMethodSelectionDialog}
-          opened={openedMethodSelectionDialog}
-          handleUploadMethod={handleUploadMethod}
-        />
-        {/* //-------------BG COLOR----------------- */}
-        <Divider label="Background Color" w={"100%"} variant="dashed" />
-        <CustomColorPicker
-          value={currentStyles?.styles?.backgroundColor}
-          onChange={(value) =>
-            setCurrentstyles("bg", {
-              ...currentStyles,
-              styles: { ...currentStyles.styles, backgroundColor: value },
-            })
-          }
-        />
-        <CustomColorInput
-          value={currentStyles?.styles?.backgroundColor}
-          onChange={(value) =>
-            setCurrentstyles("bg", {
-              ...currentStyles,
-              styles: { ...currentStyles.styles, backgroundColor: value },
-            })
-          }
-        />
-        {/* //------------BGIMAGE------------ */}
-        <Divider label="Background Image" variant="dashed" w={"100%"} />
-        <Stack w={"100%"}>
-          <Group>
-            <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
-              <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
-            </ActionIcon>
-            <Text fw={100} c={"dark"} size="xs">
-              Desktop :{" "}
-            </Text>
-            <Text ml="md" fz={10}>
-              {getFileName(
-                currentStyles?.desktopbg || bgFileName,
-                !currentStyles?.desktopbg,
-              )}
-            </Text>
-          </Group>
-          <Stack>
-            <Button
-              leftSection={<IconUpload size={16} />}
-              size="xs"
-              radius="18px"
-              type="button"
-              onClick={handleFileChange}
-              loading={isFileLoading}
-              bg={"var(--tertiary-color)"}
-            >
-              Upload Image
-            </Button>
-            <RateupButtonSecondary
-              onClick={removeBg}
-              title="Remove Image"
-              size="xs"
-              disabled={currentStyles?.desktopbg === ""}
-              leftIcon={<IconTrash size={16} />}
-            />
-            <FileButton
-              resetRef={resetBgRef}
-              onChange={(e) => {
-                if (!e) return;
-                handleUnsplashImageSave(URL.createObjectURL(e), e.name);
-                resetBgRef?.current?.();
-              }}
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-            >
-              {(props) => (
-                <Button ref={bgFileUploadBtnRef} display={"none"} {...props}>
-                  Upload Image
-                </Button>
-              )}
-            </FileButton>
-          </Stack>
-        </Stack>
-
-        <Stack w={"100%"}>
-          <Group>
-            <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
-              <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
-            </ActionIcon>
-            <Text fw={100} c={"dark"} size="xs">
-              Mobile :{" "}
-            </Text>
-            <Text fz={10}>
-              {getFileName(
-                currentStyles?.mobilebg || mobileBgFileName,
-                !currentStyles?.mobilebg,
-              )}
-            </Text>
-          </Group>
-          <Stack>
-            <Button
-              leftSection={<IconUpload size={15} />}
-              size="xs"
-              radius="18px"
-              onClick={handleMobileBgFileChange}
-              loading={isFileLoading}
-              bg={"var(--tertiary-color)"}
-            >
-              Upload Image
-            </Button>
-            <Button
-              leftSection={<IconTrash size={15} />}
-              disabled={currentStyles?.mobilebg === ""}
-              size="xs"
-              p={0}
-              radius="18px"
-              onClick={removeMobileBg}
-            >
-              Remove Image
-            </Button>
-            <FileButton
-              resetRef={resetMobileBgRef}
-              onChange={(e) => {
-                if (!e) return;
-                handleUnsplashImageSave(URL.createObjectURL(e), e.name);
-                resetMobileBgRef?.current?.();
-              }}
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-            >
-              {(props) => (
-                <Button
-                  ref={mobileBgFileUploadBtnRef}
-                  display={"none"}
-                  {...props}
-                >
-                  Upload Image
-                </Button>
-              )}
-            </FileButton>
-          </Stack>
+    <Stack align="center" w={"100%"}>
+      <UnsplashModal
+        handleUnsplashImageSave={handleUnsplashImageSave}
+        opened={openedUnsplashDialog}
+        onclose={closeUnsplashDialog}
+      />
+      <ImageCropModal
+        opened={openedCropDialog}
+        onclose={closeCropDialog}
+        imageName={selectedImage.name}
+        handleCropImageSave={handleCropImageSave}
+        image={selectedImage.url}
+        aspect={aspectRatio}
+      />
+      <ImageUploadMethodModal
+        onClose={closeMethodSelectionDialog}
+        opened={openedMethodSelectionDialog}
+        handleUploadMethod={handleUploadMethod}
+      />
+      {/* //-------------BG COLOR----------------- */}
+      <Divider label="Background Color" w={"100%"} variant="dashed" />
+      <CustomColorPicker
+        value={currentStyles?.styles?.backgroundColor}
+        onChange={(value) =>
+          setCurrentstyles("bg", {
+            ...currentStyles,
+            styles: { ...currentStyles.styles, backgroundColor: value },
+          })
+        }
+      />
+      <CustomColorInput
+        value={currentStyles?.styles?.backgroundColor}
+        onChange={(value) =>
+          setCurrentstyles("bg", {
+            ...currentStyles,
+            styles: { ...currentStyles.styles, backgroundColor: value },
+          })
+        }
+      />
+      {/* //------------BGIMAGE------------ */}
+      <Divider label="Background Image" variant="dashed" w={"100%"} />
+      <Stack w={"100%"}>
+        <Group>
+          <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
+            <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
+          </ActionIcon>
+          <Text fw={100} c={"dark"} size="xs">
+            Desktop :{" "}
+          </Text>
+        </Group>
+        <Stack>
+          <Button
+            leftSection={<IconUpload size={16} />}
+            size="xs"
+            radius="18px"
+            type="button"
+            onClick={handleFileChange}
+            loading={isFileLoading}
+            bg={"var(--tertiary-color)"}
+          >
+            Upload Image
+          </Button>
+          <Button
+            leftSection={<IconTrash size={16} />}
+            size="xs"
+            radius="18px"
+            type="button"
+            onClick={removeBg}
+            loading={isFileLoading}
+            bg={currentStyles?.desktopbg === "" ? "" : "red"}
+            disabled={currentStyles?.desktopbg === ""}
+          >
+            Remove Image
+          </Button>
+          <FileButton
+            resetRef={resetBgRef}
+            onChange={(e) => {
+              if (!e) return;
+              handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+              resetBgRef?.current?.();
+            }}
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+          >
+            {(props) => (
+              <Button ref={bgFileUploadBtnRef} display={"none"} {...props}>
+                Upload Image
+              </Button>
+            )}
+          </FileButton>
         </Stack>
       </Stack>
-    </ScrollArea>
+
+      <Stack w={"100%"}>
+        <Group>
+          <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
+            <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
+          </ActionIcon>
+          <Text fw={100} c={"dark"} size="xs">
+            Mobile :{" "}
+          </Text>
+        </Group>
+        <Stack>
+          <Button
+            leftSection={<IconUpload size={15} />}
+            size="xs"
+            radius="18px"
+            onClick={handleMobileBgFileChange}
+            loading={isFileLoading}
+            bg={"var(--tertiary-color)"}
+          >
+            Upload Image
+          </Button>
+          <Button
+            leftSection={<IconTrash size={15} />}
+            disabled={currentStyles?.mobilebg === ""}
+            bg={currentStyles?.mobilebg === "" ? "" : "red"}
+            size="xs"
+            p={0}
+            radius="18px"
+            onClick={removeMobileBg}
+          >
+            Remove Image
+          </Button>
+          <FileButton
+            resetRef={resetMobileBgRef}
+            onChange={(e) => {
+              if (!e) return;
+              handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+              resetMobileBgRef?.current?.();
+            }}
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+          >
+            {(props) => (
+              <Button
+                ref={mobileBgFileUploadBtnRef}
+                display={"none"}
+                {...props}
+              >
+                Upload Image
+              </Button>
+            )}
+          </FileButton>
+        </Stack>
+      </Stack>
+    </Stack>
   );
 }
 
