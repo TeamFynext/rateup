@@ -97,7 +97,6 @@ const TestimonialSelect = ({
           const isSelected = selectedTestimonials?.some(
             (t) => t?.id === testimonial?.id,
           );
-          console.log("isSelected", isSelected);
           return (
             <Stack pos={"relative"}>
               <Checkbox

@@ -9,10 +9,7 @@ import {
   Stack,
   Tabs,
 } from "@mantine/core";
-import {
-  useGetAllCollectionsByOrg,
-  useTestimonialSurveys,
-} from "../../../backend/testimonials/testimonial.query";
+import { useGetAllCollectionsByOrg } from "../../../backend/testimonials/testimonial.query";
 import TestimonialSurveyCard from "../../../components/testimonial/TestimonialSurveyCard";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { useState } from "react";
@@ -79,7 +76,6 @@ export default function () {
       ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
-  console.log("filteredSurveys", filteredSurveys);
 
   return (
     <Stack>

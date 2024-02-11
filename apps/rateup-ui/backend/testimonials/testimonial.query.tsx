@@ -6,17 +6,9 @@ import {
   getAllTestimonialCollectionBySurvey,
   getAllTestimonialCollections,
   getAllTestimonialsByCollection,
-  getTestimonialSurveys,
   updateTestimonialCollection,
 } from "./testimonial.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-
-export function useTestimonialSurveys() {
-  return useQuery({
-    queryKey: ["testimonialSurveys"],
-    queryFn: getTestimonialSurveys,
-  });
-}
 
 export function useGetAllTestimonials(surveyId) {
   return useQuery({

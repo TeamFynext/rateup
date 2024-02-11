@@ -64,7 +64,6 @@ export async function getSurveyWithQuestions() {
     let surveys: Array<Survey> = (
       await axiosClient.get(`${SURVEYURL}/all/survey-with-questions`)
     ).data;
-    console.log("surveys", surveys);
     return surveys;
   } catch (e) {
     console.error(e);
