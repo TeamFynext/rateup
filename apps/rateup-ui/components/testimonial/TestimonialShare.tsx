@@ -1,5 +1,4 @@
 import {
-  Code,
   CopyButton,
   Flex,
   Group,
@@ -10,7 +9,7 @@ import {
   Stack,
   Title,
   Text,
-  UnstyledButton,
+  Center,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -22,28 +21,29 @@ import {
   IconCopy,
   IconShare,
 } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
-import { useGetAllTestimonialsByCollection } from "../../backend/testimonials/testimonial.query";
 import TestimonialCard from "./TestimonialCard";
-import FormModalLayout from "../Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
-import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey";
-import Heading from "../styled/Heading/Heading";
+import NothingFound from "../NothingFound/NothingFound";
 
-const TestimonialShare = ({ filters }) => {
+const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
   const { selectedCollectionId } = useContext(
     SelectedTestimonialCollectionContext,
   );
-  // console.log("selectedCollectionId",selectedCollectionId)
-  const { data: collection } =
-    useGetAllTestimonialsByCollection(selectedCollectionId);
-  // console.log("collection",collection)
+
   const [opened, { open, close }] = useDisclosure(false);
-  const testimonials = collection?.testimonials?.map((t) => t?.testimonial);
-  console.log("testimonials", testimonials);
+
+  const filteredTestimonials = selectedTestimonials;
+  if (filteredTestimonials?.length <= 0)
+    return (
+      <Center mt={150}>
+        <NothingFound text={"No testimonials found"} />
+      </Center>
+    );
+
   return (
-    <Stack>
+    <Stack pt={"xl"}>
       <Flex justify={"flex-end"}>
         <RateupButtonBlue
           color="black"
@@ -53,17 +53,17 @@ const TestimonialShare = ({ filters }) => {
         />
       </Flex>
       <SimpleGrid cols={3} mt={"lg"}>
-        {testimonials?.map((testimonial, index) => (
+        {filteredTestimonials?.map((testimonial, index) => (
           <TestimonialCard
             testimonial={testimonial}
-            currentStyle={collection?.theme}
+            currentStyle={currentStyle}
           />
         ))}
       </SimpleGrid>
       <TestimonialShareModal
         opened={opened}
         onClose={close}
-        collectionId={collection?.id}
+        collectionId={selectedCollectionId}
       />
     </Stack>
   );
@@ -86,6 +86,7 @@ const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
       closeOnClickOutside
       withCloseButton={false}
       centered
+      zIndex={400}
     >
       {!isPreview ? (
         <Stack>

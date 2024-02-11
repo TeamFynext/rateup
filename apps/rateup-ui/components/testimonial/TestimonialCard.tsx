@@ -4,7 +4,6 @@ import {
   Stack,
   Title,
   Text,
-  Container,
   Rating,
   Anchor,
   Modal,
@@ -13,8 +12,6 @@ import PaperLayout from "../styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import dayjs from "dayjs";
-import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
-import { useContext } from "react";
 
 const TestimonialCard = ({ testimonial, currentStyle = null }) => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -44,7 +41,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
   const isProfileRemoved = currentStyle?.profileBlock.profilePic.isRemoved;
   return (
     <Stack gap={0}>
-      <Group bg={currentStyle?.profileBlock.bg} pl={"md"} py={"md"}>
+      <Group bg={currentStyle?.profileBlock.bg} pl={"xl"} py={"lg"}>
         <Avatar
           size={"lg"}
           src={
@@ -53,7 +50,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
               : getFileUrlFromKey(testimonial?.testimonial.photo)
           }
         />
-        <Stack gap={0}>
+        <Stack gap={0} w={160}>
           <Title order={4} style={currentStyle?.profileBlock.profileName}>
             {testimonial?.testimonial.name}
           </Title>
@@ -62,7 +59,13 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
           </Text>
         </Stack>
       </Group>
-      <Stack gap={0} pl={"md"} py={"sm"} bg={currentStyle?.descBlock.bg}>
+      <Stack
+        gap={0}
+        pl={"xl"}
+        pr={"sm"}
+        py={"sm"}
+        bg={currentStyle?.descBlock.bg}
+      >
         <Text
           lineClamp={isModal ? null : 3}
           style={currentStyle?.descBlock.desc}
@@ -73,13 +76,18 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
           <Anchor onClick={() => open()}>Read more</Anchor>
         )}
       </Stack>
-      {!currentStyle?.ratingBlock.isRemoved && (
-        <Stack py={"xs"} bg={currentStyle?.ratingBlock.bg} pl={"md"}>
-          <Rating value={testimonial?.testimonial.rating} readOnly size="lg" />
-        </Stack>
-      )}
+      {!currentStyle?.ratingBlock.isRemoved &&
+        testimonial?.testimonial.rating != null && (
+          <Stack py={"xs"} bg={currentStyle?.ratingBlock.bg} pl={"xl"}>
+            <Rating
+              value={testimonial?.testimonial.rating}
+              readOnly
+              size="lg"
+            />
+          </Stack>
+        )}
       {!currentStyle?.date.isRemoved && (
-        <Stack pl={"md"}>
+        <Stack pl={"xl"}>
           <Text style={currentStyle?.date}>
             {dayjs(testimonial?.createdAt).format("DD/MM/YYYY")}
           </Text>

@@ -1,41 +1,69 @@
-import { Checkbox, Flex, Grid, Loader, SimpleGrid, Stack } from "@mantine/core";
+import {
+  Center,
+  Checkbox,
+  Flex,
+  Grid,
+  Loader,
+  SimpleGrid,
+  Stack,
+} from "@mantine/core";
 import TestimonialCard from "./TestimonialCard";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import { useListState } from "@mantine/hooks";
-import { useRouter } from "next/router";
-import { useGetAllTestimonials } from "../../backend/testimonials/testimonial.query";
-import { TestimonialTabs } from "../../pages/dashboard/testimonial/[surveyId]";
+import {
+  useGetAllTestimonials,
+  useUpdateCollection,
+} from "../../backend/testimonials/testimonial.query";
+import { TestimonialTabs } from "../../pages/dashboard/testimonial/[collectionId]";
 import { getFilteredTestimonials } from "../../utils/testimonial";
-import { useEffect, useState } from "react";
+import { useContext } from "react";
+import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
+import NothingFound from "../NothingFound/NothingFound";
 
 const TestimonialSelect = ({
-  survey,
+  surveyId,
   setActiveTab,
   selectedTestimonials,
   selectedTestimonialHandler,
   filters,
+  selectedTeamId,
 }) => {
-  const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
-  console.log("selectedTestimonials", selectedTestimonials);
+  const { selectedCollectionId } = useContext(
+    SelectedTestimonialCollectionContext,
+  );
   const { data: testimonials, isLoading } = useGetAllTestimonials(surveyId);
-  console.log("testimonials", testimonials);
-  const isAllSelected = testimonials === selectedTestimonials;
-  const [filteredTestimonials, setFilteredTestimonials] = useState([]);
-  //get testimonials from testimonials using surveyTeamMapId
-  //get surveyTeamMapid from
+  const filteredTestimonials = getFilteredTestimonials(
+    testimonials,
+    filters,
+    selectedTeamId,
+  );
+  const isAllSelected = filteredTestimonials?.every(
+    (t) => selectedTestimonials?.some((st) => st.id === t.id),
+  );
 
-  useEffect(() => {
-    setFilteredTestimonials(getFilteredTestimonials(testimonials, filters));
-  }, [filters]);
-
+  const updateTestimonialCollection = useUpdateCollection(selectedCollectionId);
   const handleNext = () => {
-    setActiveTab(TestimonialTabs.Edit);
+    const data = {
+      testimonialIds: selectedTestimonials.map((t) => t.id),
+    };
+    updateTestimonialCollection.mutate(
+      { data, collectionId: selectedCollectionId },
+      {
+        onSuccess: () => {
+          setActiveTab(TestimonialTabs.Edit);
+        },
+      },
+    );
   };
   if (isLoading) return <Loader />;
+  if (filteredTestimonials?.length <= 0)
+    return (
+      <Center mt={150}>
+        <NothingFound text={"No testimonials found"} />
+      </Center>
+    );
   return (
     <Stack>
-      <Grid columns={12}>
+      <Grid columns={12} h={45}>
         <Grid.Col span={4}></Grid.Col>
         <Grid.Col span={4}>
           <Flex justify={"center"} align={"center"}>
@@ -55,14 +83,18 @@ const TestimonialSelect = ({
         </Grid.Col>
         <Grid.Col span={4}>
           <Flex justify={"flex-end"}>
-            <RateupButtonBlue color="black" title="Next" onClick={handleNext} />
+            <RateupButtonBlue
+              color="black"
+              title="Save & Next"
+              onClick={handleNext}
+            />
           </Flex>
         </Grid.Col>
       </Grid>
 
       <SimpleGrid cols={3} mt={"lg"}>
         {filteredTestimonials?.map((testimonial, index) => {
-          const isSelected = selectedTestimonials.some(
+          const isSelected = selectedTestimonials?.some(
             (t) => t?.id === testimonial?.id,
           );
           console.log("isSelected", isSelected);

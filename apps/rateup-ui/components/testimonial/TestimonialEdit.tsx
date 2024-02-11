@@ -5,28 +5,33 @@ import {
   Group,
   SimpleGrid,
   Stack,
-  Tabs,
   UnstyledButton,
   Text,
   rem,
+  Center,
 } from "@mantine/core";
 import {
   IconSwipe,
   IconTrash,
   IconPencil,
-  IconX,
   IconCircleXFilled,
-  IconReplace,
   IconReplaceFilled,
 } from "@tabler/icons-react";
-import { RateupButtonBlue, RateupButtonOutline } from "../Button/RateupButtons";
+import { RateupButtonBlue } from "../Button/RateupButtons";
 import TestimonialCard from "./TestimonialCard";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useDisclosure, useListState } from "@mantine/hooks";
 import TestimonialEditModal from "./TestimonialEditModal";
-import SaveTestimonialCollection from "./SaveTestimonialCollection";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../../utils/questions";
+import {
+  useDeleteTestimonialsFromCollections,
+  useUpdateCollection,
+} from "../../backend/testimonials/testimonial.query";
+import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
+import { TestimonialTabs } from "../../pages/dashboard/testimonial/[collectionId]";
+import { getFilteredTestimonials } from "../../utils/testimonial";
+import NothingFound from "../NothingFound/NothingFound";
 
 enum actionTab {
   Edit = "Edit",
@@ -39,23 +44,41 @@ const TestimonialEdit = ({
   setCurrentStyle,
   currentStyle,
   selectedTestimonialHandler,
+  setActiveTab,
+  filters,
 }) => {
   const [action, setAction] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
-  const [openedSave, { open: openSave, close: closeSave }] =
-    useDisclosure(false);
   function onEditClose() {
     close();
     setAction(null);
   }
   const [deletedTestimonials, setDeletedTestimonialsHandler] = useListState([]);
+  const { selectedCollectionId } = useContext(
+    SelectedTestimonialCollectionContext,
+  );
+  const deletedTestimonialsMutation =
+    useDeleteTestimonialsFromCollections(selectedCollectionId);
   const handleDelete = () => {
-    const newTestimonials = selectedTestimonials.filter(
-      (t) => !deletedTestimonials.some((dt) => dt?.id === t?.id),
-    );
-    selectedTestimonialHandler.setState(newTestimonials);
+    deletedTestimonialsMutation.mutate({
+      data: { testimonialIds: deletedTestimonials.map((t) => t.id) },
+      collectionId: selectedCollectionId,
+    });
     setAction(null);
   };
+
+  const filteredTestimonials = getFilteredTestimonials(
+    selectedTestimonials,
+    filters,
+    "all",
+  );
+  if (filteredTestimonials?.length <= 0)
+    return (
+      <Center mt={150}>
+        <NothingFound text={"No testimonials found"} />
+      </Center>
+    );
+
   return (
     <Stack gap={"lg"}>
       <Stack>
@@ -97,7 +120,6 @@ const TestimonialEdit = ({
         <Grid columns={12}>
           <Grid.Col span={4}></Grid.Col>
           <Grid.Col span={4}>
-            {/* TODO: delete testimonials */}
             {action == actionTab.Delete && (
               <Flex justify={"center"} align={"center"}>
                 <UnstyledButton
@@ -116,8 +138,11 @@ const TestimonialEdit = ({
           </Grid.Col>
           <Grid.Col span={4}>
             <Flex justify={"flex-end"} gap={"md"}>
-              <RateupButtonBlue title="Save" onClick={openSave} />
-              <RateupButtonBlue color="black" title="Next" onClick={() => {}} />
+              <RateupButtonBlue
+                color="black"
+                title="Next"
+                onClick={() => setActiveTab(TestimonialTabs.Share)}
+              />
             </Flex>
           </Grid.Col>
         </Grid>
@@ -127,10 +152,11 @@ const TestimonialEdit = ({
           selectedTestimonials={selectedTestimonials}
           selectedTestimonialHandler={selectedTestimonialHandler}
           setAction={setAction}
+          currentStyle={currentStyle}
         />
       ) : (
         <SimpleGrid cols={3}>
-          {selectedTestimonials?.map((testimonial, index) => {
+          {filteredTestimonials?.map((testimonial, index) => {
             const isSelected = deletedTestimonials.some(
               (t) => t.id === testimonial.id,
             );
@@ -156,7 +182,6 @@ const TestimonialEdit = ({
                       top: 0,
                       right: 0,
                       transform: "translate(50%, -50%)",
-                      // Center the button in the top right corner
                     }}
                     styles={{
                       icon: {
@@ -166,7 +191,10 @@ const TestimonialEdit = ({
                     color={"red"}
                   />
                 )}
-                <TestimonialCard testimonial={testimonial} />
+                <TestimonialCard
+                  testimonial={testimonial}
+                  currentStyle={currentStyle}
+                />
               </Stack>
             );
           })}
@@ -176,12 +204,6 @@ const TestimonialEdit = ({
         opened={opened}
         onClose={onEditClose}
         setCurrentstyle={setCurrentStyle}
-        currentStyle={currentStyle}
-      />
-      <SaveTestimonialCollection
-        opened={openedSave}
-        close={closeSave}
-        selectedTestimonials={selectedTestimonials}
         currentStyle={currentStyle}
       />
     </Stack>
@@ -194,15 +216,24 @@ const SwapTestimonials = ({
   selectedTestimonials,
   selectedTestimonialHandler,
   setAction,
+  currentStyle,
 }) => {
+  const { selectedCollectionId } = useContext(
+    SelectedTestimonialCollectionContext,
+  );
+  const updateCollection = useUpdateCollection(selectedCollectionId);
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const reorderedTestimonials = reorder(
       selectedTestimonials,
       result.source.index,
       result.destination?.index || 0,
-    );
+    ) as any;
     selectedTestimonialHandler.setState(reorderedTestimonials);
+    updateCollection.mutate({
+      data: { testimonialIds: reorderedTestimonials.map((t) => t.id) },
+      collectionId: selectedCollectionId,
+    });
     setAction(null);
   };
 
@@ -238,7 +269,10 @@ const SwapTestimonials = ({
                           color: "var(--tertiary-color)",
                         }}
                       />
-                      <TestimonialCard testimonial={testimonial} />
+                      <TestimonialCard
+                        testimonial={testimonial}
+                        currentStyle={currentStyle}
+                      />
                     </Stack>
                   </div>
                 )}

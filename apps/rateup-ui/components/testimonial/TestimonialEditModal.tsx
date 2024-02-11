@@ -24,13 +24,15 @@ import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "./TestimonialCard";
 import {
   RateupButtonBlue,
-  RateupButtonOutline,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import FormModalLayout from "../Modal/FormModalLayout";
+
 import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
 import { TestimonialStyleType } from "../../types/global";
 import { FontWeights } from "../Survey/SurveyTheme/SurveyTheme.constants";
+import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
+import { useContext } from "react";
+import { defaultTestimonialStyle } from "../../utils/testimonial";
 
 interface TestimonialEditModalProps {
   opened;
@@ -58,30 +60,29 @@ const TestimonialEditModal = ({
   const fonts = [
     {
       name: "Profile Name",
-      color: currentStyle.profileBlock.profileName.color,
-      fontSize: currentStyle.profileBlock.profileName?.fontSize,
-      fontWeight: currentStyle.profileBlock.profileName?.fontWeight,
+      color: currentStyle?.profileBlock.profileName.color,
+      fontSize: currentStyle?.profileBlock.profileName?.fontSize,
+      fontWeight: currentStyle?.profileBlock.profileName?.fontWeight,
     },
     {
       name: "Profile Position",
-      color: currentStyle.profileBlock.profilePos?.color,
-      fontSize: currentStyle.profileBlock.profilePos?.fontSize,
-      fontWeight: currentStyle.profileBlock.profilePos?.fontWeight,
+      color: currentStyle?.profileBlock.profilePos?.color,
+      fontSize: currentStyle?.profileBlock.profilePos?.fontSize,
+      fontWeight: currentStyle?.profileBlock.profilePos?.fontWeight,
     },
     {
       name: "Description",
-      color: currentStyle.descBlock.desc.color,
-      fontSize: currentStyle.descBlock.desc.fontSize,
-      fontWeight: currentStyle.descBlock.desc.fontWeight,
+      color: currentStyle?.descBlock.desc.color,
+      fontSize: currentStyle?.descBlock.desc.fontSize,
+      fontWeight: currentStyle?.descBlock.desc.fontWeight,
     },
     {
       name: "Date",
-      color: currentStyle.date.color,
-      fontSize: currentStyle.date.fontSize,
-      fontWeight: currentStyle.date.fontWeight,
+      color: currentStyle?.date.color,
+      fontSize: currentStyle?.date.fontSize,
+      fontWeight: currentStyle?.date.fontWeight,
     },
   ];
-  console.log("currentStyle", currentStyle);
   function handleFontColorChange(value, type) {
     switch (type) {
       case "Profile Name":
@@ -160,19 +161,19 @@ const TestimonialEditModal = ({
   const blocks = [
     {
       name: "Background",
-      bg: currentStyle.root.bg,
+      bg: currentStyle?.root.bg,
     },
     {
       name: "Profile Block",
-      bg: currentStyle.profileBlock.bg,
+      bg: currentStyle?.profileBlock.bg,
     },
     {
       name: "Description Block",
-      bg: currentStyle.descBlock.bg,
+      bg: currentStyle?.descBlock.bg,
     },
     {
       name: "Rating Block",
-      bg: currentStyle.ratingBlock.bg,
+      bg: currentStyle?.ratingBlock.bg,
     },
   ];
 
@@ -201,6 +202,20 @@ const TestimonialEditModal = ({
     }
   };
 
+  const { selectedCollectionId } = useContext(
+    SelectedTestimonialCollectionContext,
+  );
+  const updateCollection = useUpdateCollection(selectedCollectionId);
+  const handleUpdate = () => {
+    updateCollection.mutate(
+      { data: { theme: currentStyle }, collectionId: selectedCollectionId },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+      },
+    );
+  };
   return (
     <Modal
       opened={opened}
@@ -324,8 +339,14 @@ const TestimonialEditModal = ({
             </Stack>
           </ScrollArea>
           <Flex gap={"sm"} mt={"xl"}>
-            <RateupButtonSecondary title="cancel" onClick={onClose} />
-            <RateupButtonBlue title="Save" />
+            <RateupButtonSecondary
+              title="cancel"
+              onClick={() => {
+                setCurrentstyle(defaultTestimonialStyle);
+                onClose();
+              }}
+            />
+            <RateupButtonBlue title="Save" onClick={handleUpdate} />
           </Flex>
         </Grid.Col>
 
@@ -345,7 +366,7 @@ const TestimonialEditModal = ({
                   },
                 }}
                 radius={"xl"}
-                checked={currentStyle.ratingBlock.isRemoved}
+                checked={currentStyle?.ratingBlock.isRemoved}
                 onChange={(e) => {
                   setCurrentstyle((draft) => {
                     draft.ratingBlock.isRemoved = e.currentTarget.checked;
@@ -361,7 +382,7 @@ const TestimonialEditModal = ({
                     fontSize: "16px",
                   },
                 }}
-                checked={currentStyle.date.isRemoved}
+                checked={currentStyle?.date.isRemoved}
                 onChange={(e) => {
                   setCurrentstyle((draft) => {
                     draft.date.isRemoved = e.currentTarget.checked;
@@ -377,7 +398,7 @@ const TestimonialEditModal = ({
                     fontSize: "16px",
                   },
                 }}
-                checked={currentStyle.profileBlock.profilePic.isRemoved}
+                checked={currentStyle?.profileBlock.profilePic.isRemoved}
                 onChange={(e) => {
                   setCurrentstyle((draft) => {
                     draft.profileBlock.profilePic.isRemoved =

@@ -25,10 +25,28 @@ export async function getAllTestimonialCollectionBySurvey(surveyId: string) {
   ).data;
   return collections;
 }
+export async function getAllTestimonialCollections() {
+  let collections = (await axiosClient.get(`/testimonial/collections`)).data;
+  return collections;
+}
 
 export async function getAllTestimonialsByCollection(collectionId: string) {
   let collection = (
     await axiosClient.get(`/testimonial/collections/${collectionId}`)
   ).data;
   return collection;
+}
+export async function updateTestimonialCollection({ data, collectionId }) {
+  let testimonials = await axiosClient.put(
+    `/testimonial/collections/update/${collectionId}`,
+    data,
+  );
+  return testimonials.data;
+}
+export async function deleteTestimonialsFromCollection({ data, collectionId }) {
+  let testimonials = await axiosClient.put(
+    `/testimonial/collections/delete-testimonials/${collectionId}`,
+    data,
+  );
+  return testimonials.data;
 }

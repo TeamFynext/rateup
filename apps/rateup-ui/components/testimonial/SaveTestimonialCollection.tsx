@@ -1,47 +1,41 @@
 import { Stack, Text } from "@mantine/core";
-import React, { useContext, useState } from "react";
 import FormModalLayout from "../Modal/FormModalLayout";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useCreateTestimonialCollection } from "../../backend/testimonials/testimonial.query";
+import { useSurvey } from "../../backend/surveys/surveys.query";
+import { defaultTestimonialStyle } from "../../utils/testimonial";
 import { useRouter } from "next/router";
 
-const SaveTestimonialCollection = ({
-  opened,
-  close,
-  selectedTestimonials,
-  currentStyle,
-}) => {
-  const surveyTeamMapId =
-    selectedTestimonials[0]?.surveyResponse?.surveyTeamMapId;
-  console.log("selectedTestimonials", selectedTestimonials);
-  const router = useRouter();
-  const { surveyId } = router.query;
-  console.log("currentStyle", currentStyle);
-  // const { currentStyle } = useContext(SelectedTestimonialCollectionContext)
-
+const SaveTestimonialCollection = ({ opened, close, selectedSurvey }) => {
   const form = useForm({
     initialValues: {
       name: "",
-      testimonialIds: [],
       surveyTeamMapId: "",
-      theme: null,
+      theme: defaultTestimonialStyle,
     },
     validate: {
       name: isNotEmpty("Name cannot be blank"),
-      testimonialIds: isNotEmpty("Select atleast one testimonial"),
+      surveyTeamMapId: isNotEmpty("Please select a team"),
     },
   });
-  //do using surveyTeamMapId
-  const saveCollection = useCreateTestimonialCollection(surveyId);
+  const { data: survey } = useSurvey(selectedSurvey);
+  const teamsOptions = survey?.teams?.map((team) => {
+    return { value: team?.mapId, label: team?.name };
+  });
+  const router = useRouter();
+  const saveCollection = useCreateTestimonialCollection(selectedSurvey);
   const onSubmit = () => {
-    const selectedTestimonialIds = selectedTestimonials?.map((c) => c?.id);
-    form.values.testimonialIds = selectedTestimonialIds;
-    form.values.surveyTeamMapId = surveyTeamMapId;
-    form.values.theme = currentStyle;
     if (form.validate().hasErrors) return;
-    console.log("form.values", form.values);
-    saveCollection.mutate(form.values);
+    saveCollection.mutate(form.values, {
+      onSuccess: (data) => {
+        close();
+        router.push(`${router.pathname}/${data?.id}`);
+      },
+    });
   };
 
   return (
@@ -53,6 +47,10 @@ const SaveTestimonialCollection = ({
       onSubmit={onSubmit}
       buttonTitle="Save"
       includeCancelButton
+      cancelOnClick={() => {
+        form.reset();
+        close();
+      }}
     >
       <Stack>
         <ContainedTextField
@@ -65,6 +63,12 @@ const SaveTestimonialCollection = ({
               fontSize: "16px",
             },
           }}
+        />
+        <ContainedSelection
+          data={teamsOptions}
+          label={"Select Team"}
+          {...form.getInputProps("surveyTeamMapId")}
+          placeholder="Select Team"
         />
         <Text c="red">{form.errors.selectedTestimonials}</Text>
       </Stack>
