@@ -41,6 +41,7 @@
 }
 
 .opinion-scale {
+  padding: var(--mantine-spacing-sm);
   gap: 1rem;
 }
 

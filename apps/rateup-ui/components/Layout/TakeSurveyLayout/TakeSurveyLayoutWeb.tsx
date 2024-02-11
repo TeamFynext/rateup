@@ -160,6 +160,9 @@ export const TakeSurveyLayoutWeb = ({
                       isMobile && welcomeTheme?.bg?.mobilebg
                         ? welcomeTheme?.bg?.mobilebg
                         : welcomeTheme?.bg?.desktopbg,
+                      isMobile
+                        ? welcomeTheme?.bg?.unsplashImage?.mobile
+                        : welcomeTheme?.bg?.unsplashImage?.desktop,
                     )
                   : ""
                 : surveyTheme?.bg?.desktopbg || surveyTheme?.bg?.mobilebg
@@ -167,6 +170,9 @@ export const TakeSurveyLayoutWeb = ({
                     isMobile && surveyTheme?.bg?.mobilebg
                       ? surveyTheme?.bg?.mobilebg
                       : surveyTheme?.bg?.desktopbg,
+                    isMobile
+                      ? surveyTheme?.bg?.unsplashImage?.mobile
+                      : surveyTheme?.bg?.unsplashImage?.desktop,
                   )
                 : ""
             }

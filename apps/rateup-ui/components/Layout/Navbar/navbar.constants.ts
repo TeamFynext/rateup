@@ -102,12 +102,12 @@ export function getNavTopData(subscription?: Subscription) {
       ? [
           {
             Icon: IconBrandWhatsapp,
-            label: "WhatsApp Survey",
+            label: "WhatsApp",
             submenus: [
               {
                 Icon: IconFileDescription,
                 label: "Surveys",
-                href: "/dashboard/whatsapp/surveys",
+                href: "/dashboard/whatsapp",
               },
               {
                 Icon: IconMessage2Code,

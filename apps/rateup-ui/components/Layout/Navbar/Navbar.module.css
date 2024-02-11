@@ -14,9 +14,10 @@
 }
 
 .icon-and-chevraon-container {
-  justify-content: center;
+  width: 100%;
+  justify-content: space-around;
   position: relative;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .chevron-container {
@@ -33,15 +34,15 @@
 }
 
 .Logged-in-user-card {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  margin-right: 1rem;
+  margin: 0.5rem 0.5rem 0.5rem 0;
 }
 
 .user-icon-arrow-circle {
-  color: mediumblue;
+  color: var(--tertiary-color);
+  min-width: 23px;
+  min-height: 22px;
   border-radius: 50%;
-  border: 2px solid rgb(224, 221, 221);
+  border: 2px solid var(--mantine-color-gray-4);
   margin-top: 0.5rem;
   margin-left: 0.5rem;
 }

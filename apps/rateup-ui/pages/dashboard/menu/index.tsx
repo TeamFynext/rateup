@@ -66,7 +66,7 @@ export default function MenuPage() {
       </Group>
       <Space h="lg" />
       <SimpleGrid
-        p={1}
+        p={"0.875rem"}
         spacing={"lg"}
         cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
         style={{ overflow: "auto" }}

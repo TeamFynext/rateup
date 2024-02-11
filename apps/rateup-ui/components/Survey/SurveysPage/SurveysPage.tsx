@@ -67,7 +67,7 @@ export function SurveysPage({
     if (createSurveyOpened === false) {
       surveyType === "web"
         ? router.push(`/dashboard/surveys`)
-        : router.push(`/dashboard/whatsapp/surveys`);
+        : router.push(`/dashboard/whatsapp`);
     }
   }, [createSurveyOpened]);
 

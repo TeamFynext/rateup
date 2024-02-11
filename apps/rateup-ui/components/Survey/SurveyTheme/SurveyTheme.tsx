@@ -49,11 +49,6 @@ function SurveyTheme({ survey }) {
         className={styles["theme-page-div"]}
         value={activeThemeTab}
         onChange={(value) => setActiveThemeTab(value as ThemeTabEnum)}
-        styles={{
-          panel: {
-            height: "100%",
-          },
-        }}
       >
         <Tabs.List ml={"auto"} mr={"auto"}>
           <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>
@@ -61,7 +56,7 @@ function SurveyTheme({ survey }) {
           <Tabs.Tab value={ThemeTabEnum.THANKYOU}>Thankyou Page</Tabs.Tab>
         </Tabs.List>
 
-        <Flex>
+        <Flex h={"100%"}>
           <SurveyThemePreviewLayout
             isLoading={isLoading}
             survey={survey}
@@ -78,9 +73,9 @@ function SurveyTheme({ survey }) {
             </Tabs.Panel>
           </SurveyThemePreviewLayout>
 
-          <Stack style={{ flex: 0.27 }} miw={300} p={"0.4375rem"}>
+          <Stack style={{ flex: 0.27 }} miw={300} p={"0.4375rem"} h={"75vh"}>
             {activeThemeTab === ThemeTabEnum.WELCOME && (
-              <PaperLayout h={"60px"}>
+              <PaperLayout h={60}>
                 <Group justify="center" h="100%" w="100%">
                   <Switch
                     fw={400}

@@ -18,7 +18,7 @@ interface ImageCropModalProps {
   onclose: () => void;
   image: string;
   imageName: string;
-  handleCropImageSave: (file: File) => void;
+  handleCropImageSave: (file: File | string) => void;
   aspect?: number;
 }
 
@@ -97,21 +97,52 @@ export const ImageCropModal = ({
   }
   const handleCropSubmit = async () => {
     setScale(1);
-    previewCanvasRef?.current?.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const file = new File([blob], imageName, {
-          type: mimeTypesForImage[fileExtension],
-        });
+    if (!image?.startsWith("blob:")) {
+      const unsplashLink = generateCroppedLinkForUnsplash({
+        crop: completedCrop,
+        H: imgRef?.current?.height,
+        W: imgRef?.current?.width,
+        nW: imgRef?.current?.naturalWidth,
+        nH: imgRef?.current?.naturalHeight,
+        image,
+      });
+      handleCropImageSave(unsplashLink);
+      onclose();
+    } else {
+      previewCanvasRef?.current?.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const file = new File([blob], imageName, {
+            type: mimeTypesForImage[fileExtension],
+          });
 
-        if (handleCropImageSave) {
-          handleCropImageSave(file);
-          onclose();
-        }
-      },
-      mimeTypesForImage[fileExtension],
-      0.9,
-    );
+          if (handleCropImageSave) {
+            handleCropImageSave(file);
+            onclose();
+          }
+        },
+        mimeTypesForImage[fileExtension],
+        0.9,
+      );
+    }
+  };
+  const generateCroppedLinkForUnsplash = ({ crop, W, H, nW, nH, image }) => {
+    const urlParts = image?.split("?");
+    const baseUrl = urlParts?.[0];
+    const urlSegments = baseUrl?.split("/");
+    const photoKey = urlSegments?.[urlSegments?.length - 1];
+
+    const errorFraction = 0.04;
+    //fp-z value
+    let z = 2 - crop.width / W;
+    //fp-x value
+    let x = crop.x / (W - crop.width) + errorFraction;
+    //fp-x value
+    let y = crop.y / (H - crop.height) + errorFraction;
+    const cropWidth = (crop.width / W) * nW;
+    const cropHeigth = (crop.height / H) * nH;
+
+    return `${photoKey}?crop=focalpoint&fit=crop&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}`;
   };
   return (
     <FormModalLayout
@@ -125,18 +156,20 @@ export const ImageCropModal = ({
       includeCancelButton
       onSubmit={handleCropSubmit}
     >
-      <NumberInput
-        label="Scale the Image"
-        step={0.1}
-        min={0.1}
-        max={1}
-        defaultValue={scale}
-        onChange={(e) => setScale(Number(e))}
-        decimalScale={1}
-        fixedDecimalScale
-        w={150}
-        mb={"sm"}
-      />
+      {image?.startsWith("blob:") && (
+        <NumberInput
+          label="Scale the Image"
+          step={0.1}
+          min={0.1}
+          max={1}
+          defaultValue={scale}
+          onChange={(e) => setScale(Number(e))}
+          decimalScale={1}
+          fixedDecimalScale
+          w={150}
+          mb={"sm"}
+        />
+      )}
 
       <ReactCrop
         crop={crop}

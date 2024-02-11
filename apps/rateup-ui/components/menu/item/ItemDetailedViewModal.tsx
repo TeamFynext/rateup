@@ -41,7 +41,13 @@ export function ItemDetailedViewModal({
 
   const imageSlides = item?.images?.map((url: string) => (
     <Carousel.Slide key={url}>
-      <Image src={getFileUrlFromKey(url)} />
+      <Image
+        src={getFileUrlFromKey(
+          url,
+          true,
+          item?.unsplashImage?.find((data) => data === url)?.length > 0,
+        )}
+      />
     </Carousel.Slide>
   ));
 

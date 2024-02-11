@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   BackgroundImage,
   Button,
   Center,
@@ -19,12 +18,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconMapPin,
-  IconTrash,
-  IconUpload,
-  IconWorld,
-} from "@tabler/icons-react";
+import { IconMapPin, IconUpload, IconWorld } from "@tabler/icons-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
   useMenuLandingMutationById,
@@ -248,9 +242,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   let result = "";
 
   if (hasImage) {
-    result = form.values[imageKey]?.startsWith("blob")
+    result = form.values[imageKey]?.startsWith("blob:")
       ? form.values[imageKey]
-      : encodeURI(getFileUrlFromKey(form.values[imageKey]));
+      : encodeURI(
+          getFileUrlFromKey(
+            form.values[imageKey],
+            true,
+            !!form.values.unsplashImage[imageKey],
+          ),
+        );
   } else {
     result = `${
       process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
@@ -284,17 +284,41 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     resetLogoRef?.current?.();
   };
   const handleCropImageSave = (cropedImage) => {
+    let imageUrl =
+      typeof cropedImage === "string"
+        ? cropedImage
+        : URL.createObjectURL(cropedImage);
     if (imageType === "backgroundImage") {
-      form?.setFieldValue("backgroundImage", URL.createObjectURL(cropedImage));
-      setBackgroundImage(cropedImage);
+      form?.setFieldValue("backgroundImage", imageUrl);
+      if (typeof cropedImage === "string") {
+        form.setFieldValue("unsplashImage", {
+          ...form?.values.unsplashImage,
+          backgroundImage: true,
+        });
+      } else {
+        form.setFieldValue("unsplashImage", {
+          ...form?.values.unsplashImage,
+          backgroundImage: false,
+        });
+        setBackgroundImage(cropedImage);
+      }
     } else if (imageType === "mobileBackgroundImage") {
-      form?.setFieldValue(
-        "mobileBackgroundImage",
-        URL.createObjectURL(cropedImage),
-      );
-      setMobileBackgroundImage(cropedImage);
+      form?.setFieldValue("mobileBackgroundImage", imageUrl);
+
+      if (typeof cropedImage === "string") {
+        form.setFieldValue("unsplashImage", {
+          ...form?.values.unsplashImage,
+          mobileBackgroundImage: true,
+        });
+      } else {
+        form.setFieldValue("unsplashImage", {
+          ...form?.values.unsplashImage,
+          mobileBackgroundImage: false,
+        });
+        setMobileBackgroundImage(cropedImage);
+      }
     } else if (imageType === "logo") {
-      form?.setFieldValue("logo", URL.createObjectURL(cropedImage));
+      form?.setFieldValue("logo", imageUrl);
       setLogo(cropedImage);
     }
   };
@@ -331,9 +355,16 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     } else if (type === "logo") {
       setLogo(null);
     }
-    if (!form?.values?.[type]?.startsWith("blob:")) {
-      setImageToDelete((prev) => [...prev, { Key: form?.values?.[type] }]);
+    if (!form?.values?.unsplashImage[type]) {
+      if (!form?.values?.[type]?.startsWith("blob:")) {
+        setImageToDelete((prev) => [...prev, { Key: form?.values?.[type] }]);
+      }
     }
+
+    form.setFieldValue(`unsplashImage`, {
+      ...form?.values?.unsplashImage,
+      [type]: false,
+    });
     form.setFieldValue(type, "");
   };
   return (
@@ -867,5 +898,5 @@ export function getFileNameFromUrl(url: any, isNewFile: boolean) {
   if (isNewFile) return url;
   const pattern = /^[^-]+-/;
   const name = url?.replace(pattern, "");
-  return name;
+  return name?.split("?crop=focalpoint")[0];
 }
