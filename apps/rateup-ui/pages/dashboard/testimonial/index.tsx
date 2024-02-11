@@ -26,6 +26,7 @@ import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import { useDisclosure } from "@mantine/hooks";
 import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
 import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 
 enum CollectionTabs {
   New = "Create New",
@@ -115,100 +116,112 @@ export default function () {
         </Grid>
 
         <Tabs.Panel value={CollectionTabs.New} p={"xl"}>
-          <Stack gap={5}>
-            <Center>
-              <RateupButtonBlue
-                title="Select Survey"
-                rightIcon={<IconPlus />}
-                onClick={toggle}
-              />
+          {filteredSurveys?.length <= 0 ? (
+            <Center mt={150}>
+              <NothingFound text={"No testimonial Surveys found"} />
             </Center>
-
-            <Flex justify={"flex-end"} h={50}>
-              {enableSelect && (
+          ) : (
+            <Stack gap={5}>
+              <Center>
                 <RateupButtonBlue
-                  title="Next"
-                  color="black"
-                  onClick={() => {
-                    openSave();
-                  }}
+                  title="Select Survey"
+                  rightIcon={<IconPlus />}
+                  onClick={toggle}
                 />
-              )}
-            </Flex>
-            <RadioGroup value={selectedSurvey} onChange={setSelectedSurvey}>
-              <SimpleGrid cols={3}>
-                {filteredSurveys?.map((survey) => (
-                  <Stack pos={"relative"}>
-                    {enableSelect && (
-                      <Radio
-                        size="lg"
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          right: 0,
-                          transform: "translate(50%, -50%)", // Center the button in the top right corner
-                        }}
-                        icon={IconCheck}
-                        value={survey?.id}
+              </Center>
+
+              <Flex justify={"flex-end"} h={50}>
+                {enableSelect && (
+                  <RateupButtonBlue
+                    title="Next"
+                    color="black"
+                    onClick={() => {
+                      openSave();
+                    }}
+                  />
+                )}
+              </Flex>
+              <RadioGroup value={selectedSurvey} onChange={setSelectedSurvey}>
+                <SimpleGrid cols={3}>
+                  {filteredSurveys?.map((survey) => (
+                    <Stack pos={"relative"}>
+                      {enableSelect && (
+                        <Radio
+                          size="lg"
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            transform: "translate(50%, -50%)", // Center the button in the top right corner
+                          }}
+                          icon={IconCheck}
+                          value={survey?.id}
+                        />
+                      )}
+                      <TestimonialSurveyCard
+                        survey={survey}
+                        selectedTeamId={selectedTeamId}
                       />
-                    )}
-                    <TestimonialSurveyCard
-                      survey={survey}
-                      selectedTeamId={selectedTeamId}
-                    />
-                  </Stack>
-                ))}
-              </SimpleGrid>
-            </RadioGroup>
-          </Stack>
+                    </Stack>
+                  ))}
+                </SimpleGrid>
+              </RadioGroup>
+            </Stack>
+          )}
         </Tabs.Panel>
 
         <Tabs.Panel value={CollectionTabs.Update} p={"xl"}>
-          <Stack gap={"sm"}>
-            <Center>
-              <RateupButtonBlue
-                title="Select Collections"
-                rightIcon={<IconPlus />}
-                onClick={toggle}
-              />
+          {filteredCollections?.length <= 0 ? (
+            <Center mt={150}>
+              <NothingFound text={"No testimonial collections found"} />
             </Center>
-            <Flex justify={"flex-end"} h={50}>
-              {enableSelect && (
+          ) : (
+            <Stack gap={"sm"}>
+              <Center>
                 <RateupButtonBlue
-                  title="Next"
-                  color="black"
-                  onClick={() => {
-                    router.push(`${router.pathname}/${selectedCollectionId}`);
-                  }}
+                  title="Select Collections"
+                  rightIcon={<IconPlus />}
+                  onClick={toggle}
                 />
-              )}
-            </Flex>
-            <RadioGroup
-              value={selectedCollectionId}
-              onChange={setSelectedCollectionId}
-            >
-              <SimpleGrid cols={3}>
-                {filteredCollections?.map((collection) => (
-                  <Stack pos={"relative"}>
-                    {enableSelect && (
-                      <Radio
-                        size="lg"
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          right: 0,
-                          transform: "translate(50%, -50%)", // Center the button in the top right corner
-                        }}
-                        icon={IconCheck}
-                        value={collection?.id}
-                      />
-                    )}
-                    <TestimonialCollectionCard collection={collection} />
-                  </Stack>
-                ))}
-              </SimpleGrid>
-            </RadioGroup>
-          </Stack>
+              </Center>
+              <Flex justify={"flex-end"} h={50}>
+                {enableSelect && (
+                  <RateupButtonBlue
+                    title="Next"
+                    color="black"
+                    onClick={() => {
+                      router.push(`${router.pathname}/${selectedCollectionId}`);
+                    }}
+                  />
+                )}
+              </Flex>
+              <RadioGroup
+                value={selectedCollectionId}
+                onChange={setSelectedCollectionId}
+              >
+                <SimpleGrid cols={3}>
+                  {filteredCollections?.map((collection) => (
+                    <Stack pos={"relative"}>
+                      {enableSelect && (
+                        <Radio
+                          size="lg"
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            transform: "translate(50%, -50%)", // Center the button in the top right corner
+                          }}
+                          icon={IconCheck}
+                          value={collection?.id}
+                        />
+                      )}
+                      <TestimonialCollectionCard collection={collection} />
+                    </Stack>
+                  ))}
+                </SimpleGrid>
+              </RadioGroup>
+            </Stack>
+          )}
         </Tabs.Panel>
         <SaveTestimonialCollection
           opened={openedSave}
