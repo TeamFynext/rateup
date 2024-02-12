@@ -206,9 +206,15 @@ export const generateResponse = async (body: GenerateBodyInput) => {
       type: true,
     },
   });
-
-  for (let index = 0; index < body.batchSize; index++) {
-    data.push(generateResponseData(body.surveyTeamMapId, survey));
+  const surveyTeam = await prisma.surveyTeamMap.findMany({
+    where: {
+      surveyId: body.surveyId,
+    },
+  });
+  for (const team of surveyTeam) {
+    for (let index = 0; index < body.batchSize; index++) {
+      data.push(generateResponseData(team.id, survey));
+    }
   }
   await prisma.surveyResponse.createMany({
     data,
