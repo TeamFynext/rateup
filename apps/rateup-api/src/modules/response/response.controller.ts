@@ -3,10 +3,12 @@ import {
   CreateResponseInput,
   GetResponsesParams,
   DeleteResponseParamsSchema,
+  GenerateBodyInput,
 } from "./response.schema";
 import {
   createResponse,
   deleteResponse,
+  generateResponse,
   getAllResponses,
   getResponses,
   resetResponsesStats,
@@ -94,6 +96,8 @@ export async function createResponseHandler(
   reply: FastifyReply,
 ) {
   const data = request.body;
+  console.log(data);
+
   try {
     const response = await createResponse(data);
     reply.code(201).send(response);
@@ -116,5 +120,18 @@ export async function createResponseHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send();
+  }
+}
+export async function generateResponseHandler(
+  request: FastifyRequest<{
+    Body: GenerateBodyInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    await generateResponse(request.body);
+    reply.code(201).send();
+  } catch (e) {
+    reply.code(500).send(e.message);
   }
 }

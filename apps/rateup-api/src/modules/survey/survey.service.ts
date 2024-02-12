@@ -9,8 +9,6 @@ import {
 import { getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
 import { log } from "../../utils/logger";
-const CryptoJS = require("crypto-js");
-const secretPassphrase = "rateup-#$%^@#-passphrase";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string

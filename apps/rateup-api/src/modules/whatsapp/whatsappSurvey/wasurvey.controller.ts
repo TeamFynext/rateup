@@ -154,7 +154,7 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
     let session = await getSession(orgId, from);
     if (parsedMessage.type === "nfm_reply") {
       // flow response
-      await handleFlowReply(orgId, waMessage);
+      await handleStaticFlowReply(orgId, waMessage);
     } else if (!session.currentQuestionId) {
       // If no current question, then we assume this is the consent message (template)
       if (!session.templateId) {
@@ -332,9 +332,13 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   }
 }
 
-async function handleFlowReply(orgId: string, waMessage: WaMessageBody) {
+async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
   log.trace("handling flow reply");
   const { from, flowResponse } = parseMessage(waMessage);
+  if (flowResponse["responses_saved"]) {
+    log.trace("Flow response already saved. Ignoring...");
+    return;
+  }
   let session = await getSession(orgId, from);
   const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
   const flow = await getFlowFromDb(dbFlowId);

@@ -167,7 +167,7 @@ export async function updateSession(orgId: string, phone: string, data: any) {
     include: toBeIncludedWaSessionRelations,
     data: data,
   });
-  log.trace("Session updated \n%o\n", session);
+  log.trace("Session updated");
   return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 

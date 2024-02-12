@@ -2,6 +2,7 @@ import { Survey, WaFlow } from "@prisma/client";
 import { WaSendMessageBody } from "../../../types/whatsapp.types";
 import {
   LDResponse,
+  LogicCondition,
   QuestionType as qt,
   SmileyResponse,
   SurveyType,
@@ -47,7 +48,7 @@ export function generateFlowMessageData({
         parameters: {
           mode,
           flow_message_version: 3,
-          flow_token: flow_id,
+          flow_token: to,
           flow_id,
           flow_cta,
           flow_action_payload: {
@@ -558,4 +559,75 @@ export function removeIdFromFlowJson(json: WaFlowJson) {
     }
   }
   return json;
+}
+
+export function getFlowFormElementNameFromQuestionId(qId: string, map: any) {
+  for (const [key, value] of Object.entries(map)) {
+    //@ts-ignore
+    if (value.questionId === qId) return key;
+  }
+}
+
+export function validateFlowLogic(
+  userResponse: string | number,
+  condition: LogicCondition,
+  response: string,
+): boolean {
+  try {
+    switch (condition) {
+      case LogicCondition.Equals:
+        return userResponse === response;
+      case LogicCondition.NotEquals:
+        return userResponse !== response;
+      case LogicCondition.IncludesAnyOf:
+
+      default:
+        return false;
+    }
+  } catch (error) {
+    log.info(`Failed to validate logic: ${error}`);
+    return false;
+  }
+}
+
+export function parseResponseFromCurrentScreenResponse(
+  dbFlow: WaFlow,
+  questions: Question[],
+  response_data: any,
+) {
+  const flowJson = dbFlow.json as WaFlowJson;
+  const responses: QuestionResponse[] = [];
+
+  for (const formElement of waFlowFormElementIterator({
+    flowJson,
+    onlyInteractive: true,
+    includeFooter: false,
+  })) {
+    if (!response_data[formElement.name]) continue;
+    const question = getQuestionFromFlowElementId(
+      formElement.name,
+      flowJson,
+      questions,
+      dbFlow.map,
+    );
+
+    const parsedResponse = parseFlowResponse({
+      flowJson,
+      flowMap: dbFlow.map,
+      elementName: formElement.name,
+      response: response_data[formElement.name],
+    });
+
+    const questionResponse: QuestionResponse = {
+      questionId: question.id,
+      type: question.type,
+      response: {
+        [question.type]: parsedResponse,
+      },
+    };
+    log.trace("questionResponse", questionResponse);
+    responses.push(questionResponse);
+  }
+  log.trace("responses", responses);
+  return responses;
 }

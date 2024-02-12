@@ -15,6 +15,7 @@ import {
   publishFlowInWa,
   updateFlowInDb,
   updateFlowJsonInWa,
+  updateFlowMetaDataInWa,
 } from "./flow.service";
 import {
   ByDbFlowIdParams,
@@ -172,6 +173,7 @@ export async function updateFlowHandler(
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
 
+  const previousFlow = await getFlowFromDb(dbFlowId);
   const updatedFlow = await updateFlowInDb(orgId, dbFlowId, req.body);
   const jsonWithTitle = getFlowJsonWithTitleAndDescription(
     updatedFlow.json as unknown as WaFlowJson,
@@ -183,6 +185,17 @@ export async function updateFlowHandler(
     updatedFlow.flowId,
     jsonWithTitle as WaFlowJson,
   );
+
+  // add data_channel_uri if logic jumps are updated
+  if (
+    Object.keys(previousFlow.logicJumps).length === 0 &&
+    Object.keys(updatedFlow.logicJumps).length > 0
+  ) {
+    log.trace("updating data_channel_uri in wa %s", updatedFlow.flowId);
+    await updateFlowMetaDataInWa(orgId, updatedFlow.flowId, {
+      endpoint_uri: `${process.env.API_URL}/api/wa/endpoint/${orgId}/${updatedFlow.dbFlowId}`,
+    });
+  }
   res.status(201).send();
 }
 

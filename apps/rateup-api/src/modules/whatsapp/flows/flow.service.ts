@@ -4,16 +4,25 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import {
   generateFlowMessageData,
-  getFlowJsonWithTitleAndDescription,
+  getFlowFormElementNameFromQuestionId,
   injectIdToFlowJson,
+  parseFlowResponse,
+  parseResponseFromCurrentScreenResponse,
   removeIdFromFlowJson,
-  waFlowFormElementIterator,
 } from "./flow.utils";
 import { WaFlow } from "@prisma/client";
 import { UpdateFlowInput } from "./flow.schema";
 import FormData from "form-data";
 import { log } from "../../../utils/logger";
-import { WaFlowStatus } from "../../../types/enums";
+import { LogicAction, WaFlowStatus } from "../../../types/enums";
+import { FlowLogicJump } from "../../../types/global";
+import { getSurveyById } from "../../survey/survey.service";
+import {
+  getSession,
+  saveResponses,
+  updateSession,
+} from "../whatsappSurvey/wasurvey.service";
+import { validateLogic } from "../../question/question.utils";
 
 /**
  * Get flows from whatsapp
@@ -196,7 +205,6 @@ export async function sendFlow({
       screen_id: (flow.json as any).screens[0].id,
       body: "Would you like to start the survey?", // TODO: make this configurable
       mode: mode.toLocaleLowerCase() as any,
-      // TODO: look into flow_token. this could be used to track the flow
     });
 
     await callWhatsappApi(
@@ -207,7 +215,7 @@ export async function sendFlow({
     );
     return true;
   } catch (e) {
-    console.log(e);
+    log.error(e);
     return false;
   }
 }
@@ -282,14 +290,15 @@ export async function updateFlowInDb(
 export async function updateFlowMetaDataInWa(
   orgId: string,
   flowId: string,
-  name: string,
-  categories: string[],
+  updatedData: { name?: string; categories?: string[]; endpoint_uri?: string },
 ) {
   const { accessToken } = await getWaSettings(orgId);
-  const { data } = await callWhatsappApi(`/${flowId}`, "PUT", accessToken, {
-    name,
-    categories,
-  });
+  const { data } = await callWhatsappApi(
+    `/${flowId}`,
+    "POST",
+    accessToken,
+    updatedData,
+  );
   return data as { id: string };
 }
 
@@ -333,7 +342,7 @@ export async function updateFlowJsonInWa(
     );
     log.trace("Updated flow json in wa %s", waFlowId);
   } catch (e) {
-    console.log(e);
+    log.trace("Failed to update flow json in wa %o", e);
   }
 }
 
@@ -377,3 +386,173 @@ export async function getFlowBySurveyId(surveyId: string) {
     },
   });
 }
+
+// TODO: move to controller.ts
+export const handleDecryptedFlowRequest = async (
+  decryptedBody,
+  dbFlow: WaFlow,
+) => {
+  try {
+    const { screen, data, version, action, flow_token } = decryptedBody;
+
+    const session = await getSession(dbFlow.orgId, flow_token);
+    const json = dbFlow.json as unknown as WaFlowJson;
+    const survey = await getSurveyById(dbFlow.surveyId);
+    const questions = survey.questions as unknown as Question[];
+
+    log.trace("action: %s", action);
+    // handle health check request
+    if (action === "ping") {
+      return {
+        version,
+        data: {
+          status: "active",
+        },
+      };
+    }
+    // handle error notification
+    if (data?.error) {
+      log.warn("WaFlow: Received client error\n%o", data);
+      return {
+        version,
+        data: {
+          acknowledged: true,
+        },
+      };
+    }
+
+    // handle initial request when opening the flow
+    if (action === "INIT") {
+      const initialScreen = json.screens[0].id;
+      return {
+        version,
+        screen: initialScreen,
+      };
+    }
+
+    if (action === "data_exchange") {
+      // save responses
+      log.trace("Received data exchange request");
+      const currentScreenResponses = parseResponseFromCurrentScreenResponse(
+        dbFlow,
+        questions,
+        data,
+      );
+      log.trace("Current screen responses: %o", currentScreenResponses);
+      updateSession(session.orgId, session.phone, {
+        responses: [...session.responses, ...currentScreenResponses],
+      })
+        .then(() => {
+          log.trace("Session updated with responses.");
+        })
+        .catch((e) => {
+          log.error(
+            "Failed to update session with responses: %o\n%o",
+            currentScreenResponses,
+            e,
+          );
+        });
+
+      // handle the request based on the current screen
+      let nextScreen = null;
+      const currentIndex = json.screens.findIndex((s) => s.id === screen);
+
+      if (Object.keys(dbFlow.logicJumps[screen] || {}).length > 0) {
+        log.trace(
+          "Logic jumps found for screen: %s \n %o",
+          screen,
+          dbFlow.logicJumps[screen],
+        );
+        const logicJumps = dbFlow.logicJumps[
+          screen
+        ] as unknown as FlowLogicJump[];
+        for (const logicJump of logicJumps) {
+          let logicPassed = logicJump.conditions.every((condition) => {
+            const flowElementName = getFlowFormElementNameFromQuestionId(
+              condition.questionId,
+              dbFlow.map,
+            );
+            const question = questions.find(
+              (q) => q.id === condition.questionId,
+            );
+            log.trace("raw response: %o", data[flowElementName]);
+            const response = parseFlowResponse({
+              flowJson: json,
+              flowMap: dbFlow.map,
+              elementName: flowElementName,
+              response: data[flowElementName],
+            });
+            log.trace("parsed response: %s", response);
+            return validateLogic(
+              question,
+              response,
+              "en", //TODO
+              condition.condition,
+              condition.response,
+            );
+          });
+
+          if (logicPassed) {
+            if (logicJump.action === LogicAction.NextQ) {
+              log.trace("Logic passed, moving to next question");
+              nextScreen = json.screens[currentIndex + 1]?.id;
+              console.log("nextScreen", nextScreen, currentIndex);
+            } else if (logicJump.action === LogicAction.EndSurvey) {
+              await saveResponses(session);
+              return {
+                version,
+                screen: "SUCCESS",
+                data: {
+                  extension_message_response: {
+                    params: {
+                      flow_token: flow_token,
+                      responses_saved: true,
+                    },
+                  },
+                },
+              };
+            } else {
+              log.trace(
+                "Logic passed, jumping to screen: %s",
+                logicJump.action,
+              );
+              nextScreen = logicJump.action;
+            }
+          }
+        }
+        if (!nextScreen) {
+          log.trace("Logic failed, moving to next question");
+          nextScreen = json.screens[currentIndex + 1]?.id;
+        }
+      } else if (currentIndex === json.screens.length - 1) {
+        log.trace("End of survey");
+        await saveResponses(session);
+        return {
+          version,
+          screen: "SUCCESS",
+          data: {
+            extension_message_response: {
+              params: {
+                flow_token: flow_token,
+                responses_saved: true,
+              },
+            },
+          },
+        };
+      } else {
+        log.trace("No logic jumps, moving to next question");
+        nextScreen = json.screens[currentIndex + 1]?.id;
+      }
+
+      return {
+        version,
+        screen: nextScreen,
+      };
+    }
+  } catch (error) {
+    console.error("Unhandled request body:", decryptedBody);
+    throw new Error(
+      "Unhandled endpoint request. Make sure you handle the request action & screen logged above.",
+    );
+  }
+};

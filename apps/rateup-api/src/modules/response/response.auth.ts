@@ -1,18 +1,21 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessToSurvey } from "../../utils/auth";
-import { GetResponsesParams } from "./response.schema";
+import { GetResponsesParams, getResponsesBody } from "./response.schema";
 import Session from "supertokens-node/recipe/session";
 import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions";
 
 export async function verifyAccess(
   request: FastifyRequest<{
     Params: GetResponsesParams;
+    Body: getResponsesBody;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const surveyId = request.params.surveyId
     ? request.params.surveyId
-    : await getSurveyIdfromMap(request.params.surveyTeamMapId);
+    : request.body?.surveyId
+      ? request.body.surveyId
+      : await getSurveyIdfromMap(request.params.surveyTeamMapId);
   const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
 
   if (!hasAccess) {

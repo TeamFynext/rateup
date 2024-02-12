@@ -7,6 +7,7 @@ import { waWebhookRoutes } from "./whatsappSurvey/wasurvey.route";
 import { waRedirectRoutes } from "./redirect/wa_redirect.route";
 import { flowRoutes } from "./flows/flow.route";
 import { waFlowSchemas } from "./flows/flow.schema";
+import { flowEnpointRoutes } from "./flows/flow.endpoint-routes";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [waSettingsSchema, waTemplateSchemas, waFlowSchemas];
@@ -19,5 +20,6 @@ export async function whatsappRoutes(server: FastifyInstance) {
   server.register(flowRoutes, { prefix: "/flows" });
   server.register(waSettingsRoutes, { prefix: "/settings" });
   server.register(waWebhookRoutes, { prefix: "/webhook" });
+  server.register(flowEnpointRoutes, { prefix: "/endpoint" });
   server.register(waRedirectRoutes, { prefix: "/redirect" });
 }
