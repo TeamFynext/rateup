@@ -22,6 +22,7 @@ import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
 import classes from "./itemDetailedViewModal.module.css";
+import { CreditsCard } from "../../Card/CreditsCard";
 interface ItemDetailedViewModalProps {
   item: MenuItem;
   onClose: () => void;
@@ -41,13 +42,20 @@ export function ItemDetailedViewModal({
 
   const imageSlides = item?.images?.map((url: string) => (
     <Carousel.Slide key={url}>
-      <Image
-        src={getFileUrlFromKey(
-          url,
-          true,
-          item?.unsplashImage?.find((data) => data === url)?.length > 0,
-        )}
-      />
+      <CreditsCard
+        enableCredits={
+          item?.unsplashImage?.find((data) => data === url)?.length > 0
+        }
+        url={url}
+      >
+        <Image
+          src={getFileUrlFromKey(
+            url,
+            true,
+            item?.unsplashImage?.find((data) => data === url)?.length > 0,
+          )}
+        />
+      </CreditsCard>
     </Carousel.Slide>
   ));
 

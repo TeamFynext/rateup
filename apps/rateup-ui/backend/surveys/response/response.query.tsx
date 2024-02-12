@@ -124,11 +124,8 @@ export function useGenerateResponse(surveyId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: {
-      surveyId: string;
-      surveyTeamMapId: string;
-      batchSize: number;
-    }) => generateResponse(data),
+    mutationFn: (data: { surveyId: string; batchSize: number }) =>
+      generateResponse(data),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });

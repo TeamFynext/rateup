@@ -32,6 +32,7 @@ import QuestionTypePreview from "../../../../Question/Previews/QuestionTypePrevi
 import { questionTypeEnumArray } from "../../../SurveyTheme.constants";
 import { CurrentResponsesContext } from "../../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../../context/SelectedLanguage";
+import { CreditsCard } from "../../../../../Card/CreditsCard";
 
 export default function SurveyThemeView({ selectedType, setSelectedType }) {
   const { surveyTheme, mobileOrDesktop } = useContext(SurveyThemeContext);
@@ -57,141 +58,153 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
       }}
       ff={lexend300.style.fontFamily}
     >
-      <BackgroundImage
-        className={classes.parentContainer}
-        style={{ height: "100%", width: "100%", objectFit: "contain" }}
-        src={getImageUrl(
-          mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
-          unsplashImage?.[mobileOrDesktop],
-        )}
+      <CreditsCard
+        enableCredits={unsplashImage?.[mobileOrDesktop]}
+        url={
+          mobileOrDesktop === PreviewTypeEnum.DESKTOP
+            ? encodeURI(desktopbg)
+            : encodeURI(mobilebg)
+        }
       >
-        <ActionIcon
-          variant="default"
-          size="md"
-          radius="lg"
-          onClick={(e) => {
-            e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-          }}
-          className={classes.actionIcon}
+        <BackgroundImage
+          className={classes.parentContainer}
+          style={{ height: "100%", width: "100%", objectFit: "contain" }}
+          src={getImageUrl(
+            mobileOrDesktop === PreviewTypeEnum.DESKTOP
+              ? encodeURI(desktopbg)
+              : encodeURI(mobilebg),
+            unsplashImage?.[mobileOrDesktop],
+          )}
         >
-          <IconEdit style={{ width: "70%", height: "70%" }} />
-        </ActionIcon>
-        <Flex
-          h={"100%"}
-          direction={"column"}
-          ff={lexend.style.fontFamily}
-          justify={"center"}
-        >
-          <Box className={classes.titleBox} w={"fit-content"}>
-            <ActionIcon
-              variant="default"
-              radius="lg"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation(), setSelectedType(SelectedItemEnum.TITLE);
-              }}
-              className={classes.actionIcon}
-            >
-              <IconEdit style={{ width: "70%", height: "70%" }} />
-            </ActionIcon>
-            <Text style={titleStyles}>Why is the sky blue?</Text>
-          </Box>
-          <Box className={classes.titleBox} w={"fit-content"}>
-            <ActionIcon
-              variant="default"
-              radius="lg"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation(), setSelectedType(SelectedItemEnum.SUBTITLE);
-              }}
-              className={classes.actionIcon}
-            >
-              <IconEdit style={{ width: "70%", height: "70%" }} />
-            </ActionIcon>
-            <Text style={subtitleStyles}>
-              This classic question is often asked by curious minds.
-            </Text>
-          </Box>
-          <Stack align="center" style={{ flex: 1 }} mt={"lg"}>
-            <ScrollArea
-              offsetScrollbars
-              scrollbarSize={5}
-              m="auto"
-              style={{
-                width: "100%",
-                maxHeight: "220px",
-              }}
-              p={"xs"}
-            >
-              <MantineProvider
-                theme={{
-                  primaryColor: primaryColor,
+          <ActionIcon
+            variant="default"
+            size="md"
+            radius="lg"
+            onClick={(e) => {
+              e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
+            }}
+            className={classes.actionIcon}
+          >
+            <IconEdit style={{ width: "70%", height: "70%" }} />
+          </ActionIcon>
+          <Flex
+            h={"100%"}
+            direction={"column"}
+            ff={lexend.style.fontFamily}
+            justify={"center"}
+          >
+            <Box className={classes.titleBox} w={"fit-content"}>
+              <ActionIcon
+                variant="default"
+                radius="lg"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(), setSelectedType(SelectedItemEnum.TITLE);
                 }}
+                className={classes.actionIcon}
               >
-                <CurrentResponsesContext.Provider
-                  value={{ response: currentResponse, updateResponse }}
-                >
-                  <QuestionTypePreview
-                    choices={[1, 2, 3, 4]}
-                    features={getFeaturesBasedOnQuestionType(
-                      selectedLanguage,
-                      questionTypeEnumArray[currentQuestionTypeCount],
-                    )}
-                    type={questionTypeEnumArray[currentQuestionTypeCount]}
-                    tnc={{
-                      title: "I agree",
-                      content:
-                        "Terms & conditions.... \n conditions 1....\n conditions 3.... \n conditions 3....",
-                      urlTitle: "terms and conditions",
-                    }}
-                  />
-                </CurrentResponsesContext.Provider>
-              </MantineProvider>
-            </ScrollArea>
-            <Group mt="auto" justify="right" w={"100%"} align="center">
-              <Badge>{questionTypeEnumArray[currentQuestionTypeCount]}</Badge>
-              <Group>
-                <Button
-                  variant="white"
-                  radius={"xl"}
-                  disabled={currentQuestionTypeCount === 0}
-                  onClick={() => {
-                    if (currentQuestionTypeCount === 0) return;
-                    setCurrentQuestionTypeCount(currentQuestionTypeCount - 1);
-                    updateResponse(null);
+                <IconEdit style={{ width: "70%", height: "70%" }} />
+              </ActionIcon>
+              <Text style={titleStyles}>Why is the sky blue?</Text>
+            </Box>
+            <Box className={classes.titleBox} w={"fit-content"}>
+              <ActionIcon
+                variant="default"
+                radius="lg"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(),
+                    setSelectedType(SelectedItemEnum.SUBTITLE);
+                }}
+                className={classes.actionIcon}
+              >
+                <IconEdit style={{ width: "70%", height: "70%" }} />
+              </ActionIcon>
+              <Text style={subtitleStyles}>
+                This classic question is often asked by curious minds.
+              </Text>
+            </Box>
+            <Stack align="center" style={{ flex: 1 }} mt={"lg"}>
+              <ScrollArea
+                offsetScrollbars
+                scrollbarSize={5}
+                m="auto"
+                style={{
+                  width: "100%",
+                  maxHeight: "220px",
+                }}
+                p={"xs"}
+              >
+                <MantineProvider
+                  theme={{
+                    primaryColor: primaryColor,
                   }}
                 >
-                  <IconChevronLeft />
-                </Button>
+                  <CurrentResponsesContext.Provider
+                    value={{ response: currentResponse, updateResponse }}
+                  >
+                    <QuestionTypePreview
+                      choices={[1, 2, 3, 4]}
+                      features={getFeaturesBasedOnQuestionType(
+                        selectedLanguage,
+                        questionTypeEnumArray[currentQuestionTypeCount],
+                      )}
+                      type={questionTypeEnumArray[currentQuestionTypeCount]}
+                      tnc={{
+                        title: "I agree",
+                        content:
+                          "Terms & conditions.... \n conditions 1....\n conditions 3.... \n conditions 3....",
+                        urlTitle: "terms and conditions",
+                      }}
+                    />
+                  </CurrentResponsesContext.Provider>
+                </MantineProvider>
+              </ScrollArea>
+              <Group mt="auto" justify="right" w={"100%"} align="center">
+                <Badge>{questionTypeEnumArray[currentQuestionTypeCount]}</Badge>
+                <Group>
+                  <Button
+                    variant="white"
+                    radius={"xl"}
+                    disabled={currentQuestionTypeCount === 0}
+                    onClick={() => {
+                      if (currentQuestionTypeCount === 0) return;
+                      setCurrentQuestionTypeCount(currentQuestionTypeCount - 1);
+                      updateResponse(null);
+                    }}
+                  >
+                    <IconChevronLeft />
+                  </Button>
 
-                <Button
-                  variant="white"
-                  radius={"xl"}
-                  disabled={
-                    currentQuestionTypeCount ===
-                    questionTypeEnumArray.length - 1
-                  }
-                  onClick={() => {
-                    if (
+                  <Button
+                    variant="white"
+                    radius={"xl"}
+                    disabled={
                       currentQuestionTypeCount ===
                       questionTypeEnumArray.length - 1
-                    )
-                      return;
-                    setCurrentQuestionTypeCount(currentQuestionTypeCount + 1);
-                    updateResponse(null);
-                  }}
-                >
-                  <IconChevronRight />
-                </Button>
+                    }
+                    onClick={() => {
+                      if (
+                        currentQuestionTypeCount ===
+                        questionTypeEnumArray.length - 1
+                      )
+                        return;
+                      setCurrentQuestionTypeCount(currentQuestionTypeCount + 1);
+                      updateResponse(null);
+                    }}
+                  >
+                    <IconChevronRight />
+                  </Button>
+                </Group>
               </Group>
-            </Group>
-          </Stack>
-          <NextPrev
-            isMobile={mobileOrDesktop === PreviewTypeEnum.MOBILE}
-            buttonStyles={buttonStyles}
-          />
-        </Flex>
-      </BackgroundImage>
+            </Stack>
+            <NextPrev
+              isMobile={mobileOrDesktop === PreviewTypeEnum.MOBILE}
+              buttonStyles={buttonStyles}
+            />
+          </Flex>
+        </BackgroundImage>
+      </CreditsCard>
     </Flex>
   );
 }

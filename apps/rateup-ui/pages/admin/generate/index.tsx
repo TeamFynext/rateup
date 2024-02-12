@@ -38,8 +38,6 @@ const GenerateData = () => {
     });
     generateResponse.mutate({
       surveyId: selectedSurveyId,
-      surveyTeamMapId: data.find((item) => item.id === selectedSurveyId)
-        ?.teams?.[0]?.mapId,
       batchSize: batchSize,
     });
   };

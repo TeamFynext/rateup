@@ -10,8 +10,9 @@ import ReactCrop, {
 import { useDebounceEffect } from "../menu/hook/useDebounceEffect";
 import { canvasPreview } from "../menu/easyCrop/CanvasPreview";
 import "react-image-crop/dist/ReactCrop.css";
-import { Image, NumberInput } from "@mantine/core";
+import { Box, Image, NumberInput, Stack } from "@mantine/core";
 import { mimeTypesForImage } from "../../utils/constants";
+import CenteredSpinner from "../Loaders/CenteredSpinner";
 
 interface ImageCropModalProps {
   opened: boolean;
@@ -36,6 +37,7 @@ export const ImageCropModal = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(1);
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
+  const [imageLoading, setImageLoading] = useState(true);
 
   useDebounceEffect(
     () => {
@@ -89,6 +91,7 @@ export const ImageCropModal = ({
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     if (aspect) {
+      setImageLoading(false);
       const { width, height } = e.currentTarget;
       const percentCrop = centerAspectCrop(width, height, aspect);
       setCrop(percentCrop);
@@ -131,7 +134,11 @@ export const ImageCropModal = ({
     const baseUrl = urlParts?.[0];
     const urlSegments = baseUrl?.split("/");
     const photoKey = urlSegments?.[urlSegments?.length - 1];
-
+    const params = new URLSearchParams(urlParts[1]);
+    const auther = params.get("auther");
+    const username = params.get("username");
+    const ixid = params.get("ixid");
+    const ixlib = params.get("ixlib");
     const errorFraction = 0.04;
     //fp-z value
     let z = 2 - crop.width / W;
@@ -142,7 +149,7 @@ export const ImageCropModal = ({
     const cropWidth = (crop.width / W) * nW;
     const cropHeigth = (crop.height / H) * nH;
 
-    return `${photoKey}?crop=focalpoint&fit=crop&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}`;
+    return `${photoKey}?crop=focalpoint&fit=crop&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}&ixid=${ixid}&ixlib=${ixlib}&auther=${auther}&username=${username}`;
   };
   return (
     <FormModalLayout
@@ -189,6 +196,11 @@ export const ImageCropModal = ({
           alt="cropping image"
         />
       </ReactCrop>
+      {!imgRef.current && (
+        <Stack miw={350} mih={250} justify="center">
+          <CenteredSpinner />
+        </Stack>
+      )}
       <canvas
         ref={previewCanvasRef}
         style={{

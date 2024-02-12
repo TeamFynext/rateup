@@ -24,6 +24,7 @@ import { HoverCardComponent } from "../../../Survey/HoverCard/HoverCard";
 import { ActionIconCommon } from "../../ActionIcon/ActionIconCommon";
 import { currencyLabel } from "../../util/currencyData";
 import MenuFoodLabelBadge from "../tag/MenuFoodLabelBadge";
+import { CreditsCard } from "../../../Card/CreditsCard";
 
 const TableRow = ({
   item,
@@ -40,21 +41,31 @@ const TableRow = ({
   return (
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
-        <Image
-          style={{ borderRadius: "4px", aspectRatio: "4/3" }}
-          src={
-            item?.images?.length > 0
-              ? getImageValue(
-                  item?.images[0],
-                  false,
-                  item?.unsplashImage?.find((data) => data === item?.images[0])
-                    ?.length > 0,
-                )
-              : fallbackImage
+        <CreditsCard
+          enableCredits={
+            item?.unsplashImage?.find((data) => data === item?.images[0])
+              ?.length > 0
           }
-          alt={item?.name}
-          w={100}
-        />
+          url={item?.images[0]}
+          fz={8}
+        >
+          <Image
+            style={{ borderRadius: "4px", aspectRatio: "4/3" }}
+            src={
+              item?.images?.length > 0
+                ? getImageValue(
+                    item?.images[0],
+                    false,
+                    item?.unsplashImage?.find(
+                      (data) => data === item?.images[0],
+                    )?.length > 0,
+                  )
+                : fallbackImage
+            }
+            alt={item?.name}
+            w={100}
+          />
+        </CreditsCard>
       </Table.Td>
       <Table.Td tt={"capitalize"}>{item?.name}</Table.Td>
       <Table.Td>

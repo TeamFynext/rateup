@@ -35,6 +35,7 @@ import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
+import { CreditsCard } from "../../../../components/Card/CreditsCard";
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
   const { msg } = context.query;
@@ -91,107 +92,120 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
     confettiEnabled,
   } = thankyouTheme;
   return (
-    <Flex
-      style={{
-        ...bgStyles,
-        ...{
-          height: "100dvh",
-          backgroundColor: bgStyles?.backgroundColor
-            ? bgStyles?.backgroundColor
-            : theme.colors[theme.primaryColor][6],
-          backgroundImage:
-            thankyouTheme?.bg?.desktopbg || thankyouTheme?.bg?.mobilebg
-              ? `url(${getImageUrl(
-                  isMobile && thankyouTheme?.bg?.mobilebg
-                    ? thankyouTheme?.bg?.mobilebg
-                    : thankyouTheme?.bg?.desktopbg,
-                  isMobile
-                    ? thankyouTheme?.bg?.unsplashImage?.mobile
-                    : thankyouTheme?.bg?.unsplashImage?.desktop,
-                )})`
-              : "",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        },
-      }}
-      direction={"column"}
-      justify={"center"}
+    <CreditsCard
+      enableCredits={
+        isMobile
+          ? thankyouTheme?.bg?.unsplashImage?.mobile
+          : thankyouTheme?.bg?.unsplashImage?.desktop
+      }
+      url={
+        isMobile && thankyouTheme?.bg?.mobilebg
+          ? thankyouTheme?.bg?.mobilebg
+          : thankyouTheme?.bg?.desktopbg
+      }
     >
-      <Stack h="100%" w="100%">
-        {confettiEnabled && <Confetti width={width} height={height} />}
-        <Stack
-          align="center"
-          justify="center"
-          p="sm"
-          m={"auto"}
-          h={"100%"}
-          style={{
-            flex: 0,
-          }}
-        >
-          {logo ? (
-            <Image
-              src={getImageUrl(logo)}
-              alt="Rateup"
-              height={"auto"}
-              style={logoStyles}
-            />
-          ) : (
-            <IconCircleCheck
-              size={"3rem"}
-              style={logoStyles}
-              color={titleStyles?.color ?? "#fff"}
-            />
-          )}
-          <Title
-            order={1}
-            fw={400}
-            style={{
-              ...titleStyles,
-              ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
-            }}
-          >
-            {title}
-          </Title>
-          {subtitle && <Text style={subtitleStyles}>{subtitle}</Text>}
-        </Stack>
-        {enableBody && (
+      <Flex
+        style={{
+          ...bgStyles,
+          ...{
+            height: "100dvh",
+            backgroundColor: bgStyles?.backgroundColor
+              ? bgStyles?.backgroundColor
+              : theme.colors[theme.primaryColor][6],
+            backgroundImage:
+              thankyouTheme?.bg?.desktopbg || thankyouTheme?.bg?.mobilebg
+                ? `url(${getImageUrl(
+                    isMobile
+                      ? thankyouTheme?.bg?.mobilebg
+                      : thankyouTheme?.bg?.desktopbg,
+                    isMobile
+                      ? thankyouTheme?.bg?.unsplashImage?.mobile
+                      : thankyouTheme?.bg?.unsplashImage?.desktop,
+                  )})`
+                : "",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          },
+        }}
+        direction={"column"}
+        justify={"center"}
+      >
+        <Stack h="100%" w="100%">
+          {confettiEnabled && <Confetti width={width} height={height} />}
           <Stack
             align="center"
             justify="center"
-            gap="xl"
+            p="sm"
+            m={"auto"}
+            h={"100%"}
             style={{
-              flex: 1,
-              borderRadius: "28px 28px 0px 0px",
-              backgroundColor: "whitesmoke",
+              flex: 0,
             }}
           >
-            {enableGoogleReview && (
-              <GoogleReview
-                googleLink={googleLink}
-                reviewSuggestions={reviews}
+            {logo ? (
+              <Image
+                src={getImageUrl(logo)}
+                alt="Rateup"
+                height={"auto"}
+                style={logoStyles}
+              />
+            ) : (
+              <IconCircleCheck
+                size={"3rem"}
+                style={logoStyles}
+                color={titleStyles?.color ?? "#fff"}
               />
             )}
-
-            {k === "cs" && (
-              <Group m="xl" p="xl">
-                <Link
-                  href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
-                  target="_blank"
-                >
-                  <RateupButtonBlue
-                    leftIcon={<IconHome />}
-                    title="Go to Home"
-                  />
-                </Link>
-              </Group>
-            )}
+            <Title
+              order={1}
+              fw={400}
+              style={{
+                ...titleStyles,
+                ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
+              }}
+            >
+              {title}
+            </Title>
+            {subtitle && <Text style={subtitleStyles}>{subtitle}</Text>}
           </Stack>
-        )}
-      </Stack>
-      <RateupRedirectCard />
-    </Flex>
+          {enableBody && (
+            <Stack
+              align="center"
+              justify="center"
+              gap="xl"
+              style={{
+                flex: 1,
+                borderRadius: "28px 28px 0px 0px",
+                backgroundColor: "whitesmoke",
+              }}
+            >
+              {enableGoogleReview && (
+                <GoogleReview
+                  googleLink={googleLink}
+                  reviewSuggestions={reviews}
+                />
+              )}
+
+              {k === "cs" && (
+                <Group m="xl" p="xl">
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
+                    target="_blank"
+                  >
+                    <RateupButtonBlue
+                      leftIcon={<IconHome />}
+                      title="Go to Home"
+                    />
+                  </Link>
+                </Group>
+              )}
+            </Stack>
+          )}
+        </Stack>
+        <RateupRedirectCard />
+      </Flex>
+    </CreditsCard>
   );
 }
 
