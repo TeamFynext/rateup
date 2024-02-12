@@ -31,6 +31,7 @@ import { IconChevronRight } from "@tabler/icons-react";
 import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 import { getImageUrl } from "../../Survey/SurveyTheme/SurveyTheme.utils";
+import { CreditsCard } from "../../Card/CreditsCard";
 export const TakeSurveyLayoutWeb = ({
   survey,
   children,
@@ -144,128 +145,145 @@ export const TakeSurveyLayoutWeb = ({
             !startClicked ? welcomeTheme?.bg?.styles : surveyTheme?.bg?.styles
           }
         >
-          <BackgroundImage
-            mih={"100dvh"}
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              objectFit: "contain",
-            }}
-            src={
+          <CreditsCard
+            enableCredits={
               !startClicked
-                ? welcomeTheme?.bg?.desktopbg || welcomeTheme?.bg?.mobilebg
-                  ? getImageUrl(
-                      isMobile && welcomeTheme?.bg?.mobilebg
-                        ? welcomeTheme?.bg?.mobilebg
-                        : welcomeTheme?.bg?.desktopbg,
-                      isMobile
-                        ? welcomeTheme?.bg?.unsplashImage?.mobile
-                        : welcomeTheme?.bg?.unsplashImage?.desktop,
-                    )
-                  : ""
-                : surveyTheme?.bg?.desktopbg || surveyTheme?.bg?.mobilebg
-                ? getImageUrl(
-                    isMobile && surveyTheme?.bg?.mobilebg
-                      ? surveyTheme?.bg?.mobilebg
-                      : surveyTheme?.bg?.desktopbg,
-                    isMobile
-                      ? surveyTheme?.bg?.unsplashImage?.mobile
-                      : surveyTheme?.bg?.unsplashImage?.desktop,
-                  )
-                : ""
+                ? isMobile
+                  ? welcomeTheme?.bg?.unsplashImage?.mobile
+                  : welcomeTheme?.bg?.unsplashImage?.desktop
+                : isMobile
+                ? surveyTheme?.bg?.unsplashImage?.mobile
+                : surveyTheme?.bg?.unsplashImage?.desktop
+            }
+            url={
+              isMobile && welcomeTheme?.bg?.mobilebg
+                ? welcomeTheme?.bg?.mobilebg
+                : welcomeTheme?.bg?.desktopbg
             }
           >
-            {/* .........Survey Header Section.......... */}
-            {survey?.isPublished == true && !!startClicked && (
-              <Group justify="center" mt={"3vh"}>
-                <Stack
-                  style={{
-                    maxHeight: isMobile ? "65px" : "100px",
-                    maxWidth: "30%",
-                  }}
-                >
-                  <Image
-                    src={
-                      survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
-                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
-                        : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-                    }
-                    alt="Logo"
-                    w={isMobile ? 70 : 80}
-                    h={isMobile ? 70 : 80}
-                  />
-                </Stack>
-              </Group>
-            )}
-
-            <Paper
-              pt="-50px"
-              radius={0}
-              bg="transparent"
-              style={{ padding: 0, margin: 0, flex: 1 }}
-              display={"flex"}
+            <BackgroundImage
+              mih={"100dvh"}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                objectFit: "contain",
+              }}
+              src={
+                !startClicked
+                  ? welcomeTheme?.bg?.desktopbg || welcomeTheme?.bg?.mobilebg
+                    ? getImageUrl(
+                        isMobile && welcomeTheme?.bg?.mobilebg
+                          ? welcomeTheme?.bg?.mobilebg
+                          : welcomeTheme?.bg?.desktopbg,
+                        isMobile
+                          ? welcomeTheme?.bg?.unsplashImage?.mobile
+                          : welcomeTheme?.bg?.unsplashImage?.desktop,
+                      )
+                    : ""
+                  : surveyTheme?.bg?.desktopbg || surveyTheme?.bg?.mobilebg
+                  ? getImageUrl(
+                      isMobile && surveyTheme?.bg?.mobilebg
+                        ? surveyTheme?.bg?.mobilebg
+                        : surveyTheme?.bg?.desktopbg,
+                      isMobile
+                        ? surveyTheme?.bg?.unsplashImage?.mobile
+                        : surveyTheme?.bg?.unsplashImage?.desktop,
+                    )
+                  : ""
+              }
             >
-              {survey?.isPublished === true && survey?.active === true ? (
-                survey?.isProtected && isPasswordVerified === false ? null : (
-                  <Paper
-                    radius={0}
-                    pb={largeScreen && startClicked && "xl"}
-                    w={"100%"}
-                    bg={"transparent"}
+              {/* .........Survey Header Section.......... */}
+              {survey?.isPublished == true && !!startClicked && (
+                <Group justify="center" mt={"3vh"}>
+                  <Stack
+                    style={{
+                      maxHeight: isMobile ? "65px" : "100px",
+                      maxWidth: "30%",
+                    }}
                   >
-                    {startClicked &&
-                      (!selectedLanguage && survey?.languages?.length > 1 ? (
-                        <SelectLang
-                          languages={survey?.languages}
-                          selectedLanguage={selectedLanguage}
-                          setSelectedLanguage={setSelectedLanguage}
-                        />
-                      ) : (
-                        selectedLanguage && (
-                          <SelectedLanguageContext.Provider
-                            value={{
-                              selectedLanguage,
-                              defaultLanguage: survey?.languages[0],
-                            }}
-                          >
-                            {children}
-                          </SelectedLanguageContext.Provider>
-                        )
-                      ))}
-
-                    {!startClicked && (
-                      <WelcomePage
-                        surveyThemeData={welcomeTheme}
-                        onStart={handleStartClick}
-                        largeScreen={largeScreen}
-                      />
-                    )}
-                  </Paper>
-                )
-              ) : (
-                <Center style={{ flex: 1 }}>
-                  {(survey?.isPublished !== true || !survey?.active) && (
-                    <Group align="center" justify="center">
-                      <Image
-                        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
-                        alt="Logo"
-                        w={isMobile ? 70 : 80}
-                        h={isMobile ? 70 : 80}
-                        fit={"contain"}
-                      />
-                      <Text c="#CDCDCD" fw={"bold"} fz={28}>
-                        Survey is not available..!
-                      </Text>
-                    </Group>
-                  )}
-                </Center>
+                    <Image
+                      src={
+                        survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
+                          ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
+                          : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
+                      }
+                      alt="Logo"
+                      w={isMobile ? 70 : 80}
+                      h={isMobile ? 70 : 80}
+                    />
+                  </Stack>
+                </Group>
               )}
-            </Paper>
 
-            {!!startClicked && <RateupRedirectCard />}
-          </BackgroundImage>
+              <Paper
+                pt="-50px"
+                radius={0}
+                bg="transparent"
+                style={{ padding: 0, margin: 0, flex: 1 }}
+                display={"flex"}
+              >
+                {survey?.isPublished === true && survey?.active === true ? (
+                  survey?.isProtected && isPasswordVerified === false ? null : (
+                    <Paper
+                      radius={0}
+                      pb={largeScreen && startClicked && "xl"}
+                      w={"100%"}
+                      bg={"transparent"}
+                    >
+                      {startClicked &&
+                        (!selectedLanguage && survey?.languages?.length > 1 ? (
+                          <SelectLang
+                            languages={survey?.languages}
+                            selectedLanguage={selectedLanguage}
+                            setSelectedLanguage={setSelectedLanguage}
+                          />
+                        ) : (
+                          selectedLanguage && (
+                            <SelectedLanguageContext.Provider
+                              value={{
+                                selectedLanguage,
+                                defaultLanguage: survey?.languages[0],
+                              }}
+                            >
+                              {children}
+                            </SelectedLanguageContext.Provider>
+                          )
+                        ))}
+
+                      {!startClicked && (
+                        <WelcomePage
+                          surveyThemeData={welcomeTheme}
+                          onStart={handleStartClick}
+                          largeScreen={largeScreen}
+                        />
+                      )}
+                    </Paper>
+                  )
+                ) : (
+                  <Center style={{ flex: 1 }}>
+                    {(survey?.isPublished !== true || !survey?.active) && (
+                      <Group align="center" justify="center">
+                        <Image
+                          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
+                          alt="Logo"
+                          w={isMobile ? 70 : 80}
+                          h={isMobile ? 70 : 80}
+                          fit={"contain"}
+                        />
+                        <Text c="#CDCDCD" fw={"bold"} fz={28}>
+                          Survey is not available..!
+                        </Text>
+                      </Group>
+                    )}
+                  </Center>
+                )}
+              </Paper>
+
+              {!!startClicked && <RateupRedirectCard />}
+            </BackgroundImage>
+          </CreditsCard>
         </Stack>
       </QuestionCountContext.Provider>
     </MantineProvider>

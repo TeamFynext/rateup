@@ -16,6 +16,7 @@ import { lexend } from "../../../utils/fonts";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
+import { CreditsCard } from "../../Card/CreditsCard";
 
 interface ItemDisplayProps {
   readonly item: any;
@@ -56,35 +57,47 @@ export function ItemDisplay({
             gridTemplateRows: "auto min-content 16px",
           }}
         >
-          <Image
-            w={"100%"}
-            h={"100%"}
-            miw={smallScreen ? "120px" : "164px"}
-            maw={smallScreen ? "120px" : "164px"}
-            src={
-              item?.images?.length > 0
-                ? encodeURI(
-                    getFileUrlFromKey(
-                      item?.images[0],
-                      true,
-                      item?.unsplashImage?.find(
-                        (data) => data === item?.images[0],
-                      )?.length > 0,
-                    ),
-                  )
-                : fallbackImage
+          <CreditsCard
+            enableCredits={
+              item?.unsplashImage?.find((data) => data === item?.images[0])
+                ?.length > 0
             }
-            style={{
-              backgroundColor: "var(--orange-400)",
+            url={item?.images[0]}
+            sx={{
               gridArea: "1 / 1 / 4 / 2",
-              filter:
-                item?.disabled || categoryDisabled
-                  ? "grayscale(1)"
-                  : "grayscale(0)",
             }}
-            opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
-            fallbackSrc={fallbackImage}
-          />
+            fz={"clamp(12px, calc(9.856px + 0.357vw), 15px)"}
+          >
+            <Image
+              w={"100%"}
+              h={"100%"}
+              miw={smallScreen ? "120px" : "164px"}
+              maw={smallScreen ? "120px" : "164px"}
+              src={
+                item?.images?.length > 0
+                  ? encodeURI(
+                      getFileUrlFromKey(
+                        item?.images[0],
+                        true,
+                        item?.unsplashImage?.find(
+                          (data) => data === item?.images[0],
+                        )?.length > 0,
+                      ),
+                    )
+                  : fallbackImage
+              }
+              style={{
+                backgroundColor: "var(--orange-400)",
+                gridArea: "1 / 1 / 4 / 2",
+                filter:
+                  item?.disabled || categoryDisabled
+                    ? "grayscale(1)"
+                    : "grayscale(0)",
+              }}
+              opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
+              fallbackSrc={fallbackImage}
+            />
+          </CreditsCard>
           {(item?.disabled || categoryDisabled) && (
             <Center h={"100%"} style={{ gridArea: "1 / 1 / 4" }}>
               <Paper

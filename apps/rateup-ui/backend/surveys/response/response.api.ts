@@ -46,7 +46,6 @@ export async function deleteResponse(id: string, surveyTeamMapId: string) {
 }
 type generateResponseType = {
   surveyId: string;
-  surveyTeamMapId: string;
   batchSize: number;
 };
 export async function generateResponse(data: generateResponseType) {

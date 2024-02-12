@@ -23,7 +23,11 @@ type UnsplashModalProps = {
   handleUnsplashImageSave: (url: string, filename: string) => void;
 };
 type UnsplashPhotoProps = {
-  photo: { urls: { regular: string }; id: string };
+  photo: {
+    urls: { regular: string };
+    user: { name: string; username: string };
+    id: string;
+  };
   handleUnsplashImageSave: (url: string, filename: string) => void;
   close: () => void;
   setSearchQuery: (query: string) => void;
@@ -137,10 +141,16 @@ const UnsplashPhoto = ({
 }: UnsplashPhotoProps) => {
   const {
     urls: { regular },
+    user: { name, username },
     id,
   } = photo;
   const handleImageSelection = () => {
-    handleUnsplashImageSave(regular, "unsplashImage" + id + ".jpg");
+    console.log(photo);
+
+    handleUnsplashImageSave(
+      `${regular}&auther=${name}&username=${username}`,
+      "unsplashImage" + id + ".jpg",
+    );
     setSearchQuery("");
     close();
   };

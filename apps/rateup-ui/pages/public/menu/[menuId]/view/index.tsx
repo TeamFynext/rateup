@@ -25,6 +25,7 @@ import { Carousel } from "@mantine/carousel";
 import { getMenuBannerByMenuId } from "../../../../../backend/menu/Banner/banner.api";
 import Autoplay from "embla-carousel-autoplay";
 import { isCategoryActive } from "../../../../../utils/dateTime";
+import { CreditsCard } from "../../../../../components/Card/CreditsCard";
 
 type MenuViewProp = {
   menuId: string;
@@ -157,77 +158,90 @@ export default function ({ fullMenu, menuBanner }) {
             ))}
           </Carousel>
         ) : (
-          <BackgroundImage
-            px={largeScreen ? "10vw" : "1vw"}
-            py="3vh"
-            src={
-              backgroundImage
-                ? getFileUrlFromKey(
-                    encodeURI(backgroundImage),
-                    true,
-                    !!fullMenu.menuLanding?.unsplashImage[
-                      largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-                    ],
-                  )
-                : backgroundImageFallback
+          <CreditsCard
+            enableCredits={
+              !!fullMenu.menuLanding?.unsplashImage[
+                largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+              ]
             }
-            style={{
-              borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-              backgroundColor: "var(--orange-400)",
-            }}
-            bgp={"center"}
-            bgsz={"cover"}
-            c={"white"}
-            h={"33vh"}
-            maw={largeScreen ? "2440px" : "768px"}
+            url={backgroundImage}
           >
-            <Stack
-              align="center"
+            <BackgroundImage
+              px={largeScreen ? "10vw" : "1vw"}
+              py="3vh"
+              src={
+                backgroundImage
+                  ? getFileUrlFromKey(
+                      encodeURI(backgroundImage),
+                      true,
+                      !!fullMenu.menuLanding?.unsplashImage[
+                        largeScreen
+                          ? "backgroundImage"
+                          : "mobileBackgroundImage"
+                      ],
+                    )
+                  : backgroundImageFallback
+              }
               style={{
-                padding: "0 20px 0 20px",
+                borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+                backgroundColor: "var(--orange-400)",
               }}
-              justify="center"
-              h="100%"
-              mb="lg"
+              bgp={"center"}
+              bgsz={"cover"}
+              c={"white"}
+              h={"33vh"}
+              maw={largeScreen ? "2440px" : "768px"}
             >
-              {fullMenu?.logo && (
-                <Image
-                  w="100px"
-                  h={"100px"}
-                  style={{
-                    borderRadius: "4px",
-                  }}
-                  src={getFileUrlFromKey(fullMenu?.logo)}
-                />
-              )}
-              <Stack gap={0}>
-                <Text
-                  ta={"center"}
-                  fz={
-                    fullMenu?.menuLanding?.headerStyle?.fontSize
-                      ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
-                      : "clamp(18px, 8px + 1.667vw, 32px)"
-                  }
-                  fw={fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"}
-                  c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
-                >
-                  {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
-                </Text>
-                <Text
-                  fz={
-                    fullMenu?.menuLanding?.titleStyle?.fontSize
-                      ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
-                      : "clamp(28px, 13.712px + 2.381vw, 48px))"
-                  }
-                  fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
-                  c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
-                  ta={"center"}
-                >
-                  {fullMenu?.displayName ?? "Name"}
-                </Text>
+              <Stack
+                align="center"
+                style={{
+                  padding: "0 20px 0 20px",
+                }}
+                justify="center"
+                h="100%"
+                mb="lg"
+              >
+                {fullMenu?.logo && (
+                  <Image
+                    w="100px"
+                    h={"100px"}
+                    style={{
+                      borderRadius: "4px",
+                    }}
+                    src={getFileUrlFromKey(fullMenu?.logo)}
+                  />
+                )}
+                <Stack gap={0}>
+                  <Text
+                    ta={"center"}
+                    fz={
+                      fullMenu?.menuLanding?.headerStyle?.fontSize
+                        ? `clamp(18px, 8px + 1.667vw, ${fullMenu?.menuLanding?.headerStyle?.fontSize}px)`
+                        : "clamp(18px, 8px + 1.667vw, 32px)"
+                    }
+                    fw={
+                      fullMenu?.menuLanding?.headerStyle?.fontWeight ?? "bold"
+                    }
+                    c={fullMenu?.menuLanding?.headerStyle?.color ?? "inherit"}
+                  >
+                    {fullMenu?.menuLanding?.headerText ?? "Welcome To"}
+                  </Text>
+                  <Text
+                    fz={
+                      fullMenu?.menuLanding?.titleStyle?.fontSize
+                        ? `clamp(28px, 13.712px + 2.381vw,${fullMenu?.menuLanding?.titleStyle?.fontSize}px )`
+                        : "clamp(28px, 13.712px + 2.381vw, 48px))"
+                    }
+                    fw={fullMenu?.menuLanding?.titleStyle?.fontWeight ?? "bold"}
+                    c={fullMenu?.menuLanding?.titleStyle?.color ?? "inherit"}
+                    ta={"center"}
+                  >
+                    {fullMenu?.displayName ?? "Name"}
+                  </Text>
+                </Stack>
               </Stack>
-            </Stack>
-          </BackgroundImage>
+            </BackgroundImage>
+          </CreditsCard>
         )}
         <Group
           px={largeScreen ? "lg" : "xs"}
