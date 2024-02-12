@@ -64,7 +64,7 @@ declare global {
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
     tnc?: TNC;
-  };
+  }
   type WaSectionsType = Array<{
     title?: string;
     rows: Array<{ id?: string; title: string; description?: string }>;
@@ -236,7 +236,15 @@ declare global {
     payload: any;
   };
 }
-
+export interface FlowLogicCondition {
+  questionId: string;
+  condition: LogicCondition;
+  response: any;
+}
+export interface FlowLogicJump {
+  conditions: Array<FlowLogicCondition>;
+  action: LogicAction;
+}
 const fullWaSession = Prisma.validator<Prisma.WaSessionArgs>()({
   include: toBeIncludedWaSessionRelations,
 });

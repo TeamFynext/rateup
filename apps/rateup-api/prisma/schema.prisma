@@ -88,6 +88,8 @@ model WhatsappSettings {
   businessId      String
   phoneId         String
   webhookPassword String
+
+  encryption Json? // {publicKey: string, privateKey: string}
 }
 
 model OrgMember {
@@ -648,7 +650,8 @@ model WaFlow {
   json    Json
   preview Json?
 
-  map Json
+  map        Json
+  logicJumps Json @default("{}")
 
   org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId    String @db.Uuid

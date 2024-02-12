@@ -2,8 +2,6 @@ import prisma, { excludeFields } from "../../utils/prisma";
 
 import { getTeamsByUserId } from "../team/team.service";
 import { UpdateLandingPageInput } from "./landingpage.schema";
-const CryptoJS = require("crypto-js");
-const secretPassphrase = "rateup-#$%^@#-passphrase";
 
 //--------------get landing page by id
 export async function getLandingPageById(id: string) {
@@ -29,9 +27,11 @@ export async function deleteLandingPageById(id: string) {
   return LandingPage;
 }
 
-
 //----------update landing page bu id ----------
-export async function updateLandingPageById(id: string, input: UpdateLandingPageInput) {
+export async function updateLandingPageById(
+  id: string,
+  input: UpdateLandingPageInput,
+) {
   const LandingPage = await prisma.surveyLanding.update({
     where: {
       id,
