@@ -27,6 +27,7 @@ import { useDisclosure } from "@mantine/hooks";
 import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
 import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
 import NothingFound from "../../../components/NothingFound/NothingFound";
+import { showLoadingToast } from "../../../utils/notifications";
 
 enum CollectionTabs {
   New = "Create New",
@@ -36,7 +37,7 @@ export default function () {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const {
     data: allSurveys,
-    isLoading,
+    isLoading: isSurveyLoading,
     isError,
   } = useSurveysWithQuestions(!!selectedTeamId);
   const surveys =
@@ -59,7 +60,8 @@ export default function () {
   const [openedSave, { open: openSave, close: closeSave }] =
     useDisclosure(false);
 
-  const { data: collections } = useGetAllCollectionsByOrg();
+  const { data: collections, isLoading: isCollectionLoading } =
+    useGetAllCollectionsByOrg();
 
   let filteredCollections =
     selectedTeamId == "all"
@@ -78,6 +80,24 @@ export default function () {
       : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
+  if (activeTab == CollectionTabs.New && isSurveyLoading) {
+    showLoadingToast(
+      "Hold on..,Surveys getting loaded",
+      "load-data",
+      isSurveyLoading,
+      "Loading",
+      "var(--tertiary-color)",
+    );
+  }
+  if (activeTab == CollectionTabs.Update && isCollectionLoading) {
+    showLoadingToast(
+      "Hold on...,your testimonial collections getting loaded",
+      "load-data",
+      isCollectionLoading,
+      "Loading",
+      "var(--tertiary-color)",
+    );
+  }
   return (
     <Stack>
       <StyledTabs
@@ -209,7 +229,7 @@ export default function () {
                             position: "absolute",
                             top: 0,
                             right: 0,
-                            transform: "translate(50%, -50%)", // Center the button in the top right corner
+                            transform: "translate(50%, -50%)",
                           }}
                           icon={IconCheck}
                           value={collection?.id}

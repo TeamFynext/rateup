@@ -1,7 +1,7 @@
 import { Stack, Title, Text } from "@mantine/core";
 import { useRouter } from "next/router";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import dayjs from "dayjs";
+import { formatDate } from "../../utils/dateTime";
 
 const TestimonialCollectionCard = ({ collection }) => {
   const router = useRouter();
@@ -18,9 +18,7 @@ const TestimonialCollectionCard = ({ collection }) => {
           <Text
             fz={15}
           >{`${collection?._count?.testimonials} Testimonials`}</Text>
-          <Text fz={15}>
-            {dayjs(collection?.createdAt).format("DD/MM/YYYY")}{" "}
-          </Text>
+          <Text fz={15}>{formatDate(collection?.createdAt)}</Text>
         </Stack>
       </Stack>
     </PaperLayout>

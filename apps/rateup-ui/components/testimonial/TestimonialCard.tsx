@@ -11,7 +11,7 @@ import {
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import dayjs from "dayjs";
+import { formatDate } from "../../utils/dateTime";
 
 const TestimonialCard = ({ testimonial, currentStyle = null }) => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -89,7 +89,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
       {!currentStyle?.date.isRemoved && (
         <Stack pl={"xl"}>
           <Text style={currentStyle?.date}>
-            {dayjs(testimonial?.createdAt).format("DD/MM/YYYY")}
+            {formatDate(testimonial?.createdAt)}
           </Text>
         </Stack>
       )}

@@ -9,10 +9,11 @@ import {
   updateTestimonialCollection,
 } from "./testimonial.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 export function useGetAllTestimonials(surveyId) {
   return useQuery({
-    queryKey: ["alltestimonialbysurvey", surveyId],
+    queryKey: ["allTestimonialBySurvey", surveyId],
     queryFn: () => getAllTestimonialBySurvey(surveyId),
     enabled: !!surveyId,
   });
@@ -20,14 +21,14 @@ export function useGetAllTestimonials(surveyId) {
 
 export function useGetAllCollections(surveyId) {
   return useQuery({
-    queryKey: ["alltestimonialcollectionsbysurvey", surveyId],
+    queryKey: ["allTestimonialCollectionsBySurvey", surveyId],
     queryFn: () => getAllTestimonialCollectionBySurvey(surveyId),
     enabled: !!surveyId,
   });
 }
 export function useGetAllCollectionsByOrg() {
   return useQuery({
-    queryKey: ["alltestimonialcollections"],
+    queryKey: ["allTestimonialCollections"],
     queryFn: getAllTestimonialCollections,
   });
 }
@@ -37,16 +38,21 @@ export function useCreateTestimonialCollection(surveyId) {
   return useMutation({
     mutationFn: createTestimonialCollection,
     onSuccess: (data) => {
-      showSuccessToast("Collection created", "create-collection");
+      showSuccessToast(
+        "Collection created",
+        "create-collection",
+        <IconCheck />,
+        true,
+      );
       queryClient.invalidateQueries({
-        queryKey: ["alltestimonialcollectionsbysurvey", surveyId],
+        queryKey: ["allTestimonialCollectionsBySurvey", surveyId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["alltestimonialcollections"],
+        queryKey: ["allTestimonialCollections"],
       });
     },
     onError: (error) => {
-      showErrorToast("Error creating collection", error.message);
+      showErrorToast("Error creating collection", error.message, <IconX />);
     },
   });
 }
@@ -65,13 +71,17 @@ export function useUpdateCollection(collectionId) {
   return useMutation({
     mutationFn: updateTestimonialCollection,
     onSuccess: () => {
-      showSuccessToast("Collection updated", "update-collection");
+      showSuccessToast(
+        "Collection updated",
+        "update-collection",
+        <IconCheck />,
+      );
       queryClient.invalidateQueries({
         queryKey: ["alltestimonialsbyCollection", collectionId],
       });
     },
     onError: (error) => {
-      showErrorToast("Error updating collection", error.message);
+      showErrorToast("Error updating collection", error.message, <IconX />);
     },
   });
 }
@@ -81,13 +91,17 @@ export function useDeleteTestimonialsFromCollections(collectionId) {
   return useMutation({
     mutationFn: deleteTestimonialsFromCollection,
     onSuccess: () => {
-      showSuccessToast("Testimonials deleted", "update-collection");
+      showSuccessToast(
+        "Testimonials deleted",
+        "update-collection",
+        <IconCheck />,
+      );
       queryClient.invalidateQueries({
         queryKey: ["alltestimonialsbyCollection", collectionId],
       });
     },
     onError: (error) => {
-      showErrorToast("Error deleting collection", error.message);
+      showErrorToast("Error deleting collection", error.message, <IconX />);
     },
   });
 }

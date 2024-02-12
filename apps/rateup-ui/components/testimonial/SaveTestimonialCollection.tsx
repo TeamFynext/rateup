@@ -9,6 +9,7 @@ import { useCreateTestimonialCollection } from "../../backend/testimonials/testi
 import { useSurvey } from "../../backend/surveys/surveys.query";
 import { defaultTestimonialStyle } from "../../utils/testimonial";
 import { useRouter } from "next/router";
+import { notifications } from "@mantine/notifications";
 
 const SaveTestimonialCollection = ({ opened, close, selectedSurvey }) => {
   const form = useForm({
@@ -30,6 +31,14 @@ const SaveTestimonialCollection = ({ opened, close, selectedSurvey }) => {
   const saveCollection = useCreateTestimonialCollection(selectedSurvey);
   const onSubmit = () => {
     if (form.validate().hasErrors) return;
+    notifications.show({
+      id: "create-collection",
+      loading: true,
+      title: "Creating survey..",
+      message: `Hold on, your collection is getting created...`,
+      autoClose: false,
+      withCloseButton: true,
+    });
     saveCollection.mutate(form.values, {
       onSuccess: (data) => {
         close();
