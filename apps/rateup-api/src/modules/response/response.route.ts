@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { $Rref } from "./response.schema";
 import {
   deleteResponseHandler,
+  generateResponseHandler,
   getAllResponsesHandler,
   getResponsesHandler,
   resetResponsesHandler,
@@ -22,10 +23,22 @@ export async function responseRoutes(server: FastifyInstance) {
         params: $Rref("getResponsesParamsSchema"),
       },
     },
-    getResponsesHandler
+    getResponsesHandler,
   );
   //route dedcicated for getting all responses for a survey including all teams
   server.get("/all/:surveyId", getAllResponsesHandler);
+
+  //generate response data
+  server.post(
+    "/generate",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      schema: {
+        body: $Rref("generateBodySchema"),
+      },
+    },
+    generateResponseHandler,
+  );
 
   //to reset survey responses & stats
   server.delete(
@@ -36,7 +49,7 @@ export async function responseRoutes(server: FastifyInstance) {
         params: $Rref("getResponsesParamsSchema"),
       },
     },
-    resetResponsesHandler
+    resetResponsesHandler,
   );
 
   //to delete single response
@@ -48,6 +61,6 @@ export async function responseRoutes(server: FastifyInstance) {
         params: $Rref("deleteResponseParamsSchema"),
       },
     },
-    deleteResponseHandler
+    deleteResponseHandler,
   );
 }

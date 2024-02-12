@@ -2,7 +2,8 @@ import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunct
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail";
 import prisma from "../../utils/prisma";
-import { CreateResponseInput } from "./response.schema";
+import { generateResponseData } from "../../utils/survey/response.data";
+import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
@@ -192,3 +193,25 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
   }
   return "response";
 }
+
+export const generateResponse = async (body: GenerateBodyInput) => {
+  let data: any = [];
+  const survey = await prisma.survey.findFirst({
+    where: {
+      id: body.surveyId,
+    },
+    select: {
+      questions: true,
+      languages: true,
+      type: true,
+    },
+  });
+
+  for (let index = 0; index < body.batchSize; index++) {
+    data.push(generateResponseData(body.surveyTeamMapId, survey));
+  }
+  await prisma.surveyResponse.createMany({
+    data,
+  });
+  return data;
+};
