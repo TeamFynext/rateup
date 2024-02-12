@@ -314,13 +314,25 @@ export const getNewScreenObj = ({
 };
 // We need to pass the draft of immer(used useImmer as state in EditFlow).
 
-export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson) => {
+export const updateFlowJsonNavigationAndDataPassing = (
+  draft: WaFlowJson,
+  dbFlow: DbFlow,
+) => {
   let screenData = null;
   let previousPayloadData = null;
 
+  let routing_model = {};
+
   const screens = draft.screens;
+  const flowHasLogic = screens.some((screen) => !!dbFlow.logicJumps[screen.id]);
+
   screens.forEach((screen, currentIndex) => {
+    routing_model[screen.id] = draft.screens
+      .slice(currentIndex + 1)
+      .map((s) => s.id);
+
     delete screen["terminal"];
+    delete screen["success"];
     if (screenData) {
       screen.data = screenData;
     } else {
@@ -343,46 +355,62 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson) => {
     );
     if (currentScreenIsNotLast) {
       footerObject["on-click-action"] = {
-        name: "navigate",
-        next: {
-          type: "screen",
-          name: screens[currentIndex + 1].id,
-        },
+        name: flowHasLogic ? "data_exchange" : "navigate",
+        next: flowHasLogic
+          ? undefined
+          : {
+              type: "screen",
+              name: screens[currentIndex + 1].id,
+            },
         payload: { ...currentScreenPayload, ...previousPayloadData },
       };
-      const payloadToNextScreen = formElements.reduce(
-        (prev, fe) => ({
-          ...prev,
-          [fe.name]: `\${data.${fe.name}}`,
-        }),
-        {},
-      );
+      const payloadToNextScreen = flowHasLogic
+        ? {}
+        : formElements.reduce(
+            (prev, fe) => ({
+              ...prev,
+              [fe.name]: `\${data.${fe.name}}`,
+            }),
+            {},
+          );
       previousPayloadData = {
         ...previousPayloadData,
         ...payloadToNextScreen,
       };
-      const screenDataForNextScreen = formElements.reduce(
-        (prev, fe) => ({
-          ...prev,
-          [fe.name]: getScreenDataForFormElement(fe),
-        }),
-        {},
-      );
+      const screenDataForNextScreen = flowHasLogic
+        ? {}
+        : formElements.reduce(
+            (prev, fe) => ({
+              ...prev,
+              [fe.name]: getScreenDataForFormElement(fe),
+            }),
+            {},
+          );
       screenData = {
         ...screenData,
         ...screenDataForNextScreen,
       };
-    } else if (currentIndex === screens.length - 1) {
+    } else {
       screen["terminal"] = true;
-      footerObject["on-click-action"] = {
-        name: "complete",
-        payload: {
-          ...currentScreenPayload,
-          ...previousPayloadData,
-        },
-      };
+      footerObject["on-click-action"] = flowHasLogic
+        ? {
+            name: "data_exchange",
+            payload: {
+              ...currentScreenPayload,
+              ...previousPayloadData,
+            },
+          }
+        : {
+            name: "complete",
+            payload: {
+              ...currentScreenPayload,
+              ...previousPayloadData,
+            },
+          };
     }
   });
+  draft.routing_model = flowHasLogic ? routing_model : undefined;
+  draft.data_api_version = flowHasLogic ? "3.0" : undefined;
 };
 function getScreenDataForFormElement(fe: WaFlowFormElement): {
   type: string;

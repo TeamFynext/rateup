@@ -1,9 +1,8 @@
 import { Box, Grid } from "@mantine/core";
 import styles from "./FlowCardsList.module.css";
 import FlowCard from "../FlowCard";
-import { WaFlow } from "../../../../types/global";
 
-function FlowCardsList({ flows }: { flows: WaFlow[] }) {
+function FlowCardsList({ flows }: { flows: DbFlow[] }) {
   return (
     <Grid className={styles["flows-cards-div"]}>
       {flows.map(({ dbFlowId, name, status, createdAt }) => {

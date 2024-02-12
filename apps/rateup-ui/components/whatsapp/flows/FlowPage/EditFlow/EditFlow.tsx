@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Tooltip, useMantineTheme } from "@mantine/core";
+import { ActionIcon, Box, Tooltip } from "@mantine/core";
 import FlowScreensList from "../FlowScreensList";
 import { useContext, useState } from "react";
 import styles from "./EditFlow.module.css";
@@ -31,9 +31,9 @@ import {
   getQuestionFromFlowFormElementName,
   getQuestionIdFromFlowFormElementName,
 } from "../../../../../utils/whatsapp/flow.utils";
-import { get } from "http";
 import { PreviewPanel } from "../../Preview/PreviewPanel";
 import { WaFlowJson } from "../../../../../types/global";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 
 enum EditFlowRightPanel {
   ElementEditor = "element-editor",
@@ -58,6 +58,7 @@ function EditFlow() {
   } = useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
 
   const deleteQuestionMutation = useQuestionDeleteMutation(survey.id);
 
@@ -78,7 +79,7 @@ function EditFlow() {
       screenToBeEdited.layout.children
         .find((se) => se.type === "Form")
         .children.push(questionElement);
-      updateFlowJsonNavigationAndDataPassing(draft);
+      updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
     setSelectedFormElementId(questionElement.id);
     setBlankQuestion(null);
@@ -105,7 +106,7 @@ function EditFlow() {
         (q) => q.name === questionElement.name,
       );
       form.children[qIndex] = questionElement;
-      updateFlowJsonNavigationAndDataPassing(draft);
+      updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
   }
 
@@ -135,7 +136,7 @@ function EditFlow() {
         screenToBeEdited.layout.children
           .find((se) => se.type === "Form")
           .children.push(newElement);
-        updateFlowJsonNavigationAndDataPassing(draft);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       });
       setSelectedFormElementId(newElement.id);
       setActiveEditor(EditFlowRightPanel.ElementEditor);
@@ -193,7 +194,7 @@ function EditFlow() {
           (c) => c.name === fe.name,
         );
         formElements.children.splice(elementIndex, 1);
-        updateFlowJsonNavigationAndDataPassing(draft);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       });
       // deleting element from map
       updateMap((draft) => {
@@ -214,7 +215,7 @@ function EditFlow() {
           (c) => c.id === fe.id,
         );
         formElements.children.splice(elementIndex, 1);
-        updateFlowJsonNavigationAndDataPassing(draft);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       });
     }
   }
@@ -259,7 +260,6 @@ function EditFlow() {
             key={selectedQuestion.id}
             question={selectedQuestion}
             surveyId={survey.id}
-            setActiveTab={() => {}}
             setSelectedLanguage={() => {}}
             surveyLanguages={["en"]}
             onCreated={handleNewQuestionCreated}

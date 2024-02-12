@@ -49,6 +49,8 @@ import {
   WaFlowFormElementType,
 } from "../../../../../types/enums";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { useRouter } from "next/router";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -71,14 +73,13 @@ function ScreenListItem({
     updateFlowJson,
     map,
     updateMap,
-    selectedLang,
     selectedFormElementId,
     setSelectedFormElementId,
     updateSurvey,
-    flowJson,
-    selectedScreenId,
   } = useContext(EditFlowContext);
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
 
   const elements = getFlowFormElementsFromScreen(screen);
@@ -97,7 +98,7 @@ function ScreenListItem({
       });
       const screenIndex = draft.screens.findIndex((s) => s.id === screen.id);
       draft.screens.splice(screenIndex, 1);
-      updateFlowJsonNavigationAndDataPassing(draft);
+      updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
     const feNames = getFlowFormElementsFromScreen(screen, true).map(
       (fe) => fe.name,
@@ -110,7 +111,6 @@ function ScreenListItem({
   };
 
   if (!survey) return null;
-  const questions = getQuestionsFromScreen(screen, survey as Survey, map);
 
   function updateScreenTitle(title: string) {
     updateFlowJson((draft) => {
