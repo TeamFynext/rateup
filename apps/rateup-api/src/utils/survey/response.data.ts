@@ -23,21 +23,23 @@ const getResponseFromQuestion = (question = []) => {
     switch (data.type as QuestionType) {
       case QuestionType.Contact:
         const features = data?.features;
-        if (Array.isArray(features) && features.length > 0) {
-          response = {
-            ...(features[0]?.name?.isEnabled && {
-              name: faker.person.fullName(),
-            }),
-            ...(features[0]?.email?.isEnabled && {
-              email: faker.internet.email(),
-            }),
-            ...(features[0]?.phone?.isEnabled && {
-              phone: faker.phone.number(),
-            }),
-          };
-        } else {
-          response = {};
-        }
+
+        response = {
+          ...(Object.values(features as { name: { isEnabled: boolean } }[])?.[0]
+            ?.name?.isEnabled && {
+            name: faker.person.fullName(),
+          }),
+          ...(Object.values(
+            features as { email: { isEnabled: boolean } }[],
+          )?.[0]?.email?.isEnabled && {
+            email: faker.internet.email(),
+          }),
+          ...(Object.values(
+            features as { phone: { isEnabled: boolean } }[],
+          )?.[0]?.phone?.isEnabled && {
+            phone: faker.phone.number(),
+          }),
+        };
         break;
       case QuestionType.Rating:
         response = faker.number.int({ min: 1, max: 5 });
