@@ -427,6 +427,7 @@ export const handleDecryptedFlowRequest = async (
       return {
         version,
         screen: initialScreen,
+        data: {},
       };
     }
 
@@ -547,6 +548,7 @@ export const handleDecryptedFlowRequest = async (
       return {
         version,
         screen: nextScreen,
+        data: {},
       };
     }
   } catch (error) {
