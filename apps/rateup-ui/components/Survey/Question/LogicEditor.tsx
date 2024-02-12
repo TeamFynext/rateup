@@ -35,6 +35,10 @@ import {
 } from "../../Button/RateupButtons";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useListState } from "@mantine/hooks";
+import {
+  getConditions,
+  getResponses,
+} from "../../../utils/survey/logic/logic.utils";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -137,100 +141,6 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   );
 };
 
-const OpinionResponse = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
-const RatingResponse = ["1", "2", "3", "4", "5"];
-
-function getResponses(
-  question: Question,
-  selectedLanguage: string,
-): Array<string | { label: string; value: string }> {
-  try {
-    switch (question.type) {
-      case Q.LD:
-        return Object.values(LDResponse);
-      case Q.MCQ:
-      case Q.MSQ:
-      case Q.DDSS:
-      case Q.DDMS:
-      case Q.CustomNPS:
-        return (
-          question.choices[selectedLanguage].map((choice, index) => ({
-            label: choice.value,
-            value: index.toString(),
-          })) || []
-        );
-      case Q.YN:
-        return Object.values(YNResponse);
-      case Q.Opinion:
-        return OpinionResponse;
-      case Q.Rating:
-        return RatingResponse;
-      case Q.Smiley:
-        return Object.values(SmileyResponse);
-      default:
-        throw new Error("Logic not implemented for this question type");
-    }
-  } catch (e) {
-    console.log(e);
-    return [];
-  }
-}
-
-function getConditions(qType: QuestionType): Array<any> {
-  switch (qType) {
-    case Q.LD:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
-    case Q.MCQ:
-    case Q.DDSS:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.IncludesNoneOf,
-        LogicCondition.IncludesAnyOf,
-        LogicCondition.Submitted,
-      ];
-    case Q.YN:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
-    case Q.Opinion:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
-    case Q.Rating:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
-    case Q.Smiley:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
-    case Q.MSQ:
-    case Q.DDMS:
-      return [
-        LogicCondition.IncludesNoneOf,
-        LogicCondition.IncludesAnyOf,
-        LogicCondition.IncludesAllOf,
-        LogicCondition.Submitted,
-      ];
-    default:
-      throw new Error("Logic not implemented for this question type");
-  }
-}
-
-// create props for below component
 interface ConditionBlockProps {
   selectedQ: Question;
   questions: Array<Question>;

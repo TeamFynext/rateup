@@ -2,6 +2,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   deleteResponse,
+  generateResponse,
   getAllResponses,
   getResponses,
   resetResponsesStats,
@@ -115,6 +116,44 @@ export function useDeleteResponse(
         autoClose: 3000,
       });
       setIsDeleting(false);
+    },
+  });
+}
+
+export function useGenerateResponse(surveyId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      surveyId: string;
+      surveyTeamMapId: string;
+      batchSize: number;
+    }) => generateResponse(data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["responses"] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
+
+      notifications.update({
+        id: "generateResponse",
+        loading: false,
+        color: "green",
+        title: "Response Generate Success",
+        message: "Generate Response successfully",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      notifications.update({
+        id: "generateResponse",
+        color: "red",
+        loading: false,
+        title: "Failed Response Generate",
+        message: error.message,
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
     },
   });
 }

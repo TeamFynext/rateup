@@ -4,13 +4,17 @@ import { Updater } from "use-immer";
 interface IEditFlowContext {
   flowJson: WaFlowJson;
   updateFlowJson: Updater<WaFlowJson>;
+
   map: WaFlowMap;
   updateMap: Updater<WaFlowMap>;
+
   survey: Survey;
   updateSurvey: Updater<Survey>;
+
   selectedLang: string;
   selectedFormElementId: string;
   setSelectedFormElementId: (id: string) => void;
+
   selectedScreenId: string;
   setSelectedScreenId: (screenId: string) => void;
 }

@@ -8,6 +8,7 @@ import {
   Badge,
   Image,
   ScrollArea,
+  Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
@@ -41,23 +42,64 @@ import {
 } from "../../../whatsappConfig";
 import { WaQuestionExtraProps } from "../../../surveys/WaQuestionDetailedView";
 import { EditFlowContext } from "./EditFlowContext";
+import { FlowLogicEditor } from "./FlowLogicEditor";
 
 interface QuestionDetailedViewProps {
   question: Question;
-  setActiveTab: (tab: QuestionTabsEnum) => void;
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   surveyId: string;
   onCreated: (q: Question) => void;
 }
+
+enum EditorType {
+  LogicEditor = "logic-editor",
+  GoogleReviewEditor = "google-review-editor",
+  ElementEditor = "element-editor",
+}
 export function FlowQuestionDetailedView({
   question,
-  setActiveTab,
   surveyLanguages,
   setSelectedLanguage,
   surveyId,
   onCreated,
 }: QuestionDetailedViewProps) {
+  const [activeEditor, setActiveEditor] = useState<EditorType>(
+    EditorType.ElementEditor,
+  );
+  switch (activeEditor) {
+    case EditorType.ElementEditor:
+      return (
+        <ElementEditor
+          question={question}
+          surveyLanguages={surveyLanguages}
+          setSelectedLanguage={setSelectedLanguage}
+          surveyId={surveyId}
+          onCreated={onCreated}
+          setActiveTab={setActiveEditor}
+        />
+      );
+    case EditorType.LogicEditor:
+      return (
+        <FlowLogicEditor
+          afterSave={() => setActiveEditor(EditorType.ElementEditor)}
+        />
+      );
+  }
+}
+
+interface ElementEditorProps extends QuestionDetailedViewProps {
+  setActiveTab: (tab: EditorType) => void;
+}
+
+function ElementEditor({
+  question,
+  surveyLanguages,
+  setSelectedLanguage,
+  surveyId,
+  onCreated,
+  setActiveTab,
+}: ElementEditorProps) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { flowJson } = useContext(EditFlowContext);
@@ -178,7 +220,7 @@ export function FlowQuestionDetailedView({
               variant="unstyled"
               autosize
               maxRows={3}
-              placeholder="Enter question title here *"
+              placeholder="Enter question title here"
               {...form.getInputProps(`title.${selectedLanguage}`)}
               value={form.values.title[selectedLanguage]}
             />
@@ -196,7 +238,7 @@ export function FlowQuestionDetailedView({
             />
             <Textarea
               variant="unstyled"
-              placeholder="Enter question label here"
+              placeholder="Enter question label here *"
               {...form.getInputProps(`label.${selectedLanguage}`)}
               value={form.values.label[selectedLanguage]}
               styles={{
@@ -235,8 +277,7 @@ export function FlowQuestionDetailedView({
                 color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
-                  save === "saved" &&
-                    setActiveTab(QuestionTabsEnum.LogicEditor);
+                  save === "saved" && setActiveTab(EditorType.LogicEditor);
                 }}
               />
             )}
@@ -249,8 +290,7 @@ export function FlowQuestionDetailedView({
                 color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
-                  save === "saved" &&
-                    setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                  save === "saved" && setActiveTab(EditorType.ElementEditor);
                 }}
               />
             )}

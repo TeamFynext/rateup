@@ -1,6 +1,7 @@
 import {
   IconBusinessplan,
   IconCreditCard,
+  IconDatabasePlus,
   IconListDetails,
   IconPremiumRights,
   IconWallet,
@@ -43,5 +44,10 @@ export const adminNavItems = [
     Icon: IconBusinessplan,
     label: "RateUp Plans",
     href: "/admin/rateup",
+  },
+  {
+    Icon: IconDatabasePlus,
+    label: "Generate data",
+    href: "/admin/generate",
   },
 ];

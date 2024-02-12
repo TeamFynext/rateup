@@ -44,3 +44,11 @@ export async function deleteResponse(id: string, surveyTeamMapId: string) {
   );
   return res.data;
 }
+type generateResponseType = {
+  surveyId: string;
+  surveyTeamMapId: string;
+  batchSize: number;
+};
+export async function generateResponse(data: generateResponseType) {
+  return await axiosClient.post(`${RESPONSE_URL}/generate`, data);
+}
