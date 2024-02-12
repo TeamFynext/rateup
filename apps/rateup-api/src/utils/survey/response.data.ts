@@ -1,5 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { QuestionType } from "../../types/enums";
+import {
+  LDResponse,
+  QuestionType,
+  SmileyResponse,
+  YNResponse,
+} from "../../types/enums";
 import { ResponsePlatform } from "@prisma/client";
 
 export const generateResponseData = (surveyTeamMapId, survey) => {
@@ -46,15 +51,15 @@ const getResponseFromQuestion = (question = []) => {
         break;
 
       case QuestionType.Smiley:
-        response = faker.number.int({ min: 1, max: 5 });
+        response = faker.helpers.arrayElement(Object.values(SmileyResponse));
         break;
 
       case QuestionType.LD:
-        response = faker.helpers.arrayElement(["LIKE", "DISLIKE"]);
+        response = faker.helpers.arrayElement(Object.values(LDResponse));
         break;
 
       case QuestionType.YN:
-        response = faker.helpers.arrayElement(["YES", "NO"]);
+        response = faker.helpers.arrayElement(Object.values(YNResponse));
         break;
 
       case QuestionType.Opinion:
