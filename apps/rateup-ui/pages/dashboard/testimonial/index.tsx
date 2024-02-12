@@ -144,7 +144,7 @@ export default function () {
               <RadioGroup value={selectedSurvey} onChange={setSelectedSurvey}>
                 <SimpleGrid cols={3}>
                   {filteredSurveys?.map((survey) => (
-                    <Stack pos={"relative"}>
+                    <Stack pos={"relative"} key={survey?.id}>
                       {enableSelect && (
                         <Radio
                           size="lg"
@@ -201,7 +201,7 @@ export default function () {
               >
                 <SimpleGrid cols={3}>
                   {filteredCollections?.map((collection) => (
-                    <Stack pos={"relative"}>
+                    <Stack pos={"relative"} key={collection?.id}>
                       {enableSelect && (
                         <Radio
                           size="lg"

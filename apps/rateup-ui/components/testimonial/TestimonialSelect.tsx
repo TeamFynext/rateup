@@ -98,7 +98,7 @@ const TestimonialSelect = ({
             (t) => t?.id === testimonial?.id,
           );
           return (
-            <Stack pos={"relative"}>
+            <Stack pos={"relative"} key={testimonial?.id}>
               <Checkbox
                 checked={isSelected}
                 onChange={(e) => {

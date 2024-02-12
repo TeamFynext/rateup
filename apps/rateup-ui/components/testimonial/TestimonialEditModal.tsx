@@ -248,7 +248,7 @@ const TestimonialEditModal = ({
               <Stack w={470}>
                 <Title order={3}>Change Font</Title>
                 {fonts.map((f) => (
-                  <Group justify="space-between">
+                  <Group justify="space-between" key={f?.name}>
                     <Text>{f.name}</Text>
                     <Group gap={"xs"}>
                       <ContainedColorInput
@@ -301,8 +301,8 @@ const TestimonialEditModal = ({
                         slidesToScroll={1}
                         slideGap={"xs"}
                       >
-                        {Array.apply(null, { length: 3 }).map((e) => (
-                          <Carousel.Slide>
+                        {Array.apply(null, { length: 3 }).map((e, index) => (
+                          <Carousel.Slide key={index}>
                             <Box
                               bg={"#E2E5ED"}
                               h={100}
@@ -323,12 +323,13 @@ const TestimonialEditModal = ({
                         spacing={"md"}
                         verticalSpacing={"sm"}
                       >
-                        {Array.apply(null, { length: 8 }).map((e) => (
+                        {Array.apply(null, { length: 8 }).map((e, index) => (
                           <Box
                             bg={"#E2E5ED"}
                             h={80}
                             w={100}
                             style={{ borderRadius: "5px" }}
+                            key={index}
                           ></Box>
                         ))}
                       </SimpleGrid>

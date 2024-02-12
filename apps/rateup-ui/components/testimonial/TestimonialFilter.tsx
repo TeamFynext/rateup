@@ -72,7 +72,7 @@ const TestimonialFilter = ({
                   multiple={false}
                 >
                   {collections?.map((c) => (
-                    <Chip value={c?.value}>
+                    <Chip value={c?.value} key={c?.value}>
                       <Text w={200}>{c?.label}</Text>
                     </Chip>
                   ))}

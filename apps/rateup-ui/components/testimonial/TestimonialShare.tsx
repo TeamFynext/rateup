@@ -58,6 +58,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
           <TestimonialCard
             testimonial={testimonial}
             currentStyle={currentStyle}
+            key={testimonial?.id}
           />
         ))}
       </SimpleGrid>
