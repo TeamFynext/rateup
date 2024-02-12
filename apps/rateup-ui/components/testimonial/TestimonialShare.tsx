@@ -10,6 +10,7 @@ import {
   Title,
   Text,
   Center,
+  Image,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
@@ -98,7 +99,7 @@ const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             align="center"
             style={{ borderRadius: "10px" }}
           >
-            <Group gap={1}>
+            <Group gap={"xs"}>
               <Stack gap={0}>
                 <Title fw={400}>Share Your Testimonials</Title>
                 <Title order={5} fw={400}>
@@ -107,7 +108,7 @@ const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
                   website
                 </Title>
               </Stack>
-              <IconConfetti color="red" size={"20px"} />
+              <Image src={`../../images/Party Svg Icon.svg`} w={60} h={60} />
             </Group>
           </Stack>
           <Stack px={100} py={"xl"}>
