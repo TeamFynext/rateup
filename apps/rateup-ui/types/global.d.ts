@@ -56,6 +56,7 @@ declare global {
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
     tnc?: TNC;
+    enableNpsAnalytics?: boolean;
   }
   type WaSectionsType = Array<{
     title?: string;

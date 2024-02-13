@@ -13,10 +13,12 @@ export function getImageUrl(
     return url;
   }
   if (unsplashImage)
-    return `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${imageObject}`;
+    return encodeURI(`${process.env.NEXT_PUBLIC_UNSPLASH_URL}${imageObject}`);
 
   if (imageObject) {
-    return `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${imageObject}`;
+    return encodeURI(
+      `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${imageObject}`,
+    );
   }
   return "";
 }

@@ -445,7 +445,7 @@ function Choice({
         variant="transparent"
         onClick={open}
         size={"sm"}
-        disabled={!hasResponse}
+        disabled={hasResponse}
       >
         <IconEdit />
       </ActionIcon>

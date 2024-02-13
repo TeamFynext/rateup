@@ -48,6 +48,7 @@ import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import ContactExtraProps from "./ContactExtraProps";
 import TncExtraProps from "./TncExtraProps";
 import styles from "./QuestionDetailedView.module.css";
+import { NPSQuestions } from "../../../utils/constants";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -111,6 +112,7 @@ export function QuestionDetailedView({
           setDeleteFileLoading(false);
           resetImage();
         }
+
         // Checking if its a new question
         if (!question.id) {
           // Creating new question
@@ -222,9 +224,20 @@ export function QuestionDetailedView({
               label="Required"
               color="var(--tertiary-color)"
               fw={600}
-              mr="100px"
+              mr={!NPSQuestions.includes(question?.type) && "100px"}
               {...form.getInputProps("required", { type: "checkbox" })}
             />
+            {NPSQuestions.includes(question?.type) && (
+              <Checkbox
+                label="Enable Nps Analytics"
+                color="var(--tertiary-color)"
+                fw={600}
+                {...form.getInputProps("enableNpsAnalytics", {
+                  type: "checkbox",
+                })}
+              />
+            )}
+
             {logicSupportedTypes.includes(question?.type) && (
               <RateupButtonSecondary
                 title={"Logic Jump"}
