@@ -65,7 +65,7 @@ export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,
   type = SurveyType.Web,
-): Omit<Question, "id"> => {
+): Omit<Question, "id"> & { enableNpsAnalytics?: boolean } => {
   const emptyText = {};
   languages.forEach((lang) => {
     emptyText[lang] = "";
@@ -78,6 +78,7 @@ export const getInitialQuestionValues = (
         ? { ...emptyText, ...question?.label }
         : undefined,
     required: question?.required,
+    enableNpsAnalytics: question?.enableNpsAnalytics,
     type: question?.type,
     choices: question?.choices,
     features: question?.features,

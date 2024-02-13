@@ -54,6 +54,7 @@ const GenerateData = () => {
           disabled={surveyFormatedData?.length === 0}
           required
           allowDeselect={false}
+          searchable
           data={surveyFormatedData}
           onChange={(value) => setSelectedSurveyId(value)}
         />
