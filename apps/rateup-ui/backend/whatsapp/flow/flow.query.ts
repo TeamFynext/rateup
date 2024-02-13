@@ -14,7 +14,7 @@ import {
   publishFlow,
   deprecateFlow,
 } from "./flow.api";
-import { showSuccessToast } from "../../../utils/notifications";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export const useWaFlowsFromDb = () =>
   useQuery({
@@ -74,7 +74,7 @@ export const useImportFlowsMutation = () => {
       showSuccessToast("Flows Imported Successfully");
     },
     onError: () => {
-      showSuccessToast("Error importing flows");
+      showErrorToast("Error importing flows");
     },
   });
 };
@@ -89,7 +89,7 @@ export const useCreateFlowMutation = () => {
       showSuccessToast("Flow Created Successfully");
     },
     onError: () => {
-      showSuccessToast("Error creating flows");
+      showErrorToast("Error creating flows");
     },
   });
 };
@@ -105,7 +105,7 @@ export const useUpdateFlowMutation = () => {
       qc.invalidateQueries({ queryKey: ["surveys"] });
     },
     onError: () => {
-      showSuccessToast("Error saving flows");
+      showErrorToast("Error saving flows");
     },
   });
 };
@@ -120,7 +120,7 @@ export const useDeleteFlowMutation = () => {
       showSuccessToast("Flow Deleted Successfully");
     },
     onError: () => {
-      showSuccessToast("Error deleting flows");
+      showErrorToast("Error deleting flows");
     },
   });
 };
@@ -134,7 +134,7 @@ export const usePublishFlowMutation = () => {
       showSuccessToast("Flow Published Successfully");
     },
     onError: () => {
-      showSuccessToast("Error publishing flows");
+      showErrorToast("Error publishing flows");
     },
   });
 };
@@ -148,7 +148,7 @@ export const useDeprecateFlowMutation = () => {
       showSuccessToast("Flow Deprecated Successfully");
     },
     onError: () => {
-      showSuccessToast("Error deprecating flows");
+      showErrorToast("Error deprecating flows");
     },
   });
 };
