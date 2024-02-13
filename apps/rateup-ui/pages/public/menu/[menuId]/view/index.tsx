@@ -160,7 +160,7 @@ export default function ({ fullMenu, menuBanner }) {
         ) : (
           <CreditsCard
             enableCredits={
-              !!fullMenu.menuLanding?.unsplashImage[
+              !!fullMenu.menuLanding?.unsplashImage?.[
                 largeScreen ? "backgroundImage" : "mobileBackgroundImage"
               ]
             }
@@ -174,7 +174,7 @@ export default function ({ fullMenu, menuBanner }) {
                   ? getFileUrlFromKey(
                       encodeURI(backgroundImage),
                       true,
-                      !!fullMenu.menuLanding?.unsplashImage[
+                      !!fullMenu.menuLanding?.unsplashImage?.[
                         largeScreen
                           ? "backgroundImage"
                           : "mobileBackgroundImage"
