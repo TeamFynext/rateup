@@ -39,8 +39,7 @@ export const CreditsCard = ({
           fz={fz}
           w={isMobile ? 120 : "100%"}
           style={{
-            // mixBlendMode: "darken",
-            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5);",
+            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
           }}
         >
           Photo by{" "}
