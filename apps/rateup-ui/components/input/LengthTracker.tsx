@@ -1,7 +1,6 @@
 import { Group, Text } from "@mantine/core";
 
-export function LengthTracker({ string, maxValue }) {
-  const length = string.length;
+export function LengthTracker({ maxValue, length }) {
   return (
     <Group justify="flex-end" miw={"80px"}>
       <Text c="dimmed" fz={".8rem"} pr="sm">

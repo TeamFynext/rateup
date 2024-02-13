@@ -1,11 +1,9 @@
-import { Box, Button, TextInput } from "@mantine/core";
+import { Box, Button } from "@mantine/core";
 import ScreenListItem from "./ScreenListItem";
 import styles from "./FlowScreensList.module.css";
 import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import CreateFlowScreenModal from "./CreateFlowScreenModal";
-import { Updater, useImmer } from "use-immer";
-import { WaFlowJson } from "../../../../../types/global";
 import { useContext } from "react";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import { DragDropContext } from "@hello-pangea/dnd";
@@ -16,6 +14,8 @@ import {
 import { reorder } from "../../../../../utils/questions";
 import { getFlowFormElementsFromScreen } from "../../../../../utils/whatsapp/flow.utils";
 import { WaFlowFormElementType } from "../../../../../types/enums";
+import { FlowMaxScreens } from "../../../whatsappConfig";
+import { showErrorToast } from "../../../../../utils/notifications";
 
 interface FlowScreensListProps {
   onAddElementClick: (screenId: string) => void;
@@ -33,6 +33,14 @@ function FlowScreensList({
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
+
+  function handleCreateScreenClick() {
+    if (flowJson.screens.length >= FlowMaxScreens) {
+      showErrorToast(`You can only have ${FlowMaxScreens} screens`);
+    } else {
+      openCreateFlowScreenModal();
+    }
+  }
 
   function onDragEnd({ destination, source }) {
     if (!destination) return;
@@ -74,7 +82,7 @@ function FlowScreensList({
       <h1 className={styles["heading-h1"]}>Screens</h1>
       <Button
         leftSection={<IconPlus size={"1rem"} />}
-        onClick={openCreateFlowScreenModal}
+        onClick={handleCreateScreenClick}
         mb="sm"
       >
         Add Screen

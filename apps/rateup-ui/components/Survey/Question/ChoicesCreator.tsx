@@ -220,7 +220,10 @@ export function ChoicesCreator({
             }}
             rightSection={
               maxCharCount && (
-                <LengthTracker string={newChoice} maxValue={maxCharCount} />
+                <LengthTracker
+                  length={newChoice.length}
+                  maxValue={maxCharCount}
+                />
               )
             }
             error={inputError}

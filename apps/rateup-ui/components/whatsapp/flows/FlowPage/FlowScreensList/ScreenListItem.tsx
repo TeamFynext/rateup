@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Collapse,
-  Divider,
   Group,
   Paper,
   Stack,
@@ -14,25 +13,17 @@ import {
 import {
   IconChevronDown,
   IconChevronUp,
-  IconEdit,
   IconGripVertical,
   IconTrash,
 } from "@tabler/icons-react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import {
-  getFormObjFromScreenId,
   getScreenObjById,
-  getWaFlowElementIdFromQuestionId,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { EditableText } from "../../../../input/EditableText";
-import {
-  WaFlowFormElement,
-  WaFlowJson,
-  WaFlowScreen,
-} from "../../../../../types/global";
+import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import {
   getFlowElementText,
@@ -40,17 +31,13 @@ import {
   getQuestionsFromScreen,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { useUpdateSurveyMutation } from "../../../../../backend/surveys/surveys.query";
-import {
-  useQuestionDeleteMutation,
-  useReplaceQuestionsMutation,
-} from "../../../../../backend/surveys/questions/questions.query";
-import {
-  QuestionType,
-  WaFlowFormElementType,
-} from "../../../../../types/enums";
+import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
+import { WaFlowFormElementType } from "../../../../../types/enums";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
+import { showErrorToast } from "../../../../../utils/notifications";
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -120,7 +107,14 @@ function ScreenListItem({
   }
 
   function handleAddElementClick() {
-    onAddElementClick(screen.id);
+    const elements = getFlowFormElementsFromScreen(screen);
+    if (elements.length >= FlowMaxElementsPerScreen) {
+      showErrorToast(
+        `Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`,
+      );
+    } else {
+      onAddElementClick(screen.id);
+    }
   }
 
   function handleDeleteFormElement(index: number) {

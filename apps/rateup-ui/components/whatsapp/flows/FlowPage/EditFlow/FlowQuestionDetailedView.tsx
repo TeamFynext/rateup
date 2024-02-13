@@ -9,8 +9,11 @@ import {
   Image,
   ScrollArea,
   Text,
+  TextInput,
+  TextInputProps,
+  Box,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { UseFormReturnType, useForm } from "@mantine/form";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useState, useContext, useEffect } from "react";
 import {
@@ -32,17 +35,17 @@ import {
   RateupButtonSecondary,
   RateupButtonPrimary,
 } from "../../../../Button/RateupButtons";
-import { QuestionTabsEnum } from "../../../surveys/WaEditSurvey";
 import {
-  WA_HEADER_CHAR_LIMIT,
-  WA_BODY_CHAR_LIMIT,
-  WA_FLOW_LABEL_CHAR_LIMIT,
   WA_FLOW_HEADING_CHAR_LIMIT,
   WA_FLOW_BODY_CHAR_LIMIT,
+  getFlowLabelLimit,
+  getFlowOptionsLimit,
 } from "../../../whatsappConfig";
-import { WaQuestionExtraProps } from "../../../surveys/WaQuestionDetailedView";
 import { EditFlowContext } from "./EditFlowContext";
 import { FlowLogicEditor } from "./FlowLogicEditor";
+import { LengthTracker } from "../../../../input/LengthTracker";
+import { questionTypeToFlowFormElementType } from "../../../../../utils/whatsapp/flow.utils";
+import { ChoicesCreator } from "../../../../Survey/Question/ChoicesCreator";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -102,8 +105,7 @@ function ElementEditor({
 }: ElementEditorProps) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const { flowJson } = useContext(EditFlowContext);
-  const [previewOpened, setPreviewOpened] = useState(false);
+  const { flowJson, selectedFormElementId } = useContext(EditFlowContext);
 
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
@@ -111,6 +113,17 @@ function ElementEditor({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
+
+  const labelMaxLength = getFlowLabelLimit(
+    questionTypeToFlowFormElementType(question.type),
+  );
+
+  function validateLabel(value: string) {
+    if (!value) return "Label is required";
+    if (value.trim().length > labelMaxLength) {
+      return `Max ${labelMaxLength} characters allowed`;
+    }
+  }
 
   const form = useForm({
     initialValues: getInitialQuestionValues(
@@ -121,15 +134,18 @@ function ElementEditor({
     validate: {
       title: (title) => {
         const value = title[selectedLanguage];
-        if (value.trim().length > WA_FLOW_LABEL_CHAR_LIMIT) {
-          return `Max ${WA_FLOW_HEADING_CHAR_LIMIT} charecters allowed`;
+        if (value.trim().length > WA_FLOW_HEADING_CHAR_LIMIT) {
+          return `Max ${WA_FLOW_HEADING_CHAR_LIMIT} characters allowed`;
         }
       },
       description: (description) => {
         const value = description[selectedLanguage];
-        if (value.trim().length > WA_HEADER_CHAR_LIMIT) {
-          return `Max ${WA_FLOW_BODY_CHAR_LIMIT} charecters allowed`;
+        if (value.trim().length > WA_FLOW_BODY_CHAR_LIMIT) {
+          return `Max ${WA_FLOW_BODY_CHAR_LIMIT} characters allowed`;
         }
+      },
+      label: (label) => {
+        return validateLabel(label[selectedLanguage]);
       },
     },
   });
@@ -142,15 +158,10 @@ function ElementEditor({
 
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
-    if (
-      (!form.values.description[selectedLanguage] ||
-        form.values.description[selectedLanguage] == "") &&
-      (!form.values.title[selectedLanguage] ||
-        form.values.title[selectedLanguage] == "") &&
-      (!form.values.label[selectedLanguage] ||
-        form.values.label[selectedLanguage] == "")
-    ) {
-      showErrorToast("Atleast one of title, description or label is required");
+    const res = form.validate();
+    console.log(res);
+    if (res.hasErrors) {
+      showErrorToast("Fix errors before saving");
       return "error";
     } else {
       if (incompleteLanguages.length > 0) {
@@ -177,6 +188,11 @@ function ElementEditor({
 
   const isSaving =
     questionCreateMutation.isPending || questionUpdateMutation.isPending;
+
+  const labelInputProps = form.getInputProps(`label.${selectedLanguage}`);
+  // TODO: defer error checking until user has entered some text
+  labelInputProps.error = validateLabel(labelInputProps.value);
+
   return (
     <Stack
       style={{
@@ -194,7 +210,6 @@ function ElementEditor({
           </Badge>
         </Group>
         <Group p={2} gap={2} pr={42}>
-          {/* TODO: Preview button & language-complete status component are overlapping */}
           <Stack
             style={{
               height: "100%",
@@ -222,7 +237,6 @@ function ElementEditor({
               maxRows={3}
               placeholder="Enter question title here"
               {...form.getInputProps(`title.${selectedLanguage}`)}
-              value={form.values.title[selectedLanguage]}
             />
             <Textarea
               variant="unstyled"
@@ -236,19 +250,10 @@ function ElementEditor({
                 },
               }}
             />
-            <Textarea
-              variant="unstyled"
-              placeholder="Enter question label here *"
-              {...form.getInputProps(`label.${selectedLanguage}`)}
-              value={form.values.label[selectedLanguage]}
-              styles={{
-                input: {
-                  fontSize: "1.1rem",
-                  fontWeight: 400, // set custom font size for this TextInput
-                },
-              }}
-            />
-            <WaQuestionExtraProps form={form} question={question} />
+
+            <LabelTextInput {...labelInputProps} maxLength={labelMaxLength} />
+
+            <FlowQuestionExtraProps form={form} question={question} />
           </Stack>
         </Group>
       </ScrollArea>
@@ -312,4 +317,73 @@ function ElementEditor({
       </Stack>
     </Stack>
   );
+}
+
+function LabelTextInput(props: TextInputProps & { maxLength: number }) {
+  return (
+    <TextInput
+      variant="unstyled"
+      placeholder="Enter question label here *"
+      {...props}
+      styles={{
+        input: {
+          fontSize: "1.1rem",
+          fontWeight: 400, // set custom font size for this TextInput
+        },
+      }}
+      rightSection={
+        <LengthTracker
+          length={(props.value as string).length}
+          maxValue={props.maxLength}
+        />
+      }
+      rightSectionProps={{
+        style: {
+          minWidth: "80px",
+        },
+      }}
+    />
+  );
+}
+
+interface ExtraPropsProps {
+  form: UseFormReturnType<any>;
+  question: Question;
+}
+function FlowQuestionExtraProps({ form, question }: ExtraPropsProps) {
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  switch (question.type) {
+    case QuestionType.MCQ:
+    case QuestionType.MSQ:
+    case QuestionType.DDSS:
+    case QuestionType.DDMS:
+    case QuestionType.CustomNPS:
+      const maxChoiceCount = getFlowOptionsLimit(
+        questionTypeToFlowFormElementType(question.type),
+      );
+      return (
+        <Stack gap={0} mt="xl">
+          <Group justify="space-between">
+            <Text fw="bold" c="dimmed">
+              Choices
+            </Text>
+            <Divider style={{ flexGrow: 1 }} />
+            <LengthTracker
+              length={form.values.choices?.[selectedLanguage]?.length || 0}
+              maxValue={maxChoiceCount}
+            />
+          </Group>
+          <Box pl="xs">
+            <ChoicesCreator
+              qId={question.id}
+              form={form}
+              maxCharCount={30}
+              maxChoiceCount={maxChoiceCount}
+            />
+          </Box>
+        </Stack>
+      );
+    default:
+      return null;
+  }
 }

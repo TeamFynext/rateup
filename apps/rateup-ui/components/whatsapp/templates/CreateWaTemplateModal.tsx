@@ -128,7 +128,10 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               placeholder="Name"
               {...form.getInputProps("name")}
               rightSection={
-                <LengthTracker string={form.values.name} maxValue={512} />
+                <LengthTracker
+                  length={form.values.name.length}
+                  maxValue={512}
+                />
               }
               disabled={!!editingItem}
             />
@@ -137,7 +140,10 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               placeholder="Header"
               {...form.getInputProps("header")}
               rightSection={
-                <LengthTracker string={form.values.header} maxValue={60} />
+                <LengthTracker
+                  length={form.values.header.length}
+                  maxValue={60}
+                />
               }
             />
             <ContainedTextArea
@@ -149,7 +155,10 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               maxRows={4}
               {...form.getInputProps("body")}
               rightSection={
-                <LengthTracker string={form.values.body} maxValue={1024} />
+                <LengthTracker
+                  length={form.values.body.length}
+                  maxValue={1024}
+                />
               }
             />
             <ContainedTextField
@@ -157,7 +166,10 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               placeholder="Footer"
               {...form.getInputProps("footer")}
               rightSection={
-                <LengthTracker string={form.values.footer} maxValue={60} />
+                <LengthTracker
+                  length={form.values.footer.length}
+                  maxValue={60}
+                />
               }
             />
             <ContainedTextField
@@ -166,7 +178,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               {...form.getInputProps("declineButton")}
               rightSection={
                 <LengthTracker
-                  string={form.values.declineButton}
+                  length={form.values.declineButton.length}
                   maxValue={25}
                 />
               }
@@ -177,7 +189,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               {...form.getInputProps("acceptButton")}
               rightSection={
                 <LengthTracker
-                  string={form.values.acceptButton}
+                  length={form.values.acceptButton.length}
                   maxValue={25}
                 />
               }
