@@ -1,4 +1,5 @@
 import { Anchor, Box, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import React from "react";
 
 type CreditsCardProps = {
@@ -13,7 +14,7 @@ export const CreditsCard = ({
   url,
   children,
   sx = undefined,
-  fz = 16,
+  fz = 9,
 }: CreditsCardProps) => {
   let params;
   let auther = "";
@@ -23,6 +24,8 @@ export const CreditsCard = ({
     auther = params.get("auther");
     username = params.get("username");
   }
+  const isMobile = useMediaQuery("(max-width: 480px)");
+
   return (
     <Box pos={"relative"} p={0} m={0} w={"100%"} h={"100%"} style={sx}>
       {children}
@@ -32,30 +35,24 @@ export const CreditsCard = ({
           bottom={0}
           left={0}
           c={"white"}
-          px={fz === 16 ? "xs" : 0}
+          px={fz === 9 ? "xs" : 0}
           fz={fz}
+          w={isMobile ? 120 : "100%"}
           style={{
-            background: "rgba( 255, 255, 255, 0.25 )",
-            boxShadow: "0 8px 32px 0 rgba( 31, 38, 135, 0.37 )",
-            backdropFilter: "blur( 4px )",
-            WebkitBackdropFilter: "blur( 4px )",
-            border: "1px solid rgba( 255, 255, 255, 0.18 )",
+            // mixBlendMode: "darken",
+            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5);",
           }}
         >
           Photo by{" "}
           <Anchor
-            href={`${process.env.NEXT_PUBLIC_UNSPLASH_SITE_URL}@${username}`}
+            href={`https://unsplash.com/@${username}`}
             target="_blank"
             fz={fz}
           >
             {auther}
           </Anchor>{" "}
           on{" "}
-          <Anchor
-            href={process.env.NEXT_PUBLIC_UNSPLASH_SITE_URL}
-            target="_blank"
-            fz={fz}
-          >
+          <Anchor href={"https://unsplash.com/"} target="_blank" fz={fz}>
             Unsplash
           </Anchor>
         </Text>
