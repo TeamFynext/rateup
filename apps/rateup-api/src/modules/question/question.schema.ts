@@ -41,6 +41,7 @@ const questionCore = {
   description: z.record(z.string(), z.string()),
   label: z.record(z.string(), z.string()).optional(),
   required: z.boolean().default(false),
+  enableNpsAnalytics: z.boolean().default(false),
   type: z.nativeEnum(QuestionType),
   choices: z
     .record(
