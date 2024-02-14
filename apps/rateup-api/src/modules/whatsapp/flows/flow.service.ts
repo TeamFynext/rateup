@@ -392,14 +392,9 @@ export const handleDecryptedFlowRequest = async (
   decryptedBody,
   dbFlow: WaFlow,
 ) => {
+  const { screen, data, version, action, flow_token } = decryptedBody;
+
   try {
-    const { screen, data, version, action, flow_token } = decryptedBody;
-
-    const session = await getSession(dbFlow.orgId, flow_token);
-    const json = dbFlow.json as unknown as WaFlowJson;
-    const survey = await getSurveyById(dbFlow.surveyId);
-    const questions = survey.questions as unknown as Question[];
-
     log.trace("action: %s", action);
     // handle health check request
     if (action === "ping") {
@@ -420,6 +415,8 @@ export const handleDecryptedFlowRequest = async (
         },
       };
     }
+    const session = await getSession(dbFlow.orgId, flow_token);
+    const json = dbFlow.json as unknown as WaFlowJson;
 
     // handle initial request when opening the flow
     if (action === "INIT") {
@@ -430,6 +427,8 @@ export const handleDecryptedFlowRequest = async (
         data: {},
       };
     }
+    const survey = await getSurveyById(dbFlow.surveyId);
+    const questions = survey.questions as unknown as Question[];
 
     if (action === "data_exchange") {
       // save responses
@@ -552,7 +551,15 @@ export const handleDecryptedFlowRequest = async (
       };
     }
   } catch (error) {
-    console.error("Unhandled request body:", decryptedBody);
+    // TODO: handle error
+    if (error.response?.data) {
+      log.error(
+        "Error in handling flow request. res.data: %o",
+        error.response.data,
+      );
+    } else {
+      log.error("Error in handling flow request: %o", error);
+    }
     throw new Error(
       "Unhandled endpoint request. Make sure you handle the request action & screen logged above.",
     );
