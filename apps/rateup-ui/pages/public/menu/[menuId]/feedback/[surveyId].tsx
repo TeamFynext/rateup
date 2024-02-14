@@ -24,31 +24,51 @@ import { lexend } from "../../../../../utils/fonts";
 import Head from "next/head";
 import { fallbackImage } from "../../../../../utils/constants";
 import { CreditsCard } from "../../../../../components/Card/CreditsCard";
+import { getCookie, setCookie } from "cookies-next";
+import { NextApiRequest, NextApiResponse } from "next";
 
-type MenuProp = {
-  menuId: string;
-  surveyId: string;
-};
+interface ServerSidePropsContext {
+  req: NextApiRequest;
+  res: NextApiResponse;
+  params: {
+    menuId: string;
+    surveyId: string;
+  };
+}
 
-export const getServerSideProps = async (context: { params: MenuProp }) => {
-  const params = context.params;
-
+export const getServerSideProps = async ({
+  req,
+  res,
+  params,
+}: ServerSidePropsContext) => {
   const menuLanding = await getMenuPublicById(params.menuId);
-  await updateMenuVisitedMutation(params.menuId);
+  const pageVisited = getCookie("pageVisited", { req, res });
 
+  if (!pageVisited && !menuLanding?.expiry) {
+    setCookie("pageVisited", "true", {
+      req,
+      res,
+      maxAge: 60 * 60,
+      httpOnly: true,
+    });
+    await updateMenuVisitedMutation(params.menuId);
+  }
   return { props: { menuLanding: menuLanding } };
 };
 
 export default function ({ menuLanding }: { menuLanding: Data }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  if (!menuLanding || !menuLanding?.menu?.isPublished)
+  if (!menuLanding || !menuLanding?.menu?.isPublished || menuLanding?.expiry) {
     return (
       <Stack align="center" h="50vh" justify="space-around">
         <Text size="xl" c="red" fw="600">
-          Menu is not available..!
+          {menuLanding?.expiry
+            ? menuLanding?.expiry
+            : "Menu is not available..!"}
         </Text>
       </Stack>
     );
+  }
   const backgroundImageBorderRadius = largeScreen ? "47px" : "22px";
   const fallbackImageBackround = largeScreen
     ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
