@@ -52,13 +52,10 @@ export async function cloneSurvey(
     where: {
       id: surveyId,
     },
-    include: {
-      WelcomeTheme: true,
-    },
   });
 
   if (survey) {
-    const { id, WelcomeTheme, ...surveyWithoutId } = survey;
+    const { id, ...surveyWithoutId } = survey;
 
     const existingSurveys = await prisma.survey.findMany({
       where: {
@@ -110,27 +107,6 @@ export async function cloneSurvey(
     const newClonedSurvey = await prisma.survey.create({
       data: clonedSurvey,
     });
-
-    let themeData = survey?.WelcomeTheme;
-
-    let addThemeToClonedSurvey = await prisma.welcomeTheme.create({
-      data: {
-        headerText: themeData.headerText,
-        descText: themeData.descText,
-        buttonText: themeData.buttonText,
-        headerStyles: themeData.headerStyles,
-        descStyles: themeData.descStyles,
-        buttonStyles: themeData.buttonStyles,
-        bgStyles: themeData.bgStyles,
-        logoStyles: themeData.logoStyles,
-        surveyId: newClonedSurvey.id,
-        bgUrl: themeData.bgUrl,
-        mobileBgUrl: themeData.mobileBgUrl,
-        bgType: themeData.bgType,
-        logoUrl: themeData.logoUrl,
-      },
-    });
-
     return newClonedSurvey;
   } else {
     return "Survey not found to duplicate";
@@ -478,11 +454,7 @@ export async function getSurveyTemplates(surveyType: string) {
       teamId: teamId,
     },
     include: {
-      survey: {
-        include: {
-          WelcomeTheme: true,
-        },
-      },
+      survey: true,
     },
   });
 

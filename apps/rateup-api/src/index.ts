@@ -57,7 +57,6 @@ async function main() {
       console.error(e);
       process.exit(1);
     });
-  // exportData();
 }
 
 if (require.main === module) {

@@ -18,10 +18,7 @@ import { userRoutes } from "./modules/user/user.route";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
 import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
 import { userSchemas } from "./modules/user/user.schema";
-import { LandingThemeSchema } from "./modules/landingWelcomeTheme/landingTheme.schema";
 import { LandingPageRoutes } from "./modules/landingPage/landingpage.route";
-import { LandingThemeRoutes } from "./modules/landingWelcomeTheme/landingTheme.routes";
-import { LandingThemePublicRoutes } from "./modules/landingWelcomeTheme/landingTheme.public.routes";
 import { menuSchemas } from "./modules/menu/menu.schema";
 import { menuRoutes } from "./modules/menu/menu.route";
 import { menuCategorySchemas } from "./modules/menu/category/category.schema";
@@ -65,7 +62,6 @@ export function registerRoutes(server: FastifyInstance): void {
     uploadSchemas,
     userSchemas,
     landingPageSchemas,
-    LandingThemeSchema,
     menuSchemas,
     menuCategorySchemas,
     menuItemSchemas,
@@ -88,10 +84,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(LandingPageRoutes, { prefix: "api/landingpage" });
   server.register(surveyMenuShareSettingsRoutes, {
     prefix: "api/shareSettings",
-  });
-  server.register(LandingThemeRoutes, { prefix: "api/landingtheme" });
-  server.register(LandingThemePublicRoutes, {
-    prefix: "api/public/landingtheme",
   });
   server.register(questionRoutes, { prefix: "api/question/:surveyId" });
   server.register(userRoutes, { prefix: "api/user" });
