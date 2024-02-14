@@ -69,7 +69,7 @@ const deleteResponseParamsSchema = z.object({
 });
 
 const generateBodySchema = z.object({
-  surveyId: z.string(),
+  surveyTeamMapId: z.string(),
   batchSize: z.number(),
 });
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
