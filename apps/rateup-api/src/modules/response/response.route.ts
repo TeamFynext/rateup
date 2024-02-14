@@ -8,9 +8,9 @@ import {
   resetResponsesHandler,
 } from "./response.controller";
 import { verifyAccess } from "./response.auth";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { checkSession } from "../../utils/checkSession";
+import { assertRootOrg } from "../../utils/auth";
 
 export async function responseRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -32,7 +32,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.post(
     "/generate",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      preHandler: [assertRootOrg],
       schema: {
         body: $Rref("generateBodySchema"),
       },

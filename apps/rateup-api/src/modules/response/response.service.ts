@@ -196,26 +196,25 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
 
 export const generateResponse = async (body: GenerateBodyInput) => {
   let data: any = [];
-  const survey = await prisma.survey.findFirst({
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
     where: {
-      id: body.surveyId,
+      id: body.surveyTeamMapId,
     },
-    select: {
-      questions: true,
-      languages: true,
-      type: true,
+    include: {
+      survey: {
+        select: {
+          questions: true,
+          languages: true,
+          type: true,
+        },
+      },
     },
   });
-  const surveyTeam = await prisma.surveyTeamMap.findMany({
-    where: {
-      surveyId: body.surveyId,
-    },
-  });
-  for (const team of surveyTeam) {
-    for (let index = 0; index < body.batchSize; index++) {
-      data.push(generateResponseData(team.id, survey));
-    }
+
+  for (let index = 0; index < body.batchSize; index++) {
+    data.push(generateResponseData(surveyTeamMap.id, surveyTeamMap.survey));
   }
+  if (data.length === 0) throw new Error("Survey Not Found");
   await prisma.surveyResponse.createMany({
     data,
   });
