@@ -1,37 +1,39 @@
 import {
-  Paper,
-  Text,
-  Image,
-  Group,
-  Center,
-  Title,
-  Stack,
-  Space,
-  SegmentedControl,
-  Button,
-  MantineProvider,
   BackgroundImage,
+  Box,
+  Button,
+  Center,
+  Group,
+  Image,
+  MantineProvider,
+  Paper,
+  Radio,
+  Space,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconChevronRight } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
   useVerifySurveyPwdMutation,
 } from "../../../backend/surveys/surveys.query";
 import QuestionCountContext from "../../../context/QuestionCountContext";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import WelcomePage from "../WelcomePage/WelcomePage";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { notifications } from "@mantine/notifications";
-import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
-import RateupRedirectCard from "../../Card/RateupRedirectCard";
-import { IconChevronRight } from "@tabler/icons-react";
-import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
-import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
-import { getImageUrl } from "../../Survey/SurveyTheme/SurveyTheme.utils";
 import { CreditsCard } from "../../Card/CreditsCard";
+import RateupRedirectCard from "../../Card/RateupRedirectCard";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { getImageUrl } from "../../Survey/SurveyTheme/SurveyTheme.utils";
+import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
+import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
+import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
+import WelcomePage from "../WelcomePage/WelcomePage";
 export const TakeSurveyLayoutWeb = ({
   survey,
   children,
@@ -238,6 +240,7 @@ export const TakeSurveyLayoutWeb = ({
                             languages={survey?.languages}
                             selectedLanguage={selectedLanguage}
                             setSelectedLanguage={setSelectedLanguage}
+                            surveyTheme={surveyTheme}
                           />
                         ) : (
                           selectedLanguage && (
@@ -280,7 +283,6 @@ export const TakeSurveyLayoutWeb = ({
                   </Center>
                 )}
               </Paper>
-
               {!!startClicked && <RateupRedirectCard />}
             </BackgroundImage>
           </CreditsCard>
@@ -290,10 +292,14 @@ export const TakeSurveyLayoutWeb = ({
   );
 };
 
-function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
+function SelectLang({
+  languages,
+  selectedLanguage,
+  setSelectedLanguage,
+  surveyTheme,
+}) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [lang, setLang] = useState(languages[0]);
-
   return (
     <Stack
       justify="space-between"
@@ -301,37 +307,30 @@ function SelectLang({ languages, selectedLanguage, setSelectedLanguage }) {
       style={{ height: isMobile ? "60vh" : "65vh" }}
     >
       <Stack align="center">
-        <Title order={isMobile ? 2 : 1}> let's begin!</Title>
-        <Title order={isMobile ? 2 : 1} fw={100}>
+        <Title order={isMobile ? 2 : 1} style={surveyTheme.title.styles}>
+          Let's begin!
+        </Title>
+        <Title
+          order={isMobile ? 2 : 1}
+          fw={100}
+          style={surveyTheme?.subtitle?.styles}
+        >
           Select a language
         </Title>
       </Stack>
-
-      <SegmentedControl
-        data={languages}
-        placeholder="Select language"
-        value={lang}
-        onChange={setLang}
-        orientation={isMobile ? "vertical" : "horizontal"}
-        color="var(--tertiary-color)"
-        size="md"
-        style={{
-          root: {
-            maxWidth: "60vw",
-          },
-          label: {
-            fontSize: "16px",
-          },
-        }}
-      />
-
+      <Box miw={200}>
+        <Radio.Group value={lang} onChange={setLang} mr={"sm"} w={"100%"}>
+          <SingleSelectCard data={languages} selectedValue={lang} sizeTrim />
+        </Radio.Group>
+      </Box>
       <Group justify="center" mt="xl">
         <Button
           radius={"xl"}
           onClick={() => setSelectedLanguage(lang)}
           size={isMobile ? "sm" : "lg"}
-          color="dark"
+          color="var(--tertiary-color)"
           rightSection={<IconChevronRight />}
+          style={surveyTheme?.button?.styles}
         >
           Start Survey
         </Button>
