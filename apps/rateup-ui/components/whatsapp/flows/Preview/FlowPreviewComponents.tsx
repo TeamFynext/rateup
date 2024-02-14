@@ -219,7 +219,7 @@ export function FlowPreviewContainer({ children, onClose, style }) {
           justifySelf: "end",
         }}
       >
-        Continue
+        Next {/* TODO: make footer button customizable */}
       </Button>
     </Stack>
   );

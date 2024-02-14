@@ -38,6 +38,7 @@ import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
 import { showErrorToast } from "../../../../../utils/notifications";
+import { modals } from "@mantine/modals";
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -70,6 +71,23 @@ function ScreenListItem({
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
 
   const elements = getFlowFormElementsFromScreen(screen);
+
+  const openDeleteModal = () => {
+    modals.openConfirmModal({
+      title: "Delete Screen",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this Screen? It will also delete all
+          the elements in this screen.
+        </Text>
+      ),
+      labels: { confirm: "Yes", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: handleDeleteScreen,
+      onCancel: () => modals.closeAll(),
+    });
+  };
 
   const handleDeleteScreen = () => {
     setSelectedFormElementId(null);
@@ -155,11 +173,7 @@ function ScreenListItem({
         />
         <Group>
           <Tooltip label="Delete Screen">
-            <ActionIcon
-              onClick={handleDeleteScreen}
-              variant="subtle"
-              color="gray"
-            >
+            <ActionIcon onClick={openDeleteModal} variant="subtle" color="gray">
               <IconTrash />
             </ActionIcon>
           </Tooltip>
