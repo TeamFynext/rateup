@@ -5,6 +5,10 @@ import { useForm } from "@mantine/form";
 import { useCallback } from "react";
 import { useCreateFlowMutation } from "../../../../backend/whatsapp/flow/flow.query";
 import { TeamSelector } from "../../../input/TeamSelector";
+import {
+  ContainedMultiSelect,
+  ContainedTextField,
+} from "../../../input/ContainedInput/ContainedInput";
 
 function CreateFlowModal({ opened, onClose }) {
   const form = useForm({
@@ -56,22 +60,15 @@ function CreateFlowModal({ opened, onClose }) {
       }}
     >
       <Box className={styles["create-flow-modal-body"]}>
-        <TextInput
+        <ContainedTextField
           label="Name"
           placeholder="Enter Name"
-          classNames={{
-            label: styles["input-element-label"],
-          }}
           {...form.getInputProps("name")}
         />
-
-        <MultiSelect
+        <ContainedMultiSelect
           label="Categories"
           placeholder="Select Categories"
           data={flowsCategories}
-          classNames={{
-            label: styles["input-element-label"],
-          }}
           {...form.getInputProps("categories")}
         />
         <TeamSelector // TODO: add multi select
