@@ -1,33 +1,19 @@
 import React, { useState } from "react";
 import {
   ContainedNumberInput,
-  ContainedSelection,
+  ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
-import { useSurveys } from "../../../backend/surveys/surveys.query";
-import CenteredSpinner from "../../../components/Loaders/CenteredSpinner";
 import { SimpleGrid, Stack } from "@mantine/core";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { useGenerateResponse } from "../../../backend/surveys/response/response.query";
 import { notifications } from "@mantine/notifications";
 
 const GenerateData = () => {
-  const { data, isPending } = useSurveys(false);
-  const [selectedSurveyId, setSelectedSurveyId] = useState("");
+  const [selectedSurveyTeamMapId, setSelectedSurveyTeamMapId] = useState("");
   const [batchSize, setBatchSize] = useState(1);
-  const generateResponse = useGenerateResponse(selectedSurveyId);
+  const generateResponse = useGenerateResponse(selectedSurveyTeamMapId);
 
-  if (isPending) return <CenteredSpinner />;
-  let surveyFormatedData = [];
-  if (Array.isArray(data)) {
-    surveyFormatedData = data
-      .filter((data) => data.isPublished)
-      .map((survey) => ({
-        value: survey?.id,
-        label: survey.title,
-      }));
-  }
   const handleSubmit = () => {
-    if (!Array.isArray(data)) return;
     notifications.show({
       id: "generateResponse",
       loading: true,
@@ -37,26 +23,17 @@ const GenerateData = () => {
       withCloseButton: false,
     });
     generateResponse.mutate({
-      surveyId: selectedSurveyId,
+      surveyTeamMapId: selectedSurveyTeamMapId,
       batchSize: batchSize,
     });
   };
   return (
     <SimpleGrid cols={{ base: 1, lg: 3 }}>
       <Stack>
-        <ContainedSelection
-          label="Choose a survey"
-          placeholder={
-            surveyFormatedData?.length === 0
-              ? "There is no survay"
-              : "Select survey"
-          }
-          disabled={surveyFormatedData?.length === 0}
-          required
-          allowDeselect={false}
-          searchable
-          data={surveyFormatedData}
-          onChange={(value) => setSelectedSurveyId(value)}
+        <ContainedTextField
+          label={"Enter surveyMapId"}
+          placeholder="Enter a surveyMapId"
+          onChange={(value) => setSelectedSurveyTeamMapId(value?.target?.value)}
         />
         <ContainedNumberInput
           label={"Number of generated data"}
@@ -69,7 +46,7 @@ const GenerateData = () => {
           title="Generate"
           size="md"
           onClick={handleSubmit}
-          disabled={!selectedSurveyId}
+          disabled={!selectedSurveyTeamMapId}
           loading={generateResponse?.isPending}
         />
       </Stack>
