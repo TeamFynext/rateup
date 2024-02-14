@@ -124,7 +124,7 @@ export function useGenerateResponse(surveyId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { surveyId: string; batchSize: number }) =>
+    mutationFn: (data: { surveyTeamMapId: string; batchSize: number }) =>
       generateResponse(data),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
@@ -147,7 +147,7 @@ export function useGenerateResponse(surveyId: string) {
         color: "red",
         loading: false,
         title: "Failed Response Generate",
-        message: error.message,
+        message: error?.response?.data,
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
