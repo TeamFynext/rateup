@@ -76,6 +76,7 @@ const fullMenuPublicResponseSchema = z.object({
       ),
     }),
   ),
+  expiry: z.string().optional(),
   menuLanding: z
     .object({
       headerStyle: z
