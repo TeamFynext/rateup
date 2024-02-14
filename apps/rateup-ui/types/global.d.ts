@@ -525,7 +525,7 @@ declare global {
     createdAt: Date;
     flowId: string;
     name: string;
-    status: string;
+    status: WaFlowStatus;
     json: WaFlowJson;
     map: any;
     logicJumps: {

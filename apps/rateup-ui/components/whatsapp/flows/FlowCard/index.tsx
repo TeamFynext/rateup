@@ -1,4 +1,12 @@
-import { ActionIcon, Badge, Box, Flex, Menu, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Flex,
+  Menu,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import styles from "./FlowCard.module.css";
 import { useRouter } from "next/router";
 import { useDisclosure } from "@mantine/hooks";
@@ -6,8 +14,15 @@ import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { useDeleteFlowMutation } from "../../../../backend/whatsapp/flow/flow.query";
 import { useTimeSince } from "../../../../hooks/timeSince";
+import { WaFlowStatus } from "../../../../types/enums";
 
-function FlowCard({ name, status, dbFlowId, createdAt }) {
+interface FlowCardProps {
+  name: string;
+  status: WaFlowStatus;
+  dbFlowId: string;
+  createdAt: Date;
+}
+function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
   const router = useRouter();
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const deleteMutation = useDeleteFlowMutation();
@@ -49,9 +64,25 @@ function FlowCard({ name, status, dbFlowId, createdAt }) {
                 e.stopPropagation();
               }}
             >
-              <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
-                Delete
-              </Menu.Item>
+              <Tooltip
+                label={
+                  status !== WaFlowStatus.DRAFT
+                    ? "You can only delete flows in DRAFT state"
+                    : "Delete Flow"
+                }
+              >
+                <Box>
+                  {" "}
+                  {/* HackyFix for tooltip not displaying when Menu.Item is disabled. Wrapping it with an extra element seems to fix it @_@ */}
+                  <Menu.Item
+                    leftSection={<IconTrash size={16} />}
+                    onClick={toggle}
+                    disabled={status !== WaFlowStatus.DRAFT}
+                  >
+                    Delete
+                  </Menu.Item>
+                </Box>
+              </Tooltip>
             </Menu.Dropdown>
           </Menu>
         </Flex>
