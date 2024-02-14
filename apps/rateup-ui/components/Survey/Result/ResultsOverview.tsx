@@ -194,17 +194,21 @@ const ResultsOverview = () => {
         },
         csat: csatScore,
         choicesInAllLang: choicesInAllLang,
+        enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
       };
     });
   };
 
   chartData = prepareData(questions, filteredResponsesByTeam);
+  let enablewholeNpsAnalytics =
+    chartData?.filter((item) => item.enableNpsAnalytics === true)?.length > 0;
+
   return (
     <>
       <Stack h={"100%"} p={3}>
         {chartData?.length > 0 ? (
           <Stack>
-            {isAllowedQnsPresent && (
+            {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
                 <Heading subtitle="NPS Overview" />
                 <PaperLayout p={"xl"}>
@@ -218,6 +222,7 @@ const ResultsOverview = () => {
                         item.type === QuestionType.Opinion ||
                         item.type === QuestionType.CustomNPS,
                     )
+                    ?.filter((item) => item.enableNpsAnalytics === true)
                     ?.map((item, index, filteredArray) => (
                       <React.Fragment key={index}>
                         <QuestionPieChart

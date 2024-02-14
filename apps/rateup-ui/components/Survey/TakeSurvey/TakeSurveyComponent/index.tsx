@@ -649,7 +649,7 @@ function submitSurvey({
       //   message: "Survey completed!",
       //   color: "teal",
       // });
-      setIsSavingResponses(false);
+      //setIsSavingResponses(false);
     })
     .catch((e) => {
       console.error(e);

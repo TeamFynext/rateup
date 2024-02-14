@@ -74,11 +74,12 @@ export default function Layout({ children }) {
             className={styles["content-container"]}
             direction={"column"}
             gap="15px"
-            bg={
-              router?.pathname?.toLowerCase().startsWith("/dashboard/menu/")
-                ? "var(--bg-grey-color)"
-                : "initial"
-            }
+            // if we want to change bg color of /dashboard/ urls
+            // bg={
+            //   router?.pathname?.toLowerCase().startsWith("/dashboard/menu/")
+            //     ? "var(--bg-grey-color)"
+            //     : "initial"
+            // }
           >
             <Transition mounted={!focus} transition="slide-down">
               {(transitionStyle) => (

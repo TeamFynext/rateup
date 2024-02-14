@@ -1,18 +1,18 @@
-import React, { useRef } from "react";
 import {
-  UnstyledButton,
   Checkbox,
-  Text,
-  SimpleGrid,
-  Radio,
   Image,
+  Radio,
+  SimpleGrid,
   Stack,
+  Text,
+  UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
-import classes from "./ImageCheckboxes.module.css";
-import { getImageValue } from "../../../../../utils/file-upload/upload";
 import cx from "clsx";
+import React, { useRef } from "react";
+import { getImageValue } from "../../../../../utils/file-upload/upload";
+import classes from "./ImageCheckboxes.module.css";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -130,6 +130,7 @@ export function SingleSelectCard({
   checkBoxEnable = false,
   includeImage = false,
   fallbackEnable = true,
+  sizeTrim = false,
 }) {
   const items = data?.map((item: string | { value: string; image: string }) => (
     <ImageCheckbox
@@ -144,7 +145,7 @@ export function SingleSelectCard({
     ? { base: 2, xs: 3, sm: 4, md: 5 }
     : { base: 1, xs: 2, sm: 3, md: 4 };
   return (
-    <SimpleGrid cols={colsCount} spacing={10}>
+    <SimpleGrid cols={sizeTrim ? 1 : colsCount} spacing={10}>
       {items}
     </SimpleGrid>
   );
