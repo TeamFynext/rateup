@@ -19,6 +19,7 @@ import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
 import Session from "supertokens-node/recipe/session";
 import { getTeamIdsByUserId } from "../team/team.service";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -132,6 +133,8 @@ export async function generateResponseHandler(
     await generateResponse(request.body);
     reply.code(201).send();
   } catch (e) {
-    reply.code(500).send(e.message);
+    if (e instanceof PrismaClientKnownRequestError)
+      reply.code(400).send("Survey Not Found");
+    else reply.code(500).send(e.message);
   }
 }
