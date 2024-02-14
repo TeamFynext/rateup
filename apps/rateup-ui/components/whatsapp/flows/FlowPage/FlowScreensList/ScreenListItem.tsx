@@ -32,7 +32,10 @@ import {
 } from "../../../../../utils/whatsapp/flow.utils";
 import { useUpdateSurveyMutation } from "../../../../../backend/surveys/surveys.query";
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
-import { WaFlowFormElementType } from "../../../../../types/enums";
+import {
+  WaFlowFormElementType,
+  WaFlowStatus,
+} from "../../../../../types/enums";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
@@ -69,10 +72,12 @@ function ScreenListItem({
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
   const elements = getFlowFormElementsFromScreen(screen);
 
   const openDeleteModal = () => {
+    if (!flowEditable) return;
     modals.openConfirmModal({
       title: "Delete Screen",
       centered: true,
@@ -90,6 +95,7 @@ function ScreenListItem({
   };
 
   const handleDeleteScreen = () => {
+    if (!flowEditable) return;
     setSelectedFormElementId(null);
     updateFlowJson((draft) => {
       const questions = getQuestionsFromScreen(screen, survey, map);
@@ -118,6 +124,7 @@ function ScreenListItem({
   if (!survey) return null;
 
   function updateScreenTitle(title: string) {
+    if (!flowEditable) return;
     updateFlowJson((draft) => {
       const screenToBeEdited = getScreenObjById(draft.screens, screen.id);
       screenToBeEdited["title"] = title;
@@ -125,6 +132,7 @@ function ScreenListItem({
   }
 
   function handleAddElementClick() {
+    if (!flowEditable) return;
     const elements = getFlowFormElementsFromScreen(screen);
     if (elements.length >= FlowMaxElementsPerScreen) {
       showErrorToast(
@@ -136,6 +144,7 @@ function ScreenListItem({
   }
 
   function handleDeleteFormElement(index: number) {
+    if (!flowEditable) return;
     const element = elements[index];
     onDeleteElement(element.id, screen.id);
   }
@@ -172,11 +181,17 @@ function ScreenListItem({
           }}
         />
         <Group>
-          <Tooltip label="Delete Screen">
-            <ActionIcon onClick={openDeleteModal} variant="subtle" color="gray">
-              <IconTrash />
-            </ActionIcon>
-          </Tooltip>
+          {flowEditable && (
+            <Tooltip label="Delete Screen">
+              <ActionIcon
+                onClick={openDeleteModal}
+                variant="subtle"
+                color="gray"
+              >
+                <IconTrash />
+              </ActionIcon>
+            </Tooltip>
+          )}
           <ActionIcon
             variant="subtle"
             onClick={() => setExpanded((prev) => !prev)}
@@ -209,7 +224,12 @@ function ScreenListItem({
                 );
               })}
               {provided.placeholder}
-              <Button onClick={handleAddElementClick} variant="outline" mt="sm">
+              <Button
+                onClick={handleAddElementClick}
+                variant="outline"
+                mt="sm"
+                disabled={!flowEditable}
+              >
                 Add Element
               </Button>
             </Stack>
@@ -255,6 +275,12 @@ function FormElementCard({
   handleDelete,
   dragHandleProps,
 }: FormElementCardProps) {
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
+
   return (
     <Box
       onClick={() => handleOpen(index)}
@@ -283,17 +309,19 @@ function FormElementCard({
       <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
         {text}
       </Text>
-      <ActionIcon
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleDelete(index);
-        }}
-        variant="subtle"
-        color="gray"
-      >
-        <IconTrash />
-      </ActionIcon>
+      {flowEditable && (
+        <ActionIcon
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDelete(index);
+          }}
+          variant="subtle"
+          color="gray"
+        >
+          <IconTrash />
+        </ActionIcon>
+      )}
     </Box>
   );
 }

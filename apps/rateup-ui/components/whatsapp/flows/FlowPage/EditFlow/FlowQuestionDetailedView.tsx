@@ -21,7 +21,11 @@ import {
   useQuestionUpdateMutation,
 } from "../../../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import { QuestionType, SurveyType } from "../../../../../types/enums";
+import {
+  QuestionType,
+  SurveyType,
+  WaFlowStatus,
+} from "../../../../../types/enums";
 import {
   logicSupportedTypes,
   googleReviewSupportedTypes,
@@ -46,6 +50,8 @@ import { FlowLogicEditor } from "./FlowLogicEditor";
 import { LengthTracker } from "../../../../input/LengthTracker";
 import { questionTypeToFlowFormElementType } from "../../../../../utils/whatsapp/flow.utils";
 import { ChoicesCreator } from "../../../../Survey/Question/ChoicesCreator";
+import { useRouter } from "next/router";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -106,6 +112,10 @@ function ElementEditor({
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { flowJson, selectedFormElementId } = useContext(EditFlowContext);
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
@@ -158,6 +168,10 @@ function ElementEditor({
 
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
+    if (!flowEditable) {
+      showErrorToast("Published Flows cannot be edited");
+      return;
+    }
     const res = form.validate();
     console.log(res);
     if (res.hasErrors) {
