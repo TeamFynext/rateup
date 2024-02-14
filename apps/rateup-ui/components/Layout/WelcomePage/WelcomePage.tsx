@@ -46,9 +46,7 @@ function WelcomePage({
         />
       )}
       <Text style={titleStyles}>{title}</Text>
-      <Text style={{ ...subtitleStyles, wordBreak: "break-all" }}>
-        {subtitle}
-      </Text>
+      <Text style={{ ...subtitleStyles }}>{subtitle}</Text>
       <Button
         style={buttonStyles ? { ...buttonStyles } : { ..._buttonStyles }}
         onClick={onStart}

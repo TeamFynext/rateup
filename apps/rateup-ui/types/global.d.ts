@@ -527,6 +527,9 @@ declare global {
     status: string;
     json: WaFlowJson;
     map: any;
+    logicJumps: {
+      [screenId: string]: FlowLogicJump[];
+    };
     orgId: string;
     surveyId: string;
   };
@@ -582,21 +585,13 @@ export type ReviewSuggestion = {
   review: string;
 };
 
-export type WaFlow = {
-  name: string;
-  status: WaFlowStatus;
-  json: WaFlowJson;
-  dbFlowId: string;
-  createdAt: Date;
-  flowId: string | null;
-  name: string;
-  map: any;
-  orgId: string;
-  surveyId: string;
-};
 export type WaFlowJson = {
   version: string;
   screens: Array<WaFlowScreen>;
+  routing_model: {
+    [screenId: string]: Array<string>;
+  };
+  data_api_version?: string;
 };
 export type WaFlowScreen = {
   id: string;
@@ -648,13 +643,22 @@ export type WaFlowFormChoice = {
 };
 
 export type WaFlowOnClickAction = {
-  name: string; // add types
+  name: "navigate" | "data_exchange" | "complete"; // add types
   next?: {
     type: string; // add types
     name: string;
   };
   payload: any;
 };
+export interface FlowLogicCondition {
+  questionId: string;
+  condition: LogicCondition;
+  response: any;
+}
+export interface FlowLogicJump {
+  conditions: Array<FlowLogicCondition>;
+  action: LogicAction;
+}
 
 type Profile = {
   bg: string;
@@ -705,4 +709,21 @@ export type TestimonialStyleType = {
   ratingBlock: RatingBlock;
   date: DateBlock;
   layout: Layout;
+};
+
+export type Testimonial = {
+  id: string;
+  createdAt: string;
+  testimonial: {
+    name: string;
+    rating?: number;
+    jobTitle?: string;
+    questionId?: string;
+    testimonial: string;
+  };
+  teamId: string;
+  survey: {
+    id: string;
+    name: string;
+  };
 };

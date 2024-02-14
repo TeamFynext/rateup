@@ -1,254 +1,156 @@
 import {
   Center,
+  Container,
   Flex,
   Grid,
   Group,
-  Radio,
-  RadioGroup,
+  Loader,
   SimpleGrid,
-  Stack,
   Tabs,
+  TextInput,
+  Title,
+  Space,
+  Stack,
+  ScrollAreaAutosize,
 } from "@mantine/core";
-import { useGetAllCollectionsByOrg } from "../../../backend/testimonials/testimonial.query";
-import TestimonialSurveyCard from "../../../components/testimonial/TestimonialSurveyCard";
+import { IconPlus } from "@tabler/icons-react";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { TeamSelector } from "../../../components/input/TeamSelector";
-import { useState } from "react";
 import Heading from "../../../components/styled/Heading/Heading";
-import { useSurveysWithQuestions } from "../../../backend/surveys/surveys.query";
-import { QuestionType } from "../../../types/enums";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "../../../components/Button/RateupButtons";
-import { IconCheck, IconPlus, IconSelector } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import { useDisclosure } from "@mantine/hooks";
-import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
-import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
 import NothingFound from "../../../components/NothingFound/NothingFound";
-import { showLoadingToast } from "../../../utils/notifications";
+import { useState } from "react";
+import styles from "../contacts/contacts.module.css";
+import {
+  useGetAllCollectionsByOrg,
+  useGetAllTestimonialsByOrg,
+} from "../../../backend/testimonials/testimonial.query";
+import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
+import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
+import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 
-enum CollectionTabs {
-  New = "Create New",
-  Update = "Update Existing",
+enum TestimonailInnerTabEnum {
+  TESTIMONIALS = "testimonials",
+  COLLECTIONS = "collections",
 }
-export default function () {
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const {
-    data: allSurveys,
-    isLoading: isSurveyLoading,
-    isError,
-  } = useSurveysWithQuestions(!!selectedTeamId);
-  const surveys =
-    selectedTeamId === "all" || !selectedTeamId
-      ? allSurveys
-      : allSurveys?.filter(
-          (s: Survey) => s?.teams?.some((team) => team?.id === selectedTeamId),
-        );
-  let filteredSurveys = surveys?.filter(
-    (s) =>
-      s?.questions?.some((q: Question) => q?.type == QuestionType.Testimonial),
-  );
-  const router = useRouter();
-  const [enableSelect, { toggle }] = useDisclosure(false);
-  const [selectedSurvey, setSelectedSurvey] = useState("");
-  const [selectedCollectionId, setSelectedCollectionId] = useState("");
-  const [activeTab, setActiveTab] = useState<CollectionTabs | null>(
-    CollectionTabs.New,
-  );
+const indexPage = () => {
   const [openedSave, { open: openSave, close: closeSave }] =
     useDisclosure(false);
-
+  const [activeTab, setActiveTab] = useState<TestimonailInnerTabEnum>(
+    TestimonailInnerTabEnum.TESTIMONIALS,
+  );
   const { data: collections, isLoading: isCollectionLoading } =
     useGetAllCollectionsByOrg();
-
+  const { data: testimonials, isLoading: isTestimonialLoading } =
+    useGetAllTestimonialsByOrg();
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
   let filteredCollections =
     selectedTeamId == "all"
       ? collections
-      : collections?.filter((c) => c?.surveyTeamMap?.teamId == selectedTeamId);
-  const [sort, { toggle: sortToggle }] = useDisclosure(false);
+      : collections?.filter((c) => c?.teamId == selectedTeamId);
 
-  filteredSurveys?.sort((a, b) =>
-    sort
-      ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
-  filteredCollections?.sort((a, b) =>
-    sort
-      ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
-
-  if (activeTab == CollectionTabs.New && isSurveyLoading) {
-    showLoadingToast(
-      "Hold on..,Surveys getting loaded",
-      "load-data",
-      isSurveyLoading,
-      "Loading",
-      "var(--tertiary-color)",
-    );
-  }
-  if (activeTab == CollectionTabs.Update && isCollectionLoading) {
-    showLoadingToast(
-      "Hold on...,your testimonial collections getting loaded",
-      "load-data",
-      isCollectionLoading,
-      "Loading",
-      "var(--tertiary-color)",
-    );
-  }
+  const filteredTestimonials =
+    selectedTeamId == "all"
+      ? testimonials
+      : testimonials?.filter((t) => t?.teamId === selectedTeamId);
   return (
-    <Stack>
-      <StyledTabs
-        value={activeTab}
-        onChange={(value) => setActiveTab(value as CollectionTabs)}
+    <Stack gap={"lg"}>
+      <Flex
+        mih={50}
+        gap="md"
+        justify="space-between"
+        align="center"
+        direction="row"
+        wrap="wrap"
       >
-        <Grid columns={12}>
-          <Grid.Col span={4}>
-            <Heading title="Testimonials" titleprops={{ w: "fit-content" }} />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <Tabs.List>
-              <Tabs.Tab value={CollectionTabs.New}>
-                Create New Collection
-              </Tabs.Tab>
-              <Tabs.Tab value={CollectionTabs.Update}>
-                Update your collections
-              </Tabs.Tab>
-            </Tabs.List>
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <Group justify={"flex-end"}>
-              <RateupButtonPrimary
-                onClick={sortToggle}
-                title={"Sort"}
-                variant="subtle"
-                rightIcon={<IconSelector size="1rem" />}
-              />
-              <TeamSelector
-                value={selectedTeamId}
-                onChange={(teamId) => setSelectedTeamId(teamId)}
-                enableAll={true}
-              />
-            </Group>
-          </Grid.Col>
-        </Grid>
-
-        <Tabs.Panel value={CollectionTabs.New} p={"xl"}>
-          {filteredSurveys?.length <= 0 ? (
-            <Center mt={150}>
-              <NothingFound text={"No testimonial Surveys found"} />
-            </Center>
-          ) : (
-            <Stack gap={5}>
-              <Center>
-                <RateupButtonBlue
-                  title="Select Survey"
-                  rightIcon={<IconPlus />}
-                  onClick={toggle}
-                />
+        <Group gap={"md"}>
+          <Heading title="Testimonials" titleprops={{ w: "fit-content" }} />
+          <RateupButtonBlue
+            title="Create Collection"
+            rightIcon={<IconPlus />}
+            onClick={openSave}
+          />
+          <SaveTestimonialCollection close={closeSave} opened={openedSave} />
+        </Group>
+        <TeamSelector
+          value={selectedTeamId}
+          onChange={setSelectedTeamId}
+          enableAll={true}
+        ></TeamSelector>
+      </Flex>
+      <Tabs
+        value={activeTab}
+        onChange={(value: string) =>
+          setActiveTab(value as TestimonailInnerTabEnum)
+        }
+        color="var(--tertiary-color)"
+      >
+        <Tabs.List w={"fit-content"}>
+          <Tabs.Tab
+            value={TestimonailInnerTabEnum.TESTIMONIALS}
+            className={styles.tabLabel}
+          >
+            <Title order={4} fw={400}>
+              Testimonials
+            </Title>
+          </Tabs.Tab>
+          <Tabs.Tab
+            value={TestimonailInnerTabEnum.COLLECTIONS}
+            className={styles.tabLabel}
+          >
+            <Title order={4} fw={400}>
+              Collections
+            </Title>
+          </Tabs.Tab>
+        </Tabs.List>
+        <Space h="sm" />
+        <ScrollAreaAutosize>
+          <Tabs.Panel value={TestimonailInnerTabEnum.TESTIMONIALS} p={"sm"}>
+            {isTestimonialLoading ? (
+              <Center pt="xl">
+                <Loader type="bars" />
               </Center>
+            ) : filteredTestimonials?.length > 0 ? (
+              <Group mah={450}>
+                {filteredTestimonials.map((testimonial) => (
+                  <TestimonialCard testimonial={testimonial} />
+                ))}
+              </Group>
+            ) : (
+              <Container mt={"7%"}>
+                <NothingFound text="No Testimonials Found" />
+              </Container>
+            )}
+          </Tabs.Panel>
 
-              <Flex justify={"flex-end"} h={50}>
-                {enableSelect && (
-                  <RateupButtonBlue
-                    title="Next"
-                    color="black"
-                    onClick={() => {
-                      openSave();
-                    }}
-                  />
-                )}
-              </Flex>
-              <RadioGroup value={selectedSurvey} onChange={setSelectedSurvey}>
-                <SimpleGrid cols={3}>
-                  {filteredSurveys?.map((survey) => (
-                    <Stack pos={"relative"} key={survey?.id}>
-                      {enableSelect && (
-                        <Radio
-                          size="lg"
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            transform: "translate(50%, -50%)", // Center the button in the top right corner
-                          }}
-                          icon={IconCheck}
-                          value={survey?.id}
-                        />
-                      )}
-                      <TestimonialSurveyCard
-                        survey={survey}
-                        selectedTeamId={selectedTeamId}
-                      />
-                    </Stack>
-                  ))}
-                </SimpleGrid>
-              </RadioGroup>
-            </Stack>
-          )}
-        </Tabs.Panel>
-
-        <Tabs.Panel value={CollectionTabs.Update} p={"xl"}>
-          {filteredCollections?.length <= 0 ? (
-            <Center mt={150}>
-              <NothingFound text={"No testimonial collections found"} />
-            </Center>
-          ) : (
-            <Stack gap={"sm"}>
-              <Center>
-                <RateupButtonBlue
-                  title="Select Collections"
-                  rightIcon={<IconPlus />}
-                  onClick={toggle}
-                />
+          <Tabs.Panel value={TestimonailInnerTabEnum.COLLECTIONS} py={"sm"}>
+            {isCollectionLoading ? (
+              <Center pt="xl">
+                <Loader type="bars" />
               </Center>
-              <Flex justify={"flex-end"} h={50}>
-                {enableSelect && (
-                  <RateupButtonBlue
-                    title="Next"
-                    color="black"
-                    onClick={() => {
-                      router.push(`${router.pathname}/${selectedCollectionId}`);
-                    }}
-                  />
-                )}
-              </Flex>
-              <RadioGroup
-                value={selectedCollectionId}
-                onChange={setSelectedCollectionId}
+            ) : filteredCollections?.length > 0 ? (
+              <SimpleGrid
+                cols={{ base: 1, sm: 2, lg: 3 }}
+                spacing={{ base: 10, sm: "xl", lg: "xl" }}
+                verticalSpacing={{ base: "md", sm: "xl" }}
               >
-                <SimpleGrid cols={3}>
-                  {filteredCollections?.map((collection) => (
-                    <Stack pos={"relative"} key={collection?.id}>
-                      {enableSelect && (
-                        <Radio
-                          size="lg"
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            transform: "translate(50%, -50%)",
-                          }}
-                          icon={IconCheck}
-                          value={collection?.id}
-                        />
-                      )}
-                      <TestimonialCollectionCard collection={collection} />
-                    </Stack>
-                  ))}
-                </SimpleGrid>
-              </RadioGroup>
-            </Stack>
-          )}
-        </Tabs.Panel>
-        <SaveTestimonialCollection
-          opened={openedSave}
-          close={closeSave}
-          selectedSurvey={selectedSurvey}
-        />
-      </StyledTabs>
+                {filteredCollections?.map((collection) => (
+                  <TestimonialCollectionCard
+                    collection={collection}
+                    key={collection?.id}
+                  ></TestimonialCollectionCard>
+                ))}
+              </SimpleGrid>
+            ) : (
+              <Container mt={"7%"}>
+                <NothingFound text="No Testimonial Collections Found" />
+              </Container>
+            )}
+          </Tabs.Panel>
+        </ScrollAreaAutosize>
+      </Tabs>
     </Stack>
   );
-}
+};
+
+export default indexPage;

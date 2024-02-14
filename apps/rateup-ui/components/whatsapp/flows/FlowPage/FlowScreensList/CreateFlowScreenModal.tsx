@@ -1,4 +1,4 @@
-import { Box, Button, Modal, TextInput } from "@mantine/core";
+import { Button, Modal, TextInput } from "@mantine/core";
 import styles from "./FlowScreensList.module.css";
 import { useForm } from "@mantine/form";
 import { useCallback, useContext, useEffect, useRef } from "react";
@@ -9,9 +9,9 @@ import {
 } from "../../../../../utils/whatsapp/flow.utils";
 import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
 import { showErrorToast } from "../../../../../utils/notifications";
-import { WaFlowJson } from "../../../../../types/global";
-import { Updater } from "use-immer";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import { useRouter } from "next/router";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 
 function getInitialValues(screens) {
   return {
@@ -35,7 +35,9 @@ function CreateFlowScreenModal({
 }: CreateFlowScreenModalProps) {
   const formElementRef = useRef(null);
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
-
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const form = useForm({
     initialValues: getInitialValues(flowJson.screens),
     validate: {
@@ -66,7 +68,7 @@ function CreateFlowScreenModal({
     updateFlowJson((draft) => {
       if (!screenId) {
         draft.screens.push(getNewScreenObj(values));
-        updateFlowJsonNavigationAndDataPassing(draft);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       } else {
         const screenToBeEdited = getScreenObjById(draft.screens, screenId);
         screenToBeEdited["title"] = values.screenTitle;

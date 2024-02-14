@@ -1,160 +1,221 @@
 import {
   Button,
-  Chip,
   Group,
-  Popover,
   Rating,
-  ScrollArea,
   Stack,
-  Title,
   Text,
-  Space,
+  MultiSelect,
+  Paper,
+  Radio,
+  Divider,
+  ActionIcon,
+  ScrollAreaAutosize,
 } from "@mantine/core";
-import { useGetAllCollectionsByOrg } from "../../backend/testimonials/testimonial.query";
+import { useGetAllTestimonialsByOrg } from "../../backend/testimonials/testimonial.query";
+import { useTeamsByUser } from "../../backend/team/team.query";
 import { useEffect, useState } from "react";
-import { IconChevronDown } from "@tabler/icons-react";
-import { TeamSelector } from "../input/TeamSelector";
+import { IconRestore } from "@tabler/icons-react";
 import { TestimonialTabs } from "../../pages/dashboard/testimonial/[collectionId]";
+import { produce } from "immer";
+import { filterType } from "../../pages/dashboard/testimonial/[collectionId]";
 
 const TestimonialFilter = ({
-  selectedCollectionId,
-  setSelectedCollection,
   filters,
   setFilters,
-  selectedTeamId,
-  setSelectedTeamId,
   activeTab,
+  setType,
+}: {
+  filters: filterType;
+  setFilters: React.Dispatch<React.SetStateAction<filterType>>;
+  activeTab: TestimonialTabs;
+  setType: React.Dispatch<React.SetStateAction<string>>;
 }) => {
-  const { data: allCollections } = useGetAllCollectionsByOrg();
-  const collections = allCollections?.map((c) => ({
-    value: c?.id,
-    label: c?.name,
+  const { data: testimonials } = useGetAllTestimonialsByOrg();
+  const { data: teams } = useTeamsByUser();
+  const teamMultiSelectOptions = teams?.data?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
   }));
-  const [allRatings, setAllRatings] = useState(true);
+  const surveyMultiSelectOptions = testimonials
+    ?.filter(({ teamId }) =>
+      filters?.teams?.length > 0 ? filters.teams?.includes(teamId) : true,
+    )
+    .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
+  const removeObjectsWithRepeatedValues = produce(
+    (draft: { label: string; value: string }[]) => {
+      const seenValues = new Set();
+      for (let i = draft?.length - 1; i >= 0; i--) {
+        const currentObj = draft[i];
+        if (seenValues.has(currentObj?.value)) {
+          draft.splice(i, 1);
+          break;
+        } else {
+          seenValues.add(currentObj?.value);
+        }
+      }
+    },
+  );
 
+  function removeDuplicates(surveyMultiSelectOptions) {
+    const uniqueArray = [];
+    const encounteredIds = [];
+    for (let i = 0; i < surveyMultiSelectOptions?.length; i++) {
+      const obj = surveyMultiSelectOptions[i];
+      if (!encounteredIds.includes(obj.value)) {
+        encounteredIds.push(obj.value);
+        uniqueArray.push(obj);
+      }
+    }
+    return uniqueArray;
+  }
+
+  const [allRatings, setAllRatings] = useState(true);
+  const filterData = (
+    type: "date" | "rating" | "surveys" | "teams" | "length",
+    newValue,
+  ) => {
+    setFilters(
+      produce((draft: filterType) => {
+        draft[type as string] = newValue;
+      }),
+    );
+    setType(type);
+  };
   useEffect(() => {
     if (allRatings) {
       setFilters({ ...filters, rating: null });
     }
   }, [allRatings]);
+
   return (
-    <Stack gap={"xl"}>
-      {activeTab == TestimonialTabs.Select ? (
-        <TeamSelector
-          value={selectedTeamId}
-          onChange={(teamId) => setSelectedTeamId(teamId)}
-          enableAll={true}
-        />
-      ) : (
-        <Space h={46} />
-      )}
-
-      <Stack gap={170}>
-        <Popover opened={true} position="bottom" width={"target"} zIndex={100}>
-          <Popover.Target>
-            <Button
-              radius={"md"}
-              variant="outline"
-              justify="space-between"
-              fw={400}
-              rightSection={<IconChevronDown />}
-            >
-              Your Collections
-            </Button>
-          </Popover.Target>
-
-          <Popover.Dropdown>
-            <ScrollArea h={100}>
-              <Stack>
-                <Chip.Group
-                  value={selectedCollectionId}
-                  onChange={(value) => setSelectedCollection(value)}
-                  multiple={false}
-                >
-                  {collections?.map((c) => (
-                    <Chip value={c?.value} key={c?.value}>
-                      <Text w={200}>{c?.label}</Text>
-                    </Chip>
-                  ))}
-                </Chip.Group>
-              </Stack>
-            </ScrollArea>
-          </Popover.Dropdown>
-        </Popover>
-
-        {activeTab != TestimonialTabs.Share && (
-          <Popover
-            opened={true}
-            defaultOpened
-            position="bottom"
-            width={"target"}
-            zIndex={100}
+    <ScrollAreaAutosize scrollbarSize={5}>
+      <Paper radius="md" withBorder p="sm" maw={200} miw={200}>
+        <Group justify="space-between" mb={2}>
+          <Text size="sm" c="dimmed" fw={500}>
+            Filters
+          </Text>
+          <ActionIcon
+            size="sm"
+            variant="light"
+            onClick={() =>
+              setFilters({
+                date: "new",
+                length: "longest",
+                rating: null,
+                surveys: [],
+                teams: [],
+              })
+            }
           >
-            <Popover.Target>
-              <Button
-                radius={"md"}
-                variant="outline"
-                justify="space-between"
-                rightSection={<IconChevronDown />}
-              >
-                Filter
-              </Button>
-            </Popover.Target>
-
-            <Popover.Dropdown>
-              <ScrollArea h={100}>
-                <Stack>
-                  <Stack>
-                    <Title order={5}>Date</Title>
-                    <Chip.Group
-                      value={filters?.date}
-                      onChange={(value) =>
-                        setFilters({ ...filters, date: value })
-                      }
-                      multiple={false}
-                    >
-                      <Chip value="new">Newest First</Chip>
-                      <Chip value="old">Oldest First</Chip>
-                    </Chip.Group>
-                  </Stack>
-                  <Stack>
-                    <Stack>
-                      <Group>
-                        <Title order={5}>Rating</Title>
-                        <Chip checked={allRatings} onChange={setAllRatings}>
-                          All
-                        </Chip>
-                      </Group>
-
-                      <Rating
-                        value={filters.rating}
-                        onChange={(value) => {
-                          setFilters({ ...filters, rating: value });
-                          setAllRatings(false);
-                        }}
-                        size={"xl"}
-                        color="var(--tertiary-color)"
-                      />
-                    </Stack>
-                    <Title order={5}>Testimonial Length</Title>
-                    <Chip.Group
-                      value={filters.testimonialLength}
-                      onChange={(value) =>
-                        setFilters({ ...filters, testimonialLength: value })
-                      }
-                      multiple={false}
-                    >
-                      <Chip value="longest">Longest to shortest</Chip>
-                      <Chip value="shortest">Shortest to Longest</Chip>
-                    </Chip.Group>
-                  </Stack>
-                </Stack>
-              </ScrollArea>
-            </Popover.Dropdown>
-          </Popover>
-        )}
-      </Stack>
-    </Stack>
+            <IconRestore size={15} />
+          </ActionIcon>
+        </Group>
+        <Divider />
+        <Stack gap={2}>
+          {activeTab == TestimonialTabs.Select && (
+            <>
+              <MultiSelect
+                radius={"10px"}
+                searchable
+                clearable
+                label="Select Team"
+                styles={{ label: { fontSize: 12 } }}
+                data={teamMultiSelectOptions}
+                value={filters.teams}
+                onChange={(value) => filterData("teams", value)}
+                placeholder={filters?.teams?.length > 0 ? "" : "All Teams"}
+              />
+              <MultiSelect
+                radius={"10px"}
+                searchable
+                clearable
+                label="Select survey"
+                styles={{ label: { fontSize: 12 } }}
+                data={removeDuplicates(
+                  surveyMultiSelectOptions as {
+                    label: string;
+                    value: string;
+                  }[],
+                )}
+                value={filters.surveys}
+                onChange={(value) => filterData("surveys", value)}
+                placeholder={filters?.teams?.length > 0 ? "" : "All Surveys"}
+              />
+            </>
+          )}
+          <Stack gap={"sm"}>
+            {activeTab != TestimonialTabs.Share && (
+              <>
+                <Divider label="Date" labelPosition="left" />
+                <Radio.Group
+                  onChange={(value) => filterData("date", value)}
+                  value={filters.date}
+                >
+                  <Group>
+                    <Radio
+                      label="newest"
+                      value="new"
+                      size="xs"
+                      styles={{ label: { fontSize: 12 } }}
+                    />
+                    <Radio
+                      label="older"
+                      value="old"
+                      size="xs"
+                      styles={{ label: { fontSize: 12 } }}
+                    />
+                  </Group>
+                </Radio.Group>
+                <Divider label="Length" labelPosition="left" />
+                <Radio.Group
+                  onChange={(value) => filterData("length", value)}
+                  value={filters.length}
+                >
+                  <Group>
+                    <Radio
+                      label="longest"
+                      value="longest"
+                      size="xs"
+                      styles={{ label: { fontSize: 12 } }}
+                    />
+                    <Radio
+                      label="shortest"
+                      value="shortest"
+                      size="xs"
+                      styles={{ label: { fontSize: 12 } }}
+                    />
+                  </Group>
+                </Radio.Group>
+                <Divider
+                  label={
+                    <Group gap={"xs"}>
+                      <Text size="xs" c="dimmed">
+                        Rating
+                      </Text>
+                      <Button
+                        size="compact-xs"
+                        onClick={() => filterData("rating", null)}
+                        variant="light"
+                      >
+                        All
+                      </Button>
+                    </Group>
+                  }
+                  labelPosition="left"
+                />
+                <Group gap={2}>
+                  <Rating
+                    value={filters.rating}
+                    onChange={(value) => filterData("rating", value)}
+                    size={"lg"}
+                  />
+                </Group>
+              </>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
+    </ScrollAreaAutosize>
   );
 };
 

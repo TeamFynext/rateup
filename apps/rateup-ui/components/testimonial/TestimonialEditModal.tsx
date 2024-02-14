@@ -13,26 +13,22 @@ import {
   Flex,
   Modal,
 } from "@mantine/core";
-
 import {
   ContainedColorInput,
   ContainedNumberInput,
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput";
-
 import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "./TestimonialCard";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-
-import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
-import { TestimonialStyleType } from "../../types/global";
+import { Testimonial, TestimonialStyleType } from "../../types/global";
 import { FontWeights } from "../Survey/SurveyTheme/SurveyTheme.constants";
 import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
-import { useContext } from "react";
 import { defaultTestimonialStyle } from "../../utils/testimonial";
+import { useRouter } from "next/router";
 
 interface TestimonialEditModalProps {
   opened;
@@ -47,7 +43,7 @@ const TestimonialEditModal = ({
   setCurrentstyle,
   currentStyle,
 }: TestimonialEditModalProps) => {
-  const testimonialSample = {
+  const testimonialSample: Testimonial = {
     testimonial: {
       name: "Profile Name",
       jobTitle: "Profile Position",
@@ -55,7 +51,10 @@ const TestimonialEditModal = ({
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, su",
       rating: 5,
     },
-    createdAt: Date.now(),
+    id: "",
+    survey: { id: "", name: "" },
+    teamId: "",
+    createdAt: Date.now().toString(),
   };
   const fonts = [
     {
@@ -202,13 +201,11 @@ const TestimonialEditModal = ({
     }
   };
 
-  const { selectedCollectionId } = useContext(
-    SelectedTestimonialCollectionContext,
-  );
-  const updateCollection = useUpdateCollection(selectedCollectionId);
+  const { collectionId } = useRouter().query;
+  const updateCollection = useUpdateCollection(collectionId);
   const handleUpdate = () => {
     updateCollection.mutate(
-      { data: { theme: currentStyle }, collectionId: selectedCollectionId },
+      { data: { theme: currentStyle }, collectionId },
       {
         onSuccess: () => {
           onClose();

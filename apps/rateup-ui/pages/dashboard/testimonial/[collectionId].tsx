@@ -1,126 +1,279 @@
 import { useEffect, useState } from "react";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { Flex, Stack, Tabs } from "@mantine/core";
+import { Stack, Tabs, Group, Paper, Checkbox, Button } from "@mantine/core";
 import Heading from "../../../components/styled/Heading/Heading";
 import { useRouter } from "next/router";
 import TestimonialSelect from "../../../components/testimonial/TestimonialSelect";
 import TestimonialEdit from "../../../components/testimonial/TestimonialEdit";
-import TestimonialShare from "../../../components/testimonial/TestimonialShare";
+import TestimonialShare, {
+  TestimonialShareModal,
+} from "../../../components/testimonial/TestimonialShare";
 import TestimonialFilter from "../../../components/testimonial/TestimonialFilter";
-import { useListState } from "@mantine/hooks";
-import SelectedTestimonialCollectionContext from "../../../context/SelectedCollectionContext";
-import { TestimonialStyleType } from "../../../types/global";
+import { Testimonial, TestimonialStyleType } from "../../../types/global";
 import { useImmer } from "use-immer";
-import { useGetAllTestimonialsByCollection } from "../../../backend/testimonials/testimonial.query";
+import {
+  useGetAllTestimonialsByCollection,
+  useGetAllTestimonialsByOrg,
+  useUpdateCollection,
+} from "../../../backend/testimonials/testimonial.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { defaultTestimonialStyle } from "../../../utils/testimonial";
+import {
+  defaultTestimonialStyle,
+  getFilteredTestimonials,
+} from "../../../utils/testimonial";
+import { useDisclosure } from "@mantine/hooks";
+import TestimonialEditModal from "../../../components/testimonial/TestimonialEditModal";
+import {
+  IconDeviceFloppy,
+  IconPencil,
+  IconShare,
+  IconTrash,
+} from "@tabler/icons-react";
 
 export enum TestimonialTabs {
   Select = "Select",
   Edit = "Edit",
   Share = "Share",
 }
+export type filterType = {
+  date: "new" | "old";
+  rating: number;
+  length: "longest" | "shortest";
+  teams: string[];
+  surveys: string[];
+};
 export default function () {
   const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(
     TestimonialTabs.Select,
   );
-  const [selectedTestimonials, selectedTestimonialHandler] = useListState([]);
-
+  const [selectedTestimonialIds, setSelectedTestimonialIds] = useState<
+    string[]
+  >([]);
+  const [isDelete, { toggle: toggleDelete }] = useDisclosure(false);
   const router = useRouter();
   const { collectionId } = router.query as { collectionId: string };
-  const [selectedCollectionId, setSelectedCollectionId] =
-    useState(collectionId);
-  const { data: collection, refetch } =
-    useGetAllTestimonialsByCollection(selectedCollectionId);
-  const surveyId = collection?.surveyTeamMap?.surveyId;
-
+  const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
+  //  console.log("collection",collection)
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(
     defaultTestimonialStyle,
   );
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<filterType>({
     date: "new",
     rating: null,
-    testimonialLength: "longest",
+    length: "longest",
+    surveys: [],
+    teams: [],
   });
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
   const { update } = useRouteParams();
-  useEffect(() => {
-    refetch();
-    update({ collectionId: collection?.name });
-    selectedTestimonialHandler.setState(
-      collection?.testimonials.map((t) => t.testimonial),
-    );
-    setCurrentstyle(collection?.theme);
-  }, [selectedCollectionId, collection, activeTab]);
+  const [type, setType] = useState("date");
 
   useEffect(() => {
-    setSelectedCollectionId(collectionId);
-  }, [collectionId]);
+    update({ collectionId: collection?.name });
+    setSelectedTestimonialIds(collection?.testimonials?.map((t) => t.id));
+    setCurrentstyle(collection?.theme);
+  }, [collection]);
+
+  const { data: alltestimonials, isLoading: isTestimonialLoading } =
+    useGetAllTestimonialsByOrg();
+  const filteredTestimonials = getFilteredTestimonials(
+    alltestimonials,
+    filters,
+    type,
+  );
+  const filteredTestimonialIds = filteredTestimonials?.map((t) => t.id);
+  const [openedEdit, { open: openEdit, close: closeEdit }] =
+    useDisclosure(false);
 
   return (
-    <>
-      <SelectedTestimonialCollectionContext.Provider
-        value={{ selectedCollectionId }}
-      >
-        <Flex>
-          <Stack>
-            <Heading title={"Testimonials"} titleprops={{ tt: "capitalize" }} />
+    <StyledTabs
+      value={activeTab}
+      onChange={(value) => setActiveTab(value as TestimonialTabs)}
+      p="lg"
+      styles={{ root: { flex: 1 } }}
+    >
+      <Group>
+        <Heading title={"Testimonials"} titleprops={{ tt: "capitalize" }} />
+        <Tabs.List>
+          <Tabs.Tab value={TestimonialTabs.Select}>
+            {TestimonialTabs.Select}
+          </Tabs.Tab>
+          <Tabs.Tab value={TestimonialTabs.Edit}>
+            {TestimonialTabs.Edit}
+          </Tabs.Tab>
+          <Tabs.Tab value={TestimonialTabs.Share}>
+            {TestimonialTabs.Share}
+          </Tabs.Tab>
+        </Tabs.List>
+      </Group>
+      <Group gap="sm" h="75vh">
+        <Tabs.Panel value={TestimonialTabs.Select}>
+          <TestimonialSelect
+            selectedTestimonialIds={selectedTestimonialIds}
+            setSelectedTestimonialIds={setSelectedTestimonialIds}
+            filters={filters}
+            type={type}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={TestimonialTabs.Edit}>
+          <TestimonialEdit
+            currentStyle={currentStyle}
+            testimonials={collection?.testimonials}
+            filters={filters}
+            isDelete={isDelete}
+            type={type}
+            toggleDelete={toggleDelete}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={TestimonialTabs.Share}>
+          <TestimonialShare
+            selectedTestimonials={collection?.testimonials}
+            currentStyle={currentStyle}
+          />
+        </Tabs.Panel>
+
+        <Stack gap="xs" miw={200} maw={200} h="100%">
+          <UtilityComponent
+            {...{
+              activeTab,
+              selectedTestimonialIds,
+              setActiveTab,
+              setSelectedTestimonialIds,
+              filteredTestimonialIds,
+              openEdit,
+              toggleDelete,
+            }}
+          />
+          {activeTab != TestimonialTabs.Share && (
             <TestimonialFilter
-              selectedCollectionId={selectedCollectionId}
-              setSelectedCollection={setSelectedCollectionId}
               filters={filters}
               setFilters={setFilters}
-              selectedTeamId={selectedTeamId}
-              setSelectedTeamId={setSelectedTeamId}
               activeTab={activeTab}
+              setType={setType}
             />
-          </Stack>
-          <StyledTabs
-            value={activeTab}
-            onChange={(value) => setActiveTab(value as TestimonialTabs)}
-            w={"100%"}
-            px={"xl"}
-          >
-            <Tabs.List>
-              <Tabs.Tab px={70} value={TestimonialTabs.Select}>
-                Select
-              </Tabs.Tab>
-              <Tabs.Tab px={70} value={TestimonialTabs.Edit}>
-                Edit
-              </Tabs.Tab>
-              <Tabs.Tab px={70} value={TestimonialTabs.Share}>
-                Share
-              </Tabs.Tab>
-            </Tabs.List>
-            <Tabs.Panel value={TestimonialTabs.Select} pt={"xl"}>
-              <TestimonialSelect
-                surveyId={surveyId}
-                setActiveTab={setActiveTab}
-                selectedTestimonials={selectedTestimonials}
-                selectedTestimonialHandler={selectedTestimonialHandler}
-                filters={filters}
-                selectedTeamId={selectedTeamId}
-              />
-            </Tabs.Panel>
-            <Tabs.Panel value={TestimonialTabs.Edit}>
-              <TestimonialEdit
-                selectedTestimonials={selectedTestimonials}
-                setCurrentStyle={setCurrentstyle}
-                currentStyle={currentStyle}
-                selectedTestimonialHandler={selectedTestimonialHandler}
-                setActiveTab={setActiveTab}
-                filters={filters}
-              />
-            </Tabs.Panel>
-            <Tabs.Panel value={TestimonialTabs.Share}>
-              <TestimonialShare
-                selectedTestimonials={selectedTestimonials}
-                currentStyle={currentStyle}
-              />
-            </Tabs.Panel>
-          </StyledTabs>
-        </Flex>
-      </SelectedTestimonialCollectionContext.Provider>
-    </>
+          )}
+        </Stack>
+      </Group>
+      <TestimonialEditModal
+        setCurrentstyle={setCurrentstyle}
+        currentStyle={currentStyle}
+        onClose={closeEdit}
+        opened={openedEdit}
+      />
+    </StyledTabs>
+  );
+}
+
+interface UtilityComponentProps {
+  selectedTestimonialIds: string[];
+  setSelectedTestimonialIds: React.Dispatch<React.SetStateAction<string[]>>;
+  activeTab: TestimonialTabs;
+  setActiveTab: React.Dispatch<React.SetStateAction<TestimonialTabs>>;
+  filteredTestimonialIds: string[];
+  openEdit: () => void;
+  toggleDelete;
+}
+function UtilityComponent({
+  selectedTestimonialIds,
+  setSelectedTestimonialIds,
+  activeTab,
+  setActiveTab,
+  filteredTestimonialIds,
+  openEdit,
+  toggleDelete,
+}: UtilityComponentProps) {
+  const { collectionId } = useRouter().query as { collectionId: string };
+  const updateTestimonialCollection = useUpdateCollection(collectionId);
+  const handleNext = () => {
+    updateTestimonialCollection.mutate(
+      {
+        data: { testimonialIds: selectedTestimonialIds },
+        collectionId: collectionId,
+      },
+      {
+        onSuccess: () => {
+          setActiveTab(TestimonialTabs.Edit);
+        },
+      },
+    );
+  };
+  function selectAll(e) {
+    if (e.currentTarget.checked)
+      setSelectedTestimonialIds(filteredTestimonialIds);
+    else setSelectedTestimonialIds([]);
+  }
+  const isAllSelected =
+    filteredTestimonialIds?.length &&
+    filteredTestimonialIds?.every((t) => selectedTestimonialIds?.includes(t));
+  const [openedShare, { open: openShare, close: closeShare }] =
+    useDisclosure(false);
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <Stack>
+        {activeTab === TestimonialTabs.Edit && (
+          <>
+            <Button
+              size="compact-xs"
+              radius="md"
+              variant="light"
+              onClick={openEdit}
+              disabled={!filteredTestimonialIds?.length}
+              leftSection={<IconPencil size={"1rem"} />}
+            >
+              Edit
+            </Button>
+            <Button
+              size="compact-xs"
+              radius="md"
+              variant="light"
+              color="red"
+              onClick={toggleDelete}
+              disabled={!filteredTestimonialIds?.length}
+              leftSection={<IconTrash size={"1rem"} />}
+            >
+              Delete
+            </Button>
+          </>
+        )}
+        {activeTab === TestimonialTabs.Select && (
+          <>
+            <Checkbox
+              label={"Select All"}
+              size="xs"
+              checked={isAllSelected}
+              disabled={!filteredTestimonialIds?.length}
+              onChange={selectAll}
+            />
+            <Button
+              size="compact-xs"
+              radius="md"
+              variant="light"
+              onClick={handleNext}
+              disabled={!filteredTestimonialIds?.length}
+              leftSection={<IconDeviceFloppy size={"1rem"} />}
+            >
+              Save and Next
+            </Button>
+          </>
+        )}
+        {activeTab === TestimonialTabs.Share && (
+          <>
+            <Button
+              size="compact-xs"
+              radius="md"
+              variant="light"
+              onClick={openShare}
+              leftSection={<IconShare size={"1rem"} />}
+            >
+              Share
+            </Button>
+          </>
+        )}
+      </Stack>
+      <TestimonialShareModal
+        opened={openedShare}
+        onClose={closeShare}
+        collectionId={collectionId}
+      />
+    </Paper>
   );
 }

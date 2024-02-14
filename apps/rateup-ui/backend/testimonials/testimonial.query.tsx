@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createTestimonialCollection,
+  deleteTestimonialCollection,
   deleteTestimonialsFromCollection,
   getAllTestimonialBySurvey,
-  getAllTestimonialCollectionBySurvey,
   getAllTestimonialCollections,
+  getAllTestimonialSurveys,
+  getAllTestimonials,
   getAllTestimonialsByCollection,
   updateTestimonialCollection,
 } from "./testimonial.api";
@@ -19,13 +21,14 @@ export function useGetAllTestimonials(surveyId) {
   });
 }
 
-export function useGetAllCollections(surveyId) {
+export function useGetAllTestimonialsByOrg() {
   return useQuery({
-    queryKey: ["allTestimonialCollectionsBySurvey", surveyId],
-    queryFn: () => getAllTestimonialCollectionBySurvey(surveyId),
-    enabled: !!surveyId,
+    queryKey: ["allTestimonialByOrg"],
+    queryFn: getAllTestimonials,
+    refetchOnMount: "always",
   });
 }
+
 export function useGetAllCollectionsByOrg() {
   return useQuery({
     queryKey: ["allTestimonialCollections"],
@@ -33,7 +36,7 @@ export function useGetAllCollectionsByOrg() {
   });
 }
 
-export function useCreateTestimonialCollection(surveyId) {
+export function useCreateTestimonialCollection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createTestimonialCollection,
@@ -44,9 +47,6 @@ export function useCreateTestimonialCollection(surveyId) {
         <IconCheck />,
         true,
       );
-      queryClient.invalidateQueries({
-        queryKey: ["allTestimonialCollectionsBySurvey", surveyId],
-      });
       queryClient.invalidateQueries({
         queryKey: ["allTestimonialCollections"],
       });
@@ -59,10 +59,9 @@ export function useCreateTestimonialCollection(surveyId) {
 
 export function useGetAllTestimonialsByCollection(collectionId) {
   return useQuery({
-    queryKey: ["alltestimonialsbyCollection", collectionId],
+    queryKey: ["allTestimonialsByCollection", collectionId],
     queryFn: () => getAllTestimonialsByCollection(collectionId),
     enabled: !!collectionId,
-    staleTime: Infinity,
   });
 }
 
@@ -77,7 +76,7 @@ export function useUpdateCollection(collectionId) {
         <IconCheck />,
       );
       queryClient.invalidateQueries({
-        queryKey: ["alltestimonialsbyCollection", collectionId],
+        queryKey: ["allTestimonialsByCollection", collectionId],
       });
     },
     onError: (error) => {
@@ -97,11 +96,38 @@ export function useDeleteTestimonialsFromCollections(collectionId) {
         <IconCheck />,
       );
       queryClient.invalidateQueries({
-        queryKey: ["alltestimonialsbyCollection", collectionId],
+        queryKey: ["allTestimonialsByCollection", collectionId],
+      });
+    },
+    onError: (error) => {
+      showErrorToast("Error deleting testimonials", error.message, <IconX />);
+    },
+  });
+}
+
+export function useDeleteTestimonialCollection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTestimonialCollection,
+    onSuccess: () => {
+      showSuccessToast(
+        "Collection deleted",
+        "delete-collection",
+        <IconCheck />,
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["allTestimonialCollections"],
       });
     },
     onError: (error) => {
       showErrorToast("Error deleting collection", error.message, <IconX />);
     },
+  });
+}
+
+export function useGetAllTestimonialSurveys() {
+  return useQuery({
+    queryKey: ["alltestimonialSurveys"],
+    queryFn: getAllTestimonialSurveys,
   });
 }

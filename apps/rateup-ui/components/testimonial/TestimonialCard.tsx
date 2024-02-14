@@ -8,16 +8,32 @@ import {
   Anchor,
   Modal,
 } from "@mantine/core";
-import PaperLayout from "../styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { formatDate } from "../../utils/dateTime";
+import { Testimonial } from "../../types/global";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
-const TestimonialCard = ({ testimonial, currentStyle = null }) => {
+interface TestimonialCardInterface {
+  testimonial: Testimonial;
+  currentStyle?: any;
+}
+const TestimonialCard = ({
+  testimonial,
+  currentStyle = null,
+}: TestimonialCardInterface) => {
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <>
-      <PaperLayout shadow="xl" h={300} bg={currentStyle?.root?.bg} p={0}>
+      <PaperLayout
+        shadow="sm"
+        radius={"sm"}
+        h={300}
+        bg={currentStyle?.root?.bg}
+        p={0}
+        maw={350}
+        w={280}
+      >
         <TestimonialContent
           testimonial={testimonial}
           isModal={false}
@@ -25,7 +41,14 @@ const TestimonialCard = ({ testimonial, currentStyle = null }) => {
           currentStyle={currentStyle}
         />
       </PaperLayout>
-      <Modal opened={opened} onClose={close} radius={"xl"} centered padding={0}>
+      <Modal
+        opened={opened}
+        onClose={close}
+        radius={"xl"}
+        centered
+        padding={0}
+        withCloseButton={false}
+      >
         <TestimonialContent
           testimonial={testimonial}
           isModal={true}
@@ -45,7 +68,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
         <Avatar
           size={"lg"}
           src={
-            isProfileRemoved
+            isProfileRemoved || !testimonial?.testimonial.photo
               ? null
               : getFileUrlFromKey(testimonial?.testimonial.photo)
           }
@@ -54,7 +77,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
           <Title order={4} style={currentStyle?.profileBlock.profileName}>
             {testimonial?.testimonial.name}
           </Title>
-          <Text style={currentStyle?.profileBlock.profilePos}>
+          <Text style={currentStyle?.profileBlock.profilePos} size="sm">
             {testimonial?.testimonial.jobTitle}
           </Text>
         </Stack>
@@ -67,6 +90,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
         bg={currentStyle?.descBlock.bg}
       >
         <Text
+          size="sm"
           lineClamp={isModal ? null : 3}
           style={currentStyle?.descBlock.desc}
         >
@@ -88,7 +112,7 @@ const TestimonialContent = ({ testimonial, isModal, open, currentStyle }) => {
         )}
       {!currentStyle?.date.isRemoved && (
         <Stack pl={"xl"}>
-          <Text style={currentStyle?.date}>
+          <Text style={currentStyle?.date} size="sm">
             {formatDate(testimonial?.createdAt)}
           </Text>
         </Stack>

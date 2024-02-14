@@ -74,7 +74,7 @@ function FlowPage() {
       }
       const timer = setTimeout(() => {
         updateFlowMutation.mutate({ dbFlowId, data: { json: flowJson, map } });
-      }, 1000);
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [flowJson]);
@@ -105,7 +105,7 @@ function FlowPage() {
             }
           }
         }
-        updateFlowJsonNavigationAndDataPassing(draft);
+        updateFlowJsonNavigationAndDataPassing(draft, flow);
       });
     }
   }, [questions]);

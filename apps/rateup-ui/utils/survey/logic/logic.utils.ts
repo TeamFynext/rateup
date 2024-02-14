@@ -1,7 +1,10 @@
 import {
+  LDResponse,
   LogicAction,
   LogicCondition,
-  QuestionType,
+  QuestionType as Q,
+  SmileyResponse,
+  YNResponse,
 } from "../../../types/enums";
 import { ChoiceTypeQuestions } from "../../constants";
 import { logicSupportedTypes } from "../../data";
@@ -78,7 +81,7 @@ export function parseLogicAction(
         switch (logic.condition) {
           case LogicCondition.NotEquals:
           case LogicCondition.Equals:
-            if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
+            if (type === Q.MSQ || type === Q.DDMS) {
               flag = logic.response[iterator as string](comparator);
             } else {
               flag = [logic.response][iterator as string](comparator);
@@ -127,5 +130,100 @@ export function parseLogicAction(
     // TODO: show error toast if in dev mode
     console.warn(e);
     return LogicAction.NextQ;
+  }
+}
+
+const OpinionResponse = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+const RatingResponse = ["1", "2", "3", "4", "5"];
+
+export function getResponses(
+  question: Question,
+  selectedLanguage: string,
+): Array<string | { label: string; value: string }> {
+  try {
+    switch (question.type) {
+      case Q.LD:
+        return Object.values(LDResponse);
+      case Q.MCQ:
+      case Q.MSQ:
+      case Q.DDSS:
+      case Q.DDMS:
+      case Q.CustomNPS:
+        return (
+          question.choices[selectedLanguage].map((choice, index) => ({
+            label: choice.value,
+            value: index.toString(),
+          })) || []
+        );
+      case Q.YN:
+        return Object.values(YNResponse);
+      case Q.Opinion:
+        return OpinionResponse;
+      case Q.Rating:
+        return RatingResponse;
+      case Q.Smiley:
+        return Object.values(SmileyResponse);
+      default:
+        console.log("type", question.type);
+        throw new Error("Logic not implemented for question type");
+    }
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
+}
+
+export function getConditions(qType: Q): Array<any> {
+  switch (qType) {
+    case Q.LD:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q.MCQ:
+    case Q.DDSS:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
+        LogicCondition.Submitted,
+      ];
+    case Q.YN:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q.Opinion:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q.Rating:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q.Smiley:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q.MSQ:
+    case Q.DDMS:
+      return [
+        LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
+        LogicCondition.IncludesAllOf,
+        LogicCondition.Submitted,
+      ];
+    default:
+      console.error("type", qType);
+      throw new Error("Logic not implemented for this question type");
   }
 }

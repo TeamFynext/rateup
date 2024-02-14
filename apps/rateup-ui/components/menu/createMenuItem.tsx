@@ -40,6 +40,7 @@ import {
 } from "../../utils/constants";
 import { PriceSection } from "./item/PriceSection";
 import { FoodLabelSelector } from "./combobox/foodLabelSelector";
+import { CreditsCard } from "../Card/CreditsCard";
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -336,21 +337,30 @@ export function CreateMenuItemModal({
             <Text>Add Images (max 3)</Text>
             {form?.values?.images?.length > 0 ? (
               <Box>
-                <Image
-                  src={getImageValue(
-                    selectedImage,
-                    false,
+                <CreditsCard
+                  enableCredits={
                     form?.values?.unsplashImage?.find(
                       (data) => data === selectedImage,
-                    )?.length > 0,
-                  )}
-                  {...imageProps}
-                  alt="image of menu"
-                  style={{
-                    aspectRatio: 4 / 3,
-                  }}
-                  w={"100%"}
-                />
+                    )?.length > 0
+                  }
+                  url={selectedImage}
+                >
+                  <Image
+                    src={getImageValue(
+                      selectedImage,
+                      false,
+                      form?.values?.unsplashImage?.find(
+                        (data) => data === selectedImage,
+                      )?.length > 0,
+                    )}
+                    {...imageProps}
+                    alt="image of menu"
+                    style={{
+                      aspectRatio: 4 / 3,
+                    }}
+                    w={"100%"}
+                  />
+                </CreditsCard>
                 <Center mt="xs">
                   <Button
                     radius={"xs"}
@@ -376,24 +386,33 @@ export function CreateMenuItemModal({
           </Group>
           <Group>
             {form.values.images?.map((image: File | string, index) => (
-              <Image
-                onClick={() => setSelectedImage(image)}
-                style={{ borderRadius: "8px", cursor: "pointer" }}
-                key={
-                  typeof image === "object" && image !== null
-                    ? (image as File).name + index
-                    : String(image)
-                }
-                src={getImageValue(
-                  image,
-                  false,
+              <CreditsCard
+                enableCredits={
                   form?.values?.unsplashImage?.find((data) => data === image)
-                    ?.length > 0,
-                )}
-                h={50}
-                fallbackSrc={fallbackImage}
-                alt="thumbnail image of menu item"
-              />
+                    ?.length > 0
+                }
+                url={image}
+                fz={6}
+              >
+                <Image
+                  onClick={() => setSelectedImage(image)}
+                  style={{ borderRadius: "8px", cursor: "pointer" }}
+                  key={
+                    typeof image === "object" && image !== null
+                      ? (image as File).name + index
+                      : String(image)
+                  }
+                  src={getImageValue(
+                    image,
+                    false,
+                    form?.values?.unsplashImage?.find((data) => data === image)
+                      ?.length > 0,
+                  )}
+                  h={50}
+                  fallbackSrc={fallbackImage}
+                  alt="thumbnail image of menu item"
+                />
+              </CreditsCard>
             ))}
             {form?.values?.images?.length < 3 && (
               <>

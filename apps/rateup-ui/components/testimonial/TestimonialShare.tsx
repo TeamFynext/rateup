@@ -1,40 +1,26 @@
 import {
   CopyButton,
-  Flex,
   Group,
   Modal,
   Paper,
   ScrollArea,
-  SimpleGrid,
   Stack,
   Title,
   Text,
   Center,
   Image,
+  ScrollAreaAutosize,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import {
-  IconChevronLeft,
-  IconConfetti,
-  IconCopy,
-  IconShare,
-} from "@tabler/icons-react";
-import { useContext, useState } from "react";
-import SelectedTestimonialCollectionContext from "../../context/SelectedCollectionContext";
+import { IconChevronLeft, IconCopy } from "@tabler/icons-react";
+import { useState } from "react";
 import TestimonialCard from "./TestimonialCard";
-import { useDisclosure } from "@mantine/hooks";
 import NothingFound from "../NothingFound/NothingFound";
 
 const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
-  const { selectedCollectionId } = useContext(
-    SelectedTestimonialCollectionContext,
-  );
-
-  const [opened, { open, close }] = useDisclosure(false);
-
   const filteredTestimonials = selectedTestimonials;
   if (filteredTestimonials?.length <= 0)
     return (
@@ -44,34 +30,23 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
     );
 
   return (
-    <Stack pt={"xl"}>
-      <Flex justify={"flex-end"}>
-        <RateupButtonBlue
-          color="black"
-          title="Share"
-          leftIcon={<IconShare />}
-          onClick={open}
-        />
-      </Flex>
-      <SimpleGrid cols={3} mt={"lg"}>
-        {filteredTestimonials?.map((testimonial, index) => (
-          <TestimonialCard
-            testimonial={testimonial}
-            currentStyle={currentStyle}
-            key={testimonial?.id}
-          />
-        ))}
-      </SimpleGrid>
-      <TestimonialShareModal
-        opened={opened}
-        onClose={close}
-        collectionId={selectedCollectionId}
-      />
-    </Stack>
+    <ScrollAreaAutosize>
+      <Stack mah={500}>
+        <Group p={"sm"}>
+          {filteredTestimonials?.map((testimonial, index) => (
+            <TestimonialCard
+              testimonial={testimonial}
+              currentStyle={currentStyle}
+              key={testimonial?.id}
+            />
+          ))}
+        </Group>
+      </Stack>
+    </ScrollAreaAutosize>
   );
 };
 
-const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
+export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const shareUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/testimonial/${collectionId}`;
   const iframe = `<iframe src="${shareUrl}" width={"100%"} height={"400"}></iframe>`;
 

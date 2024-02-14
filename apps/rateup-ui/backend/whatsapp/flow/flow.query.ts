@@ -15,7 +15,6 @@ import {
   deprecateFlow,
 } from "./flow.api";
 import { showSuccessToast } from "../../../utils/notifications";
-import { WaFlow } from "../../../types/global";
 
 export const useWaFlowsFromDb = () =>
   useQuery({
@@ -99,7 +98,7 @@ export const useUpdateFlowMutation = () => {
   return useMutation({
     mutationFn: (data: {
       dbFlowId: string;
-      data: Partial<Omit<WaFlow, "dbFlowId">>;
+      data: Partial<Omit<DbFlow, "dbFlowId">>;
     }) => updateFlow(data.dbFlowId, data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });

@@ -27,18 +27,14 @@ import { showErrorToast } from "../../../utils/notifications";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge";
 import { useEffect, useState } from "react";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import { WaResponseMessage } from "../MessageComponents";
-import whatsappStyles from "../whatsapp.module.css";
 import {
   useImportFlowsMutation,
   useUnsyncedFlows,
   useWaFlowJson,
 } from "../../../backend/whatsapp/flow/flow.query";
 import {
-  WaFlow,
   WaFlowFormChoice,
   WaFlowFormElement,
-  WaFlowJson,
   WaFlowWa,
 } from "../../../types/global";
 import {
@@ -46,12 +42,11 @@ import {
   getQuestionTypesFromFlowElement,
   qTypesWithAmbiguousChoices,
   validateOptions,
-  waFlowFormElementIterator,
   waFlowFormToQuestionTypeMaps,
 } from "../../../utils/whatsapp/flow.utils";
 import { useForm } from "@mantine/form";
 import CenteredSpinner from "../../Loaders/CenteredSpinner";
-import { UseForm, UseFormReturnType } from "@mantine/form/lib/types";
+import { UseFormReturnType } from "@mantine/form/lib/types";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { WaFlowFormElementType } from "../../../types/enums";
 import { TeamSelector } from "../../input/TeamSelector";

@@ -4,13 +4,12 @@ import { useGetAllTestimonialsByCollection } from "../../../backend/testimonials
 import { Carousel } from "@mantine/carousel";
 import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 import Head from "next/head";
-import { Flex, SimpleGrid } from "@mantine/core";
+import { Flex, Loader, SimpleGrid } from "@mantine/core";
 
 const Collections = () => {
   const router = useRouter();
-  const { collectionId } = router.query;
+  const { collectionId, isLoading } = router.query;
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
-  const testimonials = collection?.testimonials?.map((t) => t?.testimonial);
 
   return (
     <>
@@ -41,7 +40,9 @@ const Collections = () => {
         <meta property="og:image:alt" content="Star Icon" />
       </Head>
       <Flex justify={"center"} align={"center"} m={"xl"} bg={"transparent"}>
-        {collection?.theme.layout == "horizontal" ? (
+        {isLoading ? (
+          <Loader type="bars" />
+        ) : collection?.theme.layout == "horizontal" ? (
           <Carousel
             align="start"
             slideSize={{ base: "270px", xs: "320px" }}
@@ -51,7 +52,7 @@ const Collections = () => {
             speed={5}
             controlsOffset={"xs"}
           >
-            {testimonials?.map((testimonial) => {
+            {collection?.testimonials?.map((testimonial) => {
               return (
                 <>
                   <Carousel.Slide key={testimonial.id}>
@@ -66,7 +67,7 @@ const Collections = () => {
           </Carousel>
         ) : (
           <SimpleGrid cols={3}>
-            {testimonials?.map((testimonial) => (
+            {collection?.testimonials?.map((testimonial) => (
               <TestimonialCard
                 testimonial={testimonial}
                 currentStyle={collection?.theme}

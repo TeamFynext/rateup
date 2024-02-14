@@ -1,4 +1,4 @@
-import { Stack, Text } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import FormModalLayout from "../Modal/FormModalLayout";
 import {
   ContainedSelection,
@@ -6,29 +6,36 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useCreateTestimonialCollection } from "../../backend/testimonials/testimonial.query";
-import { useSurvey } from "../../backend/surveys/surveys.query";
 import { defaultTestimonialStyle } from "../../utils/testimonial";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
+import { useTeamsByUser } from "../../backend/team/team.query";
 
-const SaveTestimonialCollection = ({ opened, close, selectedSurvey }) => {
+const SaveTestimonialCollection = ({ opened, close }) => {
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error,
+  } = useTeamsByUser();
+  const teamOptions = teamRes?.data?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
+  }));
   const form = useForm({
     initialValues: {
       name: "",
-      surveyTeamMapId: "",
+      teamId: "",
       theme: defaultTestimonialStyle,
     },
     validate: {
       name: isNotEmpty("Name cannot be blank"),
-      surveyTeamMapId: isNotEmpty("Please select a team"),
+      teamId: isNotEmpty("Please select a team"),
     },
   });
-  const { data: survey } = useSurvey(selectedSurvey);
-  const teamsOptions = survey?.teams?.map((team) => {
-    return { value: team?.mapId, label: team?.name };
-  });
+
   const router = useRouter();
-  const saveCollection = useCreateTestimonialCollection(selectedSurvey);
+  const saveCollection = useCreateTestimonialCollection();
   const onSubmit = () => {
     if (form.validate().hasErrors) return;
     notifications.show({
@@ -74,12 +81,11 @@ const SaveTestimonialCollection = ({ opened, close, selectedSurvey }) => {
           }}
         />
         <ContainedSelection
-          data={teamsOptions}
+          data={teamOptions}
           label={"Select Team"}
-          {...form.getInputProps("surveyTeamMapId")}
+          {...form.getInputProps("teamId")}
           placeholder="Select Team"
         />
-        <Text c="red">{form.errors.selectedTestimonials}</Text>
       </Stack>
     </FormModalLayout>
   );
