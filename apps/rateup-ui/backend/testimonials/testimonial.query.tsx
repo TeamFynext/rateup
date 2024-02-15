@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  addMultipleTestimonialsToCollection,
   createTestimonialCollection,
+  deleteMultipleTestimonialsFromCollection,
   deleteTestimonialCollection,
-  deleteTestimonialsFromCollection,
   getAllTestimonialBySurvey,
   getAllTestimonialCollections,
   getAllTestimonialSurveys,
@@ -85,26 +86,6 @@ export function useUpdateCollection(collectionId) {
   });
 }
 
-export function useDeleteTestimonialsFromCollections(collectionId) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: deleteTestimonialsFromCollection,
-    onSuccess: () => {
-      showSuccessToast(
-        "Testimonials deleted",
-        "update-collection",
-        <IconCheck />,
-      );
-      queryClient.invalidateQueries({
-        queryKey: ["allTestimonialsByCollection", collectionId],
-      });
-    },
-    onError: (error) => {
-      showErrorToast("Error deleting testimonials", error.message, <IconX />);
-    },
-  });
-}
-
 export function useDeleteTestimonialCollection() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -129,5 +110,46 @@ export function useGetAllTestimonialSurveys() {
   return useQuery({
     queryKey: ["alltestimonialSurveys"],
     queryFn: getAllTestimonialSurveys,
+  });
+}
+
+//all the below metioned queries are used for managing multiple testimonials in a collection
+export function useAddMultipleTestimonialsToCollection(collectionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (testimonialIds: string[]) =>
+      addMultipleTestimonialsToCollection(collectionId, testimonialIds),
+    onSuccess: () => {
+      showSuccessToast("Testimonials added", "add-testimonials", <IconCheck />);
+      queryClient.invalidateQueries({
+        queryKey: ["allTestimonialsByCollection", collectionId],
+      });
+    },
+    onError: (error) => {
+      showErrorToast("Error adding testimonials", error.message, <IconX />);
+    },
+  });
+}
+
+export function useDeleteMultipleTestimonialsFromCollection(
+  collectionId: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (testimonialIds: string[]) =>
+      deleteMultipleTestimonialsFromCollection(collectionId, testimonialIds),
+    onSuccess: () => {
+      showSuccessToast(
+        "Testimonials deleted",
+        "delete-testimonials",
+        <IconCheck />,
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["allTestimonialsByCollection", collectionId],
+      });
+    },
+    onError: (error) => {
+      showErrorToast("Error deleting testimonials", error.message, <IconX />);
+    },
   });
 }

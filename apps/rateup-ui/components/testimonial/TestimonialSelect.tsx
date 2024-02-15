@@ -7,11 +7,15 @@ import {
   Group,
 } from "@mantine/core";
 import TestimonialCard from "./TestimonialCard";
-import { useGetAllTestimonialsByOrg } from "../../backend/testimonials/testimonial.query";
+import {
+  useGetAllTestimonialsByCollection,
+  useGetAllTestimonialsByOrg,
+} from "../../backend/testimonials/testimonial.query";
 import { filterType } from "../../pages/dashboard/testimonial/[collectionId]";
 import { getFilteredTestimonials } from "../../utils/testimonial";
 import NothingFound from "../NothingFound/NothingFound";
 import classes from "./testimonial.module.css";
+import { useRouter } from "next/router";
 
 const TestimonialSelect = ({
   selectedTestimonialIds,
@@ -24,6 +28,7 @@ const TestimonialSelect = ({
   filters: filterType;
   type: string;
 }) => {
+  const { collectionId } = useRouter().query as { collectionId: string };
   const { data: alltestimonials, isLoading: isTestimonialLoading } =
     useGetAllTestimonialsByOrg();
   const filteredTestimonials = getFilteredTestimonials(
@@ -31,7 +36,13 @@ const TestimonialSelect = ({
     filters,
     type,
   );
-
+  const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
+  function checkIfTestimonialIdsAreIncludedInAllTestimonials(
+    idtocheck: string,
+  ) {
+    const esistingtestimonialIds = collection?.testimonials.map((t) => t.id);
+    return esistingtestimonialIds?.includes(idtocheck);
+  }
   if (isTestimonialLoading) return <Loader />;
   if (filteredTestimonials?.length <= 0)
     return (
@@ -41,7 +52,7 @@ const TestimonialSelect = ({
     );
   return (
     <ScrollAreaAutosize>
-      <Stack mah={500}>
+      <Stack>
         <Group p={"sm"}>
           {filteredTestimonials?.map((testimonial, index) => {
             const isSelected = selectedTestimonialIds?.some(
@@ -51,7 +62,15 @@ const TestimonialSelect = ({
               <div className={classes.root} key={testimonial?.id}>
                 <Checkbox
                   classNames={{ root: classes.checkboxWrapper }}
-                  checked={isSelected}
+                  checked={
+                    isSelected ||
+                    checkIfTestimonialIdsAreIncludedInAllTestimonials(
+                      testimonial?.id,
+                    )
+                  }
+                  disabled={checkIfTestimonialIdsAreIncludedInAllTestimonials(
+                    testimonial?.id,
+                  )}
                   onChange={(e) => {
                     if (e.currentTarget.checked)
                       setSelectedTestimonialIds((prev) => [

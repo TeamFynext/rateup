@@ -81,6 +81,7 @@ const SaveTestimonialCollection = ({ opened, close }) => {
           }}
         />
         <ContainedSelection
+          allowDeselect={false}
           data={teamOptions}
           label={"Select Team"}
           {...form.getInputProps("teamId")}

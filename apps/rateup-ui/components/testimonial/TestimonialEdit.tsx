@@ -16,7 +16,7 @@ import TestimonialCard from "./TestimonialCard";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../../utils/questions";
 import {
-  useDeleteTestimonialsFromCollections,
+  useDeleteMultipleTestimonialsFromCollection,
   useUpdateCollection,
 } from "../../backend/testimonials/testimonial.query";
 import { getFilteredTestimonials } from "../../utils/testimonial";
@@ -36,41 +36,26 @@ const TestimonialEdit = ({
   toggleDelete,
 }) => {
   console.log("edit page testimonials", testimonials);
-  const [deletedTestimonialIds, setDeletedTestimonialIds] = useState<
-    Array<string>
-  >([]);
-  const { collectionId } = useRouter().query;
+  const [testimonialIds, setTestimonialIds] = useState<Array<string>>([]);
+  const { collectionId } = useRouter().query as { collectionId: string };
   const deletedTestimonialsMutation =
-    useDeleteTestimonialsFromCollections(collectionId);
+    useDeleteMultipleTestimonialsFromCollection(collectionId);
 
   const [dialogOpened, { open: openDialog, close: closeDialog }] =
     useDisclosure(false);
 
   const handleDelete = () => {
-    deletedTestimonialsMutation.mutate(
-      {
-        data: { testimonialIds: deletedTestimonialIds },
-        collectionId,
+    deletedTestimonialsMutation.mutate(testimonialIds, {
+      onSuccess: () => {
+        toggleDelete();
       },
-      {
-        onSuccess: () => {
-          toggleDelete();
-        },
-      },
-    );
+    });
   };
   let filteredTestimonials = getFilteredTestimonials(
     testimonials,
     filters,
     type,
   );
-
-  if (testimonials?.length <= 0)
-    return (
-      <Center mt={150}>
-        <NothingFound text={"No testimonials found"} />
-      </Center>
-    );
 
   filteredTestimonials = testimonials;
   const updateCollection = useUpdateCollection(collectionId);
@@ -99,6 +84,12 @@ const TestimonialEdit = ({
       },
     );
   };
+  if (testimonials?.length <= 0)
+    return (
+      <Center mt={150}>
+        <NothingFound text={"No testimonials found"} />
+      </Center>
+    );
 
   return (
     <Stack gap={"md"}>
@@ -125,7 +116,7 @@ const TestimonialEdit = ({
                   style={{ flexWrap: "wrap" }}
                 >
                   {filteredTestimonials?.map((testimonial, index) => {
-                    const isSelected = deletedTestimonialIds.some(
+                    const isSelected = testimonialIds.some(
                       (t) => t === testimonial.id,
                     );
                     return (
@@ -147,12 +138,12 @@ const TestimonialEdit = ({
                                   classNames={{ root: classes.checkboxWrapper }}
                                   onChange={(e) => {
                                     if (e.currentTarget.checked)
-                                      setDeletedTestimonialIds((prev) => [
+                                      setTestimonialIds((prev) => [
                                         ...prev,
                                         testimonial?.id,
                                       ]);
                                     else
-                                      setDeletedTestimonialIds(
+                                      setTestimonialIds(
                                         (prev) =>
                                           prev?.filter(
                                             (t) => t !== testimonial?.id,

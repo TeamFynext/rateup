@@ -2,12 +2,10 @@ import {
   Center,
   Container,
   Flex,
-  Grid,
   Group,
   Loader,
   SimpleGrid,
   Tabs,
-  TextInput,
   Title,
   Space,
   Stack,
@@ -54,7 +52,7 @@ const indexPage = () => {
       ? testimonials
       : testimonials?.filter((t) => t?.teamId === selectedTeamId);
   return (
-    <Stack gap={"lg"}>
+    <Stack gap={"lg"} h="100%">
       <Flex
         mih={50}
         gap="md"
@@ -76,7 +74,7 @@ const indexPage = () => {
           value={selectedTeamId}
           onChange={setSelectedTeamId}
           enableAll={true}
-        ></TeamSelector>
+        />
       </Flex>
       <Tabs
         value={activeTab}
@@ -111,9 +109,12 @@ const indexPage = () => {
                 <Loader type="bars" />
               </Center>
             ) : filteredTestimonials?.length > 0 ? (
-              <Group mah={450}>
+              <Group>
                 {filteredTestimonials.map((testimonial) => (
-                  <TestimonialCard testimonial={testimonial} />
+                  <TestimonialCard
+                    testimonial={testimonial}
+                    key={testimonial.id}
+                  />
                 ))}
               </Group>
             ) : (
@@ -138,7 +139,7 @@ const indexPage = () => {
                   <TestimonialCollectionCard
                     collection={collection}
                     key={collection?.id}
-                  ></TestimonialCollectionCard>
+                  />
                 ))}
               </SimpleGrid>
             ) : (

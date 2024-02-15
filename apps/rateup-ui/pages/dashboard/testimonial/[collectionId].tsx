@@ -12,6 +12,7 @@ import TestimonialFilter from "../../../components/testimonial/TestimonialFilter
 import { Testimonial, TestimonialStyleType } from "../../../types/global";
 import { useImmer } from "use-immer";
 import {
+  useAddMultipleTestimonialsToCollection,
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
   useUpdateCollection,
@@ -43,6 +44,8 @@ export type filterType = {
   surveys: string[];
 };
 export default function () {
+  const { update } = useRouteParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(
     TestimonialTabs.Select,
   );
@@ -50,10 +53,8 @@ export default function () {
     string[]
   >([]);
   const [isDelete, { toggle: toggleDelete }] = useDisclosure(false);
-  const router = useRouter();
   const { collectionId } = router.query as { collectionId: string };
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
-  //  console.log("collection",collection)
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(
     defaultTestimonialStyle,
   );
@@ -64,14 +65,7 @@ export default function () {
     surveys: [],
     teams: [],
   });
-  const { update } = useRouteParams();
   const [type, setType] = useState("date");
-
-  useEffect(() => {
-    update({ collectionId: collection?.name });
-    setSelectedTestimonialIds(collection?.testimonials?.map((t) => t.id));
-    setCurrentstyle(collection?.theme);
-  }, [collection]);
 
   const { data: alltestimonials, isLoading: isTestimonialLoading } =
     useGetAllTestimonialsByOrg();
@@ -84,6 +78,11 @@ export default function () {
   const [openedEdit, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
 
+  // useEffect(() => {
+  //   update({ collectionId: collection?.name });
+  //   setSelectedTestimonialIds(collection?.testimonials?.map((t) => t.id));
+  //   setCurrentstyle(collection?.theme);
+  // }, [collection]);
   return (
     <StyledTabs
       value={activeTab}
@@ -105,7 +104,7 @@ export default function () {
           </Tabs.Tab>
         </Tabs.List>
       </Group>
-      <Group gap="sm" h="75vh">
+      <Group gap="sm" h="85vh">
         <Tabs.Panel value={TestimonialTabs.Select}>
           <TestimonialSelect
             selectedTestimonialIds={selectedTestimonialIds}
@@ -183,22 +182,31 @@ function UtilityComponent({
 }: UtilityComponentProps) {
   const { collectionId } = useRouter().query as { collectionId: string };
   const updateTestimonialCollection = useUpdateCollection(collectionId);
+  const addMultipleTestimonials =
+    useAddMultipleTestimonialsToCollection(collectionId);
   const handleNext = () => {
-    updateTestimonialCollection.mutate(
-      {
-        data: { testimonialIds: selectedTestimonialIds },
-        collectionId: collectionId,
-      },
-      {
-        onSuccess: () => {
-          setActiveTab(TestimonialTabs.Edit);
-        },
-      },
-    );
+    addMultipleTestimonials.mutate(selectedTestimonialIds);
+    // updateTestimonialCollection.mutate(
+    //   {
+    //     data: { testimonialIds: selectedTestimonialIds },
+    //     collectionId: collectionId,
+    //   },
+    //   {
+    //     onSuccess: () => {
+    //       setActiveTab(TestimonialTabs.Edit);
+    //     },
+    //   }
+    // );
   };
-  function selectAll(e) {
+  const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
+  //this function is used to check if the selected testimonial ids are already present in the collection
+  function filterAndSelectTestimonialIds(e) {
+    const savedTestimonialIds = collection?.testimonials?.map((t) => t.id);
+    const testimonialIdsNotInCollection = filteredTestimonialIds.filter(
+      (t) => !savedTestimonialIds.includes(t),
+    );
     if (e.currentTarget.checked)
-      setSelectedTestimonialIds(filteredTestimonialIds);
+      setSelectedTestimonialIds(testimonialIdsNotInCollection);
     else setSelectedTestimonialIds([]);
   }
   const isAllSelected =
@@ -241,7 +249,7 @@ function UtilityComponent({
               size="xs"
               checked={isAllSelected}
               disabled={!filteredTestimonialIds?.length}
-              onChange={selectAll}
+              onChange={filterAndSelectTestimonialIds}
             />
             <Button
               size="compact-xs"

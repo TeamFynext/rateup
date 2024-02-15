@@ -17,6 +17,7 @@ const TestimonialCollectionCard = ({ collection }) => {
   }
   return (
     <PaperLayout
+      hoveractive
       shadow="xl"
       onClick={() => {
         router.push(`${router.pathname}/${collection.id}`);

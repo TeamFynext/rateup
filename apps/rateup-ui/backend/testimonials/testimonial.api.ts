@@ -1,5 +1,8 @@
-import { Testimonial } from "../../types/global";
+import { Testimonial, TestimonialStyleType } from "../../types/global";
 import { axiosClient } from "../apiClient";
+
+const TESTIMONIAL_BASE_URL = "/testimonials";
+const TESTIMONIAL_COLLECTION_BASE_URL = "/testimonial/collections";
 
 export async function getAllTestimonialBySurvey(surveyId: string) {
   let testimonials = await axiosClient.get(`/testimonials/${surveyId}`);
@@ -28,12 +31,23 @@ export async function getAllTestimonialCollections() {
   return collections;
 }
 
+type TestiomonialCollection = {
+  id: string;
+  createdAt: string;
+  name: string;
+  teamId: string;
+  theme: TestimonialStyleType;
+  testimonials: Omit<
+    Testimonial & { responseId: string },
+    "teamId" | "survey"
+  >[];
+};
 export async function getAllTestimonialsByCollection(collectionId: string) {
   let collection = (
     await axiosClient.get(`/testimonial/collections/${collectionId}`)
   ).data;
   console.log("collection", collection);
-  return collection;
+  return collection as TestiomonialCollection;
 }
 export async function updateTestimonialCollection({ data, collectionId }) {
   let testimonials = await axiosClient.put(
@@ -42,15 +56,29 @@ export async function updateTestimonialCollection({ data, collectionId }) {
   );
   return testimonials.data;
 }
-export async function deleteTestimonialsFromCollection({ data, collectionId }) {
-  let testimonials = await axiosClient.put(
-    `/testimonial/collections/delete-testimonials/${collectionId}`,
-    data,
-  );
-  return testimonials.data;
-}
 
 export async function deleteTestimonialCollection(collectionId) {
   return (await axiosClient.delete(`/testimonial/collections/${collectionId}`))
     .data;
+}
+
+//all these below listed functions are for managing multiple testimonials in a collection
+export async function addMultipleTestimonialsToCollection(
+  collection_id: string,
+  testimonialIds: string[],
+) {
+  return await axiosClient.post(
+    `${TESTIMONIAL_COLLECTION_BASE_URL}/${collection_id}/testimonials`,
+    { testimonialIds },
+  );
+}
+
+export async function deleteMultipleTestimonialsFromCollection(
+  collection_id: string,
+  testimonialIds: string[],
+) {
+  return await axiosClient.delete(
+    `${TESTIMONIAL_COLLECTION_BASE_URL}/${collection_id}/testimonials`,
+    { data: { testimonialIds } },
+  );
 }
