@@ -23,12 +23,12 @@ function HeaderStyles({
     <>
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
-        <Group wrap="nowrap" gap={"xs"}>
+        <Group wrap="nowrap" gap={"xs"} w={"100%"}>
           <Select
             label="Font weight"
             name="fontWeight"
             data={FontWeights}
-            maw={120}
+            style={{ flex: 1 }}
             value={currentStyles?.styles?.fontWeight}
             classNames={{ label: styles["label"] }}
             onChange={(e) => {
@@ -41,7 +41,7 @@ function HeaderStyles({
           <NumberInput
             min={10}
             max={100}
-            maw={120}
+            style={{ flex: 1 }}
             defaultValue={18}
             placeholder="size"
             label="Font Size"

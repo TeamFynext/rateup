@@ -1,38 +1,24 @@
 import React, { useState, useEffect } from "react";
 import {
-  Image,
   Stack,
   Burger,
-  useMantineTheme,
-  Text,
-  Flex,
-  Menu,
-  Group,
-  Avatar,
   NavLink,
   Tooltip,
   Divider,
   ScrollArea,
   Anchor,
   Box,
-  Combobox,
 } from "@mantine/core";
-import LoggedInUserCard from "./LoggedInUserCard";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useRouter } from "next/router";
-import { IconChevronLeft } from "@tabler/icons-react";
-import { IconChevronUp, IconChevronDown } from "@tabler/icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { useUser } from "../../../context/UserContext";
 import styles from "./Navbar.module.css";
-import {
-  NavbarLinkProps,
-  getNavTopData,
-  useNavBottomData,
-} from "./navbar.constants";
+import { NavbarLinkProps, getNavTopData } from "./navbar.constants";
 import { UserRole } from "../../../utils/enums";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import ExpiryComponent from "../../Premium/ExpiryComponent";
+import NavbarHeader from "./NavbarHeader";
+import NavbarFooter from "./NavbarFooter";
 interface _NavbarLinkProps {
   data: Array<NavbarLinkProps>;
   opened: boolean;
@@ -186,10 +172,7 @@ interface iProps {
 }
 
 const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
-  const theme = useMantineTheme();
-  const router = useRouter();
   const [active, setActive] = useState(0);
-  const navBottomData = useNavBottomData();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { user } = useUser();
@@ -206,16 +189,6 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       );
     }
   }, [user]);
-
-  const handleItemClick = (item: NavbarLinkProps) => {
-    if (item.label === "Admin") {
-      router.push(`/admin`);
-    } else if (item.label === "Settings") {
-      router.push(`/dashboard/settings`);
-    } else if (item.label === "Logout") {
-      router.push(`/logout`);
-    }
-  };
 
   const handlePaperLayoutClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -244,7 +217,6 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
   return (
     <Stack
       className={styles["navbar"]}
-      p="lg"
       gap={0}
       style={style}
       w={"100%"}
@@ -252,76 +224,14 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
       miw={opened ? (isMobile ? 360 : 250) : 70}
       maw={opened ? (isMobile ? 360 : 250) : 70}
     >
-      {opened ? (
-        <Stack align="center" gap={0} pos={"relative"}>
-          {isMobile && (
-            <Burger
-              opened={opened}
-              onClick={() => {
-                setOpened((o) => !o);
-              }}
-              size="sm"
-              mb="sm"
-              color={theme.colors.gray[6]}
-            />
-          )}
-          <Group className={styles["icon-and-chevraon-container"]}>
-            <Image
-              h={user?.orgLogo ? 120 : 120}
-              w={user?.orgLogo ? 120 : 120}
-              fit="contain"
-              src={
-                user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
-                  ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
-                  : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-              }
-            />
-            <PaperLayout
-              w={"fit-content"}
-              p={2}
-              hoveractive
-              radius={"md"}
-              style={{
-                justifySelf: "flex-end",
-                alignItems: "center",
-                justifyContent: "center",
-                display: "flex",
-              }}
-            >
-              <IconChevronLeft
-                size={25}
-                onClick={() => {
-                  setOpened((o) => !o);
-                }}
-                style={{ cursor: "pointer" }}
-              />
-            </PaperLayout>
-          </Group>
-        </Stack>
-      ) : (
-        <>
-          <Avatar
-            onClick={() => {
-              setOpened((o) => !o);
-            }}
-            style={{ cursor: "pointer" }}
-            src={
-              user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
-                ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.orgLogo}`
-                : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-            }
-            alt={"Organization Name"}
-            radius="xl"
-            size={30}
-            mt={50}
-          />
-        </>
-      )}
-
+      <header>
+        <NavbarHeader {...user} {...{ opened, setOpened }} />
+      </header>
+      <Divider />
       <ScrollArea
-        mt={"sm"}
+        mt={"xs"}
         mb={20}
-        p={1}
+        p={"lg"}
         h={"100%"}
         scrollbarSize={2}
         offsetScrollbars
@@ -360,91 +270,17 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
           </Tooltip>
         </ExpiryComponent>
       </ScrollArea>
-      <Stack gap={10}>
-        <Combobox>
-          <Menu shadow="md" onClose={() => setIsDropdownOpen(false)}>
-            <Menu.Target>
-              <Box>
-                {opened ? (
-                  <PaperLayout
-                    p={3}
-                    hoveractive
-                    left={0}
-                    radius={"lg"}
-                    onClick={handlePaperLayoutClick}
-                  >
-                    <Flex
-                      justify={"space-between"}
-                      className={styles["Logged-in-user-card"]}
-                    >
-                      <LoggedInUserCard />
-                      {isDropdownOpen ? (
-                        <IconChevronDown
-                          className={styles["user-icon-arrow-circle"]}
-                        />
-                      ) : (
-                        <IconChevronUp
-                          className={styles["user-icon-arrow-circle"]}
-                        />
-                      )}
-                    </Flex>
-                  </PaperLayout>
-                ) : (
-                  <Avatar
-                    onClick={() => {
-                      setOpened((o) => !o);
-                    }}
-                    src={
-                      user?.orgLogo && user?.orgLogo !== "REMOVED_PHOTO"
-                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`
-                        : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-                    }
-                    alt=""
-                    radius="xl"
-                    size={30}
-                    mt={50}
-                  />
-                )}{" "}
-              </Box>
-            </Menu.Target>
-            <Menu.Dropdown
-              className={styles["dropdown-menu"]}
-              style={{ width: "190px" }}
-            >
-              <Menu.Label>Manage your Account</Menu.Label>
-              {navBottomData.map((item, index) => (
-                <Menu.Item key={index} onClick={() => handleItemClick(item)}>
-                  <Flex style={{ marginLeft: "1rem", marginTop: "0.5rem" }}>
-                    {item.Icon && (
-                      <item.Icon size={21} style={{ color: "grey" }} />
-                    )}
-                    <Text
-                      style={{
-                        fontSize: "15px",
-                        marginLeft: "1rem",
-                        color: "grey",
-                      }}
-                    >
-                      {item.label}
-                    </Text>
-                  </Flex>
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-        </Combobox>
-        <img
-          src={
-            opened
-              ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-              : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/icons/rateup_new_logo.svg`
-          }
-          alt=""
-          height={opened ? 40 : 20}
-        />
-      </Stack>
+      <Divider />
+      <footer className={styles.navbarfooter}>
+        <NavbarFooter {...user} {...{ opened, setOpened }} />
+      </footer>
     </Stack>
   );
 };
 
 export default LeftNavbar;
+
+export interface UserCardInterface extends UserData {
+  opened: boolean;
+  setOpened: React.Dispatch<React.SetStateAction<boolean>>;
+}

@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import React from "react";
-import { Breadcrumbs, Text } from "@mantine/core";
+import { Breadcrumbs, Group, Image, Text } from "@mantine/core";
 import Link from "next/link";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { IconChevronRight, IconHome } from "@tabler/icons";
@@ -13,36 +13,41 @@ export const Navbar = () => {
   const pathParts = pathname.split("/").filter((path) => path);
   const routeParams = useRouteParams();
   return (
-    <Breadcrumbs
-      separator={
-        <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
-      }
-    >
-      <Link href="/dashboard" className={styles["link"]}>
-        <IconHome size={23} color="var(--mantine-color-gray-6)" />
-      </Link>
-      {pathParts.map((part, index) => {
-        part = replaceRouteParameter(part, query, routeParams);
-        if (part == "dashboard") return;
-        return (
-          <Link
-            className={styles["link"]}
-            href={`/${pathParts.slice(0, index + 1).join("/")}`}
-            key={index}
-          >
-            <Text
-              c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
-              size={"14px"}
+    <Group justify="space-between">
+      <Breadcrumbs
+        separator={
+          <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
+        }
+      >
+        <Link href="/dashboard" className={styles["link"]}>
+          <IconHome size={23} color="var(--mantine-color-gray-6)" />
+        </Link>
+        {pathParts.map((part, index) => {
+          part = replaceRouteParameter(part, query, routeParams);
+          if (part == "dashboard") return;
+          return (
+            <Link
+              className={styles["link"]}
+              href={`/${pathParts.slice(0, index + 1).join("/")}`}
+              key={index}
             >
-              {part.charAt(0).toUpperCase() + part.slice(1)}
-            </Text>
-          </Link>
-        );
-      })}
-    </Breadcrumbs>
+              <Text
+                c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
+                size={"14px"}
+              >
+                {part.charAt(0).toUpperCase() + part.slice(1)}
+              </Text>
+            </Link>
+          );
+        })}
+      </Breadcrumbs>
+      <Image
+        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
+        w={50}
+      />
+    </Group>
   );
 };
-
 function replaceRouteParameter(part, query, routeParams) {
   // Add routeParams as a parameter
   if (part.startsWith("[") && part.endsWith("]")) {
