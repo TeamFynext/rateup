@@ -1,4 +1,4 @@
-import { log } from "../../utils/logger";
+import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { deleteFile } from "../../utils/upload/s3Upload";
 import {
@@ -54,6 +54,11 @@ export async function getFullMenu(menuId: string) {
           itemOrder: "asc",
         },
       },
+      team: {
+        select: {
+          orgId: true,
+        },
+      },
       menuLanding: {
         select: {
           headerStyle: true,
@@ -65,6 +70,7 @@ export async function getFullMenu(menuId: string) {
           mobileBackgroundImage: true,
           surveyTeamMapId: true,
           unsplashImage: true,
+          visited: true,
           menu: {
             select: {
               currency: true,
@@ -75,7 +81,20 @@ export async function getFullMenu(menuId: string) {
       },
     },
   });
-  return menu;
+  const subscription = await prisma.subscription.findFirst({
+    where: {
+      orgId: menu?.team?.orgId,
+    },
+  });
+  let expiry;
+  const isExpired = dayjs().isAfter(subscription.expiresAt);
+  if (!subscription.basePlanId && menu?.menuLanding?.visited >= 100)
+    expiry = "Your free plan quota has been exceeded.";
+  else if (isExpired) expiry = "Your subscription plan has expired.";
+  if (menu.menuLanding) {
+    delete menu.menuLanding.visited;
+  }
+  return { ...menu, expiry };
 }
 export async function getAllMenus({ userId, role, orgId }) {
   let condition = {};
@@ -221,7 +240,15 @@ export async function getMenuLanding(id: string) {
       },
     },
     include: {
-      menu: true,
+      menu: {
+        include: {
+          team: {
+            select: {
+              orgId: true,
+            },
+          },
+        },
+      },
       surveyTeamMap: {
         select: {
           surveyId: true,
@@ -234,6 +261,13 @@ export async function getMenuLanding(id: string) {
     menu = await prisma.menu.findFirst({
       where: {
         id: id,
+      },
+      include: {
+        team: {
+          select: {
+            orgId: true,
+          },
+        },
       },
     });
     menu = {
@@ -248,9 +282,17 @@ export async function getMenuLanding(id: string) {
       ...menu,
     };
   }
-  if (menu) {
-    return menu;
-  } else {
+  const subscription = await prisma.subscription.findFirst({
+    where: menu?.team?.orgId,
+  });
+  const isExpired = dayjs().isAfter(subscription.expiresAt);
+
+  if (!subscription.basePlanId && menu.visited >= 100)
+    menu.expiry = "Your free plan quota has been exceeded.";
+  else if (isExpired) menu.expiry = "Your subscription plan has expired.";
+
+  if (menu) return menu;
+  else {
     return {
       success: false,
       message: "Menu data not found",

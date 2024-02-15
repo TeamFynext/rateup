@@ -28,7 +28,6 @@ const createSurveyLandingRequestSchema = z.object({
     invalid_type_error: "Header must be a string",
   }),
   surveys: z.array(z.string()),
-
 });
 const createSurveyLandingResponseSchema = z.object({
   title: z.string({
@@ -77,8 +76,10 @@ const getSurveyPublicResponseSchema = z.object({
   kioskMode: z.boolean(),
   getLocation: z.boolean(),
   welcomePageEnabled: z.boolean(),
-  orgLogo:z.string(),
+  orgLogo: z.string(),
   skipPreview: z.boolean(),
+  googleLink: z.string(),
+  reviews: z.array(z.any()),
 });
 
 const updateSurveyRequestSchema = z.object({
@@ -97,7 +98,7 @@ const updateSurveyRequestSchema = z.object({
   skipPreview: z.boolean().optional(),
   getLocation: z.boolean().optional(),
   enableNotificationEmail: z.boolean().optional(),
-  notificationEmail:z.string().email().optional()
+  notificationEmail: z.string().email().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z
@@ -114,7 +115,6 @@ const updateLandingPageRequestSchema = z.object({
     .optional(),
   surveys: z.array(z.string()).optional(),
   welcomePageEnabled: z.boolean().default(false).optional(),
-
 });
 
 const updateSurveyPasswordRequestSchema = z.object({
@@ -147,24 +147,32 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     idParamsSchema,
     cloneSurveySchema,
     updateGoogleLinkRequestSchema,
-    deleteTeamSurveyRequestSchema
+    deleteTeamSurveyRequestSchema,
   },
-  { $id: "surveySchema" }
+  { $id: "surveySchema" },
 );
 
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type CreateSurveyLandingInput = z.infer<
   typeof createSurveyLandingRequestSchema
 >;
-export type GetSurveyTemplatesParams = z.infer<typeof getSurveyTemplatesParamsSchema>;
+export type GetSurveyTemplatesParams = z.infer<
+  typeof getSurveyTemplatesParamsSchema
+>;
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
-export type GetSurveyLandingByIdParams = z.infer<typeof getSurveyLandingByIdParamsSchema>;
+export type GetSurveyLandingByIdParams = z.infer<
+  typeof getSurveyLandingByIdParamsSchema
+>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
-export type UpdateLandingPageInput = z.infer<typeof updateLandingPageRequestSchema>;
+export type UpdateLandingPageInput = z.infer<
+  typeof updateLandingPageRequestSchema
+>;
 export type UpdateSurveyPassword = z.infer<
   typeof updateSurveyPasswordRequestSchema
 >;
-export type DeleteTeamSurveyInput = z.infer<typeof deleteTeamSurveyRequestSchema>;
+export type DeleteTeamSurveyInput = z.infer<
+  typeof deleteTeamSurveyRequestSchema
+>;
 export type IdParamInput = z.infer<typeof idParamsSchema>;
 export type CloneSurveyInput = z.infer<typeof cloneSurveySchema>;
 export type UpdateGoogleLinkInput = z.infer<
