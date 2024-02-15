@@ -1,31 +1,18 @@
 import {
   Checkbox,
-  Flex,
-  Grid,
   Group,
   Stack,
-  UnstyledButton,
-  Text,
-  rem,
   Center,
   ScrollAreaAutosize,
-  Button,
 } from "@mantine/core";
-import { IconCircleXFilled } from "@tabler/icons-react";
 import TestimonialCard from "./TestimonialCard";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../../utils/questions";
-import {
-  useDeleteMultipleTestimonialsFromCollection,
-  useUpdateCollection,
-} from "../../backend/testimonials/testimonial.query";
+import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
 import { getFilteredTestimonials } from "../../utils/testimonial";
 import NothingFound from "../NothingFound/NothingFound";
 import classes from "./testimonial.module.css";
 import { useRouter } from "next/router";
-import { useState } from "react";
-import ConfirmationModal from "../Modal/ConfirmationModal";
-import { useDisclosure } from "@mantine/hooks";
 
 const TestimonialEdit = ({
   currentStyle,
@@ -33,31 +20,19 @@ const TestimonialEdit = ({
   filters,
   isDelete,
   type,
-  toggleDelete,
+  selectedTestimonialIds,
+  setSelectedTestimonialIds,
+  setFilters,
 }) => {
-  console.log("edit page testimonials", testimonials);
-  const [testimonialIds, setTestimonialIds] = useState<Array<string>>([]);
   const { collectionId } = useRouter().query as { collectionId: string };
-  const deletedTestimonialsMutation =
-    useDeleteMultipleTestimonialsFromCollection(collectionId);
 
-  const [dialogOpened, { open: openDialog, close: closeDialog }] =
-    useDisclosure(false);
-
-  const handleDelete = () => {
-    deletedTestimonialsMutation.mutate(testimonialIds, {
-      onSuccess: () => {
-        toggleDelete();
-      },
-    });
-  };
   let filteredTestimonials = getFilteredTestimonials(
     testimonials,
     filters,
     type,
   );
 
-  filteredTestimonials = testimonials;
+  console.log("filteredTestimonials", filteredTestimonials);
   const updateCollection = useUpdateCollection(collectionId);
 
   const handleDragEnd = (result) => {
@@ -67,22 +42,11 @@ const TestimonialEdit = ({
       result.source.index,
       result.destination?.index || 0,
     ) as any;
-    console.log("reorderedTestimonials", reorderedTestimonials);
-    console.log(
-      "reorderedTestimonials.map((t) => t.id)",
-      reorderedTestimonials.map((t) => t.id),
-    );
-    updateCollection.mutate(
-      {
-        data: { testimonialIds: reorderedTestimonials.map((t) => t.id) },
-        collectionId,
-      },
-      {
-        onSuccess: (data) => {
-          //  console.log("data",data)
-        },
-      },
-    );
+    setFilters(null);
+    updateCollection.mutate({
+      data: { testimonialIds: reorderedTestimonials.map((t) => t.id) },
+      collectionId,
+    });
   };
   if (testimonials?.length <= 0)
     return (
@@ -93,20 +57,8 @@ const TestimonialEdit = ({
 
   return (
     <Stack gap={"md"}>
-      {isDelete && (
-        <Flex justify={"center"} align={"center"}>
-          <UnstyledButton onClick={openDialog} style={{ cursor: "pointer" }}>
-            <Group>
-              <IconCircleXFilled
-                style={{ width: rem(35), height: rem(35), color: "red" }}
-              />
-              <Text>Delete</Text>
-            </Group>
-          </UnstyledButton>
-        </Flex>
-      )}
       <ScrollAreaAutosize>
-        <Stack mah={500} p={"sm"}>
+        <Stack mah={500} p={"sm"} w={"100%"}>
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="testimonial-list" direction={"vertical"}>
               {(provided) => (
@@ -116,7 +68,7 @@ const TestimonialEdit = ({
                   style={{ flexWrap: "wrap" }}
                 >
                   {filteredTestimonials?.map((testimonial, index) => {
-                    const isSelected = testimonialIds.some(
+                    const isSelected = selectedTestimonialIds.some(
                       (t) => t === testimonial.id,
                     );
                     return (
@@ -138,12 +90,12 @@ const TestimonialEdit = ({
                                   classNames={{ root: classes.checkboxWrapper }}
                                   onChange={(e) => {
                                     if (e.currentTarget.checked)
-                                      setTestimonialIds((prev) => [
+                                      setSelectedTestimonialIds((prev) => [
                                         ...prev,
                                         testimonial?.id,
                                       ]);
                                     else
-                                      setTestimonialIds(
+                                      setSelectedTestimonialIds(
                                         (prev) =>
                                           prev?.filter(
                                             (t) => t !== testimonial?.id,
@@ -171,17 +123,6 @@ const TestimonialEdit = ({
               )}
             </Droppable>
           </DragDropContext>
-          <ConfirmationModal
-            forDeleteFunctionality
-            confirmLabel="Delete"
-            headerLabel="Are you sure to delete these testimonials?"
-            headerTitle="Delete question?"
-            opened={dialogOpened}
-            onClose={closeDialog}
-            onConfirm={(e) => {
-              handleDelete();
-            }}
-          />
         </Stack>
       </ScrollAreaAutosize>
     </Stack>

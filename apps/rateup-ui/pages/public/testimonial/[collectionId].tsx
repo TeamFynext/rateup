@@ -28,7 +28,7 @@ const Collections = () => {
         />
         <meta
           property="og:description"
-          content={`Testimonial ${collection?.title}`}
+          content={`Testimonial ${collection?.name}`}
         />
         <meta
           property="og:image"

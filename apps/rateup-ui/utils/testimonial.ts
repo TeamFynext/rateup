@@ -6,38 +6,46 @@ export const getFilteredTestimonials = (
   filters: filterType,
   type: string,
 ) => {
-  let filteredTestimonials = testimonials;
+  if (!type) return testimonials;
   switch (type) {
     case "date":
-      return filterByDate(filteredTestimonials, filters.date);
+      return filterByDate(testimonials, filters?.date);
     case "length":
-      return filterByLength(filteredTestimonials, filters.length);
+      return filterByLength(testimonials, filters?.length);
     case "teams":
-      return filterByTeams(filteredTestimonials, filters.teams);
+      return filterByTeams(testimonials, filters?.teams);
     case "surveys":
-      return filterBySurveys(filteredTestimonials, filters.surveys);
+      return filterBySurveys(testimonials, filters?.surveys);
     case "rating":
-      return filterByRating(filteredTestimonials, filters.rating);
+      return filterByRating(testimonials, filters?.rating);
   }
 };
 
 export function filterByDate(testimonials: Array<Testimonial>, order: string) {
-  return testimonials?.sort((t1, t2) =>
-    order === "new"
-      ? new Date(t2?.createdAt).getTime() - new Date(t1?.createdAt).getTime()
-      : new Date(t1?.createdAt).getTime() - new Date(t2?.createdAt).getTime(),
-  );
+  return order
+    ? testimonials?.sort((t1, t2) =>
+        order === "new"
+          ? new Date(t2?.createdAt).getTime() -
+            new Date(t1?.createdAt).getTime()
+          : new Date(t1?.createdAt).getTime() -
+            new Date(t2?.createdAt).getTime(),
+      )
+    : testimonials;
 }
 
 export function filterByLength(
   testimonials: Array<Testimonial>,
   length: string,
 ) {
-  return testimonials?.sort((t1, t2) =>
-    length == "longest"
-      ? t2?.testimonial.testimonial.length - t1?.testimonial.testimonial.length
-      : t1?.testimonial.testimonial.length - t2?.testimonial.testimonial.length,
-  );
+  return length
+    ? testimonials?.sort((t1, t2) =>
+        length == "longest"
+          ? t2?.testimonial.testimonial.length -
+            t1?.testimonial.testimonial.length
+          : t1?.testimonial.testimonial.length -
+            t2?.testimonial.testimonial.length,
+      )
+    : testimonials;
 }
 
 export function filterByTeams(testimonials: Array<Testimonial>, teams) {

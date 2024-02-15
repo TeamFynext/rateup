@@ -46,7 +46,6 @@ export async function getAllTestimonialsByCollection(collectionId: string) {
   let collection = (
     await axiosClient.get(`/testimonial/collections/${collectionId}`)
   ).data;
-  console.log("collection", collection);
   return collection as TestiomonialCollection;
 }
 export async function updateTestimonialCollection({ data, collectionId }) {

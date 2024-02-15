@@ -15,7 +15,7 @@ import { Testimonial } from "../../types/global";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
 interface TestimonialCardInterface {
-  testimonial: Testimonial;
+  testimonial: Omit<Testimonial, "teamId" | "survey">;
   currentStyle?: any;
 }
 const TestimonialCard = ({

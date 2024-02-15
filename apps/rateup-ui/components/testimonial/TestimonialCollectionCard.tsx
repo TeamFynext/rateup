@@ -28,7 +28,7 @@ const TestimonialCollectionCard = ({ collection }) => {
           forDeleteFunctionality
           confirmLabel="Delete"
           headerLabel="Are you sure to delete this collection?"
-          headerTitle="Delete question?"
+          headerTitle="Delete Testimonial Collection?"
           opened={dialogOpened}
           onClose={closeDialog}
           onConfirm={deleteCollection}

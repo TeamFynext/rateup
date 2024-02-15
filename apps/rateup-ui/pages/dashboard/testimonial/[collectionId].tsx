@@ -9,13 +9,13 @@ import TestimonialShare, {
   TestimonialShareModal,
 } from "../../../components/testimonial/TestimonialShare";
 import TestimonialFilter from "../../../components/testimonial/TestimonialFilter";
-import { Testimonial, TestimonialStyleType } from "../../../types/global";
+import { TestimonialStyleType } from "../../../types/global";
 import { useImmer } from "use-immer";
 import {
   useAddMultipleTestimonialsToCollection,
+  useDeleteMultipleTestimonialsFromCollection,
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
-  useUpdateCollection,
 } from "../../../backend/testimonials/testimonial.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import {
@@ -30,6 +30,7 @@ import {
   IconShare,
   IconTrash,
 } from "@tabler/icons-react";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 export enum TestimonialTabs {
   Select = "Select",
@@ -59,9 +60,9 @@ export default function () {
     defaultTestimonialStyle,
   );
   const [filters, setFilters] = useState<filterType>({
-    date: "new",
+    date: null,
     rating: null,
-    length: "longest",
+    length: null,
     surveys: [],
     teams: [],
   });
@@ -75,14 +76,26 @@ export default function () {
     type,
   );
   const filteredTestimonialIds = filteredTestimonials?.map((t) => t.id);
+
   const [openedEdit, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
 
-  // useEffect(() => {
-  //   update({ collectionId: collection?.name });
-  //   setSelectedTestimonialIds(collection?.testimonials?.map((t) => t.id));
-  //   setCurrentstyle(collection?.theme);
-  // }, [collection]);
+  useEffect(() => {
+    update({ collectionId: collection?.name });
+    setCurrentstyle(collection?.theme);
+  }, [collection]);
+
+  useEffect(() => {
+    setFilters({
+      date: null,
+      rating: null,
+      length: null,
+      surveys: [],
+      teams: [],
+    });
+    setType(null);
+  }, [activeTab]);
+
   return (
     <StyledTabs
       value={activeTab}
@@ -120,7 +133,9 @@ export default function () {
             filters={filters}
             isDelete={isDelete}
             type={type}
-            toggleDelete={toggleDelete}
+            selectedTestimonialIds={selectedTestimonialIds}
+            setSelectedTestimonialIds={setSelectedTestimonialIds}
+            setFilters={setFilters}
           />
         </Tabs.Panel>
         <Tabs.Panel value={TestimonialTabs.Share}>
@@ -140,6 +155,7 @@ export default function () {
               filteredTestimonialIds,
               openEdit,
               toggleDelete,
+              isDelete,
             }}
           />
           {activeTab != TestimonialTabs.Share && (
@@ -170,6 +186,7 @@ interface UtilityComponentProps {
   filteredTestimonialIds: string[];
   openEdit: () => void;
   toggleDelete;
+  isDelete;
 }
 function UtilityComponent({
   selectedTestimonialIds,
@@ -179,46 +196,75 @@ function UtilityComponent({
   filteredTestimonialIds,
   openEdit,
   toggleDelete,
+  isDelete,
 }: UtilityComponentProps) {
   const { collectionId } = useRouter().query as { collectionId: string };
-  const updateTestimonialCollection = useUpdateCollection(collectionId);
   const addMultipleTestimonials =
     useAddMultipleTestimonialsToCollection(collectionId);
-  const handleNext = () => {
-    addMultipleTestimonials.mutate(selectedTestimonialIds);
-    // updateTestimonialCollection.mutate(
-    //   {
-    //     data: { testimonialIds: selectedTestimonialIds },
-    //     collectionId: collectionId,
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       setActiveTab(TestimonialTabs.Edit);
-    //     },
-    //   }
-    // );
-  };
+  const deletedTestimonialsMutation =
+    useDeleteMultipleTestimonialsFromCollection(collectionId);
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
+  const savedTestimonialIds = collection?.testimonials?.map((t) => t.id);
+  const [dialogOpened, { open: openDialog, close: closeDialog }] =
+    useDisclosure(false);
+  const [openedShare, { open: openShare, close: closeShare }] =
+    useDisclosure(false);
+
+  const handleSave = () => {
+    addMultipleTestimonials.mutate(selectedTestimonialIds, {
+      onSuccess: () => {
+        setSelectedTestimonialIds([]);
+        setActiveTab(TestimonialTabs.Edit);
+      },
+    });
+  };
+  const handleDelete = () => {
+    deletedTestimonialsMutation.mutate(selectedTestimonialIds, {
+      onSuccess: () => {
+        toggleDelete();
+      },
+    });
+  };
+  const testimonialIdsNotInCollection = filteredTestimonialIds?.filter(
+    (t) => !savedTestimonialIds?.includes(t),
+  );
   //this function is used to check if the selected testimonial ids are already present in the collection
   function filterAndSelectTestimonialIds(e) {
-    const savedTestimonialIds = collection?.testimonials?.map((t) => t.id);
-    const testimonialIdsNotInCollection = filteredTestimonialIds.filter(
-      (t) => !savedTestimonialIds.includes(t),
-    );
     if (e.currentTarget.checked)
       setSelectedTestimonialIds(testimonialIdsNotInCollection);
     else setSelectedTestimonialIds([]);
   }
-  const isAllSelected =
-    filteredTestimonialIds?.length &&
-    filteredTestimonialIds?.every((t) => selectedTestimonialIds?.includes(t));
-  const [openedShare, { open: openShare, close: closeShare }] =
-    useDisclosure(false);
+
+  const isAllSelected = testimonialIdsNotInCollection?.every(
+    (t) => selectedTestimonialIds?.includes(t),
+  );
+  const isAllSelectedForDelete = savedTestimonialIds?.every(
+    (t) => selectedTestimonialIds?.includes(t),
+  );
+
+  useEffect(() => {
+    if (!isDelete && activeTab == TestimonialTabs.Edit)
+      setSelectedTestimonialIds([]);
+  }, [isDelete, activeTab]);
+
   return (
     <Paper withBorder radius="md" p="sm">
       <Stack>
         {activeTab === TestimonialTabs.Edit && (
           <>
+            {isDelete && (
+              <Checkbox
+                label={"Select All"}
+                size="xs"
+                checked={isAllSelectedForDelete}
+                disabled={!filteredTestimonialIds?.length}
+                onChange={(e) => {
+                  if (e.currentTarget.checked)
+                    setSelectedTestimonialIds(savedTestimonialIds);
+                  else setSelectedTestimonialIds([]);
+                }}
+              />
+            )}
             <Button
               size="compact-xs"
               radius="md"
@@ -229,19 +275,31 @@ function UtilityComponent({
             >
               Edit
             </Button>
+
             <Button
               size="compact-xs"
               radius="md"
-              variant="light"
+              variant={isDelete ? "filled" : "light"}
               color="red"
-              onClick={toggleDelete}
+              onClick={!isDelete ? toggleDelete : openDialog}
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconTrash size={"1rem"} />}
             >
               Delete
             </Button>
+            {isDelete && (
+              <Button
+                size="compact-xs"
+                radius="md"
+                variant="filled"
+                onClick={toggleDelete}
+              >
+                Cancel
+              </Button>
+            )}
           </>
         )}
+
         {activeTab === TestimonialTabs.Select && (
           <>
             <Checkbox
@@ -255,7 +313,7 @@ function UtilityComponent({
               size="compact-xs"
               radius="md"
               variant="light"
-              onClick={handleNext}
+              onClick={handleSave}
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconDeviceFloppy size={"1rem"} />}
             >
@@ -281,6 +339,17 @@ function UtilityComponent({
         opened={openedShare}
         onClose={closeShare}
         collectionId={collectionId}
+      />
+      <ConfirmationModal
+        forDeleteFunctionality
+        confirmLabel="Delete"
+        headerLabel="Are you sure to delete these testimonials?"
+        headerTitle="Delete testimonials?"
+        opened={dialogOpened}
+        onClose={closeDialog}
+        onConfirm={(e) => {
+          handleDelete();
+        }}
       />
     </Paper>
   );

@@ -38,23 +38,9 @@ const TestimonialFilter = ({
   }));
   const surveyMultiSelectOptions = testimonials
     ?.filter(({ teamId }) =>
-      filters?.teams?.length > 0 ? filters.teams?.includes(teamId) : true,
+      filters?.teams?.length > 0 ? filters?.teams?.includes(teamId) : true,
     )
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
-  const removeObjectsWithRepeatedValues = produce(
-    (draft: { label: string; value: string }[]) => {
-      const seenValues = new Set();
-      for (let i = draft?.length - 1; i >= 0; i--) {
-        const currentObj = draft[i];
-        if (seenValues.has(currentObj?.value)) {
-          draft.splice(i, 1);
-          break;
-        } else {
-          seenValues.add(currentObj?.value);
-        }
-      }
-    },
-  );
 
   function removeDuplicates(surveyMultiSelectOptions) {
     const uniqueArray = [];
@@ -97,15 +83,16 @@ const TestimonialFilter = ({
           <ActionIcon
             size="sm"
             variant="light"
-            onClick={() =>
+            onClick={() => {
               setFilters({
-                date: "new",
-                length: "longest",
+                date: null,
+                length: null,
                 rating: null,
                 surveys: [],
                 teams: [],
-              })
-            }
+              });
+              setType(null);
+            }}
           >
             <IconRestore size={15} />
           </ActionIcon>
@@ -121,7 +108,7 @@ const TestimonialFilter = ({
                 label="Select Team"
                 styles={{ label: { fontSize: 12 } }}
                 data={teamMultiSelectOptions}
-                value={filters.teams}
+                value={filters?.teams}
                 onChange={(value) => filterData("teams", value)}
                 placeholder={filters?.teams?.length > 0 ? "" : "All Teams"}
               />
@@ -137,7 +124,7 @@ const TestimonialFilter = ({
                     value: string;
                   }[],
                 )}
-                value={filters.surveys}
+                value={filters?.surveys}
                 onChange={(value) => filterData("surveys", value)}
                 placeholder={filters?.teams?.length > 0 ? "" : "All Surveys"}
               />
@@ -149,7 +136,7 @@ const TestimonialFilter = ({
                 <Divider label="Date" labelPosition="left" />
                 <Radio.Group
                   onChange={(value) => filterData("date", value)}
-                  value={filters.date}
+                  value={filters?.date}
                 >
                   <Group>
                     <Radio
@@ -169,7 +156,7 @@ const TestimonialFilter = ({
                 <Divider label="Length" labelPosition="left" />
                 <Radio.Group
                   onChange={(value) => filterData("length", value)}
-                  value={filters.length}
+                  value={filters?.length}
                 >
                   <Group>
                     <Radio
@@ -205,7 +192,7 @@ const TestimonialFilter = ({
                 />
                 <Group gap={2}>
                   <Rating
-                    value={filters.rating}
+                    value={filters?.rating}
                     onChange={(value) => filterData("rating", value)}
                     size={"lg"}
                   />
