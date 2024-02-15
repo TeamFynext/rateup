@@ -22,6 +22,7 @@ interface ImageCheckboxProps {
   checkBoxEnable: boolean;
   selectedValue: string;
   fallbackEnable: boolean;
+  sizeTrim: boolean;
 }
 
 export function ImageCheckbox({
@@ -32,6 +33,7 @@ export function ImageCheckbox({
   checkBoxEnable,
   selectedValue,
   fallbackEnable,
+  sizeTrim,
   className,
   ...others
 }: ImageCheckboxProps &
@@ -106,7 +108,13 @@ export function ImageCheckbox({
           </Text>
         </Stack>
       ) : (
-        <Text size="sm" lh={1.5} ml={checkBoxEnable ? "xs" : 0}>
+        <Text
+          size="sm"
+          lh={1.5}
+          ml={checkBoxEnable ? "xs" : 0}
+          w={"100%"}
+          ta={sizeTrim ? "center" : "left"}
+        >
           {title}
         </Text>
       )}
@@ -139,6 +147,7 @@ export function SingleSelectCard({
       checkBoxEnable={checkBoxEnable}
       selectedValue={selectedValue}
       fallbackEnable={fallbackEnable}
+      sizeTrim={sizeTrim}
     />
   ));
   const colsCount = includeImage

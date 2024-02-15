@@ -229,7 +229,7 @@ export function QuestionDetailedView({
             />
             {NPSQuestions.includes(question?.type) && (
               <Checkbox
-                label="Enable Nps Analytics"
+                label="NPS Analytics"
                 color="var(--tertiary-color)"
                 fw={600}
                 {...form.getInputProps("enableNpsAnalytics", {
