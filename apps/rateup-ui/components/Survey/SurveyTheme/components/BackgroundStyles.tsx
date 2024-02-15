@@ -72,13 +72,27 @@ function BackgroundStyles({
   };
 
   const removeBg = () => {
-    setCurrentstyles("bg", { ...currentStyles, desktopbg: "" });
+    setCurrentstyles("bg", {
+      ...currentStyles,
+      desktopbg: "",
+      unsplashImage: {
+        ...currentStyles.unsplashImage,
+        [PreviewTypeEnum.DESKTOP]: false,
+      },
+    });
     setBgFileName("");
     resetBgRef.current?.();
   };
 
   const removeMobileBg = () => {
-    setCurrentstyles("bg", { ...currentStyles, mobilebg: "" });
+    setCurrentstyles("bg", {
+      ...currentStyles,
+      mobilebg: "",
+      unsplashImage: {
+        ...currentStyles.unsplashImage,
+        [PreviewTypeEnum.MOBILE]: false,
+      },
+    });
     setMobileBgFileName("");
     resetMobileBgRef.current?.();
   };
