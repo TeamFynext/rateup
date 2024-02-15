@@ -354,6 +354,7 @@ declare global {
     team?: {
       code?: string;
     };
+    expiry?: string;
   };
 
   type MenuCategory = {
@@ -566,6 +567,7 @@ export interface Data {
     backgroundImage: boolean;
     mobileBackgroundImage: boolean;
   };
+  expiry?: string;
 }
 
 export interface Style {

@@ -75,7 +75,7 @@ import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
 import { lexend } from "../../../../utils/fonts";
 
-function TakeSurvey({ survey }) {
+function TakeSurvey({ survey, setIsReviewPage }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const smallScreen = useMediaQuery("(max-width: 30em)");
 
@@ -307,7 +307,8 @@ function TakeSurvey({ survey }) {
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
-        ? router.push(`${surveyId}/review-us-on-google`)
+        ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
+          setIsReviewPage(true)
         : router.push(`${surveyId}/end?k=${kioskMode}&sid=${survey.id}`);
     });
   };

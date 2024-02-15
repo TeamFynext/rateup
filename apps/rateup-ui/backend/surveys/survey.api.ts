@@ -131,9 +131,14 @@ export async function getSurveyByLandingId(landingid: string) {
   return res.data as Survey;
 }
 
+type ExtendedSurvey = Survey & {
+  googleLink: string;
+  reviews: Array<any>;
+};
+
 export async function getPublicSurvey(surveyId: string) {
   const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`);
-  return res.data as Survey;
+  return res.data as ExtendedSurvey;
 }
 
 export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {

@@ -41,11 +41,11 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
 };
 
 export default function ({ fullMenu, menuBanner }) {
-  if (!fullMenu || !fullMenu?.isPublished)
+  if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
     return (
       <Stack align="center" h="50vh" justify="space-around">
         <Text size="xl" c="red" fw="600">
-          Menu is not available..!
+          {fullMenu?.expiry ? fullMenu?.expiry : "Menu is not available..!"}
         </Text>
       </Stack>
     );
