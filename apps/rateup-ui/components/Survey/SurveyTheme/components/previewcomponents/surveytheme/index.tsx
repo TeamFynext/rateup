@@ -70,9 +70,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
           className={classes.parentContainer}
           style={{ height: "100%", width: "100%", objectFit: "contain" }}
           src={getImageUrl(
-            mobileOrDesktop === PreviewTypeEnum.DESKTOP
-              ? encodeURI(desktopbg)
-              : encodeURI(mobilebg),
+            mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
             unsplashImage?.[mobileOrDesktop],
           )}
         >

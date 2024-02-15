@@ -8,8 +8,9 @@ import {
   Group,
   Text,
   Divider,
+  ThemeIcon,
 } from "@mantine/core";
-import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
+import { IconEye, IconStar, IconTrash, IconUpload } from "@tabler/icons-react";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
 import { Logo } from "../surveyTheme.types";
@@ -67,14 +68,14 @@ function LogoStyles({
       />
       <Stack align="center" w={"100%"}>
         <Divider label="Styles" variant="dashed" w={"100%"} />
-        <Group wrap="nowrap" gap="xs">
+        <Group wrap="nowrap" gap="xs" w={"100%"}>
           <NumberInput
             min={10}
             max={100}
             placeholder="height"
             label="Height (px)"
             name="height"
-            maw={120}
+            style={{ flex: 1 }}
             classNames={{ label: styles["label"] }}
             value={currentStyles?.styles?.height}
             onChange={(e) => {
@@ -90,7 +91,7 @@ function LogoStyles({
             placeholder="Width"
             label="Width (px)"
             name="Width"
-            maw={120}
+            style={{ flex: 1 }}
             classNames={{ label: styles["label"] }}
             value={currentStyles?.styles?.width}
             onChange={(e) => {
@@ -102,16 +103,16 @@ function LogoStyles({
           />
         </Group>
         <Divider label="Upload Logo" variant="dashed" w={"100%"} />
-        <Stack w={"100%"}>
-          <Group>
-            <ActionIcon variant="filled" aria-label="Settings">
-              <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
-            </ActionIcon>
+        <Group justify="space-between" w={"100%"}>
+          <Group gap={"xs"}>
+            <ThemeIcon>
+              <IconStar size={15} />
+            </ThemeIcon>
             <Text fw={100} c={"dark"} size="xs">
               Logo :{" "}
             </Text>
           </Group>
-          <Stack>
+          <Group>
             <FileButton
               onChange={handleFileChange}
               accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -129,18 +130,17 @@ function LogoStyles({
                 </Button>
               )}
             </FileButton>
-            <Button
-              onClick={removeImage}
-              size="xs"
+            <ActionIcon
+              color="red"
+              size={"md"}
+              radius={"xl"}
               disabled={!currentStyles?.logo && !logoFileName}
-              leftSection={<IconTrash size={16} />}
-              radius="18px"
-              bg={!currentStyles?.logo && !logoFileName ? "" : "red"}
+              onClick={removeImage}
             >
-              RemoveLogo
-            </Button>
-          </Stack>
-        </Stack>
+              <IconTrash size={15} />
+            </ActionIcon>
+          </Group>
+        </Group>
       </Stack>
     </>
   );

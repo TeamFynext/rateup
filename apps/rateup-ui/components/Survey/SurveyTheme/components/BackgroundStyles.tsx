@@ -6,8 +6,15 @@ import {
   Group,
   ActionIcon,
   Divider,
+  ThemeIcon,
 } from "@mantine/core";
-import { IconEye, IconTrash, IconUpload } from "@tabler/icons-react";
+import {
+  IconDeviceDesktop,
+  IconDeviceMobile,
+  IconEye,
+  IconTrash,
+  IconUpload,
+} from "@tabler/icons-react";
 import React, { useState, useRef, ReactNode } from "react";
 import { UnsplashModal } from "../../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
@@ -186,16 +193,19 @@ function BackgroundStyles({
       />
       {/* //------------BGIMAGE------------ */}
       <Divider label="Background Image" variant="dashed" w={"100%"} />
-      <Stack w={"100%"}>
-        <Group>
-          <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
-            <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
-          </ActionIcon>
+      <Group w={"100%"} justify="space-between">
+        <Group gap={"xs"}>
+          <ThemeIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
+            <IconDeviceDesktop
+              style={{ width: "70%", height: "70%" }}
+              stroke={1.5}
+            />
+          </ThemeIcon>
           <Text fw={100} c={"dark"} size="xs">
             Desktop :{" "}
           </Text>
         </Group>
-        <Stack>
+        <Group>
           <Button
             leftSection={<IconUpload size={16} />}
             size="xs"
@@ -207,18 +217,16 @@ function BackgroundStyles({
           >
             Upload Image
           </Button>
-          <Button
-            leftSection={<IconTrash size={16} />}
-            size="xs"
-            radius="18px"
-            type="button"
+          <ActionIcon
+            color="red"
+            size={"md"}
+            radius={"xl"}
             onClick={removeBg}
             loading={isFileLoading}
-            bg={currentStyles?.desktopbg === "" ? "" : "red"}
             disabled={currentStyles?.desktopbg === ""}
           >
-            Remove Image
-          </Button>
+            <IconTrash size={15} />
+          </ActionIcon>
           <FileButton
             resetRef={resetBgRef}
             onChange={(e) => {
@@ -234,25 +242,21 @@ function BackgroundStyles({
               </Button>
             )}
           </FileButton>
-        </Stack>
-      </Stack>
-
-      <Stack w={"100%"}>
-        <Group>
-          <ActionIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
-            <IconEye style={{ width: "70%", height: "70%" }} stroke={1.5} />
-          </ActionIcon>
+        </Group>
+      </Group>
+      <Group w={"100%"} justify="space-between">
+        <Group gap={"xs"}>
+          <ThemeIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
+            <IconDeviceMobile
+              style={{ width: "70%", height: "70%" }}
+              stroke={1.5}
+            />
+          </ThemeIcon>
           <Text fw={100} c={"dark"} size="xs">
             Mobile :{" "}
           </Text>
-          <Text fz={10}>
-            {getFileName(
-              currentStyles?.mobilebg || mobileBgFileName,
-              !currentStyles?.mobilebg,
-            )}
-          </Text>
         </Group>
-        <Stack>
+        <Group>
           <Button
             leftSection={<IconUpload size={15} />}
             size="xs"
@@ -263,16 +267,15 @@ function BackgroundStyles({
           >
             Upload Image
           </Button>
-          <Button
-            leftSection={<IconTrash size={15} />}
+          <ActionIcon
+            color="red"
+            size={"md"}
+            radius={"xl"}
             disabled={currentStyles?.mobilebg === ""}
-            size="xs"
-            p={0}
-            radius="18px"
             onClick={removeMobileBg}
           >
-            Remove Image
-          </Button>
+            <IconTrash size={15} />
+          </ActionIcon>
           <FileButton
             resetRef={resetMobileBgRef}
             onChange={(e) => {
@@ -292,8 +295,8 @@ function BackgroundStyles({
               </Button>
             )}
           </FileButton>
-        </Stack>
-      </Stack>
+        </Group>
+      </Group>
     </Stack>
   );
 }
