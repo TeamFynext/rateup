@@ -32,7 +32,7 @@ export async function getAllTestimonialsByCollection(collectionId: string) {
   let collection = (
     await axiosClient.get(`/testimonial/collections/${collectionId}`)
   ).data;
-  // console.log("collection",collection)
+  console.log("collection", collection);
   return collection;
 }
 export async function updateTestimonialCollection({ data, collectionId }) {

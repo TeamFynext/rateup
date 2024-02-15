@@ -71,6 +71,7 @@ const Collections = () => {
               <TestimonialCard
                 testimonial={testimonial}
                 currentStyle={collection?.theme}
+                key={testimonial?.id}
               />
             ))}
           </SimpleGrid>
