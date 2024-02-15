@@ -20,7 +20,7 @@ import {
   useDeleteTeamMutation,
   useEditTeamMutation,
 } from "../../../backend/team/team.query";
-import { useDisclosure } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { deleteTeamById, editTeam } from "../../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import DangerZone from "../../../components/DangerZone/DangerZone";
@@ -30,6 +30,7 @@ import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { GoogleIcon } from "../../../components/Button/GoogleIcon";
 import { showErrorToast } from "../../../utils/notifications";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 export interface ITeamData {
   name: string;
@@ -118,7 +119,12 @@ const TeamSettings = ({
           label="Update your team information"
         />
         <PaperLayout>
-          <form onSubmit={teamForm.onSubmit(onSubmit)}>
+          <form
+            onSubmit={teamForm.onSubmit(onSubmit)}
+            onKeyDown={getHotkeyHandler([
+              [SAVE_HOTKEY, (event: any) => teamForm.onSubmit(onSubmit)(event)],
+            ])}
+          >
             <Grid align="center">
               <Grid.Col span={{ md: 6, lg: 4 }}>
                 <Text size={"md"}>Team Name: </Text>

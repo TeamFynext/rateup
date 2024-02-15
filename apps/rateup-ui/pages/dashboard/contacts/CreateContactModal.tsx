@@ -28,6 +28,8 @@ import Papa from "papaparse";
 import { importMethod } from "../../../utils/enums";
 import { showErrorToast } from "../../../utils/notifications";
 import { IconPlus } from "@tabler/icons-react";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 export interface ImportContact {
   name: string;
@@ -185,7 +187,10 @@ const CreateContactModal = ({ contactClose, close }) => {
   };
   return (
     <Box p="0">
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
+      >
         <Stack>
           <Text>Select Team</Text>
           <Flex justify={"flex-start"}>
@@ -237,7 +242,7 @@ const CreateContactModal = ({ contactClose, close }) => {
                     size="md"
                     w={90}
                     placeholder="code"
-                    leftSection={<IconPlus size={"1rem"} />}
+                    leftSection={<IconPlus size={"16px"} />}
                   />
                 )}
                 {contactType.includes("phone") && (
@@ -274,8 +279,8 @@ const CreateContactModal = ({ contactClose, close }) => {
                 onChange={setCsvfile}
                 styles={{
                   input: {
-                    border: "2px dashed lightgrey",
-                    height: "60px",
+                    border: ".125rem dashed lightgrey",
+                    height: "3.75rem",
                     textAlign: "center",
                   },
                 }}

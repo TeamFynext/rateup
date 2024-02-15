@@ -32,13 +32,14 @@ import {
 import { mergeNames, retrieveRole } from "../../../utils/essential";
 import { passwordValidation } from "../../../utils/validation";
 import { IconPlus } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 import styles from "./setting.module.css";
 import "react-phone-number-input/style.css";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const ProfileSettings = () => {
   const {
@@ -281,6 +282,12 @@ const ProfileSettings = () => {
           <form
             onSubmit={profileForm.onSubmit(onSubmit)}
             style={{ display: "flex", flexDirection: "column", gap: 30 }}
+            onKeyDown={getHotkeyHandler([
+              [
+                SAVE_HOTKEY,
+                (event: any) => profileForm.onSubmit(onSubmit)(event),
+              ],
+            ])}
           >
             <Grid columns={10} grow>
               <Grid.Col span={{ xs: 10, lg: 2 }} bg="white">

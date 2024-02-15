@@ -12,6 +12,8 @@ import { useState } from "react";
 import PhoneNumberForm from "./phoneNumberForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { IconChevronLeft, IconMail, IconPhone } from "@tabler/icons-react";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
@@ -215,6 +217,12 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             ${styles["signup-form"]}
           `}
         onSubmit={signUpForm.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [
+            SAVE_HOTKEY,
+            (event: any) => signUpForm.onSubmit(handleSubmit)(event),
+          ],
+        ])}
       >
         <AnimatePresence mode="wait">
           <motion.div

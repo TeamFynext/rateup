@@ -23,6 +23,8 @@ import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
 import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 interface IProps {
   selectedQ: Question;
@@ -216,7 +218,7 @@ const ValidationRulesEditor = ({
         style={{ minHeight: "300px", minWidth: "650px", maxWidth: "650px" }}
       >
         <ScrollArea h={400}>
-          <form>
+          <form onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}>
             {Object.entries(values).map(([ruleType, ruleValues]) => {
               const ruleData = ruleValues as RuleValue;
 
