@@ -48,7 +48,8 @@ import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import ContactExtraProps from "./ContactExtraProps";
 import TncExtraProps from "./TncExtraProps";
 import styles from "./QuestionDetailedView.module.css";
-import { NPSQuestions } from "../../../utils/constants";
+import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
+import { getHotkeyHandler } from "@mantine/hooks";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -142,7 +143,13 @@ export function QuestionDetailedView({
     questionUpdateMutation.isPending ||
     deleteFileLoading;
   return (
-    <form onSubmit={form.onSubmit(handleSave)} style={{ height: "100%" }}>
+    <form
+      onSubmit={form.onSubmit(handleSave)}
+      style={{ height: "100%" }}
+      onKeyDown={getHotkeyHandler([
+        [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSave)(event)],
+      ])}
+    >
       <Stack style={{ height: "100%" }}>
         <ScrollArea style={{ flex: "1 1 0", overflow: "auto" }}>
           <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>

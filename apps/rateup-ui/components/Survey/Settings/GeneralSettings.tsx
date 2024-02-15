@@ -17,6 +17,8 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules }) => {
@@ -56,7 +58,15 @@ const GeneralSettings = ({ survey, enabledModules }) => {
   }, [languages]);
   return (
     <PaperLayout shadow="xl" p={"xl"} px={50}>
-      <form onSubmit={settingsForm.onSubmit(handleSubmit)}>
+      <form
+        onSubmit={settingsForm.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [
+            SAVE_HOTKEY,
+            (event: any) => settingsForm.onSubmit(handleSubmit)(event),
+          ],
+        ])}
+      >
         <Stack gap={"lg"}>
           {enabledModules.includes("name") && (
             <Grid columns={10}>

@@ -22,6 +22,8 @@ import { useEffect } from "react";
 import { IconChecks, IconCopy, IconHelp } from "@tabler/icons-react";
 import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 export default function () {
   const { data: waSettings, isLoading } = useWaSettings();
   const form = useForm({
@@ -53,7 +55,13 @@ export default function () {
     <>
       <h2>WhatsApp Settings</h2>
       <Flex w="100%" align="stretch" gap={"sm"}>
-        <form onSubmit={form.onSubmit(handleSubmit)} style={{ flexGrow: 1 }}>
+        <form
+          onSubmit={form.onSubmit(handleSubmit)}
+          style={{ flexGrow: 1 }}
+          onKeyDown={getHotkeyHandler([
+            [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+          ])}
+        >
           <Stack px="md">
             <TextInput
               label="Business ID"

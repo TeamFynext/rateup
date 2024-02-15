@@ -20,6 +20,8 @@ import { useRouter } from "next/router";
 import { resendOTP, showNotification } from "../../utils/auth";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { fetchUserProfile } from "../../backend/user/user.api";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 function VerifyPhoneNumberPage() {
   const router = useRouter();
@@ -112,6 +114,7 @@ function VerifyPhoneNumberPage() {
             ${styles["login-sign-up-form"]}
             ${styles["signup-form"]}
           `}
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleOTPInput]])}
       >
         <TextInput
           classNames={styles}

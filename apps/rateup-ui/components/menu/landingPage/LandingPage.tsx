@@ -18,7 +18,12 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import {
+  getHotkeyHandler,
+  useDisclosure,
+  useHotkeys,
+  useMediaQuery,
+} from "@mantine/hooks";
 import { IconMapPin, IconUpload, IconWorld } from "@tabler/icons-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -28,6 +33,7 @@ import {
 import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
+  SAVE_HOTKEY,
   fallbackImage,
 } from "../../../utils/constants";
 import {
@@ -116,6 +122,9 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const menulandingOptionMutation = useUpdateMenuLandingPageOptionById(
     editingItem?.menuId,
   );
+  useHotkeys([
+    [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+  ]);
 
   useEffect(() => {
     if (form.isTouched("headerText")) {
@@ -442,166 +451,176 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                       >
                         <></>
                       </TooltipWithEditIcon>
-                      <Stack
-                        align="center"
-                        justify={!isMobileTab ? "space-around" : "center"}
-                        h={"100%"}
-                        style={{
-                          padding: !isMobileTab ? "0 1.25rem 0 1.25rem" : "0",
-                        }}
+                      <form
+                        onKeyDown={getHotkeyHandler([
+                          [
+                            SAVE_HOTKEY,
+                            (event: any) => form.onSubmit(handleSubmit)(event),
+                          ],
+                        ])}
                       >
-                        <div></div>
-                        <Stack align="center" gap={0} px={"3.125rem"}>
-                          <TooltipWithEditIcon
-                            tooltipLabel="change logo"
-                            handleEditIcon={(e) => {
-                              e.stopPropagation();
-                              setMainTabState("logo");
-                            }}
-                          >
-                            <Image
-                              src={getImageValue(form?.values?.logo)}
-                              onClick={() => {
-                                logoRef?.current?.click();
+                        <Stack
+                          align="center"
+                          justify={!isMobileTab ? "space-around" : "center"}
+                          h={"100%"}
+                          style={{
+                            padding: !isMobileTab ? "0 1.25rem 0 1.25rem" : "0",
+                          }}
+                        >
+                          <div></div>
+
+                          <Stack align="center" gap={0} px={"3.125rem"}>
+                            <TooltipWithEditIcon
+                              tooltipLabel="change logo"
+                              handleEditIcon={(e) => {
+                                e.stopPropagation();
                                 setMainTabState("logo");
                               }}
-                              h={50}
-                              w={50}
-                              maw={50}
-                              miw={50}
-                              mih={50}
-                              radius={"md"}
-                              fallbackSrc={fallbackImage}
-                              alt="image of logo"
-                              style={{
-                                objectFit: "contain",
+                            >
+                              <Image
+                                src={getImageValue(form?.values?.logo)}
+                                onClick={() => {
+                                  logoRef?.current?.click();
+                                  setMainTabState("logo");
+                                }}
+                                h={50}
+                                w={50}
+                                maw={50}
+                                miw={50}
+                                mih={50}
+                                radius={"md"}
+                                fallbackSrc={fallbackImage}
+                                alt="image of logo"
+                                style={{
+                                  objectFit: "contain",
+                                }}
+                              />
+                            </TooltipWithEditIcon>
+                            <TooltipWithEditIcon
+                              tooltipLabel="Edit Header"
+                              handleEditIcon={(e) => {
+                                e.stopPropagation();
+                                setMainTabState("text");
                               }}
-                            />
-                          </TooltipWithEditIcon>
-                          <TooltipWithEditIcon
-                            tooltipLabel="Edit Header"
-                            handleEditIcon={(e) => {
-                              e.stopPropagation();
-                              setMainTabState("text");
-                            }}
-                          >
-                            <ContainedTextArea
-                              placeholder="Welcome to"
-                              variant="unstyled"
-                              autosize
-                              styles={{
-                                input: {
-                                  ...form?.values?.headerStyle,
-                                  ...headerMobile,
-                                  border: "none",
-                                  textAlign: "center",
-                                  fontFamily: "inherit",
-                                },
+                            >
+                              <ContainedTextArea
+                                placeholder="Welcome to"
+                                variant="unstyled"
+                                autosize
+                                styles={{
+                                  input: {
+                                    ...form?.values?.headerStyle,
+                                    ...headerMobile,
+                                    border: "none",
+                                    textAlign: "center",
+                                    fontFamily: "inherit",
+                                  },
+                                }}
+                                p={0}
+                                {...form.getInputProps("headerText")}
+                              />
+                            </TooltipWithEditIcon>
+                            <TooltipWithEditIcon
+                              tooltipLabel="Edit Title"
+                              handleEditIcon={(e) => {
+                                e.stopPropagation();
+                                setMainTabState("text");
                               }}
-                              p={0}
-                              {...form.getInputProps("headerText")}
-                            />
-                          </TooltipWithEditIcon>
-                          <TooltipWithEditIcon
-                            tooltipLabel="Edit Title"
-                            handleEditIcon={(e) => {
-                              e.stopPropagation();
-                              setMainTabState("text");
-                            }}
-                          >
-                            <ContainedTextArea
-                              placeholder="HOTEL NAME"
-                              variant="unstyled"
-                              autosize
-                              styles={{
-                                input: {
-                                  ...form?.values?.titleStyle,
-                                  ...titleMobile,
-                                  border: "none",
-                                  textAlign: "center",
-                                  fontFamily: "inherit",
-                                },
-                              }}
-                              p={0}
-                              {...form.getInputProps("titleText")}
-                            />
-                          </TooltipWithEditIcon>
+                            >
+                              <ContainedTextArea
+                                placeholder="HOTEL NAME"
+                                variant="unstyled"
+                                autosize
+                                styles={{
+                                  input: {
+                                    ...form?.values?.titleStyle,
+                                    ...titleMobile,
+                                    border: "none",
+                                    textAlign: "center",
+                                    fontFamily: "inherit",
+                                  },
+                                }}
+                                p={0}
+                                {...form.getInputProps("titleText")}
+                              />
+                            </TooltipWithEditIcon>
+                          </Stack>
+                          <Center p={0} w={!isMobileTab && "100%"}>
+                            <Flex
+                              align={!isMobileTab ? "center" : "start"}
+                              justify={"space-between"}
+                              direction={isMobileTab ? "column" : "row"}
+                              w={"100%"}
+                              px={!isMobileTab && "100"}
+                              pb={"lg"}
+                            >
+                              <TooltipWithEditIcon
+                                tooltipLabel="Edit Website Text"
+                                handleEditIcon={(e) => {
+                                  e.stopPropagation();
+                                  setMainTabState("text");
+                                }}
+                              >
+                                <ContainedTextArea
+                                  placeholder="Website Name"
+                                  leftSection={
+                                    <IconWorld
+                                      size={
+                                        isMobileTab
+                                          ? "1.3125rem"
+                                          : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
+                                      }
+                                      color={form?.values?.otherStyle?.color}
+                                    />
+                                  }
+                                  variant="unstyled"
+                                  autosize
+                                  styles={{
+                                    input: {
+                                      ...form?.values?.otherStyle,
+                                      border: "none",
+                                      fontFamily: "inherit",
+                                    },
+                                  }}
+                                  {...form.getInputProps("websiteText")}
+                                />
+                              </TooltipWithEditIcon>
+                              <TooltipWithEditIcon
+                                tooltipLabel="Edit Location Name"
+                                handleEditIcon={(e) => {
+                                  e.stopPropagation();
+                                  setMainTabState("text");
+                                }}
+                              >
+                                <ContainedTextArea
+                                  placeholder="location"
+                                  leftSection={
+                                    <IconMapPin
+                                      size={
+                                        isMobileTab
+                                          ? "1.3125rem"
+                                          : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
+                                      }
+                                      color={form?.values?.otherStyle?.color}
+                                    />
+                                  }
+                                  variant="unstyled"
+                                  autosize
+                                  styles={{
+                                    input: {
+                                      ...form?.values?.otherStyle,
+                                      border: "none",
+                                      fontFamily: "inherit",
+                                    },
+                                  }}
+                                  tt={"capitalize"}
+                                  {...form.getInputProps("locationText")}
+                                />
+                              </TooltipWithEditIcon>
+                            </Flex>
+                          </Center>
                         </Stack>
-                        <Center p={0} w={!isMobileTab && "100%"}>
-                          <Flex
-                            align={!isMobileTab ? "center" : "start"}
-                            justify={"space-between"}
-                            direction={isMobileTab ? "column" : "row"}
-                            w={"100%"}
-                            px={!isMobileTab && "100"}
-                            pb={"lg"}
-                          >
-                            <TooltipWithEditIcon
-                              tooltipLabel="Edit Website Text"
-                              handleEditIcon={(e) => {
-                                e.stopPropagation();
-                                setMainTabState("text");
-                              }}
-                            >
-                              <ContainedTextArea
-                                placeholder="Website Name"
-                                leftSection={
-                                  <IconWorld
-                                    size={
-                                      isMobileTab
-                                        ? "1.3125rem"
-                                        : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
-                                    }
-                                    color={form?.values?.otherStyle?.color}
-                                  />
-                                }
-                                variant="unstyled"
-                                autosize
-                                styles={{
-                                  input: {
-                                    ...form?.values?.otherStyle,
-                                    border: "none",
-                                    fontFamily: "inherit",
-                                  },
-                                }}
-                                {...form.getInputProps("websiteText")}
-                              />
-                            </TooltipWithEditIcon>
-                            <TooltipWithEditIcon
-                              tooltipLabel="Edit Location Name"
-                              handleEditIcon={(e) => {
-                                e.stopPropagation();
-                                setMainTabState("text");
-                              }}
-                            >
-                              <ContainedTextArea
-                                placeholder="location"
-                                leftSection={
-                                  <IconMapPin
-                                    size={
-                                      isMobileTab
-                                        ? "1.3125rem"
-                                        : "clamp(1.313rem, .464rem + 2.262vw, 2.5rem)"
-                                    }
-                                    color={form?.values?.otherStyle?.color}
-                                  />
-                                }
-                                variant="unstyled"
-                                autosize
-                                styles={{
-                                  input: {
-                                    ...form?.values?.otherStyle,
-                                    border: "none",
-                                    fontFamily: "inherit",
-                                  },
-                                }}
-                                tt={"capitalize"}
-                                {...form.getInputProps("locationText")}
-                              />
-                            </TooltipWithEditIcon>
-                          </Flex>
-                        </Center>
-                      </Stack>
+                      </form>
                     </BackgroundImage>
                   </CreditsCard>
                   <Stack
@@ -674,7 +693,15 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
             </Group>
           </PaperLayout>
           <PaperLayout h="100%">
-            <form onSubmit={form.onSubmit(handleSubmit)}>
+            <form
+              onSubmit={form.onSubmit(handleSubmit)}
+              onKeyDown={getHotkeyHandler([
+                [
+                  SAVE_HOTKEY,
+                  (event: any) => form.onSubmit(handleSubmit)(event),
+                ],
+              ])}
+            >
               <Stack gap={"5"} mx="xs">
                 <TabsCommon
                   tabHeading={["bg", "logo", "type", "text"]}

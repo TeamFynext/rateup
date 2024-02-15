@@ -14,6 +14,8 @@ import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "../../../backend/campaign/campaign.query";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 interface CreateCampaignProps {
   close: () => void;
@@ -95,7 +97,12 @@ const CreateCampaignModal = ({
   };
   return (
     <>
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form
+        onSubmit={form.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+        ])}
+      >
         <Group justify={"space-between"} mt={"lg"}>
           <Title order={2}>
             {isEdit ? "Edit Campaign" : "Create Campaign"}

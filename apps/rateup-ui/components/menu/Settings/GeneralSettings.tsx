@@ -13,6 +13,8 @@ import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import CenteredSpinner from "../../Loaders/CenteredSpinner";
 import { currencyLabel } from "../util/currencyData";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = editingItem;
@@ -68,7 +70,13 @@ const GeneralSettings = ({ editingItem }) => {
   };
   return (
     <PaperLayout>
-      <form onSubmit={form.onSubmit(onSubmit)} style={{ gap: "20px" }}>
+      <form
+        onSubmit={form.onSubmit(onSubmit)}
+        style={{ gap: "20px" }}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(onSubmit)(event)],
+        ])}
+      >
         <Heading subtitle="General settings" />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <TeamSelector

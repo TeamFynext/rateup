@@ -12,6 +12,8 @@ import { showErrorToast } from "../../../../../utils/notifications";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
 
 function getInitialValues(screens) {
   return {
@@ -103,6 +105,9 @@ function CreateFlowScreenModal({
         onSubmit={form.onSubmit(handleCreate)}
         className={styles["create-flow-screen-modal-form"]}
         ref={formElementRef}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleCreate)(event)],
+        ])}
       >
         <TextInput
           placeholder="Enter Screen Title"

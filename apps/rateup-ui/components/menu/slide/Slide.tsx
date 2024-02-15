@@ -16,7 +16,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ContainedTextField,
   ContainedTextArea,
-  ContainedMultiSelect,
 } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { PriceSection } from "../item/PriceSection";
@@ -24,7 +23,7 @@ import TabsCommon from "../landingPage/Tabs/TabsCommon";
 import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 import { useForm } from "@mantine/form";
 import { MenuItemPriceType } from "../../../types/enums";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -40,6 +39,7 @@ import { ImageCropModal } from "../../Modal/ImageCropModal";
 import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
+  SAVE_HOTKEY,
 } from "../../../utils/constants";
 import { showErrorToast } from "../../../utils/notifications";
 import { FoodLabelSelector } from "../combobox/foodLabelSelector";
@@ -208,7 +208,12 @@ export const Slide = ({
         overlayProps={{ radius: "sm", blur: 2 }}
         loaderProps={{ type: "bars" }}
       />
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form
+        onSubmit={form.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+        ])}
+      >
         <SimpleGrid cols={largeScreen ? 2 : 1}>
           <Stack>
             <Flex columnGap={30} rowGap={0}>

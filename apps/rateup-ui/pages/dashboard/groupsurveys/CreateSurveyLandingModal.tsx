@@ -20,6 +20,8 @@ import {
   useUpdateSurveyLandingPageMutation,
 } from "../../../backend/surveys/surveys.query";
 import SurveyCardList from "../../../components/Survey/SurveyCardList";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 interface FormValues {
   title: string;
@@ -186,7 +188,10 @@ export default function CreateSurveyLandingModal({
       </Text>
 
       <FormProvider form={form}>
-        <form onSubmit={onSubmit}>
+        <form
+          onSubmit={onSubmit}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSubmit]])}
+        >
           <Stack mt="xl">
             <TextInput
               placeholder="Enter Landing title"

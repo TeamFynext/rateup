@@ -30,6 +30,8 @@ import { useCheckEmailExistMutation } from "../../backend/user/user.query";
 import { showNotification } from "../../utils/auth";
 import { rateupLogoUrl } from "../HomePage/constants";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
@@ -175,6 +177,15 @@ const ResetPasswordForm = ({ mode }) => {
                 ? emailForm.onSubmit(onSubmit)
                 : pwdForm.onSubmit(onSubmit)
             }
+            onKeyDown={getHotkeyHandler([
+              [
+                SAVE_HOTKEY,
+                (event: any) =>
+                  isEmailPage
+                    ? emailForm.onSubmit(onSubmit)(event)
+                    : pwdForm.onSubmit(onSubmit)(event),
+              ],
+            ])}
           >
             {isEmailPage ? (
               <ContainedTextField

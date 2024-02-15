@@ -4,6 +4,8 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../utils/constants";
 interface FormModalLayoutProps {
   opened: boolean;
   onClose: () => void;
@@ -70,6 +72,9 @@ export default function FormModalLayout({
           onSubmit();
         }}
         style={{ padding: 20 }}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, onSubmit ? onSubmit : () => {}],
+        ])}
       >
         {children}
         <Space h={"md"} />
