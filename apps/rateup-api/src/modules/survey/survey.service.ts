@@ -9,6 +9,7 @@ import {
 import { getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
 import { log } from "../../utils/logger";
+import { getReviewsBySurveyTeamMapId } from "../reviewSuggestion/reviewSuggestion.service";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -183,7 +184,15 @@ export async function getPublicSurveyById(id: string) {
   });
 
   let orgLogo = { orgLogo: org?.org?.logo };
-  let publicSurvey = { ...surveyTeamMap.survey, ...orgLogo };
+  let googleLink = await getGoogleUrlBySurveyTeamMapId(id);
+  let reviewSuggestion = await getReviewsBySurveyTeamMapId(id);
+
+  let publicSurvey = {
+    ...surveyTeamMap.survey,
+    ...orgLogo,
+    googleLink: googleLink,
+    reviews: reviewSuggestion,
+  };
 
   return publicSurvey;
 }
