@@ -2,7 +2,8 @@ import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyCompo
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import Head from "next/head";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import ReviewUsOnGoogle from "./review-us-on-google";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -12,8 +13,8 @@ export const getServerSideProps = async (context: {
   params: SurveyViewProp;
 }) => {
   try {
-    const params = context.params;
-    const surveyData = await getPublicSurvey(params.surveyId);
+    const { surveyId } = context.params;
+    const surveyData = await getPublicSurvey(surveyId);
     return { props: { survey: surveyData } };
   } catch (error) {
     console.error("error in getServerSideProps");
@@ -25,6 +26,8 @@ export const getServerSideProps = async (context: {
 };
 
 export default function Page({ survey, error_occured }) {
+  const [isReviewPage, setIsReviewPage] = useState(false);
+
   useEffect(() => {
     if (error_occured) {
       try {
@@ -92,9 +95,21 @@ export default function Page({ survey, error_occured }) {
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Star Icon" />
       </Head>
-      <TakeSurveyLayoutWeb survey={survey}>
-        <TakeSurvey survey={survey} />
-      </TakeSurveyLayoutWeb>
+      {isReviewPage ? (
+        <ReviewUsOnGoogle
+          googleLink={survey.googleLink}
+          reviews={survey.reviews}
+          orgLogoUrl={
+            survey.orgLogo && survey.orgLogo !== "REMOVED_PHOTO"
+              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
+              : null
+          }
+        />
+      ) : (
+        <TakeSurveyLayoutWeb survey={survey}>
+          <TakeSurvey survey={survey} setIsReviewPage={setIsReviewPage} />
+        </TakeSurveyLayoutWeb>
+      )}
     </>
   );
 }

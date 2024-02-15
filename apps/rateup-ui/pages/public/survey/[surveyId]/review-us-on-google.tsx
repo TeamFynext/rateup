@@ -5,6 +5,8 @@ import {
 import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
 
+//TODO REMOVE THIS PAGE AFTER TESTING  --  CURRENTLY MERGED WITHIN PUBLIC SURVEY PAGE
+
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
 
@@ -27,7 +29,7 @@ export async function getServerSideProps(context) {
   };
 }
 
-function ReviewUsOnGoogle({ googleLink, reviews, orgLogoUrl }) {
+export function ReviewUsOnGoogle({ googleLink, reviews, orgLogoUrl }) {
   return (
     <GoogleReview
       googleLink={googleLink}
