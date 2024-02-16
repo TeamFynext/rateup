@@ -18,6 +18,7 @@ import {
   IconFileInfo,
   IconHome,
   IconWaveSine,
+  IconMessageChatbot,
 } from "@tabler/icons-react";
 
 import { UserRole } from "../../../utils/enums";
@@ -155,6 +156,15 @@ export function getNavTopData(subscription?: Subscription) {
           },
         ]),
     { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
+    ...(hiddenModules.includes("testimonial")
+      ? []
+      : [
+          {
+            Icon: IconMessageChatbot,
+            label: "Testimonial",
+            href: "/dashboard/testimonial",
+          },
+        ]),
   ];
   return navTopData;
 }

@@ -1,0 +1,9 @@
+.root {
+  position: relative;
+}
+
+.checkboxWrapper {
+  position: absolute;
+  top: var(--mantine-spacing-md);
+  right: var(--mantine-spacing-md);
+}
