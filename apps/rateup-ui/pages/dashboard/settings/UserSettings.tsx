@@ -113,7 +113,7 @@ const ProfileSettings = () => {
     const data = {
       title: values.title,
       name: mergeNames(values.firstname, values.lastname),
-      phone: values.phone?.slice(1),
+      phone: values.phone,
     };
     if (isAnyPasswordFieldDirty(values)) {
       const passwordData = {
