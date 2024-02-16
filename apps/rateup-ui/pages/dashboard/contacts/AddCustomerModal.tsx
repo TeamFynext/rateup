@@ -28,6 +28,8 @@ import { ContainedFileInput } from "../../../components/input/ContainedInput/Con
 import { ImportContact } from "./CreateContactModal";
 import Papa from "papaparse";
 import { showErrorToast } from "../../../utils/notifications";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 export interface IAddCustomer {
   name: string;
@@ -290,7 +292,12 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
 
   return (
     <Box p="0">
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form
+        onSubmit={form.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+        ])}
+      >
         <Stack gap={"md"}>
           {addType == contactAddType.EXISTING && (
             <Center my="md">

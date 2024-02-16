@@ -26,6 +26,8 @@ import {
 } from "../../input/ContainedInput/ContainedInput";
 import inputStyles from "../../../components/input/InputStyles.module.css";
 import { LengthTracker } from "../../input/LengthTracker";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,7 +122,12 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
       <Modal.Header>
         <Text fz="xl">{editingItem ? "Edit Template" : "Create Template"}</Text>
       </Modal.Header>
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form
+        onSubmit={form.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+        ])}
+      >
         <Grid align="stretch">
           <Grid.Col span={6} className={inputStyles.lengthTrackerParent}>
             <ContainedTextField

@@ -40,6 +40,7 @@ export default function WelcomePageThemeView({
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
   } = welcomeTheme;
+
   return (
     <Flex
       align={"center"}

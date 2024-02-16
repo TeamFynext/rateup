@@ -5,8 +5,9 @@ import Link from "next/link";
 import { IconArrowAutofitLeft } from "@tabler/icons";
 import styles from "./AuthForm.module.css";
 import FormModalLayout from "../Modal/FormModalLayout";
-import { useDisclosure } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconArrowNarrowRight } from "@tabler/icons-react";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 function AuthTypeSignupForm({
   setIsLoading,
@@ -97,6 +98,12 @@ function AuthTypeSignupForm({
           ${styles["login-sign-up-form"]}
         `}
         onSubmit={signUpForm.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [
+            SAVE_HOTKEY,
+            (event: any) => signUpForm.onSubmit(handleSubmit)(event),
+          ],
+        ])}
       >
         <TextInput
           classNames={styles}

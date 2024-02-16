@@ -36,6 +36,8 @@ import {
   getDividerLabel,
 } from "../../SurveyTheme.utils";
 import InputStyles from "../InputStyles";
+import { useHotkeys } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
 
 type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
 interface StylesComponentProps {
@@ -149,6 +151,7 @@ function StylesComponent({
       setSaveLoading(false);
     }, 1000);
   }
+  useHotkeys([[SAVE_HOTKEY, saveStyles]]);
   useEffect(() => {
     setSurveyTheme(_savedSurveyTheme);
   }, [_savedSurveyTheme]);

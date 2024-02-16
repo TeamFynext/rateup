@@ -14,6 +14,8 @@ import { signUpType } from "./SignupForm";
 import PhoneNumberForm from "./phoneNumberForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { IconPhone } from "@tabler/icons-react";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 function LoginForm({ setIsLoading, signIn, isLoading }) {
   const loginForm = useForm({
@@ -126,6 +128,12 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
             ${styles["login-form"]}
           `}
         onSubmit={loginForm.onSubmit(handleSubmit)}
+        onKeyDown={getHotkeyHandler([
+          [
+            SAVE_HOTKEY,
+            (event: any) => loginForm.onSubmit(handleSubmit)(event),
+          ],
+        ])}
       >
         <AnimatePresence mode="wait">
           <motion.div

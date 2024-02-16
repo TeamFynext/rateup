@@ -26,12 +26,13 @@ import { ContainedTextField } from "../../../components/input/ContainedInput/Con
 import { useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
-import { useDisclosure } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import "react-phone-number-input/style.css";
 import styles from "./setting.module.css";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -209,6 +210,9 @@ const OrgSettings = () => {
           <form
             onSubmit={orgForm.onSubmit(onSubmit)}
             style={{ display: "flex", flexDirection: "column", gap: 30 }}
+            onKeyDown={getHotkeyHandler([
+              [SAVE_HOTKEY, (event: any) => orgForm.onSubmit(onSubmit)(event)],
+            ])}
           >
             <Grid columns={10} grow>
               <Grid.Col span={{ xs: 10 }}>

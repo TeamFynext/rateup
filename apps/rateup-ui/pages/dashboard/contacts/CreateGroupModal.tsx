@@ -26,6 +26,8 @@ import {
   uploadFile,
 } from "../../../utils/file-upload/upload";
 import { showErrorToast } from "../../../utils/notifications";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 interface GroupModalProps {
   groupClose: () => void;
@@ -129,7 +131,10 @@ const CreateGroupModal = ({
 
   return (
     <Box>
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
+      >
         <SimpleGrid cols={2}>
           <TextInput
             label="Group Name"

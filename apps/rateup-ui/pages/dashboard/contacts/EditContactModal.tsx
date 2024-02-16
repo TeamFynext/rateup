@@ -15,6 +15,8 @@ import {
 import { useState } from "react";
 import { useEditContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import { IconPlus } from "@tabler/icons-react";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const EditContactModal = ({ contact, closeEditModal, groupId }) => {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -61,7 +63,11 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
   };
   return (
     <Box>
-      <form>
+      <form
+        onKeyDown={getHotkeyHandler([
+          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+        ])}
+      >
         <SimpleGrid cols={2}>
           <TextInput
             label="Name"
