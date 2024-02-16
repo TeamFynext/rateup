@@ -5,6 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// for having typed Json fields
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

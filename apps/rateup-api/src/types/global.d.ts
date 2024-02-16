@@ -235,6 +235,8 @@ declare global {
     };
     payload: any;
   };
+
+  namespace PrismaJson {}
 }
 export interface FlowLogicCondition {
   questionId: string;
