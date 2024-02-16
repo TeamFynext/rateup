@@ -13,16 +13,16 @@ const LoggedInUserCard = () => {
             ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}`
             : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`
         }
-        alt={user.userName}
+        alt={user?.userName}
         radius="lg"
         style={{ size: "40px" }}
       />
       <Stack style={{ gap: 0, flex: 1 }}>
         <Text size="sm" fw={500} w={100} truncate>
-          {user.userName ? user.userName : user.email}
+          {user?.userName ? user?.userName : user?.email}
         </Text>
         <Text c="dimmed" size="xs">
-          {user.role}
+          {user?.role}
         </Text>
       </Stack>
     </Group>

@@ -65,3 +65,5 @@ export const isCategoryActive = (item) => {
     return currentTime >= startTime || currentTime <= endTime;
   else return startTime <= currentTime && endTime >= currentTime;
 };
+
+export const formatDate = (date) => dayjs(date).format("DD/MM/YYYY");

@@ -662,3 +662,71 @@ export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
   action: LogicAction;
 }
+
+type Profile = {
+  bg: string;
+  profileName: {
+    color: string;
+    fontSize: string;
+    fontWeight: string;
+  };
+  profilePos: {
+    color: string;
+    fontSize: string;
+    fontWeight: string;
+  };
+  profilePic: {
+    isRemoved: boolean;
+  };
+};
+
+type DescriptionBlock = {
+  bg: string;
+  desc: {
+    color: string;
+    fontSize: string;
+    fontWeight: string;
+  };
+};
+
+type RatingBlock = {
+  bg: string;
+  isRemoved: boolean;
+};
+
+type DateBlock = {
+  color: string;
+  fontSize: string;
+  fontWeight: string;
+  isRemoved: boolean;
+};
+
+type Layout = "vertical" | "horizontal"; // Assuming limited layouts
+
+export type TestimonialStyleType = {
+  root: {
+    bg: string;
+  };
+  profileBlock: Profile;
+  descBlock: DescriptionBlock;
+  ratingBlock: RatingBlock;
+  date: DateBlock;
+  layout: Layout;
+};
+
+export type Testimonial = {
+  id: string;
+  createdAt: string;
+  testimonial: {
+    name: string;
+    rating?: number;
+    jobTitle?: string;
+    questionId?: string;
+    testimonial: string;
+  };
+  teamId: string;
+  survey: {
+    id: string;
+    name: string;
+  };
+};
