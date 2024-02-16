@@ -1,3 +1,5 @@
+import { WaFlowStatus } from "./enums";
+
 // TODO: find if there is an official type for this
 export type WaMessageBody = {
   object: string;
@@ -146,7 +148,7 @@ type WaInteractiveMessageAction = {
       screen: string; // id of the screen
       data?: any; // data to be sent to the screen
     };
-    mode?: "draft" | "published";
+    mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
   };
 };
 

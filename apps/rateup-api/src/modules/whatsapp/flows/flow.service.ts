@@ -64,7 +64,6 @@ export async function getFlowFromWa(orgId: string, flowId: string) {
   return flow;
 }
 
-type WaFlowPreview = { preview_url: string; expires_at: string };
 export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
   const waSettings = await getWaSettings(orgId);
 
@@ -136,10 +135,7 @@ export async function getFlowFromDb(dbFlowId: string) {
       dbFlowId,
     },
   });
-  return flow as unknown as WaFlow & {
-    json: WaFlowJson;
-    preview: WaFlowPreview;
-  };
+  return flow;
 }
 
 export async function getUnsyncedFlows(orgId: string) {
@@ -187,24 +183,15 @@ interface sendFlowProps {
   orgId: string;
   dbFlowId: string;
   phone: string;
-  mode: WaFlowStatus.PUBLISHED | WaFlowStatus.DRAFT;
 }
-export async function sendFlow({
-  orgId,
-  dbFlowId,
-  phone,
-  mode,
-}: sendFlowProps) {
+export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
   try {
     const waSettings = await getWaSettings(orgId);
-    const flow = await getFlowFromDb(dbFlowId);
+    const dbFlow = await getFlowFromDb(dbFlowId);
+
     const messageData = generateFlowMessageData({
       to: phone,
-      flow_id: flow.flowId,
-      flow_cta: "Start",
-      screen_id: (flow.json as any).screens[0].id,
-      body: "Would you like to start the survey?", // TODO: make this configurable
-      mode: mode.toLocaleLowerCase() as any,
+      dbFlow,
     });
 
     await callWhatsappApi(
@@ -219,6 +206,7 @@ export async function sendFlow({
     return false;
   }
 }
+
 interface CreateFlowCopyInDbArgs {
   orgId: string;
   flowId: string;
@@ -247,6 +235,10 @@ export async function createFlowCopyInDb({
       surveyId: surveyId,
       status: status,
       name: name,
+      templateMessage: {
+        body: "Would you like to start survey?",
+        cta: "Open",
+      },
     },
   });
 
