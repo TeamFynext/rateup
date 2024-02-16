@@ -147,7 +147,7 @@ export function useGenerateResponse(surveyId: string) {
         color: "red",
         loading: false,
         title: "Failed Response Generate",
-        message: error?.response?.data,
+        message: error?.response?.data?.message ?? error?.response?.data,
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
