@@ -198,7 +198,7 @@ export function FlowImagePreview({
         marginTop: 0,
         marginBottom: 0,
       }}
-      src={src}
+      src={`data:image/png;base64,${src}`}
       w={width}
       h={height}
     />

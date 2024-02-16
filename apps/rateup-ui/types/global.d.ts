@@ -520,6 +520,13 @@ declare global {
     phone: string;
     address: string;
   };
+  type WaFlowTemplateMessage = {
+    header?: string;
+    body: string;
+    footer?: string;
+    cta: string;
+  };
+
   type DbFlow = {
     dbFlowId: string;
     createdAt: Date;
@@ -533,6 +540,7 @@ declare global {
     };
     orgId: string;
     surveyId: string;
+    templateMessage: WaFlowTemplateMessage;
   };
 }
 

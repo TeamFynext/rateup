@@ -35,7 +35,8 @@ export function FlowImageDetailedView() {
       id: selectedFormElement.id,
       "scale-type": "cover",
       src: "",
-      height: 200,
+      height: selectedFormElement.height || 200,
+      width: selectedFormElement.width || 300,
     },
     validate: {},
   });
@@ -45,7 +46,8 @@ export function FlowImageDetailedView() {
   useEffect(() => {
     if (!form.values.src) {
       form.setFieldValue("src", selectedFormElement.src);
-      form.setFieldValue("height", selectedFormElement.height);
+      form.setFieldValue("height", selectedFormElement.height || 200);
+      form.setFieldValue("width", selectedFormElement.width || 300);
     }
   }, [selectedFormElement]);
 
@@ -64,7 +66,7 @@ export function FlowImageDetailedView() {
 
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl.children[index] = form.values;
+      formEl.children[index] = form.values as any;
       console.log(form.values);
     });
   }
@@ -99,6 +101,7 @@ export function FlowImageDetailedView() {
             <FlowImageElementEditor
               onChange={handleChange}
               height={form.values.height}
+              width={form.values.width}
               src={form.values.src}
             />
           </Stack>
@@ -121,13 +124,13 @@ export function FlowImageDetailedView() {
 }
 
 // currently not allowing user to edit width
-function FlowImageElementEditor({ onChange, src, height }) {
+function FlowImageElementEditor({ onChange, src, height, width }) {
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
 
   useEffect(() => {
     onChange({
-      src: base64,
+      src: base64.split(",")[1],
     });
   }, [base64]);
 
@@ -154,8 +157,15 @@ function FlowImageElementEditor({ onChange, src, height }) {
       {src && (
         <>
           <Box h={200}>
-            <Image src={src} h={height} w={"auto"} />
+            <Image src={`data:image/png;base64,${src}`} h={height} w={width} />
           </Box>
+          <NumberInput
+            label="Width"
+            min={100}
+            max={400}
+            value={width}
+            onChange={(width) => onChange({ width })}
+          />
           <NumberInput
             label="Height"
             min={100}

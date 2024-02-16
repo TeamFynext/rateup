@@ -57,7 +57,6 @@ function ScreenListItem({
 }: ScreenListItemProps) {
   const [expanded, setExpanded] = useState(true); // expanded screen id
   const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
-  const updateSurveyMutation = useUpdateSurveyMutation();
 
   const {
     survey,

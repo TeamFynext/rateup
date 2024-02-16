@@ -39,6 +39,7 @@ import { useWaFlowFromDb } from "../../../backend/whatsapp/flow/flow.query";
 import { ShareMethods } from "./ShareMethods";
 import { CopyLinkComponent } from "./ShareSurvey";
 import { FlowShareTemplateEditor } from "./FlowShareTemplateEditor";
+import { modals } from "@mantine/modals";
 
 // TODO: add tag support
 export const ShareFlow = ({
@@ -96,6 +97,45 @@ export const ShareFlow = ({
 
   const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
   const disableShare = !(isPublished || allowUnpublishedShare);
+
+  const confirmModal = () => {
+    modals.openConfirmModal({
+      title: "Confirm Publish",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to Publish this Flow? You{" "}
+          <b>can't edit flows after </b>
+          publishing.
+          <br />
+          It is advised to test the flow by opening the link in before
+          publishing and make sure everything is working fine.
+        </Text>
+      ),
+      labels: { confirm: "Yes", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: handlePublish,
+      onCancel: () => modals.closeAll(),
+    });
+  };
+
+  // TODO: allow user to deprecate the flow.
+  // TODO: implement pause & resume
+
+  function handlePublish() {
+    surveyUpdateMutation.mutate(
+      {
+        surveyId: survey.id,
+        data: { isPublished: true },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["flow", "db"] });
+        },
+      },
+    );
+  }
+
   return (
     <Stack p={2} h={"fit-content"}>
       <PaperLayout
@@ -110,12 +150,8 @@ export const ShareFlow = ({
             fw={500}
             size="lg"
             checked={isPublished}
-            onChange={(event) => {
-              surveyUpdateMutation.mutate({
-                surveyId: survey.id,
-                data: { isPublished: event.currentTarget.checked },
-              });
-            }}
+            disabled={isPublished}
+            onChange={confirmModal}
             label="Publish Survey"
           />
           <Group>

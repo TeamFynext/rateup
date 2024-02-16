@@ -185,3 +185,9 @@ export enum WaFlowFormNonInputElementType {
   textCaption = "TextCaption",
   image = "Image",
 }
+
+export enum SaveStatus {
+  saved = "Saved",
+  notSaved = "Pending Save",
+  saving = "Saving",
+}

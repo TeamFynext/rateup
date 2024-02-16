@@ -29,6 +29,7 @@ import { useUser } from "../../../../context/UserContext";
 import { UserRole } from "../../../../utils/enums";
 import { getQuestionFromFlowFormElementName } from "../../../../utils/whatsapp/flow.utils";
 import { showErrorToast } from "../../../../utils/notifications";
+import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
 
 function FlowPage() {
   const router = useRouter();
@@ -227,11 +228,7 @@ function FlowPage() {
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Share}>
-                    <ShareSurvey
-                      allowUnpublishedShare={true}
-                      survey={survey as Survey}
-                      setActiveTab={() => {}}
-                    />
+                    <ShareFlow allowUnpublishedShare={true} />
                   </Tabs.Panel>
                 </Tabs>
               </SurveyContext.Provider>
