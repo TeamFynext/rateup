@@ -18,6 +18,7 @@ import {
   deleteTeamSurveyHandler,
   getSurveyStatsBySurveyTeamMapIdHandler,
   getSurveyTemplatesHandler,
+  getSurveysWithQuestionsHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import {
@@ -51,6 +52,8 @@ export async function surveyRoutes(server: FastifyInstance) {
   // get all surveys from user
   server.get("/", getSurveysHandler);
 
+  //get All Surveys with questions
+  server.get("/all/survey-with-questions", getSurveysWithQuestionsHandler);
   // get all web  surveys from user
   server.get("/web", getWebSurveysHandler);
 

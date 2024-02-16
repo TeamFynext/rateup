@@ -124,6 +124,8 @@ model Team {
   reviewSuggestions ReviewSuggestion[]
   Review            Review[]
   RM_Topic          RM_Topic[]
+  testimonialCollections TestimonialCollection[]
+
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -227,6 +229,7 @@ model SurveyResponse {
   Contact              Contact?              @relation(fields: [contactId], references: [id])
   contactId            String?               @db.Uuid
   CampaignParticipants CampaignParticipant[]
+  Testimonial Testimonial[]
 }
 
 model SurveyStats {
@@ -634,4 +637,37 @@ model WaFlow {
   orgId    String @db.Uuid
   survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId String @unique @db.Uuid
+}
+
+model Testimonial {
+  id              String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime                   @default(now())
+  testimonial     Json
+  responseId      String                     @db.Uuid
+  surveyResponse  SurveyResponse             @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  collections     TestimonialCollectionMap[]
+
+  @@unique([testimonial,responseId], name: "response_testimonial_unique")
+}
+
+model TestimonialCollection {
+  id              String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  testimonials    TestimonialCollectionMap[]
+  teamId          String                     @db.Uuid
+  team            Team                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  theme           Json?
+  createdAt       DateTime                   @default(now())
+
+  @@unique([name,teamId], name: "collection_name_team_id_unique")
+}
+
+model TestimonialCollectionMap {
+  testimonialId String                @db.Uuid
+  testimonial   Testimonial           @relation(fields: [testimonialId], references: [id], onDelete: Cascade)
+  collectionId  String                @db.Uuid
+  collection    TestimonialCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime              @default(now())
+  
+  @@id([testimonialId, collectionId])
 }
