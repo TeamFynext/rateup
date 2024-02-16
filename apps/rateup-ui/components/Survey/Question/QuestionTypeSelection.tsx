@@ -31,6 +31,7 @@ import {
   IconAdjustmentsQuestion,
   IconAddressBook,
   IconCheckbox,
+  IconPhoto,
 } from "@tabler/icons-react";
 import {
   QuestionType,
@@ -174,6 +175,7 @@ const questionIcons = {
   [WaFlowFormNonInputElementType.textCaption]: IconTextSize,
   [WaFlowFormNonInputElementType.textHeading]: IconTextSize,
   [WaFlowFormNonInputElementType.textSubHeading]: IconTextSize,
+  [WaFlowFormNonInputElementType.image]: IconPhoto,
 };
 
 export { questionIcons };

@@ -8,6 +8,7 @@ import {
   Group,
   Button,
   Divider,
+  Image,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import {
@@ -180,6 +181,29 @@ export function FlowOptInPreview({ label = "Label" }: { label?: string }) {
     />
   );
 }
+interface FlowImagePreviewProps {
+  src: string;
+  width?: number;
+  height?: number;
+}
+export function FlowImagePreview({
+  src,
+  width,
+  height,
+}: FlowImagePreviewProps) {
+  return (
+    <Image
+      style={{
+        margin: "auto",
+        marginTop: 0,
+        marginBottom: 0,
+      }}
+      src={src}
+      w={width}
+      h={height}
+    />
+  );
+}
 
 /**
  * The popup that appears when you click on the "Open" button in the FlowChatPreview.
@@ -282,6 +306,10 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       );
     case WaFlowFormElementType.optIn:
       return <FlowOptInPreview label={fe.label} />;
+    case WaFlowFormElementType.image:
+      return (
+        <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />
+      );
     default:
       throw new Error("Invalid form element type");
   }

@@ -628,6 +628,12 @@ export type WaFlowFormElement = {
   "input-type"?: string; // add types
   "on-click-action"?: WaFlowOnClickAction;
   "data-source"?: Array<WaFlowFormChoice>;
+  src?: string; // base64 of an image (required for Image type)
+  width?: number;
+  height?: number;
+  "scale-type"?: "cover" | "contain";
+  "aspect-ratio"?: number; // default
+  "alt-text"?: string; // for accessibility (Talkback, voice over)
 };
 
 export type WaFlowMap = {

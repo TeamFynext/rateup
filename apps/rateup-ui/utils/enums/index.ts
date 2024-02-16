@@ -100,6 +100,8 @@ export function getQuestionTypeLabel(
       return "Text Heading";
     case WaFlowFormNonInputElementType.textSubHeading:
       return "Text Sub Heading";
+    case WaFlowFormNonInputElementType.image:
+      return "Image";
     default:
       throw new Error("Invalid Question Type");
   }
@@ -161,6 +163,8 @@ export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
       return "Text: Heading";
     case WaFlowFormElementType.textSubHeading:
       return "Text: Sub Heading";
+    case WaFlowFormElementType.image:
+      return "Image";
     default:
       throw new Error("Invalid WaFlowFormElementType" + type);
   }
