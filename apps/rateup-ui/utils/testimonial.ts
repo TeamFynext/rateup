@@ -15,7 +15,7 @@ export const getFilteredTestimonials = (
     case "teams":
       return filterByTeams(testimonials, filters?.teams);
     case "surveys":
-      return filterBySurveys(testimonials, filters?.surveys);
+      return filterBySurveys(testimonials, filters?.surveys, filters?.teams);
     case "rating":
       return filterByRating(testimonials, filters?.rating);
   }
@@ -54,9 +54,17 @@ export function filterByTeams(testimonials: Array<Testimonial>, teams) {
   );
 }
 
-export function filterBySurveys(testimonials: Array<Testimonial>, surveys) {
+export function filterBySurveys(
+  testimonials: Array<Testimonial>,
+  surveys,
+  teams,
+) {
   return testimonials?.filter((t) =>
-    surveys.length ? surveys.includes(t.survey.id) : true,
+    teams?.length
+      ? teams?.includes(t.teamId)
+      : surveys?.length
+      ? surveys.includes(t.survey.id)
+      : t,
   );
 }
 

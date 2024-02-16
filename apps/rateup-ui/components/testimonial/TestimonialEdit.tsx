@@ -32,7 +32,6 @@ const TestimonialEdit = ({
     type,
   );
 
-  console.log("filteredTestimonials", filteredTestimonials);
   const updateCollection = useUpdateCollection(collectionId);
 
   const handleDragEnd = (result) => {
