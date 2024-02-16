@@ -1,5 +1,17 @@
-import { Box, Group, Stack, Text, TextInputProps, Title } from "@mantine/core";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import {
+  Box,
+  Group,
+  Stack,
+  Text,
+  TextInputProps,
+  Textarea,
+  TextareaProps,
+  Title,
+} from "@mantine/core";
+import {
+  ContainedTextArea,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useForm } from "@mantine/form";
 import { WaResponseMessage } from "../../whatsapp/MessageComponents";
@@ -115,7 +127,7 @@ export function FlowShareTemplateEditor() {
             {...form.getInputProps("header")}
             maxValue={60}
           />
-          <TextInputWithLengthTracker
+          <TextareaWithLengthTracker
             label={"Body"}
             {...form.getInputProps("body")}
             maxValue={1024}
@@ -171,6 +183,38 @@ export function TextInputWithLengthTracker(
 
   return (
     <ContainedTextField
+      rightSection={<LengthTracker length={length} maxValue={maxValue} />}
+      styles={{
+        input: {
+          paddingRight: "80px",
+          ...input,
+        },
+        ...restOfStyles,
+      }}
+      rightSectionProps={{
+        style: {
+          width: "80px",
+        },
+      }}
+      {...restOfProps}
+    />
+  );
+}
+
+type TextareaWithLengthTrackerProps = TextareaProps &
+  Omit<LengthTrackerProps, "length"> & {
+    value?: string;
+  };
+
+export function TextareaWithLengthTracker(
+  props: TextareaWithLengthTrackerProps,
+) {
+  const { maxValue, styles, ...restOfProps } = props;
+  const length = props.value?.length || 0;
+  const { input, ...restOfStyles } = styles || ({} as any);
+
+  return (
+    <ContainedTextArea
       rightSection={<LengthTracker length={length} maxValue={maxValue} />}
       styles={{
         input: {
