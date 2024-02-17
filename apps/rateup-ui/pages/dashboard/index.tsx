@@ -480,6 +480,7 @@ export default function DashboardHome() {
                               timePeriod === "daily" ? "H A" : "MMM DD",
                             )
                           }
+                          fill="var(--light-grey-color-3)"
                         />
                       </AreaChart>
                     ) : (
