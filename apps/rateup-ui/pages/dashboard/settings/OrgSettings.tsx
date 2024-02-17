@@ -73,7 +73,7 @@ const OrgSettings = () => {
     setIsLoading(true);
     const data = {
       name: values.name,
-      phone: values?.phone?.slice(1) ?? "",
+      phone: values?.phone ?? "",
       address: values?.address ?? "",
     };
     orgDetailsUpdate.mutate(data);
@@ -115,7 +115,7 @@ const OrgSettings = () => {
       setAvatarSrc("");
     }
     if (user) {
-      const phone = user?.orgPhone ? "+" + user?.orgPhone : null;
+      const phone = user?.orgPhone ? user?.orgPhone : null;
       orgForm.setValues({
         name: user?.orgName ?? "",
         phone: phone ?? "",
@@ -192,7 +192,7 @@ const OrgSettings = () => {
             <Text size={"28px"} fw={500}>
               {user?.orgName ?? "Organization"}
             </Text>
-            <Text> {user?.orgPhone ? "+" + user?.orgPhone : "Phone"}</Text>
+            <Text> {user?.orgPhone ? user?.orgPhone : "Phone"}</Text>
             <Text size="sm">{user?.orgAddress ?? "Adress"}</Text>
           </Stack>
         </Flex>

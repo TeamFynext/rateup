@@ -41,6 +41,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Area,
+  Brush,
 } from "recharts";
 import dayjs from "dayjs";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
@@ -99,34 +100,82 @@ export default function DashboardHome() {
     fetchStatus === "idle" && notifications.clean();
   }, [fetchStatus]);
 
+  function dateToISOButLocal(date) {
+    return dayjs(new Date(date)).format();
+  }
+
   function prepareData(surveysSummary: SurveySummaryData) {
     let dateResponseCount = {};
+    let dayResponseCount = {};
     surveysSummary?.surveys?.forEach((survey) => {
       survey?.teams?.forEach((team) => {
         team?.responses?.forEach((response) => {
-          let date = new Date(response?.createdAt).toISOString().split("T")[0];
+          let date = dateToISOButLocal(response?.createdAt).split("T")[0];
           if (dateResponseCount[date]) {
             dateResponseCount[date]++;
           } else {
             dateResponseCount[date] = 1;
           }
+          let dateWithHour = dateToISOButLocal(response?.createdAt).slice(
+            0,
+            13,
+          );
+          if (dayResponseCount[dateWithHour]) dayResponseCount[dateWithHour]++;
+          else dayResponseCount[dateWithHour] = 1;
         });
       });
     });
-    let data = Object.keys(dateResponseCount)?.map((date) => ({
+
+    const allDates = [];
+    const currentYear = dayjs().year();
+    const currentMonth = dayjs().month();
+    for (var i = 1; i <= dayjs().daysInMonth(); i++)
+      allDates.push(
+        dayjs(new Date(currentYear, currentMonth, i))
+          .format()
+          .split("T")[0],
+      );
+    const remainingDates = allDates.filter(
+      (d) => !Object.keys(dateResponseCount).some((dt) => dt == d),
+    );
+    remainingDates.map((rd) => {
+      dateResponseCount[rd] = 0;
+    });
+
+    const dayWithAllTimes = [];
+    for (var i = 0; i <= 23; i++) {
+      const now = new Date();
+      now.setHours(i);
+      dayWithAllTimes.push(dayjs(now).format().slice(0, 13));
+    }
+    const remainingTimes = dayWithAllTimes.filter(
+      (dt) => !Object.keys(dayResponseCount).some((d) => dt === d),
+    );
+    remainingTimes.map((rd) => {
+      dayResponseCount[rd] = 0;
+    });
+    let data = Object.keys(
+      timePeriod === "daily" ? dayResponseCount : dateResponseCount,
+    )?.map((date) => ({
       date: date,
-      responses: dateResponseCount[date],
+      responses:
+        timePeriod === "daily"
+          ? dayResponseCount[date]
+          : dateResponseCount[date],
     }));
 
-    data.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-    );
-
-    return data;
+    const formattedData =
+      timePeriod === "daily"
+        ? data.sort((a, b) => {
+            return a.date.localeCompare(b.date);
+          })
+        : data.sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+          );
+    return formattedData;
   }
 
   const data = prepareData(surveysSummary);
-
   function getTotalCount(data) {
     let totalCount = 0;
     for (const item of data) {
@@ -140,29 +189,40 @@ export default function DashboardHome() {
     const date = dayjs(datum.date);
     const now = dayjs();
     let periodStart;
+    let periodEnd;
     switch (timePeriod) {
       case "daily":
-        periodStart = now.subtract(1, "day");
+        periodStart = now.startOf("day");
+        periodEnd = now.endOf("day");
         break;
       case "weekly":
-        periodStart = now.subtract(1, "week");
+        periodStart = now.startOf("week");
+        periodEnd = now.endOf("week");
         break;
       case "monthly":
-        periodStart = now.subtract(1, "month");
+        periodStart = now.startOf("month");
+        periodEnd = now.endOf("month");
         break;
       default:
         periodStart = dayjs(0);
     }
-    return date.isAfter(periodStart);
+    return (
+      (date.isAfter(periodStart) || date.isSame(periodStart)) &&
+      (date.isBefore(periodEnd) || date.isSame(periodEnd))
+    );
   });
 
   interface iProps {
     active?: any;
     payload?: any;
     label?: any;
+    timePeriod?: any;
   }
-  const CustomTooltip = ({ active, payload, label }: iProps) => {
+  const CustomTooltip = ({ active, payload, label, timePeriod }: iProps) => {
     if (active && payload && payload?.length) {
+      label = dayjs(label).format(
+        timePeriod === "daily" ? "MMM DD, YYYY H A" : "MMM DD, YYYY",
+      );
       return (
         <div
           className="custom-tooltip"
@@ -174,7 +234,7 @@ export default function DashboardHome() {
             borderRadius: "10px",
           }}
         >
-          <p className="label">{`${dayjs(label).format("MMM DD, YYYY")}`}</p>
+          <p className="label">{label}</p>
           <p className="intro">{`Responses: ${payload[0].value}`}</p>
         </div>
       );
@@ -341,7 +401,7 @@ export default function DashboardHome() {
                           radius="lg"
                           color={timePeriod !== "daily" && "gray"}
                           onClick={() => setTimePeriod("daily")}
-                          title="Daily"
+                          title="Day"
                         />
 
                         <RateupButtonBlue
@@ -351,7 +411,7 @@ export default function DashboardHome() {
                           radius="lg"
                           color={timePeriod !== "weekly" && "gray"}
                           onClick={() => setTimePeriod("weekly")}
-                          title="Weekly"
+                          title="Week"
                         />
                         <RateupButtonBlue
                           variant={
@@ -360,7 +420,7 @@ export default function DashboardHome() {
                           radius="lg"
                           color={timePeriod !== "monthly" && "gray"}
                           onClick={() => setTimePeriod("monthly")}
-                          title="Monthly"
+                          title="Month"
                         />
                       </Group>
                     </Group>
@@ -371,19 +431,56 @@ export default function DashboardHome() {
                         data={filteredData}
                         margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                       >
+                        <defs>
+                          <linearGradient
+                            id="gradientColor"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="var(--tertiary-color)"
+                              stopOpacity={1}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="var(--tertiary-color)"
+                              stopOpacity={0.1}
+                            />
+                          </linearGradient>
+                        </defs>
                         <XAxis
                           dataKey="date"
-                          tickFormatter={(str) => dayjs(str).format("MMM DD")}
+                          tickFormatter={(str) =>
+                            dayjs(str).format(
+                              timePeriod === "daily" ? "H A" : "MMM DD",
+                            )
+                          }
                         />
                         <YAxis allowDecimals={false} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip
+                          content={<CustomTooltip timePeriod={timePeriod} />}
+                        />
                         {/* <Legend /> */}
                         <CartesianGrid stroke="#f5f5f5" />
                         <Area
                           type="monotone"
                           dataKey="responses"
                           fillOpacity={0.7}
-                          fill="var(--tertiary-color)"
+                          fill="url(#gradientColor)"
+                          dot={{ stroke: "var(--tertary-color" }}
+                        />
+                        <Brush
+                          height={15}
+                          dataKey="date"
+                          tickFormatter={(str) =>
+                            dayjs(str).format(
+                              timePeriod === "daily" ? "H A" : "MMM DD",
+                            )
+                          }
+                          fill="var(--light-grey-color-3)"
                         />
                       </AreaChart>
                     ) : (
