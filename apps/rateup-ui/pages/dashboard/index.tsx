@@ -41,6 +41,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Area,
+  Brush,
 } from "recharts";
 import dayjs from "dayjs";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
@@ -470,6 +471,15 @@ export default function DashboardHome() {
                           fillOpacity={0.7}
                           fill="url(#gradientColor)"
                           dot={{ stroke: "var(--tertary-color" }}
+                        />
+                        <Brush
+                          height={15}
+                          dataKey="date"
+                          tickFormatter={(str) =>
+                            dayjs(str).format(
+                              timePeriod === "daily" ? "H A" : "MMM DD",
+                            )
+                          }
                         />
                       </AreaChart>
                     ) : (
