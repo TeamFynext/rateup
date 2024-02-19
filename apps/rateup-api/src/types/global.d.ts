@@ -235,6 +235,18 @@ declare global {
     };
     payload: any;
   };
+  type WaFlowPreview = { preview_url: string; expires_at: string };
+  type WaFlowTemplateMessage = {
+    header?: string;
+    body: string;
+    footer?: string;
+    cta: string;
+  };
+  namespace PrismaJson {
+    type PWaFlowJson = WaFlowJson;
+    type PWaFlowPreview = WaFlowPreview;
+    type PWaFlowTemplateMessage = WaFlowTemplateMessage;
+  }
 }
 export interface FlowLogicCondition {
   questionId: string;

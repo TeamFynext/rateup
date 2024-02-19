@@ -20,6 +20,8 @@ import { getIp } from "../../utils/http";
 import Session from "supertokens-node/recipe/session";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { QuestionType } from "../../types/enums";
+import { createTestimonial } from "../testimonial/testimonial.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -117,6 +119,10 @@ export async function createResponseHandler(
       }
 
       await updateResponse(response.id, { ip, location });
+      const hasTestimonialResponse = data.responses.some(
+        (res) => res?.type === QuestionType.Testimonial,
+      );
+      if (hasTestimonialResponse) await createTestimonial(data, response.id);
     }
   } catch (e) {
     console.error(e);

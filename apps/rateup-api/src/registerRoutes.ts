@@ -51,6 +51,10 @@ import { surveyThemeSchemas } from "./modules/surveyTheme/surveyTheme.schema";
 import { paymentRoutes } from "./modules/payment/payment.route";
 import { paymentSchemas } from "./modules/payment/payment.schema";
 import { paymentPublicRoutes } from "./modules/payment/payment.public.route";
+import { testimonialRoutes } from "./modules/testimonial/testimonials.route";
+import { testimonialSchemas } from "./modules/testimonial/testimonial.schema";
+import { testimonialCollectionRoutes } from "./modules/testimonial/testimonialCollection/testimonialCollection.route";
+import { testimonialCollectionSchemas } from "./modules/testimonial/testimonialCollection/testimonialCollection.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -74,6 +78,8 @@ export function registerRoutes(server: FastifyInstance): void {
     subscriptionSchemas,
     surveyThemeSchemas,
     paymentSchemas,
+    testimonialSchemas,
+    testimonialCollectionSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -115,4 +121,8 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(paymentRoutes, { prefix: "api/payment" });
   server.register(paymentPublicRoutes, { prefix: "api/public/payment" });
   server.register(surveyThemeRoutes, { prefix: "api/surveyTheme" });
+  server.register(testimonialRoutes, { prefix: "api/testimonials" });
+  server.register(testimonialCollectionRoutes, {
+    prefix: "api/testimonial/collections",
+  });
 }

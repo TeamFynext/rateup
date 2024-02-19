@@ -238,6 +238,21 @@ export async function getSurveysHandler(
     reply.code(500);
   }
 }
+
+export async function getSurveysWithQuestionsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const includeQuestions = true;
+    const surveys = await getSurveysByUserId(request.userId, includeQuestions);
+    reply.send(surveys);
+  } catch (e) {
+    console.error(e);
+    reply.code(500);
+  }
+}
+
 export async function getWebSurveysHandler(
   request: FastifyRequest,
   reply: FastifyReply,

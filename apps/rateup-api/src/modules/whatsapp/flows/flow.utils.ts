@@ -7,32 +7,64 @@ import {
   SmileyResponse,
   SurveyType,
   WaFlowFormElementType,
+  WaFlowStatus,
   YNResponse,
 } from "../../../types/enums";
 import { CreateSurveyInput } from "../../survey/survey.schema";
 import { CreateQuestionInput } from "../../question/question.schema";
 import { ChoiceTypeQuestions } from "../../../utils/survey/question/question.utils";
-import { createSurvey, getSurveyById } from "../../survey/survey.service";
+import { createSurvey } from "../../survey/survey.service";
 import { createQuestion } from "../../question/question.service";
 import { log } from "../../../utils/logger";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
 
 interface generateFlowMessageDataProps {
   to: string;
-  flow_id: string;
-  flow_cta: string;
-  screen_id: string;
-  body: string;
-  mode: "draft" | "published";
+  dbFlow: WaFlow;
 }
 export function generateFlowMessageData({
   to,
-  flow_id,
-  flow_cta,
-  screen_id,
-  body,
-  mode,
+  dbFlow,
 }: generateFlowMessageDataProps): WaSendMessageBody {
+  const flow_id = dbFlow.flowId;
+  const mode = dbFlow.status as WaFlowStatus;
+
+  // TODO: only use status in lowercase
+  if (![WaFlowStatus.DRAFT, WaFlowStatus.PUBLISHED].includes(mode)) {
+    throw new Error(`Cant send a flow in '${mode}' state`);
+  }
+
+  let message: Partial<WaSendMessageBody["interactive"]> = {};
+
+  let { body, header, cta, footer } = dbFlow.templateMessage;
+
+  // setting defaults for old waFlow
+  if (!body) {
+    body = "Would you like to start survey?";
+  }
+  if (!cta) {
+    cta = "Open";
+  }
+
+  if (body) {
+    message.body = {
+      text: body,
+    };
+  }
+  if (header) {
+    message.header = {
+      type: "text",
+      text: header,
+    };
+  }
+  if (footer) {
+    message.footer = {
+      text: footer,
+    };
+  }
+
+  const screen_id = dbFlow.json.screens[0].id;
+
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -40,17 +72,15 @@ export function generateFlowMessageData({
     type: "interactive",
     interactive: {
       type: "flow",
-      body: {
-        text: body,
-      },
+      ...message,
       action: {
         name: "flow",
         parameters: {
-          mode,
+          mode: mode.toLowerCase() as any,
           flow_message_version: 3,
           flow_token: to,
           flow_id,
-          flow_cta,
+          flow_cta: cta,
           flow_action_payload: {
             screen: screen_id,
           },

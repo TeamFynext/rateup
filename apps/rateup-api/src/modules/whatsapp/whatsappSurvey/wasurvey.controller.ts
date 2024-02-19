@@ -179,7 +179,6 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
             orgId,
             phone: from,
             dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
-            mode: session.surveyTeamMap.survey.WaFlow.status as any,
           });
         } else {
           // if survey, send first question
@@ -260,7 +259,6 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
       dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
       orgId,
       phone: from,
-      mode: session.surveyTeamMap.survey.WaFlow.status as any,
     });
   } else {
     // WaSurvey
@@ -436,7 +434,6 @@ export async function sendSurveyToParticipants(campaignId: string) {
           orgId: campaign.surveyTeamMap.survey.WaFlow.orgId,
           dbFlowId: campaign.surveyTeamMap.survey.WaFlow.dbFlowId,
           phone: contact.phone,
-          mode: WaFlowStatus.PUBLISHED, // only allow published flows to be sent in campaign mode
         });
       } else {
         success = await sendSurveyToParticipant({

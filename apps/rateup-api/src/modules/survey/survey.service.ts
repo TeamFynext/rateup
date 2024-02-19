@@ -227,7 +227,10 @@ export async function getSurveyBylandingId(landingid: string) {
 
 //------------get ALL Surveys list of a logged user (without qns)--------
 
-export async function getSurveysByUserId(userId: string) {
+export async function getSurveysByUserId(
+  userId: string,
+  includeQuestions?: boolean,
+) {
   const teamIds: string[] = await getTeamIdsByUserId(userId);
 
   const surveyRes = await prisma.survey.findMany({
@@ -266,7 +269,10 @@ export async function getSurveysByUserId(userId: string) {
   });
 
   const surveys = surveyTeamOptimized?.map((survey) => {
-    return excludeFields(survey, ["questions", "password"]);
+    return excludeFields(survey, [
+      includeQuestions ? undefined : "questions",
+      "password",
+    ]);
   });
 
   return surveys;

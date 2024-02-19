@@ -29,6 +29,7 @@ const updateFlowInput = z.object({
   json: z.any().optional(),
   map: z.any().optional(),
   logicJumps: z.any().optional(),
+  templateMessage: z.custom<WaFlowTemplateMessage>().optional(),
 });
 export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
   {
