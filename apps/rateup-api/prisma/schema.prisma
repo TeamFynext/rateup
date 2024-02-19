@@ -5,6 +5,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// for having typed Json fields
+// TODO: remove this when prisma allows types for Json
+// https://github.com/prisma/prisma/issues/3219
+generator json {
+  provider = "prisma-json-types-generator"
+  namespace = "PrismaJson"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -627,11 +635,16 @@ model WaFlow {
   flowId  String? @unique
   name    String
   status  String
+  /// [PWaFlowJson]
   json    Json
+  /// [PWaFlowPreview]
   preview Json?
 
   map        Json
   logicJumps Json @default("{}")
+
+  /// [PWaFlowTemplateMessage]
+  templateMessage Json @default("{}")
 
   org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId    String @db.Uuid
