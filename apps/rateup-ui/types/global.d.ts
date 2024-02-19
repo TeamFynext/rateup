@@ -521,12 +521,19 @@ declare global {
     phone: string;
     address: string;
   };
+  type WaFlowTemplateMessage = {
+    header?: string;
+    body: string;
+    footer?: string;
+    cta: string;
+  };
+
   type DbFlow = {
     dbFlowId: string;
     createdAt: Date;
     flowId: string;
     name: string;
-    status: string;
+    status: WaFlowStatus;
     json: WaFlowJson;
     map: any;
     logicJumps: {
@@ -534,6 +541,7 @@ declare global {
     };
     orgId: string;
     surveyId: string;
+    templateMessage: WaFlowTemplateMessage;
   };
 }
 
@@ -630,6 +638,12 @@ export type WaFlowFormElement = {
   "input-type"?: string; // add types
   "on-click-action"?: WaFlowOnClickAction;
   "data-source"?: Array<WaFlowFormChoice>;
+  src?: string; // base64 of an image (required for Image type)
+  width?: number;
+  height?: number;
+  "scale-type"?: "cover" | "contain";
+  "aspect-ratio"?: number; // default
+  "alt-text"?: string; // for accessibility (Talkback, voice over)
 };
 
 export type WaFlowMap = {

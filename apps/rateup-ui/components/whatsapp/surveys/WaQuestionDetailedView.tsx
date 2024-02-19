@@ -219,7 +219,7 @@ export function WaQuestionDetailedView({
                 placeholder="Enter message header here"
                 rightSection={
                   <LengthTracker
-                    string={form.values.title[selectedLanguage]}
+                    length={form.values.title[selectedLanguage].length}
                     maxValue={WA_HEADER_CHAR_LIMIT}
                   />
                 }
@@ -242,7 +242,7 @@ export function WaQuestionDetailedView({
               }}
               rightSection={
                 <LengthTracker
-                  string={form.values.description[selectedLanguage]}
+                  length={form.values.description[selectedLanguage].length}
                   maxValue={WA_BODY_CHAR_LIMIT}
                 />
               }

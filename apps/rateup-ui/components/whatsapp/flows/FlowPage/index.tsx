@@ -29,12 +29,14 @@ import { useUser } from "../../../../context/UserContext";
 import { UserRole } from "../../../../utils/enums";
 import { getQuestionFromFlowFormElementName } from "../../../../utils/whatsapp/flow.utils";
 import { showErrorToast } from "../../../../utils/notifications";
+import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
 
 function FlowPage() {
   const router = useRouter();
   const { dbFlowId } = router.query as { dbFlowId: string };
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
   const { data: surveyData } = useSurvey(flow?.surveyId);
+  const flowEditable = flow?.status === WaFlowStatus.DRAFT;
 
   const [flowJson, updateFlowJson] = useImmer<WaFlowJson>(undefined);
   const [survey, updateSurvey] = useImmer<Survey>(undefined); // survey created from flowJson which we will be using to parse responses of the flow
@@ -67,6 +69,7 @@ function FlowPage() {
 
   // autoSave
   useEffect(() => {
+    if (!flowEditable) return;
     if (flowJson) {
       if (flow.status === WaFlowStatus.PUBLISHED) {
         showErrorToast("You can't edit a published flow.");
@@ -81,6 +84,7 @@ function FlowPage() {
 
   // update flowJson when there is a change in questions
   useEffect(() => {
+    if (!flowEditable) return;
     if (questions && flowJson) {
       updateSurvey((draft) => {
         draft.questions = questions;
@@ -224,11 +228,7 @@ function FlowPage() {
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Share}>
-                    <ShareSurvey
-                      allowUnpublishedShare={true}
-                      survey={survey as Survey}
-                      setActiveTab={() => {}}
-                    />
+                    <ShareFlow allowUnpublishedShare={true} />
                   </Tabs.Panel>
                 </Tabs>
               </SurveyContext.Provider>

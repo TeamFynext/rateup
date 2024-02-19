@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Collapse,
-  Divider,
   Group,
   Paper,
   Stack,
@@ -14,25 +13,17 @@ import {
 import {
   IconChevronDown,
   IconChevronUp,
-  IconEdit,
   IconGripVertical,
   IconTrash,
 } from "@tabler/icons-react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import {
-  getFormObjFromScreenId,
   getScreenObjById,
-  getWaFlowElementIdFromQuestionId,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { EditableText } from "../../../../input/EditableText";
-import {
-  WaFlowFormElement,
-  WaFlowJson,
-  WaFlowScreen,
-} from "../../../../../types/global";
+import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import {
   getFlowElementText,
@@ -40,17 +31,17 @@ import {
   getQuestionsFromScreen,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { useUpdateSurveyMutation } from "../../../../../backend/surveys/surveys.query";
+import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
 import {
-  useQuestionDeleteMutation,
-  useReplaceQuestionsMutation,
-} from "../../../../../backend/surveys/questions/questions.query";
-import {
-  QuestionType,
   WaFlowFormElementType,
+  WaFlowStatus,
 } from "../../../../../types/enums";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
+import { showErrorToast } from "../../../../../utils/notifications";
+import { modals } from "@mantine/modals";
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -66,7 +57,6 @@ function ScreenListItem({
 }: ScreenListItemProps) {
   const [expanded, setExpanded] = useState(true); // expanded screen id
   const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
-  const updateSurveyMutation = useUpdateSurveyMutation();
 
   const {
     survey,
@@ -81,10 +71,30 @@ function ScreenListItem({
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
   const elements = getFlowFormElementsFromScreen(screen);
 
+  const openDeleteModal = () => {
+    if (!flowEditable) return;
+    modals.openConfirmModal({
+      title: "Delete Screen",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this Screen? It will also delete all
+          the elements in this screen.
+        </Text>
+      ),
+      labels: { confirm: "Yes", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: handleDeleteScreen,
+      onCancel: () => modals.closeAll(),
+    });
+  };
+
   const handleDeleteScreen = () => {
+    if (!flowEditable) return;
     setSelectedFormElementId(null);
     updateFlowJson((draft) => {
       const questions = getQuestionsFromScreen(screen, survey, map);
@@ -113,6 +123,7 @@ function ScreenListItem({
   if (!survey) return null;
 
   function updateScreenTitle(title: string) {
+    if (!flowEditable) return;
     updateFlowJson((draft) => {
       const screenToBeEdited = getScreenObjById(draft.screens, screen.id);
       screenToBeEdited["title"] = title;
@@ -120,10 +131,19 @@ function ScreenListItem({
   }
 
   function handleAddElementClick() {
-    onAddElementClick(screen.id);
+    if (!flowEditable) return;
+    const elements = getFlowFormElementsFromScreen(screen);
+    if (elements.length >= FlowMaxElementsPerScreen) {
+      showErrorToast(
+        `Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`,
+      );
+    } else {
+      onAddElementClick(screen.id);
+    }
   }
 
   function handleDeleteFormElement(index: number) {
+    if (!flowEditable) return;
     const element = elements[index];
     onDeleteElement(element.id, screen.id);
   }
@@ -160,15 +180,17 @@ function ScreenListItem({
           }}
         />
         <Group>
-          <Tooltip label="Delete Screen">
-            <ActionIcon
-              onClick={handleDeleteScreen}
-              variant="subtle"
-              color="gray"
-            >
-              <IconTrash />
-            </ActionIcon>
-          </Tooltip>
+          {flowEditable && (
+            <Tooltip label="Delete Screen">
+              <ActionIcon
+                onClick={openDeleteModal}
+                variant="subtle"
+                color="gray"
+              >
+                <IconTrash />
+              </ActionIcon>
+            </Tooltip>
+          )}
           <ActionIcon
             variant="subtle"
             onClick={() => setExpanded((prev) => !prev)}
@@ -201,7 +223,12 @@ function ScreenListItem({
                 );
               })}
               {provided.placeholder}
-              <Button onClick={handleAddElementClick} variant="outline" mt="sm">
+              <Button
+                onClick={handleAddElementClick}
+                variant="outline"
+                mt="sm"
+                disabled={!flowEditable}
+              >
                 Add Element
               </Button>
             </Stack>
@@ -247,6 +274,12 @@ function FormElementCard({
   handleDelete,
   dragHandleProps,
 }: FormElementCardProps) {
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
+
   return (
     <Box
       onClick={() => handleOpen(index)}
@@ -275,17 +308,19 @@ function FormElementCard({
       <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
         {text}
       </Text>
-      <ActionIcon
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleDelete(index);
-        }}
-        variant="subtle"
-        color="gray"
-      >
-        <IconTrash />
-      </ActionIcon>
+      {flowEditable && (
+        <ActionIcon
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDelete(index);
+          }}
+          variant="subtle"
+          color="gray"
+        >
+          <IconTrash />
+        </ActionIcon>
+      )}
     </Box>
   );
 }

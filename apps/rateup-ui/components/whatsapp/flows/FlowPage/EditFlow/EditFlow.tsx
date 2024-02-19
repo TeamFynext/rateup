@@ -21,6 +21,7 @@ import {
   WaFlowFormElementType,
   WaFlowFormInputElementType,
   WaFlowFormNonInputElementType,
+  WaFlowStatus,
 } from "../../../../../types/enums";
 import { createBlankQuestion } from "../../../../../utils/questions";
 import { FlowNonQuestionDetailedView } from "./FlowNonQuestionDetailedView";
@@ -60,9 +61,12 @@ function EditFlow() {
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
 
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
+
   const deleteQuestionMutation = useQuestionDeleteMutation(survey.id);
 
   function handleNewQuestionCreated(newQ: Question) {
+    if (!flowEditable) return;
     updateSurvey((draft) => {
       draft.questions.push(newQ);
     });
@@ -83,31 +87,6 @@ function EditFlow() {
     });
     setSelectedFormElementId(questionElement.id);
     setBlankQuestion(null);
-  }
-  function handleQuestionUpdated(updatedQ: Question) {
-    updateSurvey((draft) => {
-      const qIndex = draft.questions.findIndex((q) => q.id === updatedQ.id);
-      draft.questions[qIndex] = updatedQ;
-    });
-    const {
-      formElements: { questionElement },
-      map: qMap,
-    } = getFlowElementJsonFromQuestion(updatedQ);
-    updateMap(() => ({ ...map, ...qMap }));
-    updateFlowJson((draft) => {
-      const screenToBeEdited = getScreenObjById(
-        draft.screens,
-        selectedScreenId,
-      );
-      const form = screenToBeEdited.layout.children.find(
-        (se) => se.type === "Form",
-      );
-      const qIndex = form.children.findIndex(
-        (q) => q.name === questionElement.name,
-      );
-      form.children[qIndex] = questionElement;
-      updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
-    });
   }
 
   const handleTypeSelection = (type: QuestionType | WaFlowFormElementType) => {
@@ -172,12 +151,14 @@ function EditFlow() {
     setActiveEditor(EditFlowRightPanel.ElementEditor);
   }
   function handleAddElementClick(screenId: string) {
+    if (!flowEditable) return;
     setActiveEditor(EditFlowRightPanel.TypeSelection);
     setSelectedFormElementId(null);
     setSelectedScreenId(screenId);
   }
 
   function handleDeleteElement(feId: string, screenId: string) {
+    if (!flowEditable) return;
     const fe = getFlowFormElementById(feId, flowJson);
     setActiveEditor(null);
     setSelectedFormElementId(null);

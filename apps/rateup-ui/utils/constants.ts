@@ -88,6 +88,7 @@ const flowNonInputElements = [
   wft.textSubHeading,
   wft.textBody,
   wft.textCaption,
+  wft.image,
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links

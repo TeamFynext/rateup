@@ -23,7 +23,6 @@ import {
   WA_FLOW_HEADING_CHAR_LIMIT,
   WA_FLOW_SUBHEADING_CHAR_LIMIT,
 } from "../../components/whatsapp/whatsappConfig";
-import { getUniqueRandomAlphaId } from "../misc/random.utils";
 import { RatingResponses, ratingEmoji, OpinionResponses } from "../questions";
 
 // Since flow doesn't support multiple languages, we will use 'en' as the default language.
@@ -243,6 +242,9 @@ export function getFlowElementText(
   questions: Question[],
   map: any,
 ) {
+  if (fe.type === WaFlowFormElementType.image) {
+    return "IMAGE";
+  }
   if (fe.text) {
     return fe.text;
   } else {

@@ -1,11 +1,17 @@
-import { Box, Button, TextInput } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Group,
+  MantineContext,
+  Text,
+  useMantineContext,
+  useMantineTheme,
+} from "@mantine/core";
 import ScreenListItem from "./ScreenListItem";
 import styles from "./FlowScreensList.module.css";
-import { IconPlus } from "@tabler/icons-react";
+import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import CreateFlowScreenModal from "./CreateFlowScreenModal";
-import { Updater, useImmer } from "use-immer";
-import { WaFlowJson } from "../../../../../types/global";
 import { useContext } from "react";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import { DragDropContext } from "@hello-pangea/dnd";
@@ -15,7 +21,14 @@ import {
 } from "../../../../../utils/whatsapp/flow.utils";
 import { reorder } from "../../../../../utils/questions";
 import { getFlowFormElementsFromScreen } from "../../../../../utils/whatsapp/flow.utils";
-import { WaFlowFormElementType } from "../../../../../types/enums";
+import {
+  WaFlowFormElementType,
+  WaFlowStatus,
+} from "../../../../../types/enums";
+import { FlowMaxScreens } from "../../../whatsappConfig";
+import { showErrorToast } from "../../../../../utils/notifications";
+import { useRouter } from "next/router";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 
 interface FlowScreensListProps {
   onAddElementClick: (screenId: string) => void;
@@ -28,11 +41,25 @@ function FlowScreensList({
   onDeleteElement,
 }: FlowScreensListProps) {
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
+  const router = useRouter();
+  const theme = useMantineTheme();
+  const dbFlowId = router.query.dbFlowId as string;
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+
+  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
   const [
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
+
+  function handleCreateScreenClick() {
+    if (flowJson.screens.length >= FlowMaxScreens) {
+      showErrorToast(`You can only have ${FlowMaxScreens} screens`);
+    } else {
+      openCreateFlowScreenModal();
+    }
+  }
 
   function onDragEnd({ destination, source }) {
     if (!destination) return;
@@ -69,13 +96,34 @@ function FlowScreensList({
       console.error("Inter-screen dragging Not implemented");
     }
   }
+
   return (
     <Box className={styles["flow-screens-list-container"]}>
+      {flowEditable || (
+        <Group
+          justify="center"
+          style={{
+            borderRadius: "4px",
+            backgroundColor: theme.colors.red[1],
+          }}
+          p="4"
+        >
+          <IconAlertTriangle color={theme.colors.red[9]} />
+          <Text
+            style={{
+              color: theme.colors.red[9],
+            }}
+          >
+            Cannot Edit a Published Flow
+          </Text>
+        </Group>
+      )}
       <h1 className={styles["heading-h1"]}>Screens</h1>
       <Button
         leftSection={<IconPlus size={"1rem"} />}
-        onClick={openCreateFlowScreenModal}
+        onClick={handleCreateScreenClick}
         mb="sm"
+        disabled={!flowEditable}
       >
         Add Screen
       </Button>

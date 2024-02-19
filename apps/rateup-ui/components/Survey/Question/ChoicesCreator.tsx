@@ -92,6 +92,8 @@ export function ChoicesCreator({
   const handleAddChoice = async () => {
     try {
       if (newChoice.trim().length === 0) return setInputError("Text required");
+      if (maxCharCount && newChoice.length > maxCharCount)
+        return setInputError("Max character limit reached");
       if (choiceWeightage.trim().length === 0)
         return setInputError("Text required");
       if (
@@ -220,7 +222,10 @@ export function ChoicesCreator({
             }}
             rightSection={
               maxCharCount && (
-                <LengthTracker string={newChoice} maxValue={maxCharCount} />
+                <LengthTracker
+                  length={newChoice.length}
+                  maxValue={maxCharCount}
+                />
               )
             }
             error={inputError}
@@ -439,7 +444,15 @@ function Choice({
           />
         </Flex>
       ) : (
-        <Checkbox label={choice?.value} w={"85%"} checked={false} readOnly />
+        <Checkbox
+          style={{
+            flexShrink: 1,
+            flexGrow: 1,
+          }}
+          label={choice?.value}
+          checked={false}
+          readOnly
+        />
       )}
       <ActionIcon
         variant="transparent"

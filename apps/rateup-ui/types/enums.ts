@@ -151,11 +151,14 @@ export enum WaFlowLayoutType {
   scl = "SingleColumnLayout",
 }
 export enum WaFlowFormElementType {
+  // Non interactive
   textBody = "TextBody",
   textHeading = "TextHeading",
   textSubHeading = "TextSubheading",
   textCaption = "TextCaption",
+  image = "Image",
 
+  // interactive
   textInput = "TextInput",
   textArea = "TextArea",
   datePicker = "DatePicker",
@@ -180,4 +183,11 @@ export enum WaFlowFormNonInputElementType {
   textHeading = "TextHeading",
   textSubHeading = "TextSubheading",
   textCaption = "TextCaption",
+  image = "Image",
+}
+
+export enum SaveStatus {
+  saved = "Saved",
+  notSaved = "Pending Save",
+  saving = "Saving",
 }
