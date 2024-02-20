@@ -52,6 +52,7 @@ import { questionTypeToFlowFormElementType } from "../../../../../utils/whatsapp
 import { ChoicesCreator } from "../../../../Survey/Question/ChoicesCreator";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -76,6 +77,14 @@ export function FlowQuestionDetailedView({
   const [activeEditor, setActiveEditor] = useState<EditorType>(
     EditorType.ElementEditor,
   );
+
+  const updateQuestionMutation = useQuestionUpdateMutation({ surveyId });
+
+  function handleUpdateQuestion(q: Question) {
+    const { googleReview } = q;
+    updateQuestionMutation.mutate({ qId: q.id, data: { googleReview } });
+  }
+
   switch (activeEditor) {
     case EditorType.ElementEditor:
       return (
@@ -92,6 +101,15 @@ export function FlowQuestionDetailedView({
       return (
         <FlowLogicEditor
           afterSave={() => setActiveEditor(EditorType.ElementEditor)}
+        />
+      );
+    case EditorType.GoogleReviewEditor:
+      return (
+        <GoogleReviewEditor
+          selectedQ={question}
+          setSelectedQ={handleUpdateQuestion}
+          setActiveTab={() => {}}
+          surveyId={surveyId}
         />
       );
   }
@@ -309,7 +327,8 @@ function ElementEditor({
                 color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
-                  save === "saved" && setActiveTab(EditorType.ElementEditor);
+                  save === "saved" &&
+                    setActiveTab(EditorType.GoogleReviewEditor);
                 }}
               />
             )}

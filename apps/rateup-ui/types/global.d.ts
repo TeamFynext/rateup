@@ -523,6 +523,7 @@ declare global {
   };
   type WaFlowTemplateMessage = {
     header?: string;
+    headerImage?: string;
     body: string;
     footer?: string;
     cta: string;
