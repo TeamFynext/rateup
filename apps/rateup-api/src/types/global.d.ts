@@ -238,14 +238,20 @@ declare global {
   type WaFlowPreview = { preview_url: string; expires_at: string };
   type WaFlowTemplateMessage = {
     header?: string;
+    headerImage?: string;
     body: string;
     footer?: string;
     cta: string;
   };
+
+  // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
     type PWaFlowPreview = WaFlowPreview;
     type PWaFlowTemplateMessage = WaFlowTemplateMessage;
+
+    type PQuestion = Question;
+    type PQuestionResponse = QuestionResponse;
   }
 }
 export interface FlowLogicCondition {
