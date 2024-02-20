@@ -238,6 +238,7 @@ declare global {
   type WaFlowPreview = { preview_url: string; expires_at: string };
   type WaFlowTemplateMessage = {
     header?: string;
+    headerImage?: string;
     body: string;
     footer?: string;
     cta: string;
