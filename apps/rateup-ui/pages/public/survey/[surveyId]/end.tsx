@@ -36,6 +36,7 @@ import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.quer
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
+import { defaultTheme } from "../../../../components/Survey/SurveyTheme/defaultTheme";
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
   const { msg } = context.query;
@@ -83,7 +84,8 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
   if (isLoading) return <div>Loading...</div>;
-  const { thankyouTheme } = surveyThemeData;
+  const { thankyouTheme } = surveyThemeData || defaultTheme;
+
   const {
     bg: { styles: bgStyles },
     logo: { logo, styles: logoStyles },
@@ -91,6 +93,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
     title: { title, styles: titleStyles },
     confettiEnabled,
   } = thankyouTheme;
+
   return (
     <CreditsCard
       enableCredits={

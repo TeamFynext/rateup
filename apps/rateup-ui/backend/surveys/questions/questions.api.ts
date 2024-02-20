@@ -29,7 +29,7 @@ export async function replaceQuestions(
 export async function updateQuestion(
   surveyId: string,
   questionId: string,
-  data,
+  data: Partial<Question>,
 ) {
   return axiosClient.put(`${QUESTION_URL}/${surveyId}/${questionId}`, data);
 }

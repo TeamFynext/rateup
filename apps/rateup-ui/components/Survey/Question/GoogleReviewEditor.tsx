@@ -30,14 +30,16 @@ interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
+  surveyId?: string;
 }
 
 const GoogleReviewEditor = ({
   selectedQ,
   setSelectedQ,
   setActiveTab,
+  surveyId,
 }: IProps) => {
-  const { surveyId } = useRouter().query as { surveyId: string };
+  surveyId = surveyId || (useRouter().query.surveyId as string);
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const { data: survey } = useSurvey(surveyId);
 
@@ -45,13 +47,18 @@ const GoogleReviewEditor = ({
     surveyId,
   });
 
-  const [enableGoogleReview, setEnableGoogleReview] = useState(false);
-  const [minRating, setMinRating] = useState(3);
-  const [minOpinion, setMinOpinion] = useState(6);
-  const [selectedSmileys, setSelectedSmileys] = useState([
-    "VeryHappy",
-    "Happy",
-  ]);
+  const [enableGoogleReview, setEnableGoogleReview] = useState(
+    !!selectedQ.googleReview,
+  );
+  const [minRating, setMinRating] = useState(
+    selectedQ.googleReview?.minRating || 3,
+  );
+  const [minOpinion, setMinOpinion] = useState(
+    selectedQ.googleReview?.minOpinion || 6,
+  );
+  const [selectedSmileys, setSelectedSmileys] = useState(
+    selectedQ.googleReview?.reqOptions || ["VeryHappy", "Happy"],
+  );
 
   const updateGoogleReview = (googleReview: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, googleReview });
@@ -180,6 +187,7 @@ const GoogleReviewEditor = ({
     setActiveTab(QuestionTabsEnum.Edit);
     setLinkUpdateStatus(false);
   };
+
   const { primaryColor } = useMantineTheme();
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
@@ -321,7 +329,7 @@ const GoogleReviewEditor = ({
               >
                 {teamsToDisplay &&
                   teamsToDisplay.map((team) => (
-                    <Group justify="space-between">
+                    <Group justify="space-between" key={team.id}>
                       <Text
                         style={{
                           flex: 1,

@@ -121,6 +121,7 @@ function EditFlow() {
       setActiveEditor(EditFlowRightPanel.ElementEditor);
     }
   };
+
   let selectedQuestion = null;
   let selectedNonQuestion = null;
   if (blankQuestion) {
@@ -153,6 +154,7 @@ function EditFlow() {
   function handleAddElementClick(screenId: string) {
     if (!flowEditable) return;
     setActiveEditor(EditFlowRightPanel.TypeSelection);
+    setBlankQuestion(null);
     setSelectedFormElementId(null);
     setSelectedScreenId(screenId);
   }
@@ -236,7 +238,8 @@ function EditFlow() {
           />
         )}
         {activeEditor === EditFlowRightPanel.ElementEditor &&
-        selectedQuestion ? (
+        selectedQuestion &&
+        survey.id ? (
           <FlowQuestionDetailedView
             key={selectedQuestion.id}
             question={selectedQuestion}
