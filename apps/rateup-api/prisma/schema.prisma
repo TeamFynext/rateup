@@ -170,6 +170,7 @@ model Survey {
   updatedAt               DateTime?       @updatedAt
   title                   String
   description             String?         @default("")
+  /// [PQuestion]
   questions               Json[]          @default([])
   languages               String[]
   user                    User            @relation(fields: [createdBy], references: [id])
@@ -223,6 +224,7 @@ model SurveyResponse {
   createdAt       DateTime         @default(now())
   surveyTeamMap   SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId String           @db.Uuid
+  /// [PQuestionResponse]
   responses       Json[]
   language        String           @default("")
   platform        ResponsePlatform @default(WEB)

@@ -1,4 +1,4 @@
-import { ResponsePlatform } from "@prisma/client";
+import { ResponsePlatform, SurveyResponse } from "@prisma/client";
 import {
   CampaignParticipantStatus,
   LogicAction,
@@ -16,7 +16,6 @@ import { parseLogicAction } from "../../question/question.utils";
 import { createResponse } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
-import {} from "./wasurvey.utils";
 import {
   createTextMessage,
   generateMessageDataFromQuestion,
@@ -180,8 +179,7 @@ export async function sendNextQuestion(
     log.error("CurrentQuestionId is null");
     throw new Error("CurrentQuestionId is null");
   }
-  const questions = surveyTeamMap.survey
-    .questions as unknown as Array<Question>;
+  const questions = surveyTeamMap.survey.questions;
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
   if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found");
@@ -200,7 +198,12 @@ export async function sendNextQuestion(
   ) {
     // End Survey
     await saveResponses(session);
-    if (shouldShowGoogleReview({ session })) {
+    if (
+      shouldShowGoogleReview({
+        questions: session.surveyTeamMap.survey.questions,
+        responses: session.responses,
+      })
+    ) {
       log.trace("Sending google review link to %s", session.phone);
       const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${session.surveyTeamMapId}/end?k=n&msg=thanks`;
       const googleReviewMessage = createCTAButtonMessage({
@@ -230,13 +233,19 @@ export async function sendNextQuestion(
 }
 const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
 
-function shouldShowGoogleReview({ session }) {
+interface ShouldShowGoogleReviewProps {
+  questions: Question[];
+  responses: QuestionResponse[];
+}
+export function shouldShowGoogleReview({
+  questions,
+  responses,
+}: ShouldShowGoogleReviewProps) {
+  log.trace("q\n%o\nr%o", questions, responses);
   let showGoogleReview = false;
-  session.surveyTeamMap.survey.questions.forEach((q: Question) => {
+  questions.forEach((q: Question) => {
     if (googleReviewSupportedTypes.includes(q.type) && q.googleReview) {
-      const questionResponse = session.responses.find(
-        (r) => r.questionId === q.id,
-      );
+      const questionResponse = responses.find((r) => r.questionId === q.id);
       switch (q.type) {
         case Q.Rating:
           if (
@@ -330,6 +339,8 @@ export async function saveResponses(session: WaSessionWithRelations) {
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);
+
+  // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {
     await updateCampaignParticipant(session.campaignParticipantId, {
@@ -337,6 +348,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
       responseId: res.id,
     });
   }
+  return res;
 }
 
 export async function sendTextMessage(
