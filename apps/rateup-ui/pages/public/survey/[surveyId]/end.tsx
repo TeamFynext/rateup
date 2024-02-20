@@ -84,7 +84,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
   if (isLoading) return <div>Loading...</div>;
-  const { thankyouTheme } = surveyThemeData || defaultTheme;
+  const { thankyouTheme } = surveyThemeData || (defaultTheme as SurveyTheme);
 
   const {
     bg: { styles: bgStyles },

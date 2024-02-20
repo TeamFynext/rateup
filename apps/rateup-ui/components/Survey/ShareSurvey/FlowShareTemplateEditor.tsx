@@ -1,5 +1,7 @@
 import {
   Box,
+  Button,
+  FileButton,
   Group,
   Stack,
   Text,
@@ -26,6 +28,10 @@ import {
   useWaFlowFromDb,
 } from "../../../backend/whatsapp/flow/flow.query";
 import { useEffect, useState } from "react";
+import { showErrorToast } from "../../../utils/notifications";
+import { uploadFile } from "../../../utils/file-upload/upload";
+import { ImageCropModal } from "../../Modal/ImageCropModal";
+import { useDisclosure } from "@mantine/hooks";
 
 const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
@@ -44,6 +50,7 @@ export function FlowShareTemplateEditor() {
 
   const initialValues = {
     header: dbFlow.templateMessage.header || "",
+    headerImage: dbFlow.templateMessage.headerImage || null,
     body: dbFlow.templateMessage.body || "Would you like to start survey?",
     footer: dbFlow.templateMessage.footer || "",
     cta: dbFlow.templateMessage.cta || "Open",
@@ -104,6 +111,49 @@ export function FlowShareTemplateEditor() {
     return () => clearTimeout(timer);
   }, [form.values]);
 
+  const [image, setImage] = useState(null);
+
+  const max_mb = 1;
+  const onImageUpload = (event: File) => {
+    if (!event) return;
+    if (event.size > max_mb * 1024 * 1024) {
+      showErrorToast(`Max file size is ${max_mb} MB`);
+      return;
+    }
+    setImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+
+    toggleCropDialog();
+  };
+
+  const [imageToUpload, setImageToUpload] = useState(null);
+
+  // saving image
+  useEffect(() => {
+    if (imageToUpload) {
+      uploadFile(imageToUpload)
+        .then((fileKey) => {
+          form.setFieldValue("headerImage", fileKey);
+        })
+        .catch((e) => console.error(e));
+    }
+  }, [imageToUpload]);
+
+  function handleRemoveImage() {
+    form.setFieldValue("headerImage", "");
+    setImage(null);
+  }
+
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
+
+  const handleCropImageSave = (cropedImage) => {
+    setImageToUpload(cropedImage);
+  };
   return (
     <PaperLayout
       p="30px"
@@ -112,6 +162,16 @@ export function FlowShareTemplateEditor() {
         overflowX: "auto",
       }}
     >
+      {image && (
+        <ImageCropModal
+          opened={openedCropDialog}
+          onclose={closeCropDialog}
+          imageName={image.name}
+          handleCropImageSave={handleCropImageSave}
+          image={image.url}
+          aspect={16 / 9}
+        />
+      )}
       <Group mb="sm">
         <Title order={4}>Edit Template Message</Title>
         <SaveStatusIndicator status={status} />
@@ -122,11 +182,25 @@ export function FlowShareTemplateEditor() {
             flex: 1,
           }}
         >
-          <TextInputWithLengthTracker
-            label={"Header"}
-            {...form.getInputProps("header")}
-            maxValue={60}
-          />
+          <Group>
+            <FileButton
+              onChange={onImageUpload}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            >
+              {(props) => {
+                return (
+                  <Button {...props}>
+                    {image ? "Change Image" : "Upload Image"}
+                  </Button>
+                );
+              }}
+            </FileButton>
+
+            <Button variant="outline" onClick={handleRemoveImage}>
+              Remove Image
+            </Button>
+          </Group>
+
           <TextareaWithLengthTracker
             label={"Body"}
             {...form.getInputProps("body")}
