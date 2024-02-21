@@ -223,8 +223,6 @@ export async function cloneFlowHandler(
     await updateFlowIdAndStatusInDb(dbFlowId, flowId, previousFlow.surveyId);
     res.status(204).send();
   } catch (error) {
-    console.log(error);
-
     res.status(500).send(error.message);
   }
 }
