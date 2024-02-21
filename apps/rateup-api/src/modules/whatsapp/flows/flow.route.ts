@@ -3,6 +3,7 @@ import { getFlowsFromWa } from "./flow.service";
 import { checkSession } from "../../../utils/checkSession";
 import { $waFlow } from "./flow.schema";
 import {
+  cloneFlowHandler,
   createFlowHandler,
   deleteFlowHandler,
   deprecateFlowHandler,
@@ -84,7 +85,15 @@ export async function flowRoutes(server: FastifyInstance) {
     },
     updateFlowHandler,
   );
-
+  server.put(
+    "/clone/:dbFlowId",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    cloneFlowHandler,
+  );
   server.get(
     "/:dbFlowId/preview",
     {
