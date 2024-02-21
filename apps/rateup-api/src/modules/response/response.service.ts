@@ -87,7 +87,7 @@ export async function createResponse(input: CreateResponseInput) {
       tag: input.tag,
       surveyTeamMapId: input.surveyTeamMapId,
       language: input.language,
-      responses: input.responses,
+      responses: input.responses as QuestionResponse[],
     },
     include: {
       surveyTeamMap: {

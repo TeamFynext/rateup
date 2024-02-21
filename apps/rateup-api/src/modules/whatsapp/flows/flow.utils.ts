@@ -17,6 +17,7 @@ import { createSurvey } from "../../survey/survey.service";
 import { createQuestion } from "../../question/question.service";
 import { log } from "../../../utils/logger";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
 interface generateFlowMessageDataProps {
   to: string;
@@ -36,7 +37,7 @@ export function generateFlowMessageData({
 
   let message: Partial<WaSendMessageBody["interactive"]> = {};
 
-  let { body, header, cta, footer } = dbFlow.templateMessage;
+  let { body, header, cta, footer, headerImage } = dbFlow.templateMessage;
 
   // setting defaults for old waFlow
   if (!body) {
@@ -55,6 +56,15 @@ export function generateFlowMessageData({
     message.header = {
       type: "text",
       text: header,
+    };
+  }
+
+  if (headerImage) {
+    message.header = {
+      type: "image",
+      image: {
+        link: getFileUrlFromKey(headerImage),
+      },
     };
   }
   if (footer) {

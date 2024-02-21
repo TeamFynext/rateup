@@ -20,9 +20,12 @@ import { getSurveyById } from "../../survey/survey.service";
 import {
   getSession,
   saveResponses,
+  sendMessage,
+  shouldShowGoogleReview,
   updateSession,
 } from "../whatsappSurvey/wasurvey.service";
 import { validateLogic } from "../../question/question.utils";
+import { createCTAButtonMessage } from "../whatsappSurvey/wasurvey.utils";
 
 /**
  * Get flows from whatsapp
@@ -149,6 +152,21 @@ export async function getUnsyncedFlows(orgId: string) {
   return unsyncedFlows;
 }
 
+export async function updateFlowIdAndStatusInDb(
+  dbFlowId: string,
+  flowId: string,
+  surveyId: string,
+) {
+  await prisma.waFlow.update({
+    where: { dbFlowId },
+    data: { flowId, status: WaFlowStatus.DRAFT },
+  });
+  await prisma.survey.update({
+    where: { id: surveyId },
+    data: { isPublished: false },
+  });
+}
+
 export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
   const assets = await getFlowAssets(orgId, waFlowId);
   const jsonAssetLink = assets.find(
@@ -215,6 +233,11 @@ interface CreateFlowCopyInDbArgs {
   surveyId: string;
   status: string;
   name: string;
+  logicJumps?: {};
+  templateMessage?: {
+    body: string;
+    cta: string;
+  };
 }
 
 export async function createFlowCopyInDb({
@@ -225,20 +248,23 @@ export async function createFlowCopyInDb({
   surveyId,
   status,
   name,
+  logicJumps = {},
+  templateMessage = {
+    body: "Would you like to start survey?",
+    cta: "Open",
+  },
 }: CreateFlowCopyInDbArgs) {
   const flow = await prisma.waFlow.create({
     data: {
       orgId,
       flowId,
       json,
+      logicJumps,
+      templateMessage,
       map: flowMap,
       surveyId: surveyId,
       status: status,
       name: name,
-      templateMessage: {
-        body: "Would you like to start survey?",
-        cta: "Open",
-      },
     },
   });
 
@@ -255,6 +281,27 @@ export async function createFlowInWa(
   createFlowInput: { name: string; categories: string[] },
 ) {
   const { businessId, accessToken } = await getWaSettings(orgId);
+  console.log(createFlowInput);
+
+  const { data } = await callWhatsappApi(
+    `/${businessId}/flows`,
+    "POST",
+    accessToken,
+    createFlowInput,
+  );
+  return data as { id: string };
+}
+
+export async function cloneFlowInWa(
+  orgId: string,
+  createFlowInput: {
+    name?: string;
+    categories?: string[];
+    clone_flow_id: string;
+  },
+) {
+  const { businessId, accessToken } = await getWaSettings(orgId);
+
   const { data } = await callWhatsappApi(
     `/${businessId}/flows`,
     "POST",
@@ -490,19 +537,10 @@ export const handleDecryptedFlowRequest = async (
               nextScreen = json.screens[currentIndex + 1]?.id;
               console.log("nextScreen", nextScreen, currentIndex);
             } else if (logicJump.action === LogicAction.EndSurvey) {
-              await saveResponses(session);
-              return {
-                version,
-                screen: "SUCCESS",
-                data: {
-                  extension_message_response: {
-                    params: {
-                      flow_token: flow_token,
-                      responses_saved: true,
-                    },
-                  },
-                },
-              };
+              return await handleFlowEnd({
+                session,
+                decryptedBody,
+              });
             } else {
               log.trace(
                 "Logic passed, jumping to screen: %s",
@@ -518,19 +556,10 @@ export const handleDecryptedFlowRequest = async (
         }
       } else if (currentIndex === json.screens.length - 1) {
         log.trace("End of survey");
-        await saveResponses(session);
-        return {
-          version,
-          screen: "SUCCESS",
-          data: {
-            extension_message_response: {
-              params: {
-                flow_token: flow_token,
-                responses_saved: true,
-              },
-            },
-          },
-        };
+        return await handleFlowEnd({
+          session,
+          decryptedBody,
+        });
       } else {
         log.trace("No logic jumps, moving to next question");
         nextScreen = json.screens[currentIndex + 1]?.id;
@@ -557,3 +586,73 @@ export const handleDecryptedFlowRequest = async (
     );
   }
 };
+
+interface handleFlowEndProps {
+  session: WaSessionWithRelations;
+  decryptedBody: any;
+}
+async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
+  log.trace("Ending Flow");
+  const { version, flow_token } = decryptedBody;
+  const uniqueResponses = removeDuplicateResponses(session.responses);
+  session.responses = uniqueResponses;
+  await saveResponses(session);
+  const sendGRLink = shouldShowGoogleReview({
+    questions: session.surveyTeamMap.survey.questions,
+    responses: uniqueResponses,
+  });
+
+  if (sendGRLink) {
+    sendGReviewLink({
+      phone: session.phone,
+      surveyTeamMapId: session.surveyTeamMapId,
+      orgId: session.orgId,
+    })
+      .then()
+      .catch((e) => log.error(e));
+  }
+
+  return {
+    version,
+    screen: "SUCCESS",
+    data: {
+      extension_message_response: {
+        params: {
+          flow_token: flow_token,
+          responses_saved: true,
+        },
+      },
+    },
+  };
+}
+
+interface sendGReviewLinkProps {
+  phone: string;
+  surveyTeamMapId: string;
+  orgId: string;
+}
+export async function sendGReviewLink({
+  phone,
+  surveyTeamMapId,
+  orgId,
+}: sendGReviewLinkProps) {
+  log.trace("Sending google review link to %s", phone);
+  const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
+  const googleReviewMessage = createCTAButtonMessage({
+    to: phone,
+    buttonText: "Review us on Google",
+    url: thankYouPage,
+    body: "Thank you for your feedback!",
+  });
+  await sendMessage(orgId, googleReviewMessage);
+}
+
+export function removeDuplicateResponses(responses: QuestionResponse[]) {
+  const qIds = responses.map((r) => r.questionId);
+
+  const uniqueQIds = [...new Set(qIds)];
+
+  const reversedRes = responses.reverse();
+
+  return uniqueQIds.map((qId) => reversedRes.find((r) => r.questionId === qId));
+}

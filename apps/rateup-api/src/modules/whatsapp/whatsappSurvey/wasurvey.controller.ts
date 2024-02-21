@@ -20,6 +20,7 @@ import {
   sendQuestion,
   sendSurveyToParticipant,
   sendTextMessage,
+  shouldShowGoogleReview,
   updateSession,
 } from "./wasurvey.service";
 import {
@@ -48,7 +49,12 @@ import {
 } from "../../survey/survey.service";
 import { getIpFromToken } from "../redirect/wa_redirect.service";
 import { generateQuestionResponsesFromFlowResponse } from "../flows/flow.utils";
-import { getFlowFromDb, sendFlow } from "../flows/flow.service";
+import {
+  getFlowFromDb,
+  removeDuplicateResponses,
+  sendFlow,
+  sendGReviewLink,
+} from "../flows/flow.service";
 import { createResponse } from "../../response/response.service";
 
 // TODO: add as fastify schema
@@ -337,6 +343,7 @@ async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
     log.trace("Flow response already saved. Ignoring...");
     return;
   }
+
   let session = await getSession(orgId, from);
   const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
   const flow = await getFlowFromDb(dbFlowId);
@@ -347,8 +354,22 @@ async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
     surveyTeamMapId: session.surveyTeamMapId,
   });
 
-  session.responses = questionResponses;
+  const uniqueResponses = removeDuplicateResponses(questionResponses);
+  session.responses = uniqueResponses;
   await saveResponses(session);
+
+  if (
+    shouldShowGoogleReview({
+      questions: session.surveyTeamMap.survey.questions,
+      responses: uniqueResponses,
+    })
+  ) {
+    await sendGReviewLink({
+      phone: session.phone,
+      surveyTeamMapId: session.surveyTeamMapId,
+      orgId: session.orgId,
+    });
+  }
 }
 
 async function handleLanguageSelection(session: WaSessionWithRelations) {

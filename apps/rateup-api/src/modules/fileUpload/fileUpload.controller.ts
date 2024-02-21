@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { deleteFile, uploadFile } from "../../utils/upload/s3Upload";
 import { allowedMimeTypes, fileDeleteInput } from "./fileUpload.schema";
 import sharp from "sharp";
+import { log } from "../../utils/logger";
 
 export async function uploadController(
   req: FastifyRequest,
@@ -9,6 +10,8 @@ export async function uploadController(
 ) {
   const data = await req.file();
   if (!allowedMimeTypes.includes(data?.mimetype) || data.type !== "file") {
+    log.debug("mime => %o", data?.mimetype);
+    log.debug("type => %o", data.type);
     return reply
       .code(400)
       .send({ message: "This file type is not permitted." });
