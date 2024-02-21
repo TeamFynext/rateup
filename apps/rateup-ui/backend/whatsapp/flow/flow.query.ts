@@ -13,6 +13,7 @@ import {
   deleteFlow,
   publishFlow,
   deprecateFlow,
+  cloneFlows,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
@@ -79,6 +80,25 @@ export const useImportFlowsMutation = () => {
   });
 };
 
+export const useCloneFlowsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (flowId: string) => cloneFlows(flowId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flow"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      showSuccessToast(
+        "Copy & Renew Flow Successfully",
+        "copy-renew",
+        "",
+        true,
+      );
+    },
+    onError: () => {
+      showErrorToast("Error Copy & Renew Flow", "copy-renew", "", true);
+    },
+  });
+};
 export const useCreateFlowMutation = () => {
   const qc = useQueryClient();
   return useMutation({
