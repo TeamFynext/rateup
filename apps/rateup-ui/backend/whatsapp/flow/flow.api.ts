@@ -37,6 +37,10 @@ export async function importFlows(
   });
   return res.data;
 }
+export async function cloneFlows(flowId: string) {
+  const res = await axiosClient.put(`${BASE}/clone/${flowId}`, {});
+  return res.data;
+}
 export type createFlowInput = {
   name: string;
   teamIds: string[];

@@ -48,16 +48,16 @@ const GoogleReviewEditor = ({
   });
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(
-    !!selectedQ.googleReview,
+    !!selectedQ?.googleReview,
   );
   const [minRating, setMinRating] = useState(
-    selectedQ.googleReview?.minRating || 3,
+    selectedQ?.googleReview?.minRating || 3,
   );
   const [minOpinion, setMinOpinion] = useState(
-    selectedQ.googleReview?.minOpinion || 6,
+    selectedQ?.googleReview?.minOpinion || 6,
   );
   const [selectedSmileys, setSelectedSmileys] = useState(
-    selectedQ.googleReview?.reqOptions || ["VeryHappy", "Happy"],
+    selectedQ?.googleReview?.reqOptions || ["VeryHappy", "Happy"],
   );
 
   const updateGoogleReview = (googleReview: any) => {
