@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  cloneFlowInWa,
   createFlowCopyInDb,
   createFlowInWa,
   deleteFlowInDb,
@@ -13,6 +14,7 @@ import {
   getFlowsFromWa,
   getUnsyncedFlows,
   publishFlowInWa,
+  updateFlowIdAndStatusInDb,
   updateFlowInDb,
   updateFlowJsonInWa,
   updateFlowMetaDataInWa,
@@ -32,7 +34,7 @@ import {
 import { log } from "../../../utils/logger";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
-import { Survey, WaFlow } from "@prisma/client";
+import { Survey } from "@prisma/client";
 
 /**
  * Get flows from whatsapp api or our database.
@@ -199,6 +201,33 @@ export async function updateFlowHandler(
   res.status(201).send();
 }
 
+export async function cloneFlowHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const { dbFlowId } = req.params;
+    const previousFlow = await getFlowFromDb(dbFlowId);
+    const { categories } = await getFlowFromWa(orgId, previousFlow.flowId);
+    //flowid of new cloned flow
+    const { id: flowId } = await cloneFlowInWa(orgId, {
+      name: `${previousFlow.name} ${previousFlow.flowId}`,
+      categories,
+      clone_flow_id: previousFlow.flowId,
+    });
+
+    await deprecateFlowInWa(orgId, previousFlow.flowId);
+    await updateFlowIdAndStatusInDb(dbFlowId, flowId, previousFlow.surveyId);
+    res.status(204).send();
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send(error.message);
+  }
+}
 export async function getFlowPreviewHandler(
   req: FastifyRequest<{
     Params: ByDbFlowIdParams;

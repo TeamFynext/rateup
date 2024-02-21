@@ -186,6 +186,7 @@ declare global {
     name: string;
     id: string;
     status: WaFlowStatus;
+    categories?: string[];
   };
   type WaFlowJson = {
     version: string;

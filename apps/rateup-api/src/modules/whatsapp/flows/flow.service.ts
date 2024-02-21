@@ -152,6 +152,21 @@ export async function getUnsyncedFlows(orgId: string) {
   return unsyncedFlows;
 }
 
+export async function updateFlowIdAndStatusInDb(
+  dbFlowId: string,
+  flowId: string,
+  surveyId: string,
+) {
+  await prisma.waFlow.update({
+    where: { dbFlowId },
+    data: { flowId, status: WaFlowStatus.DRAFT },
+  });
+  await prisma.survey.update({
+    where: { id: surveyId },
+    data: { isPublished: false },
+  });
+}
+
 export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
   const assets = await getFlowAssets(orgId, waFlowId);
   const jsonAssetLink = assets.find(
@@ -218,6 +233,11 @@ interface CreateFlowCopyInDbArgs {
   surveyId: string;
   status: string;
   name: string;
+  logicJumps?: {};
+  templateMessage?: {
+    body: string;
+    cta: string;
+  };
 }
 
 export async function createFlowCopyInDb({
@@ -228,20 +248,23 @@ export async function createFlowCopyInDb({
   surveyId,
   status,
   name,
+  logicJumps = {},
+  templateMessage = {
+    body: "Would you like to start survey?",
+    cta: "Open",
+  },
 }: CreateFlowCopyInDbArgs) {
   const flow = await prisma.waFlow.create({
     data: {
       orgId,
       flowId,
       json,
+      logicJumps,
+      templateMessage,
       map: flowMap,
       surveyId: surveyId,
       status: status,
       name: name,
-      templateMessage: {
-        body: "Would you like to start survey?",
-        cta: "Open",
-      },
     },
   });
 
@@ -258,6 +281,27 @@ export async function createFlowInWa(
   createFlowInput: { name: string; categories: string[] },
 ) {
   const { businessId, accessToken } = await getWaSettings(orgId);
+  console.log(createFlowInput);
+
+  const { data } = await callWhatsappApi(
+    `/${businessId}/flows`,
+    "POST",
+    accessToken,
+    createFlowInput,
+  );
+  return data as { id: string };
+}
+
+export async function cloneFlowInWa(
+  orgId: string,
+  createFlowInput: {
+    name?: string;
+    categories?: string[];
+    clone_flow_id: string;
+  },
+) {
+  const { businessId, accessToken } = await getWaSettings(orgId);
+
   const { data } = await callWhatsappApi(
     `/${businessId}/flows`,
     "POST",
