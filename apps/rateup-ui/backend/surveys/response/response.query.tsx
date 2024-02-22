@@ -6,6 +6,7 @@ import {
   getAllResponses,
   getResponses,
   resetResponsesStats,
+  syncResponseToGoogleSheet,
 } from "./response.api";
 import { notifications } from "@mantine/notifications";
 
@@ -152,5 +153,12 @@ export function useGenerateResponse(surveyId: string) {
         autoClose: 3000,
       });
     },
+  });
+}
+
+export function useSyncResponseToGoogleSheet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncResponseToGoogleSheet,
   });
 }

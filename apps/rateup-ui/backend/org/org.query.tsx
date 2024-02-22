@@ -10,6 +10,9 @@ import {
   IUpdateOrgDetails,
   getAllOrgs,
   getOrgStats,
+  getAuthorizationUrl,
+  createAuthToken,
+  getGoogleAccessToken,
 } from "./org.api";
 
 export const useTeamsMembersOfOrg = () => {
@@ -132,3 +135,24 @@ export function useUpdateOrgDetailsMutation(setIsLoading) {
     },
   });
 }
+
+export const useGetAuthorizationUrl = () => {
+  return useQuery({
+    queryKey: ["authriationurl"],
+    queryFn: () => getAuthorizationUrl(),
+  });
+};
+
+export const useCreateAuthToken = () => {
+  return useMutation({
+    mutationFn: createAuthToken,
+    onSuccess: (data) => {},
+  });
+};
+
+export const useGetGoogleAccessToken = () => {
+  return useQuery({
+    queryKey: ["googleAuthAccessToken"],
+    queryFn: getGoogleAccessToken,
+  });
+};

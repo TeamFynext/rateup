@@ -52,3 +52,27 @@ export async function getAllOrgs() {
 export async function getOrgStats(orgId: string) {
   return (await axiosClient.get(`/org/${orgId}`)).data;
 }
+
+export async function getAuthorizationUrl() {
+  const res = await axiosClient.get(`org/auth-url`);
+  return res.data;
+}
+
+export async function createAuthToken(data) {
+  const res = await axiosClient.post(`org/create-auth-token`, data);
+  return res.data;
+}
+
+type GoogleAuthAccess = {
+  isExist: boolean;
+  auth: {
+    accessToken: string;
+    refreshToken: string;
+    expiryDate: string;
+    scopes: Array<string>;
+  };
+};
+export async function getGoogleAccessToken() {
+  const res = await axiosClient.get(`org/google-auth-access`);
+  return res.data as GoogleAuthAccess;
+}

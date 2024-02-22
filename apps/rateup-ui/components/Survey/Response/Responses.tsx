@@ -1,7 +1,14 @@
-import { Box, Group, Loader, Stack, Text } from "@mantine/core";
+import { Box, Group, Loader, Menu, Popover, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconFileDownload, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconDatabaseImport,
+  IconDownload,
+  IconFileDownload,
+  IconRefresh,
+  IconX,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -9,7 +16,10 @@ import { downloadExcel } from "react-export-table-to-excel";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import { useDeleteResponse } from "../../../backend/surveys/response/response.query";
+import {
+  useDeleteResponse,
+  useSyncResponseToGoogleSheet,
+} from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import { QuestionType } from "../../../types/enums";
@@ -17,10 +27,7 @@ import {
   ChoiceTypeQuestions,
   ContactQuestions,
 } from "../../../utils/constants";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import TanstackTable from "../../Table/TanstackTable";
@@ -30,6 +37,12 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
 import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import {
+  useGetAuthorizationUrl,
+  useGetGoogleAccessToken,
+} from "../../../backend/org/org.query";
+import useLocalStorage from "../../../hooks/localStorage";
 
 const Responses = ({
   survey,
@@ -209,6 +222,47 @@ const Responses = ({
     open,
   });
 
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet();
+  const { data: authUrl } = useGetAuthorizationUrl();
+  const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
+
+  const [callbackRoute, setCallBackRoute] = useLocalStorage(
+    "google-callback-route",
+    "/dashboard/settings",
+  );
+  const handleSyncGoogleSheet = () => {
+    setIsSyncing(true);
+    if (!googleAuthAccessToken.isExist) {
+      setIsSyncing(false);
+      setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
+      window.open(authUrl);
+    } else {
+      syncResponseToGoogleSheet.mutate(
+        { surveyId },
+        {
+          onSuccess: () => {
+            setIsSyncing(false);
+            showSuccessToast(
+              "Response synced to Google sheet successfully",
+              "success",
+              <IconCheck />,
+            );
+          },
+          onError: (error: any) => {
+            setIsSyncing(false);
+            if (error.response.data.error === "invalid_grant") {
+              setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
+              window.open(authUrl);
+            } else {
+              showErrorToast("Error in syncing response");
+            }
+          },
+        },
+      );
+    }
+  };
+
   if (isQLoading) return <Loader type="bars" />;
   if (QError) return <Text>An error has occurred</Text>;
   if (isLoading) return <Loader type="bars" />;
@@ -222,25 +276,54 @@ const Responses = ({
       <PaperLayout className={styles["total-responses-heading-container"]}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
-          <Group>
-            <RateupButtonBlue
-              onClick={handleExcelDownload}
-              title={"Download"}
-              size="md"
-              radius={"lg"}
-              disabled={responseCount > 0 ? false : true}
-              rightIcon={<IconFileDownload size="1rem" />}
-            />
-            {hasContactQuestion && (
-              <RateupButtonSecondary
-                onClick={handleExportContacts}
-                title={"Export to contacts"}
-                size="md"
-                radius={"lg"}
-                rightIcon={<IconFileDownload size="1rem" />}
-              />
-            )}
-          </Group>
+          {responseCount > 0 && (
+            <Popover
+              width={300}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              classNames={{
+                dropdown: styles["filters-popover-dropdown-div"],
+              }}
+            >
+              <Popover.Target>
+                <IconDownload />
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Stack>
+                  {isFetched && (
+                    <RateupButtonSecondary
+                      title="Sync with Google Sheet"
+                      onClick={handleSyncGoogleSheet}
+                      leftIcon={
+                        <IconRefresh
+                          className={
+                            isSyncing ? styles.rotateInfinitely : undefined
+                          }
+                          style={{ width: "90%", height: "90%" }}
+                          stroke={1.5}
+                        />
+                      }
+                    />
+                  )}
+                  <RateupButtonSecondary
+                    onClick={handleExcelDownload}
+                    title={"Download Excel"}
+                    radius={"lg"}
+                    leftIcon={<IconFileDownload stroke={1.5} />}
+                  />
+                  {hasContactQuestion && (
+                    <RateupButtonSecondary
+                      onClick={handleExportContacts}
+                      title={"Import Contacts"}
+                      radius={"lg"}
+                      rightIcon={<IconDatabaseImport stroke={1.5} />}
+                    />
+                  )}
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          )}
         </Group>
       </PaperLayout>
 

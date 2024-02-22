@@ -123,7 +123,6 @@ const OrgSettings = () => {
       });
     }
   }, [user.orgLogo]);
-
   const handleImagePicker = (event) => {
     if (!event) return;
     toggleCropDialog();
@@ -136,6 +135,7 @@ const OrgSettings = () => {
   const handleCropImageSave = (cropedImage) => {
     setFile(cropedImage);
   };
+
   return (
     <Flex direction={"column"} h={"100%"}>
       <ImageCropModal

@@ -51,3 +51,8 @@ type generateResponseType = {
 export async function generateResponse(data: generateResponseType) {
   return (await axiosClient.post(`${RESPONSE_URL}/generate`, data))?.data;
 }
+
+export async function syncResponseToGoogleSheet({ surveyId }) {
+  let res = await axiosClient.post(`${RESPONSE_URL}/${surveyId}/sync-response`);
+  return res?.data;
+}

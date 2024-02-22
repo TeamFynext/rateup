@@ -449,7 +449,7 @@ const ShareSurvey = ({
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}
-        title={survey.title}
+        title={survey?.title}
         isPublished={!disableShare}
         id={surveyId}
         queryKey={"surveyShareSettings"}

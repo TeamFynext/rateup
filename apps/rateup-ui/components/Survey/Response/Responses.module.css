@@ -37,3 +37,26 @@
   padding: 0.625rem;
   border-top: 1px solid var(--mantine-color-gray-4);
 }
+
+.rotateInfinitely {
+  animation: rotate-infinite 1s linear infinite;
+}
+
+@keyframes rotate-infinite {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.filters-popover-dropdown-div {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.filters-popover-dropdown-div > div {
+  box-shadow: none !important;
+}
