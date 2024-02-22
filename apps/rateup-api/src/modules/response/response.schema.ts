@@ -24,6 +24,7 @@ const responseCore = {
       .optional()
       .default(undefined),
   }),
+  encryptedResponses: z.string().optional(),
 };
 
 const createResponseInputSchema = z.object({

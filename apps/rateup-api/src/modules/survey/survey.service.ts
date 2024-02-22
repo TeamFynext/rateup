@@ -549,7 +549,6 @@ export async function deleteSurveyFromTeam(
 //------------UPDATE SURVEY by id --------
 export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
   let action = "edit";
-
   if ("isPublished" in input) {
     action = "publish";
     if (input?.isPublished === true) {

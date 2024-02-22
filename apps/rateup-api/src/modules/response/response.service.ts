@@ -52,6 +52,7 @@ export async function getAllResponses(
           tag: true,
           responses: true,
           createdAt: true,
+          encryptedResponses: true,
         },
       },
     },
@@ -94,6 +95,7 @@ export async function createResponse(input: CreateResponseInput) {
       surveyTeamMapId: input.surveyTeamMapId,
       language: input.language,
       responses: input.responses as QuestionResponse[],
+      encryptedResponses: input.encryptedResponses,
     },
     include: {
       surveyTeamMap: {

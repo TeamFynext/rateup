@@ -135,6 +135,7 @@ export async function getLoggedUserInfo(
       name: true,
       address: true,
       phone: true,
+      encryptionKeys: true,
     },
   });
   return {
@@ -149,6 +150,7 @@ export async function getLoggedUserInfo(
     orgPhone: orgData?.phone,
     orgAddress: orgData?.address,
     teams: profile?.teamMember?.map((team) => team.teamId),
+    encryptionKeys: orgData?.encryptionKeys ?? undefined,
   };
 }
 

@@ -37,9 +37,15 @@ const updateLogoSchema = z.object({
 });
 
 const updateOrgDetailsSchema = z.object({
-  name: z.string(),
+  name: z.string().optional(),
   phone: z.string().min(8).max(15).optional(),
   address: z.string().optional(),
+  encryptionKeys: z
+    .object({
+      publicKey: z.string(),
+      privateKey: z.string(),
+    })
+    .optional(),
 });
 const byOrgIdParams = z.object({
   orgId: z.string(),
@@ -55,7 +61,7 @@ export const { schemas: orgSchemas, $ref: $Sref } = buildJsonSchemas(
     byOrgIdParams,
     updateOrgDetailsSchema,
   },
-  { $id: "orgSchema" }
+  { $id: "orgSchema" },
 );
 
 export type CreateOrgInput = z.infer<typeof createOrgRequestSchema>;
