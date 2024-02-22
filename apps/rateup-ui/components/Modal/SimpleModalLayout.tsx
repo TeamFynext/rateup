@@ -7,6 +7,7 @@ interface FormModalLayoutProps {
   children: React.ReactNode;
   noCustomHeader?: boolean;
   size?: string;
+  withCloseButton?: boolean;
 }
 export default function SimpleModalLayout({
   centered,
@@ -16,9 +17,13 @@ export default function SimpleModalLayout({
   children,
   noCustomHeader,
   size = "md",
+  withCloseButton = true,
 }: FormModalLayoutProps) {
   return (
     <Modal
+      closeOnClickOutside={withCloseButton}
+      closeOnEscape={withCloseButton}
+      withCloseButton={withCloseButton}
       centered={centered}
       title={noCustomHeader && title}
       opened={opened}

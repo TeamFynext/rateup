@@ -35,6 +35,7 @@ export interface IUserData {
   orgPhone: string;
   orgAddress: string;
   teams: Array<string>;
+  encryptionKeys: EncryptionKeys | undefined;
 }
 
 export interface IUserInfoApiResponse {

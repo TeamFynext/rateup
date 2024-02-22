@@ -9,6 +9,12 @@ import {
   syncResponseToGoogleSheet,
 } from "./response.api";
 import { notifications } from "@mantine/notifications";
+import { decryptPrivateKey, passwordToKey } from "../../../utils/encryption";
+import { decryptResultResponse } from "../../../utils/response";
+import { useSurvey } from "../surveys.query";
+import { useUser } from "../../../context/UserContext";
+import { useContext } from "react";
+import SurveyContext from "../../../context/SurveyContext";
 
 export const useResponses = (surveyTeamMapId: string) =>
   useQuery({
@@ -17,12 +23,28 @@ export const useResponses = (surveyTeamMapId: string) =>
     enabled: !!surveyTeamMapId,
   });
 
-export const useAllResponses = (surveyId: string) =>
-  useQuery({
-    queryKey: ["allresponses", surveyId],
-    queryFn: () => getAllResponses(surveyId),
-    enabled: !!surveyId,
+export const useAllResponses = (surveyId: string) => {
+  const { data: survey } = useSurvey(surveyId);
+  const { user } = useUser();
+  const { encryptionpassword: passkey } = useContext(SurveyContext);
+  return useQuery({
+    queryKey: ["allresponses", survey?.id],
+    queryFn: async () => {
+      let response = await getAllResponses(survey?.id);
+      if (passkey) {
+        const { decryptedResponses } = await decryptResultResponse(
+          response,
+          user?.encryptionKeys?.privateKey,
+          user?.encryptionKeys?.publicKey,
+          passkey,
+        );
+        response = decryptedResponses;
+      }
+      return response;
+    },
+    enabled: !!survey?.id && (survey.isEncrypted ? !!passkey : true),
   });
+};
 
 export function useResetResponsesStats(
   surveyId: string,

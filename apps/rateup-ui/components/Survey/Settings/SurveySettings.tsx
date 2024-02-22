@@ -13,6 +13,7 @@ import {
 } from "./updateSettings";
 import NotificationEmailSettings from "./NotificationEmailSettings";
 import GeneralSettings from "./GeneralSettings";
+import ETESettings from "./ETESettings";
 
 const defaultEnabledModules = [
   "name",
@@ -24,6 +25,7 @@ const defaultEnabledModules = [
   "location",
   "enableNotificationEmail",
   "notificationEmail",
+  "endtoendencryption",
 ];
 const SurveySettings = ({
   surveyId,
@@ -33,9 +35,7 @@ const SurveySettings = ({
   const [kioskMode, setKioskMode] = useState(survey?.kioskMode);
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
-
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
-
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {
@@ -45,7 +45,6 @@ const SurveySettings = ({
       ),
     );
   }, [survey]);
-
   return (
     <Stack px={"xl"} py={"lg"} gap={survey?.type == "web" ? "lg" : "xs"}>
       <Heading subtitle="General settings" label="Edit your survey info" />
@@ -108,6 +107,9 @@ const SurveySettings = ({
               </Tooltip>
             </Group>
           </PaperLayout>
+        )}
+        {enabledModules.includes("endtoendencryption") && (
+          <ETESettings {...{ survey }} />
         )}
       </SimpleGrid>
       <SimpleGrid cols={2} spacing={"lg"}>

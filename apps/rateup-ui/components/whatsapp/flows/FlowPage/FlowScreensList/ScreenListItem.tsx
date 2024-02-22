@@ -98,7 +98,7 @@ function ScreenListItem({
     setSelectedFormElementId(null);
     updateFlowJson((draft) => {
       const questions = getQuestionsFromScreen(screen, survey, map);
-      const qIds = questions.map((q) => q.id);
+      const qIds = questions?.map((q) => q.id);
       const updatedQuestions = survey.questions.filter(
         (q) => !qIds.includes(q.id),
       );

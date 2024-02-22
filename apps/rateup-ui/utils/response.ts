@@ -14,6 +14,8 @@ import {
   IconMoodSmileBeam,
 } from "@tabler/icons-react";
 import { ChoiceTypeQuestions } from "./constants";
+import { decryptPrivateKey, decryptResponse } from "./encryption";
+import { TeamWiseResponses } from "../backend/surveys/response/response.api";
 
 export function getResponse(type: any, response: any) {
   if (!response) return "";
@@ -275,4 +277,31 @@ export function getFilteredResponseUsingTags(
     return dateA.diff(dateB);
   });
   return { filteredResponsesByTags, noofResponses };
+}
+
+export async function decryptResultResponse(
+  responses: TeamWiseResponses[],
+  nonceWithEncryptedPrivateKey: any,
+  publicKey: any,
+  passkey: string,
+) {
+  const decryptedResponses = responses;
+  const { privateKey } = await decryptPrivateKey(
+    nonceWithEncryptedPrivateKey,
+    passkey,
+  );
+  for (let i = 0; i < responses.length; i++) {
+    for (let j = 0; j < responses[i].responses.length; j++) {
+      const response = responses[i].responses[j];
+      if (response.encryptedResponses) {
+        const { decryptedResponse } = await decryptResponse(
+          response.encryptedResponses,
+          privateKey,
+          publicKey,
+        );
+        decryptedResponses[i].responses[j].responses = decryptedResponse;
+      }
+    }
+  }
+  return { decryptedResponses };
 }

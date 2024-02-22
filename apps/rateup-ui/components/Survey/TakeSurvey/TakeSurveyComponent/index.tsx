@@ -67,6 +67,7 @@ import { DateForm } from "./QuestionForms/DateForm";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { encryptResponse } from "../../../../utils/encryption";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import { PCQForm } from "./QuestionForms/PCQForm";
@@ -113,7 +114,6 @@ function TakeSurvey({ survey, setIsReviewPage }) {
   const boxRef = useRef(null);
 
   if (!selectedLanguage) throw new Error("No language selected");
-
   useEffect(() => {
     const updateHeight = () => {
       if (boxRef.current) {
@@ -248,7 +248,7 @@ function TakeSurvey({ survey, setIsReviewPage }) {
     }
   }
 
-  const finishSurvey = () => {
+  const finishSurvey = async () => {
     setIsSavingResponses(true);
     let shouldShowGoogleReview = false;
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
@@ -295,9 +295,22 @@ function TakeSurvey({ survey, setIsReviewPage }) {
         break;
       }
     }
+
+    //logic for encrypting the responses, to swap values between response variable and end to end encrypted response
+    let defaultResponses = responses;
+    let encryptedResponses = "";
+    if (survey?.isEncrypted || survey?.publicKey) {
+      const { encryptedResponse } = await encryptResponse(
+        responses,
+        survey?.publicKey,
+      );
+      encryptedResponses = encryptedResponse;
+      defaultResponses = [];
+    }
     submitSurvey({
       surveyTeamMapId: surveyId,
-      responses,
+      responses: defaultResponses,
+      encryptedResponses: encryptedResponses,
       selectedLanguage,
       setIsSavingResponses,
       coordinates,
@@ -637,10 +650,12 @@ function submitSurvey({
   setIsSavingResponses,
   coordinates,
   tag,
+  encryptedResponses,
 }) {
   return createResponsePublic({
     surveyTeamMapId,
     responses,
+    encryptedResponses,
     language: selectedLanguage,
     location: { coordinates },
     tag: tag || null,

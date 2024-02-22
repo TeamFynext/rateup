@@ -40,7 +40,7 @@ export const useSurveyResponseColumns = ({
       ),
     },
     ...(questions?.length > 0 &&
-      questions.map((q) => {
+      questions?.map((q) => {
         const content =
           q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
           q?.description[

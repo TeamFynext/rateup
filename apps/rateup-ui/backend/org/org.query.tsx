@@ -105,7 +105,8 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
 export function useUpdateOrgDetailsMutation(setIsLoading) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: IUpdateOrgDetails) => updateOrgDetails(values),
+    mutationFn: (values: Partial<IUpdateOrgDetails>) =>
+      updateOrgDetails(values),
     onSuccess: () => {
       notifications.update({
         id: "load-data",

@@ -82,6 +82,8 @@ declare global {
     orgLogo?: string;
     surveyTeamMapId?: string;
     skipPreview: boolean;
+    publicKey?: string;
+    isEncrypted: boolean;
   };
 
   interface STeam {
@@ -149,7 +151,9 @@ declare global {
     id: string;
     createdAt: string;
     surveyTeamMapId: string;
-    responses: Array<QuestionResponse>;
+    encryptedResponses?: string;
+    responses?: Array<QuestionResponse>;
+    encryptedResponses?: string;
     language: string;
     tag: string;
     location?: {
@@ -221,6 +225,11 @@ declare global {
     };
   };
 
+  type EncryptionKeys = {
+    publicKey: string;
+    privateKey: string;
+  };
+
   type UserData = {
     orgId: string;
     role: string;
@@ -233,6 +242,7 @@ declare global {
     orgPhone: string;
     orgAddress: string;
     teams: Array<string>;
+    encryptionKeys: EncryptionKeys | undefined;
   };
 
   interface UserInfoQueryData {

@@ -27,6 +27,7 @@ import {
   ChoiceTypeQuestions,
   ContactQuestions,
 } from "../../../utils/constants";
+import { decryptPrivateKey, decryptResponse } from "../../../utils/encryption";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -62,8 +63,9 @@ const Responses = ({
 
   const hasContactQuestion =
     responses &&
-    responses.some((response) =>
-      response.responses.some((res) => QuestionType.Contact === res.type),
+    responses?.some(
+      (response) =>
+        response?.responses?.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -71,13 +73,11 @@ const Responses = ({
     close,
     setIsDeleting,
   );
-
   const importContactMutation = useImportContactMutation();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
   }
-
   const {
     isLoading: isQLoading,
     error: QError,

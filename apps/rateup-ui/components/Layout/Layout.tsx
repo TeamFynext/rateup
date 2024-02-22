@@ -34,7 +34,6 @@ export default function Layout({ children }) {
     error: errorUserInfo,
     refetch,
   } = useUserInfo();
-
   useEffect(() => {
     if (userQueryData?.data) {
       setUserInfo(userQueryData); // update localStorage

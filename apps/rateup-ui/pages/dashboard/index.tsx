@@ -62,7 +62,6 @@ export default function DashboardHome() {
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
   const [opened, { open, close }] = useDisclosure(false);
   const [timePeriod, setTimePeriod] = useState("weekly");
-
   const {
     isLoading: isLoadingSummary,
     error: summaryError,

@@ -16,6 +16,12 @@
     "typeRoots": ["./types"],
     "jsx": "preserve"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "postcss.config.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "postcss.config.ts",
+    "utils/encryption/index.ts"
+  ],
   "exclude": ["node_modules"]
 }

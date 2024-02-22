@@ -37,8 +37,9 @@ export interface IUpdateOrgDetails {
   name: string;
   phone: string;
   address: string;
+  encryptionKeys: EncryptionKeys;
 }
-export const updateOrgDetails = (data: IUpdateOrgDetails) =>
+export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);
 
 export async function getAllOrgs() {

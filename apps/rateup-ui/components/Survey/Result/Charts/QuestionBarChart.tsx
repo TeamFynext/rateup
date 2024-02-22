@@ -58,7 +58,7 @@ const getChoiceCountsforAll = (
 ) => {
   let languages: Array<Choice[]> = Object.values(choicesInAllLang);
   if (Array.isArray(response)) {
-    return response.some((r) => {
+    return response?.some((r) => {
       let choiceIndex = null;
       for (var i = 0; i < languages?.length; i++) {
         choiceIndex = languages[i]?.findIndex((c) => c.value == r.value);

@@ -34,3 +34,14 @@ export var stringToColour = function (str: string) {
   }
   return colour;
 };
+
+export function pushToSessionStorage(key: string, value: any) {
+  sessionStorage.setItem(key, JSON.stringify(value));
+}
+
+export function getFromSessionStorage(key: string) {
+  const json = sessionStorage.getItem(key);
+  if (json) {
+    return JSON.parse(json);
+  }
+}

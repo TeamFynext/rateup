@@ -87,10 +87,7 @@ export function QuestionsSideBar({
   const queryClient = useQueryClient();
   const questionsReorderMutation = useMutation({
     mutationFn: (reorderedQuestions: Question[]) =>
-      reorderQuestions(
-        surveyId,
-        reorderedQuestions.map((q) => q.id),
-      ),
+      reorderQuestions(surveyId, reorderedQuestions?.map((q) => q.id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
     },

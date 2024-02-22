@@ -28,6 +28,7 @@ import { SurveyType } from "../../types/enums";
 import { EditWhatsappSurvey } from "../whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../config/mantineTheme";
 import styles from "./SurveyId.module.css";
+import { getFromSessionStorage } from "../../utils/essential";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -69,6 +70,7 @@ export default function SurveyID() {
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
   const [filterTags, setFilterTags] = useState([]);
+  const [encryptionpassword, setEncryptionPassword] = useState("");
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
@@ -115,6 +117,15 @@ export default function SurveyID() {
     }
   }, [selectedTeamId]);
 
+  const savedEncryptionPassword = getFromSessionStorage(
+    `${survey?.id}_ete_passkey`,
+  );
+  useEffect(() => {
+    if (savedEncryptionPassword) {
+      setEncryptionPassword(savedEncryptionPassword);
+    }
+  }, [savedEncryptionPassword]);
+
   if (isLoading || isSurveyLoading || !activeTab) return <Loader type="bars" />;
   if (error || surveyError) {
     return <p>An error has occurred</p>;
@@ -134,6 +145,7 @@ export default function SurveyID() {
             filterTeams,
             setFilterTeams,
             filterTags,
+            encryptionpassword,
             surveyId,
           }}
         >
@@ -223,6 +235,7 @@ export default function SurveyID() {
                             "location",
                             "enableNotificationEmail",
                             "notificationEmail",
+                            "endtoendencryption",
                           ]
                     }
                   />
@@ -233,6 +246,8 @@ export default function SurveyID() {
                   survey={survey}
                   setSelectedLanguage={setSelectedLanguage}
                   setFilterTags={setFilterTags}
+                  encryptionpassword={encryptionpassword}
+                  setEncryptionPassword={setEncryptionPassword}
                 />
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Share}>

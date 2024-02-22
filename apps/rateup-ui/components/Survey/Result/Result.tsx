@@ -50,7 +50,15 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
+import { useDisclosure } from "@mantine/hooks";
+import SimpleModalLayout from "../../Modal/SimpleModalLayout";
 import styles from "./Result.module.css";
+import { pushToSessionStorage } from "../../../utils/essential";
+import { useUser } from "../../../context/UserContext";
+import { decryptPrivateKey } from "../../../utils/encryption";
+import { showErrorToast } from "../../../utils/notifications";
 
 enum ResultTab {
   OverView = "overview",
@@ -59,12 +67,31 @@ enum ResultTab {
   Comparison = "comparison",
 }
 
-const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
+const Result = ({
+  survey,
+  setSelectedLanguage,
+  setFilterTags,
+  encryptionpassword,
+  setEncryptionPassword,
+}) => {
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  //fetching the responses associated with the survey
+  const [resultTab, setActiveResultTab] = useState<ResultTab>(
+    ResultTab.OverView,
+  );
+  //.
+  //.
+  //end to end encryption logic for result page begins here
+  const passwordModalOpenedCondition =
+    (survey?.isEncrypted || !!survey?.publicKey) && !encryptionpassword;
+  const [passwordModalOpened, { close, open }] = useDisclosure(
+    passwordModalOpenedCondition,
+  );
+  //end to end encryption logic for result page ends here
+  //.
+  //.
   const {
     data: teamWiseResponses,
     error: responseFetchError,
@@ -86,13 +113,6 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
     filteredResponsesByLanguage,
     filterTags,
   );
-  const [resultTab, setActiveResultTab] = useState<
-    | ResultTab.Analytics
-    | ResultTab.OverView
-    | ResultTab.Responses
-    | ResultTab.Comparison
-  >(ResultTab.OverView);
-
   //this useEffect is used to set the filtered responses to the responses when the responses are fetched
   useEffect(() => {
     setFilteredResponses(filteredResponsesByTags);
@@ -188,6 +208,12 @@ const Result = ({ survey, setSelectedLanguage, setFilterTags }) => {
           <ResultComparison />
         </Tabs.Panel>
       </Box>
+      <EncryptionPasswordModal
+        passwordModalOpened={passwordModalOpened}
+        close={close}
+        setPassword={setEncryptionPassword}
+        surveyId={survey?.id}
+      />
     </StyledTabs>
   );
 };
@@ -529,3 +555,58 @@ const ReturnSingleFilterComponent = ({
       return <></>;
   }
 };
+
+interface EncryptionPasswordModalProps {
+  passwordModalOpened: boolean;
+  close: () => void;
+  setPassword: (password: string) => void;
+  surveyId: string;
+}
+function EncryptionPasswordModal({
+  setPassword,
+  passwordModalOpened,
+  surveyId,
+  close,
+}: EncryptionPasswordModalProps) {
+  const {
+    user: { encryptionKeys },
+  } = useUser();
+  const [encryptionpassword, setEncryptionPassword] = useState("");
+  async function onSubmitPassword() {
+    const { privateKey } = await decryptPrivateKey(
+      encryptionKeys?.privateKey,
+      encryptionpassword,
+    );
+    if (privateKey) {
+      close();
+      pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);
+      setPassword(encryptionpassword);
+    } else {
+      showErrorToast("Invalid Password");
+    }
+  }
+  return (
+    <SimpleModalLayout
+      centered
+      opened={passwordModalOpened}
+      onClose={close}
+      title="Enter the password"
+      withCloseButton={false}
+    >
+      <Stack>
+        <Text>Enter the password to view the survey data</Text>
+        <ContainedPasswordInput
+          label="Password"
+          value={encryptionpassword}
+          onChange={(e) => setEncryptionPassword(e.target.value)}
+        />
+        <RateupButtonBlue
+          title="Submit"
+          onClick={() => {
+            onSubmitPassword();
+          }}
+        />
+      </Stack>
+    </SimpleModalLayout>
+  );
+}

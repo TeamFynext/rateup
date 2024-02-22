@@ -9,7 +9,7 @@ export async function getResponses(surveyTeamMapId: string) {
 
 export interface TeamWiseResponses {
   id: string; // teamId
-  responses: Array<SurveyResponse>;
+  responses?: Array<SurveyResponse>;
   team: {
     // TODO: create Team in global.d.ts
     id: string;

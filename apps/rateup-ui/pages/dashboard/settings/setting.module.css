@@ -5,3 +5,16 @@
   border: 1px solid lightgray;
   border-radius: 12px;
 }
+
+.blink {
+  animation: blink 500ms;
+  animation-iteration-count: 4;
+}
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

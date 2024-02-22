@@ -24,7 +24,6 @@ import { notifications } from "@mantine/notifications";
 import { useUser } from "../../../context/UserContext";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import { useForm } from "@mantine/form";
-import { IconPlus } from "@tabler/icons-react";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import "react-phone-number-input/style.css";
@@ -32,6 +31,7 @@ import styles from "./setting.module.css";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+import ETESettings from "./EteSettings";
 import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const OrgSettings = () => {
@@ -47,6 +47,7 @@ const OrgSettings = () => {
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
+  const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
   const { user } = useUser();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
   const orgForm = useForm({
@@ -68,7 +69,6 @@ const OrgSettings = () => {
       },
     },
   });
-  const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
   const onSubmit = (values) => {
     setIsLoading(true);
     const data = {
@@ -259,6 +259,8 @@ const OrgSettings = () => {
               />
             </Flex>
           </form>
+          <Divider />
+          <ETESettings />
         </Flex>
       </Flex>
     </Flex>

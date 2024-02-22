@@ -194,6 +194,7 @@ function FlowPage() {
             <Box className={styles["flow-page-content"]}>
               <SurveyContext.Provider
                 value={{
+                  encryptionpassword: "",
                   selectedTeamId,
                   surveyTeamMapId,
                   selectedTeamName,
@@ -222,6 +223,8 @@ function FlowPage() {
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Result}>
                     <Result
+                      encryptionpassword={""}
+                      setEncryptionPassword={() => {}}
                       survey={survey}
                       setSelectedLanguage={setSelectedLanguage}
                       setFilterTags={setFilterTags}

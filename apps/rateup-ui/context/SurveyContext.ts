@@ -8,6 +8,7 @@ type ISurveyCtx = {
   filterTeams: Array<string>;
   setFilterTeams?: (teams: Array<string>) => void;
   filterTags: Array<string>;
+  encryptionpassword: string;
 };
 
 const SurveyContext = createContext<ISurveyCtx>({
@@ -17,6 +18,7 @@ const SurveyContext = createContext<ISurveyCtx>({
   surveyTeamMapId: "",
   filterTeams: [],
   filterTags: [],
+  encryptionpassword: "",
   setFilterTeams: () => {},
 });
 

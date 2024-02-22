@@ -1,3 +1,10 @@
+import {
+  encryptPrivateKey,
+  generateKeyPair,
+  parsetoUint8Array,
+  passwordToKey,
+} from "../../../utils/encryption";
+
 export const updateKioskMode = (setKioskMode, editSurvey) => {
   setKioskMode((prev) => {
     const newKioskMode = !prev;
@@ -41,5 +48,21 @@ export const updateEmailSurvey = (setEnabledNotificationEmail, editSurvey) => {
     const isEnabled = !prev;
     editSurvey.mutate({ enableNotificationEmail: isEnabled });
     return isEnabled;
+  });
+};
+
+export const updateEndToEndEncryption = (
+  setEndToEndEncryption,
+  publicKey,
+  editSurvey,
+) => {
+  setEndToEndEncryption((prev) => {
+    const newGetEte = !prev;
+    const responsetoUpdate = {
+      isEncrypted: newGetEte,
+      publicKey: publicKey ?? "",
+    };
+    editSurvey.mutate(responsetoUpdate);
+    return newGetEte;
   });
 };

@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 
-interface User {
+export interface User {
   role: string;
   userId: string;
   userName: string;
@@ -12,6 +12,10 @@ interface User {
   orgPhone: string;
   orgAddress: string;
   teams: Array<string>;
+  encryptionKeys: {
+    publicKey: string;
+    privateKey: string;
+  };
 }
 
 interface UserContextProps {
