@@ -919,3 +919,15 @@ export async function updateCompletedSurvey(id: string) {
   }
   return surveyStats;
 }
+
+export async function saveSheetIdToSurvey(sheetId: string, surveyId) {
+  let res = await prisma.survey.update({
+    where: {
+      id: surveyId,
+    },
+    data: {
+      spreadSheetId: sheetId,
+    },
+  });
+  return res;
+}

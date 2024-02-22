@@ -6,6 +6,7 @@ import {
   getAllResponsesHandler,
   getResponsesHandler,
   resetResponsesHandler,
+  syncResponseToGoogleSheetHandler,
 } from "./response.controller";
 import { verifyAccess } from "./response.auth";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -62,5 +63,13 @@ export async function responseRoutes(server: FastifyInstance) {
       },
     },
     deleteResponseHandler,
+  );
+
+  server.post(
+    "/:surveyId/sync-response",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    syncResponseToGoogleSheetHandler,
   );
 }

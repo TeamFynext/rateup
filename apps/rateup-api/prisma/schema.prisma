@@ -86,6 +86,8 @@ model Org {
   Subscription     Subscription?
   Order            Order[]
   WaFlow           WaFlow[]
+  googleAccessToken GoogleAccessToken? 
+  driveFolderId    String?
 }
 
 model WhatsappSettings {
@@ -191,6 +193,7 @@ model Survey {
   shareSettings           Json?
   surveyTheme             SurveyTheme?
   WaFlow                  WaFlow?
+  spreadSheetId           String?
 }
 
 model SurveyTeamMap {
@@ -685,4 +688,13 @@ model TestimonialCollectionMap {
   createdAt     DateTime              @default(now())
   
   @@id([testimonialId, collectionId])
+}
+
+model GoogleAccessToken {
+  accessToken String 
+  orgId    String   @unique @db.Uuid
+  org  Org   @relation(fields: [orgId], references: [id])
+  refreshToken String
+  expiryDate String
+  scopes String[] 
 }

@@ -1,9 +1,12 @@
 import { FastifyInstance } from "fastify";
 import {
+  checkGoogleAccessHandler,
+  createGoogleAuthToken,
   createOrgHandler,
   getAllMembersWithTeamsHandler,
   getAllOrgsHandler,
   getAllTeamsAndMembers,
+  getGoogleAuthUrl,
   getOrgStatsHandler,
   updateLogoHandler,
   updateOrgDetailsHandler,
@@ -93,5 +96,28 @@ export async function orgRoutes(server: FastifyInstance) {
       },
     },
     updateRoleController,
+  );
+  server.get(
+    "/auth-url",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    getGoogleAuthUrl,
+  );
+
+  server.post(
+    "/create-auth-token",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    createGoogleAuthToken,
+  );
+
+  server.get(
+    "/google-auth-access",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    checkGoogleAccessHandler,
   );
 }

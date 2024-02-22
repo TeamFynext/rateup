@@ -11,7 +11,7 @@ export const generateResponseData = (surveyTeamMapId, survey) => {
   return {
     surveyTeamMapId: surveyTeamMapId,
     responses: getResponseFromQuestion(survey.questions),
-    language: "survey.language",
+    language: survey.languages[0],
     platform: ResponsePlatform.WEB,
     tag: "",
     ip: faker.internet.ipv4(),
