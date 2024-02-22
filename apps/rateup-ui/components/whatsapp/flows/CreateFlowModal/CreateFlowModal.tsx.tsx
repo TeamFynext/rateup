@@ -9,6 +9,8 @@ import {
   ContainedMultiSelect,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../../utils/constants";
 
 function CreateFlowModal({ opened, onClose }) {
   const form = useForm({
@@ -58,6 +60,12 @@ function CreateFlowModal({ opened, onClose }) {
         title: styles["modal-title"],
         close: styles["modal-close-button"],
       }}
+      onKeyDown={getHotkeyHandler([
+        [
+          SAVE_HOTKEY,
+          (event: any) => form.onSubmit(handleSubmitBtnClick)(event),
+        ],
+      ])}
     >
       <Box className={styles["create-flow-modal-body"]}>
         <ContainedTextField

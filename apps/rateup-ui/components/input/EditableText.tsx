@@ -9,6 +9,9 @@ import {
 } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 import inputStyles from "./InputStyles.module.css";
+import { useState } from "react";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 interface EditableTextProps {
   text: string;
@@ -36,6 +39,7 @@ export function EditableText({
   inputStyle = {},
   saveOnEnter = true,
 }: EditableTextProps) {
+  const [tempText, setTempText] = useState(text ?? "");
   if (editMode) {
     return (
       <FocusTrap active={true}>
@@ -46,8 +50,8 @@ export function EditableText({
         >
           <ContainedTextField
             label={label}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            value={tempText}
+            onChange={(e) => setTempText(e.target.value)}
             style={{
               flexGrow: 1,
               ...inputStyle,
@@ -55,9 +59,19 @@ export function EditableText({
             placeholder={placeholder}
             onKeyUp={(event) => {
               if (event.key === "Enter" && saveOnEnter) {
+                setText(tempText);
                 setEditingItem(null);
               }
             }}
+            onKeyDown={getHotkeyHandler([
+              [
+                SAVE_HOTKEY,
+                () => {
+                  setText(tempText);
+                  setEditingItem(null);
+                },
+              ],
+            ])}
           />
           <ActionIcon onClick={() => setEditingItem(null)}>
             <IconCheck />

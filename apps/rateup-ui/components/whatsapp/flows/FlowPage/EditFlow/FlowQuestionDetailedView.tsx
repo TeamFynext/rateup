@@ -53,6 +53,8 @@ import { ChoicesCreator } from "../../../../Survey/Question/ChoicesCreator";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -234,6 +236,7 @@ function ElementEditor({
         position: "relative",
       }}
       justify="space-between"
+      onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}
     >
       <ScrollArea h={"80%"}>
         <Group justify="space-between">
