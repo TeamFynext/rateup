@@ -6,7 +6,6 @@ import {
   createTestimonialCollectionHandler,
   deleteTestimonialCollectionHandler,
   deleteMultipleTestimonialsFromCollectionHandler,
-  getTestimonialCollectionByIdHandler,
   getTestimonialCollections,
   updateTestimonialCollectionHandler,
 } from "./testimonialCollection.controller";
@@ -21,15 +20,6 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
       },
     },
     createTestimonialCollectionHandler,
-  );
-  server.get(
-    "/:id",
-    {
-      schema: {
-        params: $TestimonialCollectionRef("byIdParamsSchema"),
-      },
-    },
-    getTestimonialCollectionByIdHandler,
   );
 
   server.get(
