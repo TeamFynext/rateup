@@ -4,6 +4,7 @@ import {
   BoxComponentProps,
   Container,
   Group,
+  Image,
   MantineStyleProp,
   Stack,
   Text,
@@ -162,12 +163,14 @@ interface WaResponseMessageProps {
   body: string;
   footer?: string;
   quickReplyButtons?: string[] | Choice[];
+  image?: string; // url of image
 }
 export function WaResponseMessage({
   body,
   header = "",
   footer = "",
   quickReplyButtons = [],
+  image,
 }: WaResponseMessageProps) {
   if (quickReplyButtons.length > 3) {
     throw new Error(
@@ -185,6 +188,7 @@ export function WaResponseMessage({
     >
       <ResponseMessageContainer>
         <Stack gap={4}>
+          <Image src={image} radius={6} />
           {header && <WaMessageHeader>{header}</WaMessageHeader>}
           {body && <WaMessageBody>{body}</WaMessageBody>}
           {footer && <WaMessageFooter>{footer}</WaMessageFooter>}
