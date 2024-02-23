@@ -87,26 +87,34 @@ export default function ETESettings() {
         oldPassword: "The old password is incorrect",
       });
     } else {
-      const { keyPassword } = passwordToKey(values["newPassword"]);
-      const { nonceWithEncryptedPrivateKey } = await encryptPrivateKey(
-        privateKey,
-        keyPassword,
-      );
-      orgDetailsUpdate.mutate(
-        {
-          encryptionKeys: {
-            ...user?.encryptionKeys,
-            privateKey: nonceWithEncryptedPrivateKey,
+      if (values["oldPassword"] === values["newPassword"]) {
+        passwordResetForm.setErrors({
+          newPassword:
+            "The new password should be different from the old password",
+        });
+        return;
+      } else {
+        const { keyPassword } = passwordToKey(values["newPassword"]);
+        const { nonceWithEncryptedPrivateKey } = await encryptPrivateKey(
+          privateKey,
+          keyPassword,
+        );
+        orgDetailsUpdate.mutate(
+          {
+            encryptionKeys: {
+              ...user?.encryptionKeys,
+              privateKey: nonceWithEncryptedPrivateKey,
+            },
           },
-        },
-        {
-          onSuccess: () => {
-            sessionStorage.clear();
-            showSuccessToast("Password reset successful");
-            closePasswordResetModal();
+          {
+            onSuccess: () => {
+              sessionStorage.clear();
+              showSuccessToast("Password reset successful");
+              closePasswordResetModal();
+            },
           },
-        },
-      );
+        );
+      }
     }
   };
   return (
