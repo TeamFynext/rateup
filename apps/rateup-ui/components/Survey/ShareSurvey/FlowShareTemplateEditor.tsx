@@ -6,7 +6,6 @@ import {
   Stack,
   Text,
   TextInputProps,
-  Textarea,
   TextareaProps,
   Title,
 } from "@mantine/core";
