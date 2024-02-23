@@ -500,10 +500,11 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   let titleElement: WaFlowFormElement | undefined;
   let descriptionElement: WaFlowFormElement | undefined;
 
+  // Any updates here should also be updated in backend
   if (question.title[lang]) {
     titleElement = {
       text: question.title[lang],
-      type: WaFlowFormElementType.textHeading,
+      type: WaFlowFormElementType.textSubHeading,
       id: `${question.id}_title`,
     };
   }
