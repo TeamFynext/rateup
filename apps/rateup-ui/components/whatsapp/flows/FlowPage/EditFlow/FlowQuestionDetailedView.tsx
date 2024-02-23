@@ -24,6 +24,7 @@ import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import {
   QuestionType,
   SurveyType,
+  WaFlowFormElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
 import {
@@ -48,13 +49,17 @@ import {
 import { EditFlowContext } from "./EditFlowContext";
 import { FlowLogicEditor } from "./FlowLogicEditor";
 import { LengthTracker } from "../../../../input/LengthTracker";
-import { questionTypeToFlowFormElementType } from "../../../../../utils/whatsapp/flow.utils";
+import {
+  getFlowTextLimit,
+  questionTypeToFlowFormElementType,
+} from "../../../../../utils/whatsapp/flow.utils";
 import { ChoicesCreator } from "../../../../Survey/Question/ChoicesCreator";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -131,7 +136,6 @@ function ElementEditor({
 }: ElementEditorProps) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const { flowJson, selectedFormElementId } = useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -255,7 +259,7 @@ function ElementEditor({
             gap={0}
             p={"sm"}
           >
-            <Textarea
+            <TextareaWithLengthTracker
               fw={800}
               fz="lg"
               styles={{
@@ -271,9 +275,9 @@ function ElementEditor({
               autosize
               maxRows={3}
               placeholder="Enter question title here"
-              {...form.getInputProps(`title.${selectedLanguage}`)}
+              maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
             />
-            <Textarea
+            <TextareaWithLengthTracker
               variant="unstyled"
               placeholder="Enter question description here"
               {...form.getInputProps(`description.${selectedLanguage}`)}
@@ -284,6 +288,7 @@ function ElementEditor({
                   fontWeight: 400, // set custom font size for this TextInput
                 },
               }}
+              maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
             />
 
             <LabelTextInput {...labelInputProps} maxLength={labelMaxLength} />

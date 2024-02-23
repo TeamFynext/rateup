@@ -6,7 +6,6 @@ import {
   Stack,
   Text,
   TextInputProps,
-  Textarea,
   TextareaProps,
   Title,
 } from "@mantine/core";
@@ -29,7 +28,10 @@ import {
 } from "../../../backend/whatsapp/flow/flow.query";
 import { useEffect, useState } from "react";
 import { showErrorToast } from "../../../utils/notifications";
-import { uploadFile } from "../../../utils/file-upload/upload";
+import {
+  getFileUrlFromKey,
+  uploadFile,
+} from "../../../utils/file-upload/upload";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
 
@@ -236,6 +238,7 @@ export function FlowShareTemplateEditor() {
             footer={form.values.footer}
             body={form.values.body}
             quickReplyButtons={[form.values.cta]}
+            image={getFileUrlFromKey(form.values.headerImage)}
           />
         </Box>
       </Group>

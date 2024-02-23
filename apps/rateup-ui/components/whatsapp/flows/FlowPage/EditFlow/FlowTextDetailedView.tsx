@@ -2,37 +2,26 @@ import {
   Stack,
   Divider,
   Group,
-  Textarea,
   Badge,
   ScrollArea,
   TextareaProps,
-  Text,
-  FileButton,
-  Button,
-  Image,
-  NumberInput,
-  Box,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { EditFlowContext } from "./EditFlowContext";
 import {
   getFlowFormElementById,
   getFlowTextLimit,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { getFormObjFromScreenId } from "../../../../../utils/whatsapp/flow.utils";
+import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 
 export function FlowTextDetailedView() {
-  const {
-    selectedFormElementId,
-    setSelectedFormElementId,
-    flowJson,
-    updateFlowJson,
-    selectedScreenId,
-  } = useContext(EditFlowContext);
+  const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
+    useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(
     selectedFormElementId,
     flowJson,
@@ -93,7 +82,10 @@ export function FlowTextDetailedView() {
             gap={0}
             p={"sm"}
           >
-            <FlowTextElementEditor {...form.getInputProps("text")} />
+            <FlowTextElementEditor
+              {...form.getInputProps("text")}
+              maxValue={getFlowTextLimit(selectedFormElement.type)}
+            />
           </Stack>
         </Group>
       </ScrollArea>
@@ -113,9 +105,14 @@ export function FlowTextDetailedView() {
   );
 }
 
-function FlowTextElementEditor(props: TextareaProps) {
+function FlowTextElementEditor(
+  props: TextareaProps & {
+    value?: string;
+    maxValue: number;
+  },
+) {
   return (
-    <Textarea
+    <TextareaWithLengthTracker
       fw={800}
       fz="lg"
       styles={{
