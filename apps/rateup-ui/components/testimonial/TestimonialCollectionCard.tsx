@@ -1,8 +1,8 @@
-import { Stack, Title, Text, Group, ActionIcon } from "@mantine/core";
+import { Stack, Title, Text, Group, ActionIcon, Menu } from "@mantine/core";
 import { useRouter } from "next/router";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { formatDate } from "../../utils/dateTime";
-import { IconTrash } from "@tabler/icons-react";
+import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useDeleteTestimonialCollection } from "../../backend/testimonials/testimonial.query";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
@@ -35,17 +35,10 @@ const TestimonialCollectionCard = ({ collection }) => {
         />
         <Group justify="space-between">
           <Title order={4}>{collection?.name}</Title>
-          <ActionIcon
-            onClick={(e) => {
-              e.stopPropagation();
-              openDialog();
-            }}
-            variant="subtle"
-            size={"sm"}
-            color="red"
-          >
-            <IconTrash />
-          </ActionIcon>
+          <TestimonialCollectionCardMenu
+            collectionId={collection?.id}
+            openDialog={openDialog}
+          />
         </Group>
 
         <Stack gap={0}>
@@ -56,6 +49,52 @@ const TestimonialCollectionCard = ({ collection }) => {
         </Stack>
       </Stack>
     </PaperLayout>
+  );
+};
+
+const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
+  const router = useRouter();
+  return (
+    <Menu shadow="md" width={200}>
+      <Menu.Target>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <IconDots />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<IconEdit />}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`${router.pathname}/${collectionId}?tab=Edit`);
+          }}
+        >
+          Edit
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconShare />}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`${router.pathname}/${collectionId}?tab=Share`);
+          }}
+        >
+          Share
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconTrash />}
+          onClick={(e) => {
+            e.stopPropagation();
+            openDialog();
+          }}
+        >
+          Delete
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 };
 

@@ -9,8 +9,6 @@ import TestimonialShare, {
   TestimonialShareModal,
 } from "../../../components/testimonial/TestimonialShare";
 import TestimonialFilter from "../../../components/testimonial/TestimonialFilter";
-import { TestimonialStyleType } from "../../../types/global";
-import { useImmer } from "use-immer";
 import {
   useAddMultipleTestimonialsToCollection,
   useDeleteMultipleTestimonialsFromCollection,
@@ -18,10 +16,7 @@ import {
   useGetAllTestimonialsByOrg,
 } from "../../../backend/testimonials/testimonial.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import {
-  defaultTestimonialStyle,
-  getFilteredTestimonials,
-} from "../../../utils/testimonial";
+import { getFilteredTestimonials } from "../../../utils/testimonial";
 import { useDisclosure } from "@mantine/hooks";
 import TestimonialEditModal from "../../../components/testimonial/TestimonialEditModal";
 import {
@@ -47,6 +42,7 @@ export type filterType = {
 export default function () {
   const { update } = useRouteParams();
   const router = useRouter();
+  const { tab } = router.query;
   const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(
     TestimonialTabs.Select,
   );
@@ -56,9 +52,6 @@ export default function () {
   const [isDelete, { toggle: toggleDelete }] = useDisclosure(false);
   const { collectionId } = router.query as { collectionId: string };
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
-  const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(
-    defaultTestimonialStyle,
-  );
   const [filters, setFilters] = useState<filterType>({
     date: null,
     rating: null,
@@ -82,8 +75,13 @@ export default function () {
 
   useEffect(() => {
     update({ collectionId: collection?.name });
-    setCurrentstyle(collection?.theme);
   }, [collection]);
+
+  useEffect(() => {
+    if (tab && Object.values(TestimonialTabs).includes(tab as any)) {
+      setActiveTab(tab as any);
+    }
+  }, [tab]);
 
   useEffect(() => {
     setFilters({
@@ -118,34 +116,7 @@ export default function () {
         </Tabs.List>
       </Group>
       <Group gap="sm" h="85vh">
-        <Tabs.Panel value={TestimonialTabs.Select}>
-          <TestimonialSelect
-            selectedTestimonialIds={selectedTestimonialIds}
-            setSelectedTestimonialIds={setSelectedTestimonialIds}
-            filters={filters}
-            type={type}
-          />
-        </Tabs.Panel>
-        <Tabs.Panel value={TestimonialTabs.Edit}>
-          <TestimonialEdit
-            currentStyle={currentStyle}
-            testimonials={collection?.testimonials}
-            filters={filters}
-            isDelete={isDelete}
-            type={type}
-            selectedTestimonialIds={selectedTestimonialIds}
-            setSelectedTestimonialIds={setSelectedTestimonialIds}
-            setFilters={setFilters}
-          />
-        </Tabs.Panel>
-        <Tabs.Panel value={TestimonialTabs.Share}>
-          <TestimonialShare
-            selectedTestimonials={collection?.testimonials}
-            currentStyle={currentStyle}
-          />
-        </Tabs.Panel>
-
-        <Stack gap="xs" miw={200} maw={200} h="100%">
+        <Stack gap="xs" miw={200} maw={200} h="100%" py={"sm"}>
           <UtilityComponent
             {...{
               activeTab,
@@ -167,10 +138,35 @@ export default function () {
             />
           )}
         </Stack>
+        <Tabs.Panel value={TestimonialTabs.Select}>
+          <TestimonialSelect
+            selectedTestimonialIds={selectedTestimonialIds}
+            setSelectedTestimonialIds={setSelectedTestimonialIds}
+            filters={filters}
+            type={type}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={TestimonialTabs.Edit}>
+          <TestimonialEdit
+            currentStyle={collection?.theme}
+            testimonials={collection?.testimonials}
+            filters={filters}
+            isDelete={isDelete}
+            type={type}
+            selectedTestimonialIds={selectedTestimonialIds}
+            setSelectedTestimonialIds={setSelectedTestimonialIds}
+            setFilters={setFilters}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={TestimonialTabs.Share}>
+          <TestimonialShare
+            selectedTestimonials={collection?.testimonials}
+            currentStyle={collection?.theme}
+          />
+        </Tabs.Panel>
       </Group>
       <TestimonialEditModal
-        setCurrentstyle={setCurrentstyle}
-        currentStyle={currentStyle}
+        theme={collection?.theme}
         onClose={closeEdit}
         opened={openedEdit}
       />
@@ -273,7 +269,7 @@ function UtilityComponent({
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconPencil size={"1rem"} />}
             >
-              Edit
+              Customize
             </Button>
 
             <Button

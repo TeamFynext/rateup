@@ -12,6 +12,7 @@ import {
   Grid,
   Flex,
   Modal,
+  Tabs,
 } from "@mantine/core";
 import {
   ContainedColorInput,
@@ -27,28 +28,36 @@ import {
 import { Testimonial, TestimonialStyleType } from "../../types/global";
 import { FontWeights } from "../Survey/SurveyTheme/SurveyTheme.constants";
 import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
-import { defaultTestimonialStyle } from "../../utils/testimonial";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { useImmer } from "use-immer";
+import CustomColorPicker from "../Survey/SurveyTheme/components/customelements/CustomColorPicker";
+import TabsCommon from "../menu/landingPage/Tabs/TabsCommon";
 
 interface TestimonialEditModalProps {
   opened;
   onClose;
-  setCurrentstyle: (newStyle) => void;
-  currentStyle: TestimonialStyleType;
+  theme: TestimonialStyleType;
+}
+enum BlockTabEnum {
+  Background = "Background",
+  DescriptionBlock = "Description Block",
+  ProfileBlock = "Profile Block",
+  RatingBlock = "Rating Block",
 }
 
 const TestimonialEditModal = ({
   opened,
   onClose,
-  setCurrentstyle,
-  currentStyle,
+  theme,
 }: TestimonialEditModalProps) => {
+  const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(theme);
   const testimonialSample: Testimonial = {
     testimonial: {
       name: "Profile Name",
       jobTitle: "Profile Position",
       testimonial:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, su",
+        "Excellent food. Menu is extensive and seasonal to a particularly high standard. Definitely fine dining. It can be expensive but worth it and they do different deals on different nights so it’s worth checking them out before you book. Highly recommended.",
       rating: 5,
     },
     id: "",
@@ -159,19 +168,19 @@ const TestimonialEditModal = ({
   }
   const blocks = [
     {
-      name: "Background",
+      name: BlockTabEnum.Background,
       bg: currentStyle?.root.bg,
     },
     {
-      name: "Profile Block",
+      name: BlockTabEnum.ProfileBlock,
       bg: currentStyle?.profileBlock.bg,
     },
     {
-      name: "Description Block",
+      name: BlockTabEnum.DescriptionBlock,
       bg: currentStyle?.descBlock.bg,
     },
     {
-      name: "Rating Block",
+      name: BlockTabEnum.RatingBlock,
       bg: currentStyle?.ratingBlock.bg,
     },
   ];
@@ -181,6 +190,9 @@ const TestimonialEditModal = ({
       case "Background":
         setCurrentstyle((draft) => {
           draft.root.bg = value;
+          draft.profileBlock.bg = value;
+          draft.descBlock.bg = value;
+          draft.ratingBlock.bg = value;
         });
         break;
       case "Profile Block":
@@ -213,6 +225,13 @@ const TestimonialEditModal = ({
       },
     );
   };
+  const [activeBlockTab, setActiveBlockTab] = useState<BlockTabEnum>(
+    BlockTabEnum.Background,
+  );
+  useEffect(() => {
+    setCurrentstyle(theme);
+    setActiveBlockTab(BlockTabEnum.Background);
+  }, [theme]);
   return (
     <Modal
       opened={opened}
@@ -227,20 +246,27 @@ const TestimonialEditModal = ({
         <Grid.Col span={6} p={"xl"}>
           <ScrollArea h={430}>
             <Stack justify="flex-start">
-              <Stack w={300}>
+              <Stack>
                 <Title order={3}>Change Color</Title>
-                {blocks.map((c) => (
-                  <Group justify={"space-between"} key={c?.name}>
-                    <Text>{c.name}</Text>
-                    <ContainedColorInput
-                      value={c.bg}
-                      w={150}
-                      onChange={(value) => {
-                        handleBgColor(c.name, value);
-                      }}
-                    />
-                  </Group>
-                ))}
+                <TabsCommon
+                  value={activeBlockTab}
+                  onChange={(value) => setActiveBlockTab(value as BlockTabEnum)}
+                  tabHeading={blocks.map((c) => c.name)}
+                  radius={"lg"}
+                  variant="outline"
+                  mr={"md"}
+                >
+                  {blocks.map((c) => (
+                    <Tabs.Panel value={c.name} p={"xl"}>
+                      <CustomColorPicker
+                        value={c.bg}
+                        onChange={(value) => {
+                          handleBgColor(c.name, value);
+                        }}
+                      />
+                    </Tabs.Panel>
+                  ))}
+                </TabsCommon>
               </Stack>
               <Stack w={470}>
                 <Title order={3}>Change Font</Title>
@@ -340,7 +366,7 @@ const TestimonialEditModal = ({
             <RateupButtonSecondary
               title="cancel"
               onClick={() => {
-                setCurrentstyle(defaultTestimonialStyle);
+                setCurrentstyle(theme);
                 onClose();
               }}
             />

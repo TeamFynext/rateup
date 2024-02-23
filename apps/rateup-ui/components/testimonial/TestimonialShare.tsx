@@ -10,12 +10,14 @@ import {
   Center,
   Image,
   ScrollAreaAutosize,
+  Flex,
+  ActionIcon,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { IconChevronLeft, IconCopy } from "@tabler/icons-react";
+import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import TestimonialCard from "./TestimonialCard";
 import NothingFound from "../NothingFound/NothingFound";
@@ -48,7 +50,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
 
 export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const shareUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/testimonial/${collectionId}`;
-  const iframe = `<iframe src="${shareUrl}" width={"100%"} height={"400"}></iframe>`;
+  const iframe = `<iframe src="${shareUrl}" width="100%" height="400"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
 
@@ -71,11 +73,15 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             bg={"var(--tertiary-color)"}
             p={"xl"}
             c={"white"}
-            justify="cenetr"
-            align="center"
+            gap={0}
             style={{ borderRadius: "10px" }}
           >
-            <Group gap={"xs"}>
+            <Flex justify={"flex-end"}>
+              <ActionIcon onClick={onClose} color="var(--tertiary-color)">
+                <IconX size={"1.5rem"} />
+              </ActionIcon>
+            </Flex>
+            <Group gap={"xs"} justify="center" align="center">
               <Stack gap={0}>
                 <Title fw={400}>Share Your Testimonials</Title>
                 <Title order={5} fw={400}>
@@ -89,7 +95,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
           </Stack>
           <Stack px={100} py={"xl"}>
             <Stack>
-              <Title order={5}> Add this widget to your website</Title>
+              <Title order={5}>Add this widget to your website</Title>
               <ScrollArea offsetScrollbars={"x"}>
                 <Paper bg="black" c={"white"} py={"xl"}>
                   <Text pl={"md"} fz={"sm"}>

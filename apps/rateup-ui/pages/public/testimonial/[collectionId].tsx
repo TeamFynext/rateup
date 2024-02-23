@@ -51,11 +51,12 @@ const Collections = () => {
             loop
             speed={5}
             controlsOffset={"xs"}
+            w={"100%"}
           >
             {collection?.testimonials?.map((testimonial) => {
               return (
                 <>
-                  <Carousel.Slide key={testimonial.id}>
+                  <Carousel.Slide key={testimonial.id} p={"sm"}>
                     <TestimonialCard
                       testimonial={testimonial}
                       currentStyle={collection?.theme}

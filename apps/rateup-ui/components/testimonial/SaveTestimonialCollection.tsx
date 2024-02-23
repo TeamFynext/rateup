@@ -58,7 +58,7 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title="Save Collections"
+      title="Create Collection"
       centered
       onSubmit={onSubmit}
       buttonTitle="Save"

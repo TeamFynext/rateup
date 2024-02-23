@@ -4,9 +4,9 @@ import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconDatabaseImport,
-  IconDownload,
   IconFileDownload,
   IconRefresh,
+  IconTableExport,
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -28,7 +28,10 @@ import {
   ContactQuestions,
 } from "../../../utils/constants";
 import { decryptPrivateKey, decryptResponse } from "../../../utils/encryption";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import TanstackTable from "../../Table/TanstackTable";
@@ -278,7 +281,6 @@ const Responses = ({
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           {responseCount > 0 && (
             <Popover
-              width={300}
               position="bottom-end"
               withArrow
               shadow="md"
@@ -287,7 +289,10 @@ const Responses = ({
               }}
             >
               <Popover.Target>
-                <IconDownload />
+                <RateupButtonBlue
+                  title="Export"
+                  leftIcon={<IconTableExport />}
+                />
               </Popover.Target>
               <Popover.Dropdown>
                 <Stack>

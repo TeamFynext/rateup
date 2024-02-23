@@ -124,7 +124,7 @@ const indexPage = () => {
             )}
           </Tabs.Panel>
 
-          <Tabs.Panel value={TestimonailInnerTabEnum.COLLECTIONS} py={"sm"}>
+          <Tabs.Panel value={TestimonailInnerTabEnum.COLLECTIONS} p={"sm"}>
             {isCollectionLoading ? (
               <Center pt="xl">
                 <Loader type="bars" />

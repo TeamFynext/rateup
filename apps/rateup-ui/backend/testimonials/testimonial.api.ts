@@ -10,24 +10,26 @@ export async function getAllTestimonialBySurvey(surveyId: string) {
 }
 
 export async function getAllTestimonials() {
-  return (await axiosClient.get(`/testimonials/`)).data as Array<Testimonial>;
+  return (await axiosClient.get(TESTIMONIAL_BASE_URL))
+    .data as Array<Testimonial>;
 }
 
 export async function getAllTestimonialSurveys() {
-  let surveys = await axiosClient.get(`/testimonials/surveys`);
+  let surveys = await axiosClient.get(`${TESTIMONIAL_BASE_URL}/surveys`);
   return surveys.data;
 }
 
 export async function createTestimonialCollection(data) {
   let testimonials = await axiosClient.post(
-    `/testimonial/collections/create`,
+    `${TESTIMONIAL_COLLECTION_BASE_URL}/create`,
     data,
   );
   return testimonials.data;
 }
 
 export async function getAllTestimonialCollections() {
-  let collections = (await axiosClient.get(`/testimonial/collections`)).data;
+  let collections = (await axiosClient.get(TESTIMONIAL_COLLECTION_BASE_URL))
+    .data;
   return collections;
 }
 
@@ -44,21 +46,24 @@ type TestiomonialCollection = {
 };
 export async function getAllTestimonialsByCollection(collectionId: string) {
   let collection = (
-    await axiosClient.get(`/testimonial/collections/${collectionId}`)
+    await axiosClient.get(`/public/testimonials/${collectionId}`)
   ).data;
   return collection as TestiomonialCollection;
 }
 export async function updateTestimonialCollection({ data, collectionId }) {
   let testimonials = await axiosClient.put(
-    `/testimonial/collections/update/${collectionId}`,
+    `${TESTIMONIAL_COLLECTION_BASE_URL}/update/${collectionId}`,
     data,
   );
   return testimonials.data;
 }
 
 export async function deleteTestimonialCollection(collectionId) {
-  return (await axiosClient.delete(`/testimonial/collections/${collectionId}`))
-    .data;
+  return (
+    await axiosClient.delete(
+      `${TESTIMONIAL_COLLECTION_BASE_URL}/${collectionId}`,
+    )
+  ).data;
 }
 
 //all these below listed functions are for managing multiple testimonials in a collection
