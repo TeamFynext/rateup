@@ -353,13 +353,6 @@ function TakeSurvey({ survey, setIsReviewPage }) {
     return value;
   });
   if (IsLoading) return <div>Loading...</div>;
-  const { surveyTheme } = surveyThemeData;
-  const {
-    button: { label, styles: buttonStyles },
-    subtitle: { subtitle, styles: subtitleStyles },
-    title: { title, styles: titleStyles },
-    input: { primaryColor },
-  } = surveyTheme;
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
@@ -412,7 +405,8 @@ function TakeSurvey({ survey, setIsReviewPage }) {
                                 case Q.Smiley:
                                   return mapSmileyIcon(
                                     Object.values(response?.response)[0],
-                                    primaryColor,
+                                    surveyThemeData?.surveyTheme?.input
+                                      ?.primaryColor,
                                   );
                                 case Q.Photo:
                                   const img = Object.values(
@@ -610,11 +604,13 @@ function TakeSurvey({ survey, setIsReviewPage }) {
                   <Box pb={"lg"} ref={boxRef} className={lexend.className}>
                     <QuestionTitle
                       largeScreen={largeScreen}
-                      themeStyles={titleStyles}
+                      themeStyles={surveyThemeData?.surveyTheme?.title?.styles}
                     />
                     <QuestionDesc
                       largeScreen={largeScreen}
-                      themeStyles={subtitleStyles}
+                      themeStyles={
+                        surveyThemeData?.surveyTheme?.subtitle?.styles
+                      }
                     />
                   </Box>
                   <ScrollArea.Autosize
@@ -633,7 +629,7 @@ function TakeSurvey({ survey, setIsReviewPage }) {
                 num={QnNo}
                 total={questionCount}
                 survey={survey}
-                themeStyles={buttonStyles}
+                themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
               />
             </Stack>
           </Box>

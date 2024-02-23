@@ -70,46 +70,40 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
   if (isLoading) return <div>Loading...</div>;
-  const { thankyouTheme } = surveyThemeData || (defaultTheme as SurveyTheme);
-
-  const {
-    bg: { styles: bgStyles },
-    logo: { logo, styles: logoStyles },
-    subtitle: { subtitle, styles: subtitleStyles },
-    title: { title, styles: titleStyles },
-    confettiEnabled,
-  } = thankyouTheme;
-
   return (
     <CreditsCard
       enableCredits={
         isMobile
-          ? thankyouTheme?.bg?.unsplashImage?.mobile
-          : thankyouTheme?.bg?.unsplashImage?.desktop
+          ? surveyThemeData?.thankyouTheme?.bg?.unsplashImage?.mobile
+          : surveyThemeData?.thankyouTheme?.bg?.unsplashImage?.desktop
       }
       url={
-        isMobile && thankyouTheme?.bg?.mobilebg
-          ? thankyouTheme?.bg?.mobilebg
-          : thankyouTheme?.bg?.desktopbg
+        isMobile && surveyThemeData?.thankyouTheme?.bg?.mobilebg
+          ? surveyThemeData?.thankyouTheme?.bg?.mobilebg
+          : surveyThemeData?.thankyouTheme?.bg?.desktopbg
       }
     >
       <Flex
         style={{
-          ...bgStyles,
+          ...surveyThemeData?.thankyouTheme?.bg?.styles,
           ...{
             height: "100dvh",
-            backgroundColor: bgStyles?.backgroundColor
-              ? bgStyles?.backgroundColor
+            backgroundColor: surveyThemeData?.thankyouTheme?.bg?.styles
+              ?.backgroundColor
+              ? surveyThemeData?.thankyouTheme?.bg?.styles?.backgroundColor
               : theme.colors[theme.primaryColor][6],
             backgroundImage:
-              thankyouTheme?.bg?.desktopbg || thankyouTheme?.bg?.mobilebg
+              surveyThemeData?.thankyouTheme?.bg?.desktopbg ||
+              surveyThemeData?.thankyouTheme?.bg?.mobilebg
                 ? `url(${getImageUrl(
                     isMobile
-                      ? thankyouTheme?.bg?.mobilebg
-                      : thankyouTheme?.bg?.desktopbg,
+                      ? surveyThemeData?.thankyouTheme?.bg?.mobilebg
+                      : surveyThemeData?.thankyouTheme?.bg?.desktopbg,
                     isMobile
-                      ? thankyouTheme?.bg?.unsplashImage?.mobile
-                      : thankyouTheme?.bg?.unsplashImage?.desktop,
+                      ? surveyThemeData?.thankyouTheme?.bg?.unsplashImage
+                          ?.mobile
+                      : surveyThemeData?.thankyouTheme?.bg?.unsplashImage
+                          ?.desktop,
                   )})`
                 : "",
             backgroundRepeat: "no-repeat",
@@ -121,7 +115,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
         justify={"center"}
       >
         <Stack h="100%" w="100%">
-          {confettiEnabled && (
+          {surveyThemeData?.thankyouTheme?.confettiEnabled && (
             <Confetti width={width - 1} height={height - 1} />
           )}
           {!enableGoogleReview && (
@@ -135,31 +129,38 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
                 flex: 0,
               }}
             >
-              {logo ? (
+              {surveyThemeData?.thankyouTheme?.logo?.logo ? (
                 <Image
-                  src={getImageUrl(logo)}
+                  src={getImageUrl(surveyThemeData?.thankyouTheme?.logo?.logo)}
                   alt="Rateup"
                   height={"auto"}
-                  style={logoStyles}
+                  style={surveyThemeData?.thankyouTheme?.logo?.styles}
                 />
               ) : (
                 <IconCircleCheck
                   size={"3rem"}
-                  style={logoStyles}
-                  color={titleStyles?.color ?? "#fff"}
+                  style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                  color={
+                    surveyThemeData?.thankyouTheme?.title?.styles?.color ??
+                    "#fff"
+                  }
                 />
               )}
               <Title
                 order={1}
                 fw={400}
                 style={{
-                  ...titleStyles,
+                  ...surveyThemeData?.thankyouTheme?.subtitle?.styles,
                   ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
                 }}
               >
-                {title}
+                {surveyThemeData?.thankyouTheme?.title?.title}
               </Title>
-              {subtitle && <Text style={subtitleStyles}>{subtitle}</Text>}
+              {surveyThemeData?.thankyouTheme?.subtitle?.subtitle && (
+                <Text style={surveyThemeData?.thankyouTheme?.subtitle?.styles}>
+                  {surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
+                </Text>
+              )}
             </Stack>
           )}
           {enableBody && (
@@ -177,7 +178,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
                 <GoogleReview
                   googleLink={googleLink}
                   reviewSuggestions={reviews}
-                  orgLogoUrl={logo}
+                  orgLogoUrl={surveyThemeData?.thankyouTheme?.logo?.logo}
                 />
               )}
 
