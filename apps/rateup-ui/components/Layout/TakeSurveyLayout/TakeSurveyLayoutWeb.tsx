@@ -98,9 +98,12 @@ export const TakeSurveyLayoutWeb = ({
     setSelectedLanguage(survey?.languages[0]);
   }
   if (isLoading) return <div>Loading...</div>;
-  const { surveyTheme, welcomeTheme } = surveyThemeData;
   return (
-    <MantineProvider theme={{ primaryColor: surveyTheme.input.primaryColor }}>
+    <MantineProvider
+      theme={{
+        primaryColor: surveyThemeData?.surveyTheme?.input?.primaryColor,
+      }}
+    >
       <QuestionCountContext.Provider
         value={{
           questionCount,
@@ -144,23 +147,25 @@ export const TakeSurveyLayoutWeb = ({
           w={"100%"}
           mih={"100dvh"}
           style={
-            !startClicked ? welcomeTheme?.bg?.styles : surveyTheme?.bg?.styles
+            !startClicked
+              ? surveyThemeData?.welcomeTheme?.bg?.styles
+              : surveyThemeData?.surveyTheme?.bg?.styles
           }
         >
           <CreditsCard
             enableCredits={
               !startClicked
                 ? isMobile
-                  ? welcomeTheme?.bg?.unsplashImage?.mobile
-                  : welcomeTheme?.bg?.unsplashImage?.desktop
+                  ? surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.mobile
+                  : surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.desktop
                 : isMobile
-                ? surveyTheme?.bg?.unsplashImage?.mobile
-                : surveyTheme?.bg?.unsplashImage?.desktop
+                ? surveyThemeData?.surveyTheme?.bg?.unsplashImage?.mobile
+                : surveyThemeData?.surveyTheme?.bg?.unsplashImage?.desktop
             }
             url={
-              isMobile && welcomeTheme?.bg?.mobilebg
-                ? welcomeTheme?.bg?.mobilebg
-                : welcomeTheme?.bg?.desktopbg
+              isMobile && surveyThemeData?.welcomeTheme?.bg?.mobilebg
+                ? surveyThemeData?.welcomeTheme?.bg?.mobilebg
+                : surveyThemeData?.welcomeTheme?.bg?.desktopbg
             }
           >
             <BackgroundImage
@@ -174,24 +179,30 @@ export const TakeSurveyLayoutWeb = ({
               }}
               src={
                 !startClicked
-                  ? welcomeTheme?.bg?.desktopbg || welcomeTheme?.bg?.mobilebg
+                  ? surveyThemeData?.welcomeTheme?.bg?.desktopbg ||
+                    surveyThemeData?.welcomeTheme?.bg?.mobilebg
                     ? getImageUrl(
-                        isMobile && welcomeTheme?.bg?.mobilebg
-                          ? welcomeTheme?.bg?.mobilebg
-                          : welcomeTheme?.bg?.desktopbg,
+                        isMobile && surveyThemeData?.welcomeTheme?.bg?.mobilebg
+                          ? surveyThemeData?.welcomeTheme?.bg?.mobilebg
+                          : surveyThemeData?.welcomeTheme?.bg?.desktopbg,
                         isMobile
-                          ? welcomeTheme?.bg?.unsplashImage?.mobile
-                          : welcomeTheme?.bg?.unsplashImage?.desktop,
+                          ? surveyThemeData?.welcomeTheme?.bg?.unsplashImage
+                              ?.mobile
+                          : surveyThemeData?.welcomeTheme?.bg?.unsplashImage
+                              ?.desktop,
                       )
                     : ""
-                  : surveyTheme?.bg?.desktopbg || surveyTheme?.bg?.mobilebg
+                  : surveyThemeData?.surveyTheme?.bg?.desktopbg ||
+                    surveyThemeData?.surveyTheme?.bg?.mobilebg
                   ? getImageUrl(
-                      isMobile && surveyTheme?.bg?.mobilebg
-                        ? surveyTheme?.bg?.mobilebg
-                        : surveyTheme?.bg?.desktopbg,
+                      isMobile && surveyThemeData?.surveyTheme?.bg?.mobilebg
+                        ? surveyThemeData?.surveyTheme?.bg?.mobilebg
+                        : surveyThemeData?.surveyTheme?.bg?.desktopbg,
                       isMobile
-                        ? surveyTheme?.bg?.unsplashImage?.mobile
-                        : surveyTheme?.bg?.unsplashImage?.desktop,
+                        ? surveyThemeData?.surveyTheme?.bg?.unsplashImage
+                            ?.mobile
+                        : surveyThemeData?.surveyTheme?.bg?.unsplashImage
+                            ?.desktop,
                     )
                   : ""
               }
@@ -240,7 +251,7 @@ export const TakeSurveyLayoutWeb = ({
                             languages={survey?.languages}
                             selectedLanguage={selectedLanguage}
                             setSelectedLanguage={setSelectedLanguage}
-                            surveyTheme={surveyTheme}
+                            surveyTheme={surveyThemeData?.surveyTheme}
                           />
                         ) : (
                           selectedLanguage && (
@@ -257,7 +268,7 @@ export const TakeSurveyLayoutWeb = ({
 
                       {!startClicked && (
                         <WelcomePage
-                          surveyThemeData={welcomeTheme}
+                          surveyThemeData={surveyThemeData?.welcomeTheme}
                           onStart={handleStartClick}
                           largeScreen={largeScreen}
                         />
@@ -307,7 +318,7 @@ function SelectLang({
       style={{ height: isMobile ? "60vh" : "65vh" }}
     >
       <Stack align="center">
-        <Title order={isMobile ? 2 : 1} style={surveyTheme.title.styles}>
+        <Title order={isMobile ? 2 : 1} style={surveyTheme?.title?.styles}>
           Let's begin!
         </Title>
         <Title

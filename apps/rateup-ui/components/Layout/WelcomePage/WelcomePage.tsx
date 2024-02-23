@@ -20,12 +20,6 @@ function WelcomePage({
   onStart: any;
   largeScreen: any;
 }) {
-  const {
-    button: { label, styles: buttonStyles },
-    logo: { logo, styles: logoStyles },
-    subtitle: { subtitle, styles: subtitleStyles },
-    title: { title, styles: titleStyles },
-  } = surveyThemeData;
   return (
     <Stack
       align="center"
@@ -37,23 +31,36 @@ function WelcomePage({
       className={lexend.className}
       gap={largeScreen ? "xl" : "sm"}
     >
-      {logo && (
+      {surveyThemeData?.logo?.logo && (
         <Image
           fit="contain"
-          src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`}
+          src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData?.logo?.logo}`}
           alt=" Logoss "
-          style={logoStyles}
+          style={surveyThemeData?.logo?.styles}
         />
       )}
-      <Text style={titleStyles}>{title}</Text>
-      <Text style={{ ...subtitleStyles }}>{subtitle}</Text>
+      <Text style={surveyThemeData?.title?.styles}>
+        {surveyThemeData?.title?.title || "Welcome"}
+      </Text>
+      <Text style={surveyThemeData?.subtitle?.styles}>
+        {surveyThemeData?.subtitle?.subtitle ||
+          "Welcome to the survey, please click the button below to start the survey."}
+      </Text>
       <Button
-        style={buttonStyles ? { ...buttonStyles } : { ..._buttonStyles }}
+        style={
+          surveyThemeData?.button?.styles
+            ? {
+                ...surveyThemeData?.button?.styles,
+                height: "45px",
+                fontSize: "1.1rem",
+              }
+            : { ..._buttonStyles }
+        }
         onClick={onStart}
-        miw={150}
+        miw={200}
         ff={"inherit"}
       >
-        {label}
+        {surveyThemeData?.button?.label || "Start Survey"}
       </Button>
     </Stack>
   );
