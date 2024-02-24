@@ -12,7 +12,6 @@ const Loading = ({ h }: { h?: number }) => {
         wrap="wrap"
       >
         <Loader type="bars" />
-        <p>Loading...</p>
       </Flex>
     </Paper>
   );

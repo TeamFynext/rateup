@@ -131,7 +131,7 @@ function TakeSurvey({ survey, setIsReviewPage }) {
   }, [boxRef.current]);
 
   const formMaxHeight = smallScreen
-    ? `calc(100dvh - ${boxHeight + 290}px)`
+    ? `calc(100dvh - ${boxHeight + 230}px)`
     : `calc(100dvh - ${boxHeight + 360}px)`;
 
   useEffect(() => {
@@ -601,7 +601,11 @@ function TakeSurvey({ survey, setIsReviewPage }) {
                   apEnable={false}
                   duration={1}
                 >
-                  <Box pb={"lg"} ref={boxRef} className={lexend.className}>
+                  <Box
+                    pb={smallScreen ? "sm" : "lg"}
+                    ref={boxRef}
+                    className={lexend.className}
+                  >
                     <QuestionTitle
                       largeScreen={largeScreen}
                       themeStyles={surveyThemeData?.surveyTheme?.title?.styles}
@@ -961,7 +965,7 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
         *Choose an option or answer to proceed!
       </Text>
       {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
-      <Group justify="space-between">
+      <Group justify="space-between" gap={0}>
         <Button
           radius={"xl"}
           title=""

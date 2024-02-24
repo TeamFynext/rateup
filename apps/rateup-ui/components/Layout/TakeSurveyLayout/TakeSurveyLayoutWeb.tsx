@@ -33,6 +33,7 @@ import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import WelcomePage from "../WelcomePage/WelcomePage";
+import CenteredSpinner from "../../Loaders/CenteredSpinner";
 export const TakeSurveyLayoutWeb = ({
   survey,
   children,
@@ -96,7 +97,7 @@ export const TakeSurveyLayoutWeb = ({
   if (!selectedLanguage && survey?.languages?.length <= 1) {
     setSelectedLanguage(survey?.languages[0]);
   }
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <CenteredSpinner h={"100dvh"} />;
   return (
     <MantineProvider
       theme={{
