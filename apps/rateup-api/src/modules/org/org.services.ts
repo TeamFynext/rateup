@@ -7,6 +7,7 @@ import {
 } from "./org.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
+import { google } from "googleapis";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -153,7 +154,7 @@ export async function updateOrgLogo(
 }
 
 export async function updateOrgDetails(
-  { address, phone, name }: UpdateOrgDetailsInput,
+  { address, phone, name, encryptionKeys }: UpdateOrgDetailsInput,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -167,6 +168,7 @@ export async function updateOrgDetails(
       address,
       phone,
       name,
+      encryptionKeys,
     },
   });
   return org;
@@ -435,4 +437,44 @@ export async function getOrgStats(orgId: string) {
   };
 
   return stats;
+}
+
+export async function initializeAuthClient() {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    `${process.env.FRONTEND_URL}/auth/oauth2callback`,
+  );
+  google.options({ auth: oauth2Client });
+  return oauth2Client;
+}
+
+export async function saveAuthTokens(token, orgId) {
+  let res = await prisma.googleAccessToken.upsert({
+    where: {
+      orgId: orgId,
+    },
+    update: {
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token,
+      expiryDate: `${token.expiry_date}`,
+      scopes: token.scope.split(" "),
+    },
+    create: {
+      orgId: orgId,
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token,
+      expiryDate: `${token.expiry_date}`,
+      scopes: token.scope.split(" "),
+    },
+  });
+  return res;
+}
+export async function getAccessToken(orgId) {
+  let res = await prisma.googleAccessToken.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+  return res;
 }

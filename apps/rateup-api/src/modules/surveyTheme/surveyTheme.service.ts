@@ -1,7 +1,5 @@
-import { SurveyTheme } from "@prisma/client";
 import prisma from "../../utils/prisma";
 import { defaultTheme } from "./defaultTheme";
-import { surveyThemeSchemaCore } from "./surveyTheme.schema";
 
 export async function getSurveyThemeBySurveyId(surveyId: string) {
   return await prisma.surveyTheme.findUnique({

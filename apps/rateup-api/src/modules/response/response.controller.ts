@@ -13,6 +13,7 @@ import {
   getResponses,
   resetResponsesStats,
   sendEmailOnResponseCreation,
+  syncResponseToGoogleSheet,
   updateResponse,
 } from "./response.service";
 import { fetchLocation } from "../../utils/location";
@@ -142,5 +143,26 @@ export async function generateResponseHandler(
     if (e instanceof PrismaClientKnownRequestError)
       reply.code(400).send("Survey Not Found");
     else reply.code(500).send(e.message);
+  }
+}
+
+export async function syncResponseToGoogleSheetHandler(
+  request: FastifyRequest<{
+    Params: {
+      surveyId: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const surveyId = request.params.surveyId;
+    const orgId = request.user.orgId;
+    let survey = await syncResponseToGoogleSheet(surveyId, orgId);
+    reply.code(201).send(survey);
+  } catch (e) {
+    console.log(e);
+    if (e instanceof PrismaClientKnownRequestError)
+      reply.code(400).send("Survey Not Found");
+    else reply.code(500).send(e.response.data);
   }
 }

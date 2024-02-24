@@ -149,7 +149,7 @@ export enum WaFlowLayoutType {
 export enum WaFlowFormElementType {
   textBody = "TextBody",
   textHeading = "TextHeading",
-  textSubHeading = "TextSubHeading",
+  textSubHeading = "TextSubheading",
   textCaption = "TextCaption",
   textInput = "TextInput",
   textArea = "TextArea",

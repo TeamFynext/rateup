@@ -80,6 +80,8 @@ const getSurveyPublicResponseSchema = z.object({
   skipPreview: z.boolean(),
   googleLink: z.string(),
   reviews: z.array(z.any()),
+  isEncrypted: z.boolean(),
+  publicKey: z.string().optional(),
 });
 
 const updateSurveyRequestSchema = z.object({
@@ -99,6 +101,8 @@ const updateSurveyRequestSchema = z.object({
   getLocation: z.boolean().optional(),
   enableNotificationEmail: z.boolean().optional(),
   notificationEmail: z.string().email().optional(),
+  isEncrypted: z.boolean().optional(),
+  publicKey: z.string().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

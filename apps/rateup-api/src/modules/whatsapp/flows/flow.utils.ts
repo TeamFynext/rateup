@@ -448,7 +448,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   if (question.title[lang]) {
     titleElement = {
       text: question.title[lang],
-      type: WaFlowFormElementType.textHeading,
+      type: WaFlowFormElementType.textSubHeading,
       id: `${question.id}_title`,
     };
   }

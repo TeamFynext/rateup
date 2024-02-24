@@ -54,7 +54,10 @@ export const defaultTheme: SurveyTheme & surveyThemeSchemaCore = {
   },
   surveyTheme: {
     bg: background,
-    title: { ...title, styles: { ...title.styles, textAlign: "left" } },
+    title: {
+      ...title,
+      styles: { ...title.styles, textAlign: "left", fontSize: 20 },
+    },
     subtitle: {
       ...subtitle,
       styles: { ...subtitle.styles, textAlign: "left" },

@@ -78,6 +78,7 @@ model Org {
   logo             String?
   phone            String?
   address          String?
+  encryptionKeys   Json? //{privateKey:string,publicKey:string}
   members          OrgMember[]
   teams            Team[]
   invitations      Invitation[]
@@ -86,6 +87,8 @@ model Org {
   Subscription     Subscription?
   Order            Order[]
   WaFlow           WaFlow[]
+  googleAccessToken GoogleAccessToken? 
+  driveFolderId    String?
 }
 
 model WhatsappSettings {
@@ -189,8 +192,11 @@ model Survey {
   enableNotificationEmail Boolean         @default(false)
   notificationEmail       String          @default("")
   shareSettings           Json?
+  publicKey               String?
+  isEncrypted             Boolean         @default(false)
   surveyTheme             SurveyTheme?
   WaFlow                  WaFlow?
+  spreadSheetId           String?
 }
 
 model SurveyTeamMap {
@@ -220,15 +226,16 @@ model SurveyLanding {
 }
 
 model SurveyResponse {
-  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime         @default(now())
-  surveyTeamMap   SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId String           @db.Uuid
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime         @default(now())
+  surveyTeamMap      SurveyTeamMap    @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+  surveyTeamMapId    String           @db.Uuid
   /// [PQuestionResponse]
-  responses       Json[]
-  language        String           @default("")
-  platform        ResponsePlatform @default(WEB)
-  tag             String?          @default("")
+  responses          Json[]           @default([])
+  encryptedResponses String?
+  language           String           @default("")
+  platform           ResponsePlatform @default(WEB)
+  tag                String?          @default("")
 
   ip                   String?
   location             Json? // { 
@@ -685,4 +692,13 @@ model TestimonialCollectionMap {
   createdAt     DateTime              @default(now())
   
   @@id([testimonialId, collectionId])
+}
+
+model GoogleAccessToken {
+  accessToken String 
+  orgId    String   @unique @db.Uuid
+  org  Org   @relation(fields: [orgId], references: [id])
+  refreshToken String
+  expiryDate String
+  scopes String[] 
 }

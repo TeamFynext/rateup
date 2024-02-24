@@ -1,10 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
+  getAccessToken,
   getAllMembersWithTeams,
   getAllOrgs,
   getOrgStats,
   getTeamsMembers,
+  initializeAuthClient,
+  saveAuthTokens,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgUserRole,
@@ -174,4 +177,59 @@ export async function getOrgStatsHandler(
 ) {
   const orgStats = await getOrgStats(request.params.orgId);
   reply.send(orgStats);
+}
+
+export async function checkGoogleAccessHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const googleAccess = await getAccessToken(request.user.orgId);
+    reply
+      .code(201)
+      .send({ isExist: googleAccess ? true : false, auth: googleAccess });
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+  }
+}
+
+export async function getGoogleAuthUrl(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const scopes = ["https://www.googleapis.com/auth/drive.file"];
+    const oauth2Client = await initializeAuthClient();
+    const authorizeUrl = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      scope: scopes.join(" "),
+      prompt: "consent",
+    });
+    reply.code(201).send(authorizeUrl);
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send();
+  }
+}
+
+export async function createGoogleAuthToken(
+  request: FastifyRequest<{
+    Body: {
+      code: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const code = request.body.code;
+    const oauth2Client = await initializeAuthClient();
+    const { tokens } = await oauth2Client.getToken(code);
+    //store in database
+    let res = await saveAuthTokens(tokens, request.user.orgId);
+    reply.code(201).send({ message: "success" });
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send();
+  }
 }
