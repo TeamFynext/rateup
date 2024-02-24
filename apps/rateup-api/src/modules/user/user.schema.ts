@@ -36,9 +36,9 @@ const changeUserPasswordSchema = z.object({
 });
 
 const updateProfileSchema = z.object({
-  title: z.string().min(3),
-  name: z.string().min(4),
-  phone: z.string().min(8),
+  title: z.string(),
+  name: z.string(),
+  phone: z.string(),
 });
 
 const updateProfilePhotoSchema = z.object({
