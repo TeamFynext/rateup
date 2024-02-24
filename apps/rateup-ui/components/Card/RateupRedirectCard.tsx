@@ -11,7 +11,7 @@ export default function RateupRedirectCard({ className = "" }) {
   return (
     <Center
       className={className}
-      bg={`var(--mantine-color-${theme.primaryColor}-light-hover)`}
+      bg={`white`}
       w={150}
       m={"auto"}
       px={"sm"}
@@ -26,7 +26,7 @@ export default function RateupRedirectCard({ className = "" }) {
         styles={{ root: { width: "fit-content" } }}
       >
         <Group gap={0} align="flex-end" justify="center">
-          <Text fz={10} mb={2}>
+          <Text fz={10} mb={2} c={"grey"}>
             Powered By
           </Text>
           <Image
