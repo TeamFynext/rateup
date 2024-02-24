@@ -1,23 +1,25 @@
-import { Box, Grid } from "@mantine/core";
-import styles from "./FlowCardsList.module.css";
+import { SimpleGrid } from "@mantine/core";
 import FlowCard from "../FlowCard";
 
 function FlowCardsList({ flows }: { flows: DbFlow[] }) {
   return (
-    <Grid className={styles["flows-cards-div"]}>
+    <SimpleGrid
+      p={"0.875rem"}
+      spacing={"lg"}
+      cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
+      style={{ overflow: "auto" }}
+    >
       {flows.map(({ dbFlowId, name, status, createdAt }) => {
         return (
-          <Grid.Col span={{ base: 12, sm: 6, md: 6, lg: 3 }} key={dbFlowId}>
-            <FlowCard
-              dbFlowId={dbFlowId}
-              name={name}
-              status={status}
-              createdAt={new Date(createdAt)}
-            />
-          </Grid.Col>
+          <FlowCard
+            dbFlowId={dbFlowId}
+            name={name}
+            status={status}
+            createdAt={new Date(createdAt)}
+          />
         );
       })}
-    </Grid>
+    </SimpleGrid>
   );
 }
 

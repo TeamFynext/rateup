@@ -3,7 +3,9 @@ import {
   Badge,
   Box,
   Flex,
+  Group,
   Menu,
+  Stack,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -19,6 +21,7 @@ import {
 import { useTimeSince } from "../../../../hooks/timeSince";
 import { WaFlowStatus } from "../../../../types/enums";
 import { notifications } from "@mantine/notifications";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
 
 interface FlowCardProps {
   name: string;
@@ -37,11 +40,15 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
 
   const timeSince = useTimeSince(createdAt);
   return (
-    <Box
-      className={styles["flow-card-div"]}
+    <PaperLayout
+      p="md"
+      shadow="lg"
+      radius="lg"
+      mih={"175px"}
+      hoveractive={true}
       onClick={() => router.push(`/dashboard/whatsapp/flows/${dbFlowId}`)}
     >
-      <Box className={styles["flow-card-content"]}>
+      <Stack gap={0} justify="space-between" h={"100%"}>
         <Flex gap={4} mb={"xs"}>
           <h2 className={styles["flow-name-h2"]}>{name}</h2>
           <Menu offset={0} withArrow>
@@ -131,14 +138,16 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
             </Menu.Dropdown>
           </Menu>
         </Flex>
-        <Text c="dimmed" fz={"sm"} mb={4}>
-          Created {timeSince}
-        </Text>
-        <Badge className={styles[`${status.toLowerCase()}-badge`]}>
-          {status}
-        </Badge>
-      </Box>
-    </Box>
+        <Group justify="space-between">
+          <Text c="dimmed" fz={"sm"} mb={4}>
+            Created {timeSince}
+          </Text>
+          <Badge className={styles[`${status.toLowerCase()}-badge`]}>
+            {status}
+          </Badge>
+        </Group>
+      </Stack>
+    </PaperLayout>
   );
 }
 
