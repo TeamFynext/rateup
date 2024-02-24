@@ -38,7 +38,7 @@ const updateLogoSchema = z.object({
 
 const updateOrgDetailsSchema = z.object({
   name: z.string().optional(),
-  phone: z.string().min(8).max(15).optional(),
+  phone: z.string().optional(),
   address: z.string().optional(),
   encryptionKeys: z
     .object({
