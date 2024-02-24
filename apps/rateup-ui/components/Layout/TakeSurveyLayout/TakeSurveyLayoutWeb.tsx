@@ -27,7 +27,6 @@ import {
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { CreditsCard } from "../../Card/CreditsCard";
-import RateupRedirectCard from "../../Card/RateupRedirectCard";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { getImageUrl } from "../../Survey/SurveyTheme/SurveyTheme.utils";
 import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
@@ -294,7 +293,6 @@ export const TakeSurveyLayoutWeb = ({
                   </Center>
                 )}
               </Paper>
-              {!!startClicked && <RateupRedirectCard />}
             </BackgroundImage>
           </CreditsCard>
         </Stack>
