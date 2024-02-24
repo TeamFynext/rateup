@@ -50,7 +50,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
 
 export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const shareUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/testimonial/${collectionId}`;
-  const iframe = `<iframe src="${shareUrl}" width="100%" height="400"></iframe>`;
+  const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
 

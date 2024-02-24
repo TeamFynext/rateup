@@ -21,7 +21,7 @@ import {
   useUpdateProfileMutation,
   useUpdateProfilePhotoMutation,
 } from "../../../backend/user/user.query";
-import { useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
 import {
@@ -59,20 +59,10 @@ const ProfileSettings = () => {
       confirmPassword: "",
     },
     validate: {
-      title: (value) => {
-        if (value.length < 4) {
-          return "Select a title";
-        }
-        return null; // Validation passed
-      },
-      firstname: (value) => {
-        if (value.length < 4) {
-          return "Name should be at least 4 characters long";
-        }
-        return null; // Validation passed
-      },
+      title: isNotEmpty("Select a title"),
+      firstname: isNotEmpty("Name Cannot be blank"),
       phone: (value) => {
-        if (!value || !isValidPhoneNumber(value)) return "Invalid phone number";
+        if (value && !isValidPhoneNumber(value)) return "Invalid phone number";
         return null;
       },
       existingPassword: (value, values) =>
@@ -113,7 +103,7 @@ const ProfileSettings = () => {
     const data = {
       title: values.title,
       name: mergeNames(values.firstname, values.lastname),
-      phone: values.phone,
+      phone: values.phone ?? "",
     };
     if (isAnyPasswordFieldDirty(values)) {
       const passwordData = {

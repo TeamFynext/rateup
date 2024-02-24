@@ -54,15 +54,15 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       },
       name: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (value.length < 4) {
-          return "Name should be at least 4 characters long";
+        if (!value.length) {
+          return "Name cannot be blank";
         }
         return null; // Validation passed
       },
       orgName: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (value.length < 4) {
-          return "Organization name should be at least 4 characters long";
+        if (!value.length) {
+          return "Organization name cannot be blank";
         }
         return null; // Validation passed
       },

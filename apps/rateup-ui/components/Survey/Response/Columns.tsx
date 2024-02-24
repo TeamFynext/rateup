@@ -1,4 +1,4 @@
-import { Badge, Button, Text } from "@mantine/core";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
 import { IconEye, IconTrashXFilled } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -120,7 +120,7 @@ function BadgeorTextorPreview({
   response,
 }: Readonly<{
   questionType: QuestionType;
-  response: string;
+  response: any;
 }>) {
   const [previewModalopened, { open, close }] = useDisclosure(false);
   if (previewRequired.includes(questionType)) {
@@ -157,6 +157,36 @@ function BadgeorTextorPreview({
       >
         {response}
       </Badge>
+    );
+  } else if (questionType == QuestionType.Testimonial) {
+    return (
+      <Stack>
+        {response?.photo ? (
+          <>
+            <Group>
+              <Text fw={300} fz="md" c="dark.3">
+                Profile Picture:{" "}
+              </Text>
+              <Button
+                leftSection={<IconEye />}
+                w={"fit-content"}
+                onClick={open}
+                radius={"lg"}
+                size="compact-xs"
+              >
+                Preview
+              </Button>
+            </Group>
+            <PreviewModal
+              headerTitle="Preview"
+              onClose={close}
+              imgObject={response?.photo}
+              opened={previewModalopened}
+            />
+          </>
+        ) : null}
+        <HoverCardComponent content={response?.content} />
+      </Stack>
     );
   } else {
     return <HoverCardComponent content={response} />;

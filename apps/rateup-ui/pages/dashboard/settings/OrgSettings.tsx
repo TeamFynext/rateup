@@ -23,7 +23,7 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
 import { useUser } from "../../../context/UserContext";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
-import { useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import "react-phone-number-input/style.css";
@@ -57,14 +57,9 @@ const OrgSettings = () => {
       address: "",
     },
     validate: {
-      name: (value) => {
-        if (value.length < 4) {
-          return "Name should be at least 4 characters long";
-        }
-        return null; // Validation passed
-      },
+      name: isNotEmpty("Name cannot be blank"),
       phone: (value) => {
-        if (!value || !isValidPhoneNumber(value)) return "Invalid phone number";
+        if (value && !isValidPhoneNumber(value)) return "Invalid phone number";
         return null;
       },
     },
@@ -76,6 +71,14 @@ const OrgSettings = () => {
       phone: values?.phone ?? "",
       address: values?.address ?? "",
     };
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Updating Organization info",
+      message: `Hold on, Organization info is getting updated..`,
+      autoClose: false,
+      withCloseButton: false,
+    });
     orgDetailsUpdate.mutate(data);
   };
   useEffect(() => {
@@ -115,10 +118,9 @@ const OrgSettings = () => {
       setAvatarSrc("");
     }
     if (user) {
-      const phone = user?.orgPhone ? user?.orgPhone : null;
       orgForm.setValues({
         name: user?.orgName ?? "",
-        phone: phone ?? "",
+        phone: user?.orgPhone ?? "",
         address: user?.orgAddress ?? "",
       });
     }
@@ -192,8 +194,8 @@ const OrgSettings = () => {
             <Text size={"28px"} fw={500}>
               {user?.orgName ?? "Organization"}
             </Text>
-            <Text> {user?.orgPhone ? user?.orgPhone : "Phone"}</Text>
-            <Text size="sm">{user?.orgAddress ?? "Adress"}</Text>
+            <Text> {user?.orgPhone ?? "Phone"}</Text>
+            <Text size="sm">{user?.orgAddress ?? "Address"}</Text>
           </Stack>
         </Flex>
         <Divider orientation={"vertical"} />

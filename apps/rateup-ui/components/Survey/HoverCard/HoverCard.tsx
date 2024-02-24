@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, HoverCard, Image, Text } from "@mantine/core";
+import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 
 export const HoverCardComponent = ({
@@ -27,26 +27,29 @@ export const HoverCardComponent = ({
         )}
       </HoverCard.Target>
       <HoverCard.Dropdown>
-        <Box
-          c={c}
-          size="sm"
-          style={{
-            wordBreak: "break-word",
-          }}
-        >
-          {typeof content === "object" ? (
-            <>
-              <Image src={getFileUrlFromKey(content?.value?.image)} w={200} />
-              <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
-                {content?.value?.value}
+        <ScrollAreaAutosize>
+          <Box
+            c={c}
+            size="sm"
+            style={{
+              wordBreak: "break-word",
+            }}
+            mah={250}
+          >
+            {typeof content === "object" ? (
+              <>
+                <Image src={getFileUrlFromKey(content?.value?.image)} w={200} />
+                <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
+                  {content?.value?.value}
+                </Text>
+              </>
+            ) : (
+              <Text c={c} miw={200} fw={fw} fz={fz}>
+                {typeof content === "boolean" ? content.toString() : content}
               </Text>
-            </>
-          ) : (
-            <Text c={c} miw={200} fw={fw} fz={fz}>
-              {typeof content === "boolean" ? content.toString() : content}
-            </Text>
-          )}
-        </Box>
+            )}
+          </Box>
+        </ScrollAreaAutosize>
       </HoverCard.Dropdown>
     </HoverCard>
   );

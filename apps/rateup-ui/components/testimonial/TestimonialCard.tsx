@@ -32,7 +32,6 @@ const TestimonialCard = ({
       <PaperLayout
         shadow="sm"
         radius={"sm"}
-        h={310}
         bg={currentStyle?.root?.bg}
         p={0}
         maw={350}
@@ -134,16 +133,14 @@ const TestimonialContent = ({
         <Stack py={"xs"} bg={currentStyle?.ratingBlock.bg} pl={"xl"} h={50}>
           <Rating value={testimonial?.testimonial.rating} readOnly size="lg" />
         </Stack>
-      ) : (
-        <Space h={50} />
-      )}
-      {!currentStyle?.date.isRemoved && (
+      ) : null}
+      {!currentStyle?.date.isRemoved ? (
         <Stack p={"md"} px={"xl"}>
           <Text style={currentStyle?.date} size="sm">
             {formatDate(testimonial?.createdAt)}
           </Text>
         </Stack>
-      )}
+      ) : null}
     </Stack>
   );
 };

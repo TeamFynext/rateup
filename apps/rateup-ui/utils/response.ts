@@ -22,7 +22,7 @@ export function getResponse(type: any, response: any) {
 
   switch (type) {
     case QuestionType.Testimonial:
-      return response.testimonial;
+      return formatTestimonialResponse(response);
     case QuestionType.DateTime:
       return formatDateTime(response);
     case QuestionType.Contact:
@@ -64,6 +64,19 @@ function formatChoiceTypeQuestions(response) {
 function formatWaList(response) {
   const { title, description } = response[QuestionType.WaList];
   return description ? `${title}: ${description}` : title;
+}
+
+function formatTestimonialResponse(response) {
+  if (typeof response === "string") return response;
+  const contentArray = [];
+  Object.entries(response).map(([key, value]) => {
+    if (key === "photo") return;
+    contentArray.push(`${key}:  ${String(value)}`);
+  });
+  return {
+    content: contentArray.join(", "),
+    photo: response?.photo,
+  };
 }
 
 function formatDefaultResponse(type, response) {

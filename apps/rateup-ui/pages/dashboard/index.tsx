@@ -454,7 +454,7 @@ export default function DashboardHome() {
                           dataKey="date"
                           tickFormatter={(str) =>
                             dayjs(str).format(
-                              timePeriod === "daily" ? "H A" : "MMM DD",
+                              timePeriod === "daily" ? "h A" : "MMM DD",
                             )
                           }
                         />
@@ -476,7 +476,7 @@ export default function DashboardHome() {
                           dataKey="date"
                           tickFormatter={(str) =>
                             dayjs(str).format(
-                              timePeriod === "daily" ? "H A" : "MMM DD",
+                              timePeriod === "daily" ? "h A" : "MMM DD",
                             )
                           }
                           fill="var(--light-grey-color-3)"

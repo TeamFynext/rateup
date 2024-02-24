@@ -1,4 +1,12 @@
-import { Box, Group, Loader, Menu, Popover, Stack, Text } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Group,
+  Loader,
+  Popover,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
@@ -289,10 +297,13 @@ const Responses = ({
               }}
             >
               <Popover.Target>
-                <RateupButtonBlue
-                  title="Export"
-                  leftIcon={<IconTableExport />}
-                />
+                <Button
+                  leftSection={<IconTableExport />}
+                  radius={"lg"}
+                  fw={400}
+                >
+                  Export
+                </Button>
               </Popover.Target>
               <Popover.Dropdown>
                 <Stack>
