@@ -152,7 +152,8 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
 async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
   // check for '/start' command
   const parsedMessage = parseMessage(waMessage);
-  const { message, from, type } = parsedMessage;
+  const { message: tempMessage, from, type } = parsedMessage;
+  const message = tempMessage?.split("\n")?.slice(1)?.join(" ");
   log.trace("message => %s", message);
   if (message.startsWith("/start")) {
     await handleStartMessage(orgId, waMessage);
@@ -230,7 +231,8 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
 }
 
 async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
-  const { from, message } = parseMessage(waMessage);
+  const { from, message: tempMessage } = parseMessage(waMessage);
+  const message = tempMessage?.split("\n")?.slice(1)?.join(" ");
   log.trace("handling start message");
   // delete any existing session if any
   await deleteSession(orgId, from);
