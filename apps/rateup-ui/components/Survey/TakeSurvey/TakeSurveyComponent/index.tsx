@@ -593,7 +593,7 @@ function TakeSurvey({ survey, setIsReviewPage }) {
             <Stack>
               <Stack
                 justify="center"
-                mih={smallScreen ? "calc(100dvh - 290px)" : "56dvh"}
+                mih={smallScreen ? "calc(100dvh - 270px)" : "56dvh"}
               >
                 <MotionTransition
                   keyValue={selectedQ}
