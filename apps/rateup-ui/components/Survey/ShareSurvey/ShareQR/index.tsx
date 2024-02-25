@@ -10,6 +10,7 @@ import {
   useUpdateShareSettingsMutation,
 } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import { getLogoFileValueForFileInput, getLogoSrc } from "./utils";
+import { showErrorToast } from "../../../../utils/notifications";
 
 interface ShareQRProps {
   url: string;
@@ -105,14 +106,17 @@ const ShareQR = ({
         let value = state[property];
         formData.append(property, value);
       }
-
-      await shareSettingsMutation.mutateAsync({
-        params: {
-          resourceName,
-          id,
-        },
-        body: formData,
-      });
+      try {
+        await shareSettingsMutation.mutateAsync({
+          params: {
+            resourceName,
+            id,
+          },
+          body: formData,
+        });
+      } catch (err) {
+        showErrorToast("Unable to save settings, Please try again later");
+      }
     }
   }, [state]);
 

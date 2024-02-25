@@ -6,6 +6,7 @@ import { IconDownload } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
 import { getLogoSrc } from "../ShareQR/utils";
+import { showErrorToast } from "../../../../utils/notifications";
 
 function Preview({
   url,
@@ -27,21 +28,34 @@ function Preview({
   const downloadQrCode = async () => {
     const element: HTMLElement = previewContainerRef.current;
     if (element) {
-      setIsLogoDownloadProcessing(true);
-      const scale = 6;
-      const dataUrl = await domtoimage.toPng(element, {
-        width: element?.clientWidth * scale,
-        height: element?.clientHeight * scale,
-        style: {
-          transform: "scale(" + scale + ")",
-          transformOrigin: "top left",
-        },
-      });
-      let link = document.createElement("a");
-      link.download = `${surveyTitle ? surveyTitle : "surveylink-qr"}.png`;
-      link.href = dataUrl;
-      link.click();
-      setIsLogoDownloadProcessing(false);
+      try {
+        setIsLogoDownloadProcessing(true);
+        const scale = 6;
+        const dataUrl = await domtoimage.toPng(element, {
+          width: element?.clientWidth * scale,
+          height: element?.clientHeight * scale,
+          style: {
+            transform: "scale(" + scale + ")",
+            transformOrigin: "top left",
+          },
+        });
+        let link = document.createElement("a");
+        link.download = `${surveyTitle ? surveyTitle : "surveylink-qr"}.png`;
+        link.href = dataUrl;
+        link.click();
+        setIsLogoDownloadProcessing(false);
+      } catch (err) {
+        showErrorToast(
+          "Unable to download QR, Please try again later",
+          "download-qr",
+        );
+        setIsLogoDownloadProcessing(false);
+      }
+    } else {
+      showErrorToast(
+        "Unable to download QR, Please try again later",
+        "download-qr",
+      );
     }
   };
 

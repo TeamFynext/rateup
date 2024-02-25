@@ -1,11 +1,22 @@
 .input {
-  padding: 0.625rem;
-  padding-right: 2.25rem;
+  padding: 0.625rem 1rem;
+  padding-right: 2.75rem;
   font-size: 1.125rem;
-  border-radius: 0.625rem;
-  border: 1px solid var(--mantine-color-gray-5);
+  border: none;
+  border-radius: 1rem;
+  background-color: var(--tertiary-color);
+  color: white;
 }
 
-.input:focus {
-  border: 1px solid var(--mantine-color-gray-8);
+.input :global(.mantine-InputPlaceholder-placeholder) {
+  color: white;
+}
+
+.root :global(.mantine-Input-section) {
+  right: 10px;
+}
+
+.root :global(.mantine-Input-section button) {
+  background-color: transparent;
+  color: white;
 }
