@@ -18,16 +18,12 @@ import {
   ActionIcon,
 } from "@mantine/core";
 import {
-  LDResponse,
   LogicAction,
   LogicCondition,
   QuestionType as Q,
-  QuestionType,
-  YNResponse,
 } from "../../../types/enums";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionTabsEnum } from "../EditSurvey";
-import { SmileyResponse } from "../../../types/enums";
 import { logicSupportedTypes } from "../../../utils/data";
 import {
   RateupButtonBlue,

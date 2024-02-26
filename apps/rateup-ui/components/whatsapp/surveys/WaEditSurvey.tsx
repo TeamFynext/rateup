@@ -111,7 +111,13 @@ export function EditWhatsappSurvey({
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
-            <LogicEditor selectedQ={selectedQ} setActiveTab={setActiveTab} />
+            {selectedQ && (
+              <LogicEditor
+                selectedQ={selectedQ}
+                setActiveTab={setActiveTab}
+                key={selectedQ.id}
+              />
+            )}
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
             <GoogleReviewEditor
