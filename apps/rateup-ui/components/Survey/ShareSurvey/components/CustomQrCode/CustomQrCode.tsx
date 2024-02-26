@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 
 type CustomQRCodeProps = {
   textToBeEmbedded: string;
-  version: number;
+  version?: number;
   errorCorrectionLevel: string;
   className?: string;
   qrColor?: string;

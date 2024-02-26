@@ -91,7 +91,6 @@ function Preview({
             <CustomQRCode
               className={styles["qr-svg"]}
               textToBeEmbedded={url}
-              version={10}
               errorCorrectionLevel={"H"}
               qrColor={qrColor}
             />
