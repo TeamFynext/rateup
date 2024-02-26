@@ -356,6 +356,7 @@ export const updateFlowJsonNavigationAndDataPassing = (
       {},
     );
     if (currentScreenIsNotLast) {
+      footerObject["label"] = "Continue";
       footerObject["on-click-action"] = {
         name: flowHasLogic ? "data_exchange" : "navigate",
         next: flowHasLogic
@@ -393,6 +394,7 @@ export const updateFlowJsonNavigationAndDataPassing = (
         ...screenDataForNextScreen,
       };
     } else {
+      footerObject["label"] = "Submit";
       screen["terminal"] = true;
       footerObject["on-click-action"] = flowHasLogic
         ? {

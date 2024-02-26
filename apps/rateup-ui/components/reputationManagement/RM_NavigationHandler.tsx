@@ -4,7 +4,7 @@ import { RM_Overview } from "./panels/RM_Overview";
 import { RM_Review } from "./panels/RM_Review";
 import { TeamSelector } from "../input/TeamSelector";
 import { useReviewsWithAnalysis } from "../../backend/reputation_management/review/review.query";
-import CenteredSpinner from "../Loaders/CenteredSpinner";
+import RateupLoader from "../Loaders/RateupLoader";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import isBetween from "dayjs/plugin/isBetween";
@@ -105,7 +105,7 @@ export function RM_NavigationHandler() {
     RM_NavigationTabs.OVERVIEW,
   );
   const theme = useMantineTheme();
-  if (isReviewsLoading) return <CenteredSpinner />;
+  if (isReviewsLoading) return <RateupLoader />;
   if (isReviewsError) return <div>error</div>;
 
   const filteredReviews = filterReviews(reviews, filters, ranges);

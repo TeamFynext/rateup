@@ -9,8 +9,9 @@ import {
   CountSectionContainer,
   CountCard,
 } from "../../../components/adminPanel/stats/Count";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
-export default function () {
+export default function OrgById() {
   const [opened, { close, open }] = useDisclosure(false); // subscription editor
   const router = useRouter();
   const { orgId } = router.query as { orgId: string };
@@ -21,8 +22,8 @@ export default function () {
   } = useSubscriptionByOrgId(orgId);
 
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
-  if (isError) return <div>error occured</div>;
-  if (isLoading || !stats) return <div>loading...</div>;
+  if (isError || isSubErr) return <div>error occured</div>;
+  if (isLoading || !stats || isSubLoading) return <RateupLoader h={"100dvh"} />;
 
   return (
     <Stack>

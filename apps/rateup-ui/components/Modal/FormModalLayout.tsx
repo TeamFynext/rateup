@@ -91,7 +91,7 @@ export default function FormModalLayout({
           )}
           {buttonTitle && (
             <RateupButtonBlue
-              color="var(--tertiary-color)"
+              color="var(--mantine-primary-color-filled)"
               loading={isLoading}
               type="submit"
               title={buttonTitle}

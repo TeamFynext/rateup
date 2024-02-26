@@ -1,7 +1,7 @@
 import { SimpleGrid } from "@mantine/core";
 import FlowCard from "../FlowCard";
 
-function FlowCardsList({ flows }: { flows: DbFlow[] }) {
+function FlowCardsList({ flows }: Readonly<{ flows: DbFlow[] }>) {
   return (
     <SimpleGrid
       p={"0.875rem"}
@@ -16,6 +16,7 @@ function FlowCardsList({ flows }: { flows: DbFlow[] }) {
             name={name}
             status={status}
             createdAt={new Date(createdAt)}
+            key={dbFlowId}
           />
         );
       })}

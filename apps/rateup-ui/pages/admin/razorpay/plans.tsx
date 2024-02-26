@@ -24,6 +24,7 @@ import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
 import { IconInfoCircle, IconRefresh } from "@tabler/icons-react";
 import { PaymentPlanStatus } from "../../../types/enums";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 const RazorpayPlans = () => {
   const syncPlans = usePlanSyncMutation();
@@ -76,7 +77,7 @@ const RazorpayPlans = () => {
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
   if (isError) return <div>error occured</div>;
-  if (isLoading) return <div>loading...</div>;
+  if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   const rows = Array.isArray(plans?.data)
     ? plans?.data

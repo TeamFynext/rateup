@@ -7,9 +7,10 @@ import {
   Flex,
   BackgroundImage,
 } from "@mantine/core";
-import React, { useEffect } from "react";
+import React from "react";
 import { usePublicWelcomeThemeByLandingId } from "../../../backend/LandingWelcomeTheme/LandingWelcomeTheme.query";
 import classes from "./Landing.module.css";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 function LandingWelcomePage({ setStartClicked, largeScreen, landingid }) {
   //-----------get welcome page styles and content-------------
@@ -22,7 +23,7 @@ function LandingWelcomePage({ setStartClicked, largeScreen, landingid }) {
   return (
     <>
       {/* .........Survey Welcome page.......... */}
-      {isLoading && <Text ta={"center"}> Loading...</Text>}
+      {isLoading && <RateupLoader h={"100dvh"} />}
       {!isLoading && (
         <Stack
           align="center"

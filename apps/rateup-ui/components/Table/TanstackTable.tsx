@@ -118,7 +118,10 @@ function TanstackTable({
           >
             <Popover.Target>
               <Box>
-                <RateupButtonSecondary title="Select Fields" />
+                <RateupButtonSecondary
+                  title="Select Fields"
+                  color="var(--mantine-primary-color-filled)"
+                />
               </Box>
             </Popover.Target>
             <Popover.Dropdown>
@@ -159,6 +162,7 @@ function TanstackTable({
               <RateupButtonSecondary
                 onClick={() => table.resetColumnFilters()}
                 title="Reset"
+                color="var(--mantine-primary-color-filled)"
               />
             </Box>
           </Tooltip>

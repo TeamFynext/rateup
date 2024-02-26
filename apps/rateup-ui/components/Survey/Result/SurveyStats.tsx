@@ -102,7 +102,12 @@ const SurveyStats = ({ survey }) => {
           <Stack gap={0}>
             <Heading subtitle="User Stats" />
             <Group justify="space-between">
-              <Text c="var(--tertiary-color" size="28px" fw="700" px="xl">
+              <Text
+                c="var(--mantine-primary-color-filled)"
+                size="28px"
+                fw="700"
+                px="xl"
+              >
                 {responseLength ?? 0} &nbsp;{" "}
                 {responseLength > 1 ? "Responses" : "Response"}
               </Text>
@@ -112,7 +117,10 @@ const SurveyStats = ({ survey }) => {
                     <Text fs={"20px"} fw="900" size={"30px"}>
                       {count}
                     </Text>
-                    <Badge color="blue" variant="light">
+                    <Badge
+                      color="var(--mantine-primary-color-filled)"
+                      variant="light"
+                    >
                       {label}
                     </Badge>
                   </Stack>
@@ -182,7 +190,7 @@ const SurveyStats = ({ survey }) => {
               >
                 <ZoomControl />
                 {coords &&
-                  coords.map(({ latitude, longitude }) => {
+                  coords.map(({ latitude, longitude }, index) => {
                     if (!latitude || !longitude) return;
                     return (
                       <Marker
@@ -191,6 +199,7 @@ const SurveyStats = ({ survey }) => {
                           opacity: 0.7,
                         }}
                         offset={[-10, -21]}
+                        key={index}
                       >
                         <RedDot zoom={zoom} />
                       </Marker>

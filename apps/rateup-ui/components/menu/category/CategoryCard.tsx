@@ -1,6 +1,6 @@
 import { Paper, Table, Text } from "@mantine/core";
 import { useState } from "react";
-import CenteredSpinner from "../../Loaders/CenteredSpinner";
+import RateupLoader from "../../Loaders/RateupLoader";
 import { useDisclosure } from "@mantine/hooks";
 import {
   useDeleteMenuItemMutation,
@@ -70,8 +70,8 @@ export function CategoryCard({
 
   let itemsSearch = [];
   if (searchText !== "") {
-    itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
+    itemsSearch = items?.filter((item) =>
+      item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
     );
   } else {
     itemsSearch = items;
@@ -91,7 +91,7 @@ export function CategoryCard({
           openCreateItem={handleCreateItem}
           toggleSwapOrder={toggleSwapOrderCategory}
         />
-        <CenteredSpinner m="sm" />
+        <RateupLoader m="sm" />
       </Paper>
     );
   }

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Group, SimpleGrid, Title, Space, Stack } from "@mantine/core";
+import { Group, SimpleGrid, Space, Stack } from "@mantine/core";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { IconPlus, IconSelector } from "@tabler/icons-react";
 import { useAllMenus } from "../../../backend/menu/menu.query";
@@ -14,8 +14,8 @@ import {
 import { UserRole } from "../../../utils/enums";
 import { useUser } from "../../../context/UserContext";
 import NothingFound from "../../../components/NothingFound/NothingFound";
-import CenteredSpinner from "../../../components/Loaders/CenteredSpinner";
 import Heading from "../../../components/styled/Heading/Heading";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -101,7 +101,7 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
           gridColumn: smallScreen ? 1 : 2,
         }}
       >
-        <CenteredSpinner />;
+        <RateupLoader />
       </Stack>
     );
   }

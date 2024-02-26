@@ -20,20 +20,23 @@ import {
   LoadingOverlay,
   ScrollArea,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useRef, useState } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import dayjs from "dayjs";
-import { LogicAction, QuestionType as Q } from "../../../../types/enums";
+import {
+  LogicAction,
+  QuestionType as Q,
+  QuestionType,
+} from "../../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
-import { useListState } from "@mantine/hooks";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import { createResponsePublic } from "../../../../backend/surveys/response/response.api";
 import {
@@ -43,7 +46,6 @@ import {
 import QuestionCountContext from "../../../../context/QuestionCountContext";
 import classes from "./TakeSurvey.module.css";
 import modalStyles from "./ModalStyles.module.css";
-import { useMediaQuery } from "@mantine/hooks";
 import { validateQuestion } from "../../../../utils/validation";
 import { mapSmileyIcon } from "./SmileyRating";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -75,6 +77,8 @@ import { MotionTransition } from "../../../animation/MotionTransition";
 import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
 import { lexend } from "../../../../utils/fonts";
+import RateupLoader from "../../../Loaders/RateupLoader";
+import { useAnswerSelectedStore } from "./store/surveyQsSelectStore";
 
 function TakeSurvey({ survey, setIsReviewPage }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -352,7 +356,7 @@ function TakeSurvey({ survey, setIsReviewPage }) {
     const value = item.response[key];
     return value;
   });
-  if (IsLoading) return <div>Loading...</div>;
+  if (IsLoading) return <RateupLoader h={"100dvh"} />;
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
@@ -778,15 +782,25 @@ function getQuestionForm(type, selectedQ) {
 }
 
 function NextPrev({ prev, next, num, total, themeStyles, survey }) {
-  const { surveyId } = useRouter().query as { surveyId: string };
-  //const { isLoading, isError, data: survey } = usePublicSurvey(surveyId);
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
-
   const isMobile = useMediaQuery("(max-width: 480px)");
+  const { answerSelected, updateAnswerSelected } = useAnswerSelectedStore();
+
+  useEffect(() => {
+    if (
+      [QuestionType.PCQ, QuestionType.MCQ].includes(selectedQ?.type) &&
+      response &&
+      selectedQ.id &&
+      answerSelected?.[selectedQ.id] !== response
+    ) {
+      handleNextClick();
+      updateAnswerSelected({ ...answerSelected, [selectedQ.id]: response });
+    }
+  }, [response, selectedQ.id]);
 
   useEffect(() => {
     // TODO: check if rebase was done correctly

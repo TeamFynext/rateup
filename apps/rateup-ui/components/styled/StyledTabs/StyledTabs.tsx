@@ -1,6 +1,6 @@
 import { Tabs, TabsProps } from "@mantine/core";
 import classes from "./StyledTabs.module.css";
-export default function StyledTabs(props: TabsProps) {
+export default function StyledTabs(props: Readonly<TabsProps>) {
   return (
     <Tabs
       keepMounted={false}

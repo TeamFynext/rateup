@@ -296,6 +296,7 @@ export function TextareaWithLengthTracker(
       styles={{
         input: {
           paddingRight: "80px",
+          border: "none",
           ...input,
         },
         ...restOfStyles,
@@ -311,7 +312,7 @@ export function TextareaWithLengthTracker(
 }
 
 interface SaveStatusProps {
-  status: SaveStatus;
+  readonly status: SaveStatus;
 }
 export function SaveStatusIndicator({ status }: SaveStatusProps) {
   return (

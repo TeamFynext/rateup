@@ -1,4 +1,3 @@
-import cn from "classnames";
 import Link from "next/link";
 import { Image } from "@mantine/core";
 import styles from "./blog.module.css";

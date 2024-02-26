@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import styles from "../../../components/adminPanel/admin.module.css";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/router";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 220, cellClassName: styles.idCell },
@@ -42,10 +43,10 @@ function renderActions(params: GridRenderCellParams<any, Org>) {
     </Group>
   );
 }
-export default function () {
+export default function OrgDisplay() {
   const { data: orgs, isLoading, isError } = useAllOrgs();
   if (isError) return <div>error occured</div>;
-  if (isLoading) return <div>loading...</div>;
+  if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   const rows = orgs.map((o) => ({
     id: o.id,

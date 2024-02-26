@@ -1,13 +1,16 @@
-import { parse } from "date-fns";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 type Props = {
   dateString: string;
 };
 
 const DateFormatter = ({ dateString }: Props) => {
-  const date = parse(dateString, "yyyy-MM-dd", new Date());
+  const date = dayjs().from(dateString);
 
-  return <time dateTime={dateString}>{}</time>;
+  return <>{date}</>;
 };
 
 export default DateFormatter;

@@ -36,6 +36,7 @@ import {
 import SurveyContext from "../../../context/SurveyContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
+import RateupLoader from "../../Loaders/RateupLoader";
 //import end
 //.............................................................................
 // default export component start
@@ -62,7 +63,7 @@ export default function ResultComparison() {
     teamWiseResponses,
   );
 
-  if (qLoading || rLoading) return <div>Loading...</div>;
+  if (qLoading || rLoading) return <RateupLoader h={"100dvh"} />;
   if (qError || rError) return <div>Error...</div>;
   if (teamWiseResponses?.length === 0)
     return <NothingFound text="No responses found for comparison" />;
@@ -275,7 +276,7 @@ const CombinedChart = ({
           <XAxis dataKey="name" />
           <YAxis />
           {getResponseArrayByQuestionType(question.type)?.map(
-            ({ color, value }) => (
+            ({ color, value }, index) => (
               <Bar
                 dataKey={`responses['${value}']`}
                 stackId={"a"}
@@ -283,6 +284,7 @@ const CombinedChart = ({
                 maxBarSize={50}
                 radius={10}
                 style={{ zIndex: 999, marginTop: 10, gap: 10 }}
+                key={index}
               />
             ),
           )}

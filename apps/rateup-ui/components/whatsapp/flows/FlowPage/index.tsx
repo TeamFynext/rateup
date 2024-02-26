@@ -8,28 +8,28 @@ import {
   useUpdateFlowMutation,
   useWaFlowFromDb,
 } from "../../../../backend/whatsapp/flow/flow.query";
-import CenteredSpinner from "../../../Loaders/CenteredSpinner";
 import EditFlow from "./EditFlow/EditFlow";
 import { useImmer } from "use-immer";
 import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../../../backend/surveys/surveys.query";
-import { SurveyType, WaFlowStatus } from "../../../../types/enums";
+import { WaFlowStatus } from "../../../../types/enums";
 import { WaFlowJson, WaFlowMap } from "../../../../types/global";
 import SurveySettings from "../../../Survey/Settings/SurveySettings";
 import {
   getFlowElementJsonFromQuestion,
   updateFlowJsonNavigationAndDataPassing,
+  getQuestionFromFlowFormElementName,
 } from "../../../../utils/whatsapp/flow.utils";
 import { EditFlowContext } from "./EditFlow/EditFlowContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import Result from "../../../Survey/Result/Result";
-import ShareSurvey from "../../../Survey/ShareSurvey/ShareSurvey";
 import SurveyContext from "../../../../context/SurveyContext";
 import { useUser } from "../../../../context/UserContext";
 import { UserRole } from "../../../../utils/enums";
-import { getQuestionFromFlowFormElementName } from "../../../../utils/whatsapp/flow.utils";
 import { showErrorToast } from "../../../../utils/notifications";
 import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
+import StyledTabs from "../../../styled/StyledTabs/StyledTabs";
+import RateupLoader from "../../../Loaders/RateupLoader";
 
 function FlowPage() {
   const router = useRouter();
@@ -167,8 +167,7 @@ function FlowPage() {
 
   //surveyId end
 
-  if (isPending || !flow) return <CenteredSpinner />;
-  if (!flowJson || !survey) return <CenteredSpinner />;
+  if (isPending || !flow || !flowJson || !survey) return <RateupLoader />;
 
   return (
     <MantineProvider theme={whatsappTheme}>
@@ -209,8 +208,15 @@ function FlowPage() {
                   tab={tab}
                   setTabState={setTab}
                 />
-
-                <Tabs value={tab} h={"100%"} keepMounted={false}>
+                <StyledTabs
+                  keepMounted={false}
+                  value={tab}
+                  h={"100%"}
+                  // onChange={(value) => {
+                  //   router.push(`${menuId}?tab=${value}`);
+                  //   setActiveTab(value as TabEnum);
+                  // }}
+                >
                   <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
                     <EditFlow />
                   </Tabs.Panel>
@@ -233,7 +239,7 @@ function FlowPage() {
                   <Tabs.Panel value={FlowTabEnum.Share}>
                     <ShareFlow allowUnpublishedShare={true} />
                   </Tabs.Panel>
-                </Tabs>
+                </StyledTabs>
               </SurveyContext.Provider>
             </Box>
           </Box>

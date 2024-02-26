@@ -17,7 +17,7 @@ import { lexend300, lexend500 } from "../../../../utils/fonts";
 import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
 import { useRouter } from "next/router";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
-import CenteredSpinner from "../../../Loaders/CenteredSpinner";
+import RateupLoader from "../../../Loaders/RateupLoader";
 import { useCheckSession } from "../../../../hooks/checkSession";
 import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
 import { MotionTransition } from "../../../animation/MotionTransition";
@@ -44,7 +44,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
     router.push(route);
   };
 
-  if (isPending) return <CenteredSpinner />;
+  if (isPending) return <RateupLoader />;
 
   const plans = data?.filter(
     (item) =>

@@ -6,12 +6,12 @@ import {
   ActionIcon,
   Avatar,
   Badge,
+  Box,
   Group,
   Menu,
   MenuTarget,
   Text,
   ThemeIcon,
-  UnstyledButton,
   rem,
 } from "@mantine/core";
 import { UserRole } from "../../../utils/enums";
@@ -29,7 +29,7 @@ const NavbarFooter = (props: UserCardInterface) => {
     }
   };
   return (
-    <UnstyledButton className={styles.user}>
+    <Box className={styles.user}>
       <Group>
         <Avatar
           src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.profilePhoto}`}
@@ -99,7 +99,7 @@ const NavbarFooter = (props: UserCardInterface) => {
           </Menu>
         )}
       </Group>
-    </UnstyledButton>
+    </Box>
   );
 };
 export default NavbarFooter;

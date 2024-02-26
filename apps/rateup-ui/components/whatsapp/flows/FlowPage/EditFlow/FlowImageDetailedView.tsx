@@ -16,8 +16,10 @@ import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
 import { useContext, useEffect, useState } from "react";
 import { EditFlowContext } from "./EditFlowContext";
-import { getFlowFormElementById } from "../../../../../utils/whatsapp/flow.utils";
-import { getFormObjFromScreenId } from "../../../../../utils/whatsapp/flow.utils";
+import {
+  getFlowFormElementById,
+  getFormObjFromScreenId,
+} from "../../../../../utils/whatsapp/flow.utils";
 import { fileToBase64 } from "../../../../../utils/misc/base64.utils";
 import { showErrorToast } from "../../../../../utils/notifications";
 
@@ -38,7 +40,9 @@ export function FlowImageDetailedView() {
       height: selectedFormElement.height || 200,
       width: selectedFormElement.width || 300,
     },
-    validate: {},
+    validate: {
+      src: (value) => (value?.length ? null : "Upload image to save"),
+    },
   });
 
   // TODO: figure out why this can't be set in initialValues above
@@ -59,6 +63,8 @@ export function FlowImageDetailedView() {
   }
 
   function handleSaveElement() {
+    const { hasErrors } = form.validate();
+    if (hasErrors) return showErrorToast("Upload Image to Save");
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
     const index = flowForm.children.findIndex(
       (fe) => fe === selectedFormElement,
@@ -67,7 +73,6 @@ export function FlowImageDetailedView() {
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
       formEl.children[index] = form.values as any;
-      console.log(form.values);
     });
   }
 

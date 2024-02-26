@@ -2,7 +2,6 @@ import {
   ActionIcon,
   Badge,
   Box,
-  Button,
   Collapse,
   Group,
   Paper,
@@ -20,17 +19,14 @@ import { useContext, useState } from "react";
 import {
   getScreenObjById,
   updateFlowJsonNavigationAndDataPassing,
+  getFlowElementText,
+  getFlowFormElementsFromScreen,
+  getQuestionsFromScreen,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { EditableText } from "../../../../input/EditableText";
 import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
-import {
-  getFlowElementText,
-  getFlowFormElementsFromScreen,
-  getQuestionsFromScreen,
-} from "../../../../../utils/whatsapp/flow.utils";
-import { useUpdateSurveyMutation } from "../../../../../backend/surveys/surveys.query";
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
 import {
   WaFlowFormElementType,
@@ -41,7 +37,9 @@ import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
 import { showErrorToast } from "../../../../../utils/notifications";
-import { modals } from "@mantine/modals";
+import { RateupButtonBlue } from "../../../../Button/RateupButtons";
+import ConfirmationModal from "../../../../Modal/ConfirmationModal";
+import { useDisclosure } from "@mantine/hooks";
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -54,7 +52,7 @@ function ScreenListItem({
   onAddElementClick,
   onElementClick,
   onDeleteElement,
-}: ScreenListItemProps) {
+}: Readonly<ScreenListItemProps>) {
   const [expanded, setExpanded] = useState(true); // expanded screen id
   const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
 
@@ -72,26 +70,9 @@ function ScreenListItem({
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
 
   const elements = getFlowFormElementsFromScreen(screen);
-
-  const openDeleteModal = () => {
-    if (!flowEditable) return;
-    modals.openConfirmModal({
-      title: "Delete Screen",
-      centered: true,
-      children: (
-        <Text size="sm">
-          Are you sure you want to delete this Screen? It will also delete all
-          the elements in this screen.
-        </Text>
-      ),
-      labels: { confirm: "Yes", cancel: "Cancel" },
-      confirmProps: { color: "red" },
-      onConfirm: handleDeleteScreen,
-      onCancel: () => modals.closeAll(),
-    });
-  };
 
   const handleDeleteScreen = () => {
     if (!flowEditable) return;
@@ -163,6 +144,16 @@ function ScreenListItem({
         borderRadius: "8px",
       }}
     >
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={dialogOpened}
+        onClose={closeDialog}
+        headerLabel={`Are you sure you want to delete this Screen? It will also delete all
+        the elements in this screen.`}
+        headerTitle="Delete Screen?"
+        confirmLabel="Delete"
+        onConfirm={handleDeleteScreen}
+      />
       <Group justify="space-between">
         <EditableText
           text={screen.title}
@@ -182,11 +173,7 @@ function ScreenListItem({
         <Group>
           {flowEditable && (
             <Tooltip label="Delete Screen">
-              <ActionIcon
-                onClick={openDeleteModal}
-                variant="subtle"
-                color="gray"
-              >
+              <ActionIcon onClick={toggle} variant="subtle" color="gray">
                 <IconTrash />
               </ActionIcon>
             </Tooltip>
@@ -223,14 +210,12 @@ function ScreenListItem({
                 );
               })}
               {provided.placeholder}
-              <Button
+              <RateupButtonBlue
                 onClick={handleAddElementClick}
+                title={"Add Element"}
+                size="md"
                 variant="outline"
-                mt="sm"
-                disabled={!flowEditable}
-              >
-                Add Element
-              </Button>
+              />
             </Stack>
           )}
         </Droppable>
@@ -249,7 +234,7 @@ interface FormElementCardProps {
   dragHandleProps?: any;
 }
 function DraggableFormElementCard(
-  props: Omit<FormElementCardProps, "dragHandleProps">,
+  props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>,
 ) {
   return (
     <Draggable key={props.fe.id} index={props.index} draggableId={props.fe.id}>
@@ -273,7 +258,7 @@ function FormElementCard({
   handleOpen,
   handleDelete,
   dragHandleProps,
-}: FormElementCardProps) {
+}: Readonly<FormElementCardProps>) {
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -298,11 +283,7 @@ function FormElementCard({
       >
         <IconGripVertical size={20} stroke={1.5} />
       </div>
-      <Badge
-        style={{ minWidth: "30px" }}
-        c={"white"}
-        variant={selected ? "filled" : "filled"}
-      >
+      <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
         {index + 1}
       </Badge>
       <Text px="xs" fw={500} truncate style={{ flex: 1 }}>

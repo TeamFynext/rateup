@@ -24,7 +24,8 @@ import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../utils/constants";
-export default function () {
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+export default function WhatappSettings() {
   const { data: waSettings, isLoading } = useWaSettings();
   const form = useForm({
     initialValues: waSettings || {
@@ -45,7 +46,7 @@ export default function () {
   const handleSubmit = (values: any) => {
     upsertMutation.mutate(values);
   };
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <RateupLoader h={"100dvh"} />;
   const webhookUrl = `${
     process.env.NEXT_PUBLIC_API_URL
   }/api${WHATSAPP_URL}/webhook/${

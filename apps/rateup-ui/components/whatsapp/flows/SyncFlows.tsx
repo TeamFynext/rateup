@@ -1,20 +1,15 @@
 import {
-  Box,
   Button,
   Checkbox,
-  Divider,
   Flex,
   Group,
   InputLabel,
   Modal,
   Progress,
-  ScrollArea,
   Select,
-  Space,
   Stack,
   Table,
   Text,
-  Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useListState } from "@mantine/hooks";
 import {
@@ -45,11 +40,11 @@ import {
   waFlowFormToQuestionTypeMaps,
 } from "../../../utils/whatsapp/flow.utils";
 import { useForm } from "@mantine/form";
-import CenteredSpinner from "../../Loaders/CenteredSpinner";
 import { UseFormReturnType } from "@mantine/form/lib/types";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { WaFlowFormElementType } from "../../../types/enums";
 import { TeamSelector } from "../../input/TeamSelector";
+import RateupLoader from "../../Loaders/RateupLoader";
 
 export function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
   const [selectedFlows, handlers] = useListState([]);
@@ -225,7 +220,7 @@ function ConfigureFlow({
     showErrorToast("Error loading flow");
     console.error(error);
   }
-  if (isLoading || !flowJson) return <CenteredSpinner />;
+  if (isLoading || !flowJson) return <RateupLoader />;
 
   const flowPath = `map.${flow.id}`;
   if (!form.values.map[flow.id]) form.setFieldValue(flowPath, {});
@@ -487,6 +482,7 @@ export function SyncFlowsButton() {
         }
         variant="outline"
         onClick={open}
+        radius={"lg"}
       >
         Sync
       </Button>

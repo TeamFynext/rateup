@@ -1,7 +1,5 @@
-import { Button, Modal, TextInput } from "@mantine/core";
-import styles from "./FlowScreensList.module.css";
 import { useForm } from "@mantine/form";
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import {
   getNewScreenObj,
   getScreenObjById,
@@ -12,8 +10,8 @@ import { showErrorToast } from "../../../../../utils/notifications";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import FormModalLayout from "../../../../Modal/FormModalLayout";
+import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 
 function getInitialValues(screens) {
   return {
@@ -34,8 +32,7 @@ function CreateFlowScreenModal({
   opened,
   close,
   screenId = null,
-}: CreateFlowScreenModalProps) {
-  const formElementRef = useRef(null);
+}: Readonly<CreateFlowScreenModalProps>) {
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
@@ -94,31 +91,19 @@ function CreateFlowScreenModal({
   }, []);
 
   return (
-    <Modal
+    <FormModalLayout
       opened={opened}
-      title={screenId ? "Edit Flow Screen" : "Create Flow Screen"}
+      title="Edit Contact"
       onClose={close}
       centered
-      classNames={{ root: styles["create-flow-screen-modal-root"] }}
+      onSubmit={form.onSubmit(handleCreate)}
+      buttonTitle={screenId ? "Edit" : "Create"}
     >
-      <form
-        onSubmit={form.onSubmit(handleCreate)}
-        className={styles["create-flow-screen-modal-form"]}
-        ref={formElementRef}
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleCreate)(event)],
-        ])}
-      >
-        <TextInput
-          placeholder="Enter Screen Title"
-          {...form.getInputProps("screenTitle")}
-        />
-
-        <Button type="submit" className={styles["create-submit-btn"]}>
-          {screenId ? "Edit" : "Create"}
-        </Button>
-      </form>
-    </Modal>
+      <ContainedTextField
+        placeholder="Enter Screen Title"
+        {...form.getInputProps("screenTitle")}
+      />
+    </FormModalLayout>
   );
 }
 

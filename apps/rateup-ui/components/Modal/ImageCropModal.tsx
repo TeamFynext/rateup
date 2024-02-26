@@ -10,9 +10,9 @@ import ReactCrop, {
 import { useDebounceEffect } from "../menu/hook/useDebounceEffect";
 import { canvasPreview } from "../menu/easyCrop/CanvasPreview";
 import "react-image-crop/dist/ReactCrop.css";
-import { Box, Image, NumberInput, Stack } from "@mantine/core";
+import { Image, NumberInput, Stack } from "@mantine/core";
 import { mimeTypesForImage } from "../../utils/constants";
-import CenteredSpinner from "../Loaders/CenteredSpinner";
+import RateupLoader from "../Loaders/RateupLoader";
 
 interface ImageCropModalProps {
   opened: boolean;
@@ -198,7 +198,7 @@ export const ImageCropModal = ({
       </ReactCrop>
       {!imgRef.current && (
         <Stack miw={350} mih={250} justify="center">
-          <CenteredSpinner />
+          <RateupLoader />
         </Stack>
       )}
       <canvas

@@ -23,7 +23,7 @@ import {
 import { Slide } from "../menu/slide/Slide";
 import { MenuItemPriceType } from "../../types/enums";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import CenteredSpinner from "../Loaders/CenteredSpinner";
+import RateupLoader from "../Loaders/RateupLoader";
 import { showErrorToast } from "../../utils/notifications";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
@@ -68,7 +68,7 @@ export const BannerAddAndViewModal = ({
     }
   }, [data, data?.length]);
 
-  if (isPending) return <CenteredSpinner />;
+  if (isPending) return <RateupLoader />;
   const defaultValues: MenuBanner = {
     description: "",
     id: "",

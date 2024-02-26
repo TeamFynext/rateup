@@ -16,6 +16,7 @@ import { showLoadingToast } from "../../../utils/notifications";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTagInput } from "../../../components/input/ContainedInput/ContainedInput";
 import { generateColumns } from "../../../components/adminPanel/RateUpPlans/RateUpPlanColumn";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 const RateupPlan = () => {
   const [opened, { toggle, close }] = useDisclosure(false);
@@ -37,7 +38,7 @@ const RateupPlan = () => {
   const rateupPaymentsPlanDelete = useRateupPaymentsPlanDeleteMutation();
 
   if (isError || isRazorPayPlansError) return <div>error occured</div>;
-  if (isPending || isRazorPayPlansLoading) return <div>loading...</div>;
+  if (isPending || isRazorPayPlansLoading) return <RateupLoader h={"100dvh"} />;
 
   const razorPayPlanFiltered =
     razorPayPlans?.data

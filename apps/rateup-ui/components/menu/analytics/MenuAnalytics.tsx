@@ -3,7 +3,7 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { Stack, Group, Badge, Text } from "@mantine/core";
 import Heading from "../../styled/Heading/Heading";
 import { useGetSurveyStatsBySurveyTeamMapId } from "../../../backend/surveys/surveys.query";
-import CenteredSpinner from "../../Loaders/CenteredSpinner";
+import RateupLoader from "../../Loaders/RateupLoader";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import Link from "next/link";
 
@@ -13,7 +13,7 @@ const MenuAnalytics = ({ surveyTeamMapId, visited, surveyId }) => {
     isPending,
     error,
   } = useGetSurveyStatsBySurveyTeamMapId(surveyTeamMapId);
-  if (isPending && !!surveyTeamMapId) return <CenteredSpinner />;
+  if (isPending && !!surveyTeamMapId) return <RateupLoader />;
 
   const surveyStatsCountArray = [
     {

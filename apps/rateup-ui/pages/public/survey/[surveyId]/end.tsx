@@ -22,7 +22,7 @@ import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
-import CenteredSpinner from "../../../../components/Loaders/CenteredSpinner";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
   const { msg } = context.query;
@@ -69,7 +69,7 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
   };
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
-  if (isLoading) return <CenteredSpinner h={"100dvh"} />;
+  if (isLoading) return <RateupLoader h={"100dvh"} />;
   return (
     <CreditsCard
       enableCredits={

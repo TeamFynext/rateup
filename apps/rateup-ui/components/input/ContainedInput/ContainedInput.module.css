@@ -4,7 +4,7 @@
   color: black;
 }
 .input:focus {
-  border: 1px solid var(--tertiary-color);
+  border: 1px solid var(--mantine-primary-color-filled);
 }
 .label {
   pointer-events: none;

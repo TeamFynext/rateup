@@ -8,7 +8,6 @@ import {
 import { useRouter } from "next/router";
 import SearchBox from "../../../components/input/SearchBox";
 import { useEffect, useState } from "react";
-import CenteredSpinner from "../../../components/Loaders/CenteredSpinner";
 import {
   useCategories,
   useDeleteMenuCategoryMutation,
@@ -33,6 +32,7 @@ import CategoryItemCsvModal from "../../../components/menu/category/CategoryItem
 import { IconUpload } from "@tabler/icons-react";
 import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
 import { MotionTransition } from "../../../components/animation/MotionTransition";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 enum TabEnum {
   Menu = "Menu",
@@ -89,7 +89,7 @@ export default ({ categories: initialCategories }) => {
   }, [tab]);
 
   if ((!categories && (isLoading || isError)) || isLoadingMenu) {
-    return <CenteredSpinner />;
+    return <RateupLoader />;
   }
   let menu: any = menuLandingData?.menu;
   if (menuLandingData?.surveyTeamMapId) {

@@ -21,7 +21,7 @@ export function parseLogicAction(
     if (typeof userResponse === "number") {
       userResponse = userResponse.toString();
     }
-    const { type, logic: logicJumps } = question;
+    const { type, logic: logicJumps = [] } = question;
     if (!logicSupportedTypes.includes(type) || !userResponse) {
       return LogicAction.NextQ;
     }

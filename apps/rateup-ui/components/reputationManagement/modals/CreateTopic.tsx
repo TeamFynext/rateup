@@ -17,7 +17,7 @@ import {
 } from "../../../backend/reputation_management/topic/topic.query";
 import { useContext } from "react";
 import SelectedTeamContext from "../../../context/SelectedTeam";
-import CenteredSpinner from "../../Loaders/CenteredSpinner";
+import RateupLoader from "../../Loaders/RateupLoader";
 import { useListState } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 
@@ -77,7 +77,7 @@ export function CreateTopicModal({
     }
   }
 
-  if (isTopicsLoading) return <CenteredSpinner />;
+  if (isTopicsLoading) return <RateupLoader />;
   if (isTopicsError) return <div>error</div>;
 
   const sortedEntitiesSelectData = Object.entries(entities)

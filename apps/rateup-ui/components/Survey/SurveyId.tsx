@@ -1,7 +1,5 @@
 import {
-  Loader,
   Tabs,
-  Space,
   Grid,
   MultiSelect,
   Title,
@@ -29,6 +27,7 @@ import { EditWhatsappSurvey } from "../whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../config/mantineTheme";
 import styles from "./SurveyId.module.css";
 import { getFromSessionStorage } from "../../utils/essential";
+import RateupLoader from "../Loaders/RateupLoader";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -126,7 +125,8 @@ export default function SurveyID() {
     }
   }, [savedEncryptionPassword]);
 
-  if (isLoading || isSurveyLoading || !activeTab) return <Loader type="bars" />;
+  if (isLoading || isSurveyLoading || !activeTab)
+    return <RateupLoader h={"100dvh"} />;
   if (error || surveyError) {
     return <p>An error has occurred</p>;
   }

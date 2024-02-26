@@ -12,6 +12,7 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import { SelectedItemEnum, ThemeTabEnum } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
+import RateupLoader from "../../Loaders/RateupLoader";
 
 function SurveyTheme({ survey }) {
   const [activeThemeTab, setActiveThemeTab] = useState<ThemeTabEnum>(
@@ -42,7 +43,7 @@ function SurveyTheme({ survey }) {
   const handleSwitchChange = (e) => {
     editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
   };
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <RateupLoader h={"100dvh"} />;
   return (
     <SurveyThemeContextProvider surveyTheme={surveyTheme}>
       <StyledTabs

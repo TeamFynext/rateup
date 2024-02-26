@@ -33,7 +33,7 @@ import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import WelcomePage from "../WelcomePage/WelcomePage";
-import CenteredSpinner from "../../Loaders/CenteredSpinner";
+import RateupLoader from "../../Loaders/RateupLoader";
 export const TakeSurveyLayoutWeb = ({
   survey,
   children,
@@ -97,7 +97,7 @@ export const TakeSurveyLayoutWeb = ({
   if (!selectedLanguage && survey?.languages?.length <= 1) {
     setSelectedLanguage(survey?.languages[0]);
   }
-  if (isLoading) return <CenteredSpinner h={"100dvh"} />;
+  if (isLoading) return <RateupLoader h={"100dvh"} />;
   return (
     <MantineProvider
       theme={{
@@ -159,8 +159,8 @@ export const TakeSurveyLayoutWeb = ({
                   ? surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.mobile
                   : surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.desktop
                 : isMobile
-                ? surveyThemeData?.surveyTheme?.bg?.unsplashImage?.mobile
-                : surveyThemeData?.surveyTheme?.bg?.unsplashImage?.desktop
+                  ? surveyThemeData?.surveyTheme?.bg?.unsplashImage?.mobile
+                  : surveyThemeData?.surveyTheme?.bg?.unsplashImage?.desktop
             }
             url={
               isMobile && surveyThemeData?.welcomeTheme?.bg?.mobilebg
@@ -193,18 +193,18 @@ export const TakeSurveyLayoutWeb = ({
                       )
                     : ""
                   : surveyThemeData?.surveyTheme?.bg?.desktopbg ||
-                    surveyThemeData?.surveyTheme?.bg?.mobilebg
-                  ? getImageUrl(
-                      isMobile && surveyThemeData?.surveyTheme?.bg?.mobilebg
-                        ? surveyThemeData?.surveyTheme?.bg?.mobilebg
-                        : surveyThemeData?.surveyTheme?.bg?.desktopbg,
-                      isMobile
-                        ? surveyThemeData?.surveyTheme?.bg?.unsplashImage
-                            ?.mobile
-                        : surveyThemeData?.surveyTheme?.bg?.unsplashImage
-                            ?.desktop,
-                    )
-                  : ""
+                      surveyThemeData?.surveyTheme?.bg?.mobilebg
+                    ? getImageUrl(
+                        isMobile && surveyThemeData?.surveyTheme?.bg?.mobilebg
+                          ? surveyThemeData?.surveyTheme?.bg?.mobilebg
+                          : surveyThemeData?.surveyTheme?.bg?.desktopbg,
+                        isMobile
+                          ? surveyThemeData?.surveyTheme?.bg?.unsplashImage
+                              ?.mobile
+                          : surveyThemeData?.surveyTheme?.bg?.unsplashImage
+                              ?.desktop,
+                      )
+                    : ""
               }
             >
               {/* .........Survey Header Section.......... */}

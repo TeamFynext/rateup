@@ -3,6 +3,7 @@ import styles from "./FlowPageHeader.module.css";
 import { useContext } from "react";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import SurveyContext from "../../../../../context/SurveyContext";
+import StyledTabs from "../../../../styled/StyledTabs/StyledTabs";
 
 export enum FlowTabEnum {
   Edit = "Edit",
@@ -21,14 +22,12 @@ function FlowPageHeader({ name, tab, setTabState }) {
       <Box className={styles["heading-container"]}>
         <h1 className={styles["flow-page-heading-h1"]}>{name}</h1>
       </Box>
-      <Tabs
+      <StyledTabs
+        keepMounted={false}
+        value={tab}
         defaultValue={FlowTabEnum.Edit}
-        classNames={{
-          root: styles["tabs-root-div"],
-          tab: styles["tabs-tab"],
-          list: styles["tabs-list-div"],
-        }}
         onChange={setTabState}
+        h={"100%"}
       >
         <Tabs.List>
           {Object.values(FlowTabEnum).map((tabNameString) => {
@@ -39,7 +38,7 @@ function FlowPageHeader({ name, tab, setTabState }) {
             );
           })}
         </Tabs.List>
-      </Tabs>
+      </StyledTabs>
       <Box
         style={{
           flex: 1,

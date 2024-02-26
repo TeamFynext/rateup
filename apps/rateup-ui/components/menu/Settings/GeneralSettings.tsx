@@ -11,7 +11,7 @@ import { TeamSelector } from "../../input/TeamSelector";
 import Heading from "../../styled/Heading/Heading";
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
-import CenteredSpinner from "../../Loaders/CenteredSpinner";
+import RateupLoader from "../../Loaders/RateupLoader";
 import { currencyLabel } from "../util/currencyData";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../utils/constants";
@@ -50,7 +50,7 @@ const GeneralSettings = ({ editingItem }) => {
     !!form?.values?.teamId,
   );
 
-  if (surveyIsPending) return <CenteredSpinner />;
+  if (surveyIsPending) return <RateupLoader />;
 
   const surveyFormatedData = surveys
     ?.filter((survey) => survey?.type === "web")

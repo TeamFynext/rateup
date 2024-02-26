@@ -27,6 +27,7 @@ import {
   getfilteredResponseUsingLanguage,
 } from "../../../utils/response";
 import { stringToColour } from "../../../utils/essential";
+import RateupLoader from "../../Loaders/RateupLoader";
 
 const ResultsOverview = () => {
   const { surveyId } = useRouter().query as { surveyId: string };
@@ -83,7 +84,7 @@ const ResultsOverview = () => {
   const { filteredResponsesByTags, noofResponses } =
     getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags);
   if (isLoading || isQLoading) {
-    return <div>Loading...</div>;
+    return <RateupLoader h={"100dvh"} />;
   }
 
   if (error || QError) {
