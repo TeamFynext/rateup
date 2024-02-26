@@ -78,7 +78,6 @@ import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
 import { lexend } from "../../../../utils/fonts";
 import RateupLoader from "../../../Loaders/RateupLoader";
-import { useAnswerSelectedStore } from "./store/surveyQsSelectStore";
 
 function TakeSurvey({ survey, setIsReviewPage }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -788,19 +787,6 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const isMobile = useMediaQuery("(max-width: 480px)");
-  const { answerSelected, updateAnswerSelected } = useAnswerSelectedStore();
-
-  useEffect(() => {
-    if (
-      [QuestionType.PCQ, QuestionType.MCQ].includes(selectedQ?.type) &&
-      response &&
-      selectedQ.id &&
-      answerSelected?.[selectedQ.id] !== response
-    ) {
-      handleNextClick();
-      updateAnswerSelected({ ...answerSelected, [selectedQ.id]: response });
-    }
-  }, [response, selectedQ.id]);
 
   useEffect(() => {
     // TODO: check if rebase was done correctly

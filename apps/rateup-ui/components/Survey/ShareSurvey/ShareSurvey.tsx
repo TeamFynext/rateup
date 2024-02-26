@@ -227,7 +227,11 @@ const ShareSurvey = ({
                 isPublished: event.currentTarget.checked,
               });
             }}
-            label="Publish Survey"
+            label={
+              <Text fw={700} fz={"lg"}>
+                {isPublished ? "Published" : "Publish Survey"}
+              </Text>
+            }
           />
           <Group>
             <Text>Current Status: </Text>
