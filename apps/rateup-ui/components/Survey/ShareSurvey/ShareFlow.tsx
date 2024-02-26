@@ -152,7 +152,11 @@ export const ShareFlow = ({
             checked={isPublished}
             disabled={isPublished}
             onChange={confirmModal}
-            label="Publish Survey"
+            label={
+              <Text fw={700} fz={"lg"}>
+                {isPublished ? "Published" : "Publish Survey"}
+              </Text>
+            }
           />
           <Group>
             <Text>Current Status: </Text>

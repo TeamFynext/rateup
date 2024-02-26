@@ -56,10 +56,10 @@ export const useSurveyResponseColumns = ({
             filterFn: fuzzyFilter,
           }),
           accessorFn: (row) =>
-            row?.responses?.find((item) => item?.type === q.type)?.response[
-              q.type
-            ],
-          id: content + "_,_" + q.type,
+            row.responses
+              ?.filter((item) => item?.questionId === q.id)
+              ?.find((item) => item?.type === q.type)?.response[q.type],
+          id: content + "_,_" + q.type + "_,_" + q.id,
           header: () => (
             <HoverCardComponent content={content} fw={600} fz={"lg"} />
           ),

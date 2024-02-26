@@ -4,7 +4,7 @@
   font-size: 1.125rem;
   border: none;
   border-radius: 1rem;
-  background-color: var(--tertiary-color);
+  background-color: var(--mantine-primary-color-filled);
   color: white;
 }
 

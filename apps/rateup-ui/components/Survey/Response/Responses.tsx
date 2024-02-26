@@ -74,9 +74,8 @@ const Responses = ({
 
   const hasContactQuestion =
     responses &&
-    responses?.some(
-      (response) =>
-        response?.responses?.some((res) => QuestionType.Contact === res.type),
+    responses?.some((response) =>
+      response?.responses?.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -146,12 +145,20 @@ const Responses = ({
         .visibleColumn.includes(item.title.English),
     );
     if (filteredSecondArray && responses) {
-      const headerArray = filteredSecondArray.map((question) => {
-        return question.title[defaultLanguage];
-      });
+      const headerArray = filteredSecondArray.flatMap((question) =>
+        question.type === QuestionType.Contact
+          ? Object.entries(question.features?.[defaultLanguage])
+              ?.filter((data) => data[1].isEnabled)
+              .map(
+                (data) => `${question.title[defaultLanguage]}: ${data[0]}`,
+              ) ?? []
+          : [question.title[defaultLanguage]],
+      );
+
       const bodyArray = [];
       filteredSecondArray.forEach((question) => {
         const questionId = question.id;
+        let tempArray = [];
         responses.forEach((response, answerIndex) => {
           bodyArray.push([]);
           const responses = response.responses;
@@ -159,6 +166,7 @@ const Responses = ({
             (answerObj) => answerObj.questionId === questionId,
           );
           let responseValue;
+          let flag = true;
           if (responseObj) {
             responseValue = responseObj.response[question.type];
             const responseType = responseObj.type;
@@ -171,21 +179,37 @@ const Responses = ({
                 responseValue = dayjs(responseValue).format("DD-MM-YYYY");
                 break;
               }
+              case QuestionType.PCQ: {
+                responseValue = responseValue?.value?.value;
+                break;
+              }
             }
-            if (ChoiceTypeQuestions.includes(responseType)) {
-              responseValue = Array.isArray(responseValue)
-                ? responseValue?.map((res) => res.value)
-                : responseValue?.value;
-            }
-            if (typeof responseValue === "object") {
-              responseValue = responseValue?.value
-                ? Object.values(responseValue?.value).join(", ")
-                : Object.values(responseValue).join(", ");
+            if (
+              QuestionType.Contact === responseType &&
+              !tempArray.includes({ [answerIndex]: questionId })
+            ) {
+              tempArray.push({ [answerIndex]: questionId });
+              for (const [key, value] of Object.entries(responseValue)) {
+                bodyArray[answerIndex].push(`${key}: ${value}`);
+              }
+              flag = false;
+            } else if (!tempArray.includes({ [answerIndex]: questionId })) {
+              if (ChoiceTypeQuestions.includes(responseType)) {
+                responseValue = Array.isArray(responseValue)
+                  ? responseValue?.map((res) => res.value)
+                  : responseValue?.value;
+              } else if (typeof responseValue === "object") {
+                responseValue = responseValue?.value
+                  ? Object.values(responseValue?.value).join(", ")
+                  : Object.values(responseValue).join(", ");
+              }
             }
           } else {
             responseValue = "";
           }
-          bodyArray[answerIndex].push(responseValue);
+          if (flag) {
+            bodyArray[answerIndex].push(responseValue);
+          }
         });
       });
       downloadExcel({
@@ -197,7 +221,7 @@ const Responses = ({
         },
       });
     }
-  }, [questions, responses]);
+  }, [allResponses, defaultLanguage, questions, survey?.title]);
 
   useEffect(() => {
     setVerifyEmail("");
