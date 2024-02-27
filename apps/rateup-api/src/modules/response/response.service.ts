@@ -305,7 +305,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   });
   for (const lang of languages) {
     const questionTitles = questions.map(
-      (q: Question) => q?.title[lang].trim() || q?.description[lang].trim(),
+      (q: Question, index: number) =>
+        index + 1 + "_" + q?.title[lang].trim() ||
+        index + 1 + "_" + q?.description[lang].trim(),
     );
     let sheet = await doc.sheetsByTitle[lang];
     if (!sheet) {
@@ -328,8 +330,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         const resObj = { team: langRes.team };
         resObj["Date"] = response.createdAt;
         response.responses.map((res: QuestionResponse) => {
-          let qstn = questions.find((q: Question) => q.id === res.questionId);
-          resObj[qstn.title[lang].trim()] = getFormattedResponse(
+          let QIndex;
+          let qstn = questions.find((q: Question, index: number) => {
+            if (q.id === res.questionId) {
+              QIndex = index + 1;
+              return q;
+            }
+          });
+          resObj[QIndex + "_" + qstn.title[lang].trim()] = getFormattedResponse(
             res.response[res.type],
             res.type,
           );
@@ -374,6 +382,60 @@ export async function getDriveFolderId(orgId: string, authClient) {
     });
   }
   return driveFolderId;
+}
+interface IsheetResponse {
+  surveyTeamMapId: string;
+  responses: QuestionResponse[];
+  language: string;
+  createdAt: Date;
+}
+export async function saveResponseToGoogleSheet(response: IsheetResponse) {
+  const {
+    survey: { spreadSheetId, questions },
+    team,
+  } = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id: response.surveyTeamMapId,
+    },
+    select: {
+      survey: {
+        select: {
+          spreadSheetId: true,
+          questions: true,
+        },
+      },
+      team: {
+        select: {
+          name: true,
+          orgId: true,
+        },
+      },
+    },
+  });
+
+  if (spreadSheetId) {
+    const authClient = await initializeAuthClient();
+    const token = await getAccessToken(team.orgId);
+    authClient.credentials.refresh_token = token.refreshToken;
+    const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
+    await doc.loadInfo();
+    let sheet = await doc.sheetsByTitle[response.language];
+    const resObj = { team: team.name };
+    resObj["Date"] = new Date(response.createdAt).toLocaleString();
+    response.responses.map((res: QuestionResponse) => {
+      let QIndex;
+      let qstn = questions.find((q: Question, index: number) => {
+        if (q.id === res.questionId) {
+          QIndex = index + 1;
+          return q;
+        }
+      });
+      resObj[QIndex + "_" + qstn.title[response.language].trim()] =
+        getFormattedResponse(res.response[res.type], res.type);
+    });
+    sheet.addRow(resObj);
+  }
+  return spreadSheetId;
 }
 
 export function getFormattedResponse(response, type) {

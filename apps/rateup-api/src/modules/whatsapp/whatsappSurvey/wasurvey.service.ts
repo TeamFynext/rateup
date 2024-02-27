@@ -13,7 +13,10 @@ import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import { getQuestionsBySurveyId } from "../../question/question.service";
 import { parseLogicAction } from "../../question/question.utils";
-import { createResponse } from "../../response/response.service";
+import {
+  createResponse,
+  saveResponseToGoogleSheet,
+} from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import {
@@ -339,7 +342,13 @@ export async function saveResponses(session: WaSessionWithRelations) {
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);
-
+  const { surveyTeamMapId, responses, language, createdAt } = res;
+  await saveResponseToGoogleSheet({
+    surveyTeamMapId,
+    responses,
+    language,
+    createdAt,
+  });
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {
