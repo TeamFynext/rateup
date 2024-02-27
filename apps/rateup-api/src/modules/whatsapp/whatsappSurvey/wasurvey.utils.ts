@@ -424,7 +424,7 @@ export function isValidResponse(
     case Q.Photo:
       return typeof response === "string" && response.length > 0; // Key of the uploaded file
     case Q.Email:
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(response);
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(response?.email);
     case Q.Smiley:
       return Object.values(SmileyResponse).includes(response);
     default:

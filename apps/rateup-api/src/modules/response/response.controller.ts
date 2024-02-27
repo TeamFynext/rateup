@@ -12,6 +12,7 @@ import {
   getAllResponses,
   getResponses,
   resetResponsesStats,
+  saveResponseToGoogleSheet,
   sendEmailOnResponseCreation,
   syncResponseToGoogleSheet,
   updateResponse,
@@ -105,7 +106,13 @@ export async function createResponseHandler(
   try {
     const response = await createResponse(data);
     reply.code(201).send(response);
-
+    const { surveyTeamMapId, responses, language, createdAt } = response;
+    await saveResponseToGoogleSheet({
+      surveyTeamMapId,
+      responses,
+      language,
+      createdAt,
+    });
     // checking location information after response is created since we dont
     // want to leave the user waiting
     if (data.platform === "WHATSAPP") {
@@ -163,6 +170,8 @@ export async function syncResponseToGoogleSheetHandler(
     console.log(e);
     if (e instanceof PrismaClientKnownRequestError)
       reply.code(400).send("Survey Not Found");
-    else reply.code(500).send(e.response.data);
+    else if (e.response.data.error)
+      reply.code(500).send({ error: e.response.data.error });
+    else reply.code(500).send(e);
   }
 }
