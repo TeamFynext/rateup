@@ -196,7 +196,7 @@ const Responses = ({
             } else if (!tempArray.includes({ [answerIndex]: questionId })) {
               if (ChoiceTypeQuestions.includes(responseType)) {
                 responseValue = Array.isArray(responseValue)
-                  ? responseValue?.map((res) => res.value)
+                  ? responseValue?.map((res) => res.value).join(", ")
                   : responseValue?.value;
               } else if (typeof responseValue === "object") {
                 responseValue = responseValue?.value
