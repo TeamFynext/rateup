@@ -104,9 +104,21 @@ export async function cloneSurvey(
         create: teams,
       },
     };
-
+    const theme = await prisma.surveyTheme.findFirst({
+      where: {
+        surveyId: id,
+      },
+    });
+    delete theme["id"];
+    delete theme["surveyId"];
     const newClonedSurvey = await prisma.survey.create({
       data: clonedSurvey,
+    });
+    await prisma.surveyTheme.create({
+      data: {
+        ...theme,
+        surveyId: newClonedSurvey.id,
+      },
     });
     return newClonedSurvey;
   } else {
