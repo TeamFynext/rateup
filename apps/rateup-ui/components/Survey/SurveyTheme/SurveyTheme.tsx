@@ -50,6 +50,7 @@ function SurveyTheme({ survey }) {
         className={styles["theme-page-div"]}
         value={activeThemeTab}
         onChange={(value) => setActiveThemeTab(value as ThemeTabEnum)}
+        enableRateUpBlueTheme
       >
         <Tabs.List ml={"auto"} mr={"auto"}>
           <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>

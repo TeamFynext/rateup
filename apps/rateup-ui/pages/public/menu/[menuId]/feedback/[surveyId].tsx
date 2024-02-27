@@ -56,7 +56,11 @@ export const getServerSideProps = async ({
   return { props: { menuLanding: menuLanding } };
 };
 
-export default function ({ menuLanding }: { menuLanding: Data }) {
+export default function MenuLandingPage({
+  menuLanding,
+}: {
+  menuLanding: Data;
+}) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   if (!menuLanding || !menuLanding?.menu?.isPublished || menuLanding?.expiry) {
     return (

@@ -72,8 +72,8 @@ export function ImageCheckbox({
         )
           ? `var(--mantine-color-${theme.primaryColor}-filled)`
           : !hovered
-          ? ""
-          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+            ? ""
+            : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
       }
       style={{
         borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
@@ -102,6 +102,7 @@ export function ImageCheckbox({
           <Image
             src={getImageValue(title.image, fallbackEnable)}
             style={{ aspectRatio: 4 / 3 }}
+            alt={"image of pcq"}
           />
           <Text size="sm" lh={1.5} ml={checkBoxEnable ? "xs" : 0}>
             {title.value}

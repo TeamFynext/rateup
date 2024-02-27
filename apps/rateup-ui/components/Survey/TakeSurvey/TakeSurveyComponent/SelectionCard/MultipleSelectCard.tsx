@@ -60,8 +60,8 @@ export function ImageCheckbox({
         selectedValue.includes(title)
           ? `var(--mantine-color-${theme.primaryColor}-filled)`
           : !hovered
-          ? ""
-          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+            ? ""
+            : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
       }
       style={{
         borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
@@ -88,16 +88,16 @@ export function MultipleSelectCard({
   selectedValue,
   checkBoxEnable = false,
 }) {
-  const items = data.map((item: string) => (
+  const items = data.map((item: string, index: number) => (
     <ImageCheckbox
       title={item}
-      key={item}
+      key={item + index}
       checkBoxEnable={checkBoxEnable}
       selectedValue={selectedValue}
     />
   ));
   return (
-    <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }} spacing={2}>
+    <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }} spacing={8}>
       {items}
     </SimpleGrid>
   );

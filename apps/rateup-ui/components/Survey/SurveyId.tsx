@@ -153,6 +153,7 @@ export default function SurveyID() {
             value={activeTab}
             onChange={(tab) => setActiveTab(tab as TabEnum)}
             className={styles["survey-tabs-and-panels-container"]}
+            enableRateUpBlueTheme
           >
             <Grid columns={12} className={styles["title-tabs-container"]}>
               <Grid.Col span={3}>

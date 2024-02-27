@@ -4,6 +4,7 @@ import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import ReviewUsOnGoogle from "./review-us-on-google";
+import { mimeTypesForImage } from "../../../../utils/constants";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -67,10 +68,12 @@ export default function Page({ survey, error_occured }) {
   if (error_occured == true) {
     return <></>;
   }
+  const fileExtension =
+    survey?.orgLogo?.split(".")?.pop()?.toLowerCase() ?? "png";
   return (
     <>
       <Head>
-        <title>{`Rateup - Survey ${survey?.title}`}</title>
+        <title>{survey?.title}</title>
         <meta name="description" content={`Take survey ${survey?.title}`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />
@@ -78,22 +81,22 @@ export default function Page({ survey, error_occured }) {
           property="og:url"
           content={`https://rateup.app/public/survey/${survey?.id}`}
         />
-        <meta
-          property="og:title"
-          content={`Rateup - Survey ${survey?.title}`}
-        />
-        <meta
-          property="og:description"
-          content={`Take survey ${survey?.title}`}
-        />
+        <meta property="og:title" content={survey?.title} />
         <meta
           property="og:image"
-          content="https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png"
+          content={
+            survey.orgLogo
+              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
+              : "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png"
+          }
         />
-        <meta property="og:image:type" content="image/png" />
+        <meta
+          property="og:image:type"
+          content={mimeTypesForImage[fileExtension]}
+        />
         <meta property="og:image:width" content="1086" />
         <meta property="og:image:height" content="832" />
-        <meta property="og:image:alt" content="Star Icon" />
+        <meta property="og:image:alt" content="Org Icon" />
       </Head>
       {isReviewPage ? (
         <ReviewUsOnGoogle

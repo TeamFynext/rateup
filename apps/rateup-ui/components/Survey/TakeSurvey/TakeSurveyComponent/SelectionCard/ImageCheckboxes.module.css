@@ -19,7 +19,7 @@
 }
 
 .button[data-checked] {
-  background-color: var(--mantine-color-blue-light);
+  background-color: var(--mantine-primary-color-filled);
 }
 .button:hover {
   box-shadow:
