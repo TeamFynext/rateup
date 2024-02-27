@@ -189,9 +189,9 @@ const Responses = ({
               !tempArray.includes({ [answerIndex]: questionId })
             ) {
               tempArray.push({ [answerIndex]: questionId });
-              for (const [key, value] of Object.entries(responseValue)) {
-                bodyArray[answerIndex].push(`${key}: ${value}`);
-              }
+              Object.values(responseValue)?.map((value) =>
+                bodyArray[answerIndex].push(value),
+              );
               flag = false;
             } else if (!tempArray.includes({ [answerIndex]: questionId })) {
               if (ChoiceTypeQuestions.includes(responseType)) {
