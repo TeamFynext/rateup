@@ -183,6 +183,10 @@ const Responses = ({
                 responseValue = responseValue?.value?.value;
                 break;
               }
+              case QuestionType.TnC: {
+                responseValue = responseValue?.toString();
+                break;
+              }
             }
             if (
               QuestionType.Contact === responseType &&
