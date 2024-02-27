@@ -42,6 +42,7 @@ import {
   ResponsiveContainer,
   Area,
   Brush,
+  Legend,
 } from "recharts";
 import dayjs from "dayjs";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
@@ -398,7 +399,7 @@ export default function DashboardHome() {
                         <RateupButtonBlue
                           variant={timePeriod === "daily" ? "filled" : "subtle"}
                           radius="lg"
-                          color={timePeriod !== "daily" && "gray"}
+                          color={timePeriod !== "daily" ? "gray" : "black"}
                           onClick={() => setTimePeriod("daily")}
                           title="Day"
                         />
@@ -408,7 +409,7 @@ export default function DashboardHome() {
                             timePeriod === "weekly" ? "filled" : "subtle"
                           }
                           radius="lg"
-                          color={timePeriod !== "weekly" && "gray"}
+                          color={timePeriod !== "weekly" ? "gray" : "black"}
                           onClick={() => setTimePeriod("weekly")}
                           title="Week"
                         />
@@ -417,7 +418,7 @@ export default function DashboardHome() {
                             timePeriod === "monthly" ? "filled" : "subtle"
                           }
                           radius="lg"
-                          color={timePeriod !== "monthly" && "gray"}
+                          color={timePeriod !== "monthly" ? "gray" : "black"}
                           onClick={() => setTimePeriod("monthly")}
                           title="Month"
                         />
@@ -441,7 +442,7 @@ export default function DashboardHome() {
                             <stop
                               offset="5%"
                               stopColor="var(--tertiary-color)"
-                              stopOpacity={1}
+                              stopOpacity={0.8}
                             />
                             <stop
                               offset="95%"
@@ -469,7 +470,8 @@ export default function DashboardHome() {
                           dataKey="responses"
                           fillOpacity={0.7}
                           fill="url(#gradientColor)"
-                          dot={{ stroke: "var(--tertary-color" }}
+                          stroke="var(--tertiary-color)"
+                          strokeWidth={2}
                         />
                         <Brush
                           height={15}

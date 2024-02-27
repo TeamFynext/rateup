@@ -136,11 +136,11 @@ function TanstackTable({
                     label={"Toggle All"}
                   />
                 </Flex>
-                {table.getAllLeafColumns().map((column) => {
+                {table.getAllLeafColumns().map((column, index) => {
                   if (column.getIsVisible())
                     tempVisibleColumnArray.push(column?.id?.split("_,_")?.[0]);
                   return (
-                    <Flex key={column.id} mt={4} align={"center"}>
+                    <Flex key={index} mt={4} align={"center"}>
                       <Checkbox
                         {...{
                           type: "checkbox",
@@ -172,10 +172,10 @@ function TanstackTable({
         <Stack justify="space-between" mih={"min(60dvh,440px)"}>
           <Table withRowBorders>
             <Table.Thead className={styles["table-thead"]}>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Table.Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Table.Th key={header.id} colSpan={header.colSpan}>
+              {table.getHeaderGroups().map((headerGroup, index) => (
+                <Table.Tr key={index}>
+                  {headerGroup.headers.map((header, headerIndex) => (
+                    <Table.Th key={headerIndex} colSpan={header.colSpan}>
                       {header.isPlaceholder ? null : (
                         <>
                           <UnstyledButton
@@ -236,10 +236,10 @@ function TanstackTable({
               ))}
             </Table.Thead>
             <Table.Tbody>
-              {table.getRowModel().rows.map((row) => (
-                <Table.Tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.Td key={cell.id}>
+              {table.getRowModel().rows.map((row, index) => (
+                <Table.Tr key={index}>
+                  {row.getVisibleCells().map((cell, indexCell) => (
+                    <Table.Td key={indexCell}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -250,10 +250,10 @@ function TanstackTable({
               ))}
             </Table.Tbody>
             <Table.Tfoot>
-              {table.getFooterGroups().map((footerGroup) => (
-                <Table.Tr key={footerGroup.id}>
-                  {footerGroup.headers.map((header) => (
-                    <Table.Th key={header.id}>
+              {table.getFooterGroups().map((footerGroup, index) => (
+                <Table.Tr key={index}>
+                  {footerGroup.headers.map((header, HIndex) => (
+                    <Table.Th key={HIndex}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(

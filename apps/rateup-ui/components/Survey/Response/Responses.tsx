@@ -290,7 +290,7 @@ const Responses = ({
           },
           onError: (error: any) => {
             setIsSyncing(false);
-            if (error.response.data.error === "invalid_grant") {
+            if (error.response.data?.error === "invalid_grant") {
               setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
               window.open(authUrl);
             } else {

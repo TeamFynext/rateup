@@ -231,11 +231,11 @@ function UtilityComponent({
     else setSelectedTestimonialIds([]);
   }
 
-  const isAllSelected = testimonialIdsNotInCollection?.every(
-    (t) => selectedTestimonialIds?.includes(t),
+  const isAllSelected = testimonialIdsNotInCollection?.every((t) =>
+    selectedTestimonialIds?.includes(t),
   );
-  const isAllSelectedForDelete = savedTestimonialIds?.every(
-    (t) => selectedTestimonialIds?.includes(t),
+  const isAllSelectedForDelete = savedTestimonialIds?.every((t) =>
+    selectedTestimonialIds?.includes(t),
   );
 
   useEffect(() => {
@@ -253,7 +253,7 @@ function UtilityComponent({
                 label={"Select All"}
                 size="xs"
                 checked={isAllSelectedForDelete}
-                disabled={!filteredTestimonialIds?.length}
+                disabled={!savedTestimonialIds?.length}
                 onChange={(e) => {
                   if (e.currentTarget.checked)
                     setSelectedTestimonialIds(savedTestimonialIds);
@@ -266,7 +266,7 @@ function UtilityComponent({
               radius="md"
               variant="light"
               onClick={openEdit}
-              disabled={!filteredTestimonialIds?.length}
+              disabled={!savedTestimonialIds?.length}
               leftSection={<IconPencil size={"1rem"} />}
             >
               Customize
@@ -324,6 +324,7 @@ function UtilityComponent({
               radius="md"
               variant="light"
               onClick={openShare}
+              disabled={!savedTestimonialIds?.length}
               leftSection={<IconShare size={"1rem"} />}
             >
               Share

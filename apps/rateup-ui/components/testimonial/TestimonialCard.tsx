@@ -7,7 +7,6 @@ import {
   Rating,
   Anchor,
   Modal,
-  Space,
   Flex,
   ActionIcon,
 } from "@mantine/core";
@@ -78,13 +77,12 @@ const TestimonialContent = ({
       <Stack bg={currentStyle?.profileBlock.bg} gap={0}>
         {isModal ? (
           <Flex justify={"flex-end"} m={"xs"}>
-            <ActionIcon
+            <IconX
               onClick={close}
-              variant="subtle"
-              color={currentStyle?.profileBlock.bg}
-            >
-              <IconX size={"1.5rem"} color="black" />
-            </ActionIcon>
+              size={"1.5rem"}
+              style={{ cursor: "pointer" }}
+              color="black"
+            />
           </Flex>
         ) : null}
         <Group pl={"xl"} py={"md"} h={90}>
