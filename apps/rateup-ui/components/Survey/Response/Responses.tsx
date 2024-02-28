@@ -55,6 +55,7 @@ import {
   useGetGoogleAccessToken,
 } from "../../../backend/org/org.query";
 import useLocalStorage from "../../../hooks/localStorage";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 
 const Responses = ({
   survey,
@@ -71,6 +72,17 @@ const Responses = ({
   const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
+  const { data: authUrl } = useGetAuthorizationUrl();
+  const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
+  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
+    useDisclosure(false);
+  const [openedExport, { toggle }] = useDisclosure(false);
+  const [callbackRoute, setCallBackRoute] = useLocalStorage(
+    "google-callback-route",
+    "/dashboard/settings",
+  );
 
   const hasContactQuestion =
     responses &&
@@ -135,7 +147,11 @@ const Responses = ({
         }
       });
     });
-    importContactMutation.mutate(contacts, {});
+    importContactMutation.mutate(contacts, {
+      onSettled: () => {
+        toggle();
+      },
+    });
   }
   const handleExcelDownload = useCallback(() => {
     const responses = allResponses && allResponses[0].responses;
@@ -261,19 +277,11 @@ const Responses = ({
     open,
   });
 
-  const [isSyncing, setIsSyncing] = useState(false);
-  const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet();
-  const { data: authUrl } = useGetAuthorizationUrl();
-  const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
-
-  const [callbackRoute, setCallBackRoute] = useLocalStorage(
-    "google-callback-route",
-    "/dashboard/settings",
-  );
   const handleSyncGoogleSheet = () => {
     setIsSyncing(true);
     if (!googleAuthAccessToken.isExist) {
       setIsSyncing(false);
+      toggle();
       setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
       window.open(authUrl);
     } else {
@@ -287,9 +295,11 @@ const Responses = ({
               "success",
               <IconCheck />,
             );
+            toggle();
           },
           onError: (error: any) => {
             setIsSyncing(false);
+            toggle();
             if (error.response.data?.error === "invalid_grant") {
               setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
               window.open(authUrl);
@@ -323,12 +333,14 @@ const Responses = ({
               classNames={{
                 dropdown: styles["filters-popover-dropdown-div"],
               }}
+              opened={openedExport}
             >
               <Popover.Target>
                 <Button
                   leftSection={<IconTableExport />}
                   radius={"lg"}
                   fw={400}
+                  onClick={toggle}
                 >
                   Export
                 </Button>
@@ -337,8 +349,15 @@ const Responses = ({
                 <Stack>
                   {isFetched && (
                     <RateupButtonSecondary
-                      title="Sync with Google Sheet"
-                      onClick={handleSyncGoogleSheet}
+                      title={
+                        survey.spreadSheetId
+                          ? "Resync with Google Sheet"
+                          : "Sync with Google Sheet"
+                      }
+                      onClick={() => {
+                        if (survey.spreadSheetId) alertModalOpen();
+                        else handleSyncGoogleSheet();
+                      }}
                       leftIcon={
                         <IconRefresh
                           className={
@@ -351,7 +370,10 @@ const Responses = ({
                     />
                   )}
                   <RateupButtonSecondary
-                    onClick={handleExcelDownload}
+                    onClick={() => {
+                      handleExcelDownload();
+                      toggle();
+                    }}
                     title={"Download Excel"}
                     radius={"lg"}
                     leftIcon={<IconFileDownload stroke={1.5} />}
@@ -364,6 +386,14 @@ const Responses = ({
                       leftIcon={<IconDatabaseImport stroke={1.5} />}
                     />
                   )}
+                  <ConfirmationModal
+                    opened={alertModalOpened}
+                    onClose={alertModalClose}
+                    headerTitle="Resync Google Sheet"
+                    headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
+                    confirmLabel="Yes"
+                    onConfirm={handleSyncGoogleSheet}
+                  />
                 </Stack>
               </Popover.Dropdown>
             </Popover>

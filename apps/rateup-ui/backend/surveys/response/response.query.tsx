@@ -178,9 +178,12 @@ export function useGenerateResponse(surveyId: string) {
   });
 }
 
-export function useSyncResponseToGoogleSheet() {
+export function useSyncResponseToGoogleSheet(surveyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: syncResponseToGoogleSheet,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
   });
 }
