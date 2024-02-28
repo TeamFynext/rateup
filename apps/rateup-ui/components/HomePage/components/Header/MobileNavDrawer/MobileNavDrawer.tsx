@@ -45,7 +45,7 @@ function MobileNavDrawer() {
         onClose={closeNavDrawer}
         title={
           <Link href="/">
-            <Image src={rateupLogoUrl} alt="logo" w={75} h={65} fit="cover" />
+            <Image src={rateupLogoUrl} alt="logo" w={75} h={65} fit="contain" />
           </Link>
         }
         zIndex={500}
@@ -62,6 +62,7 @@ function MobileNavDrawer() {
             className={styles["login-signup-menu-item"]}
           >
             <Link href="/login" className={`${headerStyles["login-link"]}`}>
+              Login
               <Text
                 inherit
                 span
