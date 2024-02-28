@@ -18,6 +18,10 @@ import {
 } from "../../../../../utils/whatsapp/flow.utils";
 import { getFormObjFromScreenId } from "../../../../../utils/whatsapp/flow.utils";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import { showErrorToast } from "../../../../../utils/notifications";
+import { notifications } from "@mantine/notifications";
 
 export function FlowTextDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -26,7 +30,6 @@ export function FlowTextDetailedView() {
     selectedFormElementId,
     flowJson,
   );
-
   const form = useForm({
     initialValues: {
       text: selectedFormElement.text || "",
@@ -44,17 +47,32 @@ export function FlowTextDetailedView() {
   });
 
   function handleSaveElement() {
-    const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm.children.findIndex(
-      (fe) => fe === selectedFormElement,
-    );
-
-    updateFlowJson((draft) => {
-      const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl.children[index].text = form.values.text;
-    });
+    const res = form.validate();
+    if (res.hasErrors) {
+      showErrorToast("Fix errors before saving");
+      return "error";
+    } else {
+      const flowForm = getFormObjFromScreenId(
+        flowJson.screens,
+        selectedScreenId,
+      );
+      const index = flowForm.children.findIndex(
+        (fe) => fe === selectedFormElement,
+      );
+      notifications.show({
+        id: "flow-update",
+        loading: true,
+        title: "Updating Flow",
+        message: `Hold on, flow is getting Updated...`,
+        autoClose: false,
+        withCloseButton: false,
+      });
+      updateFlowJson((draft) => {
+        const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
+        formEl.children[index].text = form.values.text;
+      });
+    }
   }
-
   return (
     <Stack
       style={{
@@ -85,6 +103,7 @@ export function FlowTextDetailedView() {
             <FlowTextElementEditor
               {...form.getInputProps("text")}
               maxValue={getFlowTextLimit(selectedFormElement.type)}
+              onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSaveElement]])}
             />
           </Stack>
         </Group>

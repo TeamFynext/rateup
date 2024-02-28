@@ -134,6 +134,7 @@ export default function MenuLandingPage({
           ]
         }
         url={bgSrc}
+        ml={largeScreen && 30}
       >
         <BackgroundImage
           src={bgSrc}

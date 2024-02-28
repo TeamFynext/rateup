@@ -197,7 +197,6 @@ function ElementEditor({
       return;
     }
     const res = form.validate();
-    console.log(res);
     if (res.hasErrors) {
       showErrorToast("Fix errors before saving");
       return "error";

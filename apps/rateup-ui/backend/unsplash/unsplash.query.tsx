@@ -1,5 +1,5 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { getPhotosList } from "./unsplash.api";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { getPhotosList, triggeringDownload } from "./unsplash.api";
 
 export function useUnsplashPhotosList(opened: boolean, searchQuery: string) {
   return useInfiniteQuery({
@@ -11,3 +11,9 @@ export function useUnsplashPhotosList(opened: boolean, searchQuery: string) {
     initialPageParam: 1,
   });
 }
+
+export const useTriggeringDownload = () => {
+  return useMutation({
+    mutationFn: triggeringDownload,
+  });
+};

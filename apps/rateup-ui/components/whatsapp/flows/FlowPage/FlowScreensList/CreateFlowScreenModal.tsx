@@ -93,7 +93,7 @@ function CreateFlowScreenModal({
   return (
     <FormModalLayout
       opened={opened}
-      title="Edit Contact"
+      title={screenId ? "Edit Screen" : "Create Screen"}
       onClose={close}
       centered
       onSubmit={form.onSubmit(handleCreate)}

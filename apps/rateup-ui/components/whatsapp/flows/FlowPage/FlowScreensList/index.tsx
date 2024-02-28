@@ -1,12 +1,4 @@
-import {
-  Box,
-  Button,
-  Group,
-  MantineContext,
-  Text,
-  useMantineContext,
-  useMantineTheme,
-} from "@mantine/core";
+import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import ScreenListItem from "./ScreenListItem";
 import styles from "./FlowScreensList.module.css";
 import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";

@@ -12,10 +12,11 @@ import {
 import {
   IconChevronDown,
   IconChevronUp,
+  IconEdit,
   IconGripVertical,
   IconTrash,
 } from "@tabler/icons-react";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import {
   getScreenObjById,
   updateFlowJsonNavigationAndDataPassing,
@@ -71,6 +72,7 @@ function ScreenListItem({
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const textInputRef = useRef(null);
 
   const elements = getFlowFormElementsFromScreen(screen);
 
@@ -169,8 +171,23 @@ function ScreenListItem({
             fontWeight: "bold",
             fontSize: "1.2rem",
           }}
+          textInputRef={textInputRef}
         />
         <Group>
+          {flowEditable && (
+            <Tooltip label="Edit Screen">
+              <ActionIcon
+                onClick={() => {
+                  textInputRef?.current?.focus();
+                  setEditingItem(screen.title);
+                }}
+                variant="subtle"
+                color="gray"
+              >
+                <IconEdit />
+              </ActionIcon>
+            </Tooltip>
+          )}
           {flowEditable && (
             <Tooltip label="Delete Screen">
               <ActionIcon onClick={toggle} variant="subtle" color="gray">

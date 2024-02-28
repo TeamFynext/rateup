@@ -8,6 +8,7 @@ type CreditsCardProps = {
   children: React.ReactNode;
   sx?: React.CSSProperties;
   fz?: number | string;
+  ml?: number | string;
 };
 export const CreditsCard = ({
   enableCredits,
@@ -15,6 +16,7 @@ export const CreditsCard = ({
   children,
   sx = undefined,
   fz = 9,
+  ml = 0,
 }: CreditsCardProps) => {
   let params;
   let auther = "";
@@ -41,17 +43,22 @@ export const CreditsCard = ({
           style={{
             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
           }}
+          ml={ml}
         >
           Photo by{" "}
           <Anchor
-            href={`https://unsplash.com/@${username}`}
+            href={`https://unsplash.com/@${username}?utm_source=Rateup&utm_medium=referral`}
             target="_blank"
             fz={fz}
           >
             {auther}
           </Anchor>{" "}
           on{" "}
-          <Anchor href={"https://unsplash.com/"} target="_blank" fz={fz}>
+          <Anchor
+            href={"https://unsplash.com/?utm_source=Rateup&utm_medium=referral"}
+            target="_blank"
+            fz={fz}
+          >
             Unsplash
           </Anchor>
         </Text>

@@ -25,6 +25,7 @@ interface EditableTextProps {
   textStyle?: MantineStyleProp;
   inputStyle?: MantineStyleProp;
   saveOnEnter?: boolean;
+  textInputRef?: React.MutableRefObject<any>;
 }
 export function EditableText({
   text,
@@ -38,6 +39,7 @@ export function EditableText({
   textStyle = {},
   inputStyle = {},
   saveOnEnter = true,
+  textInputRef = null,
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
   if (editMode) {
@@ -51,6 +53,7 @@ export function EditableText({
           <ContainedTextField
             label={label}
             value={tempText}
+            ref={textInputRef}
             onChange={(e) => setTempText(e.target.value)}
             style={{
               flexGrow: 1,

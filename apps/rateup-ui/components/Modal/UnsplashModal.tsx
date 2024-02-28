@@ -13,7 +13,10 @@ import {
 } from "@mantine/core";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
-import { useUnsplashPhotosList } from "../../backend/unsplash/unsplash.query";
+import {
+  useTriggeringDownload,
+  useUnsplashPhotosList,
+} from "../../backend/unsplash/unsplash.query";
 import useDebounce from "../menu/hook/useDebounce";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 
@@ -26,6 +29,7 @@ type UnsplashPhotoProps = {
   photo: {
     urls: { regular: string };
     user: { name: string; username: string };
+    links: { download_location: string };
     id: string;
   };
   handleUnsplashImageSave: (url: string, filename: string) => void;
@@ -142,15 +146,18 @@ const UnsplashPhoto = ({
   const {
     urls: { regular },
     user: { name, username },
+    links: { download_location },
     id,
   } = photo;
+  const triggeringDownload = useTriggeringDownload();
   const handleImageSelection = () => {
-    console.log(photo);
-
     handleUnsplashImageSave(
       `${regular}&auther=${name}&username=${username}`,
       "unsplashImage" + id + ".jpg",
     );
+    triggeringDownload.mutate({
+      downloadLocation: download_location,
+    });
     setSearchQuery("");
     close();
   };

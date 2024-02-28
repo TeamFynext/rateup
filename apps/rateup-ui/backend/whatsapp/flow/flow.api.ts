@@ -53,7 +53,11 @@ export async function updateFlow(
   dbFlowId: string,
   data: Partial<Omit<DbFlow, "id">>,
 ) {
-  await axiosClient.put(`${BASE}/${dbFlowId}`, data);
+  try {
+    return (await axiosClient.put(`${BASE}/${dbFlowId}`, data))?.data;
+  } catch (error) {
+    return error?.response?.data;
+  }
 }
 
 export async function getFlowPreview(dbFlowId: string) {

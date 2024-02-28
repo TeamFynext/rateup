@@ -27,9 +27,13 @@ import classes from "./ContainedInput.module.css";
 import { TimeInput, TimeInputProps } from "@mantine/dates";
 import { IconClock } from "@tabler/icons-react";
 
-export function ContainedTextField(props: TextInputProps) {
-  return <TextInput classNames={classes} {...props} />;
-}
+export const ContainedTextField = React.forwardRef(function ContainedTextField(
+  props: TextInputProps,
+  ref?: React.Ref<HTMLInputElement>,
+) {
+  return <TextInput ref={ref} classNames={classes} {...props} />;
+});
+
 export function ContainedTextArea(props: TextareaProps) {
   return <Textarea classNames={classes} {...props} />;
 }

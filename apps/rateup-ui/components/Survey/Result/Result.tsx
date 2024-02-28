@@ -160,33 +160,35 @@ const Result = ({
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
         </Tabs.List>
-        <Popover
-          width={300}
-          position="bottom-start"
-          withArrow
-          shadow="md"
-          classNames={{
-            dropdown: styles["filters-popover-dropdown-div"],
-          }}
-        >
-          <Popover.Target>
-            <ActionIcon
-              className={styles["filter-icon-to-open-filter-popover"]}
-            >
-              <IconFilter />
-            </ActionIcon>
-          </Popover.Target>
-          <Popover.Dropdown>
-            <ResultFilter
-              activeTab={resultTab}
-              survey={survey}
-              responses={filteredResponsesByTags}
-              setFilteredResponses={setFilteredResponses}
-              setSelectedLanguage={setSelectedLanguage}
-              setFilterTags={setFilterTags}
-            />
-          </Popover.Dropdown>
-        </Popover>
+        {resultTab === "responses" && (
+          <Popover
+            width={300}
+            position="bottom-start"
+            withArrow
+            shadow="md"
+            classNames={{
+              dropdown: styles["filters-popover-dropdown-div"],
+            }}
+          >
+            <Popover.Target>
+              <ActionIcon
+                className={styles["filter-icon-to-open-filter-popover"]}
+              >
+                <IconFilter />
+              </ActionIcon>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <ResultFilter
+                activeTab={resultTab}
+                survey={survey}
+                responses={filteredResponsesByTags}
+                setFilteredResponses={setFilteredResponses}
+                setSelectedLanguage={setSelectedLanguage}
+                setFilterTags={setFilterTags}
+              />
+            </Popover.Dropdown>
+          </Popover>
+        )}
       </Box>
       <Box className={styles["panels-container"]}>
         <Tabs.Panel value="overview">
@@ -263,8 +265,8 @@ export const ResultFilter = ({
     data: questions,
   } = useQuestions(survey?.id);
 
-  const quantitativeQuestions = questions?.filter(
-    (question) => quantitativeQuestionTypes?.includes(question?.type),
+  const quantitativeQuestions = questions?.filter((question) =>
+    quantitativeQuestionTypes?.includes(question?.type),
   );
   const [filters, setFilters] = useImmer<
     Array<{ question_id: string; responses: Array<string> }>

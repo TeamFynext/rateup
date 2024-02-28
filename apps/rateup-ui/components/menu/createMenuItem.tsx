@@ -384,7 +384,7 @@ export function CreateMenuItemModal({
               />
             )}
           </Group>
-          <Group>
+          <Flex>
             {form.values.images?.map((image: File | string, index) => (
               <CreditsCard
                 enableCredits={
@@ -393,15 +393,15 @@ export function CreateMenuItemModal({
                 }
                 url={image}
                 fz={6}
+                key={
+                  typeof image === "object" && image !== null
+                    ? (image as File).name + index
+                    : String(image)
+                }
               >
                 <Image
                   onClick={() => setSelectedImage(image)}
                   style={{ borderRadius: "8px", cursor: "pointer" }}
-                  key={
-                    typeof image === "object" && image !== null
-                      ? (image as File).name + index
-                      : String(image)
-                  }
                   src={getImageValue(
                     image,
                     false,
@@ -409,6 +409,7 @@ export function CreateMenuItemModal({
                       ?.length > 0,
                   )}
                   h={50}
+                  maw={80}
                   fallbackSrc={fallbackImage}
                   alt="thumbnail image of menu item"
                 />
@@ -430,16 +431,17 @@ export function CreateMenuItemModal({
                 </FileButton>
                 <Button
                   color="gray"
-                  h={75}
-                  w={75}
+                  h={50}
+                  w={80}
                   type="button"
                   onClick={toggleMethodSelectionDialog}
+                  mr={"md"}
                 >
                   <IconPlus />
                 </Button>
               </>
             )}
-          </Group>
+          </Flex>
         </Stack>
         <Stack style={{ flex: 1.5 }} gap={8}>
           <Flex columnGap={30}>

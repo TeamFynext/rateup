@@ -13,3 +13,14 @@ export const getPhotosList = async ({
   );
   return response?.data;
 };
+export const triggeringDownload = async ({
+  downloadLocation,
+}: {
+  downloadLocation: string;
+}) => {
+  return (
+    await axiosClient.post(`${unsplash_URL}/triggerDownload`, {
+      downloadLocation,
+    })
+  )?.data;
+};
