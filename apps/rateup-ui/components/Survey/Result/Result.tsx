@@ -207,7 +207,7 @@ const Result = ({
           />
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
-          <ResultComparison />
+          <ResultComparison surveyId={survey?.id} />
         </Tabs.Panel>
       </Box>
       <EncryptionPasswordModal

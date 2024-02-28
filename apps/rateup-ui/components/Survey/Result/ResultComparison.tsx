@@ -40,14 +40,11 @@ import RateupLoader from "../../Loaders/RateupLoader";
 //import end
 //.............................................................................
 // default export component start
-export default function ResultComparison() {
+export default function ResultComparison({ surveyId }: { surveyId: string }) {
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  const {
-    query: { surveyId },
-  } = useRouter();
   const {
     data: questions,
     isLoading: qLoading,
@@ -58,6 +55,7 @@ export default function ResultComparison() {
     isLoading: rLoading,
     error: rError,
   } = useAllResponses(surveyId?.toString());
+
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
     teamWiseResponses,
