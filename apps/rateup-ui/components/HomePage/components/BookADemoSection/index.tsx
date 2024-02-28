@@ -7,14 +7,18 @@ import {
   Title,
 } from "@mantine/core";
 import styles from "./BookADemoSection.module.css";
-import commonStyles from "../../index/index.module.css";
+import commonStyles from "../../index.module.css";
 import BookDemoContactForm from "../BookDemoContactForm";
+import Button from "../Button";
+import { useRouter } from "next/router";
 
 function BookADemoSection() {
+  const router = useRouter();
   return (
     <div className={styles["book-a-demo-wrapper"]}>
+      <div></div>
       <div className={styles["book-a-demo-container"]}>
-        <Title className={commonStyles["gradient-text"]}>
+        <Title>
           <span className={styles["heading-span"]}>
             Unlock the Power of Credibility
           </span>
@@ -22,7 +26,17 @@ function BookADemoSection() {
             Elevate Your Reputation with Rateup.
           </span>
         </Title>
-        <BookDemoContactForm />
+        <div className={styles["book-demo-pricing-buttons-container"]}>
+          <BookDemoContactForm
+            buttonProps={{ whiteBackgroundGradientText: true }}
+          />
+          <Button
+            onClick={() => router.push("/pricing")}
+            whiteBackgroundGradientText
+          >
+            Get Pricing
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,9 @@ import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
-export const rateupLogoUrl = `${imagesPath}/logo.svg`;
+export const rateupLogoBlueTextUrl = `${imagesPath}/rateup-logo-blue-text.svg`;
+export const rateupLogoWhiteTextUrl = `${imagesPath}/rateup-logo-white-text.svg`;
+export const rateupLogoUrl = rateupLogoBlueTextUrl;
 
 const headerNavLinks = [
   {
@@ -13,7 +15,7 @@ const headerNavLinks = [
     linkText: "Home",
   },
   {
-    href: "#our-solutions",
+    href: "/#our-solutions",
     linkText: "Solutions",
     hasSublinks: true,
     sublinks: [
@@ -40,7 +42,7 @@ const headerNavLinks = [
     ],
   },
   {
-    href: "#our-features",
+    href: "/#our-features",
     linkText: "Features",
   },
   {
@@ -57,34 +59,63 @@ const headerNavLinks = [
   },
 ];
 
-const footerNavLinks = [
-  ...headerNavLinks,
-  {
-    href: "/terms-of-service",
-    linkText: "Terms of Service",
+export const footerNavLinks = {
+  "our-company": {
+    heading: "Our Company",
+    linksArray: [...headerNavLinks.filter((obj) => obj.linkText !== "Pricing")],
   },
-  {
-    href: "/privacy-policy",
-    linkText: "Privacy Policy",
+  pricing: {
+    heading: "Pricing",
+    linksArray: [
+      {
+        href: "/pricing",
+        linkText: "Pricing",
+      },
+    ],
   },
-  {
-    href: "/shipping-and-delivery",
-    linkText: "Shipping and Delivery",
+  legal: {
+    heading: "Legal",
+    linksArray: [
+      {
+        href: "/privacy-policy",
+        linkText: "Privacy Policy",
+      },
+      {
+        href: "/terms-of-service",
+        linkText: "Terms of Service",
+      },
+    ],
   },
-  {
-    href: "/cancellation-and-refund",
-    linkText: "Cancellation and Refund",
-  },
-  {
-    href: "/contact-us",
-    linkText: "Contact Us",
-  },
-];
+};
 
-export const getNavLinksArray = (className: string, isHeader: boolean) => {
-  const navLinks = isHeader ? headerNavLinks : footerNavLinks;
+// [
+//   ...headerNavLinks,
+//   {
+//     href: "/terms-of-service",
+//     linkText: "Terms of Service",
+//   },
+//   {
+//     href: "/privacy-policy",
+//     linkText: "Privacy Policy",
+//   },
+//   {
+//     href: "/shipping-and-delivery",
+//     linkText: "Shipping and Delivery",
+//   },
+//   {
+//     href: "/cancellation-and-refund",
+//     linkText: "Cancellation and Refund",
+//   },
+//   {
+//     href: "/contact-us",
+//     linkText: "Contact Us",
+//   }
+// ];
+
+export const getNavLinksArray = (className: string) => {
+  const navLinks = headerNavLinks;
   return navLinks.map(({ href, linkText, hasSublinks, sublinks }) =>
-    isHeader && hasSublinks ? (
+    hasSublinks ? (
       <LinkWithSublinksPopover
         key={linkText}
         className={className}

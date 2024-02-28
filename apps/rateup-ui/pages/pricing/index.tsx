@@ -1,7 +1,12 @@
-import HomePage from "../../components/HomePage/index";
+import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import PricingPage from "../../components/HomePage/pages/Pricing";
 
-function PricingPage() {
-  return <HomePage />;
+function Pricing() {
+  return (
+    <LandingPageLayout>
+      <PricingPage />
+    </LandingPageLayout>
+  );
 }
 
-export default PricingPage;
+export default Pricing;

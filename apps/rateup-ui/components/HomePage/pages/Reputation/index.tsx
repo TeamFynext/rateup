@@ -1,7 +1,6 @@
 import HeroSection from "./HeroSection";
 import OurFeatures from "./OurFeatures";
 import WhyChooseRateupSection from "./WhyChooseRateupSection";
-import Banner from "../Home/OursolutionsSection/Banner";
 import Head from "next/head";
 import styles from "./Reputation.module.css";
 
@@ -44,10 +43,6 @@ function Reputation() {
       <HeroSection />
       <OurFeatures />
       <WhyChooseRateupSection />
-      <Banner
-        className={styles["reputation-know-more-banner"]}
-        text={"Ready to Elevate Your Brand? Sign Up with RateUp Today"}
-      />
     </>
   );
 }

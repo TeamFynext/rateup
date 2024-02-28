@@ -40,7 +40,7 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
             <span>{linkText}</span>
           </Link>
           <Button
-            className={styles["sublinks-chevron-btn"]}
+            className={`${styles["sublinks-chevron-btn"]} sublinks-chevron-btn`}
             classNames={{
               section: styles["chevron-down"],
             }}

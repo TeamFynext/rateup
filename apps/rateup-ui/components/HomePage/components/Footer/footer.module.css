@@ -1,68 +1,93 @@
 .footer-root-div {
+  width: 100%;
   padding: 0 10%;
   max-width: 120rem;
   position: relative;
+  color: var(--grey-color);
 }
 
-.curved-background {
-  max-width: 120rem;
-  background-repeat: no-repeat;
-  position: absolute;
-  width: 120%;
-  height: 130%;
-  z-index: -1;
-  bottom: 0;
-  background-size: 100%;
-  border-radius: 50%;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  background-image: linear-gradient(to right, #2564ae, #00397b);
-}
-
-.footer-logo {
-  margin-bottom: 1.875rem;
-  z-index: 100;
-}
-
-.footer-links-container {
-  justify-content: center;
-  padding-bottom: 1.5rem;
-  margin-bottom: 1.875rem;
-  border-bottom: 1px solid white;
-  width: 100%;
+.footer-content-container {
+  padding: 0 3rem;
+  padding-bottom: 4.375rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 3.5rem;
   flex-wrap: wrap;
-  z-index: 100;
 }
 
-.footer-link {
-  color: #e7e7e7;
-  composes: header-footer-link from "../../index/index.module.css";
-  margin-right: 0;
-  font-size: 1rem;
+.footer-nav-links-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4rem;
+}
+
+.footer-nav-section h1 {
+  font-size: 1.125rem;
+}
+
+.footer-nav-section-links-container a {
+  display: block;
+  text-decoration: none;
+  color: var(--grey-color);
+  padding: 0.3125rem 0;
+}
+
+.logo-and-follow-us-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.follow-us-on-para {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+.logo-links-container {
+  display: flex;
+  gap: 1rem;
+}
+
+.logo-links-container img {
+  object-fit: contain;
 }
 
 .copyright-para {
-  margin-bottom: 1.875rem;
-  color: #e7e7e7;
+  text-align: center;
+  padding: 0.625rem;
   font-size: 0.875rem;
   z-index: 100;
 }
 
+@media screen and (max-width: 1024px) {
+  .footer-content-container {
+    padding: 0;
+    padding-bottom: 3rem;
+    flex-direction: column;
+  }
+  .logo-and-follow-us-container {
+    align-items: center;
+  }
+  .footer-nav-links-container {
+    justify-content: center;
+  }
+  .footer-nav-section h1,
+  .footer-nav-section a {
+    text-align: center;
+  }
+}
+
 @media screen and (max-width: 768px) {
-  .curved-background {
-    width: 150%;
+  .footer-nav-links-container {
+    /* flex-direction: column; */
+    gap: 3rem;
   }
 }
 
 @media screen and (max-width: 425px) {
-  .curved-background {
-    width: 200%;
-    height: 120%;
-  }
-}
-
-@media screen and (min-width: 120rem) {
-  .footer-root-div {
-    padding: 0 192px;
+  .footer-nav-links-container {
+    flex-direction: column;
+    gap: 3rem;
   }
 }

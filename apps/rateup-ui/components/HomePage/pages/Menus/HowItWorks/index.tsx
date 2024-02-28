@@ -1,5 +1,5 @@
 import { Stack, Title } from "@mantine/core";
-import commonStyles from "../../../index/index.module.css";
+import commonStyles from "../../../index.module.css";
 import styles from "./HowItWorks.module.css";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
 import { howItWorksTextIllustrations } from "./constants";

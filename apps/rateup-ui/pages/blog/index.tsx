@@ -1,11 +1,16 @@
-import HomePage from "../../components/HomePage/index";
+import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import BlogPage from "../../components/HomePage/pages/Blog";
 import { getAllPosts } from "../../components/HomePage/pages/Blog/lib/api";
 
-function BlogPage({ allPosts }) {
-  return <HomePage allPosts={allPosts} />;
+function Blog({ allPosts }) {
+  return (
+    <LandingPageLayout>
+      <BlogPage allPosts={allPosts} />
+    </LandingPageLayout>
+  );
 }
 
-export default BlogPage;
+export default Blog;
 
 export const getStaticProps = async () => {
   const allPosts = getAllPosts(["title", "date", "slug", "coverImage"]);

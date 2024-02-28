@@ -32,6 +32,7 @@ function MobileNavDrawer() {
   return (
     <Flex className={styles["mobile-nav-drawer-container"]}>
       <Burger
+        className="mobile-nav-burger-icon"
         onClick={() => toggle()}
         aria-label="Toggle navigation"
         size={"lg"}

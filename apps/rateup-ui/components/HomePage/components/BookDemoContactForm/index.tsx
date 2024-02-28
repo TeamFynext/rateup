@@ -50,7 +50,7 @@ function BookDemoContactForm({ buttonProps }: BookDemoContactFormProps) {
           />
         )}
       </Modal>
-      <Button onClick={open} {...buttonProps}>
+      <Button className="book-a-demo-btn" onClick={open} {...buttonProps}>
         Book a Demo
       </Button>
     </Flex>

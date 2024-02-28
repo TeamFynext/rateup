@@ -3,6 +3,8 @@ import OurFeaturesSection from "./OurFeaturesSection";
 import OurSolutionsSection from "./OursolutionsSection";
 import Head from "next/head";
 import TestimonialsSection from "./TestimonialsSection";
+import TrustedBy from "./OursolutionsSection/TrustedBy";
+import { useRouter } from "next/router";
 
 function Home() {
   return (
@@ -37,8 +39,9 @@ function Home() {
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
-      <OurSolutionsSection />
+      <TrustedBy />
       <OurFeaturesSection />
+      <OurSolutionsSection />
       {/* <TestimonialsSection /> */}
     </>
   );

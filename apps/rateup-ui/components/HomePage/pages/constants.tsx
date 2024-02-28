@@ -1,5 +1,5 @@
 import { Text, Title } from "@mantine/core";
-import styles from "../index/index.module.css";
+import styles from "../index.module.css";
 
 export const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 

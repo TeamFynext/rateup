@@ -8,13 +8,13 @@
 }
 
 .heading {
-  composes: illustration-txt-section-heading from "../../../index/index.module.css";
-  composes: heading-with-small-blue-span-and-normal-span from "../../../index/index.module.css";
+  composes: illustration-txt-section-heading from "../../../index.module.css";
+  composes: heading-with-small-blue-span-and-normal-span from "../../../index.module.css";
   text-align: center;
 }
 
 .para {
-  composes: illustration-txt-section-text-para from "../../../index/index.module.css";
+  composes: illustration-txt-section-text-para from "../../../index.module.css";
   text-align: center;
   font-size: 1.625rem;
 }

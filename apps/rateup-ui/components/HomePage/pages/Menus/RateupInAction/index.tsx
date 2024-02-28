@@ -1,5 +1,5 @@
 import { Stack, Text, Title } from "@mantine/core";
-import commonStyles from "../../../index/index.module.css";
+import commonStyles from "../../../index.module.css";
 import styles from "./RateupInAction.module.css";
 import Image from "next/image";
 

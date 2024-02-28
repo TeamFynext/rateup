@@ -22,10 +22,9 @@
 
 .section-heading {
   text-align: center;
-  color: var(--grey-color-2);
-  text-transform: uppercase;
-  font-size: 1.625rem;
-  margin-bottom: 2.5rem;
+  color: var(--grey-color);
+  font-size: 1.75rem;
+  margin-bottom: 1.43em;
 }
 
 /* Common Styles for sections where we have an Illustration and descriptive text side by side*/
@@ -92,6 +91,9 @@
 
 /* Media Queries */
 @media screen and (max-width: 1024px) {
+  .section-heading {
+    font-size: 1.5rem;
+  }
   .illustration-txt-section {
     flex-direction: column;
   }

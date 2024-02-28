@@ -2,26 +2,29 @@ import { Flex, Stack, Text, Title } from "@mantine/core";
 import DeepInsightsSection from "./DeepInsightsSection";
 import ApiAndSdkSection from "./ApiAndSdkSection";
 import styles from "./OurFeaturesSection.module.css";
-import commonStyles from "../../../index/index.module.css";
+import commonStyles from "../../../index.module.css";
 import SurveyFeaturesCarousel from "./SurveyFeaturesCarousel";
 import AdvancedAIModelsTextBanner from "./AdvancedAIModelsTextBanner";
 import TransformingOnlinePresence from "./TransformingOnlinePresence";
-import { lexend600 } from "../../../../../utils/fonts";
+import SparklesIconWithText from "../../../components/SparklesIconWithText";
+import FeaturesCardsList from "./FeaturesCardsList";
 
 function OurFeaturesSection() {
   return (
     <Stack id="our-features" className={styles["our-features-container"]}>
-      <Title
-        className={`${lexend600.className} ${commonStyles["section-heading"]}`}
-      >
-        OUR FEATURES
+      <Title className={`${commonStyles["section-heading"]}`}>
+        <SparklesIconWithText text={"Our Features"} />
+        <span>Enriching The Customer Experience Goes</span>
+        <span>Beyond Driving Business Growth.</span>
       </Title>
-      <AdvancedAIModelsTextBanner />
+
+      <FeaturesCardsList />
+      {/* <AdvancedAIModelsTextBanner />
       <SurveyFeaturesCarousel />
       <DeepInsightsSection />
       <TransformingOnlinePresence />
-      <ApiAndSdkSection />
-      <Flex className={styles["api-and-sdk-support-banner"]}></Flex>
+      <ApiAndSdkSection /> */}
+      {/* <Flex className={styles["api-and-sdk-support-banner"]}></Flex> */}
     </Stack>
   );
 }

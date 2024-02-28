@@ -3,8 +3,10 @@ import Button from "../../../../components/Button";
 import styles from "./Banner.module.css";
 import { imagePath } from "../../../constants";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 function Banner({ text, className = undefined }) {
+  const router = useRouter();
   return (
     <Flex className={`${styles["boost-google-reviews-banner"]} ${className}`}>
       <Flex className={styles["decorative-image-container"]}>
@@ -15,9 +17,12 @@ function Banner({ text, className = undefined }) {
       </Flex>
       <Stack className={styles["content-container"]}>
         <Text className={styles["banner-para"]}>{text}</Text>
-        <Link href={"/reputation"}>
-          <Button whiteBackgroundGradientText>Know More</Button>
-        </Link>
+        <Button
+          onClick={() => router.push("/reputation")}
+          whiteBackgroundGradientText
+        >
+          Know More
+        </Button>
       </Stack>
     </Flex>
   );

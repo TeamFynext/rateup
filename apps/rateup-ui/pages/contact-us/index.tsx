@@ -1,7 +1,12 @@
-import HomePage from "../../components/HomePage/index";
+import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import ContactUsPage from "../../components/HomePage/pages/ContactUs";
 
 function ContactUs() {
-  return <HomePage />;
+  return (
+    <LandingPageLayout>
+      <ContactUsPage />
+    </LandingPageLayout>
+  );
 }
 
 export default ContactUs;

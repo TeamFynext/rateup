@@ -2,7 +2,7 @@ import { Stack, Title } from "@mantine/core";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
 import { features } from "../constants";
 import styles from "./our-features.module.css";
-import commonStyles from "../../../index/index.module.css";
+import commonStyles from "../../../index.module.css";
 import { lexend600 } from "../../../../../utils/fonts";
 
 function OurFeatures() {

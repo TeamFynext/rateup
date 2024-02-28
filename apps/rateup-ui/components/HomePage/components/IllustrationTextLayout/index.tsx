@@ -1,6 +1,6 @@
 import { Flex, Stack } from "@mantine/core";
 import { useIntersection } from "@mantine/hooks";
-import styles from "../../index/index.module.css";
+import styles from "../../index.module.css";
 import { useCallback, useEffect, useRef } from "react";
 
 function IllustrationTextLayout({

@@ -4,8 +4,8 @@
 }
 
 .heading {
-  composes: illustration-txt-section-heading from "../../../index/index.module.css";
-  composes: heading-with-small-blue-span-and-normal-span from "../../../index/index.module.css";
+  composes: illustration-txt-section-heading from "../../../index.module.css";
+  composes: heading-with-small-blue-span-and-normal-span from "../../../index.module.css";
   text-align: center;
 }
 

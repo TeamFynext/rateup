@@ -2,7 +2,7 @@ import React from "react";
 import { Button as MantineButton, Text } from "@mantine/core";
 import MotionButtonGesture from "../MotionButtonGesture";
 import styles from "./Button.module.css";
-import commonStyles from "../../index/index.module.css";
+import commonStyles from "../../index.module.css";
 
 type ButtonProps = {
   whiteBackgroundGradientText?: boolean;

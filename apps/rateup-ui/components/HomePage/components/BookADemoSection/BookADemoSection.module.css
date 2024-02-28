@@ -5,23 +5,49 @@
 }
 
 .book-a-demo-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 3rem;
   box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.1);
   border-radius: 1.5rem;
-  background-color: white;
-  margin-bottom: 10rem;
-  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/random-curves-pattern.svg");
+  margin-bottom: 6.25rem;
+  background-color: var(--tertiary-color);
+  background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1)
+    ),
+    url("https://djd7kjh9uwow0.cloudfront.net/images/curves-pattern.svg"),
+    radial-gradient(ellipse 25% 60% at left, #2272cf, rgba(0, 0, 0, 0)),
+    radial-gradient(ellipse 25% 60% at right, #2272cf, var(--tertiary-color));
   background-size: cover;
-  background-blend-mode: hard-light;
 }
 
 .book-a-demo-container h1 {
   text-align: center;
   margin-bottom: 1.5rem;
   font-size: 2rem;
+  color: white;
+  font-family: var(--font-lexend);
+  font-weight: 300;
+}
+
+.book-a-demo-container :global(.book-a-demo-btn) {
+  background-color: transparent;
+  border: 1px solid white;
+}
+
+.book-a-demo-container :global(.book-a-demo-btn .mantine-Button-label span) {
+  color: white;
+}
+
+.book-demo-pricing-buttons-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .heading-span {

@@ -1,6 +1,6 @@
 import { Text, Title } from "@mantine/core";
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
-import styles from "../../../index/index.module.css";
+import styles from "../../../index.module.css";
 import Image from "next/image";
 import { imagesPath } from "../../../../../utils/constants";
 

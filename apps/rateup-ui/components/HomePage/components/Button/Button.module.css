@@ -4,6 +4,7 @@
   font-weight: 600;
   font-size: 1.125rem;
   height: auto;
+  line-height: initial;
 }
 
 .white-background-gradient-text-btn {
@@ -16,7 +17,7 @@
 }
 
 .gradient-background-white-text-btn {
-  composes: gradient-image-1 from "../../index/index.module.css";
+  composes: gradient-image-1 from "../../index.module.css";
   color: white;
 }
 

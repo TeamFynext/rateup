@@ -1,5 +1,5 @@
 import { Text, Title } from "@mantine/core";
-import styles from "../../../../index/index.module.css";
+import styles from "../../../../index.module.css";
 import IllustrationTextLayout from "../../../../components/IllustrationTextLayout";
 
 function DeepInsightsSection() {

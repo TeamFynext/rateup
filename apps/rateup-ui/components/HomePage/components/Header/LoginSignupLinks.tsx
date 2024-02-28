@@ -9,12 +9,16 @@ function LoginSignupLinks() {
   return (
     <Group wrap="nowrap" className={styles["login-signup-links-container"]}>
       {session ? (
-        <Link href="/dashboard" className={`${styles["signup-link"]}`}>
+        <Link
+          href="/dashboard"
+          className={`${styles["go-to-dashboard-link"]} go-to-dashboard-link`}
+        >
           Go To DashBoard
         </Link>
       ) : (
         <>
-          <Link href="/login" className={`${styles["login-link"]}`}>
+          <Link href="/login" className={`${styles["login-link"]} login-link`}>
+            Login
             <Text
               inherit
               span
@@ -25,7 +29,10 @@ function LoginSignupLinks() {
               </Text>
             </Text>
           </Link>
-          <Link href="/signup" className={`${styles["signup-link"]}`}>
+          <Link
+            href="/signup"
+            className={`${styles["signup-link"]} signup-link`}
+          >
             Sign Up
           </Link>
         </>

@@ -5,13 +5,18 @@
     0 4px 8px 0 rgba(0, 0, 0, 0.1),
     0 6px 20px 0 rgba(0, 0, 0, 0.1);
   position: fixed;
-  top: 0;
+  top: -109px;
   z-index: 400;
   background-color: white;
   align-items: center;
-  padding: 0 10%;
+  padding: 1rem 10%;
   width: 100%;
   max-width: 120rem;
+  transition: top 0.4s linear;
+}
+
+.header-container.pinned {
+  top: 0;
 }
 
 .header-links-container {
@@ -24,7 +29,7 @@
 }
 
 .header-link {
-  composes: header-footer-link from "../../index/index.module.css";
+  composes: header-footer-link from "../../index.module.css";
   color: var(--grey-color-2);
   margin-right: 0;
 }
@@ -38,34 +43,46 @@
 }
 
 .login-signup-link {
-  composes: header-footer-link from "../../index/index.module.css";
+  composes: header-footer-link from "../../index.module.css";
   padding: 0.625rem 1.5rem;
-  composes: gradient-image-1 from "../../index/index.module.css";
+  composes: gradient-image-1 from "../../index.module.css";
   border-radius: 2rem;
   display: block;
+  font-family: var(--font-lexend);
+  font-weight: 400;
 }
 
 .login-link {
   composes: login-signup-link;
-  padding: 2px;
+  position: relative;
   margin-right: 0;
 }
 
 .login-link-text-span-container {
-  display: block;
+  position: absolute;
   background-color: white;
   border-radius: 2rem;
-  padding: 0.4375rem 1.5rem;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .login-link-text-span {
   display: block;
-  composes: gradient-text from "../../index/index.module.css";
+  composes: gradient-text from "../../index.module.css";
 }
 
 .signup-link {
   composes: login-signup-link;
   color: white;
+}
+
+.go-to-dashboard-link {
+  composes: signup-link;
 }
 
 .mobile-nav-burger-btn-container {
@@ -87,6 +104,58 @@
 
 .item:nth-last-child(1) {
   border: none;
+}
+
+/* Blue header styles which is used in homepage that is "/" path page */
+.blue-background {
+  margin-bottom: 4.375rem;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.blue-background :global(.go-to-dashboard-link) {
+  font-weight: 400;
+  text-decoration: none;
+  background-color: white;
+  color: var(--tertiary-color);
+  padding: 0.625rem 1rem;
+  border-radius: 2rem;
+  background-image: none;
+}
+
+.blue-background :global(.mobile-nav-burger-icon .mantine-Burger-burger),
+.blue-background :global(.mobile-nav-burger-icon .mantine-Burger-burger::after),
+.blue-background
+  :global(.mobile-nav-burger-icon .mantine-Burger-burger::before) {
+  background-color: white;
+}
+
+.blue-background :global(.header-link) {
+  color: white;
+  font-weight: 300;
+}
+
+.blue-background :global(.login-link) .login-link-text-span-container {
+  font-weight: 400;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+}
+
+.blue-background :global(.signup-link) {
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid white;
+}
+
+.blue-background :global(.sublinks-chevron-btn) {
+  color: white;
+}
+
+.blue-background :global(.sublinks-chevron-btn:hover) {
+  color: white;
 }
 
 /* media queries */
@@ -124,6 +193,6 @@
 
 @media screen and (min-width: 120rem) {
   .header-container {
-    padding: 0 192px;
+    padding: 1rem 192px;
   }
 }

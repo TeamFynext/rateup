@@ -98,6 +98,7 @@ const AuthForm = ({
               className={styles["rateup-logo-img"]}
               src={rateupLogoUrl}
               alt="RateUp Logo"
+              w={85}
             />
           </Link>
         </Flex>

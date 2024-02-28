@@ -1,7 +1,12 @@
-import HomePage from "../../components/HomePage/index";
+import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import PrivacyPolicyPage from "../../components/HomePage/pages/PrivacyPolicy";
 
 function PrivacyPolicy() {
-  return <HomePage />;
+  return (
+    <LandingPageLayout>
+      <PrivacyPolicyPage />
+    </LandingPageLayout>
+  );
 }
 
 export default PrivacyPolicy;
