@@ -361,7 +361,7 @@ const Responses = ({
                       onClick={handleExportContacts}
                       title={"Import Contacts"}
                       radius={"lg"}
-                      rightIcon={<IconDatabaseImport stroke={1.5} />}
+                      leftIcon={<IconDatabaseImport stroke={1.5} />}
                     />
                   )}
                 </Stack>

@@ -10,12 +10,17 @@ import {
   Avatar,
   Grid,
   Text,
+  Badge,
 } from "@mantine/core";
 import {
   RateupButtonBlue,
+  RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
 import {
+  useDeleteAuthToken,
+  useGetAuthorizationUrl,
+  useGetGoogleAccessToken,
   useUpdateOrgDetailsMutation,
   useUpdateOrgLogoMutation,
 } from "../../../backend/org/org.query";
@@ -33,6 +38,8 @@ import PhoneInputWithCountrySelect, {
 } from "react-phone-number-input";
 import ETESettings from "./EteSettings";
 import { SAVE_HOTKEY } from "../../../utils/constants";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import useLocalStorage from "../../../hooks/localStorage";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -50,6 +57,17 @@ const OrgSettings = () => {
   const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
   const { user } = useUser();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
+  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
+    useDisclosure(false);
+  const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
+  const deleteAuthTokenMutation = useDeleteAuthToken();
+  const { data: authUrl } = useGetAuthorizationUrl();
+
+  const [callbackRoute, setCallBackRoute] = useLocalStorage(
+    "google-callback-route",
+    "/dashboard/settings",
+  );
+
   const orgForm = useForm({
     initialValues: {
       name: "",
@@ -136,6 +154,23 @@ const OrgSettings = () => {
   };
   const handleCropImageSave = (cropedImage) => {
     setFile(cropedImage);
+  };
+
+  const handleSignOutGoogleSync = () => {
+    setIsLoading(true);
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Signing out from google sheet",
+      message: `Hold on, Signing out from google sheet..`,
+      autoClose: false,
+      withCloseButton: false,
+    });
+    deleteAuthTokenMutation.mutate(null, {
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    });
   };
 
   return (
@@ -263,6 +298,51 @@ const OrgSettings = () => {
           </form>
           <Divider />
           <ETESettings />
+          {isFetched ? (
+            <>
+              <Divider />
+              <Stack pb={"md"}>
+                <Group>
+                  <Text size="lg" fw={500}>
+                    Sync with Google Sheet
+                  </Text>
+                  <Badge
+                    color={googleAuthAccessToken.isExist ? "green" : "red"}
+                    fw={"bold"}
+                    variant="light"
+                  >
+                    {googleAuthAccessToken.isExist ? "Active" : "Inactive"}
+                  </Badge>
+                </Group>
+                <Stack w={270}>
+                  {!googleAuthAccessToken.isExist ? (
+                    <RateupButtonPrimary
+                      title="Sync Account"
+                      onClick={() => {
+                        setCallBackRoute(
+                          `dashboard/settings?activeTab=organization`,
+                        );
+                        window.open(authUrl);
+                      }}
+                    />
+                  ) : (
+                    <RateupButtonPrimary
+                      title="Sign out of google synced account"
+                      onClick={alertModalOpen}
+                    />
+                  )}
+                  <ConfirmationModal
+                    opened={alertModalOpened}
+                    onClose={alertModalClose}
+                    headerTitle="Sign out"
+                    headerLabel="Are you sure you want to sign out from the synced account?"
+                    confirmLabel="Yes"
+                    onConfirm={handleSignOutGoogleSync}
+                  />
+                </Stack>
+              </Stack>
+            </>
+          ) : null}
         </Flex>
       </Flex>
     </Flex>

@@ -60,7 +60,7 @@ export async function getAuthorizationUrl() {
 }
 
 export async function createAuthToken(data) {
-  const res = await axiosClient.post(`org/create-auth-token`, data);
+  const res = await axiosClient.post(`org/auth-token`, data);
   return res.data;
 }
 
@@ -76,4 +76,9 @@ type GoogleAuthAccess = {
 export async function getGoogleAccessToken() {
   const res = await axiosClient.get(`org/google-auth-access`);
   return res.data as GoogleAuthAccess;
+}
+
+export async function deleteAuthToken() {
+  const res = await axiosClient.delete(`org/auth-token`);
+  return res.data;
 }

@@ -13,6 +13,7 @@ import {
   getAuthorizationUrl,
   createAuthToken,
   getGoogleAccessToken,
+  deleteAuthToken,
 } from "./org.api";
 
 export const useTeamsMembersOfOrg = () => {
@@ -155,5 +156,37 @@ export const useGetGoogleAccessToken = () => {
   return useQuery({
     queryKey: ["googleAuthAccessToken"],
     queryFn: getGoogleAccessToken,
+  });
+};
+
+export const useDeleteAuthToken = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAuthToken,
+    onSuccess: (data) => {
+      notifications.update({
+        id: "load-data",
+        loading: false,
+        color: "teal",
+        title: "Success",
+        message: "Signed out from synced account successfully",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: ["googleAuthAccessToken"] });
+    },
+    onError: (error: any) => {
+      notifications.update({
+        id: "load-data",
+        loading: false,
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
   });
 };
