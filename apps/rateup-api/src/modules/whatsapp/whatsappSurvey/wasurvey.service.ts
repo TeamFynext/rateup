@@ -3,7 +3,6 @@ import {
   CampaignParticipantStatus,
   LogicAction,
   QuestionType,
-  TestimonialFeatureQuestions,
 } from "../../../types/enums";
 import {
   WaMessageBody,
@@ -419,7 +418,7 @@ export async function handleTestimonialQuestion(
   const to = session.phone;
   const response = session?.responses?.find((s) => s.questionId == question.id)
     ?.response?.[QuestionType.Testimonial];
-  if (features?.hasJobTitle && !response.jobTitle) {
+  if (features?.jobTitle && !response.jobTitle) {
     const description = "\nPlease share your job title";
     const nextSubQuestion = createTextMessage(to, null, description);
     await sendMessage(session.orgId, nextSubQuestion);
@@ -429,7 +428,7 @@ export async function handleTestimonialQuestion(
     const nextSubQuestion = createTextMessage(to, null, description);
     await sendMessage(session.orgId, nextSubQuestion);
   }
-  if (features?.hasRating && !response.rating) {
+  if (features?.rating && !response.rating) {
     const description = "\nPlease Rate us";
     const sections: WaSectionsType = [
       {
@@ -447,7 +446,7 @@ export async function handleTestimonialQuestion(
     );
     await sendMessage(session.orgId, nextSubQuestion);
   }
-  if (features?.hasPhoto && !response.photo) {
+  if (features?.photo && !response.photo) {
     const description = "\nPlease share your photo";
     const nextSubQuestion = createTextMessage(to, null, description);
     await sendMessage(session.orgId, nextSubQuestion);
@@ -488,20 +487,20 @@ export async function handleTestimonialReply(
   else if (!response.name) {
     //assume its name response
     response.name = message;
-  } else if (features?.hasJobTitle && !response.jobTitle) {
+  } else if (features?.jobTitle && !response.jobTitle) {
     //assume its job title
     response.jobTitle = message;
   } else if (!response.testimonial) {
     //assume its testimonial
     response.testimonial = message;
-  } else if (features?.hasRating && !response.rating) {
+  } else if (features?.rating && !response.rating) {
     //assume its rating
     const rating = Number.parseInt(
       reply.entry[0].changes[0].value.messages[0].interactive.list_reply.id,
     );
     if (rating < 1 || rating > 5) isValid = false;
     else response.rating = rating;
-  } else if (features?.hasPhoto && !response.photo) {
+  } else if (features?.photo && !response.photo) {
     //assume its photo
     const message = getMessageObject(reply);
     const uniqueFilename = await downloadAndUpload(session, message.image.id);
