@@ -56,7 +56,7 @@ declare global {
     required: boolean;
     type: QuestionType;
     choices?: Zod.RecordType<string, Array<Choice>>;
-    features?: Zod.RecordType<string, Zod.RecordType<string, boolean>>;
+    features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
     sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
     label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;

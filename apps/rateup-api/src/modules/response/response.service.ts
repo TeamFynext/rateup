@@ -304,11 +304,29 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     languageWiseResponse[lang] = teamAndResponse;
   });
   for (const lang of languages) {
-    const questionTitles = questions.map(
-      (q: Question, index: number) =>
+    let questionTitles = [];
+    questions.map((q: Question, index: number) => {
+      const qstnTitle =
         index + 1 + "_" + q?.title[lang].trim() ||
-        index + 1 + "_" + q?.description[lang].trim(),
-    );
+        index + 1 + "_" + q?.description[lang].trim();
+      if (
+        [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
+          q.type,
+        )
+      )
+        Object.entries(q.features?.[lang]).map(([key, value]) =>
+          value?.isEnabled
+            ? questionTitles.push((qstnTitle + ":" + key).trim())
+            : null,
+        );
+      else if (q.type === QuestionType.Testimonial) {
+        questionTitles.push((qstnTitle + ":name").trim());
+        questionTitles.push((qstnTitle + ":testimonial").trim());
+        Object.entries(q.features?.[lang]).map(([key, value]) =>
+          value ? questionTitles.push((qstnTitle + ":" + key).trim()) : null,
+        );
+      } else questionTitles.push(qstnTitle);
+    });
     let sheet = await doc.sheetsByTitle[lang];
     if (!sheet) {
       sheet = await doc.addSheet({
@@ -337,10 +355,31 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               return q;
             }
           });
-          resObj[QIndex + "_" + qstn.title[lang].trim()] = getFormattedResponse(
-            res.response[res.type],
-            res.type,
-          );
+          let qstnTitle = QIndex + "_" + qstn.title[lang].trim();
+          if (
+            [
+              QuestionType.Contact,
+              QuestionType.Email,
+              QuestionType.Phone,
+            ].includes(qstn.type)
+          )
+            Object.entries(res.response[res.type]).map(
+              ([key, value]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] = value),
+            );
+          else if (qstn.type === QuestionType.Testimonial)
+            Object.entries(res.response[res.type]).map(
+              ([key, value]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] =
+                  key == "photo"
+                    ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                    : value),
+            );
+          else
+            resObj[qstnTitle] = getFormattedResponse(
+              res.response[res.type],
+              res.type,
+            );
         });
         responseForSheet.push(resObj);
       });
@@ -430,8 +469,26 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
           return q;
         }
       });
-      resObj[QIndex + "_" + qstn.title[response.language].trim()] =
-        getFormattedResponse(res.response[res.type], res.type);
+      let qstnTitle = QIndex + "_" + qstn.title[response.language].trim();
+      if (
+        [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
+          qstn.type,
+        )
+      )
+        Object.entries(res.response[res.type]).map(
+          ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+        );
+      else if (qstn.type === QuestionType.Testimonial)
+        Object.entries(res.response[res.type]).map(
+          ([key, value]) =>
+            (resObj[(qstnTitle + ":" + key).trim()] =
+              key == "photo"
+                ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                : value),
+        );
+      else
+        resObj[QIndex + "_" + qstn.title[response.language].trim()] =
+          getFormattedResponse(res.response[res.type], res.type);
     });
     sheet.addRow(resObj);
   }
@@ -441,17 +498,6 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
 export function getFormattedResponse(response, type) {
   let formattedResponse = "";
   switch (type) {
-    case QuestionType.Contact:
-    case QuestionType.Phone:
-    case QuestionType.Email:
-    case QuestionType.Testimonial:
-      formattedResponse =
-        typeof response === "string"
-          ? response
-          : Object.entries(response)
-              .map(([key, value]) => `${key}: ${String(value)}`)
-              .join(", ");
-      break;
     case QuestionType.CustomNPS:
     case QuestionType.MCQ:
     case QuestionType.DDSS:
@@ -470,10 +516,7 @@ export function getFormattedResponse(response, type) {
       formattedResponse = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${response}`;
       break;
     case QuestionType.PCQ:
-      formattedResponse =
-        response.value +
-        ":" +
-        `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${response.image}`;
+      formattedResponse = response.value.value;
       break;
     case QuestionType.TnC:
       formattedResponse = response == true ? "accepted" : "Not accepted";

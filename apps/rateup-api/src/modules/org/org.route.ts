@@ -3,6 +3,7 @@ import {
   checkGoogleAccessHandler,
   createGoogleAuthToken,
   createOrgHandler,
+  deleteGoogleAuthTokenHandler,
   getAllMembersWithTeamsHandler,
   getAllOrgsHandler,
   getAllTeamsAndMembers,
@@ -106,7 +107,7 @@ export async function orgRoutes(server: FastifyInstance) {
   );
 
   server.post(
-    "/create-auth-token",
+    "/auth-token",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
@@ -119,5 +120,13 @@ export async function orgRoutes(server: FastifyInstance) {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     checkGoogleAccessHandler,
+  );
+
+  server.delete(
+    "/auth-token",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    deleteGoogleAuthTokenHandler,
   );
 }

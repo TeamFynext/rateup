@@ -478,3 +478,27 @@ export async function getAccessToken(orgId) {
   });
   return res;
 }
+
+export async function deleteGoogleAuthToken(orgId) {
+  let res = await prisma.googleAccessToken.delete({
+    where: {
+      orgId,
+    },
+  });
+  Promise.all([
+    await prisma.org.update({
+      where: {
+        id: orgId,
+      },
+      data: {
+        driveFolderId: null,
+      },
+    }),
+    await prisma.survey.updateMany({
+      data: {
+        spreadSheetId: null,
+      },
+    }),
+  ]);
+  return res;
+}
