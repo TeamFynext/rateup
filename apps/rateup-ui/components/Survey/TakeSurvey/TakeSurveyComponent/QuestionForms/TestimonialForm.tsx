@@ -122,7 +122,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           }}
         />
       </FormPaperLayout>
-      {features?.[selectedLanguage]?.hasJobTitle && (
+      {features?.[selectedLanguage]?.jobTitle && (
         <FormPaperLayout>
           <TextInput
             placeholder="Enter your job title"
@@ -148,7 +148,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           }}
         />
       </FormPaperLayout>
-      {features?.[selectedLanguage]?.hasRating && (
+      {features?.[selectedLanguage]?.rating && (
         <>
           <Text>Rate Us Now</Text>
           <Rating
@@ -159,7 +159,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           />
         </>
       )}
-      {features?.[selectedLanguage]?.hasPhoto && (
+      {features?.[selectedLanguage]?.photo && (
         <>
           <Stack>
             <Text>Upload your Image</Text>

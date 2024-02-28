@@ -119,9 +119,9 @@ export function getFeaturesBasedOnQuestionType(
     case QuestionType.Testimonial:
       return {
         [selectedLanguage]: {
-          hasJobTitle: true,
-          hasPhoto: true,
-          hasRating: true,
+          jobTitle: true,
+          photo: true,
+          rating: true,
         },
       };
     case QuestionType.Contact:

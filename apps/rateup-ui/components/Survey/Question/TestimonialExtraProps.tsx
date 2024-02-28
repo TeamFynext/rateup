@@ -5,38 +5,38 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 const TestimonialExtraProps = ({ qId, form }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
-    hasRating: false,
-    hasJobTitle: false,
-    hasPhoto: false,
+    rating: false,
+    jobTitle: false,
+    photo: false,
   };
-  const [hasRating, setHasRating] = useState(features?.hasRating);
-  const [hasJobTitle, setHasJobTitle] = useState(features?.hasJobTitle);
-  const [hasPhoto, setHasPhoto] = useState(features?.hasPhoto);
+  const [rating, setHasRating] = useState(features?.rating);
+  const [jobTitle, setHasJobTitle] = useState(features?.jobTitle);
+  const [photo, setHasPhoto] = useState(features?.photo);
 
   useEffect(() => {
-    setHasRating(features?.hasRating);
-    setHasJobTitle(features?.hasJobTitle);
-    setHasPhoto(features?.hasPhoto);
+    setHasRating(features?.rating);
+    setHasJobTitle(features?.jobTitle);
+    setHasPhoto(features?.photo);
   }, [features]);
 
   useEffect(() => {
     form.setFieldValue("features", {
       ...form.values.features,
-      [selectedLanguage]: { ...features, hasRating: hasRating },
+      [selectedLanguage]: { ...features, rating: rating },
     });
-  }, [hasRating]);
+  }, [rating]);
   useEffect(() => {
     form.setFieldValue("features", {
       ...form.values.features,
-      [selectedLanguage]: { ...features, hasJobTitle: hasJobTitle },
+      [selectedLanguage]: { ...features, jobTitle: jobTitle },
     });
-  }, [hasJobTitle]);
+  }, [jobTitle]);
   useEffect(() => {
     form.setFieldValue("features", {
       ...form.values.features,
-      [selectedLanguage]: { ...features, hasPhoto: hasPhoto },
+      [selectedLanguage]: { ...features, photo: photo },
     });
-  }, [hasPhoto]);
+  }, [photo]);
 
   return (
     <>
@@ -44,24 +44,24 @@ const TestimonialExtraProps = ({ qId, form }) => {
         <Paper shadow="xl" p={"lg"}>
           <Switch
             label={"Enable Rating Qn"}
-            c={hasRating ? "var(--tertiary-color)" : "dimmed"}
-            checked={hasRating}
+            c={rating ? "var(--tertiary-color)" : "dimmed"}
+            checked={rating}
             onChange={(e) => setHasRating(e.currentTarget.checked)}
           />
         </Paper>
         <Paper shadow="xl" p={"lg"} c={"dimmed"}>
           <Switch
             label={"Add job title"}
-            c={hasJobTitle ? "var(--tertiary-color)" : "dimmed"}
-            checked={hasJobTitle}
+            c={jobTitle ? "var(--tertiary-color)" : "dimmed"}
+            checked={jobTitle}
             onChange={(e) => setHasJobTitle(e.currentTarget.checked)}
           />
         </Paper>
         <Paper shadow="xl" p={"lg"}>
           <Switch
             label={"Capture photo"}
-            c={hasPhoto ? "var(--tertiary-color)" : "dimmed"}
-            checked={hasPhoto}
+            c={photo ? "var(--tertiary-color)" : "dimmed"}
+            checked={photo}
             onChange={(e) => setHasPhoto(e.currentTarget.checked)}
           />
         </Paper>

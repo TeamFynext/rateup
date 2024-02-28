@@ -111,7 +111,7 @@ export function WaQuestionPreview({
             footer="Please share your name"
           />
           <WaSentMessage body="John" />
-          {features?.hasJobTitle && (
+          {features?.jobTitle && (
             <>
               <WaResponseMessage body={"Please share your job title"} />
               <WaSentMessage body="Marketing specialist" />
@@ -119,12 +119,12 @@ export function WaQuestionPreview({
           )}
           <WaResponseMessage body={"Please share details of your experience"} />
           <WaSentMessage body="Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!" />
-          {features?.hasRating && (
+          {features?.rating && (
             <>
               <WaListMessage body="Rate us" openList={openList} />
             </>
           )}
-          {features?.hasPhoto && (
+          {features?.photo && (
             <>
               <WaResponseMessage body={"Please share your photo"} />
             </>
