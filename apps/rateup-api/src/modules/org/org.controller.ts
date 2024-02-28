@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
+  deleteGoogleAuthToken,
   getAccessToken,
   getAllMembersWithTeams,
   getAllOrgs,
@@ -227,6 +228,20 @@ export async function createGoogleAuthToken(
     const { tokens } = await oauth2Client.getToken(code);
     //store in database
     let res = await saveAuthTokens(tokens, request.user.orgId);
+    reply.code(201).send({ message: "success" });
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send();
+  }
+}
+
+export async function deleteGoogleAuthTokenHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user.orgId;
+    let res = await deleteGoogleAuthToken(orgId);
     reply.code(201).send({ message: "success" });
   } catch (error) {
     console.error(error);
