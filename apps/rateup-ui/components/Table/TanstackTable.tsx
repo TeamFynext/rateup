@@ -54,7 +54,9 @@ function TanstackTable({
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
 }>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "createdAt", desc: true },
+  ]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -79,6 +81,11 @@ function TanstackTable({
       columnVisibility,
       sorting,
       columnFilters,
+    },
+    initialState: {
+      pagination: {
+        pageSize: Number(PAGE_SIZE[0]),
+      },
     },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -295,7 +302,7 @@ function TanstackTable({
             styles={{
               input: {
                 height: 10,
-                width: 70,
+                width: 80,
               },
             }}
           />
