@@ -61,15 +61,13 @@ export function FlowImageDetailedView() {
       ...updatedData,
     });
   }
-
   function handleSaveElement() {
     const { hasErrors } = form.validate();
-    if (hasErrors) return showErrorToast("Upload Image to Save");
+    if (hasErrors) return showErrorToast("Unable to Save Image");
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
     const index = flowForm.children.findIndex(
       (fe) => fe === selectedFormElement,
     );
-
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
       formEl.children[index] = form.values as any;
@@ -141,8 +139,8 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
 
   useEffect(() => {
     if (!file) return;
-    if (file.size > 1024 * 1024) {
-      showErrorToast("Size must be under 1mb");
+    if (file.size > 300 * 1024) {
+      showErrorToast("Size must be under 300kb");
       return;
     }
 
@@ -162,7 +160,12 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
       {src && (
         <>
           <Box h={200}>
-            <Image src={`data:image/png;base64,${src}`} h={height} w={width} />
+            <Image
+              src={`data:image/jpg;base64,${src}`}
+              h={height}
+              w={width}
+              alt="flow Image"
+            />
           </Box>
           <NumberInput
             label="Width"

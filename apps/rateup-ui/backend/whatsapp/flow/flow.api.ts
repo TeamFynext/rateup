@@ -1,3 +1,4 @@
+import { notifications } from "@mantine/notifications";
 import { WHATSAPP_URL } from "..";
 import { WaFlowJson, WaFlowWa } from "../../../types/global";
 import { axiosClient } from "../../apiClient";
@@ -54,6 +55,14 @@ export async function updateFlow(
   data: Partial<Omit<DbFlow, "id">>,
 ) {
   try {
+    notifications.show({
+      id: "flow-update",
+      loading: true,
+      title: "Updating Flow",
+      message: `Hold on, flow is getting Updated...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
     return (await axiosClient.put(`${BASE}/${dbFlowId}`, data))?.data;
   } catch (error) {
     return error?.response?.data;

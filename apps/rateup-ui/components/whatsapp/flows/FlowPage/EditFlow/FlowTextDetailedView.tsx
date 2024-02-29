@@ -21,7 +21,6 @@ import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowSh
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { showErrorToast } from "../../../../../utils/notifications";
-import { notifications } from "@mantine/notifications";
 
 export function FlowTextDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -59,14 +58,6 @@ export function FlowTextDetailedView() {
       const index = flowForm.children.findIndex(
         (fe) => fe === selectedFormElement,
       );
-      notifications.show({
-        id: "flow-update",
-        loading: true,
-        title: "Updating Flow",
-        message: `Hold on, flow is getting Updated...`,
-        autoClose: false,
-        withCloseButton: false,
-      });
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
         formEl.children[index].text = form.values.text;

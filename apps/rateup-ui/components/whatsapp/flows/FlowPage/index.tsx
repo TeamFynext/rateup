@@ -47,7 +47,6 @@ function FlowPage() {
     useState<string>(undefined); // if no question is selected, then show question types list in the right side
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang, setSelectedLang] = useState("en");
-
   const [tab, setTab] = useState(FlowTabEnum.Edit);
 
   // initial data
@@ -69,18 +68,16 @@ function FlowPage() {
 
   // autoSave
   useEffect(() => {
-    if (!flowEditable) return;
-    if (flowJson) {
-      if (flow.status === WaFlowStatus.PUBLISHED) {
-        showErrorToast("You can't edit a published flow.");
-        return;
-      }
-      const timer = setTimeout(() => {
-        updateFlowMutation.mutate({ dbFlowId, data: { json: flowJson, map } });
-      }, 500);
-      return () => clearTimeout(timer);
+    if (!flowEditable || !flowJson) return;
+    if (flow.status === WaFlowStatus.PUBLISHED) {
+      showErrorToast("You can't edit a published flow.");
+      return;
     }
-  }, [flowJson]);
+    const timer = setTimeout(() => {
+      updateFlowMutation.mutate({ dbFlowId, data: { json: flowJson, map } });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [flowJson, flowEditable, dbFlowId, flow?.status, map]); // Add dependencies explicitly
 
   // update flowJson when there is a change in questions
   useEffect(() => {

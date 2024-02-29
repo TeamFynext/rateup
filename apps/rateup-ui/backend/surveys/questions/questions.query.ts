@@ -6,7 +6,6 @@ import {
   replaceQuestions,
   updateQuestion,
 } from "./questions.api";
-import { notifications } from "@mantine/notifications";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
 export const useQuestions = (surveyId: string) => {
@@ -30,18 +29,12 @@ export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
   const createMutation = useMutation({
     mutationFn: (data: any) => createQuestion(surveyId, data),
     onSuccess: () => {
-      notifications.show({
-        message: "Question created",
-      });
+      showSuccessToast("Question created");
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
     onError: (e) => {
-      console.error(e);
-      notifications.show({
-        message: "An error has occurred",
-        color: "red",
-      });
+      showErrorToast("An error has occurred");
     },
   });
   return createMutation;
@@ -55,22 +48,12 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
-      notifications.clean();
-      notifications.show({
-        id: "qns",
-        message: "Saved Changes..",
-        autoClose: 1000,
-        // icon: <IconCheck />,
-      });
+      showSuccessToast("Saved Changes..", "qns");
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
     onError: (err) => {
-      console.error(err);
-      notifications.show({
-        message: "Error updating question",
-        color: "red",
-      });
+      showErrorToast("Error updating question");
     },
   });
 

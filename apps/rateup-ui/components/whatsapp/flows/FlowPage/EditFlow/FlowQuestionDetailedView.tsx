@@ -275,6 +275,7 @@ function ElementEditor({
               maxRows={3}
               placeholder="Enter question title here"
               maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
+              {...form.getInputProps(`title.${selectedLanguage}`)}
             />
             <TextareaWithLengthTracker
               variant="unstyled"
