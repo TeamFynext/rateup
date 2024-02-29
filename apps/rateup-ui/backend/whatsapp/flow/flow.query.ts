@@ -16,7 +16,6 @@ import {
   cloneFlows,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
-import { notifications } from "@mantine/notifications";
 
 export const useWaFlowsFromDb = () =>
   useQuery({
@@ -122,7 +121,6 @@ export const useUpdateFlowMutation = () => {
       data: Partial<Omit<DbFlow, "dbFlowId">>;
     }) => updateFlow(data.dbFlowId, data.data),
     onSuccess: () => {
-      notifications.clean();
       showSuccessToast("Saved Changes..", "flow-update", "", true);
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: ["surveys"] });
