@@ -136,6 +136,10 @@
   font-weight: 300;
 }
 
+.blue-background :global(.header-link:hover) {
+  color: var(--mantine-color-gray-2);
+}
+
 .blue-background :global(.login-link) .login-link-text-span-container {
   font-weight: 400;
   top: 0px;

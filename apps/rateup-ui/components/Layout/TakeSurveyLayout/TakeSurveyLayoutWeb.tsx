@@ -159,8 +159,8 @@ export const TakeSurveyLayoutWeb = ({
                   ? surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.mobile
                   : surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.desktop
                 : isMobile
-                  ? surveyThemeData?.surveyTheme?.bg?.unsplashImage?.mobile
-                  : surveyThemeData?.surveyTheme?.bg?.unsplashImage?.desktop
+                ? surveyThemeData?.surveyTheme?.bg?.unsplashImage?.mobile
+                : surveyThemeData?.surveyTheme?.bg?.unsplashImage?.desktop
             }
             url={
               isMobile && surveyThemeData?.welcomeTheme?.bg?.mobilebg
@@ -193,18 +193,18 @@ export const TakeSurveyLayoutWeb = ({
                       )
                     : ""
                   : surveyThemeData?.surveyTheme?.bg?.desktopbg ||
-                      surveyThemeData?.surveyTheme?.bg?.mobilebg
-                    ? getImageUrl(
-                        isMobile && surveyThemeData?.surveyTheme?.bg?.mobilebg
-                          ? surveyThemeData?.surveyTheme?.bg?.mobilebg
-                          : surveyThemeData?.surveyTheme?.bg?.desktopbg,
-                        isMobile
-                          ? surveyThemeData?.surveyTheme?.bg?.unsplashImage
-                              ?.mobile
-                          : surveyThemeData?.surveyTheme?.bg?.unsplashImage
-                              ?.desktop,
-                      )
-                    : ""
+                    surveyThemeData?.surveyTheme?.bg?.mobilebg
+                  ? getImageUrl(
+                      isMobile && surveyThemeData?.surveyTheme?.bg?.mobilebg
+                        ? surveyThemeData?.surveyTheme?.bg?.mobilebg
+                        : surveyThemeData?.surveyTheme?.bg?.desktopbg,
+                      isMobile
+                        ? surveyThemeData?.surveyTheme?.bg?.unsplashImage
+                            ?.mobile
+                        : surveyThemeData?.surveyTheme?.bg?.unsplashImage
+                            ?.desktop,
+                    )
+                  : ""
               }
             >
               {/* .........Survey Header Section.......... */}

@@ -21,7 +21,7 @@ function FeatureCard({
           border: `2px solid ${imgBgColor}`,
         }}
       >
-        <Image src={imgSrc} alt={imgAlt} width={100} height={100} />
+        <Image src={imgSrc} alt={imgAlt} width={900} height={900} />
       </div>
       <div
         className={styles["desc-container"]}

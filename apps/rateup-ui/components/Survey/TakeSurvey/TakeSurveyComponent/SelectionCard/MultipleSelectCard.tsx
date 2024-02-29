@@ -60,8 +60,8 @@ export function ImageCheckbox({
         selectedValue.includes(title)
           ? `var(--mantine-color-${theme.primaryColor}-filled)`
           : !hovered
-            ? ""
-            : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+          ? ""
+          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
       }
       style={{
         borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,

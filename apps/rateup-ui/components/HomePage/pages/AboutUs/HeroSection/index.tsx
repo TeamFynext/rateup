@@ -19,13 +19,19 @@ function HeroSection() {
       </div>
 
       <div className={styles["image-container"]}>
-        <Image
-          src={`${imagesPath}/about-us-page/hero-section/about-us-hero-section-photo.png`}
-          alt="Team Group Photograph"
-          width={3693}
-          height={1368}
-          priority={true}
-        />
+        <picture>
+          <source
+            srcSet={`${imagesPath}/about-us-page/hero-section/about-us-hero-section-photo.webp`}
+            type="image/webp"
+          />
+          <Image
+            src={`${imagesPath}/about-us-page/hero-section/about-us-hero-section-photo.png`}
+            alt="Team Group Photograph"
+            width={3693}
+            height={1368}
+            priority={true}
+          />
+        </picture>
       </div>
     </div>
   );

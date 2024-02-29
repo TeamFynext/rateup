@@ -1,4 +1,5 @@
 .hero-section-wrapper {
+  position: relative;
   background-color: var(--tertiary-color);
   margin-bottom: 6.25rem;
   font-family: var(--font-lexend);
@@ -111,6 +112,23 @@
   max-height: 400px;
 }
 
+.blue-background-for-screens-bigger-than-1920px {
+  position: absolute;
+  width: 100vw;
+  height: 100%;
+  background-color: var(--tertiary-color);
+  z-index: -1;
+  top: 0;
+  left: calc((1920px - 100vw) / 2);
+  background: radial-gradient(
+      ellipse 25% 60% at -12%,
+      #52a2ff,
+      rgba(0, 0, 0, 0)
+    ),
+    radial-gradient(circle 200px at center 70%, #1a6cca, rgba(0, 0, 0, 0)),
+    radial-gradient(ellipse 25% 60% at 112%, #52a2ff, var(--tertiary-color));
+}
+
 /* Media Queries */
 
 @media screen and (max-width: 1024px) {
@@ -184,5 +202,11 @@
 
   .hero-section-para {
     font-size: 0.875rem;
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  .hero-section-wrapper {
+    background-image: none;
   }
 }

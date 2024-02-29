@@ -12,6 +12,10 @@
   background-color: white;
 }
 
+.white-background-gradient-text-btn:hover {
+  background-color: white;
+}
+
 .white-background-gradient-text-btn span {
   display: block;
 }

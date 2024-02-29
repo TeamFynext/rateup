@@ -231,11 +231,11 @@ function UtilityComponent({
     else setSelectedTestimonialIds([]);
   }
 
-  const isAllSelected = testimonialIdsNotInCollection?.every((t) =>
-    selectedTestimonialIds?.includes(t),
+  const isAllSelected = testimonialIdsNotInCollection?.every(
+    (t) => selectedTestimonialIds?.includes(t),
   );
-  const isAllSelectedForDelete = savedTestimonialIds?.every((t) =>
-    selectedTestimonialIds?.includes(t),
+  const isAllSelectedForDelete = savedTestimonialIds?.every(
+    (t) => selectedTestimonialIds?.includes(t),
   );
 
   useEffect(() => {

@@ -86,8 +86,9 @@ const Responses = ({
 
   const hasContactQuestion =
     responses &&
-    responses?.some((response) =>
-      response?.responses?.some((res) => QuestionType.Contact === res.type),
+    responses?.some(
+      (response) =>
+        response?.responses?.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,

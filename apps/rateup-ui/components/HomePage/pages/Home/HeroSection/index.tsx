@@ -45,6 +45,10 @@ function HeroSection() {
           height={774}
         />
       </div>
+
+      <div
+        className={styles["blue-background-for-screens-bigger-than-1920px"]}
+      ></div>
     </div>
   );
 }

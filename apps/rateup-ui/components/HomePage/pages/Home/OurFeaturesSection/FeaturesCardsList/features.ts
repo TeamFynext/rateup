@@ -49,7 +49,7 @@ const features = [
   },
   {
     id: 93536,
-    imgSrc: `${path}/loyality.png`,
+    imgSrc: `${path}/loyalty.png`,
     imgAlt: "loyality",
     imgBgColor: "#9E1C4C",
     heading: "Loyalty",

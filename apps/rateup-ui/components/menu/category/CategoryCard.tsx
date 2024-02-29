@@ -70,8 +70,8 @@ export function CategoryCard({
 
   let itemsSearch = [];
   if (searchText !== "") {
-    itemsSearch = items?.filter((item) =>
-      item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
+    itemsSearch = items?.filter(
+      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
     );
   } else {
     itemsSearch = items;

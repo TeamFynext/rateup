@@ -33,9 +33,10 @@
   color: var(--shade-of-blue-6);
 }
 
-.image-container {
+.image-container picture {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .image-container img {
