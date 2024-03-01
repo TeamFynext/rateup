@@ -187,6 +187,7 @@ export function RM_NavigationHandler() {
               filteredReviews={filteredReviews}
               filters={filters}
               setFilters={setFilters}
+              selectedTeamId={selectedTeamId}
             />
           </Tabs.Panel>
         </Tabs>

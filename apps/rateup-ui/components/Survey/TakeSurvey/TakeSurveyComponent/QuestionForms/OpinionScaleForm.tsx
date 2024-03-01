@@ -2,7 +2,11 @@ import { useContext, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { Button, Flex, Group, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
-export function OpinionScaleForm() {
+
+interface iProps {
+  initValue?: any;
+}
+export function OpinionScaleForm({ initValue }: iProps) {
   const theme = useMantineTheme();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [isHovered, setIsHovered] = useState(null);
@@ -26,21 +30,23 @@ export function OpinionScaleForm() {
           onMouseEnter={() => handleHover(i)}
           onMouseLeave={handleLeave}
           radius="xs"
-          onClick={() => updateResponse(i)}
-          variant={response === i ? "filled" : "outline"}
+          onClick={() => {
+            !initValue && updateResponse(i);
+          }}
+          variant={response === i || initValue == i ? "filled" : "outline"}
           styles={{
             root: {
               backgroundColor:
-                response === i
+                response === i || initValue == i
                   ? `var(--mantine-color-${theme.primaryColor}-filled)`
                   : isHovered !== i
                   ? ""
                   : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
               borderColor:
-                response !== i &&
+                (response !== i || initValue != i) &&
                 `var(--mantine-color-${theme.primaryColor}-outline)`,
               color:
-                response === i
+                response === i || initValue == i
                   ? "var(--mantine-color-white)"
                   : `var(--mantine-color-${theme.primaryColor}-outline)`,
             },

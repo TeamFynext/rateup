@@ -40,7 +40,7 @@ const Result = ({
   encryptionpassword,
   setEncryptionPassword,
 }) => {
-  const { filterTeams, filterTags } = useContext(SurveyContext);
+  const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
@@ -138,6 +138,7 @@ const Result = ({
             allResponses={teamWiseResponses}
             defaultLanguage={defaultLanguage}
             isLoading={isLoading}
+            selectedTeamId={selectedTeamId}
           />
         </Tabs.Panel>
         <Tabs.Panel value="analytics">

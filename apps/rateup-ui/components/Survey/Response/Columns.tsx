@@ -1,5 +1,10 @@
-import { Badge, Button, Group, Stack, Text } from "@mantine/core";
-import { IconEye, IconTrashXFilled } from "@tabler/icons-react";
+import { Badge, Button, Group, Menu, Stack, Text, rem } from "@mantine/core";
+import {
+  IconChevronDown,
+  IconEye,
+  IconTicket,
+  IconTrashXFilled,
+} from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { QuestionType } from "../../../types/enums";
@@ -21,6 +26,8 @@ export const useSurveyResponseColumns = ({
   defaultLanguage,
   setSelectedRowId,
   open,
+  setSelectedResponseId,
+  openTicketModal,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
@@ -89,16 +96,13 @@ export const useSurveyResponseColumns = ({
       enableSorting: false,
       cell: (info) => {
         return (
-          <Button
-            variant="subtle"
-            color="red"
-            onClick={() => {
-              setSelectedRowId(info.row.original.id);
-              open();
-            }}
-          >
-            <IconTrashXFilled />
-          </Button>
+          <ActionMenu
+            open={open}
+            resId={info.row.original.id}
+            openTicketModal={openTicketModal}
+            setSelectedResponseId={setSelectedResponseId}
+            setSelectedRowId={setSelectedRowId}
+          />
         );
       },
       accessorKey: "action",
@@ -191,4 +195,66 @@ function BadgeorTextorPreview({
   } else {
     return <HoverCardComponent content={response} />;
   }
+}
+
+function ActionMenu({
+  resId,
+  open,
+  openTicketModal,
+  setSelectedResponseId,
+  setSelectedRowId,
+}) {
+  return (
+    <Stack px="sm">
+      <Menu
+        position="bottom-end"
+        offset={4}
+        withArrow
+        arrowPosition="side"
+        transitionProps={{ transition: "rotate-right", duration: 150 }}
+      >
+        <Menu.Target>
+          <Button
+            variant="outline"
+            color="dark.2"
+            radius="lg"
+            size="xs"
+            rightSection={<IconChevronDown size="1rem" />}
+            style={{ maxWidth: "fit-content" }}
+          >
+            <Text size="xs" c="dark.5">
+              {" "}
+              Select Action{" "}
+            </Text>
+          </Button>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+          <Menu.Item
+            onClick={() => {
+              setSelectedResponseId(resId);
+              openTicketModal();
+            }}
+            leftSection={
+              <IconTicket style={{ width: rem(14), height: rem(14) }} />
+            }
+          >
+            Create Ticket
+          </Menu.Item>
+          <Menu.Item
+            color="red"
+            onClick={() => {
+              setSelectedRowId(resId);
+              open();
+            }}
+            leftSection={
+              <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
+            }
+          >
+            Delete
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </Stack>
+  );
 }

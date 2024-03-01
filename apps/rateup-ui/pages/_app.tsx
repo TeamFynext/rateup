@@ -192,7 +192,7 @@ export default function App({
                 {showQueryDevTools && (
                   <ReactQueryDevtools
                     initialIsOpen={false}
-                    buttonPosition="top-left"
+                    buttonPosition="top-right"
                   />
                 )}
               </HydrationBoundary>

@@ -19,6 +19,7 @@ import {
   IconHome,
   IconWaveSine,
   IconMessageChatbot,
+  IconTicket,
 } from "@tabler/icons-react";
 
 import { UserRole } from "../../../utils/enums";
@@ -163,6 +164,15 @@ export function getNavTopData(subscription?: Subscription) {
             Icon: IconMessageChatbot,
             label: "Testimonial",
             href: "/dashboard/testimonial",
+          },
+        ]),
+    ...(hiddenModules.includes("tickets")
+      ? []
+      : [
+          {
+            Icon: IconTicket,
+            label: "Tickets",
+            href: "/dashboard/tickets",
           },
         ]),
   ];

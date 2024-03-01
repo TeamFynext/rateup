@@ -11,7 +11,7 @@ interface HeadingPropsInterface {
   label?: string;
   titleprops?: TitleProps;
 }
-const titleStyle: MantineStyleProp = {
+export const titleStyle: MantineStyleProp = {
   fontSize: "32px",
   width: 300,
   maxWidth: "300px",

@@ -55,6 +55,8 @@ import {
   useGetGoogleAccessToken,
 } from "../../../backend/org/org.query";
 import useLocalStorage from "../../../hooks/localStorage";
+import CreateTicketModal from "../../Tickets/CreateTicketModal";
+import { TicketType } from "../../../utils/enums/ticket";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 
 const Responses = ({
@@ -63,6 +65,7 @@ const Responses = ({
   allResponses,
   defaultLanguage,
   isLoading,
+  selectedTeamId,
 }) => {
   const router = useRouter();
   const surveyId = survey?.id;
@@ -72,6 +75,11 @@ const Responses = ({
   const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [
+    createTicketOpened,
+    { open: openTicketModal, close: closeTicketModal },
+  ] = useDisclosure(false);
+  const [selectedResponseId, setSelectedResponseId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
   const { data: authUrl } = useGetAuthorizationUrl();
@@ -276,6 +284,8 @@ const Responses = ({
     defaultLanguage,
     setSelectedRowId,
     open,
+    setSelectedResponseId,
+    openTicketModal,
   });
 
   const handleSyncGoogleSheet = () => {
@@ -323,6 +333,15 @@ const Responses = ({
     <Stack
       className={styles["total-responses-header-and-responses-table-wrapper"]}
     >
+      <CreateTicketModal
+        createTicketOpened={createTicketOpened}
+        openTicketModal={openTicketModal}
+        closeTicketModal={closeTicketModal}
+        selectedTeamId={selectedTeamId}
+        type={TicketType.SURVEY_RESPONSE}
+        surveyResponseId={selectedResponseId}
+      />
+
       <PaperLayout className={styles["total-responses-heading-container"]}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />

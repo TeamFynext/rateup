@@ -1,11 +1,24 @@
-import { Box, Flex, Group, Stack, Text } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Flex,
+  Group,
+  Menu,
+  Stack,
+  Text,
+  rem,
+} from "@mantine/core";
 import { ReviewWithAnalysis } from "../../../backend/reputation_management/review/review.api";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import SearchBox from "../../input/SearchBox";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ReviewPlatform, SortType } from "../../../types/enums";
 import { GoogleIcon } from "../../Button/GoogleIcon";
-import { IconStarFilled } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconTicket,
+  IconStarFilled,
+} from "@tabler/icons-react";
 import { ratingColorMap } from "../InsightCards/RatingSummaryCard";
 import { SortableField } from "../../input/SortableField";
 import React from "react";
@@ -13,16 +26,21 @@ import { FixedSizeList } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 import classes from "./RM_Review.module.css";
 import { FilterSideBar } from "../misc/FilterSideBar";
+import { useDisclosure } from "@mantine/hooks";
+import CreateTicketModal from "../../Tickets/CreateTicketModal";
+import { TicketType } from "../../../utils/enums/ticket";
 
 interface RM_ReviewProps {
   filteredReviews: ReviewWithAnalysis[];
   filters: ReviewsFilter;
   setFilters: (filters: ReviewsFilter) => void;
+  selectedTeamId: string;
 }
 export function RM_Review({
   filteredReviews,
   filters,
   setFilters,
+  selectedTeamId,
 }: RM_ReviewProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -67,7 +85,10 @@ export function RM_Review({
             searchText={searchTerm}
             setSearchText={setSearchTerm}
           />
-          <RenderReviewTable filteredReviews={searchFilteredReviews} />
+          <RenderReviewTable
+            filteredReviews={searchFilteredReviews}
+            selectedTeamId={selectedTeamId}
+          />
         </Stack>
       </PaperLayout>
     </Group>
@@ -76,13 +97,21 @@ export function RM_Review({
 
 const RenderReviewTable = function RenderReviewTable({
   filteredReviews,
+  selectedTeamId,
 }: {
   filteredReviews: ReviewWithAnalysis[];
+  selectedTeamId: string;
 }) {
   const [sort, setSort] = useState({
     sortKey: "reviewedAt",
     sortType: SortType.DESC,
   });
+  const [
+    createTicketOpened,
+    { open: openTicketModal, close: closeTicketModal },
+  ] = useDisclosure(false);
+  const [selectedReviewId, setSelectedReviewId] = useState("");
+
   if (!filteredReviews) return <div>loading</div>;
 
   const sortedReviews = filteredReviews.sort((a, b) => {
@@ -95,6 +124,14 @@ const RenderReviewTable = function RenderReviewTable({
       ? a[sort.sortKey] - b[sort.sortKey]
       : b[sort.sortKey] - a[sort.sortKey];
   });
+
+  useEffect(() => {
+    if (selectedReviewId !== "") {
+      openTicketModal();
+      console.log(selectedReviewId);
+    }
+  }, [selectedReviewId]);
+
   return (
     <Stack
       p="lg"
@@ -133,7 +170,18 @@ const RenderReviewTable = function RenderReviewTable({
         <SortableField sortKey={"reviewedAt"} sort={sort} setSort={setSort}>
           Date
         </SortableField>
+        <Text style={{ minWidth: "140px" }}></Text>
       </Flex>
+
+      <CreateTicketModal
+        createTicketOpened={createTicketOpened}
+        openTicketModal={openTicketModal}
+        closeTicketModal={closeTicketModal}
+        selectedTeamId={selectedTeamId}
+        type={TicketType.REVIEW}
+        rid={selectedReviewId}
+      />
+
       <Box
         style={{
           flex: 1,
@@ -156,7 +204,7 @@ const RenderReviewTable = function RenderReviewTable({
                 const review = sortedReviews[index];
                 return (
                   <Flex
-                    key={review.id}
+                    key={review?.id}
                     gap={"md"}
                     h="64px"
                     align="center"
@@ -167,10 +215,10 @@ const RenderReviewTable = function RenderReviewTable({
                     className="row"
                   >
                     <Text>
-                      <PlatformIcon platform={review.platform} />
+                      <PlatformIcon platform={review?.platform} />
                     </Text>
                     <Text>
-                      <RatingBadge rating={review.rating} />
+                      <RatingBadge rating={review?.rating} />
                     </Text>
                     <Text
                       style={{
@@ -181,6 +229,11 @@ const RenderReviewTable = function RenderReviewTable({
                       {review.review}
                     </Text>
                     <Text>{review.reviewedAt.format("DD/MM/YYYY")}</Text>
+                    <ActionMenu
+                      reviewId={review?.id}
+                      openTicketModal={openTicketModal}
+                      setSelectedReviewId={setSelectedReviewId}
+                    />
                   </Flex>
                 );
               }}
@@ -191,7 +244,7 @@ const RenderReviewTable = function RenderReviewTable({
     </Stack>
   );
 };
-function PlatformIcon({ platform }: { platform: ReviewPlatform }) {
+export function PlatformIcon({ platform }: { platform: ReviewPlatform }) {
   switch (platform) {
     case ReviewPlatform.GOOGLE:
       return <GoogleIcon />;
@@ -210,7 +263,7 @@ function PlatformIcon({ platform }: { platform: ReviewPlatform }) {
   }
 }
 
-function RatingBadge({ rating }: { rating: number }) {
+export function RatingBadge({ rating }: { rating: number }) {
   return (
     <Flex
       gap={"8px"}
@@ -234,5 +287,48 @@ function RatingBadge({ rating }: { rating: number }) {
         }}
       />
     </Flex>
+  );
+}
+
+function ActionMenu({ reviewId, openTicketModal, setSelectedReviewId }) {
+  return (
+    <Stack px="sm">
+      <Menu
+        position="bottom-end"
+        offset={4}
+        withArrow
+        arrowPosition="side"
+        transitionProps={{ transition: "rotate-right", duration: 150 }}
+      >
+        <Menu.Target>
+          <Button
+            variant="outline"
+            color="dark.2"
+            radius="lg"
+            size="xs"
+            rightSection={<IconChevronDown size="1rem" />}
+          >
+            <Text size="xs" c="dark.5">
+              {" "}
+              Select Action{" "}
+            </Text>
+          </Button>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+          <Menu.Item
+            onClick={() => {
+              setSelectedReviewId(reviewId);
+              //openTicketModal()
+            }}
+            leftSection={
+              <IconTicket style={{ width: rem(14), height: rem(14) }} />
+            }
+          >
+            Create Ticket
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </Stack>
   );
 }

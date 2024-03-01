@@ -24,7 +24,12 @@ import {
   JsonInput,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
-import { TimeInput, TimeInputProps } from "@mantine/dates";
+import {
+  DateTimePicker,
+  TimeInput,
+  TimeInputProps,
+  DateTimePickerProps,
+} from "@mantine/dates";
 import { IconClock } from "@tabler/icons-react";
 
 export const ContainedTextField = React.forwardRef(function ContainedTextField(
@@ -65,6 +70,10 @@ export function ContainedNumberInput(props: NumberInputProps) {
 
 export function ContainedColorInput(props: ColorInputProps) {
   return <ColorInput disallowInput classNames={classes} {...props} />;
+}
+
+export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
+  return <DateTimePicker classNames={classes} {...props} />;
 }
 
 export function ContainedTimeInput(props: Readonly<TimeInputProps>) {

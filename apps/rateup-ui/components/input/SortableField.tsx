@@ -1,11 +1,9 @@
-import { Group, Tooltip, Stack, GroupProps } from "@mantine/core";
+import { Group, Tooltip, GroupProps } from "@mantine/core";
 import {
   IconTriangleFilled,
   IconTriangleInvertedFilled,
 } from "@tabler/icons-react";
 import { SortType } from "../../types/enums";
-import { TooltipProps } from "recharts";
-import { TooltipBaseProps } from "@mantine/core/lib/components/Tooltip/Tooltip.types";
 
 interface SortableFieldProps {
   sort?: any;
