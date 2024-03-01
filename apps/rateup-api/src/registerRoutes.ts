@@ -55,6 +55,8 @@ import { testimonialRoutes } from "./modules/testimonial/testimonials.route";
 import { testimonialSchemas } from "./modules/testimonial/testimonial.schema";
 import { testimonialCollectionRoutes } from "./modules/testimonial/testimonialCollection/testimonialCollection.route";
 import { testimonialCollectionSchemas } from "./modules/testimonial/testimonialCollection/testimonialCollection.schema";
+import { ticketRoutes } from "./modules/ticket/ticket.route";
+import { ticketSchemas } from "./modules/ticket/ticket.schema";
 import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic.route";
 
 export function registerRoutes(server: FastifyInstance): void {
@@ -81,6 +83,7 @@ export function registerRoutes(server: FastifyInstance): void {
     paymentSchemas,
     testimonialSchemas,
     testimonialCollectionSchemas,
+    ticketSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -126,6 +129,7 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(testimonialCollectionRoutes, {
     prefix: "api/testimonial/collections",
   });
+  server.register(ticketRoutes, { prefix: "api/tickets" });
   server.register(testimonialPublicRoutes, {
     prefix: "api/public/testimonials",
   });
