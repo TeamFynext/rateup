@@ -1,7 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { $Uref } from "./unsplash.schema";
 import { checkSession } from "../../utils/checkSession";
-import { getUnsplashImageListHandler } from "./unsplash.controller";
+import {
+  getUnsplashImageListHandler,
+  triggerDownloadUnsplashImageHandler,
+} from "./unsplash.controller";
 
 export async function unsplashRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -12,6 +15,15 @@ export async function unsplashRoutes(server: FastifyInstance) {
         params: $Uref("getUnsplashImageQueryStringSchema"),
       },
     },
-    getUnsplashImageListHandler
+    getUnsplashImageListHandler,
+  );
+  server.post(
+    "/triggerDownload",
+    {
+      schema: {
+        body: $Uref("triggerDownloadUnsplashImageSchema"),
+      },
+    },
+    triggerDownloadUnsplashImageHandler,
   );
 }
