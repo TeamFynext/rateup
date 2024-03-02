@@ -23,7 +23,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ContainedSelection,
   ContainedTextField,
@@ -68,6 +68,8 @@ const ShareSurvey = ({
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(
     survey?.teams[0]?.mapId,
   );
+
+  const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
   const [tagsToMap, setTagsToMap] = useState<Array<string>>([]);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
 
@@ -79,27 +81,42 @@ const ShareSurvey = ({
     null,
   );
 
+  const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
+
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
     if (
       survey.type === SurveyType.WhatsApp ||
       survey.type === SurveyType.WaFlow
     ) {
-      // TODO: get phone number from phone id (add phone number field)
-      if (survey.getLocation) {
-        // redirecting through our page to fetch ip
-        setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
+      if (shortUrlId) {
+        // TODO: get phone number from phone id (add phone number field)
+        setShareUrl(
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/was/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
+        );
       } else {
-        setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+        // TODO: get phone number from phone id (add phone number field)
+        if (survey.getLocation) {
+          // redirecting through our page to fetch ip
+          setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
+        } else {
+          setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+        }
       }
     } else {
-      setShareUrl(
-        `${
-          process.env.NEXT_PUBLIC_FRONTEND_URL
-        }/public/survey/${surveyTeamMapId}${tag ? `?tag=${tag}` : ""}`,
-      );
+      if (shortUrlId) {
+        setShareUrl(
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
+        );
+      } else {
+        setShareUrl(
+          `${
+            process.env.NEXT_PUBLIC_FRONTEND_URL
+          }/public/survey/${surveyTeamMapId}${tag ? `?tag=${tag}` : ""}`,
+        );
+      }
     }
-  }, [surveyId, surveyTeamMapId, tag]);
+  }, [surveyId, surveyTeamMapId, tag, shortUrlId]);
 
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(surveyId, data),
@@ -176,18 +193,29 @@ const ShareSurvey = ({
     }
   }
 
-  const teamSelectData = survey?.teams?.map((team) => ({
-    value: team?.mapId,
+  const teamSelectData = survey?.teams?.map((team, index) => ({
+    value: index.toString(),
     label: team?.code,
   }));
 
-  let tagSelectData = survey?.teams
-    ?.filter((ft) => ft?.mapId === surveyTeamMapId)
-    ?.map((team) => team.tags)
-    .reduce((acc, val) => acc.concat(val), []);
+  // let tagSelectData = survey?.teams
+  //   ?.filter((ft) => ft?.mapId === surveyTeamMapId)
+  //   ?.map((team) => team.tags)
+  //   .reduce((acc, val) => acc.concat(val), []);
+  // useEffect(() => {
+  //   setTagsToMap(tagSelectData);
+  // }, [survey, surveyTeamMapId]);
+
+  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map(
+    (tag) => {
+      return tag;
+    },
+  );
+
   useEffect(() => {
-    setTagsToMap(tagSelectData);
-  }, [survey, surveyTeamMapId]);
+    setTag(null);
+  }, [selectTeamDropdownState]);
+
   const getSelectedRowsToExport = ({
     apiRef,
   }: GridPrintGetRowsToExportParams): GridRowId[] => {
@@ -200,6 +228,17 @@ const ShareSurvey = ({
   };
 
   const disableShare = !(isPublished || allowUnpublishedShare);
+
+  const handleContainedSelectionChange = useCallback(
+    (value) => {
+      const teamObj = survey.teams[value];
+      setSurveyTeamMapId(teamObj.mapId);
+      setShortUrlId(teamObj.shortUrlId);
+      setSelectTeamDropdownState(value);
+    },
+    [survey],
+  );
+
   return (
     <Stack p={2} h={"fit-content"}>
       <PaperLayout
@@ -312,10 +351,10 @@ const ShareSurvey = ({
                 disabled={disableShare}
                 label="Select Team"
                 allowDeselect={false}
+                value={selectTeamDropdownState}
                 miw={150}
-                value={surveyTeamMapId}
                 data={teamSelectData}
-                onChange={setSurveyTeamMapId}
+                onChange={handleContainedSelectionChange}
               />
 
               <Group gap={2} align="flex-start" style={{ flex: 1 }}>
@@ -325,18 +364,20 @@ const ShareSurvey = ({
                   placeholder="select a single Tag"
                   miw={150}
                   data={tagSelectData}
+                  value={tag}
                   onChange={(value) => setTag(value)}
                 />
                 <TagManager
                   isPublished={isPublished}
-                  surveyTeamMapId={surveyTeamMapId}
+                  selectTeamDropdownValue={selectTeamDropdownState}
                   teamSelectData={teamSelectData}
-                  setSurveyTeamMapId={setSurveyTeamMapId}
+                  onSelectTeamDropdownChange={handleContainedSelectionChange}
                   nothingFound={NothingFound}
                   getSelectedRowsToExport={getSelectedRowsToExport}
-                  tagsToMap={tagsToMap}
+                  tagsToMap={survey.teams[selectTeamDropdownState].tags}
                   surveyTitle={survey?.title}
                   surveyId={surveyId}
+                  shareUrl={shareUrl}
                 />
               </Group>
             </Group>

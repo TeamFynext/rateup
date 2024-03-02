@@ -32,14 +32,15 @@ import { useDisclosure } from "@mantine/hooks";
 
 function TagManager({
   isPublished,
-  surveyTeamMapId,
+  selectTeamDropdownValue,
   teamSelectData,
-  setSurveyTeamMapId,
+  onSelectTeamDropdownChange,
   nothingFound,
   getSelectedRowsToExport,
   tagsToMap,
   surveyTitle,
   surveyId,
+  shareUrl,
 }) {
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] =
     useState(false);
@@ -148,9 +149,9 @@ function TagManager({
               label="Select Team"
               allowDeselect={false}
               miw={150}
-              value={surveyTeamMapId}
+              value={selectTeamDropdownValue}
               data={teamSelectData}
-              onChange={setSurveyTeamMapId}
+              onChange={onSelectTeamDropdownChange}
             />
           </Group>
         }
@@ -258,8 +259,8 @@ function TagManager({
             rows={tagsToMap.map((tag) => ({
               id: tag,
               col1: tag,
-              col2: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
-              col3: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}?tag=${tag}`,
+              col2: `${shareUrl}?tag=${tag}`,
+              col3: `${shareUrl}?tag=${tag}`,
             }))}
           />
         </Stack>

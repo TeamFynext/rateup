@@ -93,6 +93,7 @@ declare global {
     tags: Array<string>;
     mapId: string;
     code: string;
+    shortUrlId?: string;
   }
 
   interface STStats {
