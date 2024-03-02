@@ -135,7 +135,6 @@ const Result = ({
           <Responses
             survey={survey}
             responses={filteredResponses}
-            allResponses={teamWiseResponses}
             defaultLanguage={defaultLanguage}
             isLoading={isLoading}
             selectedTeamId={selectedTeamId}

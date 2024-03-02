@@ -392,7 +392,7 @@ export function useEditSurveyMutation(id) {
         autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      queryClient.invalidateQueries({ queryKey: ["survey"] });
+      queryClient.invalidateQueries({ queryKey: ["survey", id] });
     },
     onError: (error: any) => {
       console.error("Error Survey Update:", error.message);

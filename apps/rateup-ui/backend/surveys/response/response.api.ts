@@ -1,4 +1,5 @@
 import { axiosClient } from "../../apiClient";
+import { saveAs } from "file-saver";
 
 const RESPONSE_URL = "/response";
 
@@ -55,4 +56,26 @@ export async function generateResponse(data: generateResponseType) {
 export async function syncResponseToGoogleSheet({ surveyId }) {
   let res = await axiosClient.post(`${RESPONSE_URL}/${surveyId}/sync-response`);
   return res?.data;
+}
+
+export type downloadExcelResponseType = {
+  surveyId: string;
+  defaultLanguage: string;
+  visibleColumn: string[];
+  title: string;
+};
+
+export async function downloadExcelResponse(data: downloadExcelResponseType) {
+  const response = await axiosClient.post(
+    `${RESPONSE_URL}/download-response`,
+    data,
+    {
+      responseType: "blob",
+    },
+  );
+  const blob = new Blob([response.data], {
+    type: response.headers["content-type"],
+  });
+
+  return saveAs(blob, `${data.title}.xlsx`);
 }

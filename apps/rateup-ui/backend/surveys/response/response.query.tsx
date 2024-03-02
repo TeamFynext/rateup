@@ -2,6 +2,8 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   deleteResponse,
+  downloadExcelResponse,
+  downloadExcelResponseType,
   generateResponse,
   getAllResponses,
   getResponses,
@@ -184,6 +186,35 @@ export function useSyncResponseToGoogleSheet(surveyId: string) {
     mutationFn: syncResponseToGoogleSheet,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
+  });
+}
+
+export function useDownloadExcelResponse() {
+  return useMutation({
+    mutationFn: (data: downloadExcelResponseType) =>
+      downloadExcelResponse(data),
+    onSuccess: (response) => {
+      notifications.show({
+        id: "downloadExcel",
+        loading: false,
+        color: "green",
+        title: "Response Download Success",
+        message: "Downloaded Response successfully",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      notifications.show({
+        id: "downloadExcel",
+        color: "red",
+        loading: false,
+        title: "Failed Response Downloading",
+        message: error?.response?.data?.message ?? error?.response?.data,
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
     },
   });
 }

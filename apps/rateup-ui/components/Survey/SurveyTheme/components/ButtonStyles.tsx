@@ -4,12 +4,15 @@ import {
   NumberInput,
   Group,
   Divider,
-  ScrollArea,
+  Flex,
+  Box,
 } from "@mantine/core";
 import React from "react";
 import { Button as ButtonType } from "../surveyTheme.types";
 import CustomColorPicker from "./customelements/CustomColorPicker";
 import CustomColorInput from "./customelements/CustomColorInput";
+import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
+import { COORDINATESX, COORDINATESY } from "../../../../utils/constants";
 
 function ButtonStyles({
   currentStyles,
@@ -84,6 +87,37 @@ function ButtonStyles({
             });
           }}
         />
+        <Box>
+          <Text fw={500}>Coordinate position</Text>
+          <Flex gap={"sm"}>
+            <ContainedSelection
+              data={COORDINATESX}
+              placeholder="X axis"
+              defaultValue={currentStyles?.position?.x ?? COORDINATESX?.[1]}
+              onChange={(e) => {
+                setCurrentstyles("button", {
+                  ...currentStyles,
+                  position: { ...currentStyles.position, ...{ x: e } },
+                });
+              }}
+              allowDeselect={false}
+              label={"x axis"}
+            />
+            <ContainedSelection
+              data={COORDINATESY}
+              placeholder="Y axis"
+              defaultValue={currentStyles?.position?.y ?? COORDINATESY?.[3]}
+              onChange={(e) => {
+                setCurrentstyles("button", {
+                  ...currentStyles,
+                  position: { ...currentStyles.position, ...{ y: e } },
+                });
+              }}
+              allowDeselect={false}
+              label={"y axis"}
+            />
+          </Flex>
+        </Box>
       </Stack>
     </>
   );

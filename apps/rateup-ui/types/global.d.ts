@@ -84,6 +84,10 @@ declare global {
     skipPreview: boolean;
     publicKey?: string;
     isEncrypted: boolean;
+    redirect?: {
+      url: string;
+      time: string;
+    };
   };
 
   interface STeam {

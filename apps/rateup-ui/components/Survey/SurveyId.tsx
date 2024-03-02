@@ -236,6 +236,7 @@ export default function SurveyID() {
                             "enableNotificationEmail",
                             "notificationEmail",
                             "endtoendencryption",
+                            "redirect",
                           ]
                     }
                   />

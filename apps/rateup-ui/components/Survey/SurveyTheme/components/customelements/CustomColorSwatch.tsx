@@ -19,6 +19,7 @@ export default function CustomColorSwatch({
           color={swatchName}
           component="button"
           onClick={() => onChange(swatchName)}
+          key={swatchName}
         >
           {value === swatchName && <CheckIcon color="white" width={10} />}
         </ColorSwatch>

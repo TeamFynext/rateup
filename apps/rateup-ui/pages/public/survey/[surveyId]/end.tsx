@@ -14,7 +14,10 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import Confetti from "react-confetti";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
-import { getPublicSurveyGoogleLink } from "../../../../backend/surveys/survey.api";
+import {
+  getPublicSurvey,
+  getPublicSurveyGoogleLink,
+} from "../../../../backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
@@ -27,22 +30,41 @@ export async function getServerSideProps(context) {
   const { surveyId } = context.params;
   const { msg } = context.query;
 
-  let propsToPass: any = { enableGoogleReview: false };
+  let propsToPass: any = {
+    enableGoogleReview: false,
+  };
   if (msg == "thanks") {
-    const [googleLink, reviews] = await Promise.all([
+    const [googleLink, reviews, survey] = await Promise.all([
       getPublicSurveyGoogleLink(surveyId),
       getPublicReviewsBySurveyTeamMapId(surveyId),
+      getPublicSurvey(surveyId),
     ]);
     propsToPass.googleLink = googleLink;
     propsToPass.reviews = reviews;
     if (googleLink) propsToPass.enableGoogleReview = true;
+    if (survey) {
+      propsToPass.redirect = survey.redirect;
+      propsToPass.kioskMode = survey.kioskMode;
+    }
+  } else {
+    const survey = await getPublicSurvey(surveyId);
+    if (survey) {
+      propsToPass.redirect = survey.redirect;
+      propsToPass.kioskMode = survey.kioskMode;
+    }
   }
   return {
     props: propsToPass,
   };
 }
 
-export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
+export default function ThankYou({
+  enableGoogleReview,
+  googleLink,
+  reviews,
+  redirect,
+  kioskMode,
+}) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
@@ -63,6 +85,28 @@ export default function ThankYou({ enableGoogleReview, googleLink, reviews }) {
       };
     }
   }, [k]);
+
+  useEffect(() => {
+    let timeout = null;
+    if (!kioskMode && redirect && (redirect?.enable ?? true)) {
+      timeout = setTimeout(
+        () => {
+          if (redirect.url === "/") router.push(redirect.url);
+          else if (
+            redirect.url?.startsWith("http://") ||
+            redirect.url?.startsWith("https://")
+          ) {
+            router.push(redirect.url);
+          } else {
+            router.push(`https://${redirect.url}`);
+          }
+        },
+        (redirect.time ?? 1) * 1000,
+      );
+    }
+    return () => clearTimeout(timeout);
+  }, [redirect, kioskMode, router]);
+
   const { data: surveyThemeData, isLoading } = useSurveyTheme(sid) as {
     data: SurveyTheme;
     isLoading: boolean;

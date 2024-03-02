@@ -40,15 +40,7 @@ export const getServerSideProps = async (context: { params: MenuViewProp }) => {
   return { props: { fullMenu: fullMenu, menuBanner: menuBanner } };
 };
 
-export default function ({ fullMenu, menuBanner }) {
-  if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
-    return (
-      <Stack align="center" h="50vh" justify="space-around">
-        <Text size="xl" c="red" fw="600">
-          {fullMenu?.expiry ? fullMenu?.expiry : "Menu is not available..!"}
-        </Text>
-      </Stack>
-    );
+export default function MenuLandingDetail({ fullMenu, menuBanner }) {
   const router = useRouter();
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const autoplay = useRef(Autoplay({ delay: 2000, stopOnInteraction: false }));
@@ -62,6 +54,14 @@ export default function ({ fullMenu, menuBanner }) {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [drawerOpen, { open, close }] = useDisclosure();
 
+  if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
+    return (
+      <Stack align="center" h="50vh" justify="space-around">
+        <Text size="xl" c="red" fw="600">
+          {fullMenu?.expiry ? fullMenu?.expiry : "Menu is not available..!"}
+        </Text>
+      </Stack>
+    );
   function handleCategoryChipClick(categoryId: string) {
     setCategorys(
       categoryId === "1"
@@ -165,6 +165,7 @@ export default function ({ fullMenu, menuBanner }) {
               ]
             }
             url={backgroundImage}
+            pl={largeScreen && 30}
           >
             <BackgroundImage
               px={largeScreen ? "10vw" : "1vw"}
@@ -209,6 +210,7 @@ export default function ({ fullMenu, menuBanner }) {
                       borderRadius: "4px",
                     }}
                     src={getFileUrlFromKey(fullMenu?.logo)}
+                    alt="logo of org"
                   />
                 )}
                 <Stack gap={0}>
@@ -319,6 +321,7 @@ export default function ({ fullMenu, menuBanner }) {
                 src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/whiteRateUpLogo.png`}
                 w={largeScreen ? "42px" : "26px"}
                 h={largeScreen ? "38px" : "26px"}
+                alt="logo of rateup"
               />
               <Text
                 fz={"clamp(11.008px, 8.144px + 0.476vw, 15.008px)"}

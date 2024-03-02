@@ -1,3 +1,5 @@
+import { COORDINATESX, COORDINATESY } from "./constants";
+
 export function getTimeSince(date: string) {
   //@ts-ignore
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -49,3 +51,39 @@ export function shuffleArray(array) {
   }
   return array;
 }
+
+export const cordinateStyle = (type: string): {} => {
+  let style = {};
+  let notDefault = true;
+  switch (type) {
+    case COORDINATESX[0]:
+      style = { justifyContent: "flex-start" };
+      break;
+    case COORDINATESX[1]:
+      style = { justifyContent: "center" };
+      break;
+    case COORDINATESX[2]:
+      style = { justifyContent: "flex-end" };
+      break;
+    case COORDINATESY[0]:
+      style = { top: 0, bottom: "unset" };
+      break;
+    case COORDINATESY[1]:
+      style = { top: "45%", bottom: "unset" };
+      break;
+    case COORDINATESY[2]:
+      style = { bottom: 0, top: "unset" };
+      break;
+    default:
+      notDefault = false;
+      style = {
+        position: "relative",
+      };
+      break;
+  }
+  if (notDefault) {
+    style = { ...style, position: "absolute" };
+  }
+  style = { ...style, width: "100%" };
+  return style;
+};

@@ -17,29 +17,21 @@ import {
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { downloadExcel } from "react-export-table-to-excel";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
+  useDownloadExcelResponse,
   useSyncResponseToGoogleSheet,
 } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import { QuestionType } from "../../../types/enums";
-import {
-  ChoiceTypeQuestions,
-  ContactQuestions,
-} from "../../../utils/constants";
-import { decryptPrivateKey, decryptResponse } from "../../../utils/encryption";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+import { ContactQuestions } from "../../../utils/constants";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import TanstackTable from "../../Table/TanstackTable";
@@ -62,12 +54,10 @@ import ConfirmationModal from "../../Modal/ConfirmationModal";
 const Responses = ({
   survey,
   responses,
-  allResponses,
   defaultLanguage,
   isLoading,
   selectedTeamId,
 }) => {
-  const router = useRouter();
   const surveyId = survey?.id;
   const { surveyTeamMapId } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
@@ -95,7 +85,7 @@ const Responses = ({
     "google-callback-route",
     "/dashboard/settings",
   );
-
+  const router = useRouter();
   const hasContactQuestion =
     responses &&
     responses?.some((response) =>
@@ -117,7 +107,7 @@ const Responses = ({
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
-
+  const downloadExcelResponse = useDownloadExcelResponse();
   function handleExportContacts() {
     const contacts = [];
     responses.map((response) => {
@@ -166,94 +156,13 @@ const Responses = ({
     });
   }
   const handleExcelDownload = useCallback(() => {
-    const responses = allResponses && allResponses[0].responses;
-    const filteredSecondArray = questions.filter((item) =>
-      useVisibleColumnStore
-        .getState()
-        .visibleColumn.includes(item.title.English),
-    );
-    if (filteredSecondArray && responses) {
-      const headerArray = filteredSecondArray.flatMap((question) =>
-        question.type === QuestionType.Contact
-          ? Object.entries(question.features?.[defaultLanguage])
-              ?.filter((data) => data[1].isEnabled)
-              .map(
-                (data) => `${question.title[defaultLanguage]}: ${data[0]}`,
-              ) ?? []
-          : [question.title[defaultLanguage]],
-      );
-
-      const bodyArray = [];
-      filteredSecondArray.forEach((question) => {
-        const questionId = question.id;
-        let tempArray = [];
-        responses.forEach((response, answerIndex) => {
-          bodyArray.push([]);
-          const responses = response.responses;
-          const responseObj = responses.find(
-            (answerObj) => answerObj.questionId === questionId,
-          );
-          let responseValue;
-          let flag = true;
-          if (responseObj) {
-            responseValue = responseObj.response[question.type];
-            const responseType = responseObj.type;
-            switch (responseType) {
-              case QuestionType.Photo: {
-                responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
-                break;
-              }
-              case QuestionType.DateTime: {
-                responseValue = dayjs(responseValue).format("DD-MM-YYYY");
-                break;
-              }
-              case QuestionType.PCQ: {
-                responseValue = responseValue?.value?.value;
-                break;
-              }
-              case QuestionType.TnC: {
-                responseValue = responseValue?.toString();
-                break;
-              }
-            }
-            if (
-              QuestionType.Contact === responseType &&
-              !tempArray.includes({ [answerIndex]: questionId })
-            ) {
-              tempArray.push({ [answerIndex]: questionId });
-              Object.values(responseValue)?.map((value) =>
-                bodyArray[answerIndex].push(value),
-              );
-              flag = false;
-            } else if (!tempArray.includes({ [answerIndex]: questionId })) {
-              if (ChoiceTypeQuestions.includes(responseType)) {
-                responseValue = Array.isArray(responseValue)
-                  ? responseValue?.map((res) => res.value).join(", ")
-                  : responseValue?.value;
-              } else if (typeof responseValue === "object") {
-                responseValue = responseValue?.value
-                  ? Object.values(responseValue?.value).join(", ")
-                  : Object.values(responseValue).join(", ");
-              }
-            }
-          } else {
-            responseValue = "";
-          }
-          if (flag) {
-            bodyArray[answerIndex].push(responseValue);
-          }
-        });
-      });
-      downloadExcel({
-        fileName: survey?.title,
-        sheet: "Responses",
-        tablePayload: {
-          header: headerArray,
-          body: bodyArray,
-        },
-      });
-    }
-  }, [allResponses, defaultLanguage, questions, survey?.title]);
+    downloadExcelResponse.mutate({
+      defaultLanguage,
+      surveyId,
+      visibleColumn: useVisibleColumnStore.getState().visibleColumn,
+      title: survey?.title,
+    });
+  }, [defaultLanguage, downloadExcelResponse, survey?.title, surveyId]);
 
   useEffect(() => {
     setVerifyEmail("");

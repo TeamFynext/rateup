@@ -9,6 +9,7 @@ import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import {
   updateGetLocation,
   updateKioskMode,
+  updateRedirect,
   updateSkipPreview,
 } from "./updateSettings";
 import NotificationEmailSettings from "./NotificationEmailSettings";
@@ -26,6 +27,7 @@ const defaultEnabledModules = [
   "enableNotificationEmail",
   "notificationEmail",
   "endtoendencryption",
+  "redirect",
 ];
 const SurveySettings = ({
   surveyId,
@@ -36,6 +38,8 @@ const SurveySettings = ({
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
+  const [redirect, setRedirect] = useState(survey?.redirect);
+
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {
@@ -110,6 +114,28 @@ const SurveySettings = ({
         )}
         {enabledModules.includes("endtoendencryption") && (
           <ETESettings {...{ survey }} />
+        )}
+        {enabledModules.includes("redirect") && (
+          <PaperLayout shadow="xl" p={"xl"}>
+            <Group justify="space-between">
+              <Switch
+                label={"Redirect"}
+                size="md"
+                checked={redirect?.enable ?? true}
+                onChange={() => updateRedirect(setRedirect, editSurvey)}
+                disabled={kioskMode}
+              />
+              <Tooltip
+                label={
+                  kioskMode
+                    ? "Not available since KioskMode is Enabled."
+                    : "Redirect to a site after the survey completion"
+                }
+              >
+                <IconInfoCircle color="var(--tertiary-color)" />
+              </Tooltip>
+            </Group>
+          </PaperLayout>
         )}
       </SimpleGrid>
       <SimpleGrid cols={2} spacing={"lg"}>

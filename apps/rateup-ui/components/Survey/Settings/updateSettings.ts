@@ -13,6 +13,17 @@ export const updateKioskMode = (setKioskMode, editSurvey) => {
   });
 };
 
+export const updateRedirect = (setRedirect, editSurvey) => {
+  setRedirect((prev) => {
+    const newRedirect = {
+      ...prev,
+      enable: !(prev?.enable ?? true),
+    };
+    editSurvey.mutate({ redirect: newRedirect });
+    return newRedirect;
+  });
+};
+
 export const updateGetLocation = (setLocation, editSurvey) => {
   setLocation((prev) => {
     const newGetLoc = !prev;

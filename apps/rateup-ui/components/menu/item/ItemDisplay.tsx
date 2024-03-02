@@ -66,13 +66,13 @@ export function ItemDisplay({
             sx={{
               gridArea: "1 / 1 / 4 / 2",
             }}
-            fz={"clamp(12px, calc(9.856px + 0.357vw), 15px)"}
           >
             <Image
               w={"100%"}
               h={"100%"}
               miw={smallScreen ? "120px" : "164px"}
               maw={smallScreen ? "120px" : "164px"}
+              alt="image of menu item"
               src={
                 item?.images?.length > 0
                   ? encodeURI(

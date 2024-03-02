@@ -18,6 +18,7 @@ import { getImageUrl } from "../../../SurveyTheme.utils";
 import { dummyImage } from "../../../SurveyTheme.constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { cordinateStyle } from "../../../../../../utils";
 
 export default function WelcomePageThemeView({
   selectedType,
@@ -35,12 +36,11 @@ export default function WelcomePageThemeView({
   }
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
-    button: { styles: buttonStyles, label },
+    button: { styles: buttonStyles, label, position },
     logo: { styles: logoStyles, logo },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
   } = welcomeTheme;
-
   return (
     <Flex
       align={"center"}
@@ -83,6 +83,7 @@ export default function WelcomePageThemeView({
             align={"center"}
             h={"100%"}
             direction={"column"}
+            pos={"relative"}
           >
             <Flex
               onClick={(e) => {
@@ -189,11 +190,17 @@ export default function WelcomePageThemeView({
               }
             />
 
-            <Box className={classes.buttonBox}>
+            <Box
+              className={classes.buttonBox}
+              style={{
+                display: "flex",
+                ...(position?.x ? cordinateStyle(position.x) : {}),
+                ...(position?.y ? cordinateStyle(position.y) : {}),
+              }}
+            >
               <Flex
                 justify={"center"}
                 p={10}
-                mt={"10%"}
                 style={buttonStyles}
                 onClick={(e) => e.stopPropagation()}
               >

@@ -25,6 +25,7 @@ export interface Subtitle {
 export interface Button {
   label: string;
   styles?: any;
+  position?: any;
 }
 
 export interface Input {
