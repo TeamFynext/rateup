@@ -1,20 +1,25 @@
-import React, { useEffect, useState } from "react";
-import { Group, SimpleGrid, Stack, Switch, Tooltip } from "@mantine/core";
-import PasswordSettings from "./PasswordSettings";
-import OtherSettings from "./OtherSettings";
+import { Grid, Group, SimpleGrid, Stack, Switch, Tooltip } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import {
+  ContainedNumberInput,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { IconInfoCircle } from "@tabler/icons-react";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import ETESettings from "./ETESettings";
+import GeneralSettings from "./GeneralSettings";
+import NotificationEmailSettings from "./NotificationEmailSettings";
+import OtherSettings from "./OtherSettings";
+import PasswordSettings from "./PasswordSettings";
 import {
   updateGetLocation,
   updateKioskMode,
   updateRedirect,
   updateSkipPreview,
 } from "./updateSettings";
-import NotificationEmailSettings from "./NotificationEmailSettings";
-import GeneralSettings from "./GeneralSettings";
-import ETESettings from "./ETESettings";
 
 const defaultEnabledModules = [
   "name",
@@ -39,8 +44,9 @@ const SurveySettings = ({
   const [location, setLocation] = useState(survey?.getLocation);
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
   const [redirect, setRedirect] = useState(survey?.redirect);
-
+  const [redirectError, setRedirectError] = useState({ url: "", time: "" });
   const editSurvey = useEditSurveyMutation(surveyId);
+  const [debounced] = useDebouncedValue(redirect?.url, 200);
 
   useEffect(() => {
     setHasGoogleReview(
@@ -49,6 +55,14 @@ const SurveySettings = ({
       ),
     );
   }, [survey]);
+
+  useEffect(() => {
+    if (debounced && !kioskMode && redirect?.enable) {
+      let data = { ...redirect, ...{ url: debounced } };
+      updateRedirect(setRedirect, editSurvey, data);
+    }
+  }, [debounced]);
+
   return (
     <Stack px={"xl"} py={"lg"} gap={survey?.type == "web" ? "lg" : "xs"}>
       <Heading subtitle="General settings" label="Edit your survey info" />
@@ -125,16 +139,71 @@ const SurveySettings = ({
                 onChange={() => updateRedirect(setRedirect, editSurvey)}
                 disabled={kioskMode}
               />
+
               <Tooltip
                 label={
                   kioskMode
                     ? "Not available since KioskMode is Enabled."
-                    : "Redirect to a site after the survey completion"
+                    : "Redirect the page to a specific url after the user complete the survey"
                 }
               >
                 <IconInfoCircle color="var(--tertiary-color)" />
               </Tooltip>
             </Group>
+            {!survey?.kioskMode && (redirect?.enable ?? true) && (
+              <>
+                <Grid columns={10}>
+                  <Grid.Col span={6}>
+                    <ContainedTextField
+                      withAsterisk
+                      placeholder="Target URL for redirection"
+                      required
+                      label={"Redirect Url :"}
+                      defaultValue={redirect?.url}
+                      onChange={(e) => {
+                        if (e.target.value?.trim()?.length === 0) {
+                          return setRedirectError((prev) => ({
+                            ...prev,
+                            ...{ url: "Url should not be empty" },
+                          }));
+                        }
+                        setRedirectError((prev) => ({
+                          ...prev,
+                          ...{ url: "" },
+                        }));
+                        let data = { ...redirect, ...{ url: e.target.value } };
+                        setRedirect(data);
+                      }}
+                      error={redirectError.url}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={4}>
+                    <ContainedNumberInput
+                      withAsterisk
+                      placeholder="time in seconds"
+                      required
+                      label={"Redirect After:"}
+                      defaultValue={redirect?.time}
+                      onChange={(e: number) => {
+                        if (e < 2 || e > 60) {
+                          return setRedirectError((prev) => ({
+                            ...prev,
+                            ...{ time: "Time must be between 2-60" },
+                          }));
+                        }
+                        setRedirectError((prev) => ({
+                          ...prev,
+                          ...{ time: "" },
+                        }));
+                        let data = { ...redirect, ...{ time: e } };
+                        updateRedirect(setRedirect, editSurvey, data);
+                      }}
+                      error={redirectError.time}
+                    />
+                  </Grid.Col>
+                </Grid>
+              </>
+            )}
           </PaperLayout>
         )}
       </SimpleGrid>
