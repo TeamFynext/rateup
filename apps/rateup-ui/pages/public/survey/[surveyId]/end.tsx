@@ -44,13 +44,13 @@ export async function getServerSideProps(context) {
     if (googleLink) propsToPass.enableGoogleReview = true;
     if (survey) {
       propsToPass.redirect = survey.redirect;
-      propsToPass.kioskMode = survey.kioskMode;
+      propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
     }
   } else {
     const survey = await getPublicSurvey(surveyId);
     if (survey) {
       propsToPass.redirect = survey.redirect;
-      propsToPass.kioskMode = survey.kioskMode;
+      propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
     }
   }
   return {
@@ -105,7 +105,7 @@ export default function ThankYou({
 
   useEffect(() => {
     let timeout = null;
-    if (!kioskMode && redirect && (redirect?.enable ?? true)) {
+    if (kioskMode === "n" && redirect && (redirect?.enable ?? true)) {
       timeout = setTimeout(
         () => {
           if (redirect.url === "/") router.push(redirect.url);

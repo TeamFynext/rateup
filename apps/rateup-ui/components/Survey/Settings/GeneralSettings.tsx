@@ -1,27 +1,24 @@
-import React, { useState, useEffect } from "react";
 import {
-  Text,
+  CheckIcon,
+  Combobox,
   Grid,
   Group,
-  PillsInput,
-  Pill,
-  Combobox,
-  CheckIcon,
-  useCombobox,
   MultiSelect,
+  Pill,
+  PillsInput,
   Stack,
+  Text,
+  useCombobox,
 } from "@mantine/core";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { hasLength, isInRange, isNotEmpty, useForm } from "@mantine/form";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import {
-  ContainedNumberInput,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
-import { useTeamsByUser } from "../../../backend/team/team.query";
+import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
+import React, { useEffect, useState } from "react";
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import { useTeamsByUser } from "../../../backend/team/team.query";
 import { SAVE_HOTKEY } from "../../../utils/constants";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules }) => {
@@ -30,16 +27,11 @@ const GeneralSettings = ({ survey, enabledModules }) => {
       title: survey?.title || "",
       languages: survey?.langauges || [],
       teams: survey?.teams?.map((team) => team?.id) || [],
-      redirect: survey?.redirect || { url: "/", time: 5, enable: true },
     },
     validate: {
       title: isNotEmpty("Cannot be Empty"),
       languages: hasLength({ min: 1 }, "Must contain atleast one language"),
       teams: hasLength({ min: 1 }, "Must contain atleast one team"),
-      redirect: {
-        url: isNotEmpty("URL cannot be Empty"),
-        time: isInRange({ min: 2, max: 15 }, "Time must be between 2-15"),
-      },
     },
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -61,9 +53,6 @@ const GeneralSettings = ({ survey, enabledModules }) => {
   }));
   useEffect(() => {
     setLanguages(survey?.languages);
-    if (survey) {
-      settingsForm.setFieldValue("redirect", survey?.redirect);
-    }
   }, [survey]);
 
   useEffect(() => {
@@ -127,38 +116,6 @@ const GeneralSettings = ({ survey, enabledModules }) => {
               </Grid.Col>
             </Grid>
           )}
-          {!survey?.kioskMode &&
-            (settingsForm.values.redirect?.enable ?? true) &&
-            enabledModules.includes("redirect") && (
-              <>
-                <Grid columns={10}>
-                  <Grid.Col span={4}>
-                    <Text>Redirectional Url :</Text>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <ContainedTextField
-                      withAsterisk
-                      placeholder="Enter the target URL for redirection"
-                      required
-                      {...settingsForm.getInputProps("redirect.url")}
-                    />
-                  </Grid.Col>
-                </Grid>
-                <Grid columns={10}>
-                  <Grid.Col span={4}>
-                    <Text>Redirectional time :</Text>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <ContainedNumberInput
-                      withAsterisk
-                      placeholder="Enter the time in seconds"
-                      required
-                      {...settingsForm.getInputProps("redirect.time")}
-                    />
-                  </Grid.Col>
-                </Grid>
-              </>
-            )}
           <Grid columns={10}>
             <Grid.Col span={4}></Grid.Col>
             <Grid.Col span={6}>

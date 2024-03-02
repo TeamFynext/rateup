@@ -13,14 +13,15 @@ export const updateKioskMode = (setKioskMode, editSurvey) => {
   });
 };
 
-export const updateRedirect = (setRedirect, editSurvey) => {
+export const updateRedirect = (setRedirect, editSurvey, updateData = {}) => {
+  const otherUpdate = Object.keys(updateData)?.length > 0;
   setRedirect((prev) => {
     const newRedirect = {
       ...prev,
       enable: !(prev?.enable ?? true),
     };
-    editSurvey.mutate({ redirect: newRedirect });
-    return newRedirect;
+    editSurvey.mutate({ redirect: otherUpdate ? updateData : newRedirect });
+    return otherUpdate ? updateData : newRedirect;
   });
 };
 
