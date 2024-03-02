@@ -200,6 +200,7 @@ model Survey {
   surveyTheme             SurveyTheme?
   WaFlow                  WaFlow?
   spreadSheetId           String?
+  redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
 }
 
 model SurveyTeamMap {

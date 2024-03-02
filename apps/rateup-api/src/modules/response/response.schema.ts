@@ -74,6 +74,12 @@ const generateBodySchema = z.object({
   surveyTeamMapId: z.string(),
   batchSize: z.number(),
 });
+const generateXlsxSchema = z.object({
+  surveyId: z.string().min(1),
+  defaultLanguage: z.string().min(1),
+  visibleColumn: z.array(z.string()),
+});
+
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   createResponseInputSchema,
   getResponsesParamsSchema,
@@ -81,6 +87,7 @@ export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   deleteResponseParamsSchema,
   generateBodySchema,
   getResponsesBodySchema,
+  generateXlsxSchema,
 });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
@@ -91,3 +98,4 @@ export type DeleteResponseParamsSchema = z.infer<
 >;
 export type GenerateBodyInput = z.infer<typeof generateBodySchema>;
 export type getResponsesBody = z.infer<typeof getResponsesBodySchema>;
+export type generateXlsxBody = z.infer<typeof generateXlsxSchema>;

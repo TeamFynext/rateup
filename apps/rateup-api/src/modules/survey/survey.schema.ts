@@ -83,6 +83,13 @@ const getSurveyPublicResponseSchema = z.object({
   reviews: z.array(z.any()),
   isEncrypted: z.boolean(),
   publicKey: z.string().optional(),
+  redirect: z
+    .object({
+      url: z.string().optional(),
+      time: z.string().optional(),
+      enable: z.boolean().default(true),
+    })
+    .optional(),
 });
 
 const updateSurveyRequestSchema = z.object({
@@ -104,6 +111,13 @@ const updateSurveyRequestSchema = z.object({
   notificationEmail: z.string().email().optional(),
   isEncrypted: z.boolean().optional(),
   publicKey: z.string().optional(),
+  redirect: z
+    .object({
+      url: z.string().optional(),
+      time: z.string().optional(),
+      enable: z.boolean().default(true),
+    })
+    .optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

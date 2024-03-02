@@ -6,10 +6,11 @@ import prisma from "../../utils/prisma";
 import { generateResponseData } from "../../utils/survey/response.data";
 import { getAccessToken, initializeAuthClient } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
-import { QuestionType } from "../../types/enums";
+import { ChoiceTypeQuestions, QuestionType } from "../../types/enums";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
+import xlsx from "node-xlsx";
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
@@ -38,6 +39,11 @@ export async function getAllResponses(
           responses: true,
         },
       },
+      survey: {
+        select: {
+          title: true,
+        },
+      },
       team: {
         select: {
           id: true,
@@ -60,6 +66,129 @@ export async function getAllResponses(
   return responses;
 }
 
+export async function downloadExcelResponse(
+  allResponses,
+  questions,
+  defaultLanguage,
+  visibleColumn = [],
+) {
+  const responses = allResponses && allResponses[0].responses;
+  const filteredSecondArray = questions.filter((item) =>
+    visibleColumn.includes(item.title[defaultLanguage]),
+  );
+  if (filteredSecondArray && responses) {
+    const headerArray = filteredSecondArray.flatMap((question) =>
+      question.type === QuestionType.Contact
+        ? Object.entries(question.features?.[defaultLanguage])
+            ?.filter((data: any) => data[1].isEnabled)
+            .map((data) => `${question.title[defaultLanguage]}: ${data[0]}`) ??
+          []
+        : [question.title[defaultLanguage]],
+    );
+    const createdAt = "Date";
+    if (visibleColumn.includes("createdAt")) {
+      headerArray.unshift(createdAt);
+      filteredSecondArray.unshift(createdAt);
+    }
+
+    const bodyArray = [];
+    filteredSecondArray.forEach((question) => {
+      const questionId = question.id;
+      let tempArray = [];
+      responses.forEach((response, answerIndex) => {
+        bodyArray.push([]);
+
+        const responses = response.responses;
+        const responseObj = responses.find(
+          (answerObj) => answerObj.questionId === questionId,
+        );
+        let responseValue;
+        let flag = true;
+        if (responseObj) {
+          responseValue = responseObj.response[question.type];
+          const responseType = responseObj.type;
+          switch (responseType) {
+            case QuestionType.Photo: {
+              responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+              break;
+            }
+            case QuestionType.DateTime: {
+              responseValue = dayjs(responseValue).format("DD-MM-YYYY");
+              break;
+            }
+            case QuestionType.PCQ: {
+              responseValue = responseValue?.value?.value;
+              break;
+            }
+            case QuestionType.TnC: {
+              responseValue = responseValue?.toString();
+              break;
+            }
+          }
+          if (
+            QuestionType.Contact === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            Object.values(responseValue)?.map((value) =>
+              bodyArray[answerIndex].push(value),
+            );
+            flag = false;
+          } else if (!tempArray.includes({ [answerIndex]: questionId })) {
+            if (ChoiceTypeQuestions.includes(responseType)) {
+              responseValue = Array.isArray(responseValue)
+                ? responseValue?.map((res) => res.value).join(", ")
+                : responseValue?.value;
+            } else if (typeof responseValue === "object") {
+              responseValue = responseValue?.value
+                ? Object.values(responseValue?.value).join(", ")
+                : Object.values(responseValue).join(", ");
+            }
+          }
+        } else if (question === createdAt) {
+          const createdAtFormatted = dayjs(response.createdAt).format(
+            "DD-MM-YYYY hh:mm A",
+          );
+          responseValue = createdAtFormatted;
+        } else {
+          responseValue = "";
+        }
+        if (flag) {
+          bodyArray[answerIndex].push(responseValue);
+        }
+      });
+    });
+    let options = [];
+    headerArray.map((data, i) => {
+      const headingWidth = String(data)?.length + 2;
+      const dataWidth = getMaxContentWidth(bodyArray, i);
+      const width = Math.max(headingWidth, dataWidth);
+      options.push({ width: width > 40 ? 40 : width });
+    });
+    let fileName = allResponses?.[0].survey?.title ?? "download";
+    let buffer = xlsx.build([
+      {
+        name: fileName,
+        data: [headerArray, ...bodyArray],
+        options: {
+          "!cols": options,
+        },
+      },
+    ]);
+
+    return [fileName, buffer];
+  }
+}
+function getMaxContentWidth(data, columnIndex: number) {
+  let maxWidth = 0;
+  for (const row of data) {
+    const valueLength = String(row[columnIndex]).length;
+    if (valueLength > maxWidth) {
+      maxWidth = valueLength;
+    }
+  }
+  return maxWidth;
+}
 export async function resetResponsesStats(surveyTeamMapId: string) {
   const deleteResponses = await prisma.surveyResponse.deleteMany({
     where: {
