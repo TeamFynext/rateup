@@ -8,16 +8,16 @@ export const WA_FLOW_HEADING_CHAR_LIMIT = 4096;
 export const WA_FLOW_BODY_CHAR_LIMIT = 80;
 export const WA_FLOW_CAPTION_CHAR_LIMIT = 4096;
 export const WA_FLOW_SUBHEADING_CHAR_LIMIT = 60;
-export const FlowMaxScreens = 10;
+export const FlowMaxScreens = 8;
 export const FlowMaxElementsPerScreen = 10;
 export function getFlowLabelLimit(type: WaFlowFormElementType) {
   switch (type) {
-    case WaFlowFormElementType.textInput:
-    case WaFlowFormElementType.textArea:
     case WaFlowFormElementType.checkboxGroup:
     case WaFlowFormElementType.radioButtonsGroup:
       return 30;
     case WaFlowFormElementType.dropDown:
+    case WaFlowFormElementType.textInput:
+    case WaFlowFormElementType.textArea:
       return 20;
     case WaFlowFormElementType.datePicker:
       return 40;

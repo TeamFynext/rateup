@@ -42,6 +42,11 @@ export function EditableText({
   textInputRef = null,
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
+
+  function handleSave() {
+    setText(tempText);
+    setEditingItem(null);
+  }
   if (editMode) {
     return (
       <FocusTrap active={true}>
@@ -62,21 +67,12 @@ export function EditableText({
             placeholder={placeholder}
             onKeyUp={(event) => {
               if (event.key === "Enter" && saveOnEnter) {
-                setText(tempText);
-                setEditingItem(null);
+                handleSave();
               }
             }}
-            onKeyDown={getHotkeyHandler([
-              [
-                SAVE_HOTKEY,
-                () => {
-                  setText(tempText);
-                  setEditingItem(null);
-                },
-              ],
-            ])}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}
           />
-          <ActionIcon onClick={() => setEditingItem(null)}>
+          <ActionIcon onClick={handleSave}>
             <IconCheck />
           </ActionIcon>
         </Group>

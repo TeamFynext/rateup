@@ -643,3 +643,26 @@ export function getWaFlowElementIdFromQuestionId(qId: string, map: WaFlowMap) {
     return undefined;
   }
 }
+
+/**
+ * Moves a screen element to a new position.
+ * @param screenId id of the screen to be moved
+ * @param position index of where the screen is to be inserted.
+ * @param draft UseImmer draft object to save the updated flowJson
+ * */
+export function moveFlowScreen(
+  screenId: string,
+  position: number,
+  draft: WaFlowJson,
+) {
+  const currentIndex = draft.screens.findIndex((s) => s.id === screenId);
+  const currentScreen = draft.screens[currentIndex];
+
+  draft.screens.splice(position, 0, currentScreen);
+
+  if (position < currentIndex) {
+    draft.screens.splice(currentIndex + 1, 1);
+  } else {
+    draft.screens.splice(currentIndex, 1);
+  }
+}

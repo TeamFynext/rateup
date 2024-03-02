@@ -43,6 +43,7 @@ export const getFileUrlFromKey = (
   s3Upload = true,
   unsplashImage = false,
 ) => {
+  if (!key) return;
   if (unsplashImage) return `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${key}`;
   const imgUrl = s3Upload
     ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`

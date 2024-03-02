@@ -23,6 +23,7 @@ import {
   getFlowElementText,
   getFlowFormElementsFromScreen,
   getQuestionsFromScreen,
+  moveFlowScreen,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { EditableText } from "../../../../input/EditableText";
 import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
@@ -47,18 +48,22 @@ interface ScreenListItemProps {
   onAddElementClick: (screenId: string) => void;
   onElementClick: (feId: string, screenId: string) => void;
   onDeleteElement: (feId: string, screenId: string) => void;
+  expanded: boolean;
+  setExpanded: () => void;
 }
 function ScreenListItem({
   screen,
   onAddElementClick,
   onElementClick,
   onDeleteElement,
+  expanded,
+  setExpanded,
 }: Readonly<ScreenListItemProps>) {
-  const [expanded, setExpanded] = useState(true); // expanded screen id
   const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
 
   const {
     survey,
+    flowJson,
     updateFlowJson,
     map,
     updateMap,
@@ -73,6 +78,9 @@ function ScreenListItem({
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const textInputRef = useRef(null);
+  const currentScreenIndex = flowJson.screens.findIndex(
+    (s) => s.id === screen.id,
+  );
 
   const elements = getFlowFormElementsFromScreen(screen);
 
@@ -136,6 +144,15 @@ function ScreenListItem({
     onElementClick(element.id, screen.id);
   }
 
+  function handleMoveScreen(action: "up" | "down") {
+    updateFlowJson((draft) => {
+      if (action === "up") {
+        moveFlowScreen(screen.id, currentScreenIndex - 1, draft);
+      } else if (action === "down") {
+        moveFlowScreen(screen.id, currentScreenIndex + 2, draft);
+      }
+    });
+  }
   return (
     <Paper
       p="xs"
@@ -157,22 +174,46 @@ function ScreenListItem({
         onConfirm={handleDeleteScreen}
       />
       <Group justify="space-between">
-        <EditableText
-          text={screen.title}
-          setText={updateScreenTitle}
-          id={screen.title}
-          editMode={editingItem === screen.title}
-          setEditingItem={setEditingItem}
-          placeholder="Section title (Required if more than one section is added)"
-          style={{
-            flexGrow: 1,
-          }}
-          textStyle={{
-            fontWeight: "bold",
-            fontSize: "1.2rem",
-          }}
-          textInputRef={textInputRef}
-        />
+        <Group>
+          <Stack gap={2}>
+            <Tooltip label="Move Screen Up" openDelay={500}>
+              <ActionIcon
+                onClick={() => handleMoveScreen("up")}
+                variant={"outline"}
+                size={22}
+                disabled={currentScreenIndex === 0}
+              >
+                <IconChevronUp size={22} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Move Screen Down" openDelay={500}>
+              <ActionIcon
+                onClick={() => handleMoveScreen("down")}
+                variant={"outline"}
+                size={22}
+                disabled={currentScreenIndex === flowJson.screens.length - 1}
+              >
+                <IconChevronDown size={22} />
+              </ActionIcon>
+            </Tooltip>
+          </Stack>
+          <EditableText
+            text={screen.title}
+            setText={updateScreenTitle}
+            id={screen.title}
+            editMode={editingItem === screen.title}
+            setEditingItem={setEditingItem}
+            placeholder="Section title (Required if more than one section is added)"
+            style={{
+              flexGrow: 1,
+            }}
+            textStyle={{
+              fontWeight: "bold",
+              fontSize: "1.2rem",
+            }}
+            textInputRef={textInputRef}
+          />
+        </Group>
         <Group>
           {flowEditable && (
             <Tooltip label="Edit Screen">
@@ -195,10 +236,7 @@ function ScreenListItem({
               </ActionIcon>
             </Tooltip>
           )}
-          <ActionIcon
-            variant="subtle"
-            onClick={() => setExpanded((prev) => !prev)}
-          >
+          <ActionIcon variant="subtle" onClick={setExpanded}>
             {expanded ? <IconChevronUp /> : <IconChevronDown />}
           </ActionIcon>
         </Group>

@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
   TextInputProps,
+  Textarea,
   TextareaProps,
   Title,
 } from "@mantine/core";
@@ -291,12 +292,12 @@ export function TextareaWithLengthTracker(
   const { input, ...restOfStyles } = styles || ({} as any);
 
   return (
-    <ContainedTextArea
+    <Textarea
       rightSection={<LengthTracker length={length} maxValue={maxValue} />}
       styles={{
         input: {
           paddingRight: "80px",
-          border: "none",
+          borderRadius: "12px",
           ...input,
         },
         ...restOfStyles,
