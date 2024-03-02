@@ -4,10 +4,12 @@ import {
   GetResponsesParams,
   DeleteResponseParamsSchema,
   GenerateBodyInput,
+  generateXlsxBody,
 } from "./response.schema";
 import {
   createResponse,
   deleteResponse,
+  downloadExcelResponse,
   generateResponse,
   getAllResponses,
   getResponses,
@@ -24,6 +26,7 @@ import { getTeamIdsByUserId } from "../team/team.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
+import { getQuestionsBySurveyId } from "../question/question.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -59,6 +62,32 @@ export async function getAllResponsesHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send();
+  }
+}
+
+export async function downloadExcelResponseHandler(
+  request: FastifyRequest<{
+    Body: generateXlsxBody;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    const userId = session.getUserId();
+    const teamIds = await getTeamIdsByUserId(userId);
+    const surveyId = request.body.surveyId;
+    const allResponse = await getAllResponses(surveyId, teamIds);
+    const question = await getQuestionsBySurveyId(surveyId);
+    const [title, data] = await downloadExcelResponse(
+      allResponse,
+      question,
+      request.body.defaultLanguage,
+      request.body.visibleColumn,
+    );
+    reply.header("filename", `${title}.xlsx`);
+    reply.status(200).type("application/xlsx").send(data);
+  } catch (e) {
+    reply.status(500).send(e);
   }
 }
 

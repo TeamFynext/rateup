@@ -9,7 +9,7 @@ generator client {
 // TODO: remove this when prisma allows types for Json
 // https://github.com/prisma/prisma/issues/3219
 generator json {
-  provider = "prisma-json-types-generator"
+  provider  = "prisma-json-types-generator"
   namespace = "PrismaJson"
 }
 
@@ -54,41 +54,44 @@ enum Gender {
 }
 
 model User {
-  id           String       @id @default(uuid()) @db.Uuid
-  createdAt    DateTime     @default(now())
-  email        String       @unique
-  name         String?
-  profilePhoto String?
-  phone        String?
-  active       Boolean      @default(true)
-  gender       Gender?
-  org          Org[]
-  orgMember    OrgMember[]
-  teamMember   TeamMember[]
-  surveys      Survey[]
-  Order        Order[]
+  id             String          @id @default(uuid()) @db.Uuid
+  createdAt      DateTime        @default(now())
+  email          String          @unique
+  name           String?
+  profilePhoto   String?
+  phone          String?
+  active         Boolean         @default(true)
+  gender         Gender?
+  org            Org[]
+  orgMember      OrgMember[]
+  teamMember     TeamMember[]
+  surveys        Survey[]
+  Order          Order[]
+  assignedTicket Ticket[]        @relation("AssignedTicket")
+  createdTicket  Ticket[]        @relation("CreatedTicket")
+  TicketComment  TicketComment[]
 }
 
 model Org {
-  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt        DateTime          @default(now())
-  name             String
-  owner            User              @relation(fields: [ownerId], references: [id])
-  ownerId          String            @db.Uuid
-  logo             String?
-  phone            String?
-  address          String?
-  encryptionKeys   Json? //{privateKey:string,publicKey:string}
-  members          OrgMember[]
-  teams            Team[]
-  invitations      Invitation[]
-  whatsappSettings WhatsappSettings?
-  templates        WaTemplate[]
-  Subscription     Subscription?
-  Order            Order[]
-  WaFlow           WaFlow[]
-  googleAccessToken GoogleAccessToken? 
-  driveFolderId    String?
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime           @default(now())
+  name              String
+  owner             User               @relation(fields: [ownerId], references: [id])
+  ownerId           String             @db.Uuid
+  logo              String?
+  phone             String?
+  address           String?
+  encryptionKeys    Json? //{privateKey:string,publicKey:string}
+  members           OrgMember[]
+  teams             Team[]
+  invitations       Invitation[]
+  whatsappSettings  WhatsappSettings?
+  templates         WaTemplate[]
+  Subscription      Subscription?
+  Order             Order[]
+  WaFlow            WaFlow[]
+  googleAccessToken GoogleAccessToken?
+  driveFolderId     String?
 }
 
 model WhatsappSettings {
@@ -123,20 +126,20 @@ model Team {
   googleLink String?
   tags       String[] @default([])
 
-  org               Org                @relation(fields: [orgId], references: [id])
-  orgId             String             @db.Uuid
-  members           TeamMember[]
-  surveys           SurveyTeamMap[]
-  invitations       Invitation[]
-  contacts          Contact[]
-  contactGroups     ContactGroup[]
-  menu              Menu[]
-  campaigns         Campaign[]
-  reviewSuggestions ReviewSuggestion[]
-  Review            Review[]
-  RM_Topic          RM_Topic[]
+  org                    Org                     @relation(fields: [orgId], references: [id])
+  orgId                  String                  @db.Uuid
+  members                TeamMember[]
+  surveys                SurveyTeamMap[]
+  invitations            Invitation[]
+  contacts               Contact[]
+  contactGroups          ContactGroup[]
+  menu                   Menu[]
+  campaigns              Campaign[]
+  reviewSuggestions      ReviewSuggestion[]
+  Review                 Review[]
+  RM_Topic               RM_Topic[]
   testimonialCollections TestimonialCollection[]
-
+  Ticket                 Ticket[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -197,12 +200,14 @@ model Survey {
   surveyTheme             SurveyTheme?
   WaFlow                  WaFlow?
   spreadSheetId           String?
+  redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
 }
 
 model SurveyTeamMap {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   surveyId    String           @db.Uuid
   teamId      String           @db.Uuid
+  shortUrlId  String?          @unique
   survey      Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   responses   SurveyResponse[]
@@ -246,7 +251,8 @@ model SurveyResponse {
   Contact              Contact?              @relation(fields: [contactId], references: [id])
   contactId            String?               @db.Uuid
   CampaignParticipants CampaignParticipant[]
-  Testimonial Testimonial[]
+  Testimonial          Testimonial[]
+  Ticket               Ticket[]
 }
 
 model SurveyStats {
@@ -495,6 +501,7 @@ model Review {
   teamId         String          @db.Uuid
   meta           Json?
   ReviewAnalysis ReviewAnalysis?
+  Ticket         Ticket[]
 }
 
 // result of sentiment analysis
@@ -662,26 +669,26 @@ model WaFlow {
 }
 
 model Testimonial {
-  id              String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime                   @default(now())
-  testimonial     Json
-  responseId      String                     @db.Uuid
-  surveyResponse  SurveyResponse             @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  collections     TestimonialCollectionMap[]
+  id             String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt      DateTime                   @default(now())
+  testimonial    Json
+  responseId     String                     @db.Uuid
+  surveyResponse SurveyResponse             @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  collections    TestimonialCollectionMap[]
 
-  @@unique([testimonial,responseId], name: "response_testimonial_unique")
+  @@unique([testimonial, responseId], name: "response_testimonial_unique")
 }
 
 model TestimonialCollection {
-  id              String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  testimonials    TestimonialCollectionMap[]
-  teamId          String                     @db.Uuid
-  team            Team                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  theme           Json?
-  createdAt       DateTime                   @default(now())
+  id           String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  testimonials TestimonialCollectionMap[]
+  teamId       String                     @db.Uuid
+  team         Team                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  theme        Json?
+  createdAt    DateTime                   @default(now())
 
-  @@unique([name,teamId], name: "collection_name_team_id_unique")
+  @@unique([name, teamId], name: "collection_name_team_id_unique")
 }
 
 model TestimonialCollectionMap {
@@ -690,15 +697,69 @@ model TestimonialCollectionMap {
   collectionId  String                @db.Uuid
   collection    TestimonialCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   createdAt     DateTime              @default(now())
-  
+
   @@id([testimonialId, collectionId])
 }
 
+model Ticket {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number           Int             @unique @default(autoincrement())
+  title            String
+  type             TicketType
+  createdBy        User            @relation("CreatedTicket", fields: [createdById], references: [id])
+  createdById      String          @db.Uuid
+  createdAt        DateTime        @default(now())
+  status           TicketStatus
+  priority         TicketPriority
+  team             Team            @relation(fields: [teamId], references: [id])
+  teamId           String          @db.Uuid
+  deadline         DateTime?
+  assignedTo       User            @relation("AssignedTicket", fields: [assignedToId], references: [id])
+  assignedToId     String          @db.Uuid
+  comments         TicketComment[]
+  reviewId         String?         @db.Uuid
+  surveyResponseId String?         @db.Uuid
+  review           Review?         @relation(fields: [reviewId], references: [id])
+  surveyResponse   SurveyResponse? @relation(fields: [surveyResponseId], references: [id])
+
+  @@unique([number, teamId], name: "ticket_number_team_id_unique")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketType {
+  REVIEW
+  SURVEY_RESPONSE
+}
+
+model TicketComment {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  text        String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId    String   @db.Uuid
+}
+
 model GoogleAccessToken {
-  accessToken String 
-  orgId    String   @unique @db.Uuid
-  org  Org   @relation(fields: [orgId], references: [id])
+  accessToken  String
+  orgId        String   @unique @db.Uuid
+  org          Org      @relation(fields: [orgId], references: [id])
   refreshToken String
-  expiryDate String
-  scopes String[] 
+  expiryDate   String
+  scopes       String[]
+  userEmail    String
 }

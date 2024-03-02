@@ -200,7 +200,10 @@ export async function getGoogleAuthUrl(
   reply: FastifyReply,
 ) {
   try {
-    const scopes = ["https://www.googleapis.com/auth/drive.file"];
+    const scopes = [
+      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ];
     const oauth2Client = await initializeAuthClient();
     const authorizeUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
@@ -226,8 +229,9 @@ export async function createGoogleAuthToken(
     const code = request.body.code;
     const oauth2Client = await initializeAuthClient();
     const { tokens } = await oauth2Client.getToken(code);
+    const { email } = await oauth2Client.getTokenInfo(tokens.access_token);
     //store in database
-    let res = await saveAuthTokens(tokens, request.user.orgId);
+    let res = await saveAuthTokens(tokens, email, request.user.orgId);
     reply.code(201).send({ message: "success" });
   } catch (error) {
     console.error(error);

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { $Rref } from "./response.schema";
 import {
   deleteResponseHandler,
+  downloadExcelResponseHandler,
   generateResponseHandler,
   getAllResponsesHandler,
   getResponsesHandler,
@@ -28,6 +29,16 @@ export async function responseRoutes(server: FastifyInstance) {
   );
   //route dedcicated for getting all responses for a survey including all teams
   server.get("/all/:surveyId", getAllResponsesHandler);
+
+  server.post(
+    "/download-response",
+    {
+      schema: {
+        body: $Rref("generateXlsxSchema"),
+      },
+    },
+    downloadExcelResponseHandler,
+  );
 
   //generate response data
   server.post(

@@ -6,10 +6,11 @@ import prisma from "../../utils/prisma";
 import { generateResponseData } from "../../utils/survey/response.data";
 import { getAccessToken, initializeAuthClient } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
-import { QuestionType } from "../../types/enums";
+import { ChoiceTypeQuestions, QuestionType } from "../../types/enums";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
+import xlsx from "node-xlsx";
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
@@ -38,6 +39,11 @@ export async function getAllResponses(
           responses: true,
         },
       },
+      survey: {
+        select: {
+          title: true,
+        },
+      },
       team: {
         select: {
           id: true,
@@ -60,6 +66,129 @@ export async function getAllResponses(
   return responses;
 }
 
+export async function downloadExcelResponse(
+  allResponses,
+  questions,
+  defaultLanguage,
+  visibleColumn = [],
+) {
+  const responses = allResponses && allResponses[0].responses;
+  const filteredSecondArray = questions.filter((item) =>
+    visibleColumn.includes(item.title[defaultLanguage]),
+  );
+  if (filteredSecondArray && responses) {
+    const headerArray = filteredSecondArray.flatMap((question) =>
+      question.type === QuestionType.Contact
+        ? Object.entries(question.features?.[defaultLanguage])
+            ?.filter((data: any) => data[1].isEnabled)
+            .map((data) => `${question.title[defaultLanguage]}: ${data[0]}`) ??
+          []
+        : [question.title[defaultLanguage]],
+    );
+    const createdAt = "Date";
+    if (visibleColumn.includes("createdAt")) {
+      headerArray.unshift(createdAt);
+      filteredSecondArray.unshift(createdAt);
+    }
+
+    const bodyArray = [];
+    filteredSecondArray.forEach((question) => {
+      const questionId = question.id;
+      let tempArray = [];
+      responses.forEach((response, answerIndex) => {
+        bodyArray.push([]);
+
+        const responses = response.responses;
+        const responseObj = responses.find(
+          (answerObj) => answerObj.questionId === questionId,
+        );
+        let responseValue;
+        let flag = true;
+        if (responseObj) {
+          responseValue = responseObj.response[question.type];
+          const responseType = responseObj.type;
+          switch (responseType) {
+            case QuestionType.Photo: {
+              responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+              break;
+            }
+            case QuestionType.DateTime: {
+              responseValue = dayjs(responseValue).format("DD-MM-YYYY");
+              break;
+            }
+            case QuestionType.PCQ: {
+              responseValue = responseValue?.value?.value;
+              break;
+            }
+            case QuestionType.TnC: {
+              responseValue = responseValue?.toString();
+              break;
+            }
+          }
+          if (
+            QuestionType.Contact === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            Object.values(responseValue)?.map((value) =>
+              bodyArray[answerIndex].push(value),
+            );
+            flag = false;
+          } else if (!tempArray.includes({ [answerIndex]: questionId })) {
+            if (ChoiceTypeQuestions.includes(responseType)) {
+              responseValue = Array.isArray(responseValue)
+                ? responseValue?.map((res) => res.value).join(", ")
+                : responseValue?.value;
+            } else if (typeof responseValue === "object") {
+              responseValue = responseValue?.value
+                ? Object.values(responseValue?.value).join(", ")
+                : Object.values(responseValue).join(", ");
+            }
+          }
+        } else if (question === createdAt) {
+          const createdAtFormatted = dayjs(response.createdAt).format(
+            "DD-MM-YYYY hh:mm A",
+          );
+          responseValue = createdAtFormatted;
+        } else {
+          responseValue = "";
+        }
+        if (flag) {
+          bodyArray[answerIndex].push(responseValue);
+        }
+      });
+    });
+    let options = [];
+    headerArray.map((data, i) => {
+      const headingWidth = String(data)?.length + 2;
+      const dataWidth = getMaxContentWidth(bodyArray, i);
+      const width = Math.max(headingWidth, dataWidth);
+      options.push({ width: width > 40 ? 40 : width });
+    });
+    let fileName = allResponses?.[0].survey?.title ?? "download";
+    let buffer = xlsx.build([
+      {
+        name: fileName,
+        data: [headerArray, ...bodyArray],
+        options: {
+          "!cols": options,
+        },
+      },
+    ]);
+
+    return [fileName, buffer];
+  }
+}
+function getMaxContentWidth(data, columnIndex: number) {
+  let maxWidth = 0;
+  for (const row of data) {
+    const valueLength = String(row[columnIndex]).length;
+    if (valueLength > maxWidth) {
+      maxWidth = valueLength;
+    }
+  }
+  return maxWidth;
+}
 export async function resetResponsesStats(surveyTeamMapId: string) {
   const deleteResponses = await prisma.surveyResponse.deleteMany({
     where: {
@@ -253,11 +382,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const authClient = await initializeAuthClient();
   const token = await getAccessToken(orgId);
   authClient.credentials.refresh_token = token.refreshToken;
-  let doc;
+  const doc = survey.spreadSheetId
+    ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
+    : await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
+        title: survey.title,
+      });
   if (!survey.spreadSheetId) {
-    doc = await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
-      title: survey.title,
-    });
     const driveFolderId = await getDriveFolderId(orgId, authClient);
     const drive = google.drive({ version: "v3", auth: authClient });
     let fileId = doc.spreadsheetId;
@@ -274,8 +404,6 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       fields: "id, parents",
     });
     await saveSheetIdToSurvey(doc.spreadsheetId, surveyId);
-  } else {
-    doc = new GoogleSpreadsheet(survey.spreadSheetId, authClient);
   }
   await doc.loadInfo();
   const languages = survey?.languages;
@@ -295,10 +423,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       const langRes = teamRes?.responses.filter((res) => res.language === lang);
       teamAndResponse.push({
         team: teamRes.team,
-        teamWiseResponses: langRes.map((res) => ({
-          createdAt: new Date(res.createdAt).toLocaleString(),
-          responses: res.responses,
-        })),
+        teamWiseResponses: langRes
+          .map((res) => ({
+            createdAt: res.createdAt,
+            responses: res.responses,
+          }))
+          .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
       });
     });
     languageWiseResponse[lang] = teamAndResponse;
@@ -327,14 +457,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         );
       } else questionTitles.push(qstnTitle);
     });
-    let sheet = await doc.sheetsByTitle[lang];
-    if (!sheet) {
-      sheet = await doc.addSheet({
+
+    const sheet =
+      (await doc.sheetsByTitle[lang]) ??
+      (await doc.addSheet({
         title: lang,
-        headerValues: ["Date", ...questionTitles, "team"],
-      });
-    }
-    await sheet.setHeaderRow(["Date", ...questionTitles, "team"]);
+        headerValues: ["Created At", ...questionTitles, "team"],
+      }));
+    await sheet.setHeaderRow(["Created At", ...questionTitles, "team"]);
     await sheet.loadCells();
     const columnCount = await sheet.columnCount;
     for (var i = 0; i < columnCount; i++) {
@@ -346,7 +476,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     for (const langRes of languageWiseResponse[lang]) {
       langRes.teamWiseResponses.map((response) => {
         const resObj = { team: langRes.team };
-        resObj["Date"] = response.createdAt;
+        resObj["Created At"] = dayjs(response.createdAt).format(
+          "DD-MM-YYYY hh:mm A",
+        );
         response.responses.map((res: QuestionResponse) => {
           let QIndex;
           let qstn = questions.find((q: Question, index: number) => {
@@ -385,6 +517,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       });
     }
     await sheet.addRows(responseForSheet);
+    const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+    for (var i = 0; i <= responseForSheet.length; i++) {
+      sheet.getCell(i, dateColumnIndex).numberFormat = {
+        type: "DATE",
+        pattern: 'dd-mm-yyyy hh:mm A/P"M"',
+      };
+    }
+    await sheet.saveUpdatedCells();
   }
   const sheetToRemove = await doc.sheetsByTitle["Sheet1"];
   if (sheetToRemove) sheetToRemove.delete();
@@ -460,7 +600,9 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
     await doc.loadInfo();
     let sheet = await doc.sheetsByTitle[response.language];
     const resObj = { team: team.name };
-    resObj["Date"] = new Date(response.createdAt).toLocaleString();
+    resObj["Created At"] = dayjs(response.createdAt).format(
+      "DD-MM-YYYY hh:mm A",
+    );
     response.responses.map((res: QuestionResponse) => {
       let QIndex;
       let qstn = questions.find((q: Question, index: number) => {
@@ -490,7 +632,14 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
         resObj[QIndex + "_" + qstn.title[response.language].trim()] =
           getFormattedResponse(res.response[res.type], res.type);
     });
-    sheet.addRow(resObj);
+    const newRow = await sheet.addRow(resObj);
+    const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+    await sheet.loadCells();
+    sheet.getCell(newRow.rowNumber, dateColumnIndex).numberFormat = {
+      type: "DATE",
+      pattern: 'dd-mm-yyyy hh:mm A/P"M"',
+    };
+    await sheet.saveUpdatedCells();
   }
   return spreadSheetId;
 }

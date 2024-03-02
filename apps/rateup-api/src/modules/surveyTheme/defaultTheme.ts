@@ -38,6 +38,7 @@ const button = {
     color: "rgb(255, 255, 255)",
     textAlign: "center",
   },
+  position: { x: "CENTER", y: "DEFAULT" },
 };
 
 export const defaultTheme: SurveyTheme & surveyThemeSchemaCore = {

@@ -11,7 +11,11 @@ export async function verifyAccess(
   }>,
   reply: FastifyReply,
 ) {
-  if (request.routerPath === "/api/response/generate") return;
+  if (
+    request.routerPath === "/api/response/generate" ||
+    request.routerPath === "/api/response/download-response"
+  )
+    return;
   const surveyId = request.params.surveyId
     ? request.params.surveyId
     : await getSurveyIdfromMap(request.params.surveyTeamMapId);

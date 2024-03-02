@@ -38,6 +38,7 @@ import {
   updateVisitedSurvey,
 } from "../../survey/survey.service";
 import { fetchLocationFromIp } from "../../../utils/location";
+import { getOrCreateContactByPhone } from "../../contact/contact.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -332,12 +333,18 @@ export async function saveResponses(session: WaSessionWithRelations) {
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 
+  const contact = await getOrCreateContactByPhone(
+    session.phone,
+    session.surveyTeamMap.teamId,
+  );
+
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
     language: session.language,
     platform: ResponsePlatform.WHATSAPP,
     location: await fetchLocationFromIp(session.ip),
+    contactId: contact?.id,
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);

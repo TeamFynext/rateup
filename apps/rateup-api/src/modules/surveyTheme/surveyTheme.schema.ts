@@ -38,6 +38,12 @@ const welcomeThemeSchema = z.object({
     .object({
       label: z.string(),
       styles: z.any().optional(),
+      position: z
+        .object({
+          x: z.any().optional(),
+          y: z.any().optional(),
+        })
+        .optional(),
     })
     .optional(),
 });

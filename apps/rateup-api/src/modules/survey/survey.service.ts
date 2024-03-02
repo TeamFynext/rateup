@@ -10,6 +10,7 @@ import { getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
 import { log } from "../../utils/logger";
 import { getReviewsBySurveyTeamMapId } from "../reviewSuggestion/reviewSuggestion.service";
+import { getShortUrlId } from "../../utils/commnUtils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -19,7 +20,12 @@ export async function createSurvey(
   notificationEmail?: string,
 ) {
   const { templateId, ...input } = data;
-  const teamIds = input?.teamIds?.map((teamId) => ({ teamId }));
+  const teamIds = input?.teamIds?.map((teamId) => {
+    return {
+      teamId,
+      shortUrlId: getShortUrlId(),
+    };
+  });
   delete input.teamIds;
 
   if (templateId) {
@@ -150,6 +156,7 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
       },
     },
   });
+
   if (!survey) {
     throw new Error(`Could not find survey with id ${id}`);
   }
@@ -162,6 +169,7 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
       mapId: team?.id,
       code: team.team.code,
       tags: team.team.tags,
+      shortUrlId: team.shortUrlId,
     };
     return teamData;
   });
@@ -172,11 +180,12 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
 
 //-----------get public survey with org logo -------
 
+// This function returns survey from SurveyTeamMap Table, below argument id means SurveyTeamMap Table id
 export async function getPublicSurveyById(id: string) {
+  // id.length === 6 means it is shortUrlId.
+  const surveyTeamMapWhere = id.length === 6 ? { shortUrlId: id } : { id };
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
-    where: {
-      id,
-    },
+    where: surveyTeamMapWhere,
     include: {
       survey: true,
     },
@@ -185,6 +194,8 @@ export async function getPublicSurveyById(id: string) {
   if (!surveyTeamMap) {
     throw new Error(`Could not find survey with id ${id}`);
   }
+
+  const surveyTeamMapId = surveyTeamMap.id;
 
   let org = await prisma.team.findUnique({
     where: {
@@ -196,16 +207,18 @@ export async function getPublicSurveyById(id: string) {
   });
 
   let orgLogo = { orgLogo: org?.org?.logo };
-  let googleLink = await getGoogleUrlBySurveyTeamMapId(id);
-  let reviewSuggestion = await getReviewsBySurveyTeamMapId(id);
+  let googleLink = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
+  let reviewSuggestion = await getReviewsBySurveyTeamMapId(surveyTeamMapId);
 
   let publicSurvey = {
+    surveyTeamMapId,
     ...surveyTeamMap.survey,
     ...orgLogo,
     googleLink: googleLink,
     reviews: reviewSuggestion,
   };
 
+  console.log(publicSurvey);
   return publicSurvey;
 }
 
@@ -634,7 +647,11 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
     if (newTeams?.length) {
       const newSurveyTeams = await prisma.surveyTeamMap.createMany({
-        data: newTeams.map((team) => ({ surveyId: id, ...team })),
+        data: newTeams.map((team) => ({
+          surveyId: id,
+          ...team,
+          shortUrlId: getShortUrlId(),
+        })),
       });
     }
 

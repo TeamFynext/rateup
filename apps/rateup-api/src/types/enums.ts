@@ -154,3 +154,12 @@ export enum WaFlowFormElementType {
   dropDown = "Dropdown",
   optIn = "OptIn",
 }
+
+export const ChoiceTypeQuestions = [
+  QuestionType.MCQ,
+  QuestionType.MSQ,
+  QuestionType.DDMS,
+  QuestionType.DDSS,
+  QuestionType.CustomNPS,
+  QuestionType.WaButtons,
+];
