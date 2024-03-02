@@ -632,6 +632,8 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     data: dataInput,
   });
 
+  const isOldSurvey = survey.createdAt < new Date(2024, 2, 1);
+
   if (teams?.length) {
     let teamIds = teams.map((team) => ({ teamId: team }));
     const surveyTeams = await prisma.surveyTeamMap.findMany({
@@ -650,7 +652,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
         data: newTeams.map((team) => ({
           surveyId: id,
           ...team,
-          shortUrlId: getShortUrlId(),
+          shortUrlId: isOldSurvey ? null : getShortUrlId(),
         })),
       });
     }
