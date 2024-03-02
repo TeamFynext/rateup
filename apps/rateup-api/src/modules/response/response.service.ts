@@ -253,11 +253,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const authClient = await initializeAuthClient();
   const token = await getAccessToken(orgId);
   authClient.credentials.refresh_token = token.refreshToken;
-  let doc;
+  const doc = survey.spreadSheetId
+    ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
+    : await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
+        title: survey.title,
+      });
   if (!survey.spreadSheetId) {
-    doc = await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
-      title: survey.title,
-    });
     const driveFolderId = await getDriveFolderId(orgId, authClient);
     const drive = google.drive({ version: "v3", auth: authClient });
     let fileId = doc.spreadsheetId;
@@ -274,8 +275,6 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       fields: "id, parents",
     });
     await saveSheetIdToSurvey(doc.spreadsheetId, surveyId);
-  } else {
-    doc = new GoogleSpreadsheet(survey.spreadSheetId, authClient);
   }
   await doc.loadInfo();
   const languages = survey?.languages;
@@ -295,10 +294,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       const langRes = teamRes?.responses.filter((res) => res.language === lang);
       teamAndResponse.push({
         team: teamRes.team,
-        teamWiseResponses: langRes.map((res) => ({
-          createdAt: new Date(res.createdAt).toLocaleString(),
-          responses: res.responses,
-        })),
+        teamWiseResponses: langRes
+          .map((res) => ({
+            createdAt: res.createdAt,
+            responses: res.responses,
+          }))
+          .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
       });
     });
     languageWiseResponse[lang] = teamAndResponse;
@@ -327,14 +328,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         );
       } else questionTitles.push(qstnTitle);
     });
-    let sheet = await doc.sheetsByTitle[lang];
-    if (!sheet) {
-      sheet = await doc.addSheet({
+
+    const sheet =
+      (await doc.sheetsByTitle[lang]) ??
+      (await doc.addSheet({
         title: lang,
-        headerValues: ["Date", ...questionTitles, "team"],
-      });
-    }
-    await sheet.setHeaderRow(["Date", ...questionTitles, "team"]);
+        headerValues: ["Created At", ...questionTitles, "team"],
+      }));
+    await sheet.setHeaderRow(["Created At", ...questionTitles, "team"]);
     await sheet.loadCells();
     const columnCount = await sheet.columnCount;
     for (var i = 0; i < columnCount; i++) {
@@ -346,7 +347,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     for (const langRes of languageWiseResponse[lang]) {
       langRes.teamWiseResponses.map((response) => {
         const resObj = { team: langRes.team };
-        resObj["Date"] = response.createdAt;
+        resObj["Created At"] = dayjs(response.createdAt).format(
+          "DD-MM-YYYY hh:mm A",
+        );
         response.responses.map((res: QuestionResponse) => {
           let QIndex;
           let qstn = questions.find((q: Question, index: number) => {
@@ -385,6 +388,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       });
     }
     await sheet.addRows(responseForSheet);
+    const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+    for (var i = 0; i <= responseForSheet.length; i++) {
+      sheet.getCell(i, dateColumnIndex).numberFormat = {
+        type: "DATE",
+        pattern: 'dd-mm-yyyy hh:mm A/P"M"',
+      };
+    }
+    await sheet.saveUpdatedCells();
   }
   const sheetToRemove = await doc.sheetsByTitle["Sheet1"];
   if (sheetToRemove) sheetToRemove.delete();
@@ -460,7 +471,9 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
     await doc.loadInfo();
     let sheet = await doc.sheetsByTitle[response.language];
     const resObj = { team: team.name };
-    resObj["Date"] = new Date(response.createdAt).toLocaleString();
+    resObj["Created At"] = dayjs(response.createdAt).format(
+      "DD-MM-YYYY hh:mm A",
+    );
     response.responses.map((res: QuestionResponse) => {
       let QIndex;
       let qstn = questions.find((q: Question, index: number) => {
@@ -490,7 +503,14 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
         resObj[QIndex + "_" + qstn.title[response.language].trim()] =
           getFormattedResponse(res.response[res.type], res.type);
     });
-    sheet.addRow(resObj);
+    const newRow = await sheet.addRow(resObj);
+    const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+    await sheet.loadCells();
+    sheet.getCell(newRow.rowNumber, dateColumnIndex).numberFormat = {
+      type: "DATE",
+      pattern: 'dd-mm-yyyy hh:mm A/P"M"',
+    };
+    await sheet.saveUpdatedCells();
   }
   return spreadSheetId;
 }

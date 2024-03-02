@@ -449,7 +449,7 @@ export async function initializeAuthClient() {
   return oauth2Client;
 }
 
-export async function saveAuthTokens(token, orgId) {
+export async function saveAuthTokens(token, email, orgId) {
   let res = await prisma.googleAccessToken.upsert({
     where: {
       orgId: orgId,
@@ -459,6 +459,7 @@ export async function saveAuthTokens(token, orgId) {
       refreshToken: token.refresh_token,
       expiryDate: `${token.expiry_date}`,
       scopes: token.scope.split(" "),
+      userEmail: email,
     },
     create: {
       orgId: orgId,
@@ -466,6 +467,7 @@ export async function saveAuthTokens(token, orgId) {
       refreshToken: token.refresh_token,
       expiryDate: `${token.expiry_date}`,
       scopes: token.scope.split(" "),
+      userEmail: email,
     },
   });
   return res;
