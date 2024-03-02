@@ -88,7 +88,7 @@ function ButtonStyles({
           }}
         />
         <Box>
-          <Text fw={500}>Coordinate position</Text>
+          <Text fw={500}>Button position</Text>
           <Flex gap={"sm"}>
             <ContainedSelection
               data={COORDINATESX}
