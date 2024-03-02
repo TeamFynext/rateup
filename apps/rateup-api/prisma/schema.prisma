@@ -206,6 +206,7 @@ model SurveyTeamMap {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   surveyId    String           @db.Uuid
   teamId      String           @db.Uuid
+  shortUrlId  String?          @unique
   survey      Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   responses   SurveyResponse[]
