@@ -71,6 +71,7 @@ type GoogleAuthAccess = {
     refreshToken: string;
     expiryDate: string;
     scopes: Array<string>;
+    userEmail: string;
   };
 };
 export async function getGoogleAccessToken() {

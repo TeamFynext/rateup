@@ -86,6 +86,10 @@ const Responses = ({
   const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
     useDisclosure(false);
+  const [
+    redirectModalOpened,
+    { open: redirectModalOpen, close: redirectModalClose },
+  ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [callbackRoute, setCallBackRoute] = useLocalStorage(
     "google-callback-route",
@@ -94,9 +98,8 @@ const Responses = ({
 
   const hasContactQuestion =
     responses &&
-    responses?.some(
-      (response) =>
-        response?.responses?.some((res) => QuestionType.Contact === res.type),
+    responses?.some((response) =>
+      response?.responses?.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -292,9 +295,7 @@ const Responses = ({
     setIsSyncing(true);
     if (!googleAuthAccessToken.isExist) {
       setIsSyncing(false);
-      toggle();
-      setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
-      window.open(authUrl);
+      redirectModalOpen();
     } else {
       syncResponseToGoogleSheet.mutate(
         { surveyId },
@@ -413,6 +414,16 @@ const Responses = ({
                     headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
                     confirmLabel="Yes"
                     onConfirm={handleSyncGoogleSheet}
+                  />
+                  <ConfirmationModal
+                    opened={redirectModalOpened}
+                    onClose={redirectModalClose}
+                    headerTitle="Sync Google Sheet"
+                    headerLabel="Please sync your Google account in the settings."
+                    confirmLabel="Go to Settings"
+                    onConfirm={() => {
+                      router.push("/dashboard/settings?activeTab=advanced");
+                    }}
                   />
                 </Stack>
               </Popover.Dropdown>

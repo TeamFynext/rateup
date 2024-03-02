@@ -18,13 +18,19 @@ import { RateupButtonBlue } from "../../components/Button/RateupButtons";
 
 export default function AuthCallBack() {
   const router = useRouter();
-  const { code } = router.query;
+  const { code, error } = router.query;
   const [callbackRoute, setCallBackRoute] = useState("/dashboard/settings");
 
   const [isLoading, setIsLoading] = useState(true);
   const mut = useCreateAuthToken();
+
   useEffect(() => {
-    if (code) {
+    setCallBackRoute(
+      JSON.parse(localStorage?.getItem("google-callback-route")),
+    );
+    if (error) {
+      router.push(callbackRoute);
+    } else if (code) {
       mut.mutate(
         { code: code },
         {
@@ -37,7 +43,7 @@ export default function AuthCallBack() {
         },
       );
     }
-  }, [code]);
+  }, [code, error]);
 
   return (
     <>
