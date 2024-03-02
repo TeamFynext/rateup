@@ -761,5 +761,5 @@ model GoogleAccessToken {
   refreshToken String
   expiryDate   String
   scopes       String[]
-  userEmail    String
+  userEmail    String?  
 }
