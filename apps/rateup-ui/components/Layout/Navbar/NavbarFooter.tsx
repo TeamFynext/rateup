@@ -33,7 +33,12 @@ const NavbarFooter = (props: UserCardInterface) => {
   };
   return (
     <Group>
-      <Menu onClose={() => setMenuOpen(false)}>
+      <Menu
+        onClose={() => setMenuOpen(false)}
+        withArrow
+        position="right-end"
+        shadow="xs"
+      >
         <MenuTarget>
           <Box className={styles.user} onClick={() => setMenuOpen(!menuOpen)}>
             <Group>
@@ -71,7 +76,7 @@ const NavbarFooter = (props: UserCardInterface) => {
             </Group>
           </Box>
         </MenuTarget>
-        <Menu.Dropdown>
+        <Menu.Dropdown style={{ marginTop: "-4rem", marginRight: "-3rem" }}>
           <Menu.Item>
             <Group>
               <Avatar
