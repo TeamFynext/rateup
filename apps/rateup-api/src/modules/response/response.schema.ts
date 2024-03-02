@@ -51,6 +51,7 @@ const createResponseInputSchema = z.object({
     })
     .optional(),
   phone: z.string().optional(),
+  contactId: z.string().optional(),
 });
 
 const getResponsesParamsSchema = z.object({
