@@ -128,7 +128,7 @@ const GeneralSettings = ({ survey, enabledModules }) => {
             </Grid>
           )}
           {!survey?.kioskMode &&
-            (settingsForm.values.redirect.enable ?? true) &&
+            (settingsForm.values.redirect?.enable ?? true) &&
             enabledModules.includes("redirect") && (
               <>
                 <Grid columns={10}>

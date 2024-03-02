@@ -12,12 +12,12 @@ export function PriorityMenu({ priority, setPriority }) {
             priority === TicketPriority.LOW
               ? "blue"
               : priority === TicketPriority.MEDIUM
-              ? "yellow"
-              : priority === TicketPriority.HIGH
-              ? "orange"
-              : priority === TicketPriority.CRITICAL
-              ? "red"
-              : "rgba(13, 13, 13, 1)"
+                ? "yellow"
+                : priority === TicketPriority.HIGH
+                  ? "orange"
+                  : priority === TicketPriority.CRITICAL
+                    ? "red"
+                    : "rgba(13, 13, 13, 1)"
           }
           radius="xl"
           rightSection={<IconChevronDown size="1rem" />}

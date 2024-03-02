@@ -26,7 +26,7 @@ export const getServerSideProps = async (context: {
   }
 };
 
-export default function Page({ survey, error_occured }) {
+export default function Page({ survey, error_occured, fromShortUrl = false }) {
   const [isReviewPage, setIsReviewPage] = useState(false);
 
   useEffect(() => {
@@ -109,7 +109,11 @@ export default function Page({ survey, error_occured }) {
         />
       ) : (
         <TakeSurveyLayoutWeb survey={survey}>
-          <TakeSurvey survey={survey} setIsReviewPage={setIsReviewPage} />
+          <TakeSurvey
+            survey={survey}
+            setIsReviewPage={setIsReviewPage}
+            fromShortUrl={fromShortUrl}
+          />
         </TakeSurveyLayoutWeb>
       )}
     </>

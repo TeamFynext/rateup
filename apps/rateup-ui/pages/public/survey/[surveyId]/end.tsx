@@ -59,17 +59,32 @@ export async function getServerSideProps(context) {
 }
 
 export default function ThankYou({
-  enableGoogleReview,
-  googleLink,
-  reviews,
-  redirect,
+  enableGoogleReview = false,
+  googleLink = "",
+  reviews = [],
   kioskMode,
+  surveyIdValue,
+  fromShortUrl,
+  redirect = null,
 }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
-  const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
-  const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
+
+  // const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
+  // const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
+  let k,
+    sid,
+    surveyId = "";
+  if (fromShortUrl) {
+    k = kioskMode;
+    sid = surveyIdValue;
+  } else {
+    k = router.query.k; //kioskMode
+    sid = router.query.sid;
+    surveyId = router.query.surveyId as string;
+  }
+
   const { height, width } = useViewportSize();
   useEffect(() => {
     //kioskMode redirect
@@ -77,7 +92,9 @@ export default function ThankYou({
       const timeoutId = setTimeout(() => {
         k === "cs"
           ? router.push(`/public/survey/cs`)
-          : router.push(`/public/survey/${surveyId}`);
+          : fromShortUrl
+            ? router.push(`/ws/${router.query.shortId}/`)
+            : router.push(`/public/survey/${surveyId}`);
       }, 5000);
 
       return () => {

@@ -105,10 +105,10 @@ function PriorityBadge({ priority }) {
         priority === "LOW"
           ? "blue"
           : priority === "MEDIUM"
-          ? "yellow"
-          : priority === "HIGH"
-          ? "orange"
-          : "red"
+            ? "yellow"
+            : priority === "HIGH"
+              ? "orange"
+              : "red"
       }
       variant="light"
     >

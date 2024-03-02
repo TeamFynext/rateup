@@ -23,7 +23,9 @@ export const getServerSideProps = async (context: {
 
 // Web Survey
 function Ws({ survey, error_occured }) {
-  return <PublicSurvey survey={survey} error_occured={error_occured} />;
+  return (
+    <PublicSurvey survey={survey} error_occured={error_occured} fromShortUrl />
+  );
 }
 
 export default Ws;

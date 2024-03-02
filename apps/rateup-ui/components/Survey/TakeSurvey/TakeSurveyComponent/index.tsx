@@ -79,14 +79,15 @@ import ContactForm from "./QuestionForms/ContactForm";
 import { lexend } from "../../../../utils/fonts";
 import RateupLoader from "../../../Loaders/RateupLoader";
 
-function TakeSurvey({ survey, setIsReviewPage }) {
+function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const smallScreen = useMediaQuery("(max-width: 30em)");
-
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const { surveyId } = useRouter().query as { surveyId: string };
+
+  const surveyTeamMapId = survey.surveyTeamMapId;
+
   const { data: surveyThemeData, isLoading: IsLoading } = useSurveyTheme(
     survey?.id,
   ) as {
@@ -110,6 +111,7 @@ function TakeSurvey({ survey, setIsReviewPage }) {
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
   const router = useRouter();
+
   const [pageSwitchTransition, setPageSwitchTransition] = useState<
     "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
   >("bottomSlideIn");
@@ -310,8 +312,9 @@ function TakeSurvey({ survey, setIsReviewPage }) {
       encryptedResponses = encryptedResponse;
       defaultResponses = [];
     }
+
     submitSurvey({
-      surveyTeamMapId: surveyId,
+      surveyTeamMapId: surveyTeamMapId,
       responses: defaultResponses,
       encryptedResponses: encryptedResponses,
       selectedLanguage,
@@ -319,13 +322,17 @@ function TakeSurvey({ survey, setIsReviewPage }) {
       coordinates,
       tag: searchParams.get("tag"),
     }).then(() => {
-      updateCompleted.mutate(surveyId);
+      updateCompleted.mutate(surveyTeamMapId);
       let kioskMode = survey?.kioskMode ? "y" : "n";
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
         ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
           setIsReviewPage(true)
-        : router.push(`${surveyId}/end?k=${kioskMode}&sid=${survey.id}`);
+        : fromShortUrl
+          ? router.push(`/ws/${router.query.shortId}/end`)
+          : router.push(
+              `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}`,
+            );
     });
   };
 

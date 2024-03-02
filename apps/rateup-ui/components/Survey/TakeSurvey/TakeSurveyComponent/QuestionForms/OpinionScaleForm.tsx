@@ -40,8 +40,8 @@ export function OpinionScaleForm({ initValue }: iProps) {
                 response === i || initValue == i
                   ? `var(--mantine-color-${theme.primaryColor}-filled)`
                   : isHovered !== i
-                  ? ""
-                  : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+                    ? ""
+                    : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
               borderColor:
                 (response !== i || initValue != i) &&
                 `var(--mantine-color-${theme.primaryColor}-outline)`,

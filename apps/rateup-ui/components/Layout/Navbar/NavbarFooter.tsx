@@ -58,8 +58,8 @@ const NavbarFooter = (props: UserCardInterface) => {
                     {props?.role === UserRole.SUPADM
                       ? "Super Admin"
                       : props?.role === UserRole.ADM
-                      ? "Admin"
-                      : "Member"}
+                        ? "Admin"
+                        : "Member"}
                   </Badge>
 
                   <ActionIcon

@@ -12,12 +12,12 @@ export function StatusMenu({ status, setStatus }) {
             status === TicketStatus.OPEN
               ? "blue"
               : status === TicketStatus.IN_PROGRESS
-              ? "yellow"
-              : status === TicketStatus.RESOLVED
-              ? "orange"
-              : status === TicketStatus.CLOSED
-              ? "green"
-              : "black"
+                ? "yellow"
+                : status === TicketStatus.RESOLVED
+                  ? "orange"
+                  : status === TicketStatus.CLOSED
+                    ? "green"
+                    : "black"
           }
           radius="xl"
           rightSection={<IconChevronDown size="1rem" />}

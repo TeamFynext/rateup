@@ -49,9 +49,8 @@ export function RM_Review({
   const searchFilteredReviews =
     searchTerm === ""
       ? filteredReviews
-      : filteredReviews.filter(
-          (review) =>
-            review.review?.toLowerCase().includes(searchTerm.toLowerCase()),
+      : filteredReviews.filter((review) =>
+          review.review?.toLowerCase().includes(searchTerm.toLowerCase()),
         );
 
   return (
