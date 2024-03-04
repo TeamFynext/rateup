@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
-  TextInput,
   Rating,
   Group,
   Title,
@@ -11,7 +10,6 @@ import {
   SimpleGrid,
   Button,
   Divider,
-  Tooltip,
   useMantineTheme,
 } from "@mantine/core";
 import {
@@ -19,13 +17,15 @@ import {
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
-import { IconInfoCircle, IconX } from "@tabler/icons-react";
+import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
 import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import { useRouter } from "next/router";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { useDisclosure } from "@mantine/hooks";
+import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal";
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
@@ -131,8 +131,8 @@ const GoogleReviewEditor = ({
   };
 
   const { data: teamsRes } = useTeamsByUser();
-  const teamsToDisplay = teamsRes?.data?.filter(
-    (t) => survey?.teams.some((st) => st.id === t.id),
+  const teamsToDisplay = teamsRes?.data?.filter((t) =>
+    survey?.teams.some((st) => st.id === t.id),
   );
 
   const handleSave = async () => {
@@ -140,7 +140,7 @@ const GoogleReviewEditor = ({
       notifications.show({
         color: "red",
         title: "Failed",
-        message: `Please enter Google Review links for all teams in team settings page.`,
+        message: `Please enter Google Review links for all teams`,
         icon: <IconX size="1rem" />,
         autoClose: 2000,
       });
@@ -329,28 +329,11 @@ const GoogleReviewEditor = ({
               >
                 {teamsToDisplay &&
                   teamsToDisplay.map((team) => (
-                    <Group justify="space-between" key={team.id}>
-                      <Text
-                        style={{
-                          flex: 1,
-                        }}
-                      >
-                        {team.name}
-                      </Text>
-                      <Text>:</Text>
-                      <Tooltip
-                        label={"Edit these links in the Team's Settings page"}
-                        openDelay={500}
-                      >
-                        <TextInput
-                          style={{
-                            flexGrow: 1,
-                          }}
-                          value={team.googleLink}
-                          readOnly
-                        />
-                      </Tooltip>
-                    </Group>
+                    <AddGoogleReviewLinkForTeamModal
+                      team={team}
+                      surveyId={surveyId}
+                      key={team?.id}
+                    />
                   ))}
               </Stack>
             </>

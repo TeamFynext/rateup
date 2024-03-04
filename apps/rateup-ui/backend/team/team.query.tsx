@@ -85,6 +85,7 @@ export function useEditTeamMutation(
       });
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers", id] });
       if (surveyId) {
         queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });

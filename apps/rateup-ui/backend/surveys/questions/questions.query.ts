@@ -7,6 +7,7 @@ import {
   updateQuestion,
 } from "./questions.api";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
+import { notifications } from "@mantine/notifications";
 
 export const useQuestions = (surveyId: string) => {
   return useQuery({
@@ -48,7 +49,14 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
-      showSuccessToast("Saved Changes..", "qns");
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        loading: false,
+        message: "Saved Changes..",
+        autoClose: 3000,
+      });
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },

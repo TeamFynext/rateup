@@ -50,6 +50,7 @@ import TncExtraProps from "./TncExtraProps";
 import styles from "./QuestionDetailedView.module.css";
 import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
 import { getHotkeyHandler } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -124,6 +125,14 @@ export function QuestionDetailedView({
           });
         } else {
           // Updating existing question
+          notifications.show({
+            id: "load-data",
+            loading: true,
+            title: "updating question",
+            message: `Hold on, your changes are getting updated...`,
+            autoClose: false,
+            withCloseButton: false,
+          });
           questionUpdateMutation.mutate({
             qId: question.id,
             data: form.values,

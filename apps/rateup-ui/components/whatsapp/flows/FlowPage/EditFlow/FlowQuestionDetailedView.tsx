@@ -60,6 +60,7 @@ import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
+import { notifications } from "@mantine/notifications";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -89,6 +90,14 @@ export function FlowQuestionDetailedView({
 
   function handleUpdateQuestion(q: Question) {
     const { googleReview } = q;
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "updating question",
+      message: `Hold on, your changes are getting updated...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
     updateQuestionMutation.mutate({ qId: q.id, data: { googleReview } });
   }
 
@@ -216,6 +225,14 @@ function ElementEditor({
         });
       } else {
         // Updating existing question
+        notifications.show({
+          id: "load-data",
+          loading: true,
+          title: "updating question",
+          message: `Hold on, your changes are getting updated...`,
+          autoClose: false,
+          withCloseButton: false,
+        });
         questionUpdateMutation.mutate({ qId: question.id, data: form.values });
       }
     }

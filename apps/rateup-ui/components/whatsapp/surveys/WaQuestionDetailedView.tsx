@@ -49,6 +49,7 @@ import {
 import { WhatsappChatPreview } from "./WaChatPreview";
 import { LanguageCompletionView } from "../../Survey/Question/LanguageCompletionView";
 import TestimonialExtraProps from "../../Survey/Question/TestimonialExtraProps";
+import { notifications } from "@mantine/notifications";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -153,6 +154,14 @@ export function WaQuestionDetailedView({
         });
       } else {
         // Updating existing question
+        notifications.show({
+          id: "load-data",
+          loading: true,
+          title: "updating question",
+          message: `Hold on, your changes are getting updated...`,
+          autoClose: false,
+          withCloseButton: false,
+        });
         questionUpdateMutation.mutate({ qId: question.id, data: form.values });
       }
     }

@@ -35,6 +35,7 @@ import {
   getConditions,
   getResponses,
 } from "../../../utils/survey/logic/logic.utils";
+import { notifications } from "@mantine/notifications";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -67,6 +68,14 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   };
 
   const handleSave = () => {
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "updating question",
+      message: `Hold on, your changes are getting updated...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
     questionUpdateMutation
       .mutateAsync({
         qId: selectedQ.id,
