@@ -1,4 +1,13 @@
-import { Badge, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core";
+import {
+  Badge,
+  Flex,
+  Group,
+  Menu,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
@@ -36,9 +45,10 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
         <Title order={5}>{contact?.name}</Title>
         <ContactMenu contact={contact} groupId={groupId}></ContactMenu>
       </Group>
-      <Text c="dimmed">{contact?.phone}</Text>
-      <Text c="dimmed">{contact?.email}</Text>
-
+      <Stack gap={0}>
+        <Text c="dimmed">{contact?.phone}</Text>
+        <Text c="dimmed">{contact?.email}</Text>
+      </Stack>
       <Group justify="space-between">
         <Text c="dimmed">
           created on {dayjs(contact?.createdAt).format("DD-MM-YYYY")}
@@ -47,6 +57,9 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
           {teamObj?.name}
         </Badge>
       </Group>
+      <Badge size="md" variant="light" color="green" mt={"xs"}>
+        source: {contact?.source ?? "NA"}
+      </Badge>
     </Paper>
   );
 };

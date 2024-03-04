@@ -256,6 +256,7 @@ export default function () {
               groupId={groupDetails?.id}
               close={close}
               teamId={groupDetails?.teamId}
+              existingCustomers={groupDetails?.contacts?.map((c) => c.id)}
             ></AddCustomerModal>
           </FormModalLayout>
           <FormModalLayout

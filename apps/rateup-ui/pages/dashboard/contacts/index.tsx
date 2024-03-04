@@ -29,6 +29,7 @@ import { TeamSelector } from "../../../components/input/TeamSelector";
 import Heading from "../../../components/styled/Heading/Heading";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import { useRouter } from "next/router";
+import dayjs from "dayjs";
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,15 +70,17 @@ export default function Contacts() {
       : contactData?.data?.filter(
           (contact) => contact?.teamId === selectedTeamID,
         );
-  const filteredContacts = searchTerm
-    ? contacts.filter((contact) => {
-        return (
-          contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          contact?.phone?.includes(searchTerm) ||
-          contact?.email?.includes(searchTerm)
-        );
-      })
-    : contacts;
+  const filteredContacts = (
+    searchTerm
+      ? contacts.filter((contact) => {
+          return (
+            contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            contact?.phone?.includes(searchTerm) ||
+            contact?.email?.includes(searchTerm)
+          );
+        })
+      : contacts
+  )?.sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
 
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
@@ -85,11 +88,13 @@ export default function Contacts() {
       : contactGroupData?.data?.filter(
           (group) => group?.teamId === selectedTeamID,
         );
-  const filteredGroups = searchTerm
-    ? contactGroups.filter((group) => {
-        return group?.name.toLowerCase().includes(searchTerm.toLowerCase());
-      })
-    : contactGroups;
+  const filteredGroups = (
+    searchTerm
+      ? contactGroups.filter((group) => {
+          return group?.name.toLowerCase().includes(searchTerm.toLowerCase());
+        })
+      : contactGroups
+  )?.sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
 
   return (
     <>

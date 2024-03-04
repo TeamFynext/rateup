@@ -5,36 +5,42 @@ import {
   Group,
   Paper,
   SimpleGrid,
+  Stack,
   TextInput,
+  Text,
 } from "@mantine/core";
 import { isEmail, isNotEmpty, useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEditContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import { IconPlus } from "@tabler/icons-react";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
+import { SAVE_HOTKEY, emailPattern } from "../../../utils/constants";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import styles from "./contacts.module.css";
 
 const EditContactModal = ({ contact, closeEditModal, groupId }) => {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
+  const [contactType, setContactType] = useState<string[]>([]);
 
   const form = useForm({
-    initialValues: contact,
+    initialValues: { ...contact, phone: "+" + contact?.phone },
     validate: {
       phone: (value) => {
         if (contactType.includes("phone"))
-          return !/^\d+$/.test(value) ? "Invalid number" : null;
-        else return null;
+          return !isValidPhoneNumber(value) ? "Invalid number" : null;
       },
       name: isNotEmpty("Name cannot be blank"),
       email: (value) =>
         contactType.includes("email") &&
         value?.length &&
-        !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value)
+        !emailPattern.test(value)
           ? "Invalid Email"
           : null,
     },
@@ -46,6 +52,9 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
       return;
     }
     setIsUpdating(true);
+    form.values.phone = form.values.phone
+      ? form.values.phone.slice(1)
+      : undefined;
     editContactMutation.mutate(
       { data: form.values, contactId: contact?.id },
       {
@@ -61,6 +70,13 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
       },
     );
   };
+
+  useEffect(() => {
+    setContactType([
+      contact.phone ? "phone" : undefined,
+      contact.email ? "email" : undefined,
+    ]);
+  }, []);
   return (
     <Box>
       <form
@@ -87,14 +103,20 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
           </Paper>
 
           {contactType.includes("phone") && (
-            <TextInput
-              label="Phone Number"
-              placeholder="Enter phone number with country code"
-              {...form.getInputProps("phone")}
-              size="md"
-              radius={"md"}
-              leftSection={<IconPlus size={"1rem"} />}
-            />
+            <Stack gap={0}>
+              <Text>Phone Number</Text>
+              <PhoneInputWithCountrySelect
+                defaultCountry="IN"
+                international
+                countryCallingCodeEditable={false}
+                placeholder="Enter phone number"
+                {...form.getInputProps("phone")}
+                className={styles.inputPhone}
+              />
+              <Text size="sm" c={"red"}>
+                {form?.errors?.phone}
+              </Text>
+            </Stack>
           )}
           {contactType.includes("email") && (
             <TextInput

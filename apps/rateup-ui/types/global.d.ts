@@ -453,6 +453,7 @@ declare global {
     name: string;
     phone: string;
     email: string;
+    source: string;
     createdAt: Date;
   };
 
@@ -466,6 +467,7 @@ declare global {
     name: string;
     teamId: string;
     icon: string;
+    createdAt: string;
   };
   type ContactGroupResponse = {
     message: string;

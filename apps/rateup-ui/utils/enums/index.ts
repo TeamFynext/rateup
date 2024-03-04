@@ -37,7 +37,7 @@ export const contactAddType = {
 
 export const importMethod = {
   MANUAL: "MANUAL",
-  CSV: "CSV",
+  CSV: "CSV IMPORT",
 };
 
 export function getQuestionTypeLabel(

@@ -7,9 +7,9 @@ import {
   SimpleGrid,
   Stack,
   TextInput,
-  Center,
   ScrollArea,
   Table,
+  Text,
 } from "@mantine/core";
 import {
   RateupButtonSecondary,
@@ -29,15 +29,22 @@ import { ImportContact } from "./CreateContactModal";
 import Papa from "papaparse";
 import { showErrorToast } from "../../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
+import { SAVE_HOTKEY, emailPattern } from "../../../utils/constants";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import styles from "./contacts.module.css";
 
 export interface IAddCustomer {
   name: string;
   email?: string;
   phone?: string;
+  source?: string;
 }
 
-const AddCustomerModal = ({ groupId, close, teamId }) => {
+const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
   const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
   const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,22 +83,30 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
           addType === contactAddType.NEW &&
           contactType.includes("phone")
         )
-          return !/^\d+$/.test(value) ? "Invalid number" : null;
-        return null;
+          return !value
+            ? "Phone Number cannot be blank"
+            : !isValidPhoneNumber(value)
+              ? "Invalid phone number"
+              : null;
       },
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         addType == contactAddType.NEW &&
         !value.length
-          ? "Cannot be empty"
+          ? "Name cannot be blank"
           : null,
-      email: (value) =>
-        form.values.importMethod == importMethod.MANUAL &&
-        addType === contactAddType.NEW &&
-        contactType.includes("email") &&
-        !/^\S+@\S+$/.test(value)
-          ? "Invalid email"
-          : null,
+      email: (value) => {
+        if (
+          form.values.importMethod == importMethod.MANUAL &&
+          addType === contactAddType.NEW &&
+          contactType.includes("email")
+        )
+          return !value
+            ? "Email cannot be blank"
+            : !emailPattern.test(value)
+              ? "Invalid email"
+              : null;
+      },
       contactType: (value) =>
         !value.length ? "Must select any one: phone or email" : null,
     },
@@ -174,6 +189,7 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
           name,
           email: !email ? undefined : email,
           phone: !phone ? undefined : phone,
+          source: importMethod.CSV,
         }),
       );
       createNewContactMutation.mutate(
@@ -212,23 +228,17 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
         );
       } else {
         let contactData: IAddCustomer[] = [form.values];
-        if (!contactType.includes("email")) {
-          const phone = form.values.countryCode + form.values.phone;
-          contactData = [
-            {
-              name: form.values.name,
-              phone: phone,
-            },
-          ];
-        }
-        if (!contactType.includes("phone")) {
-          contactData = [
-            {
-              name: form.values.name,
-              email: form.values.email,
-            },
-          ];
-        }
+        const phone = form.values.phone.slice(1);
+        contactData = [
+          {
+            name: form.values.name,
+            phone: contactType.includes("phone") ? phone : undefined,
+            email: contactType.includes("email")
+              ? form.values.email
+              : undefined,
+            source: importMethod.MANUAL,
+          },
+        ];
         createNewContactMutation.mutate(
           {
             data: contactData,
@@ -275,7 +285,11 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
       <Table.Td>
         <Checkbox
           aria-label="Select row"
-          checked={customerList?.includes(contact?.id)}
+          checked={
+            customerList?.includes(contact?.id) ||
+            existingCustomers?.includes(contact?.id)
+          }
+          disabled={existingCustomers?.includes(contact?.id)}
           onChange={(event) =>
             setCustomerList(
               event.currentTarget.checked
@@ -299,20 +313,6 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
         ])}
       >
         <Stack gap={"md"}>
-          {addType == contactAddType.EXISTING && (
-            <Center my="md">
-              <TextInput
-                leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
-                radius="xl"
-                size="md"
-                placeholder={"Search Customer"}
-                rightSectionWidth={60}
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                w={500}
-              />
-            </Center>
-          )}
           <Group>
             <Radio.Group
               value={addType}
@@ -331,8 +331,8 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
             </Radio.Group>
           </Group>
           {addType == contactAddType.NEW && (
-            <>
-              <Group justify="space-between">
+            <Stack gap={"lg"}>
+              <Group justify="space-between" mt={"sm"}>
                 <Radio.Group
                   value={form.values.importMethod}
                   onChange={(value) =>
@@ -340,7 +340,7 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
                   }
                   name="importmethod"
                   label="Import Customers"
-                  styles={customStyle}
+                  styles={custominputstyle}
                 >
                   <Group>
                     <Radio value={importMethod.MANUAL} label="Manual" />
@@ -378,31 +378,29 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
                     required
                     styles={custominputstyle}
                   />
-                  <Group>
-                    {contactType.includes("phone") && (
-                      <TextInput
-                        label="code"
-                        {...form.getInputProps("countryCode")}
-                        required
-                        radius={"md"}
-                        size="md"
-                        w={90}
-                        placeholder="code"
-                        leftSection={<IconPlus size={"1rem"} />}
-                      />
-                    )}
-                    {contactType.includes("phone") && (
-                      <TextInput
-                        label="Phone Number"
+                  {contactType.includes("phone") && (
+                    <Stack gap={0}>
+                      <Group gap={3}>
+                        <Text fw={"bold"} fz={14}>
+                          Phone Number
+                        </Text>
+                        <Text fw={"bold"} fz={14} c="red">
+                          *
+                        </Text>
+                      </Group>
+                      <PhoneInputWithCountrySelect
+                        defaultCountry="IN"
+                        international
+                        countryCallingCodeEditable={false}
                         placeholder="Enter phone number"
                         {...form.getInputProps("phone")}
-                        required
-                        radius={"md"}
-                        size="md"
-                        styles={custominputstyle}
+                        className={styles.inputPhone}
                       />
-                    )}
-                  </Group>
+                      <Text size="sm" c={"red"}>
+                        {form?.errors?.phone}
+                      </Text>
+                    </Stack>
+                  )}
                   {contactType.includes("email") && (
                     <TextInput
                       label="Email"
@@ -433,21 +431,58 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
                   }}
                 ></ContainedFileInput>
               )}
-            </>
+            </Stack>
           )}
           {addType == contactAddType.EXISTING && (
-            <ScrollArea h={200}>
-              <Table>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th />
-                    <Table.Th>Customer Name</Table.Th>
-                    <Table.Th>Phone Number</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>{rows}</Table.Tbody>
-              </Table>
-            </ScrollArea>
+            <Stack justify="center" gap={"md"}>
+              <Group justify="space-between" px={"md"}>
+                <Checkbox
+                  aria-label="select all"
+                  label="Select All"
+                  checked={contactDataByTeamId?.data?.every((customer) =>
+                    customerList.includes(customer?.id),
+                  )}
+                  onChange={(event) => {
+                    const allCustomers = contactDataByTeamId?.data?.map(
+                      (customer) => customer?.id,
+                    );
+                    const remainingCustomers = allCustomers.filter(
+                      (c) => !existingCustomers?.includes(c),
+                    );
+                    setCustomerList(
+                      event.currentTarget.checked ? remainingCustomers : [],
+                    );
+                  }}
+                  disabled={contactDataByTeamId?.data?.every((customer) =>
+                    existingCustomers.includes(customer?.id),
+                  )}
+                />
+                <TextInput
+                  leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
+                  radius="xl"
+                  size="sm"
+                  placeholder={"Search Customer"}
+                  rightSectionWidth={60}
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.currentTarget.value)}
+                  w={300}
+                />
+              </Group>
+              <PaperLayout>
+                <ScrollArea h={200}>
+                  <Table stickyHeader>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th />
+                        <Table.Th>Customer Name</Table.Th>
+                        <Table.Th>Phone Number</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>{rows}</Table.Tbody>
+                  </Table>
+                </ScrollArea>
+              </PaperLayout>
+            </Stack>
           )}
           <Group justify="flex-end">
             <RateupButtonSecondary
@@ -458,7 +493,12 @@ const AddCustomerModal = ({ groupId, close, teamId }) => {
               title="Add Customer"
               onClick={handleSubmit}
               loading={isCreating}
-              disabled={isUpload}
+              disabled={
+                isUpload ||
+                contactDataByTeamId?.data?.every((customer) =>
+                  existingCustomers.includes(customer?.id),
+                )
+              }
             ></RateupButtonBlue>
           </Group>
         </Stack>

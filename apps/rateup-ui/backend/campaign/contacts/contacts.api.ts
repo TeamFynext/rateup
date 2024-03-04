@@ -5,6 +5,7 @@ export interface ICreateContact {
   phone?: string;
   email?: string;
   teamId: string;
+  source?: string;
 }
 
 export const getContactsList = async () => {

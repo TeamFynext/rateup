@@ -67,12 +67,15 @@ const AdvancedSettings = () => {
                 </Stack>
               ) : (
                 <Stack w={320}>
-                  <Title order={4}> Synced account info</Title>
-                  <Group justify="space-between">
-                    <Text>Email Address:</Text>
-                    <Text>{googleAuthAccessToken.auth.userEmail}</Text>
-                  </Group>
-                  {/* <Text>{`Email Address: ${googleAuthAccessToken.auth.userEmail}`}</Text> */}
+                  {googleAuthAccessToken.auth?.userEmail ? (
+                    <>
+                      <Title order={4}> Synced account info</Title>
+                      <Group justify="space-between">
+                        <Text>Email Address:</Text>
+                        <Text>{googleAuthAccessToken.auth.userEmail}</Text>
+                      </Group>
+                    </>
+                  ) : null}
                   <RateupButtonPrimary
                     title="Sign out of google synced account"
                     onClick={alertModalOpen}

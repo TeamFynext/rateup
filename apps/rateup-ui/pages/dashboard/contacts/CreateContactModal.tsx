@@ -29,7 +29,12 @@ import { importMethod } from "../../../utils/enums";
 import { showErrorToast } from "../../../utils/notifications";
 import { IconPlus } from "@tabler/icons-react";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
+import { SAVE_HOTKEY, emailPattern } from "../../../utils/constants";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import styles from "./contacts.module.css";
 
 export interface ImportContact {
   name: string;
@@ -60,21 +65,28 @@ const CreateContactModal = ({ contactClose, close }) => {
         if (
           form.values.importMethod == importMethod.MANUAL &&
           contactType.includes("phone")
-        ) {
-          return !/^\d+$/.test(value) ? "Invalid number" : null;
-        }
-        return null;
+        )
+          return !value
+            ? "Phone Number cannot be blank"
+            : !isValidPhoneNumber(value)
+              ? "Invalid phone number"
+              : null;
       },
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
-        (value.length ? null : "Cannot be empty"),
+        (value.length ? null : "Name cannot be blank"),
       teamId: (value) => (value ? null : "Must select a team"),
-      email: (value) =>
-        form.values.importMethod == importMethod.MANUAL &&
-        contactType.includes("email") &&
-        !/^\S+@\S+$/.test(value)
-          ? "Invalid email"
-          : null,
+      email: (value) => {
+        if (
+          form.values.importMethod == importMethod.MANUAL &&
+          contactType.includes("email")
+        )
+          return !value
+            ? "Email cannot be blank"
+            : !emailPattern.test(value)
+              ? "Invalid email"
+              : null;
+      },
       contactType: (value) =>
         !value.length ? "Must select any one: phone or email" : null,
     },
@@ -140,6 +152,7 @@ const CreateContactModal = ({ contactClose, close }) => {
         email: !email ? undefined : email,
         phone: !phone ? undefined : phone,
         name: name,
+        source: importMethod.CSV,
       }));
       importContactMutation.mutate(dataToUpload, {
         onSuccess: () => {
@@ -154,23 +167,15 @@ const CreateContactModal = ({ contactClose, close }) => {
         },
       });
     } else {
-      let contactData: ICreateContact = form.values;
-      if (!contactType.includes("email")) {
-        const phone = form.values.countryCode + form.values.phone;
-        contactData = {
-          name: form.values.name,
-          phone: phone,
-          teamId: form.values.teamId,
-        };
-      }
-      if (!contactType.includes("phone")) {
-        contactData = {
-          name: form.values.name,
-          email: form.values.email,
-          teamId: form.values.teamId,
-        };
-      }
-      console.log("contactData", contactData);
+      let contactData: ICreateContact = {
+        name: form.values.name,
+        phone: contactType.includes("phone")
+          ? form.values.phone.slice(1)
+          : undefined,
+        teamId: form.values.teamId,
+        email: contactType.includes("email") ? form.values.email : undefined,
+        source: importMethod.MANUAL,
+      };
       createContactMutation.mutate(contactData, {
         onSuccess: () => {
           setIsCreating(false);
@@ -232,30 +237,25 @@ const CreateContactModal = ({ contactClose, close }) => {
                 size="md"
                 required
               />
-              <Group>
-                {contactType.includes("phone") && (
-                  <TextInput
-                    label="code"
-                    {...form.getInputProps("countryCode")}
-                    required
-                    radius={"md"}
-                    size="md"
-                    w={90}
-                    placeholder="code"
-                    leftSection={<IconPlus size={"16px"} />}
-                  />
-                )}
-                {contactType.includes("phone") && (
-                  <TextInput
-                    label="Phone Number"
+              {contactType.includes("phone") && (
+                <Stack gap={0}>
+                  <Group gap={3}>
+                    <Text>Phone Number</Text>
+                    <Text c="red">*</Text>
+                  </Group>
+                  <PhoneInputWithCountrySelect
+                    defaultCountry="IN"
+                    international
+                    countryCallingCodeEditable={false}
                     placeholder="Enter phone number"
                     {...form.getInputProps("phone")}
-                    required
-                    radius={"md"}
-                    size="md"
+                    className={styles.inputPhone}
                   />
-                )}
-              </Group>
+                  <Text size="sm" c={"red"}>
+                    {form?.errors?.phone}
+                  </Text>
+                </Stack>
+              )}
               {contactType.includes("email") && (
                 <TextInput
                   label="Email"

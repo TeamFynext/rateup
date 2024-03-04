@@ -4,3 +4,11 @@
 .tabLabel[data-inactive] {
   color: rgb(173, 167, 167);
 }
+
+.inputPhone > input {
+  height: 44px;
+  outline: none;
+  border: none;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+}

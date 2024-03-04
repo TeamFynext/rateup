@@ -126,14 +126,20 @@ export default function () {
   );
 }
 
-export const SearchInput = ({ placeholder, searchText, setSearchText }) => {
+export const SearchInput = ({
+  placeholder,
+  searchText,
+  setSearchText,
+  width = 500,
+  size = "md",
+}) => {
   return (
     <TextInput
       value={searchText}
       onChange={(e) => setSearchText(e.currentTarget.value)}
-      size="md"
+      size={size}
       radius={"xl"}
-      w={500}
+      w={width}
       placeholder={placeholder}
       leftSection={<IconSearch size={"1rem"} />}
       classNames={{ input: styles.input }}
