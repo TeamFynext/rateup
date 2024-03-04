@@ -194,9 +194,17 @@ export async function updateFlowHandler(
     Object.keys(updatedFlow.logicJumps).length > 0
   ) {
     log.trace("updating data_channel_uri in wa %s", updatedFlow.flowId);
+
+    const domain = process.env.API_URL;
+    const server_url = domain.startsWith("https")
+      ? domain
+      : `https://${domain}`;
+    const endpoint_uri = `${server_url}/api/wa/endpoint/${orgId}/${updatedFlow.dbFlowId}`;
+
     await updateFlowMetaDataInWa(orgId, updatedFlow.flowId, {
-      endpoint_uri: `${process.env.API_URL}/api/wa/endpoint/${orgId}/${updatedFlow.dbFlowId}`,
+      endpoint_uri,
     });
+    log.trace("uri set to %s", endpoint_uri);
   }
   res.status(201).send();
 }

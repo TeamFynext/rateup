@@ -60,7 +60,6 @@ export async function createSurveyHandler(
     const survey = await createSurvey(data, request.userId, request.user.email);
     //creating a default survey theme once the survey is created
     if (typeof survey === "object" && survey !== null) {
-      console.log(survey);
       await createDefaultSurveyTheme(survey.id);
       reply.code(201).send(survey);
     }

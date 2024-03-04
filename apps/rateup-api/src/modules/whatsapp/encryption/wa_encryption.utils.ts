@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { FastifyRequest } from "fastify";
+import { FastifyReply, FastifyRequest } from "fastify";
 import {
   getWaSettings,
   updateWaSettings,
@@ -127,21 +127,22 @@ export async function handleFlowResponse(
   req: FastifyRequest<{
     Params: { orgId: string; dbFlowId: string };
   }>,
-  res,
+  res: FastifyReply,
 ) {
-  log.trace("Received request to handle flow response");
-  log.trace("%o", req.body);
+  log.trace("Received request to handle flow response \n%o", req.body);
   const { orgId } = req.params;
-  log.trace("OrgId: %s", orgId);
+
   let { encryption: e, phoneId, accessToken } = await getWaSettings(orgId);
   let encryption = e as unknown as WaEncryptionKeys;
   if (!encryption) {
     log.warn("Encryption keys not found for org: %s", orgId);
     const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
     log.trace("Passphrase: %s", passphrase);
+
     if (!passphrase) {
       throw new Error("WA_ENCRYPTION_PASSPHRASE is not set in .env file");
     }
+
     log.trace("Generating new key pairs for encryption");
     encryption = generateKeyPairsForWaEncryption(passphrase);
     log.trace("Generated key pairs: %o", encryption);
@@ -149,13 +150,13 @@ export async function handleFlowResponse(
     log.trace("Setting business public key");
     await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
     log.trace("Business public key set successfully");
+
     log.trace("Updating encryption keys in database");
     await updateWaSettings(orgId, { encryption });
     log.trace("Encryption keys updated successfully");
     return;
   }
-  const { privateKey, publicKey, passphrase } =
-    encryption as unknown as WaEncryptionKeys;
+  const { privateKey, passphrase } = encryption as unknown as WaEncryptionKeys;
 
   if (!isRequestSignatureValid(req)) {
     // Return status code 432 if request signature does not match.
@@ -198,7 +199,8 @@ export async function handleFlowResponse(
   try {
     log.trace(req.params.dbFlowId);
     const dbFlow = await getFlowFromDb(req.params.dbFlowId);
-    log.trace("👉 DB Flow:%o", dbFlow);
+    log.trace("👉 DB Flow:%o", { name: dbFlow.name, status: dbFlow.status });
+
     const screenResponse = await handleDecryptedFlowRequest(
       decryptedBody,
       dbFlow,

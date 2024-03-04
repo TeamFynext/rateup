@@ -289,9 +289,10 @@ model Contact {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
 
-  name  String?
-  phone String?
-  email String?
+  name   String?
+  phone  String?
+  email  String?
+  source String?
 
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
