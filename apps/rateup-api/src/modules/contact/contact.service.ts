@@ -15,6 +15,7 @@ export async function createContact(contact: CreateContactInput) {
       name: contact.name,
       phone: contact.phone,
       email: contact.email,
+      source: contact.source,
     },
   });
   return user;
@@ -29,6 +30,7 @@ export async function createMultipleContacts(
       teamId: contact.teamId,
       phone: contact.phone,
       email: contact.email,
+      source: contact.source,
     })),
   });
 }
