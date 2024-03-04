@@ -183,7 +183,7 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
 // This function returns survey from SurveyTeamMap Table, below argument id means SurveyTeamMap Table id
 export async function getPublicSurveyById(id: string) {
   // id.length === 6 means it is shortUrlId.
-  const surveyTeamMapWhere = id.length === 6 ? { shortUrlId: id } : { id };
+  const surveyTeamMapWhere = id.length === 8 ? { shortUrlId: id } : { id };
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
     where: surveyTeamMapWhere,
     include: {
