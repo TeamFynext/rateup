@@ -1,4 +1,4 @@
-import { Loader, MantineThemeProvider } from "@mantine/core";
+import { Loader, MantineProvider, MantineThemeProvider } from "@mantine/core";
 import { useSurveys } from "../../../backend/surveys/surveys.query";
 import { SurveysPage } from "../../../components/Survey/SurveysPage/SurveysPage";
 import { SurveysPageError } from "../../../components/Survey/SurveysPage/SurveyPageError";
@@ -19,7 +19,7 @@ export default function Surveys() {
   }
 
   return (
-    <MantineThemeProvider theme={whatsappTheme}>
+    <MantineProvider theme={whatsappTheme}>
       <SurveysPage
         allSurveys={allSurveys.filter((s) => s.type === "whatsapp")}
         selectedTeamId={selectedTeamId}
@@ -27,6 +27,6 @@ export default function Surveys() {
         surveyType={"whatsapp"}
         refetch={refetch}
       />
-    </MantineThemeProvider>
+    </MantineProvider>
   );
 }
