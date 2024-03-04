@@ -476,7 +476,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     for (const langRes of languageWiseResponse[lang]) {
       langRes.teamWiseResponses.map((response) => {
         const resObj = { team: langRes.team };
-        resObj["Created At"] = new Date(response.createdAt).toLocaleString();
+        resObj["Created At"] = dayjs(response.createdAt).format(
+          "DD-MM-YYYY hh:mm A",
+        );
         response.responses.map((res: QuestionResponse) => {
           let QIndex;
           let qstn = questions.find((q: Question, index: number) => {
@@ -598,7 +600,9 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
     await doc.loadInfo();
     let sheet = await doc.sheetsByTitle[response.language];
     const resObj = { team: team.name };
-    resObj["Created At"] = new Date(response.createdAt).toLocaleString();
+    resObj["Created At"] = dayjs(response.createdAt).format(
+      "DD-MM-YYYY hh:mm A",
+    );
     response.responses.map((res: QuestionResponse) => {
       let QIndex;
       let qstn = questions.find((q: Question, index: number) => {
