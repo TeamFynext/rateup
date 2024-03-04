@@ -573,14 +573,7 @@ export const handleDecryptedFlowRequest = async (
     }
   } catch (error) {
     // TODO: handle error
-    if (error.response?.data) {
-      log.error(
-        "Error in handling flow request. res.data: %o",
-        error.response.data,
-      );
-    } else {
-      log.error("Error in handling flow request: %o", error);
-    }
+    log.error("Error in handling flow request: %o", error);
     throw new Error(
       "Unhandled endpoint request. Make sure you handle the request action & screen logged above.",
     );
