@@ -5,7 +5,9 @@ import Redirect from "../../public/wa/[surveyTeamMapId]/redirect";
 function Was() {
   const router = useRouter();
   const shortId = router.query.shortId;
-  return <Redirect shortId={shortId} />;
+  const tag = router.query.tag;
+
+  return <Redirect shortId={shortId} tag={tag} />;
 }
 
 export default Was;

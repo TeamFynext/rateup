@@ -18,7 +18,7 @@ export const updateRedirect = (setRedirect, editSurvey, updateData = {}) => {
   setRedirect((prev) => {
     const newRedirect = {
       ...prev,
-      enable: !(prev?.enable ?? true),
+      enable: !(prev?.enable ?? false),
     };
     editSurvey.mutate({ redirect: otherUpdate ? updateData : newRedirect });
     return otherUpdate ? updateData : newRedirect;

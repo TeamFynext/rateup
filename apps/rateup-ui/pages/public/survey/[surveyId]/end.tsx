@@ -105,7 +105,7 @@ export default function ThankYou({
 
   useEffect(() => {
     let timeout = null;
-    if (kioskMode === "n" && redirect && (redirect?.enable ?? true)) {
+    if (kioskMode === "n" && redirect && (redirect?.enable ?? false)) {
       timeout = setTimeout(
         () => {
           if (redirect.url === "/") router.push(redirect.url);

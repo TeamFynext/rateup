@@ -39,7 +39,10 @@ export async function importFlows(
   return res.data;
 }
 export async function cloneFlows(flowId: string) {
-  const res = await axiosClient.put(`${BASE}/clone/${flowId}`, {});
+  const res = await axiosClient.put(
+    `${BASE}/clone-and-deprecate/${flowId}`,
+    {},
+  );
   return res.data;
 }
 export type createFlowInput = {

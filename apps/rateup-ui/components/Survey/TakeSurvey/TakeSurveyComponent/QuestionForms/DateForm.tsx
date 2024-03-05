@@ -28,6 +28,14 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
         classNames={{
           input: classes.input,
         }}
+        styles={{
+          calendarHeader: {
+            color: `var(--mantine-color-${theme.primaryColor}-filled)`,
+          },
+          calendarHeaderControl: {
+            color: `var(--mantine-color-${theme.primaryColor}-filled)`,
+          },
+        }}
       />
     </FormPaperLayout>
   );

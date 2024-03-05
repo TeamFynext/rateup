@@ -1,34 +1,13 @@
-import {
-  Stack,
-  Button,
-  CopyButton,
-  Group,
-  Title,
-  Switch,
-  Text,
-} from "@mantine/core";
-import {
-  IconCheck,
-  IconChevronLeft,
-  IconCopy,
-  IconPlayerPause,
-  IconPlayerPlay,
-  IconX,
-} from "@tabler/icons-react";
-import React, { useState, useEffect, useContext } from "react";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
+import { Stack, Group, Title, Switch, Text } from "@mantine/core";
+import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import ShareQR from "./ShareQR";
 import { updateSurvey } from "../../../backend/surveys/survey.api";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { StatusBadge } from "../SurveyCardList";
 import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
@@ -40,6 +19,8 @@ import { ShareMethods } from "./ShareMethods";
 import { CopyLinkComponent } from "./ShareSurvey";
 import { FlowShareTemplateEditor } from "./FlowShareTemplateEditor";
 import { modals } from "@mantine/modals";
+import TagManager from "./TagManager";
+import NothingFound from "../../NothingFound/NothingFound";
 
 // TODO: add tag support
 export const ShareFlow = ({
@@ -56,24 +37,39 @@ export const ShareFlow = ({
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(
     survey?.teams[0]?.mapId,
   );
+  const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
+  const [tag, setTag] = useState("");
+  const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
 
   const queryClient = useQueryClient();
-
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
     if (
       survey.type === SurveyType.WhatsApp ||
       survey.type === SurveyType.WaFlow
     ) {
-      // TODO: get phone number from phone id (add phone number field)
-      if (survey.getLocation) {
-        // redirecting through our page to fetch ip
-        setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
+      if (shortUrlId) {
+        setShareUrl(
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/was/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
+        );
       } else {
-        setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+        // TODO: get phone number from phone id (add phone number field)
+        if (survey.getLocation) {
+          // redirecting through our page to fetch ip
+          setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
+        } else {
+          setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+        }
       }
     }
-  }, [surveyId, surveyTeamMapId]);
+  }, [
+    surveyId,
+    surveyTeamMapId,
+    tag,
+    shortUrlId,
+    survey?.type,
+    survey?.getLocation,
+  ]);
 
   const surveyUpdateMutation = useUpdateSurveyMutation();
 
@@ -98,6 +94,15 @@ export const ShareFlow = ({
   const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
   const disableShare = !(isPublished || allowUnpublishedShare);
 
+  const handleContainedSelectionChange = useCallback(
+    (value) => {
+      const teamObj = survey.teams[value];
+      setSurveyTeamMapId(teamObj.mapId);
+      setShortUrlId(teamObj.shortUrlId);
+      setSelectTeamDropdownState(value);
+    },
+    [survey],
+  );
   const confirmModal = () => {
     modals.openConfirmModal({
       title: "Confirm Publish",
@@ -105,7 +110,7 @@ export const ShareFlow = ({
       children: (
         <Text size="sm">
           Are you sure you want to Publish this Flow? You{" "}
-          <b>can't edit flows after </b>
+          <b>can`&apos;`t edit flows after </b>
           publishing.
           <br />
           It is advised to test the flow by opening the link in before
@@ -118,7 +123,11 @@ export const ShareFlow = ({
       onCancel: () => modals.closeAll(),
     });
   };
-
+  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map(
+    (tag) => {
+      return tag;
+    },
+  );
   // TODO: allow user to deprecate the flow.
   // TODO: implement pause & resume
 
@@ -191,6 +200,29 @@ export const ShareFlow = ({
                 data={teamSelectData}
                 onChange={setSurveyTeamMapId}
               />
+              <Group gap={2} align="flex-start" style={{ flex: 1 }}>
+                <ContainedSelection
+                  disabled={disableShare || tagSelectData.length === 0}
+                  label="Select Tag"
+                  placeholder="select a single Tag"
+                  miw={150}
+                  data={tagSelectData}
+                  value={tag}
+                  onChange={(value) => setTag(value)}
+                />
+                <TagManager
+                  isPublished={true}
+                  selectTeamDropdownValue={selectTeamDropdownState}
+                  teamSelectData={teamSelectData}
+                  onSelectTeamDropdownChange={handleContainedSelectionChange}
+                  nothingFound={NothingFound}
+                  getSelectedRowsToExport={null}
+                  tagsToMap={survey.teams[selectTeamDropdownState].tags}
+                  surveyTitle={survey?.title}
+                  surveyId={surveyId}
+                  shareUrl={shareUrl}
+                />
+              </Group>
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={disableShare} />
           </Stack>

@@ -33,13 +33,19 @@ import { useDisclosure } from "@mantine/hooks";
 import { getTimeSince } from "../../../../utils";
 import { StopPropagation } from "../../../../components/containers/StopPropagation";
 import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/SyncTemplates";
+import { whatsappOptions } from "../../../../utils/constants";
+import { useRouter } from "next/router";
 
-export default function () {
+export default function Template() {
   const { data: templates, isLoading, error } = useWaTemplates();
   const templateDeleteMutation = useDeleteWaTemplateMutation();
   const [isCreateModalOpened, { open, close }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState(null);
-
+  const router = useRouter();
+  if (!whatsappOptions?.includes("templates")) {
+    router.push("/dashboard/whatsapp/flows");
+    return;
+  }
   // TODO: handle error
   function handleCreateClick() {
     setEditingItem(null);

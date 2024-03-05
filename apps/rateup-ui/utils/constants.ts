@@ -128,3 +128,4 @@ export const SAVE_HOTKEY = "mod+s";
 
 export const COORDINATESX = ["LEFT", "CENTER", "RIGHT"];
 export const COORDINATESY = ["TOP", "MIDDLE", "BOTTOM", "DEFAULT"];
+export const whatsappOptions = [];

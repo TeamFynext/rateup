@@ -123,7 +123,6 @@ function FlowPage() {
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
   const [filterTags, setFilterTags] = useState([]);
-
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setTab(FlowTabEnum.Result);
@@ -205,15 +204,7 @@ function FlowPage() {
                   tab={tab}
                   setTabState={setTab}
                 />
-                <StyledTabs
-                  keepMounted={false}
-                  value={tab}
-                  h={"100%"}
-                  // onChange={(value) => {
-                  //   router.push(`${menuId}?tab=${value}`);
-                  //   setActiveTab(value as TabEnum);
-                  // }}
-                >
+                <StyledTabs keepMounted={false} value={tab} h={"100%"}>
                   <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
                     <EditFlow />
                   </Tabs.Panel>

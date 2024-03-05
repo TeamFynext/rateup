@@ -1,4 +1,12 @@
-import { Grid, Group, SimpleGrid, Stack, Switch, Tooltip } from "@mantine/core";
+import {
+  Grid,
+  Group,
+  SimpleGrid,
+  Stack,
+  Switch,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -20,6 +28,7 @@ import {
   updateRedirect,
   updateSkipPreview,
 } from "./updateSettings";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
 
 const defaultEnabledModules = [
   "name",
@@ -56,12 +65,12 @@ const SurveySettings = ({
     );
   }, [survey]);
 
-  useEffect(() => {
-    if (debounced && !kioskMode && redirect?.enable) {
-      let data = { ...redirect, ...{ url: debounced } };
-      updateRedirect(setRedirect, editSurvey, data);
-    }
-  }, [debounced]);
+  // useEffect(() => {
+  //   if (debounced && !kioskMode && redirect?.enable) {
+  //     let data = { ...redirect, ...{ url: debounced } };
+  //     updateRedirect(setRedirect, editSurvey, data);
+  //   }
+  // }, [debounced]);
 
   return (
     <Stack px={"xl"} py={"lg"} gap={survey?.type == "web" ? "lg" : "xs"}>
@@ -129,87 +138,106 @@ const SurveySettings = ({
         {enabledModules.includes("endtoendencryption") && (
           <ETESettings {...{ survey }} />
         )}
-        {enabledModules.includes("redirect") && (
-          <PaperLayout shadow="xl" p={"xl"}>
-            <Group justify="space-between">
-              <Switch
-                label={"Redirect"}
-                size="md"
-                checked={redirect?.enable ?? true}
-                onChange={() => updateRedirect(setRedirect, editSurvey)}
-                disabled={kioskMode}
-              />
-
-              <Tooltip
-                label={
-                  kioskMode
-                    ? "Not available since KioskMode is Enabled."
-                    : "Redirect the page to a specific url after the user complete the survey"
-                }
-              >
-                <IconInfoCircle color="var(--tertiary-color)" />
-              </Tooltip>
-            </Group>
-            {!survey?.kioskMode && (redirect?.enable ?? true) && (
-              <>
-                <Grid columns={10}>
-                  <Grid.Col span={6}>
-                    <ContainedTextField
-                      withAsterisk
-                      placeholder="Target URL for redirection"
-                      required
-                      label={"Redirect Url :"}
-                      defaultValue={redirect?.url}
-                      onChange={(e) => {
-                        if (e.target.value?.trim()?.length === 0) {
-                          return setRedirectError((prev) => ({
-                            ...prev,
-                            ...{ url: "Url should not be empty" },
-                          }));
-                        }
-                        setRedirectError((prev) => ({
-                          ...prev,
-                          ...{ url: "" },
-                        }));
-                        let data = { ...redirect, ...{ url: e.target.value } };
-                        setRedirect(data);
-                      }}
-                      error={redirectError.url}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={4}>
-                    <ContainedNumberInput
-                      withAsterisk
-                      placeholder="time in seconds"
-                      required
-                      label={"Redirect After:"}
-                      defaultValue={redirect?.time}
-                      onChange={(e: number) => {
-                        if (e < 2 || e > 60) {
-                          return setRedirectError((prev) => ({
-                            ...prev,
-                            ...{ time: "Time must be between 2-60" },
-                          }));
-                        }
-                        setRedirectError((prev) => ({
-                          ...prev,
-                          ...{ time: "" },
-                        }));
-                        let data = { ...redirect, ...{ time: e } };
-                        updateRedirect(setRedirect, editSurvey, data);
-                      }}
-                      error={redirectError.time}
-                    />
-                  </Grid.Col>
-                </Grid>
-              </>
-            )}
-          </PaperLayout>
+        {enabledModules.includes("password") && (
+          <PasswordSettings survey={survey} surveyId={surveyId} />
         )}
       </SimpleGrid>
       <SimpleGrid cols={2} spacing={"lg"}>
-        {enabledModules.includes("password") && (
-          <PasswordSettings survey={survey} surveyId={surveyId} />
+        {enabledModules.includes("redirect") && (
+          <PaperLayout shadow="xl" p={"xl"}>
+            <Group justify="space-between">
+              <Title order={4}>Redirect</Title>
+              <Group>
+                <Switch
+                  label={redirect?.enable ?? false ? "Disable" : "Enable"}
+                  size="md"
+                  checked={redirect?.enable ?? false}
+                  onChange={() => updateRedirect(setRedirect, editSurvey)}
+                  disabled={kioskMode}
+                />
+
+                <Tooltip
+                  label={
+                    kioskMode
+                      ? "Not available since KioskMode is Enabled."
+                      : "Redirect the page to a specific url after the user complete the survey"
+                  }
+                >
+                  <IconInfoCircle color="var(--tertiary-color)" />
+                </Tooltip>
+              </Group>
+            </Group>
+            {!survey?.kioskMode && (redirect?.enable ?? false) && (
+              <>
+                <SimpleGrid cols={2}>
+                  <ContainedTextField
+                    withAsterisk
+                    placeholder="Target URL for redirection"
+                    required
+                    label={"Redirect Url :"}
+                    defaultValue={redirect?.url}
+                    onChange={(e) => {
+                      if (e.target.value?.trim()?.length === 0) {
+                        return setRedirectError((prev) => ({
+                          ...prev,
+                          ...{ url: "Url should not be empty" },
+                        }));
+                      }
+                      setRedirectError((prev) => ({
+                        ...prev,
+                        ...{ url: "" },
+                      }));
+                      let data = { ...redirect, ...{ url: e.target.value } };
+                      setRedirect(data);
+                    }}
+                    error={redirectError.url}
+                  />
+                  <ContainedNumberInput
+                    withAsterisk
+                    placeholder="time in seconds"
+                    required
+                    label={"Redirect After:"}
+                    defaultValue={redirect?.time}
+                    onChange={(e: number) => {
+                      if (e < 2 || e > 60) {
+                        return setRedirectError((prev) => ({
+                          ...prev,
+                          ...{ time: "Time must be between 2-60" },
+                        }));
+                      }
+                      setRedirectError((prev) => ({
+                        ...prev,
+                        ...{ time: "" },
+                      }));
+                      let data = { ...redirect, ...{ time: e } };
+                      updateRedirect(setRedirect, editSurvey, data);
+                    }}
+                    error={redirectError.time}
+                  />
+                </SimpleGrid>
+                <Group justify="center" mt={"md"}>
+                  <RateupButtonBlue
+                    title={
+                      survey?.notificationEmail?.length
+                        ? "Edit Redirect"
+                        : "Save Redirect"
+                    }
+                    radius={"xl"}
+                    disabled={
+                      redirectError?.time?.length !== 0 ||
+                      redirectError?.url?.length !== 0
+                    }
+                    onClick={() => {
+                      if (debounced && !kioskMode && redirect?.enable) {
+                        let data = { ...redirect, ...{ url: debounced } };
+                        updateRedirect(setRedirect, editSurvey, data);
+                      }
+                    }}
+                  />
+                </Group>
+              </>
+            )}
+          </PaperLayout>
         )}
         {enabledModules.includes("enableNotificationEmail") && (
           <NotificationEmailSettings surveyId={surveyId} survey={survey} />

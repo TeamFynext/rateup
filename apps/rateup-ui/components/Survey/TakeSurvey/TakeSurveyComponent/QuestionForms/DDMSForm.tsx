@@ -22,8 +22,8 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
-    ? previewChoices?.[selectedLanguage]
-    : sampleChoices;
+      ? previewChoices?.[selectedLanguage]
+      : sampleChoices;
 
   const data = options?.map((op) => op?.value);
 
@@ -55,8 +55,9 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
             backgroundColor: "transparent",
           },
           dropdown: {
-            backgroundColor: `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+            backgroundColor: `var(--mantine-color-${theme.primaryColor}-filled)`,
             borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
+            zIndex: 999,
           },
           pill: {
             color: "var(--mantine-color-white)",

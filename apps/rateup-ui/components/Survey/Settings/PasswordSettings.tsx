@@ -1,4 +1,4 @@
-import { Stack, Group, Title, Switch, Text } from "@mantine/core";
+import { Stack, Group, Switch, Text } from "@mantine/core";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -25,9 +25,8 @@ const PasswordSettings = ({ survey, surveyId }) => {
     <PaperLayout shadow="xl" p={"xl"}>
       <Stack gap={"md"}>
         <Group justify="space-between">
-          <Title order={4}>Password Protection</Title>
           <Switch
-            label={passwordProtection ? "Disable" : "Enable"}
+            label={"Password Protection"}
             size="md"
             checked={passwordProtection}
             onChange={() => {

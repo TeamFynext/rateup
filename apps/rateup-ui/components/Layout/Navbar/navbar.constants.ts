@@ -29,6 +29,7 @@ import {
   SubscriptionFeaturePathName as sfpn,
 } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import { whatsappOptions } from "../../../utils/constants";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -105,16 +106,24 @@ export function getNavTopData(subscription?: Subscription) {
             Icon: IconBrandWhatsapp,
             label: "WhatsApp",
             submenus: [
-              {
-                Icon: IconFileDescription,
-                label: "Surveys",
-                href: "/dashboard/whatsapp",
-              },
-              {
-                Icon: IconMessage2Code,
-                label: "Templates",
-                href: "/dashboard/whatsapp/templates",
-              },
+              ...(whatsappOptions.includes("surveys")
+                ? [
+                    {
+                      Icon: IconFileDescription,
+                      label: "Surveys",
+                      href: "/dashboard/whatsapp",
+                    },
+                  ]
+                : []),
+              ...(whatsappOptions.includes("templates")
+                ? [
+                    {
+                      Icon: IconMessage2Code,
+                      label: "Templates",
+                      href: "/dashboard/whatsapp/templates",
+                    },
+                  ]
+                : []),
               {
                 Icon: IconWaveSine,
                 label: "Flows",
