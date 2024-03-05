@@ -112,7 +112,7 @@ export default function DashboardHome() {
       survey?.teams?.forEach((team) => {
         team?.responses?.forEach((response) => {
           let date = dateToISOButLocal(response?.createdAt).split("T")[0];
-          let week = dayjs(new Date(response?.createdAt)).diff(dayjs(), "week");
+          let week = dayjs().diff(dayjs(new Date(response?.createdAt)), "week");
           if (dateResponseCount[date]) {
             dateResponseCount[date]++;
           } else {
