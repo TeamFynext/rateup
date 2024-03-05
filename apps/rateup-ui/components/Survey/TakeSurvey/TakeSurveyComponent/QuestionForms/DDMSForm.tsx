@@ -6,6 +6,7 @@ import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import FormPaperLayout from "./layout/FormPaperLayout";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -17,6 +18,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const choices = selectedQ?.choices[selectedLanguage];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const isMobile = useMediaQuery("(max-width: 480px)");
 
   const [selectedOp, setSelectedOp] = useState([]);
   const options = selectedQ
@@ -38,6 +40,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
     updateResponse(res);
   };
   const theme = useMantineTheme();
+  const pos = isMobile ? "top" : "bottom";
   return (
     <FormPaperLayout>
       <MultiSelect
@@ -51,6 +54,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
             flip: false,
             shift: false,
           },
+          position: pos,
         }}
         classNames={{
           input: classes.selectBox,
