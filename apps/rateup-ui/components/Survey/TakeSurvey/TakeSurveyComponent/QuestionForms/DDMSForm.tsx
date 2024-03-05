@@ -46,6 +46,12 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
         value={selectedOp}
         onChange={handleSelectedOp}
         placeholder="Select one or more / type in to search"
+        comboboxProps={{
+          middlewares: {
+            flip: false,
+            shift: false,
+          },
+        }}
         classNames={{
           input: classes.selectBox,
           root: classes.input,
@@ -55,7 +61,6 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
             backgroundColor: "transparent",
           },
           dropdown: {
-            backgroundColor: `var(--mantine-color-${theme.primaryColor}-filled)`,
             borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
             zIndex: 999,
           },

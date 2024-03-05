@@ -47,6 +47,12 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
         data={data}
         value={selectedOp}
         onChange={handleSelectedOp}
+        comboboxProps={{
+          middlewares: {
+            flip: false,
+            shift: false,
+          },
+        }}
         classNames={{
           input: classes.selectBox,
           root: classes.input,
@@ -56,7 +62,6 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
             backgroundColor: "transparent",
           },
           dropdown: {
-            backgroundColor: `var(--mantine-color-${theme.primaryColor}-filled)`,
             borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
             zIndex: 999,
           },
