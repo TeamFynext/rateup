@@ -281,6 +281,7 @@ model WaSession {
   orgId                 String               @db.Uuid
   ip                    String?
   type                  String               @default("survey") // WaSessionType
+  tag                   String?              @default("")
 
   @@unique([phone, orgId])
 }
@@ -762,5 +763,5 @@ model GoogleAccessToken {
   refreshToken String
   expiryDate   String
   scopes       String[]
-  userEmail    String?  
+  userEmail    String?
 }

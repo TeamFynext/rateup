@@ -232,7 +232,13 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
 
 async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   const { from, message: tempMessage } = parseMessage(waMessage);
-  const message = tempMessage?.split("\n")?.slice(1)?.join(" ");
+  const messageWithTagSplit = tempMessage
+    ?.split("\n")
+    ?.slice(1)
+    ?.join(" ")
+    ?.split("?t=");
+  const message = messageWithTagSplit?.[0];
+  const tag = messageWithTagSplit?.[1];
   log.trace("handling start message");
   // delete any existing session if any
   await deleteSession(orgId, from);
@@ -250,6 +256,7 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
     surveyTeamMapId,
     orgId,
     ip,
+    tag,
   });
   updateVisitedSurvey(session.surveyTeamMap.id)
     .then(() => {})

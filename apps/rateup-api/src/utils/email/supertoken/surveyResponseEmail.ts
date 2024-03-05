@@ -122,7 +122,7 @@ export function createEmailBodySurveyResponse(
                   </th>
                 </tr>
                 <tr>
-                  <th class="email-title">New Response Submitted</th>
+                  <th class="email-title">RateUp: New Response: ${name}</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,11 +136,6 @@ export function createEmailBodySurveyResponse(
                       height="144"
                     />
                   </td>
-                </tr>
-                <tr>
-                <td>
-                <h1>${name}</h1>
-                </td>
                 </tr>
                 ${body}
                 <tr>

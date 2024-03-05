@@ -3,6 +3,7 @@ import { getFlowsFromWa } from "./flow.service";
 import { checkSession } from "../../../utils/checkSession";
 import { $waFlow } from "./flow.schema";
 import {
+  cloneAndDeprecateFlowHandler,
   cloneFlowHandler,
   createFlowHandler,
   deleteFlowHandler,
@@ -85,6 +86,18 @@ export async function flowRoutes(server: FastifyInstance) {
     },
     updateFlowHandler,
   );
+  //this clone and deprecate the old one
+  server.put(
+    "/clone-and-deprecate/:dbFlowId",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    cloneAndDeprecateFlowHandler,
+  );
+
+  //this clone and create new flow
   server.put(
     "/clone/:dbFlowId",
     {
