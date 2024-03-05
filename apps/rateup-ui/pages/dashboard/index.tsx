@@ -62,7 +62,7 @@ export default function DashboardHome() {
   const [sort, setSort] = useState(true);
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
   const [opened, { open, close }] = useDisclosure(false);
-  const [timePeriod, setTimePeriod] = useState("weekly");
+  const [timePeriod, setTimePeriod] = useState("daily");
   const {
     isLoading: isLoadingSummary,
     error: summaryError,
@@ -107,10 +107,12 @@ export default function DashboardHome() {
   function prepareData(surveysSummary: SurveySummaryData) {
     let dateResponseCount = {};
     let dayResponseCount = {};
+    let weekResponseCount = {};
     surveysSummary?.surveys?.forEach((survey) => {
       survey?.teams?.forEach((team) => {
         team?.responses?.forEach((response) => {
           let date = dateToISOButLocal(response?.createdAt).split("T")[0];
+          let week = dayjs(response?.createdAt).diff(dayjs(), "week");
           if (dateResponseCount[date]) {
             dateResponseCount[date]++;
           } else {
@@ -122,56 +124,55 @@ export default function DashboardHome() {
           );
           if (dayResponseCount[dateWithHour]) dayResponseCount[dateWithHour]++;
           else dayResponseCount[dateWithHour] = 1;
+          if (weekResponseCount[week]) weekResponseCount[week]++;
+          else weekResponseCount[week] = 1;
         });
       });
     });
 
-    const allDates = [];
-    const currentYear = dayjs().year();
-    const currentMonth = dayjs().month();
-    for (var i = 1; i <= dayjs().daysInMonth(); i++)
-      allDates.push(
-        dayjs(new Date(currentYear, currentMonth, i))
-          .format()
-          .split("T")[0],
-      );
-    const remainingDates = allDates.filter(
-      (d) => !Object.keys(dateResponseCount).some((dt) => dt == d),
-    );
-    remainingDates.map((rd) => {
-      dateResponseCount[rd] = 0;
-    });
-
-    const dayWithAllTimes = [];
-    for (var i = 0; i <= 23; i++) {
-      const now = new Date();
-      now.setHours(i);
-      dayWithAllTimes.push(dayjs(now).format().slice(0, 13));
+    for (var i = 30; i >= 0; i--) {
+      const date = dayjs().subtract(i, "day").format().split("T")[0];
+      if (!Object.keys(dateResponseCount).some((dt) => dt == date))
+        dateResponseCount[date] = 0;
     }
-    const remainingTimes = dayWithAllTimes.filter(
-      (dt) => !Object.keys(dayResponseCount).some((d) => dt === d),
-    );
-    remainingTimes.map((rd) => {
-      dayResponseCount[rd] = 0;
-    });
+
+    for (var i = 0; i <= 52; i++) {
+      if (!Object.keys(weekResponseCount).some((dt) => Number(dt) == i))
+        weekResponseCount[i] = 0;
+    }
+
+    for (var i = 0; i <= 24; i++) {
+      const dayWithHour = dayjs().subtract(i, "hour").format().slice(0, 13);
+      if (!Object.keys(dayResponseCount).some((dt) => dt == dayWithHour))
+        dayResponseCount[dayWithHour] = 0;
+    }
+
     let data = Object.keys(
-      timePeriod === "daily" ? dayResponseCount : dateResponseCount,
+      timePeriod === "hourly"
+        ? dayResponseCount
+        : timePeriod === "daily"
+          ? dateResponseCount
+          : weekResponseCount,
     )?.map((date) => ({
       date: date,
       responses:
-        timePeriod === "daily"
+        timePeriod === "hourly"
           ? dayResponseCount[date]
-          : dateResponseCount[date],
+          : timePeriod === "daily"
+            ? dateResponseCount[date]
+            : weekResponseCount[date],
     }));
 
     const formattedData =
-      timePeriod === "daily"
+      timePeriod === "hourly"
         ? data.sort((a, b) => {
             return a.date.localeCompare(b.date);
           })
-        : data.sort(
-            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-          );
+        : timePeriod === "daily"
+          ? data.sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+            )
+          : data.sort((a, b) => Number(b.date) - Number(a.date));
     return formattedData;
   }
 
@@ -189,26 +190,21 @@ export default function DashboardHome() {
     const date = dayjs(datum.date);
     const now = dayjs();
     let periodStart;
-    let periodEnd;
     switch (timePeriod) {
+      case "hourly":
+        periodStart = now.subtract(1, "day");
+        break;
       case "daily":
-        periodStart = now.startOf("day");
-        periodEnd = now.endOf("day");
+        periodStart = now.subtract(1, "month");
         break;
       case "weekly":
-        periodStart = now.startOf("week");
-        periodEnd = now.endOf("week");
-        break;
-      case "monthly":
-        periodStart = now.startOf("month");
-        periodEnd = now.endOf("month");
-        break;
+        return Number(datum.date) <= 52;
       default:
         periodStart = dayjs(0);
     }
     return (
       (date.isAfter(periodStart) || date.isSame(periodStart)) &&
-      (date.isBefore(periodEnd) || date.isSame(periodEnd))
+      (date.isBefore(now) || date.isSame(now))
     );
   });
 
@@ -220,9 +216,12 @@ export default function DashboardHome() {
   }
   const CustomTooltip = ({ active, payload, label, timePeriod }: iProps) => {
     if (active && payload && payload?.length) {
-      label = dayjs(label).format(
-        timePeriod === "daily" ? "MMM DD, YYYY H A" : "MMM DD, YYYY",
-      );
+      label =
+        timePeriod === "hourly"
+          ? dayjs(label).format("MMM DD, YYYY h A")
+          : timePeriod === "daily"
+            ? dayjs(label).format("MMM DD, YYYY")
+            : label;
       return (
         <div
           className="custom-tooltip"
@@ -397,13 +396,22 @@ export default function DashboardHome() {
 
                       <Group justify="flex-end">
                         <RateupButtonBlue
+                          variant={
+                            timePeriod === "hourly" ? "filled" : "subtle"
+                          }
+                          radius="lg"
+                          color={timePeriod !== "hourly" ? "gray" : "black"}
+                          onClick={() => setTimePeriod("hourly")}
+                          title="Hourly"
+                        />
+
+                        <RateupButtonBlue
                           variant={timePeriod === "daily" ? "filled" : "subtle"}
                           radius="lg"
                           color={timePeriod !== "daily" ? "gray" : "black"}
                           onClick={() => setTimePeriod("daily")}
-                          title="Day"
+                          title="Daily"
                         />
-
                         <RateupButtonBlue
                           variant={
                             timePeriod === "weekly" ? "filled" : "subtle"
@@ -411,16 +419,7 @@ export default function DashboardHome() {
                           radius="lg"
                           color={timePeriod !== "weekly" ? "gray" : "black"}
                           onClick={() => setTimePeriod("weekly")}
-                          title="Week"
-                        />
-                        <RateupButtonBlue
-                          variant={
-                            timePeriod === "monthly" ? "filled" : "subtle"
-                          }
-                          radius="lg"
-                          color={timePeriod !== "monthly" ? "gray" : "black"}
-                          onClick={() => setTimePeriod("monthly")}
-                          title="Month"
+                          title="Weekly"
                         />
                       </Group>
                     </Group>
@@ -454,9 +453,11 @@ export default function DashboardHome() {
                         <XAxis
                           dataKey="date"
                           tickFormatter={(str) =>
-                            dayjs(str).format(
-                              timePeriod === "daily" ? "h A" : "MMM DD",
-                            )
+                            timePeriod === "hourly"
+                              ? dayjs(str).format("h A")
+                              : timePeriod === "daily"
+                                ? dayjs(str).format("MMM DD")
+                                : str
                           }
                         />
                         <YAxis allowDecimals={false} />
@@ -477,9 +478,11 @@ export default function DashboardHome() {
                           height={15}
                           dataKey="date"
                           tickFormatter={(str) =>
-                            dayjs(str).format(
-                              timePeriod === "daily" ? "h A" : "MMM DD",
-                            )
+                            timePeriod === "hourly"
+                              ? dayjs(str).format("h A")
+                              : timePeriod === "daily"
+                                ? dayjs(str).format("MMM DD")
+                                : str
                           }
                           fill="var(--light-grey-color-3)"
                         />
