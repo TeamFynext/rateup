@@ -10,7 +10,10 @@ import { getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
 import { log } from "../../utils/logger";
 import { getReviewsBySurveyTeamMapId } from "../reviewSuggestion/reviewSuggestion.service";
-import { getShortUrlId } from "../../utils/commnUtils";
+import {
+  getShortUrlId,
+  shortIdUniqueConstraintErrHandler,
+} from "../../utils/commnUtils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -20,32 +23,39 @@ export async function createSurvey(
   notificationEmail?: string,
 ) {
   const { templateId, ...input } = data;
-  const teamIds = input?.teamIds?.map((teamId) => {
-    return {
-      teamId,
-      shortUrlId: getShortUrlId(),
-    };
-  });
   delete input.teamIds;
 
   if (templateId) {
     return cloneSurvey(templateId, createdBy, data.teamIds, true);
   } else {
-    const survey = await prisma.survey.create({
-      data: {
-        ...input,
-        title: input.title,
-        languages: input.languages,
-        notificationEmail,
-        createdBy,
-        teams: {
-          create: teamIds,
-        },
-      },
-    });
-    let surveyRes = { ...survey, teamIds: input?.teamIds };
+    const createRecord = async () => {
+      const teamIds = data?.teamIds?.map((teamId) => {
+        return {
+          teamId,
+          shortUrlId: getShortUrlId(),
+        };
+      });
 
-    return surveyRes;
+      const survey = await prisma.survey.create({
+        data: {
+          ...input,
+          title: input.title,
+          languages: input.languages,
+          notificationEmail,
+          createdBy,
+          teams: {
+            create: teamIds,
+          },
+        },
+      });
+      return survey;
+    };
+
+    const survey = await shortIdUniqueConstraintErrHandler(createRecord);
+    if (survey) {
+      return { ...survey, teamIds: input?.teamIds };
+    }
+    return null;
   }
 }
 
@@ -96,7 +106,10 @@ export async function cloneSurvey(
       }
     });
 
-    const teams = teamIds?.map((teamId) => ({ teamId }));
+    const teams = teamIds?.map((teamId) => ({
+      teamId,
+      shortUrlId: getShortUrlId(),
+    }));
 
     const clonedSurvey = {
       ...surveyWithoutId,
@@ -117,9 +130,14 @@ export async function cloneSurvey(
     });
     delete theme["id"];
     delete theme["surveyId"];
-    const newClonedSurvey = await prisma.survey.create({
-      data: clonedSurvey,
-    });
+    const createClonedSurvey = async () => {
+      const cloned = await prisma.survey.create({
+        data: clonedSurvey,
+      });
+      return cloned;
+    };
+    const newClonedSurvey =
+      await shortIdUniqueConstraintErrHandler(createClonedSurvey);
     await prisma.surveyTheme.create({
       data: {
         ...theme,
@@ -182,8 +200,8 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
 
 // This function returns survey from SurveyTeamMap Table, below argument id means SurveyTeamMap Table id
 export async function getPublicSurveyById(id: string) {
-  // id.length === 6 means it is shortUrlId.
-  const surveyTeamMapWhere = id.length === 6 ? { shortUrlId: id } : { id };
+  // id.length === 8 means it is shortUrlId.
+  const surveyTeamMapWhere = id.length === 8 ? { shortUrlId: id } : { id };
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
     where: surveyTeamMapWhere,
     include: {
@@ -218,7 +236,6 @@ export async function getPublicSurveyById(id: string) {
     reviews: reviewSuggestion,
   };
 
-  console.log(publicSurvey);
   return publicSurvey;
 }
 
@@ -648,13 +665,18 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     );
 
     if (newTeams?.length) {
-      const newSurveyTeams = await prisma.surveyTeamMap.createMany({
-        data: newTeams.map((team) => ({
-          surveyId: id,
-          ...team,
-          shortUrlId: isOldSurvey ? null : getShortUrlId(),
-        })),
-      });
+      const createRecordsInSurveyTeamMap = async () => {
+        await prisma.surveyTeamMap.createMany({
+          data: newTeams.map((team) => ({
+            surveyId: id,
+            ...team,
+            shortUrlId: isOldSurvey ? null : getShortUrlId(),
+          })),
+        });
+      };
+      const newSurveyTeams = await shortIdUniqueConstraintErrHandler(
+        createRecordsInSurveyTeamMap,
+      );
     }
 
     let deletedTeams = existingTeams?.filter(

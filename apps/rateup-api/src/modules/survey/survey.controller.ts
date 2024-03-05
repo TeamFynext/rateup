@@ -66,7 +66,7 @@ export async function createSurveyHandler(
     reply.code(201).send(survey);
   } catch (e) {
     console.error(e);
-    reply.code(500).send();
+    reply.code(500).send("There was an error while creating the survey.");
   }
 }
 
