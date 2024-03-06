@@ -11,18 +11,21 @@ type ShareMenuProps = {
     isPublished: boolean;
     surveyTeamMapId?: string;
     name: string;
+    shortUrlId?: string;
   };
 };
 
 const ShareMenu = ({ menu }: ShareMenuProps) => {
-  const { id, isPublished, surveyTeamMapId, name } = menu;
+  const { id, isPublished, name, shortUrlId } = menu;
   const { isPending, error, mutate } = useUpdateMenuMutation(
     id,
     () => {},
     () => {},
   );
 
-  const shareLink = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/menu/${id}/feedback/${surveyTeamMapId}`;
+  const shareLink = menu.shortUrlId
+    ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${shortUrlId}`
+    : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${id}`;
   return (
     <Stack>
       <Paper px="md" py="lg" radius="md" shadow="lg">
@@ -70,6 +73,3 @@ const ShareMenu = ({ menu }: ShareMenuProps) => {
 };
 
 export default ShareMenu;
-function showErrorToast(message: any) {
-  throw new Error("Function not implemented.");
-}

@@ -23,7 +23,7 @@ const SessionAuth: React.FC<SessionAuthProps> = ({ children }) => {
     checkSession();
   }, [router]);
 
-  if (loading) return <RateupLoader />;
+  if (loading) return <RateupLoader h={"100dvh"} />;
 
   return <>{children}</>;
 };

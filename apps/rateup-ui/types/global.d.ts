@@ -370,6 +370,9 @@ declare global {
       code?: string;
     };
     expiry?: string;
+    menu?: {
+      id?: string;
+    };
   };
 
   type MenuCategory = {
@@ -588,6 +591,7 @@ export interface Data {
   visited?: number;
   surveyTeamMap?: {
     surveyId?: string;
+    shortUrlId?: string;
   };
   unsplashImage?: {
     backgroundImage: boolean;

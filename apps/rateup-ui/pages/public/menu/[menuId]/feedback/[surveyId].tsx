@@ -58,8 +58,10 @@ export const getServerSideProps = async ({
 
 export default function MenuLandingPage({
   menuLanding,
+  fromShortUrl = false,
 }: {
   menuLanding: Data;
+  fromShortUrl?: boolean;
 }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   if (!menuLanding || !menuLanding?.menu?.isPublished || menuLanding?.expiry) {
@@ -284,7 +286,7 @@ export default function MenuLandingPage({
                 hoveractive
                 c={"var(--grey-color-3)"}
               >
-                {MenuButton(largeScreen, menuLanding?.catalogue)}
+                {MenuButton(largeScreen, menuLanding?.catalogue, fromShortUrl)}
               </PaperLayout>
             )}
             {menuLanding?.feedbackPageEnabled === true && (
@@ -294,7 +296,11 @@ export default function MenuLandingPage({
                 hoveractive
                 c={"var(--grey-color-3)"}
               >
-                {FeedbackButton(largeScreen, menuLanding?.catalogue)}
+                {FeedbackButton(
+                  largeScreen,
+                  menuLanding?.catalogue,
+                  menuLanding?.surveyTeamMap?.shortUrlId,
+                )}
               </PaperLayout>
             )}
           </SimpleGrid>
@@ -311,13 +317,15 @@ export default function MenuLandingPage({
   );
 }
 
-function FeedbackButton(largeScreen: boolean, catalogue: boolean) {
-  const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
+function FeedbackButton(
+  largeScreen: boolean,
+  catalogue: boolean,
+  surveyId?: string,
+) {
   return (
     <Stack align="center" gap={0}>
       <Link
-        href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyId}`}
+        href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${surveyId}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Stack justify={"space-between"} align={"center"} gap={0}>
@@ -337,15 +345,20 @@ function FeedbackButton(largeScreen: boolean, catalogue: boolean) {
   );
 }
 
-function MenuButton(largeScreen: boolean, catalogue: boolean) {
+function MenuButton(
+  largeScreen: boolean,
+  catalogue: boolean,
+  fromShortUrl: boolean,
+) {
   const router = useRouter();
   let imageSrc = catalogue
     ? "/images/menu/catalogue.png"
     : "/images/menu/menu.png";
+  const menuId = fromShortUrl ? router.query.shortId : router.query.menuId;
   return (
     <Stack align="center" gap={0}>
       <Link
-        href={`/public/menu/${router.query.menuId}/view`}
+        href={`/m/${menuId}/view`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Stack justify={"center"} align={"center"} gap={0}>

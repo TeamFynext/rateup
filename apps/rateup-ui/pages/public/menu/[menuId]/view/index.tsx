@@ -313,7 +313,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
               gap={0}
               onClick={() => {
                 router.push(
-                  `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${fullMenu?.menuLanding?.surveyTeamMapId}`,
+                  `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${fullMenu?.menuLanding?.surveyTeamMap?.shortUrlId ?? fullMenu?.menuLanding?.surveyTeamMapId}`,
                 );
               }}
             >
