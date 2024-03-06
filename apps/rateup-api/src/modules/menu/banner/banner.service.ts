@@ -20,10 +20,18 @@ export async function createMenuBanner(data: CreateMenuBannerInput) {
 }
 
 export async function getMenuBanner(menuId: string) {
+  let menuSearchCondition =
+    menuId?.length === 8
+      ? {
+          menu: {
+            shortUrlId: menuId,
+          },
+        }
+      : {
+          menuId: menuId,
+        };
   const menuBanner = await prisma.menuBanner.findMany({
-    where: {
-      menuId,
-    },
+    where: menuSearchCondition,
     orderBy: {
       createdAt: "asc",
     },

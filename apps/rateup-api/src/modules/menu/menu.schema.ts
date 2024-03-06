@@ -110,6 +110,12 @@ const fullMenuPublicResponseSchema = z.object({
         currency: z.string().optional(),
         hideUnavailableCategory: z.boolean().optional(),
       }),
+      surveyTeamMap: z
+        .object({
+          shortUrlId: z.string().optional(),
+        })
+        .optional()
+        .nullable(),
       unsplashImage: z
         .object({
           mobileBackgroundImage: z.boolean().optional(),

@@ -401,6 +401,7 @@ model Menu {
   menuBanner              MenuBanner[]
   shareSettings           Json?
   hideUnavailableCategory Boolean        @default(false)
+  shortUrlId              String?        @unique
 }
 
 model MenuCategory {
