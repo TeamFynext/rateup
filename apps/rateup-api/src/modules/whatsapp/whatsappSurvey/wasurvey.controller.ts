@@ -445,10 +445,6 @@ export async function sendSurveyToParticipants(campaignId: string) {
         },
       },
     });
-    const dbTemplate = await getDbTemplate(campaign.waTemplateId);
-    if (!dbTemplate) {
-      throw new Error(`Template with id ${campaign.waTemplateId} not found`);
-    }
 
     for (const { contact, id } of campaign.campaignParticipants) {
       if (!contact.phone) {
@@ -466,6 +462,12 @@ export async function sendSurveyToParticipants(campaignId: string) {
           phone: contact.phone,
         });
       } else {
+        const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+        if (!dbTemplate) {
+          throw new Error(
+            `Template with id ${campaign.waTemplateId} not found`,
+          );
+        }
         success = await sendSurveyToParticipant({
           campaignParticipantId: id,
           phone: contact.phone,
