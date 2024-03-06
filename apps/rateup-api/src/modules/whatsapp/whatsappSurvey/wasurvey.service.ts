@@ -125,6 +125,7 @@ interface createSessionParams {
   currentQuestionId?: string;
   campaignParticipantId?: string;
   ip?: string;
+  tag?: string;
 }
 export async function createSession({
   phone,
@@ -135,6 +136,7 @@ export async function createSession({
   currentQuestionId,
   campaignParticipantId,
   ip = "",
+  tag,
 }: createSessionParams) {
   log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
 
@@ -148,6 +150,7 @@ export async function createSession({
       currentQuestionId: currentQuestionId,
       campaignParticipantId: campaignParticipantId,
       ip: ip ? ip : undefined,
+      tag,
     },
     include: toBeIncludedWaSessionRelations,
   });
@@ -337,7 +340,6 @@ export async function saveResponses(session: WaSessionWithRelations) {
     session.phone,
     session.surveyTeamMap.teamId,
   );
-
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
@@ -345,6 +347,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     platform: ResponsePlatform.WHATSAPP,
     location: await fetchLocationFromIp(session.ip),
     contactId: contact?.id,
+    tag: session.tag,
   };
   const res = await createResponse(surveyResponse);
   log.info("Responses saved \n%o\n", surveyResponse);

@@ -232,7 +232,13 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
 
 async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
   const { from, message: tempMessage } = parseMessage(waMessage);
-  const message = tempMessage?.split("\n")?.slice(1)?.join(" ");
+  const messageWithTagSplit = tempMessage
+    ?.split("\n")
+    ?.slice(1)
+    ?.join(" ")
+    ?.split("?t=");
+  const message = messageWithTagSplit?.[0];
+  const tag = messageWithTagSplit?.[1];
   log.trace("handling start message");
   // delete any existing session if any
   await deleteSession(orgId, from);
@@ -250,6 +256,7 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
     surveyTeamMapId,
     orgId,
     ip,
+    tag,
   });
   updateVisitedSurvey(session.surveyTeamMap.id)
     .then(() => {})
@@ -438,10 +445,6 @@ export async function sendSurveyToParticipants(campaignId: string) {
         },
       },
     });
-    const dbTemplate = await getDbTemplate(campaign.waTemplateId);
-    if (!dbTemplate) {
-      throw new Error(`Template with id ${campaign.waTemplateId} not found`);
-    }
 
     for (const { contact, id } of campaign.campaignParticipants) {
       if (!contact.phone) {
@@ -459,6 +462,12 @@ export async function sendSurveyToParticipants(campaignId: string) {
           phone: contact.phone,
         });
       } else {
+        const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+        if (!dbTemplate) {
+          throw new Error(
+            `Template with id ${campaign.waTemplateId} not found`,
+          );
+        }
         success = await sendSurveyToParticipant({
           campaignParticipantId: id,
           phone: contact.phone,

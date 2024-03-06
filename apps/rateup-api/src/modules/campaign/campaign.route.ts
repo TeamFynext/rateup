@@ -65,7 +65,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     },
     deleteCampaignByIdHandler,
   );
-  server.get(
+  server.post(
     "/:campaignId/start",
     {
       schema: {

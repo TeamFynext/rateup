@@ -209,7 +209,7 @@ export async function updateFlowHandler(
   res.status(201).send();
 }
 
-export async function cloneFlowHandler(
+export async function cloneAndDeprecateFlowHandler(
   req: FastifyRequest<{
     Params: ByDbFlowIdParams;
   }>,
@@ -230,6 +230,31 @@ export async function cloneFlowHandler(
     await deprecateFlowInWa(orgId, previousFlow.flowId);
     await updateFlowIdAndStatusInDb(dbFlowId, flowId, previousFlow.surveyId);
     res.status(204).send();
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
+export async function cloneFlowHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const { dbFlowId } = req.params;
+    const previousFlow = await getFlowFromDb(dbFlowId);
+    const { categories } = await getFlowFromWa(orgId, previousFlow.flowId);
+    //flowid of new cloned flow
+    const { id: flowId } = await cloneFlowInWa(orgId, {
+      name: `${previousFlow.name} ${previousFlow.flowId}`,
+      categories,
+      clone_flow_id: previousFlow.flowId,
+    });
+
+    // await updateFlowIdAndStatusInDb(dbFlowId, flowId, previousFlow.surveyId);
+    res.status(201).send();
   } catch (error) {
     res.status(500).send(error.message);
   }

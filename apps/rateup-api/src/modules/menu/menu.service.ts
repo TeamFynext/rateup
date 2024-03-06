@@ -7,6 +7,7 @@ import {
   updateLandingPageOption,
   updateMenuLandingInput,
 } from "./menu.schema";
+import { getShortUrlId } from "../../utils/commnUtils";
 
 export async function createMenu(data: CreateMenuInput) {
   if (data.teamId === undefined) return;
@@ -22,6 +23,7 @@ export async function createMenu(data: CreateMenuInput) {
           id: teamId,
         },
       },
+      shortUrlId: getShortUrlId(),
     },
   });
   return menu;
@@ -37,10 +39,16 @@ export async function getMenu(menuId: string) {
 }
 
 export async function getFullMenu(menuId: string) {
+  let menuSearchCondition =
+    menuId?.length === 8
+      ? {
+          shortUrlId: menuId,
+        }
+      : {
+          id: menuId,
+        };
   const menu = await prisma.menu.findUnique({
-    where: {
-      id: menuId,
-    },
+    where: menuSearchCondition,
     include: {
       categories: {
         include: {
@@ -75,6 +83,11 @@ export async function getFullMenu(menuId: string) {
             select: {
               currency: true,
               hideUnavailableCategory: true,
+            },
+          },
+          surveyTeamMap: {
+            select: {
+              shortUrlId: true,
             },
           },
         },
@@ -233,11 +246,17 @@ export async function deleteMenu(id: string) {
 }
 export async function getMenuLanding(id: string) {
   let menu;
+  let menuSearchCondition =
+    id?.length === 8
+      ? {
+          shortUrlId: id,
+        }
+      : {
+          id: id,
+        };
   menu = await prisma.menuLanding.findFirst({
     where: {
-      menu: {
-        id: id,
-      },
+      menu: menuSearchCondition,
     },
     include: {
       menu: {
@@ -252,6 +271,7 @@ export async function getMenuLanding(id: string) {
       surveyTeamMap: {
         select: {
           surveyId: true,
+          shortUrlId: true,
         },
       },
     },
