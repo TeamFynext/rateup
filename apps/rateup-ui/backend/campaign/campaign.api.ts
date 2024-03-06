@@ -29,3 +29,8 @@ export const deleteCampaign = async (campaignId) => {
   let res = await axiosClient.delete(`/campaign/${campaignId}`);
   return res;
 };
+
+export const startCampaign = async (campaignId) => {
+  let res = await axiosClient.post(`/campaign/${campaignId}/start`);
+  return res;
+};

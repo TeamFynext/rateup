@@ -16,6 +16,7 @@ import {
 } from "../../../backend/campaign/campaign.query";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../utils/constants";
+import { useEffect, useState } from "react";
 
 interface CreateCampaignProps {
   close: () => void;
@@ -28,6 +29,7 @@ const CreateCampaignModal = ({
   isEdit,
   campaign,
 }: CreateCampaignProps) => {
+  const [isTemplate, setIsTemplate] = useState(false);
   const form = useForm({
     initialValues: {
       name: campaign?.name || "",
@@ -40,7 +42,7 @@ const CreateCampaignModal = ({
       name: isNotEmpty("Name cannot be empty"),
       teamId: isNotEmpty("Must select a team"),
       surveyTeamMapId: isNotEmpty("Must select a survey"),
-      waTemplateId: isNotEmpty("Must select a template"),
+      waTemplateId: isTemplate && isNotEmpty("Must select a template"),
     },
   });
 
@@ -70,6 +72,7 @@ const CreateCampaignModal = ({
   const handleSubmit = (values) => {
     const validation = form.validate();
     if (validation.hasErrors) return;
+    values.waTemplateId = isTemplate ? values.waTemplateId : undefined;
     if (isEdit) {
       updateCampaignMutation.mutate(
         { data: values, campaignId: campaign?.id },
@@ -95,6 +98,14 @@ const CreateCampaignModal = ({
       });
     }
   };
+
+  useEffect(() => {
+    const survey = surveys?.find(
+      (s) => s.surveyTeamMapId === form.values.surveyTeamMapId,
+    );
+    if (survey?.type === SurveyType.WhatsApp) setIsTemplate(true);
+    else setIsTemplate(false);
+  }, [form.values.surveyTeamMapId]);
   return (
     <>
       <form
@@ -142,14 +153,16 @@ const CreateCampaignModal = ({
                 {...form.getInputProps("surveyTeamMapId")}
                 data={surveyData}
               />
-              <ContainedSelection
-                label="Choose Template"
-                withAsterisk
-                placeholder="Select Template"
-                classNames={{ label: style.inputLabel }}
-                {...form.getInputProps("waTemplateId")}
-                data={templatesData}
-              />{" "}
+              {isTemplate ? (
+                <ContainedSelection
+                  label="Choose Template"
+                  withAsterisk
+                  placeholder="Select Template"
+                  classNames={{ label: style.inputLabel }}
+                  {...form.getInputProps("waTemplateId")}
+                  data={templatesData}
+                />
+              ) : null}
             </>
           )}
         </SimpleGrid>

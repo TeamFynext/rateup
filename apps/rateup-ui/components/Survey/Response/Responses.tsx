@@ -256,7 +256,7 @@ const Responses = ({
       <PaperLayout className={styles["total-responses-heading-container"]}>
         <Group justify="space-between" align="center">
           <Heading subtitle={`Total Responses : ${responseCount}`} />
-          {responseCount > 0 && (
+          {responseCount > 0 && !survey?.isEncrypted && (
             <Popover
               position="bottom-end"
               withArrow

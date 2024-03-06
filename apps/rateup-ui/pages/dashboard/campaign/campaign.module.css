@@ -10,3 +10,17 @@
   color: rgb(167, 167, 167);
   text-transform: capitalize;
 }
+
+.rotateInfinitely {
+  animation: rotate-infinite 1s linear infinite;
+}
+
+@keyframes rotate-infinite {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

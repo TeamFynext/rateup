@@ -30,7 +30,6 @@ import { NPSWeightage, QuestionType } from "../../../types/enums";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { getNpsColor } from "./QuestionDetailedView";
 import SurveyContext from "../../../context/SurveyContext";
-import { useResponses } from "../../../backend/surveys/response/response.query";
 import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
@@ -39,6 +38,7 @@ import { showErrorToast } from "../../../utils/notifications";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { uploadFile } from "../../../utils/file-upload/upload";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
@@ -77,10 +77,8 @@ export function ChoicesCreator({
   const choices = form.values.choices?.[selectedLanguage] || [];
 
   const { surveyTeamMapId } = useContext(SurveyContext);
-  const { data: responses } = useResponses(surveyTeamMapId);
   const { updateImageArray } = useImageStore();
   const [inputError, setInputError] = useState("");
-  const hasResponse = responses?.length ? true : false;
 
   useEffect(() => {
     if (form?.values?.choices && isSubmited) {
@@ -197,7 +195,6 @@ export function ChoicesCreator({
             onDelete={() => handleRemoveChoice(choice)}
             form={form}
             index={i}
-            hasResponse={hasResponse}
             image={image}
             buttonRef={buttonRef}
           />
@@ -287,7 +284,6 @@ interface ChoiceProps {
   onDelete: () => void;
   form;
   index: number;
-  hasResponse: boolean;
   image?;
   buttonRef?;
 }
@@ -296,12 +292,13 @@ function Choice({
   onDelete,
   form,
   index,
-  hasResponse,
   image,
   buttonRef,
 }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
   const [opened, { open, close }] = useDisclosure(false);
+  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
+    useDisclosure(false);
   const [choiceValue, setChoiceValue] = useState(choice?.value);
   const [error, setError] = useState("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
@@ -413,7 +410,7 @@ function Choice({
         });
       }
       setIsSubmited(true);
-      close();
+      closeEditModal();
     }
   };
 
@@ -454,12 +451,7 @@ function Choice({
           readOnly
         />
       )}
-      <ActionIcon
-        variant="transparent"
-        onClick={open}
-        size={"sm"}
-        disabled={hasResponse}
-      >
+      <ActionIcon variant="transparent" onClick={open} size={"sm"}>
         <IconEdit />
       </ActionIcon>
       <ActionIcon
@@ -471,8 +463,8 @@ function Choice({
         <IconTrash />
       </ActionIcon>
       <FormModalLayout
-        opened={opened}
-        onClose={close}
+        opened={openedEditModal}
+        onClose={closeEditModal}
         title="Edit Choice"
         centered
       >
@@ -513,6 +505,14 @@ function Choice({
           />
         </Stack>
       </FormModalLayout>
+      <ConfirmationModal
+        opened={opened}
+        confirmLabel="Yes"
+        headerTitle="Warning"
+        headerLabel="Editing the choice may affect previous result count.Do you still want to continue?"
+        onClose={close}
+        onConfirm={openEditModal}
+      />
     </Group>
   );
 }

@@ -48,7 +48,7 @@ function FlowPage() {
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang, setSelectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
-
+  const { activeTab } = router.query as { activeTab: string };
   // initial data
   useEffect(() => {
     if (!flowJson && flow?.json?.version) {
@@ -128,6 +128,10 @@ function FlowPage() {
       setTab(FlowTabEnum.Result);
     }
   }, [survey]);
+
+  useEffect(() => {
+    setTab(activeTab as FlowTabEnum);
+  }, [activeTab]);
 
   useEffect(() => {
     teamOptions && setSelectedTeamId(teamOptions[0]?.value);

@@ -14,21 +14,24 @@ import {
   MantineProvider,
   Center,
   Loader,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
 import { SearchInput } from ".";
 import { useEffect, useState } from "react";
-import { IconEdit, IconPlus } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
 import style from "./campaign.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import AddParticipantModal from "./AddParticipantModal";
 import { useRouter } from "next/router";
 import {
   useCampaignById,
+  useStartCampaign,
   useUpdateCampaignMutation,
 } from "../../../backend/campaign/campaign.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { renderBadge } from "../../../components/Card/CampaignCard";
-import { CampaignStatus } from "../../../types/enums";
+import { CampaignStatus, SurveyType } from "../../../types/enums";
 import CreateCampaignModal from "./CreateCampaignModal";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import dayjs from "dayjs";
@@ -44,16 +47,23 @@ export default () => {
   const {
     data: campaignData,
     isLoading,
+    isFetching,
     refetch: refetchCampaign,
   } = useCampaignById(campaignId);
 
+  const selectedSurvey = campaignData?.surveyTeamMap?.survey;
+  const isWaFlow = selectedSurvey?.type === SurveyType.WaFlow;
+  const selectedSurveyId = isWaFlow
+    ? selectedSurvey?.WaFlow.dbFlowId
+    : selectedSurvey?.id;
+  const resultUrl = isWaFlow ? "whatsapp/flows" : "whatsapp";
+  const tab = isWaFlow ? "activeTab" : "tab";
+
   const campaignInfo = {
     survey: campaignData?.surveyTeamMap.survey.title,
-    template: campaignData?.waTemplate.data.name,
+    template: isWaFlow ? null : campaignData?.waTemplate?.data.name,
     team: campaignData?.team.name,
   };
-
-  const selectedSurvey = campaignData?.surveyTeamMap?.survey?.id;
 
   useEffect(() => {
     update({ campaignId: campaignData?.name });
@@ -77,7 +87,23 @@ export default () => {
           </Center>
         )}
         <Stack p={"md"} gap={"md"}>
-          <Title>{campaignData?.name}</Title>
+          <Group>
+            <Title>{campaignData?.name}</Title>
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                aria-label="refresh"
+                onClick={() => refetchCampaign()}
+              >
+                <IconRefresh
+                  className={isFetching ? style.rotateInfinitely : undefined}
+                  style={{ width: "90%", height: "90%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
           <SimpleGrid cols={2}>
             <StartCampaignCard
               campaign={campaignData}
@@ -106,7 +132,7 @@ export default () => {
             </Button>
             <Anchor
               size="xl"
-              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/${selectedSurvey}?tab=Result`}
+              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/${resultUrl}/${selectedSurveyId}?${tab}=Result`}
             >
               <Title order={3}>Results</Title>
             </Anchor>
@@ -160,13 +186,10 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
     campaign?.id,
     campaign?.teamId,
   );
-
+  const startCampMutation = useStartCampaign(campaign?.id, campaign?.teamId);
   const handleStartCampaign = (newStartCampaign) => {
     if (newStartCampaign === true) {
-      updateCampaign.mutate(
-        { data: { status: CampaignStatus.ACTIVE }, campaignId: campaign?.id },
-        { onSuccess: ({ data: response }) => refetchCampaign() },
-      );
+      startCampMutation.mutate(campaign?.id);
     } else {
       updateCampaign.mutate(
         {
@@ -241,14 +264,6 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
 };
 
 const CampaignInfoCard = ({ campaignInfo, campaign }) => {
-  const campaignEditData = {
-    id: campaign?.id,
-    name: campaign?.name,
-    surveyTeamMapId: campaign?.surveyTeamMapId,
-    waTemplateId: campaign?.waTemplateId,
-    teamId: campaign?.teamId,
-  };
-
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   return (
@@ -284,18 +299,20 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
                 {campaignInfo?.survey}
               </Badge>
             </Stack>
-            <Stack gap={"xs"}>
-              <Title order={6}>Selected Template</Title>
-              <Badge
-                variant="default"
-                classNames={{ root: style.input, label: style.badgeLabel }}
-                size={"xl"}
-                radius={"md"}
-                miw={200}
-              >
-                {campaignInfo?.template}
-              </Badge>
-            </Stack>
+            {campaignInfo?.template && (
+              <Stack gap={"xs"}>
+                <Title order={6}>Selected Template</Title>
+                <Badge
+                  variant="default"
+                  classNames={{ root: style.input, label: style.badgeLabel }}
+                  size={"xl"}
+                  radius={"md"}
+                  miw={200}
+                >
+                  {campaignInfo?.template}
+                </Badge>
+              </Stack>
+            )}
           </Group>
         </Stack>
         <Modal

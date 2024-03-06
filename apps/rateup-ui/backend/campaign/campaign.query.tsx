@@ -5,6 +5,7 @@ import {
   getCampaignById,
   getCampaigns,
   getCampaignsByTeam,
+  startCampaign,
   updateCampaign,
 } from "./campaign.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
@@ -97,6 +98,30 @@ export const useDeleteCampaignMutation = (teamId) => {
       showErrorToast(
         `Error deleting campaign: ${error?.response?.data.error}`,
         "campaign-delete",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useStartCampaign = (campaignId, teamId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: startCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      showSuccessToast(
+        "Campaign Started successfully.",
+        "campaign-start",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error starting campaign: ${error?.response?.data.error}`,
+        "campaign-start",
         <IconX />,
       );
     },
