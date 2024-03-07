@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createComment,
   createTicket,
+  deleteTicket,
   getTicket,
   getTickets,
   updateTicket,
   updateTicketStatus,
 } from "./tickets.api";
 import { notifications } from "@mantine/notifications";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 
 //get all tickets
@@ -35,6 +36,9 @@ export const useCreateTicketMutation = () => {
         autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["allresponses"] });
+      queryClient.invalidateQueries({ queryKey: ["responses"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
     },
     onError: (error: any) => {
       notifications.update({
@@ -125,6 +129,41 @@ export const useUpdateTicketMutation = (id) => {
     },
   });
 };
+
+export function useDeleteTicket() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteTicket(id),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["allresponses"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["responses"] });
+      notifications.update({
+        id: "load-data",
+        loading: false,
+        color: "green",
+        title: "Success",
+        message: "Deleted Ticket successfully",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      console.error("Error Deleting", error.message);
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        loading: false,
+        title: "Failed Delete",
+        message: error.message,
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+  });
+}
 
 //create ticket comment
 export const useCreateCommentMutation = (id) => {

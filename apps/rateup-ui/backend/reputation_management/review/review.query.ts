@@ -8,6 +8,7 @@ export const useReviewsWithAnalysis = (teamId: string) =>
     queryFn: () => getReviewsWithAnalysis(teamId),
     enabled: !!teamId,
     staleTime: 1000 * 60 * 3,
+    refetchOnWindowFocus: "always",
   });
 
 export const useDeleteAllReviews = (teamId: string) => {

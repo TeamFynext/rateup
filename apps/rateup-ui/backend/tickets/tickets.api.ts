@@ -30,6 +30,16 @@ export async function getTicket(id: string) {
   }
 }
 
+export async function deleteTicket(id: string) {
+  try {
+    let ticket: any = (await axiosClient.delete(`${TICKET_URL}/${id}`)).data;
+    return ticket;
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+}
+
 //update ticket status
 export async function updateTicketStatus(ticketId, data) {
   try {

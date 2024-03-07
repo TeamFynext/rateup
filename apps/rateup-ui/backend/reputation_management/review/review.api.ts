@@ -13,6 +13,9 @@ export interface ReviewWithAnalysis {
   rating: number | null;
   platform: ReviewPlatform;
   ReviewAnalysis: ReviewAnalysis;
+  Ticket?: {
+    id: string;
+  };
 }
 
 interface ReviewAnalysis {

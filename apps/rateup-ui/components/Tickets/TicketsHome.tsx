@@ -8,12 +8,15 @@ import {
   Tabs,
   Tooltip,
 } from "@mantine/core";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Heading from "../styled/Heading/Heading";
 import { IconRefresh, IconSelector } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
-import { useTickets } from "../../backend/tickets/tickets.query";
+import {
+  useDeleteTicket,
+  useTickets,
+} from "../../backend/tickets/tickets.query";
 import { SurveysPageError } from "../Survey/SurveysPage/SurveyPageError";
 import { SurveyCardLayout } from "../Card/SurveyCard/SurveyCardLayout";
 import NothingFound from "../NothingFound/NothingFound";
@@ -21,6 +24,8 @@ import { TicketCard } from "./TicketCard";
 import StyledTabs from "../styled/StyledTabs/StyledTabs";
 import styles from "../../components/Survey/SurveyId.module.css";
 import { TicketStatus } from "../../utils/enums/ticket";
+import { useDisclosure } from "@mantine/hooks";
+import ConfirmationModal from "../Modal/ConfirmationModal";
 
 const TicketsHome = () => {
   const [sort, setSort] = useState(true);
@@ -33,6 +38,13 @@ const TicketsHome = () => {
     error,
     refetch,
   } = useTickets();
+  const [deleteTicketId, setDeleteTicketId] = useState("");
+  const deleteTicket = useDeleteTicket();
+  const [opened, { open: toggleDelete, close }] = useDisclosure(false);
+
+  useEffect(() => {
+    deleteTicketId && toggleDelete();
+  }, [deleteTicketId]);
 
   if (ticketLoading) return <Loader type="bars" />;
   if (error || !Array.isArray(tickets)) {
@@ -47,6 +59,33 @@ const TicketsHome = () => {
         onChange={(tab) => setActiveTab(tab as TicketStatus)}
         className={styles["survey-tabs-and-panels-container"]}
       >
+        <ConfirmationModal
+          forDeleteFunctionality
+          // includeEmailConfirmation
+          deleteQuotion="All the associated comments & actions will be deleted"
+          opened={opened}
+          onClose={close}
+          onConfirm={(e) => {
+            notifications.show({
+              id: "load-data",
+              loading: true,
+              title: "Deleting ticket",
+              message: `Hold on, your Ticket is getting deleted...`,
+              autoClose: false,
+              withCloseButton: true,
+            });
+
+            deleteTicket.mutate(deleteTicketId, {
+              onSettled: () => {
+                setDeleteTicketId("");
+              },
+            });
+          }}
+          confirmLabel="Delete"
+          headerLabel="Are you sure to delete this ticket?"
+          headerTitle="Delete Ticket"
+        />
+
         <Grid columns={12} className={styles["title-tabs-container"]}>
           <Grid.Col span={3}>
             <Group gap={"md"}>
@@ -97,16 +136,36 @@ const TicketsHome = () => {
 
         <Box className={styles["tab-panel-container"]}>
           <Tabs.Panel value={TicketStatus.OPEN}>
-            <TicketsPanel tickets={tickets} sort={sort} status={activeTab} />
+            <TicketsPanel
+              tickets={tickets}
+              sort={sort}
+              status={activeTab}
+              setDeleteTicketId={setDeleteTicketId}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={TicketStatus.IN_PROGRESS}>
-            <TicketsPanel tickets={tickets} sort={sort} status={activeTab} />
+            <TicketsPanel
+              tickets={tickets}
+              sort={sort}
+              status={activeTab}
+              setDeleteTicketId={setDeleteTicketId}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={TicketStatus.RESOLVED}>
-            <TicketsPanel tickets={tickets} sort={sort} status={activeTab} />
+            <TicketsPanel
+              tickets={tickets}
+              sort={sort}
+              status={activeTab}
+              setDeleteTicketId={setDeleteTicketId}
+            />
           </Tabs.Panel>
           <Tabs.Panel value={TicketStatus.CLOSED}>
-            <TicketsPanel tickets={tickets} sort={sort} status={activeTab} />
+            <TicketsPanel
+              tickets={tickets}
+              sort={sort}
+              status={activeTab}
+              setDeleteTicketId={setDeleteTicketId}
+            />
           </Tabs.Panel>
         </Box>
       </StyledTabs>
@@ -116,24 +175,33 @@ const TicketsHome = () => {
 
 export default TicketsHome;
 
-function TicketsPanel({ tickets, status, sort }) {
+function TicketsPanel({ tickets, status, sort, setDeleteTicketId }) {
+  const filteredTickets = tickets?.filter((t) => t.status === status);
+
   return (
     <>
-      {tickets?.length > 0 ? (
+      {filteredTickets?.length > 0 ? (
         <SurveyCardLayout>
-          {tickets
-            ?.filter((t) => t.status === status)
-            .sort((a, b) =>
+          {filteredTickets
+            ?.sort((a, b) =>
               sort
                 ? new Date(b.createdAt).getTime() -
                   new Date(a.createdAt).getTime()
                 : new Date(a.createdAt).getTime() -
                   new Date(b.createdAt).getTime(),
             )
-            .map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)}
+            .map((ticket) => (
+              <TicketCard
+                setDeleteTicketId={setDeleteTicketId}
+                key={ticket.id}
+                ticket={ticket}
+              />
+            ))}
         </SurveyCardLayout>
       ) : (
-        <NothingFound text="No Tickets Found" />
+        <Stack mt="xl">
+          <NothingFound text={`No "${status}" Tickets Found`} />
+        </Stack>
       )}
     </>
   );

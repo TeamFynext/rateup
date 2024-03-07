@@ -45,6 +45,7 @@ export const useAllResponses = (surveyId: string) => {
       return response;
     },
     enabled: !!survey?.id && (survey.isEncrypted ? !!passkey : true),
+    refetchOnWindowFocus: "always",
   });
 };
 

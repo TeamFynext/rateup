@@ -25,7 +25,10 @@ import {
   IUpdateTicketStatusRequest,
 } from "../../backend/tickets/tickets";
 import { showLoadingToast } from "../../utils/notifications";
-import { formatIsoDateString } from "../../utils/dateTime";
+import {
+  formatIsoDateString,
+  formatIsoDateStringWithTime,
+} from "../../utils/dateTime";
 import {
   PlatformIcon,
   RatingBadge,
@@ -76,7 +79,7 @@ const SingleTicket = ({ id }: { id: string }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, []);
+  }, [ticket]);
 
   useEffect(() => {
     if (priority && ticket?.priority !== priority) {
@@ -156,7 +159,7 @@ const SingleTicket = ({ id }: { id: string }) => {
   };
 
   return (
-    <Stack>
+    <Stack mt="-20px">
       <Group>
         <Title
           order={2}
@@ -167,7 +170,7 @@ const SingleTicket = ({ id }: { id: string }) => {
         </Title>
       </Group>
 
-      <Group justify="flex-start" mt="sm" gap="10">
+      <Group justify="flex-start" gap="10" mt="-1px">
         <TicketDetailBlock>
           <Text>Team :</Text>
           <Text size="xl" fw="700">
@@ -184,13 +187,19 @@ const SingleTicket = ({ id }: { id: string }) => {
         </TicketDetailBlock>
         <TicketDetailBlock>
           <Text>Deadline: </Text>
-          <Text size="lg" fw="700">
-            {formatIsoDateString(ticket?.deadline) || "n/a"}
+          <Text
+            size="sm"
+            fw="700"
+            style={{ maxWidth: "130px", maxHeight: "30px" }}
+          >
+            {ticket?.deadline
+              ? formatIsoDateStringWithTime(ticket?.deadline)
+              : "n/a"}
           </Text>
         </TicketDetailBlock>
       </Group>
 
-      <Group gap={30}>
+      <Group gap={30} mb="lg">
         <PaperLayout
           hoveractive
           mah={500}
@@ -262,7 +271,7 @@ const SingleTicket = ({ id }: { id: string }) => {
             hoveractive
             mah={500}
             mih={500}
-            maw={600}
+            maw={400}
             miw={400}
             p="md"
             shadow="lg"
@@ -284,6 +293,7 @@ const SingleTicket = ({ id }: { id: string }) => {
                             ? "flex-end"
                             : "flex-start"
                         }
+                        mb="xs"
                       >
                         <CommentCard
                           comment={comment}

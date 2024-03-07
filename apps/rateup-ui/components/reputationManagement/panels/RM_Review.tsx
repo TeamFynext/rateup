@@ -230,8 +230,8 @@ const RenderReviewTable = function RenderReviewTable({
                     <Text>{review.reviewedAt.format("DD/MM/YYYY")}</Text>
                     <ActionMenu
                       reviewId={review?.id}
-                      openTicketModal={openTicketModal}
                       setSelectedReviewId={setSelectedReviewId}
+                      ticketData={review?.Ticket}
                     />
                   </Flex>
                 );
@@ -289,7 +289,9 @@ export function RatingBadge({ rating }: { rating: number }) {
   );
 }
 
-function ActionMenu({ reviewId, openTicketModal, setSelectedReviewId }) {
+function ActionMenu({ reviewId, setSelectedReviewId, ticketData }) {
+  const ticketExist = ticketData?.length > 0;
+
   return (
     <Stack px="sm">
       <Menu
@@ -316,15 +318,20 @@ function ActionMenu({ reviewId, openTicketModal, setSelectedReviewId }) {
 
         <Menu.Dropdown>
           <Menu.Item
+            color={ticketExist ? "orange" : "blue.7"}
             onClick={() => {
-              setSelectedReviewId(reviewId);
-              //openTicketModal()
+              if (ticketExist) {
+                let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                window.open(url, "_blank");
+              } else {
+                setSelectedReviewId(reviewId);
+              }
             }}
             leftSection={
               <IconTicket style={{ width: rem(14), height: rem(14) }} />
             }
           >
-            Create Ticket
+            {ticketExist ? " View Ticket" : "Create Ticket"}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { Group, Stack } from "@mantine/core";
 import { RateupButtonBlue } from "../Button/RateupButtons";
@@ -14,6 +14,8 @@ import {
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
 import { useCreateTicketMutation } from "../../backend/tickets/tickets.query";
 import { TicketType } from "../../utils/enums/ticket";
+import ConfirmationModal from "../Modal/ConfirmationModal";
+import { useDisclosure } from "@mantine/hooks";
 
 interface iProps {
   createTicketOpened: boolean;
@@ -78,6 +80,9 @@ const CreateTicketModal = ({
   }, [surveyResponseId]);
 
   const createTicket = useCreateTicketMutation();
+  const [dialogOpened, { toggle: openSuccessDialog, close: closeDialog }] =
+    useDisclosure(false);
+  const [createdTicketId, setCreatedTicketId] = useState("");
 
   const onSubmit = () => {
     const validationRes = form.validate();
@@ -95,28 +100,48 @@ const CreateTicketModal = ({
     });
 
     createTicket.mutate(form.values, {
-      onSettled: () => {
-        handleClose();
-      },
-      onSuccess: () => {
-        handleClose();
+      onSuccess: (res) => {
+        setCreatedTicketId(res.id);
       },
     });
   };
 
-  function handleClose() {
+  useEffect(() => {
+    createdTicketId && openSuccessDialog();
+  }, [createdTicketId]);
+
+  function closeAll() {
+    closeDialog();
     closeTicketModal();
     form.reset();
+    setCreatedTicketId("");
   }
 
   return (
     <FormModalLayout
       opened={createTicketOpened}
-      onClose={handleClose}
+      onClose={closeAll}
       title={"Create Ticket"}
       centered
       size="xl"
     >
+      <ConfirmationModal
+        opened={dialogOpened}
+        onClose={() => {
+          closeAll();
+        }}
+        headerLabel={`Successfully created ticket for the ${type === TicketType.SURVEY_RESPONSE ? "Survey Response" : "Review"}`}
+        headerTitle="Ticket Created"
+        confirmLabel="View Ticket"
+        onConfirm={(e) => {
+          if (createdTicketId) {
+            let url = `/dashboard/tickets/${createdTicketId}`;
+            window.open(url, "_blank");
+          }
+          closeAll();
+        }}
+      />
+
       <Stack mt="lg">
         <ContainedTextField
           placeholder={"Enter Ticket Name"}
@@ -160,7 +185,7 @@ const CreateTicketModal = ({
             mt="xl"
             title="Cancel"
             onClick={() => {
-              handleClose();
+              closeAll();
             }}
           />
 

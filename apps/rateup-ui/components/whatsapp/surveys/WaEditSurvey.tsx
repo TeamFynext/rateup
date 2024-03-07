@@ -21,6 +21,7 @@ export enum QuestionTabsEnum {
   LogicEditor = "LogicEditor",
   GoogleReviewEditor = "GoogleReviewEditor",
   ValidationRulesEditor = "ValidationRulesEditor",
+  TicketIssueEditor = "TicketIssueEditor",
   None = "None",
 }
 interface EditSurveyProps {

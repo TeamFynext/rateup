@@ -27,7 +27,6 @@ export const useSurveyResponseColumns = ({
   setSelectedRowId,
   open,
   setSelectedResponseId,
-  openTicketModal,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
@@ -99,9 +98,9 @@ export const useSurveyResponseColumns = ({
           <ActionMenu
             open={open}
             resId={info.row.original.id}
-            openTicketModal={openTicketModal}
             setSelectedResponseId={setSelectedResponseId}
             setSelectedRowId={setSelectedRowId}
+            ticketData={info.row.original.Ticket}
           />
         );
       },
@@ -200,10 +199,12 @@ function BadgeorTextorPreview({
 function ActionMenu({
   resId,
   open,
-  openTicketModal,
   setSelectedResponseId,
   setSelectedRowId,
+  ticketData,
 }) {
+  const ticketExist = ticketData?.length > 0;
+
   return (
     <Stack px="sm">
       <Menu
@@ -231,15 +232,20 @@ function ActionMenu({
 
         <Menu.Dropdown>
           <Menu.Item
+            color={ticketExist ? "orange" : "blue.7"}
             onClick={() => {
-              setSelectedResponseId(resId);
-              openTicketModal();
+              if (ticketExist) {
+                let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                window.open(url, "_blank");
+              } else {
+                setSelectedResponseId(resId);
+              }
             }}
             leftSection={
               <IconTicket style={{ width: rem(14), height: rem(14) }} />
             }
           >
-            Create Ticket
+            {ticketExist ? " View Ticket" : "Create Ticket"}
           </Menu.Item>
           <Menu.Item
             color="red"

@@ -26,11 +26,7 @@ import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.
 import { useContext, useEffect, useRef, useState } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import dayjs from "dayjs";
-import {
-  LogicAction,
-  QuestionType as Q,
-  QuestionType,
-} from "../../../../types/enums";
+import { LogicAction, QuestionType as Q } from "../../../../types/enums";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
@@ -78,6 +74,10 @@ import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import ContactForm from "./QuestionForms/ContactForm";
 import { lexend } from "../../../../utils/fonts";
 import RateupLoader from "../../../Loaders/RateupLoader";
+import {
+  checkGoogleReviewForQuestion,
+  checkRaiseTicketIssueQuestion,
+} from "./util";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -255,51 +255,15 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const finishSurvey = async () => {
     setIsSavingResponses(true);
-    let shouldShowGoogleReview = false;
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
-
-    for (let question of survey?.questions) {
-      if (question?.googleReview) {
-        let userResponse = responses.find(
-          (r) => r?.questionId === question?.id,
-        );
-        if (userResponse) {
-          switch (question?.type) {
-            case "Rating":
-              if (
-                userResponse?.response?.Rating >=
-                question?.googleReview?.minRating
-              ) {
-                shouldShowGoogleReview = true;
-              }
-              break;
-            case "Opinion Scale":
-              if (
-                userResponse?.response["Opinion Scale"] >=
-                question?.googleReview?.minOpinion
-              ) {
-                shouldShowGoogleReview = true;
-              }
-              break;
-            case "Smiley":
-              if (
-                question?.googleReview?.reqOptions.includes(
-                  userResponse?.response?.Smiley,
-                )
-              ) {
-                shouldShowGoogleReview = true;
-              }
-              break;
-            default:
-              break;
-          }
-        }
-      }
-
-      if (shouldShowGoogleReview) {
-        break;
-      }
-    }
+    let shouldShowGoogleReview = checkGoogleReviewForQuestion(
+      survey?.questions,
+      responses,
+    );
+    let shouldRaiseTicket = checkRaiseTicketIssueQuestion(
+      survey?.questions,
+      responses,
+    );
 
     //logic for encrypting the responses, to swap values between response variable and end to end encrypted response
     let defaultResponses = responses;
@@ -321,6 +285,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       setIsSavingResponses,
       coordinates,
       tag: searchParams.get("tag"),
+      shouldRaiseTicket,
     }).then(() => {
       updateCompleted.mutate(surveyTeamMapId);
       let kioskMode = survey?.kioskMode ? "y" : "n";
@@ -661,6 +626,7 @@ function submitSurvey({
   coordinates,
   tag,
   encryptedResponses,
+  shouldRaiseTicket,
 }) {
   return createResponsePublic({
     surveyTeamMapId,
@@ -669,6 +635,7 @@ function submitSurvey({
     language: selectedLanguage,
     location: { coordinates },
     tag: tag || null,
+    shouldRaiseTicket,
   })
     .then(() => {
       // notifications.show({

@@ -54,6 +54,11 @@ export function formatIsoDateString(isoDateString) {
   return dayjs(isoDateString).format("Do MMM, YYYY");
 }
 
+//Like... Output: '13th Mar, 2024, 12:00 AM'
+export function formatIsoDateStringWithTime(isoDateString) {
+  return dayjs(isoDateString).format("Do MMM, YYYY, h:mm A");
+}
+
 const currentTime = dayjs().format("HH:mm");
 export const isCategoryActive = (item) => {
   if (!item.startTime || !item.endTime || !item.scheduleEnabled) {

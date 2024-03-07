@@ -17,6 +17,12 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
+type IssueTicket = {
+  minRating?: number;
+  minOpinion?: number;
+  reqOptions?: Array<string>;
+} | null;
+
 type TNC = {
   title: string;
   urlTitle: string;
@@ -53,6 +59,7 @@ declare global {
     label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;
     googleReview?: GoogleReview;
+    ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
     tnc?: TNC;
@@ -166,6 +173,9 @@ declare global {
       city?: string;
       state?: string;
       country?: string;
+    };
+    Ticket?: {
+      id: string;
     };
   };
   type Coordinates = {

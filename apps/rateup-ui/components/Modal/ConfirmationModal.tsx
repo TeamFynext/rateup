@@ -1,5 +1,8 @@
 import { Group, Modal, Stack, Text, Blockquote } from "@mantine/core";
-import { RateupButtonBlue } from "../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { useState } from "react";
 import { useUser } from "../../context/UserContext";
@@ -87,7 +90,7 @@ export default function ConfirmationModal({
             </Stack>
           )}
           <Group justify="flex-end" mt="md">
-            <RateupButtonBlue title={"Cancel"} onClick={onClose} />
+            <RateupButtonSecondary title={"Cancel"} onClick={onClose} />
             <RateupButtonBlue
               title={confirmLabel ?? "Submit"}
               onClick={confirmation}

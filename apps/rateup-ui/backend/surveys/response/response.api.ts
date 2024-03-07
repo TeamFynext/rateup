@@ -27,7 +27,9 @@ export async function getAllResponses(surveyId: string) {
   return res.data as Array<TeamWiseResponses>;
 }
 
-type CreateResponseType = Omit<SurveyResponse, "id" | "createdAt">;
+type CreateResponseType = Omit<SurveyResponse, "id" | "createdAt"> & {
+  shouldRaiseTicket?: boolean;
+};
 export async function createResponsePublic(data: CreateResponseType) {
   return await axiosClient.post(`/public/response`, data);
 }

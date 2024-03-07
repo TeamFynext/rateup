@@ -169,6 +169,14 @@ const Responses = ({
     setVerifyEmail("");
   }, [opened]);
 
+  useEffect(() => {
+    selectedResponseId && openTicketModal();
+  }, [selectedResponseId]);
+
+  useEffect(() => {
+    !createTicketOpened && setSelectedResponseId("");
+  }, [createTicketOpened]);
+
   const confirmDelete = () => {
     if (user?.email === verifyEmail) {
       notifications.show({
@@ -198,7 +206,6 @@ const Responses = ({
     setSelectedRowId,
     open,
     setSelectedResponseId,
-    openTicketModal,
   });
 
   const handleSyncGoogleSheet = () => {
