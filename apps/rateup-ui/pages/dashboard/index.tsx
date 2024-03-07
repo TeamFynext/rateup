@@ -33,17 +33,6 @@ import {
 } from "@tabler/icons-react";
 import { useSurveysSummary } from "../../backend/surveys/surveys.query";
 import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
-import {
-  AreaChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  Brush,
-  Legend,
-} from "recharts";
 import dayjs from "dayjs";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
@@ -55,6 +44,8 @@ import PaperLayout from "../../components/styled/Layouts/PaperLayout";
 import NothingFound from "../../components/NothingFound/NothingFound";
 import Heading from "../../components/styled/Heading/Heading";
 import { lexend400, lexend500 } from "../../utils/fonts";
+import { getFormattedResponseForAreaGraph } from "../../utils/response";
+import OverallResponseGraph from "../../components/Graph/OverallResponseGraph";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -100,147 +91,16 @@ export default function DashboardHome() {
     fetchStatus === "idle" && notifications.clean();
   }, [fetchStatus]);
 
-  function dateToISOButLocal(date) {
-    return dayjs(new Date(date)).format();
-  }
-
-  function prepareData(surveysSummary: SurveySummaryData) {
-    let dateResponseCount = {};
-    let dayResponseCount = {};
-    let weekResponseCount = {};
-    surveysSummary?.surveys?.forEach((survey) => {
-      survey?.teams?.forEach((team) => {
-        team?.responses?.forEach((response) => {
-          let date = dateToISOButLocal(response?.createdAt).split("T")[0];
-          let week = dayjs().diff(dayjs(new Date(response?.createdAt)), "week");
-          if (dateResponseCount[date]) {
-            dateResponseCount[date]++;
-          } else {
-            dateResponseCount[date] = 1;
-          }
-          let dateWithHour = dateToISOButLocal(response?.createdAt).slice(
-            0,
-            13,
-          );
-          if (dayResponseCount[dateWithHour]) dayResponseCount[dateWithHour]++;
-          else dayResponseCount[dateWithHour] = 1;
-          if (weekResponseCount[week]) weekResponseCount[week]++;
-          else weekResponseCount[week] = 1;
-        });
-      });
+  const allResponses = [];
+  surveysSummary?.surveys?.forEach((survey) => {
+    survey?.teams?.forEach((team) => {
+      allResponses.push(...team?.responses);
     });
-
-    for (var i = 30; i >= 0; i--) {
-      const date = dayjs().subtract(i, "day").format().split("T")[0];
-      if (!Object.keys(dateResponseCount).some((dt) => dt == date))
-        dateResponseCount[date] = 0;
-    }
-
-    for (var i = 0; i <= 52; i++) {
-      if (!Object.keys(weekResponseCount).some((dt) => Number(dt) == i))
-        weekResponseCount[i] = 0;
-    }
-
-    for (var i = 0; i <= 24; i++) {
-      const dayWithHour = dayjs().subtract(i, "hour").format().slice(0, 13);
-      if (!Object.keys(dayResponseCount).some((dt) => dt == dayWithHour))
-        dayResponseCount[dayWithHour] = 0;
-    }
-
-    let data = Object.keys(
-      timePeriod === "hourly"
-        ? dayResponseCount
-        : timePeriod === "daily"
-          ? dateResponseCount
-          : weekResponseCount,
-    )?.map((date) => ({
-      date: date,
-      responses:
-        timePeriod === "hourly"
-          ? dayResponseCount[date]
-          : timePeriod === "daily"
-            ? dateResponseCount[date]
-            : weekResponseCount[date],
-    }));
-
-    const formattedData =
-      timePeriod === "hourly"
-        ? data.sort((a, b) => {
-            return a.date.localeCompare(b.date);
-          })
-        : timePeriod === "daily"
-          ? data.sort(
-              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-            )
-          : data.sort((a, b) => Number(b.date) - Number(a.date));
-    return formattedData;
-  }
-
-  const data = prepareData(surveysSummary);
-  function getTotalCount(data) {
-    let totalCount = 0;
-    for (const item of data) {
-      totalCount += item?.responses;
-    }
-    return totalCount;
-  }
-  const total = getTotalCount(data);
-
-  const filteredData = data?.filter((datum) => {
-    const date = dayjs(datum.date);
-    const now = dayjs();
-    let periodStart;
-    switch (timePeriod) {
-      case "hourly":
-        periodStart = now.subtract(1, "day");
-        break;
-      case "daily":
-        periodStart = now.subtract(1, "month");
-        break;
-      case "weekly":
-        return Number(datum.date) <= 52;
-      default:
-        periodStart = dayjs(0);
-    }
-    return (
-      (date.isAfter(periodStart) || date.isSame(periodStart)) &&
-      (date.isBefore(now) || date.isSame(now))
-    );
   });
-
-  interface iProps {
-    active?: any;
-    payload?: any;
-    label?: any;
-    timePeriod?: any;
-  }
-  const CustomTooltip = ({ active, payload, label, timePeriod }: iProps) => {
-    if (active && payload && payload?.length) {
-      label =
-        timePeriod === "hourly"
-          ? dayjs(label).format("MMM DD, YYYY h A")
-          : timePeriod === "daily"
-            ? dayjs(label).format("MMM DD, YYYY")
-            : label;
-      return (
-        <div
-          className="custom-tooltip"
-          style={{
-            background: "#fff",
-            padding: "2px 15px",
-            border: "1px solid #3F5BA9",
-            boxSizing: "border-box",
-            borderRadius: "10px",
-          }}
-        >
-          <p className="label">{label}</p>
-          <p className="intro">{`Responses: ${payload[0].value}`}</p>
-        </div>
-      );
-    }
-
-    return null;
-  };
+  const filteredData = getFormattedResponseForAreaGraph(
+    allResponses,
+    timePeriod,
+  );
 
   const createModalContent: Array<{
     Icon: any;
@@ -352,149 +212,13 @@ export default function DashboardHome() {
                   ),
                 )}
               </Stack>
-
-              <PaperLayout
-                px="xl"
-                py="sm"
-                style={{ flex: 0.7 }}
-                miw={300}
-                w={"100%"}
-              >
-                <>
-                  <Stack>
-                    <Group justify="space-between">
-                      <Group>
-                        <Stack align="center" gap={0}>
-                          <Text fz={32} c="#595959">
-                            {total}
-                          </Text>
-                          <Text
-                            className={lexend400.className}
-                            fz="xl"
-                            c="dimmed"
-                          >
-                            Overall Responses
-                          </Text>
-                        </Stack>
-                        <MantineTooltip label="Refresh data">
-                          <ActionIcon
-                            variant="light"
-                            aria-label="Settings"
-                            onClick={refetch}
-                          >
-                            <IconRefresh
-                              className={
-                                fetchStatus === "!fetching" &&
-                                classes.rotateInfinitely
-                              }
-                              style={{ width: "90%", height: "90%" }}
-                              stroke={1.5}
-                            />
-                          </ActionIcon>
-                        </MantineTooltip>
-                      </Group>
-
-                      <Group justify="flex-end">
-                        <RateupButtonBlue
-                          variant={
-                            timePeriod === "hourly" ? "filled" : "subtle"
-                          }
-                          radius="lg"
-                          color={timePeriod !== "hourly" ? "gray" : "black"}
-                          onClick={() => setTimePeriod("hourly")}
-                          title="Hourly"
-                        />
-
-                        <RateupButtonBlue
-                          variant={timePeriod === "daily" ? "filled" : "subtle"}
-                          radius="lg"
-                          color={timePeriod !== "daily" ? "gray" : "black"}
-                          onClick={() => setTimePeriod("daily")}
-                          title="Daily"
-                        />
-                        <RateupButtonBlue
-                          variant={
-                            timePeriod === "weekly" ? "filled" : "subtle"
-                          }
-                          radius="lg"
-                          color={timePeriod !== "weekly" ? "gray" : "black"}
-                          onClick={() => setTimePeriod("weekly")}
-                          title="Weekly"
-                        />
-                      </Group>
-                    </Group>
-                  </Stack>
-                  <ResponsiveContainer width="100%" height={380}>
-                    {filteredData?.length > 0 ? (
-                      <AreaChart
-                        data={filteredData}
-                        margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                      >
-                        <defs>
-                          <linearGradient
-                            id="gradientColor"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="var(--tertiary-color)"
-                              stopOpacity={0.8}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="var(--tertiary-color)"
-                              stopOpacity={0.1}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <XAxis
-                          dataKey="date"
-                          tickFormatter={(str) =>
-                            timePeriod === "hourly"
-                              ? dayjs(str).format("h A")
-                              : timePeriod === "daily"
-                                ? dayjs(str).format("MMM DD")
-                                : str
-                          }
-                        />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip
-                          content={<CustomTooltip timePeriod={timePeriod} />}
-                        />
-                        {/* <Legend /> */}
-                        <CartesianGrid stroke="#f5f5f5" />
-                        <Area
-                          type="monotone"
-                          dataKey="responses"
-                          fillOpacity={0.7}
-                          fill="url(#gradientColor)"
-                          stroke="var(--tertiary-color)"
-                          strokeWidth={2}
-                        />
-                        <Brush
-                          height={15}
-                          dataKey="date"
-                          tickFormatter={(str) =>
-                            timePeriod === "hourly"
-                              ? dayjs(str).format("h A")
-                              : timePeriod === "daily"
-                                ? dayjs(str).format("MMM DD")
-                                : str
-                          }
-                          fill="var(--light-grey-color-3)"
-                        />
-                      </AreaChart>
-                    ) : (
-                      <NothingFound text="No data to display" />
-                    )}
-
-                    {/* TODO : dots showing only on hover, show dots always in area chart */}
-                  </ResponsiveContainer>
-                </>
-              </PaperLayout>
+              <OverallResponseGraph
+                timePeriod={timePeriod}
+                setTimePeriod={setTimePeriod}
+                data={filteredData}
+                isFetching={isRefetching}
+                refetch={refetch}
+              />
             </Group>
             <FormModalLayout
               centered

@@ -9,8 +9,13 @@ import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
-import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
+import {
+  getFilteredResponsesUsingTeam,
+  mergeResponsesFromTeams,
+} from "../../../utils/team/surveyTeam";
 import { findCentroid } from "../../../utils/location";
+import { getFormattedResponseForAreaGraph } from "../../../utils/response";
+import OverallResponseGraph from "../../Graph/OverallResponseGraph";
 enum LocationType {
   City = "city",
   State = "state",
@@ -30,18 +35,29 @@ const SurveyStats = ({ survey }) => {
     data: teamWiseResponses,
     isLoading: rLoading,
     error: rError,
+    isFetching,
+    refetch,
   } = useAllResponses(survey?.id);
   const [zoom, setZoom] = useState(7);
   const [isFindingZoomLevel, setIsFindingZoomLevel] = useState(false);
   const [locationType, setLocationType] = useState(LocationType.City);
-  if (isResponsesLoading || !responses) {
-    // TODO: loading ui
-    return null;
-  }
+  const [timePeriod, setTimePeriod] = useState("daily");
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
     teamWiseResponses,
   );
+  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
+    filteredResponsesByTeam,
+  );
+
+  const graphResponse = getFormattedResponseForAreaGraph(
+    mergedResponses,
+    timePeriod,
+  );
+  if (isResponsesLoading || !responses) {
+    // TODO: loading ui
+    return null;
+  }
   function returnSurveyStats() {
     let filteredStats: Array<any>;
     if (filterTeams?.length > 0) {
@@ -209,6 +225,13 @@ const SurveyStats = ({ survey }) => {
             </PaperLayout>
           </Grid.Col>
         </Grid>
+        <OverallResponseGraph
+          data={graphResponse}
+          timePeriod={timePeriod}
+          setTimePeriod={setTimePeriod}
+          isFetching={isFetching}
+          refetch={refetch}
+        />
       </Stack>
     </Stack>
   );

@@ -39,6 +39,7 @@ import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { uploadFile } from "../../../utils/file-upload/upload";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import { useResponses } from "../../../backend/surveys/response/response.query";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
@@ -314,6 +315,8 @@ function Choice({
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
+  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { data: responses } = useResponses(surveyTeamMapId);
   const resetRef = useRef<() => void>(null);
   let newWeightage = choice?.weightage;
 
@@ -451,7 +454,11 @@ function Choice({
           readOnly
         />
       )}
-      <ActionIcon variant="transparent" onClick={open} size={"sm"}>
+      <ActionIcon
+        variant="transparent"
+        onClick={responses?.length ? open : openEditModal}
+        size={"sm"}
+      >
         <IconEdit />
       </ActionIcon>
       <ActionIcon
