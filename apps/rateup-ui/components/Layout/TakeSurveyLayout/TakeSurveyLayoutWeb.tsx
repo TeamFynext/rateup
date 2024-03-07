@@ -109,9 +109,10 @@ export const TakeSurveyLayoutWeb = ({
         colors: {
           // @ts-ignore
           primaryColor: Array(10).fill(
-            surveyThemeDataPrimaryColor
-              ? surveyThemeDataPrimaryColor
-              : "#1C518E",
+            surveyThemeDataPrimaryColor === "rateup-blue" ||
+              !surveyThemeDataPrimaryColor
+              ? "#1C518E"
+              : surveyThemeDataPrimaryColor,
           ),
         },
         primaryColor: "primaryColor",

@@ -139,13 +139,13 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                   theme={{
                     colors: {
                       // @ts-ignore
-                      pmColor: Array(10).fill(
-                        primaryColor === "rateup-blue"
+                      primaryColor: Array(10).fill(
+                        primaryColor === "rateup-blue" || !primaryColor
                           ? "#1C518E"
                           : primaryColor,
                       ),
                     },
-                    primaryColor: "pmColor",
+                    primaryColor: "primaryColor",
                   }}
                 >
                   <CurrentResponsesContext.Provider
