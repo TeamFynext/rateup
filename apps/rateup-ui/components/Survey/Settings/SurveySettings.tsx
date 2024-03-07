@@ -64,14 +64,15 @@ const SurveySettings = ({
       ),
     );
   }, [survey]);
-
-  // useEffect(() => {
-  //   if (debounced && !kioskMode && redirect?.enable) {
-  //     let data = { ...redirect, ...{ url: debounced } };
-  //     updateRedirect(setRedirect, editSurvey, data);
-  //   }
-  // }, [debounced]);
-
+  function validateUrl(url: string) {
+    try {
+      if (url === "/") return false;
+      new URL(url);
+      return false;
+    } catch (err) {
+      return true;
+    }
+  }
   return (
     <Stack px={"xl"} py={"lg"} gap={survey?.type == "web" ? "lg" : "xs"}>
       <Heading subtitle="General settings" label="Edit your survey info" />
@@ -182,6 +183,13 @@ const SurveySettings = ({
                           ...prev,
                           ...{ url: "Url should not be empty" },
                         }));
+                      } else if (validateUrl(e.target.value.trim())) {
+                        return setRedirectError((prev) => ({
+                          ...prev,
+                          ...{
+                            url: "Enter the Url in Correct format or / for RateUp homepage",
+                          },
+                        }));
                       }
                       setRedirectError((prev) => ({
                         ...prev,
@@ -196,7 +204,7 @@ const SurveySettings = ({
                     withAsterisk
                     placeholder="time in seconds"
                     required
-                    label={"Redirect After:"}
+                    label={"Redirect to Survey After How Many Seconds:"}
                     defaultValue={redirect?.time}
                     onChange={(e: number) => {
                       if (e < 2 || e > 60) {

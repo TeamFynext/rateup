@@ -8,6 +8,7 @@ import NothingFound from "../../../../components/NothingFound/NothingFound";
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 import { SyncFlowsButton } from "../../../../components/whatsapp/flows/SyncFlows";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import { useTeamsByUser } from "../../../../backend/team/team.query";
 
 function Flows() {
   const [
@@ -15,6 +16,13 @@ function Flows() {
     { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
   ] = useDisclosure(false);
   let { data: flows, isLoading } = useWaFlowsFromDb();
+  const {
+    isLoading: isLoadingTeamsUser,
+    data: teamsDataUser,
+    error: errorTeamsDataUser,
+  } = useTeamsByUser() as UseTeamsByUserResult;
+
+  let teamsData = teamsDataUser?.data;
 
   let componentToBeRendered = null;
   if (flows && flows.length) {
@@ -22,7 +30,9 @@ function Flows() {
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-    componentToBeRendered = <FlowCardsList flows={flows} />;
+    componentToBeRendered = (
+      <FlowCardsList flows={flows} teamsData={teamsData} />
+    );
   } else if (flows && !flows.length) {
     componentToBeRendered = <NothingFound text="No Flows Available" />;
   }
@@ -42,7 +52,10 @@ function Flows() {
       </Group>
 
       <Box className={styles["flows-list-div"]}>
-        <LoadingOverlay visible={isLoading} />
+        <LoadingOverlay
+          visible={isLoading || isLoadingTeamsUser}
+          loaderProps={{ type: "bars" }}
+        />
         {componentToBeRendered}
       </Box>
 

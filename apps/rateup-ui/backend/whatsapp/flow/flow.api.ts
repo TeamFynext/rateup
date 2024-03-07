@@ -38,11 +38,22 @@ export async function importFlows(
   });
   return res.data;
 }
-export async function cloneFlows(flowId: string) {
+export async function cloneAndDeprecateFlows(flowId: string) {
   const res = await axiosClient.put(
     `${BASE}/clone-and-deprecate/${flowId}`,
     {},
   );
+  return res.data;
+}
+
+export type cloneFlowsProps = {
+  flowId: string;
+  teamId: string;
+};
+export async function cloneFlows({ flowId, teamId }: cloneFlowsProps) {
+  const res = await axiosClient.put(`${BASE}/clone/${flowId}`, {
+    teamId: teamId,
+  });
   return res.data;
 }
 export type createFlowInput = {

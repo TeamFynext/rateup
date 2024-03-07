@@ -14,6 +14,8 @@ import {
   publishFlow,
   deprecateFlow,
   cloneFlows,
+  cloneAndDeprecateFlows,
+  cloneFlowsProps,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
@@ -80,10 +82,10 @@ export const useImportFlowsMutation = () => {
   });
 };
 
-export const useCloneFlowsMutation = () => {
+export const useCloneAndDeprecateFlowsMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (flowId: string) => cloneFlows(flowId),
+    mutationFn: (flowId: string) => cloneAndDeprecateFlows(flowId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["flow"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -99,6 +101,24 @@ export const useCloneFlowsMutation = () => {
     },
   });
 };
+
+export const useCloneFlowsMutation = (onSucess: () => void) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ flowId, teamId }: cloneFlowsProps) =>
+      cloneFlows({ flowId, teamId }),
+    onSuccess: () => {
+      onSucess();
+      queryClient.invalidateQueries({ queryKey: ["flow"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      showSuccessToast("Clone Flow Successfully", "copy", "", true);
+    },
+    onError: () => {
+      showErrorToast("Error Clone Flow", "copy", "", true);
+    },
+  });
+};
+
 export const useCreateFlowMutation = () => {
   const qc = useQueryClient();
   return useMutation({

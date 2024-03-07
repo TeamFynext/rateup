@@ -9,36 +9,80 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import styles from "./FlowCard.module.css";
-import { useRouter } from "next/router";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconCopy, IconDotsVertical, IconTrash } from "@tabler/icons-react";
-import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import { useRouter } from "next/router";
 import {
+  useCloneAndDeprecateFlowsMutation,
   useCloneFlowsMutation,
   useDeleteFlowMutation,
 } from "../../../../backend/whatsapp/flow/flow.query";
 import { useTimeSince } from "../../../../hooks/timeSince";
 import { WaFlowStatus } from "../../../../types/enums";
-import { notifications } from "@mantine/notifications";
+import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import FormModalLayout from "../../../Modal/FormModalLayout";
+import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import styles from "./FlowCard.module.css";
 
 interface FlowCardProps {
   name: string;
   status: WaFlowStatus;
   dbFlowId: string;
   createdAt: Date;
+  teamsData?: any;
 }
-function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
+function FlowCard({
+  name,
+  status,
+  dbFlowId,
+  createdAt,
+  teamsData,
+}: FlowCardProps) {
   const router = useRouter();
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [
+    cloneAandRenewOpened,
+    { toggle: toggleCloneAndRenew, close: closeCloneAndRenew },
+  ] = useDisclosure(false);
   const [cloneDialogOpened, { toggle: toggleClone, close: closeClone }] =
     useDisclosure(false);
-
   const deleteMutation = useDeleteFlowMutation();
-  const cloneFlowsMutation = useCloneFlowsMutation();
+  const cloneFlowsMutation = useCloneFlowsMutation(() => {
+    closeClone();
+    cloneForm.reset();
+  });
+  const cloneAndDeprecateFlowsMutation = useCloneAndDeprecateFlowsMutation();
+  const teamOptions = teamsData?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
+  }));
+  const cloneForm = useForm({
+    initialValues: {
+      teamId: "",
+    },
+    validate: {
+      teamId: (values) => (values?.length ? null : "Must contain one team"),
+    },
+  });
 
   const timeSince = useTimeSince(createdAt);
+  const onSubmit = (values: typeof cloneForm.values) => {
+    notifications.show({
+      id: "copy",
+      loading: true,
+      title: "Clonning Flow..",
+      message: `Hold on, your flow is getting clonned...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
+    cloneFlowsMutation.mutate({
+      flowId: dbFlowId,
+      teamId: values.teamId,
+    });
+  };
   return (
     <PaperLayout
       p="md"
@@ -66,8 +110,8 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
             />
             <ConfirmationModal
               forDeleteFunctionality
-              opened={cloneDialogOpened}
-              onClose={closeClone}
+              opened={cloneAandRenewOpened}
+              onClose={closeCloneAndRenew}
               headerLabel="Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!"
               headerTitle="Copy & Renew Flow"
               confirmLabel="Copy & Renew Flow"
@@ -80,8 +124,8 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
                   autoClose: false,
                   withCloseButton: false,
                 });
-                cloneFlowsMutation.mutate(dbFlowId);
-                closeClone();
+                cloneAndDeprecateFlowsMutation.mutate(dbFlowId);
+                closeCloneAndRenew();
               }}
             />
             <Menu.Target>
@@ -94,6 +138,32 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
                 <IconDotsVertical size={20} />
               </ActionIcon>
             </Menu.Target>
+            <FormModalLayout
+              opened={cloneDialogOpened}
+              onClose={() => {
+                closeClone();
+                cloneForm.reset();
+              }}
+              title={"Clone Whatsapp Flow"}
+              centered
+              onSubmit={cloneForm.onSubmit(onSubmit)}
+              buttonTitle={"Clone"}
+              includeCancelButton
+            >
+              <Stack>
+                <Text c="dimmed">
+                  Select the team in which the whatsapp flow copy to be created.
+                </Text>
+                <ContainedSelection
+                  radius="md"
+                  placeholder="Select team (type in to search)"
+                  data={teamOptions}
+                  searchable
+                  styles={{ root: { width: "100%" } }}
+                  {...cloneForm.getInputProps("teamId")}
+                />
+              </Stack>
+            </FormModalLayout>
             <Menu.Dropdown
               onClick={(e) => {
                 e.stopPropagation();
@@ -118,6 +188,17 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
                   </Menu.Item>
                 </Box>
               </Tooltip>
+              <Tooltip label={"clone-flow"}>
+                <Box>
+                  <Menu.Item
+                    leftSection={<IconCopy size={16} />}
+                    onClick={toggleClone}
+                    disabled={status === WaFlowStatus.DEPRECATED}
+                  >
+                    Clone
+                  </Menu.Item>
+                </Box>
+              </Tooltip>
               <Tooltip
                 label={
                   status !== WaFlowStatus.PUBLISHED
@@ -128,7 +209,7 @@ function FlowCard({ name, status, dbFlowId, createdAt }: FlowCardProps) {
                 <Box>
                   <Menu.Item
                     leftSection={<IconCopy size={16} />}
-                    onClick={toggleClone}
+                    onClick={toggleCloneAndRenew}
                     disabled={status !== WaFlowStatus.PUBLISHED}
                   >
                     Copy & Renew Flow

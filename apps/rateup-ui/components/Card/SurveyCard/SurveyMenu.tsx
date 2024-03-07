@@ -71,20 +71,6 @@ export function SurveyMenu({
     cloneForm.setFieldValue("teamIds", selectedTeams);
   }, [selectedTeams]);
 
-  function arraysEqual(a, b) {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a?.length !== b?.length) return false;
-
-    a.sort();
-    b.sort();
-
-    for (let i = 0; i < a?.length; ++i) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-
   useEffect(() => {
     setSelectedTeams([]);
   }, [teamChoice]);
@@ -292,4 +278,18 @@ export function SurveyMenu({
       </Menu.Dropdown>
     </Menu>
   );
+}
+
+export function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a?.length !== b?.length) return false;
+
+  a.sort();
+  b.sort();
+
+  for (let i = 0; i < a?.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }

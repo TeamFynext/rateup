@@ -110,8 +110,8 @@ export default function ThankYou({
         () => {
           if (redirect.url === "/") router.push(redirect.url);
           else if (
-            redirect.url?.startsWith("http://") ||
-            redirect.url?.startsWith("https://")
+            redirect.url?.startsWith("http:") ||
+            redirect.url?.startsWith("https:")
           ) {
             router.push(redirect.url);
           } else {
