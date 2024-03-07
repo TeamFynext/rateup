@@ -299,7 +299,8 @@ export default function MenuLandingPage({
                 {FeedbackButton(
                   largeScreen,
                   menuLanding?.catalogue,
-                  menuLanding?.surveyTeamMap?.shortUrlId,
+                  menuLanding?.surveyTeamMap?.shortUrlId ??
+                    menuLanding?.surveyTeamMapId,
                 )}
               </PaperLayout>
             )}
