@@ -162,13 +162,6 @@ function StylesComponent({
     setSurveyTheme(_savedSurveyTheme);
   }, [_savedSurveyTheme]);
 
-  const editSurvey = useEditSurveyMutation(survey?.id);
-
-  const isWelcomePageEnabled = survey?.welcomePageEnabled;
-  const handleSwitchChange = (e) => {
-    editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
-  };
-
   const confettiEnabled = (selectedTabStyles as ThankyouTheme)?.confettiEnabled;
 
   return (
@@ -223,22 +216,6 @@ function StylesComponent({
               mb="md"
             />
 
-            {selectedTab === ThemeTabEnum.WELCOME && (
-              <Box className={styles["welcome-page-switch-container"]}>
-                <Switch
-                  classNames={{
-                    track: `${!isWelcomePageEnabled ? styles["switch-disabled-track"] : ""}`,
-                    body: styles["switch-body"],
-                  }}
-                  size="md"
-                  label="Welcome Page: "
-                  checked={isWelcomePageEnabled}
-                  onChange={handleSwitchChange}
-                  labelPosition="left"
-                />
-              </Box>
-            )}
-
             <ScrollArea scrollbarSize={5} offsetScrollbars>
               {availableStyleComponents.includes(
                 SelectedItemEnum.BACKGROUND,
@@ -248,12 +225,12 @@ function StylesComponent({
                     {selectedTab === ThemeTabEnum.THANKYOU && (
                       <>
                         {/* <Divider label="Confetti" variant="dashed" w={"100%"} /> */}
-                        <Paper m={"auto"} w={"fit-content"}>
+                        <Paper>
                           <Switch
                             h={"fit-content"}
                             fw={400}
-                            size="sm"
-                            label="Confetti:"
+                            size="md"
+                            label={`${confettiEnabled ? "Disable Confetti:" : "Enable Confetti:"}`}
                             checked={confettiEnabled}
                             color="var(--tertiary-color)"
                             onChange={() =>

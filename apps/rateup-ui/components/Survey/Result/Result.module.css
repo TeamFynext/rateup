@@ -6,6 +6,11 @@
   gap: 1rem;
 }
 
+.result-page-tabs-list :global(.mantine-Tabs-tab) {
+  font-size: 0.875rem;
+  padding: 0.4375rem 1rem;
+}
+
 .panels-container {
   flex: 1 1 0;
   overflow: auto;

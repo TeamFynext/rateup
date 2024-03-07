@@ -6,6 +6,7 @@ import {
   Divider,
   Flex,
   Box,
+  Slider,
 } from "@mantine/core";
 import React from "react";
 import { Button as ButtonType } from "../surveyTheme.types";
@@ -26,24 +27,6 @@ function ButtonStyles({
     <>
       <Stack align="start" w={"100%"}>
         {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
-        <Group>
-          <NumberInput
-            min={0}
-            max={50}
-            defaultValue={18}
-            placeholder="radius"
-            label="Border Radius"
-            name="borderRadius"
-            value={currentStyles?.styles?.borderRadius}
-            onChange={(e) => {
-              setCurrentstyles("button", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, borderRadius: e },
-              });
-            }}
-            // style={{ maxWidth: "100px" }}
-          />
-        </Group>
 
         {/* <Text mt={10} fw={500}>
           Choose background color
@@ -114,8 +97,40 @@ function ButtonStyles({
           />
         </Box>
 
-        <Box>
-          <Text fw={500}>Button position</Text>
+        <Box className={"styles-section-div"}>
+          {/* <NumberInput
+            min={0}
+            max={50}
+            defaultValue={18}
+            placeholder="radius"
+            label="Border Radius"
+            name="borderRadius"
+            value={currentStyles?.styles?.borderRadius}
+            onChange={(e) => {
+              setCurrentstyles("button", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, borderRadius: e },
+              });
+            }}
+            // style={{ maxWidth: "100px" }}
+          /> */}
+          <h2>Border Radius</h2>
+          <Slider
+            min={0}
+            max={50}
+            defaultValue={18}
+            value={currentStyles?.styles?.borderRadius}
+            onChange={(e) => {
+              setCurrentstyles("button", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, borderRadius: e },
+              });
+            }}
+          />
+        </Box>
+
+        <Box className={"styles-section-div"}>
+          <h2>Button position</h2>
           <Flex gap={"sm"}>
             <ContainedSelection
               data={COORDINATESX}

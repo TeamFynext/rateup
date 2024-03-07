@@ -76,7 +76,7 @@ export default function WelcomePageThemeView({
                 e.stopPropagation(),
                   setSelectedType(SelectedItemEnum.BACKGROUND);
               }}
-              className={classes.actionIcon}
+              className={`${classes.actionIcon} ${mobileOrDesktop === PreviewTypeEnum.DESKTOP ? classes.welcomePageBgDtEditActionIcon : classes.welcomePageBgMbEditActionIcon}`}
             >
               <IconEdit style={{ width: "70%", height: "70%" }} />
             </ActionIcon>

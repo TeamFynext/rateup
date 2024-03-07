@@ -7,7 +7,16 @@ import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 import SurveyThemeContextProvider from "./SurveyThemeContext";
-import { Stack, Flex, Switch, Group, Tabs, Box, Button } from "@mantine/core";
+import {
+  Stack,
+  Flex,
+  Switch,
+  Group,
+  Tabs,
+  Box,
+  Button,
+  Overlay,
+} from "@mantine/core";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import {
@@ -32,6 +41,12 @@ function SurveyTheme({ survey }) {
   );
 
   const { data: surveyTheme, isLoading } = useSurveyTheme(survey?.id);
+
+  const editSurvey = useEditSurveyMutation(survey?.id);
+  const isWelcomePageEnabled = survey?.welcomePageEnabled;
+  const handleWelcomePageSwitchChange = (e) => {
+    editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
+  };
 
   function availableThemeStyleComponents(): Array<SelectedItemEnum> {
     const common = [
@@ -96,6 +111,7 @@ function SurveyTheme({ survey }) {
                   <WelcomePageThemeView
                     {...{ selectedType, setSelectedType }}
                   />
+                  {!isWelcomePageEnabled && <Overlay color="#FFFFFF" />}
                 </Tabs.Panel>
                 <Tabs.Panel value={ThemeTabEnum.SURVEY}>
                   <SurveyThemeView {...{ selectedType, setSelectedType }} />
@@ -107,9 +123,27 @@ function SurveyTheme({ survey }) {
                 </Tabs.Panel>
               </Tabs>
             </SurveyThemePreviewLayout>
+            {selectedPageTab === ThemeTabEnum.WELCOME && (
+              <Box className={styles["welcome-page-switch-container"]}>
+                <Switch
+                  className={styles["welcome-page-switch"]}
+                  classNames={{
+                    track: `${!isWelcomePageEnabled ? styles["switched-on-track"] : styles["switched-off-track"]}`,
+                    body: styles["switch-body"],
+                  }}
+                  size="md"
+                  label={`${isWelcomePageEnabled ? "Disable: " : "Enable: "}`}
+                  checked={isWelcomePageEnabled}
+                  onChange={handleWelcomePageSwitchChange}
+                  labelPosition="left"
+                />
+              </Box>
+            )}
           </Box>
 
           <Box className={styles["styles-component-container"]}>
+            {selectedPageTab === ThemeTabEnum.WELCOME &&
+              !isWelcomePageEnabled && <Overlay color="#FFFFFF" />}
             <StylesComponent
               selectedType={
                 selectedType ? selectedType : SelectedItemEnum.BACKGROUND

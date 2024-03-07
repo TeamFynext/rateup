@@ -29,8 +29,12 @@
 }
 
 .switch-body {
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.625rem;
+}
+
+.switch-body label {
+  cursor: pointer;
 }
 
 .switch-disabled-track {
@@ -82,4 +86,14 @@
   :global(.custom-color-picker-container .eye-dropper-btn svg) {
   width: 1.125rem;
   height: 1.125rem;
+}
+
+.styles-component-div :global(.styles-section-div) {
+  width: 100%;
+}
+
+.styles-component-div :global(.styles-section-div h2) {
+  font-size: 1rem;
+  margin-bottom: 0.625rem;
+  font-weight: 500;
 }

@@ -22,17 +22,51 @@
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;
-  padding-right: 0.625rem;
+  padding: 5px;
 }
 
 .theme-preview-container {
+  position: relative;
   flex: 0.73 0 0;
-  border: 1px solid var(--mantine-color-gray-5);
+  box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.09);
   border-radius: 1rem;
 }
 
 .survey-theme-preview-tab-panels-root {
   height: 100%;
+}
+
+.welcome-page-switch-container {
+  padding: 0.625rem;
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 0.625rem;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 301;
+}
+
+.welcome-page-switch {
+  font-size: 0.875rem;
+  height: auto;
+}
+
+.switch-body {
+  gap: 0.625rem;
+}
+
+.switch-body label {
+  cursor: pointer;
+}
+
+.welcome-page-switch .switched-on-track {
+  background-color: rgb(112, 0, 0);
+  cursor: pointer;
+}
+
+.welcome-page-switch .switched-off-track {
+  background-color: rgb(0, 98, 0);
+  cursor: pointer;
 }
 
 .survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
@@ -42,8 +76,9 @@
 }
 
 .styles-component-container {
+  position: relative;
   flex: 0.27 0 0;
-  border: 1px solid var(--mantine-color-gray-5);
+  box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.09);
   border-radius: 1rem;
 }
 
@@ -68,6 +103,17 @@
   right: 3px;
   color: var(--grey-color-4);
 }
+
+.welcomePageBgDtEditActionIcon {
+  top: 7px;
+  right: 11.25rem;
+}
+
+.welcomePageBgMbEditActionIcon {
+  top: 3px;
+  right: 3px;
+}
+
 .saveButton {
   margin-top: 1rem;
   background-color: #fff;

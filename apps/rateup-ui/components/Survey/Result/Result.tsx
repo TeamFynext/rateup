@@ -120,7 +120,7 @@ const Result = ({
       }}
     >
       <Box className={styles["result-page-tabs-and-filter-btn-container"]}>
-        <Tabs.List>
+        <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
