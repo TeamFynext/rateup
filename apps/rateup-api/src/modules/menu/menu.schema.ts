@@ -112,7 +112,7 @@ const fullMenuPublicResponseSchema = z.object({
       }),
       surveyTeamMap: z
         .object({
-          shortUrlId: z.string().optional(),
+          shortUrlId: z.string().optional().nullable(),
         })
         .optional()
         .nullable(),
