@@ -173,74 +173,78 @@ function ScreenListItem({
         confirmLabel="Delete"
         onConfirm={handleDeleteScreen}
       />
-      <Group justify="space-between">
-        <Group>
-          <Stack gap={2}>
+      <Stack justify="space-between" gap={0}>
+        <EditableText
+          text={screen.title}
+          setText={updateScreenTitle}
+          id={screen.title}
+          editMode={editingItem === screen.title}
+          setEditingItem={setEditingItem}
+          placeholder="Section title (Required if more than one section is added)"
+          style={{
+            flexGrow: 1,
+          }}
+          textStyle={{
+            fontWeight: "bold",
+            fontSize: "1.2rem",
+          }}
+          textInputRef={textInputRef}
+        />
+        <Group justify="space-between">
+          <Group gap={2}>
             <Tooltip label="Move Screen Up" openDelay={500}>
               <ActionIcon
                 onClick={() => handleMoveScreen("up")}
                 variant={"outline"}
-                size={22}
+                size={20}
                 disabled={currentScreenIndex === 0}
               >
-                <IconChevronUp size={22} />
+                <IconChevronUp size={20} />
               </ActionIcon>
             </Tooltip>
             <Tooltip label="Move Screen Down" openDelay={500}>
               <ActionIcon
                 onClick={() => handleMoveScreen("down")}
                 variant={"outline"}
-                size={22}
+                size={20}
                 disabled={currentScreenIndex === flowJson.screens.length - 1}
               >
-                <IconChevronDown size={22} />
+                <IconChevronDown size={20} />
               </ActionIcon>
             </Tooltip>
-          </Stack>
-          <EditableText
-            text={screen.title}
-            setText={updateScreenTitle}
-            id={screen.title}
-            editMode={editingItem === screen.title}
-            setEditingItem={setEditingItem}
-            placeholder="Section title (Required if more than one section is added)"
-            style={{
-              flexGrow: 1,
-            }}
-            textStyle={{
-              fontWeight: "bold",
-              fontSize: "1.2rem",
-            }}
-            textInputRef={textInputRef}
-          />
+          </Group>
+          <Group gap={"5"}>
+            {flowEditable && (
+              <Tooltip label="Edit Screen">
+                <ActionIcon
+                  onClick={() => {
+                    textInputRef?.current?.focus();
+                    setEditingItem(screen.title);
+                  }}
+                  variant="subtle"
+                  color="gray"
+                >
+                  <IconEdit size={20} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            {flowEditable && (
+              <Tooltip label="Delete Screen">
+                <ActionIcon onClick={toggle} variant="subtle" color="gray">
+                  <IconTrash size={20} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            <ActionIcon variant="subtle" onClick={setExpanded}>
+              {expanded ? (
+                <IconChevronUp size={20} />
+              ) : (
+                <IconChevronDown size={20} />
+              )}
+            </ActionIcon>
+          </Group>
         </Group>
-        <Group>
-          {flowEditable && (
-            <Tooltip label="Edit Screen">
-              <ActionIcon
-                onClick={() => {
-                  textInputRef?.current?.focus();
-                  setEditingItem(screen.title);
-                }}
-                variant="subtle"
-                color="gray"
-              >
-                <IconEdit />
-              </ActionIcon>
-            </Tooltip>
-          )}
-          {flowEditable && (
-            <Tooltip label="Delete Screen">
-              <ActionIcon onClick={toggle} variant="subtle" color="gray">
-                <IconTrash />
-              </ActionIcon>
-            </Tooltip>
-          )}
-          <ActionIcon variant="subtle" onClick={setExpanded}>
-            {expanded ? <IconChevronUp /> : <IconChevronDown />}
-          </ActionIcon>
-        </Group>
-      </Group>
+      </Stack>
       <Collapse in={expanded}>
         <Droppable droppableId={screen.id} direction="vertical">
           {(provided) => (
