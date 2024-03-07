@@ -66,7 +66,7 @@ export const defaultTheme: SurveyTheme & surveyThemeSchemaCore = {
     },
     button: button,
     input: {
-      primaryColor: "rateup-blue",
+      primaryColor: "#1C518E",
     },
   },
   thankyouTheme: {
