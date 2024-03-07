@@ -130,11 +130,13 @@ export default function MenuLandingPage({
         <meta property="og:image:alt" content="Star Icon" />
       </Head>
       <CreditsCard
-        enableCredits={
-          !!menuLanding?.unsplashImage?.[
-            largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-          ]
-        }
+        // enableCredits={
+        //   !!menuLanding?.unsplashImage?.[
+        //     largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+        //   ]
+        // }
+        // disabled for now
+        enableCredits={false}
         url={bgSrc}
         pl={largeScreen && 30}
       >

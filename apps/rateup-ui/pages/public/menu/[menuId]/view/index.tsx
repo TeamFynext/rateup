@@ -159,11 +159,13 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
           </Carousel>
         ) : (
           <CreditsCard
-            enableCredits={
-              !!fullMenu.menuLanding?.unsplashImage?.[
-                largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-              ]
-            }
+            // enableCredits={
+            //   !!fullMenu.menuLanding?.unsplashImage?.[
+            //     largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+            //   ]
+            // }
+            // disabled for now
+            enableCredits={false}
             url={backgroundImage}
             pl={largeScreen && 30}
           >
