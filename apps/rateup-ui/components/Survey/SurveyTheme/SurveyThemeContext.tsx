@@ -12,9 +12,7 @@ export default function SurveyThemeContextProvider(props: any) {
   const [surveyTheme, setSurveyTheme] = useState<SurveyTheme>(
     props.surveyTheme,
   );
-  const [mobileOrDesktop, setMobileOrDesktop] = useState<PreviewTypeEnum>(
-    PreviewTypeEnum.DESKTOP,
-  );
+  const { mobileOrDesktop, setMobileOrDesktop } = props;
   return (
     <SurveyThemeContext.Provider
       value={{

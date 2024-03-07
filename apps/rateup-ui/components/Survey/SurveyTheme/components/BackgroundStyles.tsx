@@ -7,6 +7,7 @@ import {
   ActionIcon,
   Divider,
   ThemeIcon,
+  Box,
 } from "@mantine/core";
 import {
   IconDeviceDesktop,
@@ -21,10 +22,12 @@ import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../../Modal/ImageUploadMethodModal";
 import { useDisclosure } from "@mantine/hooks";
 import { Bg } from "../surveyTheme.types";
-import CustomColorPicker from "./customelements/CustomColorPicker";
-import CustomColorInput from "./customelements/CustomColorInput";
+// import CustomColorPicker from "./customelements/CustomColorPicker";
+// import CustomColorInput from "./customelements/CustomColorInput";
 import { BgTab } from "../SurveyTheme.enums";
 import { PreviewTypeEnum } from "../SurveyTheme.enums";
+import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
+import styles from "./stylescomponent/StylesComponent.module.css";
 
 interface BackgroundStylesProps {
   currentStyles: Bg;
@@ -152,7 +155,7 @@ function BackgroundStyles({
 
   const [bgTab, setBgTab] = useState<BgTab>(BgTab.BGCOLOR);
   return (
-    <Stack align="center" w={"100%"}>
+    <Stack align="start" w={"100%"}>
       <UnsplashModal
         handleUnsplashImageSave={handleUnsplashImageSave}
         opened={openedUnsplashDialog}
@@ -172,8 +175,8 @@ function BackgroundStyles({
         handleUploadMethod={handleUploadMethod}
       />
       {/* //-------------BG COLOR----------------- */}
-      <Divider label="Background Color" w={"100%"} variant="dashed" />
-      <CustomColorPicker
+      {/* <Divider label="Background Color" w={"100%"} variant="dashed" /> */}
+      {/* <CustomColorPicker
         value={currentStyles?.styles?.backgroundColor}
         onChange={(value) =>
           setCurrentstyles("bg", {
@@ -181,8 +184,8 @@ function BackgroundStyles({
             styles: { ...currentStyles.styles, backgroundColor: value },
           })
         }
-      />
-      <CustomColorInput
+      /> */}
+      {/* <CustomColorInput
         value={currentStyles?.styles?.backgroundColor}
         onChange={(value) =>
           setCurrentstyles("bg", {
@@ -190,113 +193,129 @@ function BackgroundStyles({
             styles: { ...currentStyles.styles, backgroundColor: value },
           })
         }
-      />
+      /> */}
+      <Box className={"custom-color-picker-and-heading-container"}>
+        <h2>Background Color</h2>
+        <CustomColorPicker
+          value={currentStyles?.styles?.backgroundColor}
+          onChange={(value) => {
+            setCurrentstyles("bg", {
+              ...currentStyles,
+              styles: { ...currentStyles.styles, backgroundColor: value },
+            });
+          }}
+        />
+      </Box>
+
       {/* //------------BGIMAGE------------ */}
-      <Divider label="Background Image" variant="dashed" w={"100%"} />
-      <Group w={"100%"} justify="space-between">
-        <Group gap={"xs"}>
-          <ThemeIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
-            <IconDeviceDesktop
-              style={{ width: "70%", height: "70%" }}
-              stroke={1.5}
-            />
-          </ThemeIcon>
-          <Text fw={100} c={"dark"} size="xs">
-            Desktop :{" "}
-          </Text>
+      {/* <Divider label="Background Image" variant="dashed" w={"100%"} /> */}
+      <Stack gap={"0.625rem"}>
+        <h2 className={styles["section-heading"]}>Background Image</h2>
+        <Group w={"100%"} justify="space-between">
+          <Group gap={"xs"}>
+            <ThemeIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
+              <IconDeviceDesktop
+                style={{ width: "70%", height: "70%" }}
+                stroke={1.5}
+              />
+            </ThemeIcon>
+            <Text fw={100} c={"dark"} size="xs">
+              Desktop :{" "}
+            </Text>
+          </Group>
+          <Group>
+            <Button
+              leftSection={<IconUpload size={16} />}
+              size="xs"
+              radius="18px"
+              type="button"
+              onClick={handleFileChange}
+              loading={isFileLoading}
+              bg={"var(--tertiary-color)"}
+            >
+              Upload Image
+            </Button>
+            <ActionIcon
+              color="red"
+              size={"md"}
+              radius={"xl"}
+              onClick={removeBg}
+              loading={isFileLoading}
+              disabled={currentStyles?.desktopbg === ""}
+            >
+              <IconTrash size={15} />
+            </ActionIcon>
+            <FileButton
+              resetRef={resetBgRef}
+              onChange={(e) => {
+                if (!e) return;
+                handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+                resetBgRef?.current?.();
+              }}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            >
+              {(props) => (
+                <Button ref={bgFileUploadBtnRef} display={"none"} {...props}>
+                  Upload Image
+                </Button>
+              )}
+            </FileButton>
+          </Group>
         </Group>
-        <Group>
-          <Button
-            leftSection={<IconUpload size={16} />}
-            size="xs"
-            radius="18px"
-            type="button"
-            onClick={handleFileChange}
-            loading={isFileLoading}
-            bg={"var(--tertiary-color)"}
-          >
-            Upload Image
-          </Button>
-          <ActionIcon
-            color="red"
-            size={"md"}
-            radius={"xl"}
-            onClick={removeBg}
-            loading={isFileLoading}
-            disabled={currentStyles?.desktopbg === ""}
-          >
-            <IconTrash size={15} />
-          </ActionIcon>
-          <FileButton
-            resetRef={resetBgRef}
-            onChange={(e) => {
-              if (!e) return;
-              handleUnsplashImageSave(URL.createObjectURL(e), e.name);
-              resetBgRef?.current?.();
-            }}
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
-          >
-            {(props) => (
-              <Button ref={bgFileUploadBtnRef} display={"none"} {...props}>
-                Upload Image
-              </Button>
-            )}
-          </FileButton>
+        <Group w={"100%"} justify="space-between">
+          <Group gap={"xs"}>
+            <ThemeIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
+              <IconDeviceMobile
+                style={{ width: "70%", height: "70%" }}
+                stroke={1.5}
+              />
+            </ThemeIcon>
+            <Text fw={100} c={"dark"} size="xs">
+              Mobile :{" "}
+            </Text>
+          </Group>
+          <Group>
+            <Button
+              leftSection={<IconUpload size={15} />}
+              size="xs"
+              radius="18px"
+              onClick={handleMobileBgFileChange}
+              loading={isFileLoading}
+              bg={"var(--tertiary-color)"}
+            >
+              Upload Image
+            </Button>
+            <ActionIcon
+              color="red"
+              size={"md"}
+              radius={"xl"}
+              disabled={currentStyles?.mobilebg === ""}
+              onClick={removeMobileBg}
+            >
+              <IconTrash size={15} />
+            </ActionIcon>
+            <FileButton
+              resetRef={resetMobileBgRef}
+              onChange={(e) => {
+                if (!e) return;
+                handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+                resetMobileBgRef?.current?.();
+              }}
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            >
+              {(props) => (
+                <Button
+                  ref={mobileBgFileUploadBtnRef}
+                  display={"none"}
+                  {...props}
+                >
+                  Upload Image
+                </Button>
+              )}
+            </FileButton>
+          </Group>
         </Group>
-      </Group>
-      <Group w={"100%"} justify="space-between">
-        <Group gap={"xs"}>
-          <ThemeIcon aria-label="Settings" bg={"var(--tertiary-color)"}>
-            <IconDeviceMobile
-              style={{ width: "70%", height: "70%" }}
-              stroke={1.5}
-            />
-          </ThemeIcon>
-          <Text fw={100} c={"dark"} size="xs">
-            Mobile :{" "}
-          </Text>
-        </Group>
-        <Group>
-          <Button
-            leftSection={<IconUpload size={15} />}
-            size="xs"
-            radius="18px"
-            onClick={handleMobileBgFileChange}
-            loading={isFileLoading}
-            bg={"var(--tertiary-color)"}
-          >
-            Upload Image
-          </Button>
-          <ActionIcon
-            color="red"
-            size={"md"}
-            radius={"xl"}
-            disabled={currentStyles?.mobilebg === ""}
-            onClick={removeMobileBg}
-          >
-            <IconTrash size={15} />
-          </ActionIcon>
-          <FileButton
-            resetRef={resetMobileBgRef}
-            onChange={(e) => {
-              if (!e) return;
-              handleUnsplashImageSave(URL.createObjectURL(e), e.name);
-              resetMobileBgRef?.current?.();
-            }}
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
-          >
-            {(props) => (
-              <Button
-                ref={mobileBgFileUploadBtnRef}
-                display={"none"}
-                {...props}
-              >
-                Upload Image
-              </Button>
-            )}
-          </FileButton>
-        </Group>
-      </Group>
+      </Stack>
     </Stack>
   );
 }

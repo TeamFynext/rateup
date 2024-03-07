@@ -9,8 +9,9 @@ import {
 } from "@mantine/core";
 import React from "react";
 import { Button as ButtonType } from "../surveyTheme.types";
-import CustomColorPicker from "./customelements/CustomColorPicker";
-import CustomColorInput from "./customelements/CustomColorInput";
+// import CustomColorPicker from "./customelements/CustomColorPicker";
+// import CustomColorInput from "./customelements/CustomColorInput";
+import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import { COORDINATESX, COORDINATESY } from "../../../../utils/constants";
 
@@ -23,8 +24,8 @@ function ButtonStyles({
 }) {
   return (
     <>
-      <Stack align="center" w={"100%"}>
-        <Divider label="Styles" variant="dashed" w={"100%"} />
+      <Stack align="start" w={"100%"}>
+        {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group>
           <NumberInput
             min={0}
@@ -40,11 +41,11 @@ function ButtonStyles({
                 styles: { ...currentStyles.styles, borderRadius: e },
               });
             }}
-            style={{ maxWidth: "100px" }}
+            // style={{ maxWidth: "100px" }}
           />
         </Group>
 
-        <Text mt={10} fw={500}>
+        {/* <Text mt={10} fw={500}>
           Choose background color
         </Text>
         <CustomColorPicker
@@ -64,9 +65,21 @@ function ButtonStyles({
               styles: { ...currentStyles.styles, backgroundColor: e },
             });
           }}
-        />
+        /> */}
+        <Box className={"custom-color-picker-and-heading-container"}>
+          <h2>Background Color</h2>
+          <CustomColorPicker
+            value={currentStyles?.styles?.backgroundColor}
+            onChange={(e) => {
+              setCurrentstyles("button", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, backgroundColor: e },
+              });
+            }}
+          />
+        </Box>
 
-        <Text mt={10} fw={500}>
+        {/* <Text mt={10} fw={500}>
           Choose text color
         </Text>
         <CustomColorPicker
@@ -86,7 +99,21 @@ function ButtonStyles({
               styles: { ...currentStyles.styles, color: e },
             });
           }}
-        />
+        /> */}
+
+        <Box className={"custom-color-picker-and-heading-container"}>
+          <h2>Text Color</h2>
+          <CustomColorPicker
+            value={currentStyles?.styles?.color}
+            onChange={(e) => {
+              setCurrentstyles("button", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, color: e },
+              });
+            }}
+          />
+        </Box>
+
         <Box>
           <Text fw={500}>Button position</Text>
           <Flex gap={"sm"}>

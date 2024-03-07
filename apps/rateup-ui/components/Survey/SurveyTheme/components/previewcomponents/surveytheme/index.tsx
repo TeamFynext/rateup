@@ -16,6 +16,7 @@ import {
   ScrollArea,
   Stack,
   Text,
+  createTheme,
 } from "@mantine/core";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import classes from "../../../SurveyTheme.module.css";
@@ -48,6 +49,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
     button: { styles: buttonStyles, label },
     input: { primaryColor },
   } = _surveyTheme;
+
   return (
     <Flex
       align={"center"}
@@ -135,7 +137,15 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
               >
                 <MantineProvider
                   theme={{
-                    primaryColor: primaryColor,
+                    colors: {
+                      // @ts-ignore
+                      pmColor: Array(10).fill(
+                        primaryColor === "rateup-blue"
+                          ? "#1C518E"
+                          : primaryColor,
+                      ),
+                    },
+                    primaryColor: "pmColor",
                   }}
                 >
                   <CurrentResponsesContext.Provider
@@ -159,7 +169,9 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                 </MantineProvider>
               </ScrollArea>
               <Group mt="auto" justify="right" w={"100%"} align="center">
-                <Badge>{questionTypeEnumArray[currentQuestionTypeCount]}</Badge>
+                <Badge color={`${primaryColor}`}>
+                  {questionTypeEnumArray[currentQuestionTypeCount]}
+                </Badge>
                 <Group>
                   <Button
                     variant="white"

@@ -7,29 +7,39 @@ import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 import SurveyThemeContextProvider from "./SurveyThemeContext";
-import { Stack, Flex, Switch, Group, Tabs, Box } from "@mantine/core";
+import { Stack, Flex, Switch, Group, Tabs, Box, Button } from "@mantine/core";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
-import { SelectedItemEnum, ThemeTabEnum } from "./SurveyTheme.enums";
+import {
+  PreviewTypeEnum,
+  SelectedItemEnum,
+  ThemeTabEnum,
+} from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
 import RateupLoader from "../../Loaders/RateupLoader";
+import { IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react";
+import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
+import PageSelector from "./components/PageSelector";
 
 function SurveyTheme({ survey }) {
-  const [activeThemeTab, setActiveThemeTab] = useState<ThemeTabEnum>(
-    ThemeTabEnum.WELCOME,
+  const [selectedPreveiw, setSelectedPreveiw] = useState(
+    PreviewTypeEnum.DESKTOP,
   );
+  const [selectedPageTab, setSelectedPageTab] = useState(ThemeTabEnum.WELCOME);
+
   const [selectedType, setSelectedType] = useState<SelectedItemEnum>(
     SelectedItemEnum.BACKGROUND,
   );
+
   const { data: surveyTheme, isLoading } = useSurveyTheme(survey?.id);
-  const editSurvey = useEditSurveyMutation(survey?.id);
+
   function availableThemeStyleComponents(): Array<SelectedItemEnum> {
     const common = [
       SelectedItemEnum.BACKGROUND,
       SelectedItemEnum.TITLE,
       SelectedItemEnum.SUBTITLE,
     ];
-    switch (activeThemeTab) {
+    switch (selectedPageTab) {
       case ThemeTabEnum.WELCOME:
         return [...common, SelectedItemEnum.LOGO, SelectedItemEnum.BUTTON];
       case ThemeTabEnum.SURVEY:
@@ -40,68 +50,78 @@ function SurveyTheme({ survey }) {
         return [];
     }
   }
-  const handleSwitchChange = (e) => {
-    editSurvey.mutate({ welcomePageEnabled: e.currentTarget.checked });
-  };
+
   if (isLoading) return <RateupLoader h={"100dvh"} />;
+
   return (
-    <SurveyThemeContextProvider surveyTheme={surveyTheme}>
-      <StyledTabs
-        className={styles["theme-page-div"]}
-        value={activeThemeTab}
-        onChange={(value) => setActiveThemeTab(value as ThemeTabEnum)}
-        enableRateUpBlueTheme
-      >
-        <Tabs.List ml={"auto"} mr={"auto"}>
-          <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>
-          <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey Theme</Tabs.Tab>
-          <Tabs.Tab value={ThemeTabEnum.THANKYOU}>Thankyou Page</Tabs.Tab>
-        </Tabs.List>
-
-        <Flex h={"100%"}>
-          <SurveyThemePreviewLayout
-            isLoading={isLoading}
-            survey={survey}
-            themeType={activeThemeTab}
+    <SurveyThemeContextProvider
+      surveyTheme={surveyTheme}
+      mobileOrDesktop={selectedPreveiw}
+      setMobileOrDesktop={setSelectedPreveiw}
+    >
+      <Box className={styles["survey-theme-root-div"]}>
+        <Group className={styles["tabs-and-other-options-container"]}>
+          <PreviewDeviceSelector
+            value={selectedPreveiw}
+            onChange={setSelectedPreveiw}
+          />
+          <PageSelector onChange={setSelectedPageTab} value={selectedPageTab} />
+          <Box
+            className={styles["save-btn-container"]}
+            id="save-btn-container-portal"
           >
-            <Tabs.Panel value={ThemeTabEnum.WELCOME}>
-              <WelcomePageThemeView {...{ selectedType, setSelectedType }} />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.SURVEY}>
-              <SurveyThemeView {...{ selectedType, setSelectedType }} />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
-              <ThankyouPageThemeView {...{ selectedType, setSelectedType }} />
-            </Tabs.Panel>
-          </SurveyThemePreviewLayout>
+            {/* save button from styles component will be rendered here */}
+          </Box>
+        </Group>
 
-          <Stack style={{ flex: 0.27 }} miw={300} p={"0.4375rem"} h={"75vh"}>
-            {activeThemeTab === ThemeTabEnum.WELCOME && (
-              <PaperLayout h={60}>
-                <Group justify="center" h="100%" w="100%">
-                  <Switch
-                    fw={400}
-                    size="sm"
-                    label="Enable Welcome page"
-                    checked={survey?.welcomePageEnabled}
-                    color="var(--tertiary-color)"
-                    onChange={handleSwitchChange}
+        <Box
+          className={
+            styles["selected-page-tab-panels-and-styles-div-container"]
+          }
+        >
+          <Box className={styles["theme-preview-container"]}>
+            <SurveyThemePreviewLayout
+              isLoading={isLoading}
+              survey={survey}
+              themeType={selectedPageTab}
+              mobileOrDesktop={selectedPreveiw}
+            >
+              <Tabs
+                value={selectedPageTab}
+                classNames={{
+                  root: styles["survey-theme-preview-tab-panels-root"],
+                }}
+              >
+                <Tabs.Panel value={ThemeTabEnum.WELCOME}>
+                  <WelcomePageThemeView
+                    {...{ selectedType, setSelectedType }}
                   />
-                </Group>
-              </PaperLayout>
-            )}
+                </Tabs.Panel>
+                <Tabs.Panel value={ThemeTabEnum.SURVEY}>
+                  <SurveyThemeView {...{ selectedType, setSelectedType }} />
+                </Tabs.Panel>
+                <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
+                  <ThankyouPageThemeView
+                    {...{ selectedType, setSelectedType }}
+                  />
+                </Tabs.Panel>
+              </Tabs>
+            </SurveyThemePreviewLayout>
+          </Box>
+
+          <Box className={styles["styles-component-container"]}>
             <StylesComponent
               selectedType={
                 selectedType ? selectedType : SelectedItemEnum.BACKGROUND
               }
               availableStyleComponents={availableThemeStyleComponents()}
-              setSelectedTab={setActiveThemeTab}
-              selectedTab={activeThemeTab}
+              setSelectedTab={setSelectedPageTab}
+              selectedTab={selectedPageTab}
               survey={survey}
             />
-          </Stack>
-        </Flex>
-      </StyledTabs>
+          </Box>
+        </Box>
+      </Box>
     </SurveyThemeContextProvider>
   );
 }

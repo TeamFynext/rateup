@@ -1,14 +1,50 @@
-.enable-welcome-page-switch-container {
-  height: fit-content;
-  padding: 0.625rem;
+.survey-theme-root-div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.enable-welcome-page-switch-container :global(.mantine-Switch-label) {
-  font-size: 1rem;
+.survey-theme-root-div > div:nth-child(2) {
+  flex: 1 1 0;
+  overflow: auto;
+}
+
+.tabs-and-other-options-container {
+  margin-bottom: 1rem;
+}
+
+.tabs-and-other-options-container > div {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+}
+
+.selected-page-tab-panels-and-styles-div-container {
+  display: flex;
+  gap: 0.625rem;
+  padding-right: 0.625rem;
+}
+
+.theme-preview-container {
+  flex: 0.73 0 0;
+  border: 1px solid var(--mantine-color-gray-5);
+  border-radius: 1rem;
+}
+
+.survey-theme-preview-tab-panels-root {
+  height: 100%;
+}
+
+.survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1rem;
 }
 
 .styles-component-container {
-  flex: 1 1 auto;
+  flex: 0.27 0 0;
+  border: 1px solid var(--mantine-color-gray-5);
+  border-radius: 1rem;
 }
 
 /* styles for different preview view components */
@@ -28,8 +64,8 @@
 
 .actionIcon {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 3px;
+  right: 3px;
   color: var(--grey-color-4);
 }
 .saveButton {

@@ -12,7 +12,7 @@ function CustomColorPicker({ value, onChange }) {
   const handleBlur = useCallback(
     (e) => {
       setIsColorPickerOpen(false);
-      if (!value.length) {
+      if (!value?.length) {
         onChange("#000000");
       }
     },
@@ -37,19 +37,22 @@ function CustomColorPicker({ value, onChange }) {
   return (
     <Popover opened={isColorPickerOpen} onChange={setIsColorPickerOpen}>
       <Popover.Target>
-        <Flex className={styles["custom-color-picker-container"]}>
+        <Flex
+          className={`${styles["custom-color-picker-container"]} custom-color-picker-container`}
+        >
           <Button
-            className={styles["color-indicator"]}
+            className={`${styles["color-indicator"]} color-indicator`}
             style={{ backgroundColor: value }}
             onBlur={handleBlur}
             onFocus={handleFocus}
+            color={`${value}`}
           />
 
           <input
             type="text"
-            className={styles["text-input-for-picking-color"]}
+            className={`${styles["text-input-for-picking-color"]} text-input-for-picking-color`}
             size={7}
-            value={value}
+            value={!value?.length ? "#000000" : value}
             onBlur={handleBlur}
             onFocus={handleFocus}
             onChange={handleInputChange}
@@ -57,10 +60,11 @@ function CustomColorPicker({ value, onChange }) {
 
           {!isEyeDroppersupported ? null : (
             <Button
-              className={styles["eye-dropper-btn"]}
+              className={`${styles["eye-dropper-btn"]} eye-dropper-btn`}
               leftSection={<IconColorPicker />}
               onClick={pickEyeDropperColor}
               classNames={buttonStyles}
+              color="#1C518E"
             >
               {"Eye Dropper"}
             </Button>

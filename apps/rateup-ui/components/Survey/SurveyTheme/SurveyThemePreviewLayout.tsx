@@ -18,21 +18,21 @@ interface SurveyThemePreviewLayoutProps {
   isLoading: boolean;
   themeType: ThemeTabEnum;
   survey: any;
+  mobileOrDesktop: PreviewTypeEnum;
 }
 
 export default function SurveyThemePreviewLayout({
   children,
   isLoading,
+  mobileOrDesktop,
   themeType,
   survey,
 }: SurveyThemePreviewLayoutProps) {
-  const { mobileOrDesktop, setMobileOrDesktop } =
-    useContext(SurveyThemeContext);
   return (
-    <Stack h="100%" w={"100%"} p={"0.4375rem"} flex={"0.73"}>
+    <Stack h="100%" w={"100%"} p={"0.4375rem"}>
       <LoadingOverlay visible={isLoading} overlayProps={{ blur: 2 }} />
-      <Group justify="space-between" px={10} pb={10}>
-        <Group>
+      {/* <Group justify="space-between" px={10} pb={10}> */}
+      {/* <Group>
           <Title order={2} c={"dimmed"}>
             Preview
           </Title>
@@ -46,16 +46,16 @@ export default function SurveyThemePreviewLayout({
           >
             <></>
           </TabsCommon>
-        </Group>
-        {themeType === ThemeTabEnum.WELCOME && (
+        </Group> */}
+      {/* {themeType === ThemeTabEnum.WELCOME && (
           <Group>
             <Text>Status: </Text>
             <Badge color={survey?.welcomePageEnabled ? "green" : "red"}>
               {survey?.welcomePageEnabled ? "ENABLED" : "DISABLED"}
             </Badge>
           </Group>
-        )}
-      </Group>
+        )} */}
+      {/* </Group> */}
       <Box
         style={{
           display: "flex",
@@ -63,14 +63,13 @@ export default function SurveyThemePreviewLayout({
         }}
         h={"100%"}
       >
-        <PaperLayout
-          p={0}
+        <Box
           h={"100%"}
-          mah={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 650 : 1000}
+          // mah={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 650 : 1000}
           w={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 380 : "100%"}
         >
           {children}
-        </PaperLayout>
+        </Box>
       </Box>
     </Stack>
   );

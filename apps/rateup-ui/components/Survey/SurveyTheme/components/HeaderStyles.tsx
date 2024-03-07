@@ -5,12 +5,13 @@ import {
   NumberInput,
   Divider,
   Group,
+  Box,
 } from "@mantine/core";
 import { Title } from "../surveyTheme.types";
 import { FontWeights } from "../SurveyTheme.constants";
-import CustomColorPicker from "./customelements/CustomColorPicker";
-import CustomColorInput from "./customelements/CustomColorInput";
+
 import styles from "./stylescomponent/StylesComponent.module.css";
+import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 
 function HeaderStyles({
   currentStyles,
@@ -21,8 +22,8 @@ function HeaderStyles({
 }) {
   return (
     <>
-      <Stack align="center" w={"100%"}>
-        <Divider label="Styles" variant="dashed" w={"100%"} />
+      <Stack align="start" w={"100%"}>
+        {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group wrap="nowrap" gap={"xs"} w={"100%"}>
           <Select
             label="Font weight"
@@ -56,10 +57,7 @@ function HeaderStyles({
             }}
           />
         </Group>
-        <Text mt={10} fw={500}>
-          Choose text color
-        </Text>
-        <CustomColorPicker
+        {/* <CustomColorPicker
           value={currentStyles?.styles?.color}
           onChange={(e) => {
             setCurrentstyles("title", {
@@ -76,7 +74,19 @@ function HeaderStyles({
               styles: { ...currentStyles.styles, color: e },
             });
           }}
-        />
+        /> */}
+        <Box className={"custom-color-picker-and-heading-container"}>
+          <h2>Text Color</h2>
+          <CustomColorPicker
+            value={currentStyles?.styles?.color}
+            onChange={(e) => {
+              setCurrentstyles("title", {
+                ...currentStyles,
+                styles: { ...currentStyles.styles, color: e },
+              });
+            }}
+          />
+        </Box>
       </Stack>
     </>
   );

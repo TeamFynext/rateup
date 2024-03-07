@@ -1,0 +1,22 @@
+.list {
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 0.4rem;
+  max-width: max-content;
+}
+
+.list::before {
+  display: none;
+}
+
+.tab {
+  border-radius: 0.3125rem;
+}
+
+.tab:not([data-active]):hover {
+  background-color: var(--mantine-color-rateup-blue-light-hover);
+}
+
+.tab[data-active="true"] {
+  background-color: var(--tertiary-color);
+  color: white;
+}

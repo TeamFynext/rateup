@@ -1,9 +1,18 @@
-import { Stack, Text, Divider, Button, Group, ScrollArea } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Divider,
+  Button,
+  Group,
+  ScrollArea,
+  Box,
+} from "@mantine/core";
 
 import React from "react";
 import { Input } from "../surveyTheme.types";
 import CustomColorSwatch from "./customelements/CustomColorSwatch";
 import { defaultThemeName } from "../SurveyTheme.enums";
+import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 
 function InputStyles({
   currentStyles,
@@ -15,9 +24,25 @@ function InputStyles({
   return (
     <>
       <Stack align="center" w={"100%"}>
-        <Divider label="Styles" variant="dashed" w={"100%"} />
+        {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group justify="space-between" w={"100%"}>
-          <Text c={"dimmed"} fz="xs">
+          <Box className={"custom-color-picker-and-heading-container"}>
+            <h2>Text Color</h2>
+            <CustomColorPicker
+              value={
+                currentStyles?.primaryColor === "rateup-blue"
+                  ? "#1C518E"
+                  : currentStyles?.primaryColor
+              }
+              onChange={(e) => {
+                setCurrentstyles("input", {
+                  ...currentStyles,
+                  primaryColor: e,
+                });
+              }}
+            />
+          </Box>
+          {/* <Text c={"dimmed"} fz="xs">
             Choose component color
           </Text>
           <Button
@@ -32,10 +57,10 @@ function InputStyles({
             }}
           >
             Reset
-          </Button>
+          </Button> */}
         </Group>
 
-        <CustomColorSwatch
+        {/* <CustomColorSwatch
           value={currentStyles?.primaryColor}
           onChange={(e) => {
             setCurrentstyles("input", {
@@ -43,7 +68,7 @@ function InputStyles({
               primaryColor: e,
             });
           }}
-        />
+        /> */}
       </Stack>
     </>
   );

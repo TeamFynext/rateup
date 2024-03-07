@@ -67,17 +67,21 @@ export default function WelcomePageThemeView({
             unsplashImage?.[mobileOrDesktop],
           )}
         >
-          <ActionIcon
-            variant="default"
-            size="md"
-            radius="lg"
-            onClick={(e) => {
-              e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-            }}
-            className={classes.actionIcon}
-          >
-            <IconEdit style={{ width: "70%", height: "70%" }} />
-          </ActionIcon>
+          <Tooltip label={"Edit Background"}>
+            <ActionIcon
+              variant="default"
+              size="md"
+              radius="lg"
+              onClick={(e) => {
+                e.stopPropagation(),
+                  setSelectedType(SelectedItemEnum.BACKGROUND);
+              }}
+              className={classes.actionIcon}
+            >
+              <IconEdit style={{ width: "70%", height: "70%" }} />
+            </ActionIcon>
+          </Tooltip>
+
           <Flex
             justify={"center"}
             align={"center"}

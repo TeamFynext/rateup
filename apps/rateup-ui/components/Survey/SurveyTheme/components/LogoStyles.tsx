@@ -67,7 +67,7 @@ function LogoStyles({
         aspect={4 / 3}
       />
       <Stack align="center" w={"100%"}>
-        <Divider label="Styles" variant="dashed" w={"100%"} />
+        {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group wrap="nowrap" gap="xs" w={"100%"}>
           <NumberInput
             min={10}
