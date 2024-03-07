@@ -103,6 +103,7 @@ export async function flowRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $waFlow("byDbFlowIdParams"),
+        body: $waFlow("cloneFlowSchema"),
       },
     },
     cloneFlowHandler,

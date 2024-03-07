@@ -31,6 +31,10 @@ const updateFlowInput = z.object({
   logicJumps: z.any().optional(),
   templateMessage: z.custom<WaFlowTemplateMessage>().optional(),
 });
+
+const cloneFlowSchema = z.object({
+  teamId: z.string().uuid(),
+});
 export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
   {
     sourceQuery,
@@ -39,6 +43,7 @@ export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
     createFlowInput,
     byDbFlowIdParams,
     updateFlowInput,
+    cloneFlowSchema,
   },
   {
     $id: "waFlow",
@@ -51,3 +56,4 @@ export type ImportFlowsBody = z.infer<typeof importFlowsBody>;
 export type CreateFlowInput = z.infer<typeof createFlowInput>;
 export type ByDbFlowIdParams = z.infer<typeof byDbFlowIdParams>;
 export type UpdateFlowInput = z.infer<typeof updateFlowInput>;
+export type CloneFlowBody = z.infer<typeof cloneFlowSchema>;
