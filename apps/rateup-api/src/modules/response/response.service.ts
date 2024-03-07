@@ -11,11 +11,19 @@ import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
 import xlsx from "node-xlsx";
+import { autoGenerateTicket } from "../ticket/ticket.service";
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
     where: {
       surveyTeamMapId,
+    },
+    include: {
+      Ticket: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
   return responses;
@@ -59,6 +67,11 @@ export async function getAllResponses(
           responses: true,
           createdAt: true,
           encryptedResponses: true,
+          Ticket: {
+            select: {
+              id: true,
+            },
+          },
         },
       },
     },
@@ -216,7 +229,10 @@ export async function deleteResponse(id: string) {
   return deleteResponse;
 }
 
-export async function createResponse(input: CreateResponseInput) {
+export async function createResponse(
+  input: CreateResponseInput,
+  shouldRaiseTicket = false,
+) {
   const surveyResponse = await prisma.surveyResponse.create({
     data: {
       ...input,
@@ -238,6 +254,14 @@ export async function createResponse(input: CreateResponseInput) {
       },
     },
   });
+
+  if (shouldRaiseTicket && input?.responses?.length > 0) {
+    //generate ticket
+    let generatedTicket = await autoGenerateTicket(
+      surveyResponse?.surveyTeamMap?.teamId,
+      surveyResponse.id,
+    );
+  }
 
   return surveyResponse;
 }

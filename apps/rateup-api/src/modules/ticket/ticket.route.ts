@@ -3,6 +3,7 @@ import { $TicketRef } from "./ticket.schema";
 import {
   createCommentHandler,
   createTicketHandler,
+  deleteSingleTicketHandler,
   getAllTicketsByUserHandler,
   getSingleTicketHandler,
   updateStatusHandler,
@@ -43,6 +44,17 @@ export async function ticketRoutes(server: FastifyInstance) {
       },
     },
     getSingleTicketHandler,
+  );
+
+  server.delete(
+    "/:id",
+    {
+      preHandler: [verifyTicketAccess, checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: $TicketRef("idParamsSchema"),
+      },
+    },
+    deleteSingleTicketHandler,
   );
 
   server.put(

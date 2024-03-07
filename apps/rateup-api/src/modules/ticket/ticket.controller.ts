@@ -9,6 +9,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createComment,
   createTicket,
+  deleteTicketById,
   getAllTicketsByUser,
   getSingleTicket,
   updateTicket,
@@ -48,7 +49,7 @@ export async function getAllTicketsByUserHandler(
     const userId = session.getUserId();
 
     const tickets = await getAllTicketsByUser(userId);
-    if (!tickets || tickets.length === 0) {
+    if (!tickets) {
       reply.code(200).send({ message: "No tickets found" });
     } else {
       reply.code(200).send(tickets);
@@ -67,6 +68,21 @@ export async function getSingleTicketHandler(
   try {
     const ticket = await getSingleTicket(request.params.id);
     reply.code(200).send(ticket);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ message: e.message });
+  }
+}
+
+export async function deleteSingleTicketHandler(
+  request: FastifyRequest<{
+    Params: IdParamsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const ticket = await deleteTicketById(request.params.id);
+    reply.code(200).send("Ticket deleted Successfully");
   } catch (e) {
     console.error(e);
     reply.code(500).send({ message: e.message });

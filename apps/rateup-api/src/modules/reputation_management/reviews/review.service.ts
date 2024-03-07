@@ -14,6 +14,11 @@ export async function getReviewsByTeamId(teamId: string) {
       review: true,
       rating: true,
       platform: true,
+      Ticket: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
   return reviews;
@@ -31,6 +36,11 @@ export async function getReviewsWithAnalysis(teamId: string) {
       review: true,
       rating: true,
       platform: true,
+      Ticket: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
   return reviews;

@@ -87,6 +87,16 @@ const questionCore = {
       }),
     ])
     .optional(),
+  ticketIssue: z
+    .union([
+      z.null(),
+      z.object({
+        minRating: z.number().optional(),
+        minOpinion: z.number().optional(),
+        reqOptions: z.array(z.string()).optional(),
+      }),
+    ])
+    .optional(),
   logic: z.array(logicJumpSchema).optional(),
   validationRules: z.union([z.null(), validationRulesSchema]).optional(),
   tnc: z
@@ -136,6 +146,16 @@ const updateQuestionRequestSchema = z.object({
   type: z.never().optional(),
   logic: z.any().optional(), //TODO
   googleReview: z
+    .union([
+      z.null(),
+      z.object({
+        minRating: z.number().optional(),
+        minOpinion: z.number().optional(),
+        reqOptions: z.array(z.string()).optional(),
+      }),
+    ])
+    .optional(),
+  ticketIssue: z
     .union([
       z.null(),
       z.object({
