@@ -169,6 +169,7 @@ const questionIcons = {
   [QuestionType.PCQ]: IconAdjustmentsQuestion,
   [QuestionType.Contact]: IconAddressBook,
   [QuestionType.TnC]: IconCheckbox,
+  [QuestionType.InfoMessage]: IconMailFilled,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.textBody]: IconTextSize,

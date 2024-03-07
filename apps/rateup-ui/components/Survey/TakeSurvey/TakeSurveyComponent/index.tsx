@@ -294,10 +294,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
           setIsReviewPage(true)
         : fromShortUrl
-          ? router.push(`/ws/${router.query.shortId}/end`)
-          : router.push(
-              `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}`,
-            );
+        ? router.push(`/ws/${router.query.shortId}/end`)
+        : router.push(`${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}`);
     });
   };
 
@@ -749,6 +747,8 @@ function getQuestionForm(type, selectedQ) {
       return (
         <TermsNConditionsForm key={selectedQ?.id} tncData={selectedQ?.tnc} />
       );
+    case Q.InfoMessage:
+      return <></>;
     default:
       return <div>not implemented</div>;
   }

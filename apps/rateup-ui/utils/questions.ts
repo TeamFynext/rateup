@@ -70,6 +70,9 @@ export const getInitialQuestionValues = (
   languages.forEach((lang) => {
     emptyText[lang] = "";
   });
+
+  const required = question.type !== QuestionType.InfoMessage;
+
   return {
     title: { ...emptyText, ...question?.title },
     description: { ...emptyText, ...question?.description },
@@ -77,7 +80,7 @@ export const getInitialQuestionValues = (
       type === SurveyType.WaFlow
         ? { ...emptyText, ...question?.label }
         : undefined,
-    required: question?.required,
+    required,
     enableNpsAnalytics: question?.enableNpsAnalytics,
     type: question?.type,
     choices: question?.choices,

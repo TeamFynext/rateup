@@ -51,6 +51,7 @@ export const OtherQuestions = [
   QuestionType.DDMS,
   QuestionType.PCQ,
   QuestionType.TnC,
+  QuestionType.InfoMessage,
 ];
 
 export const WaOtherQuestions = [

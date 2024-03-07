@@ -20,6 +20,7 @@ import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForm
 import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQForm";
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
 import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
+import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/InfoMessageForm";
 
 const QuestionTypePreview = ({ type, choices, features, tnc }) => {
   switch (type) {
@@ -65,6 +66,8 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       return <PCQForm previewChoices={choices} />;
     case Q.Contact:
       return <ContactForm features={features} />;
+    case Q.InfoMessage:
+      return <InfoMessage />;
     case Q.TnC:
       return <TermsNConditionsForm tncData={tnc} />;
     default:

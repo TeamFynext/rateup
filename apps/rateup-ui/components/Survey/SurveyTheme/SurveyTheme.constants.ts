@@ -97,4 +97,5 @@ export const questionTypeEnumArray = [
   QuestionType.CustomNPS,
   QuestionType.PCQ,
   QuestionType.TnC,
+  QuestionType.InfoMessage,
 ];

@@ -187,22 +187,28 @@ export function QuestionDetailedView({
                 variant="unstyled"
                 autosize
                 maxRows={3}
-                placeholder="Enter question title here *"
+                placeholder={
+                  question.type !== QuestionType.InfoMessage
+                    ? "Enter question title here *"
+                    : "Enter the Message here"
+                }
                 {...form.getInputProps(`title.${selectedLanguage}`)}
                 value={form.values.title[selectedLanguage]}
               />
-              <Textarea
-                variant="unstyled"
-                placeholder="Enter question description here"
-                {...form.getInputProps(`description.${selectedLanguage}`)}
-                value={form.values.description[selectedLanguage]}
-                styles={{
-                  input: {
-                    fontSize: "1.1rem",
-                    fontWeight: 400, // set custom font size for this TextInput
-                  },
-                }}
-              />
+              {question.type !== QuestionType.InfoMessage && (
+                <Textarea
+                  variant="unstyled"
+                  placeholder="Enter question description here"
+                  {...form.getInputProps(`description.${selectedLanguage}`)}
+                  value={form.values.description[selectedLanguage]}
+                  styles={{
+                    input: {
+                      fontSize: "1.1rem",
+                      fontWeight: 400, // set custom font size for this TextInput
+                    },
+                  }}
+                />
+              )}
               <ExtraProps form={form} question={question} />
             </Stack>
             <LanguageCompletionView
@@ -247,6 +253,7 @@ export function QuestionDetailedView({
               fw={600}
               mr={!NPSQuestions.includes(question?.type) && "100px"}
               {...form.getInputProps("required", { type: "checkbox" })}
+              disabled={question.type === QuestionType.InfoMessage}
             />
             {NPSQuestions.includes(question?.type) && (
               <Checkbox
@@ -413,6 +420,7 @@ function ExtraProps({ form, question }: ExtraPropsProps) {
       return <ContactExtraProps form={form} />;
     case QuestionType.TnC:
       return <TncExtraProps form={form} />;
+    case QuestionType.InfoMessage:
     default:
       return null;
   }
