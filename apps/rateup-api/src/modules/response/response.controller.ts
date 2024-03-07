@@ -129,11 +129,10 @@ export async function createResponseHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const data = request.body;
-  console.log(data);
+  const { shouldRaiseTicket, ...data } = request.body;
 
   try {
-    const response = await createResponse(data);
+    const response = await createResponse(data, shouldRaiseTicket);
     reply.code(201).send(response);
     const { surveyTeamMapId, responses, language, createdAt } = response;
     await saveResponseToGoogleSheet({

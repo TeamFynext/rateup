@@ -1,4 +1,4 @@
-import { TicketStatus, TicketType } from "@prisma/client";
+import { TicketPriority, TicketStatus, TicketType } from "@prisma/client";
 import prisma from "../../utils/prisma";
 import {
   CreateCommentInput,
@@ -6,6 +6,7 @@ import {
   UpdateStatusInput,
   UpdateTicketInput,
 } from "./ticket.schema";
+import { Role } from "../../utils/enums";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -59,7 +60,7 @@ export async function createTicket(
                 id: teamId,
               },
             },
-            deadline: new Date(deadline) || null,
+            deadline: deadline ? new Date(deadline) : null,
             assignedTo: {
               connect: {
                 id: assignedToId,
@@ -200,6 +201,20 @@ export async function getSingleTicket(ticketId: string) {
   }
 }
 
+export async function deleteTicketById(ticketId: string) {
+  try {
+    const ticket = await prisma.ticket.delete({
+      where: {
+        id: ticketId,
+      },
+    });
+
+    return ticket;
+  } catch (error) {
+    throw new Error("Failed to delete ticket");
+  }
+}
+
 export async function createComment(input: CreateCommentInput) {
   const { ticketId, createdBy, msg } = input;
 
@@ -247,7 +262,7 @@ export async function updateTicketStatus(
     let ticketData = {
       ticketId: updatedTicket.id,
       createdBy: userId,
-      msg: `Note: Updated the Ticket Status.`,
+      msg: `Note: Updated the Ticket Status to ${input.status}.`,
     };
     createComment(ticketData);
   }
@@ -281,4 +296,79 @@ export async function updateTicket(
   }
 
   return updatedTicket;
+}
+
+//Autogenerate ticket
+export async function autoGenerateTicket(
+  teamId: string,
+  surveyResponseId: string,
+) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    include: {
+      members: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  let teamMembers = team?.members;
+
+  const memberList = [];
+
+  for (const member of teamMembers) {
+    const orgMember = await prisma.orgMember.findFirst({
+      where: {
+        userId: member.userId,
+        orgId: team.orgId,
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        role: true,
+      },
+    });
+
+    memberList.push({
+      userId: orgMember.user.id,
+      name: orgMember.user.name,
+      role: orgMember.role,
+    });
+  }
+
+  const createdBy = memberList.find(
+    (member) => member.role === Role.SUPER_ADMIN,
+  )?.userId;
+
+  const assignedTo =
+    memberList.find((member) => member.role === Role.ADMIN)?.userId ||
+    memberList.find(
+      (member) =>
+        member.role === Role.SUPER_ADMIN && member.userId !== createdBy.id,
+    )?.userId ||
+    createdBy;
+
+  const ticketData = {
+    title: "Response Ticket (Auto Generated)",
+    priority: TicketPriority.LOW,
+    teamId: teamId,
+    // deadline: null,
+    assignedToId: assignedTo,
+    reviewId: null,
+    surveyResponseId: surveyResponseId,
+    firstComment:
+      "This ticket is raised automatically based on the survey response",
+  };
+
+  let createdNewTicket = await createTicket(ticketData, createdBy);
+
+  return createdNewTicket;
 }

@@ -25,6 +25,7 @@ const responseCore = {
       .default(undefined),
   }),
   encryptedResponses: z.string().optional(),
+  shouldRaiseTicket: z.boolean().optional(),
 };
 
 const createResponseInputSchema = z.object({

@@ -26,6 +26,10 @@ import {
 } from "../whatsappSurvey/wasurvey.service";
 import { validateLogic } from "../../question/question.utils";
 import { createCTAButtonMessage } from "../whatsappSurvey/wasurvey.utils";
+import {
+  getShortUrlId,
+  shortIdUniqueConstraintErrHandler,
+} from "../../../utils/commnUtils";
 
 /**
  * Get flows from whatsapp
@@ -165,6 +169,93 @@ export async function updateFlowIdAndStatusInDb(
     where: { id: surveyId },
     data: { isPublished: false },
   });
+}
+
+export async function cloneFlow(
+  previousFlow: any,
+  flowId: string,
+  userId: string,
+  teamId: string,
+) {
+  const surveyId = previousFlow.surveyId;
+  const survey = await prisma.survey.findUnique({
+    where: {
+      id: surveyId,
+    },
+  });
+
+  if (!survey) return "Survey not found to duplicate";
+  const { id, ...surveyWithoutId } = survey;
+
+  const existingSurveys = await prisma.survey.findMany({
+    where: {
+      AND: [
+        {
+          title: {
+            startsWith: survey.title,
+          },
+        },
+      ],
+    },
+    orderBy: {
+      title: "asc",
+    },
+  });
+
+  let maxCopyNumber = 0;
+
+  existingSurveys.forEach((existingSurvey) => {
+    const suffix = existingSurvey.title.slice(survey.title.length);
+    if (suffix.startsWith(" Copy ")) {
+      const copyNumberStr = suffix.slice(" Copy ".length);
+      const copyNumber = parseInt(copyNumberStr, 10);
+      console.log(
+        `Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`,
+      );
+      if (!isNaN(copyNumber)) {
+        maxCopyNumber = Math.max(maxCopyNumber, copyNumber);
+        console.log("Found a valid copy number: ", maxCopyNumber);
+      }
+    }
+  });
+  const title = `${survey.title} Copy ${maxCopyNumber + 1}`;
+  const clonedSurvey = {
+    ...surveyWithoutId,
+    createdBy: userId,
+    createdAt: new Date(),
+    updatedAt: null,
+    title: title,
+    isPublished: false,
+    teams: {
+      create: {
+        teamId,
+        shortUrlId: getShortUrlId(),
+      },
+    },
+  };
+  const createClonedSurvey = async () => {
+    const cloned = await prisma.survey.create({
+      data: clonedSurvey,
+    });
+    return cloned;
+  };
+  const newClonedSurvey =
+    await shortIdUniqueConstraintErrHandler(createClonedSurvey);
+  const { json, map, orgId, logicJumps, templateMessage } = previousFlow;
+  await prisma.waFlow.create({
+    data: {
+      flowId,
+      status: WaFlowStatus.DRAFT,
+      json,
+      map,
+      orgId,
+      logicJumps,
+      templateMessage,
+      name: title,
+      surveyId: newClonedSurvey.id,
+    },
+  });
+  return newClonedSurvey;
 }
 
 export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
