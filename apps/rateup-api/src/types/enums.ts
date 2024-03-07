@@ -21,6 +21,7 @@ export enum QuestionType {
   EmailPhone = "Email & Phone",
   Text = "Text",
   TextArea = "TextArea",
+  InfoMessage = "InfoMessage",
   Number = "Number",
   DateTime = "DateTime",
   CustomNPS = "Custom NPS",
