@@ -43,9 +43,11 @@ export function ItemDetailedViewModal({
   const imageSlides = item?.images?.map((url: string) => (
     <Carousel.Slide key={url}>
       <CreditsCard
-        enableCredits={
-          item?.unsplashImage?.find((data) => data === url)?.length > 0
-        }
+        // enableCredits={
+        //   item?.unsplashImage?.find((data) => data === url)?.length > 0
+        // }
+        // disabled for now
+        enableCredits={false}
         url={url}
       >
         <Image
@@ -54,6 +56,7 @@ export function ItemDetailedViewModal({
             true,
             item?.unsplashImage?.find((data) => data === url)?.length > 0,
           )}
+          alt="menu item image"
         />
       </CreditsCard>
     </Carousel.Slide>

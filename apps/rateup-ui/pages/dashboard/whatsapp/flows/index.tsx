@@ -9,29 +9,36 @@ import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 import { SyncFlowsButton } from "../../../../components/whatsapp/flows/SyncFlows";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
+import { TeamSelector } from "../../../../components/input/TeamSelector";
+import { useState } from "react";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
 
 function Flows() {
   const [
     isCreateFlowModalOpened,
     { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
   ] = useDisclosure(false);
-  let { data: flows, isLoading } = useWaFlowsFromDb();
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
-    error: errorTeamsDataUser,
-  } = useTeamsByUser() as UseTeamsByUserResult;
+  let { data: flows, isPending } = useWaFlowsFromDb();
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const { isPending: isPendingTeamsUser, data: teamsDataUser } =
+    useTeamsByUser();
 
   let teamsData = teamsDataUser?.data;
-
+  if (isPendingTeamsUser || isPending) return <RateupLoader h={"100dvh"} />;
   let componentToBeRendered = null;
   if (flows && flows.length) {
-    flows = flows.sort(
+    let filteredMenus =
+      selectedTeamId === "all"
+        ? flows
+        : flows?.filter((flow) =>
+            flow.survey.teams.some((team) => team.teamId === selectedTeamId),
+          );
+    filteredMenus = filteredMenus.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     componentToBeRendered = (
-      <FlowCardsList flows={flows} teamsData={teamsData} />
+      <FlowCardsList flows={filteredMenus} teamsData={teamsData} />
     );
   } else if (flows && !flows.length) {
     componentToBeRendered = <NothingFound text="No Flows Available" />;
@@ -48,12 +55,20 @@ function Flows() {
             onClick={handleCreateFlowModalOpen}
           />
         </Group>
-        <SyncFlowsButton />
+        <Group>
+          <TeamSelector
+            value={selectedTeamId}
+            onChange={(teamId) => setSelectedTeamId(teamId)}
+            enableAll={true}
+            allowDeselect={false}
+          />
+          <SyncFlowsButton />
+        </Group>
       </Group>
 
       <Box className={styles["flows-list-div"]}>
         <LoadingOverlay
-          visible={isLoading || isLoadingTeamsUser}
+          visible={isPending || isPendingTeamsUser}
           loaderProps={{ type: "bars" }}
         />
         {componentToBeRendered}

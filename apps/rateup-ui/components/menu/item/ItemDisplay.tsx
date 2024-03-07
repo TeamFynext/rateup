@@ -53,10 +53,12 @@ export function ItemDisplay({
             }}
           >
             <CreditsCard
-              enableCredits={
-                item?.unsplashImage?.find((data) => data === item?.images[0])
-                  ?.length > 0
-              }
+              // enableCredits={
+              //   item?.unsplashImage?.find((data) => data === item?.images[0])
+              //     ?.length > 0
+              // }
+              // disabled for now
+              enableCredits={false}
               url={item?.images[0]}
               sx={{
                 gridArea: "1 / 1 / 4 / 2",
