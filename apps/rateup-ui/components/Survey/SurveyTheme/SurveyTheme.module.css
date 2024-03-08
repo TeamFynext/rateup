@@ -28,7 +28,9 @@
 .theme-preview-container {
   position: relative;
   flex: 0.73 0 0;
-  box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.09);
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
   border-radius: 1rem;
 }
 
@@ -43,7 +45,7 @@
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  z-index: 301;
+  z-index: 205;
 }
 
 .welcome-page-switch {
@@ -57,15 +59,16 @@
 
 .switch-body label {
   cursor: pointer;
+  border: none;
 }
 
 .welcome-page-switch .switched-on-track {
-  background-color: rgb(112, 0, 0);
+  background-color: #ff0000;
   cursor: pointer;
 }
 
 .welcome-page-switch .switched-off-track {
-  background-color: rgb(0, 98, 0);
+  background-color: #40c057;
   cursor: pointer;
 }
 
@@ -78,7 +81,9 @@
 .styles-component-container {
   position: relative;
   flex: 0.27 0 0;
-  box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.09);
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
   border-radius: 1rem;
 }
 

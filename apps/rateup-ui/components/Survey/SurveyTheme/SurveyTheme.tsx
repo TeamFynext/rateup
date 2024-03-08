@@ -132,7 +132,7 @@ function SurveyTheme({ survey }) {
                     body: styles["switch-body"],
                   }}
                   size="md"
-                  label={`${isWelcomePageEnabled ? "Disable: " : "Enable: "}`}
+                  label={`${isWelcomePageEnabled ? "Enabled " : "Disabled "}`}
                   checked={isWelcomePageEnabled}
                   onChange={handleWelcomePageSwitchChange}
                   labelPosition="left"

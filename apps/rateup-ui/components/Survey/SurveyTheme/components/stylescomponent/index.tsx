@@ -230,7 +230,7 @@ function StylesComponent({
                             h={"fit-content"}
                             fw={400}
                             size="md"
-                            label={`${confettiEnabled ? "Disable Confetti:" : "Enable Confetti:"}`}
+                            label={`${confettiEnabled ? "Confetti Enabled:" : "Confetti Disabled:"}`}
                             checked={confettiEnabled}
                             color="var(--tertiary-color)"
                             onChange={() =>

@@ -4,10 +4,10 @@ import {
   ActionIcon,
   Box,
   Button,
-  Center,
   FileButton,
   Group,
   Image,
+  LoadingOverlay,
   Stack,
   Text,
 } from "@mantine/core";
@@ -23,6 +23,9 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     isPreview ? null : response || null,
   );
+
+  const [isUploading, setIsUploading] = useState(false);
+
   const resetRef = useRef<() => void>(null);
   const [selectedImage, setSelectedImage] = useState({
     url: "",
@@ -36,7 +39,9 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   useEffect(() => {
     const uploadAndUpdate = async () => {
       if (file) {
+        setIsUploading(true);
         const fileKey = await uploadFile(file);
+        setIsUploading(false);
         updateResponse(fileKey);
       }
     };
@@ -75,6 +80,10 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     if (!cropedImage) return;
     setFile(cropedImage);
   };
+
+  const isImageSelected = previewUrl || response?.length > 0;
+  const imageContainerWidthAndHeight = isImageSelected ? 150 : 0;
+
   return (
     <Stack>
       <ImageCropModal
@@ -105,40 +114,61 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
         </FileButton>
       </Box>
 
-      <Stack mt="lg">
-        {(file || response?.length > 0) && (
-          <Group justify="flex-end">
-            <ActionIcon
-              onClick={removeImg}
-              variant="filled"
-              color="gray"
-              radius="lg"
+      <Box
+        className={"image-remove-icon-picked-file-text-container"}
+        style={{ position: "relative" }}
+      >
+        <Stack align="center">
+          {(file || response?.length > 0) && (
+            <Group
+              justify="flex-end"
+              style={{ position: "absolute", right: 0, top: 0 }}
             >
-              <IconX style={{ width: "70%", height: "70%" }} stroke={1.5} />
-            </ActionIcon>
-          </Group>
-        )}
-
-        <Center>
-          {(previewUrl || response?.length > 0) && (
-            <Image
-              src={
-                previewUrl ||
-                `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`
-              }
-              alt="Preview"
-              style={{ maxWidth: "100px", height: "auto", maxHeight: "100px" }}
-            />
+              <ActionIcon
+                onClick={removeImg}
+                variant="filled"
+                color="gray"
+                radius="lg"
+              >
+                <IconX style={{ width: "70%", height: "70%" }} stroke={1.5} />
+              </ActionIcon>
+            </Group>
           )}
-        </Center>
 
-        {(file || response?.length > 0) && (
-          <Text size="sm" style={{ textAlign: "center" }} mt="sm">
-            Picked file:{" "}
-            {file?.name || getFileName(response, isPreview || false)}
-          </Text>
-        )}
-      </Stack>
+          <Box
+            className="image-container"
+            style={{
+              position: "relative",
+              width: imageContainerWidthAndHeight,
+              height: imageContainerWidthAndHeight,
+            }}
+          >
+            <LoadingOverlay
+              visible={isUploading}
+              zIndex={1000}
+              overlayProps={{ radius: "sm", blur: 2 }}
+            />
+            {isImageSelected && (
+              <Image
+                fit="contain"
+                src={
+                  previewUrl ||
+                  `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`
+                }
+                alt="Preview"
+                style={{ width: "100%", height: "100%" }}
+              />
+            )}
+          </Box>
+
+          {isImageSelected && (
+            <Text size="sm" style={{ textAlign: "center" }}>
+              Picked file:{" "}
+              {file?.name || getFileName(response, isPreview || false)}
+            </Text>
+          )}
+        </Stack>
+      </Box>
     </Stack>
   );
 }

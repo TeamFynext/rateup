@@ -2,14 +2,13 @@
   position: fixed;
   bottom: 0;
   right: 3rem;
-  z-index: 500;
+  z-index: 205;
 }
 
 .report-bug-container {
   position: absolute;
   right: 15px;
   bottom: 15px;
-  z-index: 400;
 }
 
 .report-bug-button {
@@ -17,6 +16,10 @@
   box-shadow:
     rgba(0, 0, 0, 0.05) 0px 1px 0px,
     rgba(0, 0, 0, 0.11) 0px 0px 8px;
+}
+
+.report-bug-button:hover {
+  background-color: rgb(236, 236, 236);
 }
 
 .report-bug-button svg path {
