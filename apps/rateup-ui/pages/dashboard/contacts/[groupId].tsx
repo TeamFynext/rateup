@@ -21,7 +21,7 @@ import {
 } from "../../../components/Button/RateupButtons";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import AddCustomerModal from "./AddCustomerModal";
+import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import {
@@ -31,10 +31,10 @@ import {
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { modals } from "@mantine/modals";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import CreateGroupModal from "./CreateGroupModal";
+import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
 import { useTeamsByUser } from "../../../backend/team/team.query";
-import GroupParticipant from "./GroupParticipant";
-import RemovePartcipantModal from "./RemovePartcipantModal";
+import GroupParticipant from "../../../components/Contacts/GroupParticipant";
+import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
 
 export default function () {
   const [opened, { open, close }] = useDisclosure(false);
@@ -256,13 +256,13 @@ export default function () {
               groupId={groupDetails?.id}
               close={close}
               teamId={groupDetails?.teamId}
-              existingCustomers={groupDetails?.contacts?.map((c) => c.id)}
+              existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
             ></AddCustomerModal>
           </FormModalLayout>
           <FormModalLayout
             centered
             onClose={closeEditCustomer}
-            title={`Remove customer - ${groupDetails?.name}`}
+            title="Remove contacts"
             size="lg"
             opened={openedEditCustomer}
           >

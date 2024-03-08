@@ -19,7 +19,7 @@ import { IconPlus, IconRefresh, IconSearch } from "@tabler/icons-react";
 import styles from "./campaign.module.css";
 import CampaignCard from "../../../components/Card/CampaignCard";
 import { useDisclosure } from "@mantine/hooks";
-import CreateCampaignModal from "./CreateCampaignModal";
+import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
 import {
   useCampaignData,
   useCampaignDataByTeam,

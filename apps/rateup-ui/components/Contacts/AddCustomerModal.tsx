@@ -14,28 +14,28 @@ import {
 import {
   RateupButtonSecondary,
   RateupButtonBlue,
-} from "../../../components/Button/RateupButtons";
+} from "../Button/RateupButtons";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
-} from "../../../backend/campaign/contactGroup/contactGroup.query";
-import { useCampaignContactsByTeamId } from "../../../backend/campaign/contacts/contacts.query";
-import { contactAddType, importMethod } from "../../../utils/enums";
-import { ContainedFileInput } from "../../../components/input/ContainedInput/ContainedInput";
+} from "../../backend/campaign/contactGroup/contactGroup.query";
+import { useCampaignContactsByTeamId } from "../../backend/campaign/contacts/contacts.query";
+import { contactAddType, importMethod } from "../../utils/enums";
+import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import { ImportContact } from "./CreateContactModal";
 import Papa from "papaparse";
-import { showErrorToast } from "../../../utils/notifications";
+import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, emailPattern } from "../../../utils/constants";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { SAVE_HOTKEY, emailPattern } from "../../utils/constants";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import styles from "./contacts.module.css";
+import styles from "./contact.module.css";
 
 export interface IAddCustomer {
   name: string;
@@ -44,7 +44,7 @@ export interface IAddCustomer {
   source?: string;
 }
 
-const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
+const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
   const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
   const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -112,13 +112,17 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
     },
   });
   const createNewContactMutation = useAddNewContactMutation(groupId);
-
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
+  const allContactIds = contactDataByTeamId?.data?.map(
+    (customer) => customer?.id,
+  );
+  const remainingContactIds = allContactIds?.filter(
+    (c) => !existingContactIds?.includes(c),
+  );
 
   useEffect(() => {
     form.values.contactType = contactType;
   }, [contactType]);
-
   useEffect(() => {
     if (!searchTerm.length && contactDataByTeamId?.data) {
       setFilteredCustomerList(contactDataByTeamId?.data);
@@ -137,7 +141,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
       }
     }
   }, [searchTerm, contactDataByTeamId?.data]);
-
   useEffect(() => {
     if (csvfile == null) return;
 
@@ -151,7 +154,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
       },
     });
   }, [csvfile]);
-
   const handleSubmit = () => {
     const validation = form.validate();
     if (validation.hasErrors) {
@@ -259,7 +261,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
       }
     }
   };
-
   const customStyle = {
     label: {
       fontWeight: "bold",
@@ -272,7 +273,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
       fontSize: "14px",
     },
   };
-
   const rows = filteredCustomerList?.map((contact) => (
     <Table.Tr
       key={contact?.id}
@@ -287,9 +287,9 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
           aria-label="Select row"
           checked={
             customerList?.includes(contact?.id) ||
-            existingCustomers?.includes(contact?.id)
+            existingContactIds?.includes(contact?.id)
           }
-          disabled={existingCustomers?.includes(contact?.id)}
+          disabled={existingContactIds?.includes(contact?.id)}
           onChange={(event) =>
             setCustomerList(
               event.currentTarget.checked
@@ -303,7 +303,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
       <Table.Td>{contact?.phone}</Table.Td>
     </Table.Tr>
   ));
-
   return (
     <Box p="0">
       <form
@@ -322,10 +321,10 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
               styles={customStyle}
             >
               <Group>
-                <Radio value={contactAddType.NEW} label="Add New Customer" />
+                <Radio value={contactAddType.NEW} label="Add New Contact" />
                 <Radio
                   value={contactAddType.EXISTING}
-                  label="Add Existing customer"
+                  label="Add Existing Contacts"
                 />
               </Group>
             </Radio.Group>
@@ -439,29 +438,29 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
                 <Checkbox
                   aria-label="select all"
                   label="Select All"
-                  checked={contactDataByTeamId?.data?.every((customer) =>
-                    customerList.includes(customer?.id),
+                  checked={remainingContactIds?.every((id) =>
+                    customerList.includes(id),
                   )}
                   onChange={(event) => {
-                    const allCustomers = contactDataByTeamId?.data?.map(
-                      (customer) => customer?.id,
-                    );
-                    const remainingCustomers = allCustomers.filter(
-                      (c) => !existingCustomers?.includes(c),
-                    );
+                    // const allCustomers = contactDataByTeamId?.data?.map(
+                    //   (customer) => customer?.id,
+                    // );
+                    // const remainingCustomers = allCustomers.filter(
+                    //   (c) => !existingContactIds?.includes(c),
+                    // );
                     setCustomerList(
-                      event.currentTarget.checked ? remainingCustomers : [],
+                      event.currentTarget.checked ? remainingContactIds : [],
                     );
                   }}
                   disabled={contactDataByTeamId?.data?.every((customer) =>
-                    existingCustomers.includes(customer?.id),
+                    existingContactIds.includes(customer?.id),
                   )}
                 />
                 <TextInput
                   leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
                   radius="xl"
                   size="sm"
-                  placeholder={"Search Customer"}
+                  placeholder={"Search Contact"}
                   rightSectionWidth={60}
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.currentTarget.value)}
@@ -474,7 +473,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
                     <Table.Thead>
                       <Table.Tr>
                         <Table.Th />
-                        <Table.Th>Customer Name</Table.Th>
+                        <Table.Th>Name</Table.Th>
                         <Table.Th>Phone Number</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
@@ -496,7 +495,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingCustomers }) => {
               disabled={
                 isUpload ||
                 contactDataByTeamId?.data?.every((customer) =>
-                  existingCustomers.includes(customer?.id),
+                  existingContactIds.includes(customer?.id),
                 )
               }
             ></RateupButtonBlue>

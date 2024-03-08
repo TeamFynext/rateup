@@ -22,7 +22,7 @@ import { useEffect, useState } from "react";
 import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
 import style from "./campaign.module.css";
 import { useDisclosure } from "@mantine/hooks";
-import AddParticipantModal from "./AddParticipantModal";
+import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import { useRouter } from "next/router";
 import {
   useCampaignById,
@@ -32,10 +32,10 @@ import {
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { renderBadge } from "../../../components/Card/CampaignCard";
 import { CampaignStatus, SurveyType } from "../../../types/enums";
-import CreateCampaignModal from "./CreateCampaignModal";
+import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import dayjs from "dayjs";
-import CampaignParticipantCard from "./CampaignParticipantCard";
+import CampaignParticipantCard from "../../../components/Campaign/CampaignParticipantCard";
 
 export default () => {
   const [searchText, setSearchText] = useState("");
@@ -235,7 +235,7 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
               <Text c="dimmed">
                 {campaign?.startedAt
                   ? `Started at ${dayjs(campaign?.startedAt).format(
-                      "DD/MM/YYYY HH:MM a",
+                      "DD/MM/YYYY hh:mm A",
                     )}`
                   : null}
               </Text>

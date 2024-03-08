@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContact,
   deleteContact,
+  deleteManyContacts,
   editContact,
   getContactListByTeamId,
   getContactsList,
@@ -112,6 +113,31 @@ export const useEditContactMutation = (groupId) => {
       showErrorToast(
         `Error updating the contact: ${error?.response?.data?.error}`,
         "contact-update",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useDeleteManyContactsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteManyContacts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
+      });
+      showSuccessToast(
+        "Contact Deleted successfully",
+        "contact-delete",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error deleting contact: ${error?.response?.data?.error}`,
+        "contact-delete",
         <IconX />,
       );
     },

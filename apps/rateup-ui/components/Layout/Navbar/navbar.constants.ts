@@ -129,6 +129,21 @@ export function getNavTopData(subscription?: Subscription) {
                 label: "Flows",
                 href: "/dashboard/whatsapp/flows",
               },
+              ...(hiddenModules.includes("campaign") ||
+              !hasFeature(sfpn.WhatsAppCampaign)
+                ? []
+                : [
+                    {
+                      Icon: IconSpeakerphone,
+                      label: "Campaign",
+                      href: "/dashboard/campaign",
+                    },
+                    {
+                      Icon: IconAddressBook,
+                      label: "Contacts",
+                      href: "/dashboard/contacts",
+                    },
+                  ]),
               {
                 Icon: IconSettings,
                 label: "Settings",
@@ -138,23 +153,6 @@ export function getNavTopData(subscription?: Subscription) {
           },
         ]
       : []),
-    ...(hasFeature(sfpn.Menu)
-      ? [{ Icon: IconClipboardList, label: "Menu", href: "/dashboard/menu" }]
-      : []),
-    ...(hiddenModules.includes("campaign") || !hasFeature(sfpn.WhatsAppCampaign)
-      ? []
-      : [
-          {
-            Icon: IconSpeakerphone,
-            label: "Campaign",
-            href: "/dashboard/campaign",
-          },
-          {
-            Icon: IconAddressBook,
-            label: "Contacts",
-            href: "/dashboard/contacts",
-          },
-        ]),
     ...(hiddenModules.includes("reputation_management") ||
     !hasFeature(sfpn.ReputationManagement)
       ? []
@@ -163,16 +161,6 @@ export function getNavTopData(subscription?: Subscription) {
             Icon: IconComet,
             label: "Reputation",
             href: "/dashboard/rm",
-          },
-        ]),
-    { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
-    ...(hiddenModules.includes("testimonial")
-      ? []
-      : [
-          {
-            Icon: IconMessageChatbot,
-            label: "Testimonial",
-            href: "/dashboard/testimonial",
           },
         ]),
     ...(hiddenModules.includes("tickets")
@@ -184,6 +172,25 @@ export function getNavTopData(subscription?: Subscription) {
             href: "/dashboard/tickets",
           },
         ]),
+    ...(hiddenModules.includes("testimonial")
+      ? []
+      : [
+          {
+            Icon: IconMessageChatbot,
+            label: "Testimonial",
+            href: "/dashboard/testimonial",
+          },
+        ]),
+    ...(hasFeature(sfpn.Menu)
+      ? [
+          {
+            Icon: IconClipboardList,
+            label: "Digital Menu",
+            href: "/dashboard/menu",
+          },
+        ]
+      : []),
+    { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
   ];
   return navTopData;
 }

@@ -13,17 +13,17 @@ import { isEmail, isNotEmpty, useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
+} from "../Button/RateupButtons";
 import { useEffect, useState } from "react";
-import { useEditContactMutation } from "../../../backend/campaign/contacts/contacts.query";
+import { useEditContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import { IconPlus } from "@tabler/icons-react";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, emailPattern } from "../../../utils/constants";
+import { SAVE_HOTKEY, emailPattern } from "../../utils/constants";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import styles from "./contacts.module.css";
+import styles from "./contact.module.css";
 
 const EditContactModal = ({ contact, closeEditModal, groupId }) => {
   const [isUpdating, setIsUpdating] = useState(false);

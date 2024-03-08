@@ -11,23 +11,20 @@ import {
 } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
-import { TeamSelector } from "../../../components/input/TeamSelector";
+import { TeamSelector } from "../input/TeamSelector";
 import { useEffect, useState } from "react";
 import {
   RateupButtonSecondary,
   RateupButtonBlue,
-} from "../../../components/Button/RateupButtons";
+} from "../Button/RateupButtons";
 import {
   useCreateContactGroupMutation,
   useEditContactGroupMutation,
-} from "../../../backend/campaign/contactGroup/contactGroup.query";
-import {
-  getFileUrlFromKey,
-  uploadFile,
-} from "../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../utils/notifications";
+} from "../../backend/campaign/contactGroup/contactGroup.query";
+import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
+import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
+import { SAVE_HOTKEY } from "../../utils/constants";
 
 interface GroupModalProps {
   groupClose: () => void;
@@ -143,7 +140,7 @@ const CreateGroupModal = ({
             size="md"
             radius={"md"}
           ></TextInput>
-          {!isEdit && (
+          {!isEdit ? (
             <Stack gap={0}>
               <Text>Select Team</Text>
               <TeamSelector
@@ -151,6 +148,8 @@ const CreateGroupModal = ({
                 onChange={(value) => setSelectedTeamId(value)}
               ></TeamSelector>
             </Stack>
+          ) : (
+            <Stack></Stack>
           )}
           <Stack gap={0}>
             <Text>Upload profile picture</Text>

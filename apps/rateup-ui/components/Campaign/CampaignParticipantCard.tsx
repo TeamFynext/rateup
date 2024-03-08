@@ -1,9 +1,9 @@
 import { Paper, Group, Stack, Title, Badge, Text, Menu } from "@mantine/core";
-import { renderBadge } from "../../../components/Card/CampaignCard";
+import { renderBadge } from "../Card/CampaignCard";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
-import { CampaignStatus } from "../../../types/enums";
-import { useRemoveCampaignParticipant } from "../../../backend/campaign/campaignParticipants/campaignParticipants.query";
+import { CampaignStatus } from "../../types/enums";
+import { useRemoveCampaignParticipant } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 
 const CampaignParticipantCard = ({ participant, campaign }) => {
   return (

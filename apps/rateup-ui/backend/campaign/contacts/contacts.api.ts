@@ -8,34 +8,43 @@ export interface ICreateContact {
   source?: string;
 }
 
+const CONTACT_BASE_URL = "/contact";
+
 export const getContactsList = async () => {
-  let contactsData: ContactsResponse = await axiosClient.get("/contact/");
+  let contactsData: ContactsResponse = await axiosClient.get(CONTACT_BASE_URL);
   return contactsData;
 };
 
 export const getContactListByTeamId = async (teamId: string) => {
   let contactsData: ContactsResponse = await axiosClient.get(
-    `/contact?teamId=${teamId}`,
+    `${CONTACT_BASE_URL}?teamId=${teamId}`,
   );
   return contactsData;
 };
 
 export const createContact = async (data: ICreateContact) => {
-  let res = await axiosClient.post("/contact/", data);
+  let res = await axiosClient.post(CONTACT_BASE_URL, data);
   return res;
 };
 
 export const importContacts = async (data) => {
-  let res = await axiosClient.post("/contact/importcontacts", data);
+  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcontacts`, data);
   return res;
 };
 
-export const deleteContact = (contactId: string) => {
-  let res = axiosClient.delete(`/contact/${contactId}`);
+export const deleteContact = async (contactId: string) => {
+  let res = await axiosClient.delete(`${CONTACT_BASE_URL}/${contactId}`);
+  return res;
+};
+
+export const deleteManyContacts = async (contactIds: string[]) => {
+  let res = await axiosClient.delete(CONTACT_BASE_URL, {
+    data: { contactIds },
+  });
   return res;
 };
 
 export const editContact = async ({ data, contactId }) => {
-  let res = await axiosClient.put(`/contact/${contactId}`, data);
+  let res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}`, data);
   return res;
 };

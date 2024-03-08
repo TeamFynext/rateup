@@ -11,30 +11,29 @@ import {
   Flex,
   Progress,
 } from "@mantine/core";
-import { TeamSelector } from "../../../components/input/TeamSelector";
+import { TeamSelector } from "../input/TeamSelector";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
+} from "../Button/RateupButtons";
 import {
   useCreateContactMutation,
   useImportContactMutation,
-} from "../../../backend/campaign/contacts/contacts.query";
-import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
-import { ContainedFileInput } from "../../../components/input/ContainedInput/ContainedInput";
+} from "../../backend/campaign/contacts/contacts.query";
+import { ICreateContact } from "../../backend/campaign/contacts/contacts.api";
+import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import Papa from "papaparse";
-import { importMethod } from "../../../utils/enums";
-import { showErrorToast } from "../../../utils/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { importMethod } from "../../utils/enums";
+import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, emailPattern } from "../../../utils/constants";
+import { SAVE_HOTKEY, emailPattern } from "../../utils/constants";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import styles from "./contacts.module.css";
+import styles from "./contact.module.css";
 
 export interface ImportContact {
   name: string;
@@ -43,7 +42,7 @@ export interface ImportContact {
 }
 
 const CreateContactModal = ({ contactClose, close }) => {
-  const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
+  const [contactType, setContactType] = useState<string[]>(["phone"]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
@@ -57,7 +56,7 @@ const CreateContactModal = ({ contactClose, close }) => {
       email: "",
       teamId: null,
       importMethod: importMethod.MANUAL,
-      contactType: ["phone", "email"],
+      contactType: ["phone"],
       countryCode: "91",
     },
     validate: {

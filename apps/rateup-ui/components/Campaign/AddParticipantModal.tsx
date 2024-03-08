@@ -13,13 +13,13 @@ import {
   Box,
 } from "@mantine/core";
 import { IconPlus, IconUser, IconUsers } from "@tabler/icons-react";
-import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
-import { useCampaignContactsByTeamId } from "../../../backend/campaign/contacts/contacts.query";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import { useCampaignContactsByTeamId } from "../../backend/campaign/contacts/contacts.query";
 import { useState } from "react";
-import { useContactGroupsByTeamId } from "../../../backend/campaign/contactGroup/contactGroup.query";
-import { useAddCampaignParticipants } from "../../../backend/campaign/campaignParticipants/campaignParticipants.query";
-import { showWarnToast } from "../../../utils/notifications";
-import { CampaignParticipantSource } from "../../../types/enums";
+import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/contactGroup.query";
+import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
+import { showWarnToast } from "../../utils/notifications";
+import { CampaignParticipantSource } from "../../types/enums";
 import { useListState } from "@mantine/hooks";
 
 const AddParticipantModal = ({ close, campaign }) => {

@@ -1,12 +1,13 @@
 import { Checkbox, Group, ScrollArea, Stack, Table } from "@mantine/core";
 import { useState } from "react";
-import { useRemoveContactsFromGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
+import { useRemoveContactsFromGroup } from "../../backend/campaign/contactGroup/contactGroup.query";
 import {
   RateupButtonSecondary,
   RateupButtonPrimary,
-} from "../../../components/Button/RateupButtons";
-import { SearchInput } from "../campaign";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+} from "../Button/RateupButtons";
+import { SearchInput } from "../../pages/dashboard/campaign";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import NothingFound from "../NothingFound/NothingFound";
 
 const RemovePartcipantModal = ({ customerList, groupId, close }) => {
   const [searchText, setSearchText] = useState("");
@@ -67,8 +68,8 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
         </Table.Td>
       </Table.Tr>
     );
-  return (
-    <>
+  return customerList?.length ? (
+    <Stack>
       <Stack gap={"md"} justify="center">
         <Group justify="space-between">
           <Checkbox
@@ -86,7 +87,7 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
             }
           />
           <SearchInput
-            placeholder={"Search customer"}
+            placeholder={"Search contact"}
             searchText={searchText}
             setSearchText={setSearchText}
             width={300}
@@ -99,7 +100,7 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th />
-                  <Table.Th>Customer Name</Table.Th>
+                  <Table.Th>Name</Table.Th>
                   <Table.Th>Phone Number</Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -115,7 +116,9 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
           onClick={handleRemoveCustomers}
         />
       </Group>
-    </>
+    </Stack>
+  ) : (
+    <NothingFound text="No Contacts Found" />
   );
 };
 

@@ -2,7 +2,7 @@ import { Center, Container, Group, Paper, Stack, Text } from "@mantine/core";
 import CreateContactModal from "./CreateContactModal";
 import { IconUser, IconUsersGroup } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import FormModalLayout from "../Modal/FormModalLayout";
 import CreateGroupModal from "./CreateGroupModal";
 
 const OpenCreateModal = ({ close }) => {
@@ -29,7 +29,7 @@ const OpenCreateModal = ({ close }) => {
                 fill="var(--tertiary-color)"
               ></IconUser>
             </Center>
-            <Text>Customer</Text>
+            <Text>Contact</Text>
           </Stack>
         </Paper>
         <Paper
@@ -56,7 +56,7 @@ const OpenCreateModal = ({ close }) => {
         centered
         opened={contactOpened}
         onClose={contactClose}
-        title="Create customer"
+        title="Create contact"
         size={"xl"}
       >
         <CreateContactModal

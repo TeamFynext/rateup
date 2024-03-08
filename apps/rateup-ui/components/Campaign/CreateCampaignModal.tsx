@@ -1,21 +1,19 @@
 import { Button, Flex, Group, SimpleGrid, Title } from "@mantine/core";
-import { TeamSelector } from "../../../components/input/TeamSelector";
+import { TeamSelector } from "../input/TeamSelector";
 import { isNotEmpty, useForm } from "@mantine/form";
 import {
   ContainedSelection,
   ContainedTextField,
-} from "../../../components/input/ContainedInput/ContainedInput";
-import { DateTimePicker } from "@mantine/dates";
-import style from "./campaign.module.css";
-import { CampaignStatus, CampaignType, SurveyType } from "../../../types/enums";
-import { useWaTemplates } from "../../../backend/whatsapp/whatsapp.query";
-import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
+} from "../input/ContainedInput/ContainedInput";
+import { CampaignStatus, CampaignType, SurveyType } from "../../types/enums";
+import { useWaTemplates } from "../../backend/whatsapp/whatsapp.query";
+import { useSurveysByTeam } from "../../backend/surveys/surveys.query";
 import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
-} from "../../../backend/campaign/campaign.query";
+} from "../../backend/campaign/campaign.query";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import { useEffect, useState } from "react";
 
 interface CreateCampaignProps {
@@ -139,7 +137,7 @@ const CreateCampaignModal = ({
             placeholder="Enter campaign name"
             withAsterisk
             {...form.getInputProps("name")}
-            classNames={{ label: style.inputLabel }}
+            styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
           />
           {isEdit && campaign?.status === CampaignStatus.ACTIVE ? (
             <></>
@@ -149,7 +147,7 @@ const CreateCampaignModal = ({
                 label="Select Survey"
                 withAsterisk
                 placeholder="Select Whatsapp survey to send"
-                classNames={{ label: style.inputLabel }}
+                styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
                 {...form.getInputProps("surveyTeamMapId")}
                 data={surveyData}
               />
@@ -158,7 +156,7 @@ const CreateCampaignModal = ({
                   label="Choose Template"
                   withAsterisk
                   placeholder="Select Template"
-                  classNames={{ label: style.inputLabel }}
+                  styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
                   {...form.getInputProps("waTemplateId")}
                   data={templatesData}
                 />

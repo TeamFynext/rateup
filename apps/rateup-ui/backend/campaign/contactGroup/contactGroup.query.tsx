@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addExistingContactsToGroup,
+  addExistingContactsToMultipleGroups,
   addNewContact,
   createContactGroup,
   deleteContactGroup,
@@ -185,6 +186,37 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
       showErrorToast(
         `Error removing customer from group: ${error?.response?.data?.error}`,
         "contact-group-remove",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useAddExistingContactToMultipleGroupsMutation = (
+  groupIds: string[],
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addExistingContactsToMultipleGroups,
+    onSuccess: () => {
+      for (const id of groupIds) {
+        queryClient.invalidateQueries({
+          queryKey: ["contactGroupById", id],
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
+      });
+      showSuccessToast(
+        "Contacts added to groups successfully.",
+        "contact-group-add-existing",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error adding contacts to groups: ${error?.response?.data?.error}`,
+        "contact-group-add-existing",
         <IconX />,
       );
     },
