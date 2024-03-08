@@ -113,3 +113,14 @@ export async function getOrCreateContactByPhone(phone: string, teamId: string) {
     log.error(e);
   }
 }
+
+export async function deleteManyContacts(contactIds: Array<string>) {
+  const res = await prisma.contact.deleteMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+    },
+  });
+  return res;
+}

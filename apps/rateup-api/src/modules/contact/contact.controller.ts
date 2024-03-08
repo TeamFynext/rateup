@@ -4,6 +4,7 @@ import {
   CreateContactInput,
   GetContactQuery,
   createMultipleContactInput,
+  deleteManyContactsInput,
   updateContactSchema,
 } from "./contact.schema";
 import { log } from "../../utils/logger";
@@ -11,6 +12,7 @@ import {
   createContact,
   createMultipleContacts,
   deleteContactById,
+  deleteManyContacts,
   getContactById,
   getContactsByOrgId,
   getContactsByTeamId,
@@ -124,5 +126,19 @@ export async function updateContactByIdHandler(
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
+  }
+}
+
+export async function deleteManyContactsHandler(
+  request: FastifyRequest<{ Body: deleteManyContactsInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactIds } = request.body;
+    const res = await deleteManyContacts(contactIds);
+    return reply.code(200).send(res);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
