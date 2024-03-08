@@ -28,6 +28,10 @@ const getContactQuerySchema = z.object({
   contactId: z.string().optional(),
 });
 
+const deleteManyContactSchema = z.object({
+  contactIds: z.array(z.string()),
+});
+
 export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
   {
     createContactSchema,
@@ -35,6 +39,7 @@ export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
     updateContactSchema,
     getContactQuerySchema,
     createMultipleContactSchema,
+    deleteManyContactSchema,
   },
   {
     $id: "contactSchema",
@@ -48,3 +53,4 @@ export type updateContactSchema = z.infer<typeof updateContactSchema>;
 export type createMultipleContactInput = z.infer<
   typeof createMultipleContactSchema
 >;
+export type deleteManyContactsInput = z.infer<typeof deleteManyContactSchema>;
