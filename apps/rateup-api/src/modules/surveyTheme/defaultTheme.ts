@@ -34,9 +34,10 @@ const subtitle = {
 const button = {
   label: "",
   styles: {
-    backgroundColor: "rgb(28, 81, 142)",
-    color: "rgb(255, 255, 255)",
+    backgroundColor: "#1C518E",
+    color: "#FFFFFF",
     textAlign: "center",
+    borderRadius: 18,
   },
   position: { x: "CENTER", y: "DEFAULT" },
 };
@@ -65,7 +66,7 @@ export const defaultTheme: SurveyTheme & surveyThemeSchemaCore = {
     },
     button: button,
     input: {
-      primaryColor: "rateup-blue",
+      primaryColor: "#1C518E",
     },
   },
   thankyouTheme: {

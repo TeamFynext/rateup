@@ -125,6 +125,17 @@ export async function getFlowsFromDb(orgId: string) {
     where: {
       orgId,
     },
+    include: {
+      survey: {
+        select: {
+          teams: {
+            select: {
+              teamId: true,
+            },
+          },
+        },
+      },
+    },
   });
   return flows;
 }
