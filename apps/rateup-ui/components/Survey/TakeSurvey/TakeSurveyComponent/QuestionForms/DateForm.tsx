@@ -22,6 +22,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
         value={isPreview ? value : response}
         onChange={isPreview ? setValue : updateResponse}
         placeholder="Select date"
+        defaultLevel="decade"
         maw={400}
         mx="auto"
         dropdownType={isMobile ? "modal" : "popover"}

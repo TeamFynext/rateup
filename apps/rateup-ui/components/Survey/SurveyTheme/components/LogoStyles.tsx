@@ -9,6 +9,7 @@ import {
   Text,
   Divider,
   ThemeIcon,
+  Box,
 } from "@mantine/core";
 import { IconEye, IconStar, IconTrash, IconUpload } from "@tabler/icons-react";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
@@ -66,7 +67,7 @@ function LogoStyles({
         image={selectedImage.url}
         aspect={4 / 3}
       />
-      <Stack align="center" w={"100%"}>
+      <Stack align="center" w={"100%"} gap={"1.5rem"}>
         {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group wrap="nowrap" gap="xs" w={"100%"}>
           <NumberInput
@@ -102,45 +103,48 @@ function LogoStyles({
             }}
           />
         </Group>
-        <Divider label="Upload Logo" variant="dashed" w={"100%"} />
-        <Group justify="space-between" w={"100%"}>
-          <Group gap={"xs"}>
-            <ThemeIcon>
-              <IconStar size={15} />
-            </ThemeIcon>
-            <Text fw={100} c={"dark"} size="xs">
-              Logo :{" "}
-            </Text>
+
+        <Stack>
+          <Divider label="Upload Logo" variant="dashed" w={"100%"} />
+          <Group justify="space-between" w={"100%"}>
+            <Group gap={"xs"}>
+              <ThemeIcon>
+                <IconStar size={15} />
+              </ThemeIcon>
+              <Text fw={100} c={"dark"} size="xs">
+                Logo :{" "}
+              </Text>
+            </Group>
+            <Group>
+              <FileButton
+                onChange={handleFileChange}
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                resetRef={resetLogoRef}
+              >
+                {(props) => (
+                  <Button
+                    leftSection={<IconUpload size={16} />}
+                    radius="18px"
+                    size="xs"
+                    {...props}
+                    loading={isFileLoading}
+                  >
+                    Upload Image
+                  </Button>
+                )}
+              </FileButton>
+              <ActionIcon
+                color="red"
+                size={"md"}
+                radius={"xl"}
+                disabled={!currentStyles?.logo && !logoFileName}
+                onClick={removeImage}
+              >
+                <IconTrash size={15} />
+              </ActionIcon>
+            </Group>
           </Group>
-          <Group>
-            <FileButton
-              onChange={handleFileChange}
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-              resetRef={resetLogoRef}
-            >
-              {(props) => (
-                <Button
-                  leftSection={<IconUpload size={16} />}
-                  radius="18px"
-                  size="xs"
-                  {...props}
-                  loading={isFileLoading}
-                >
-                  Upload Image
-                </Button>
-              )}
-            </FileButton>
-            <ActionIcon
-              color="red"
-              size={"md"}
-              radius={"xl"}
-              disabled={!currentStyles?.logo && !logoFileName}
-              onClick={removeImage}
-            >
-              <IconTrash size={15} />
-            </ActionIcon>
-          </Group>
-        </Group>
+        </Stack>
       </Stack>
     </>
   );

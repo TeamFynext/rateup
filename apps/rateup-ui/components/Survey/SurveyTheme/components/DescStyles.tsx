@@ -25,7 +25,7 @@ function DescStyles({
 }) {
   return (
     <>
-      <Stack align="start" w={"100%"}>
+      <Stack align="start" w={"100%"} gap={"1.5rem"}>
         {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group wrap="nowrap" gap={"xs"}>
           <Select

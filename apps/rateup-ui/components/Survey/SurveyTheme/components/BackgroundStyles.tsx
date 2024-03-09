@@ -155,7 +155,7 @@ function BackgroundStyles({
 
   const [bgTab, setBgTab] = useState<BgTab>(BgTab.BGCOLOR);
   return (
-    <Stack align="start" w={"100%"}>
+    <Stack align="start" w={"100%"} gap={"1.5rem"}>
       <UnsplashModal
         handleUnsplashImageSave={handleUnsplashImageSave}
         opened={openedUnsplashDialog}

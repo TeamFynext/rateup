@@ -25,7 +25,7 @@ function ButtonStyles({
 }) {
   return (
     <>
-      <Stack align="start" w={"100%"}>
+      <Stack align="start" w={"100%"} gap={"1.5rem"}>
         {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
 
         {/* <Text mt={10} fw={500}>
