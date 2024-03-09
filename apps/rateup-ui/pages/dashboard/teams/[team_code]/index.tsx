@@ -178,11 +178,15 @@ const TeamDetails = () => {
             <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
             <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
           </Tabs.List>
+        </Stack>
+        <Tabs.Panel value={TabEnum.Members}>
           <Group mih={60}>
-            <Heading
-              title={teamsMembersData?.teamName || "Team"}
-              titleprops={{ w: "fit-content" }}
-            />
+            <Group style={{ marginTop: "auto", marginBottom: "auto" }}>
+              <Heading
+                title={teamsMembersData?.teamName || "Team"}
+                titleprops={{ w: "fit-content" }}
+              />
+            </Group>
             <Tabs.Panel value={TabEnum.Members} mt={30}>
               <RateupButtonBlue
                 title="Add Member"
@@ -191,8 +195,6 @@ const TeamDetails = () => {
               />
             </Tabs.Panel>
           </Group>
-        </Stack>
-        <Tabs.Panel value={TabEnum.Members}>
           <SimpleGrid
             p={1}
             spacing={"lg"}
@@ -225,6 +227,11 @@ const TeamDetails = () => {
           </SimpleGrid>
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Settings} mt={60}>
+          <Heading
+            title={teamsMembersData?.teamName || "Team"}
+            titleprops={{ w: "fit-content" }}
+          />
+
           <TeamSettings
             id={teamID?.toString()}
             teamData={{

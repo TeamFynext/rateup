@@ -75,6 +75,7 @@ const Templates = () => {
           width: "230px",
           minHeight: "150px",
           cursor: "pointer",
+          marginTop: "2rem",
         }}
       >
         {survey?.WelcomeTheme?.bgUrl && (

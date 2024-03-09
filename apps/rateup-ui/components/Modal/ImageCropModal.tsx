@@ -181,7 +181,7 @@ export const ImageCropModal = ({
         crop={crop}
         onChange={(_, percentCrop) => setCrop(percentCrop)}
         onComplete={(c) => setCompletedCrop(c)}
-        aspect={aspect}
+        aspect={1}
         minHeight={100}
         keepSelection
       >
