@@ -15,6 +15,7 @@ import { parseLogicAction } from "../../question/question.utils";
 import {
   createResponse,
   saveResponseToGoogleSheet,
+  updateResponse,
 } from "../../response/response.service";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
@@ -37,7 +38,6 @@ import {
   updateCompletedSurvey,
   updateVisitedSurvey,
 } from "../../survey/survey.service";
-import { fetchLocationFromIp } from "../../../utils/location";
 import { getOrCreateContactByPhone } from "../../contact/contact.service";
 
 export const toBeIncludedWaSessionRelations = {
@@ -345,11 +345,11 @@ export async function saveResponses(session: WaSessionWithRelations) {
     responses: questionResponses,
     language: session.language,
     platform: ResponsePlatform.WHATSAPP,
-    location: await fetchLocationFromIp(session.ip),
     contactId: contact?.id,
     tag: session.tag,
   };
   const res = await createResponse(surveyResponse);
+  await updateResponse(res.id, { ip: session.ip, location: undefined });
   log.info("Responses saved \n%o\n", surveyResponse);
   const { surveyTeamMapId, responses, language, createdAt } = res;
   await saveResponseToGoogleSheet({

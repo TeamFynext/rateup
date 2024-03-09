@@ -10,6 +10,7 @@ import {
   getContactsByContactGroupIdHandler,
   removeContactsFromGroupHandler,
   addExistingContactsToMultipleGroupsHandler,
+  deleteManyContactGroupsHandler,
 } from "./contactGroup.controller";
 
 export async function contactGroupRoutes(server: FastifyInstance) {
@@ -107,5 +108,15 @@ export async function contactGroupRoutes(server: FastifyInstance) {
       },
     },
     addExistingContactsToMultipleGroupsHandler,
+  );
+
+  server.delete(
+    "/",
+    {
+      schema: {
+        body: $contactGroupRef("deleteManyGroupSchema"),
+      },
+    },
+    deleteManyContactGroupsHandler,
   );
 }
