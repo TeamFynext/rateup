@@ -87,7 +87,7 @@ const getSurveyPublicResponseSchema = z.object({
     .object({
       url: z.string().optional(),
       time: z.string().optional(),
-      enable: z.boolean().default(true),
+      enable: z.boolean().default(false),
     })
     .optional(),
 });
@@ -115,7 +115,7 @@ const updateSurveyRequestSchema = z.object({
     .object({
       url: z.string().optional(),
       time: z.string().optional(),
-      enable: z.boolean().default(true),
+      enable: z.boolean().default(false),
     })
     .optional(),
 });
