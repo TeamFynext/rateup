@@ -10,9 +10,18 @@ import ReactCrop, {
 import { useDebounceEffect } from "../menu/hook/useDebounceEffect";
 import { canvasPreview } from "../menu/easyCrop/CanvasPreview";
 import "react-image-crop/dist/ReactCrop.css";
-import { Image, NumberInput, Stack } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Group,
+  Image,
+  Modal,
+  NumberInput,
+  Stack,
+} from "@mantine/core";
 import { mimeTypesForImage } from "../../utils/constants";
 import RateupLoader from "../Loaders/RateupLoader";
+import styles from "./ImageCropModal.module.css";
 
 interface ImageCropModalProps {
   opened: boolean;
@@ -151,16 +160,19 @@ export const ImageCropModal = ({
     return `${photoKey}?crop=focalpoint&fit=crop&q=${q}&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}&ixid=${ixid}&ixlib=${ixlib}&auther=${auther}&username=${username}`;
   };
   return (
-    <FormModalLayout
+    <Modal
+      classNames={{
+        content: styles["modal-content"],
+        header: styles["modal-header"],
+        body: styles["modal-body"],
+      }}
       title="Crop Image"
+      centered
       onClose={() => {
         onclose();
         setScale(1);
       }}
       opened={opened}
-      buttonTitle="save"
-      includeCancelButton
-      onSubmit={handleCropSubmit}
     >
       {image?.startsWith("blob:") && (
         <NumberInput
@@ -172,34 +184,38 @@ export const ImageCropModal = ({
           onChange={(e) => setScale(Number(e))}
           decimalScale={1}
           fixedDecimalScale
-          w={150}
-          mb={"sm"}
         />
       )}
 
-      <ReactCrop
-        crop={crop}
-        onChange={(_, percentCrop) => setCrop(percentCrop)}
-        onComplete={(c) => setCompletedCrop(c)}
-        aspect={1}
-        minHeight={100}
-        keepSelection
-      >
-        <Image
-          src={image}
-          onLoad={onImageLoad}
-          ref={imgRef}
-          style={{
-            transform: `scale(${scale})`,
-          }}
-          alt="cropping image"
-        />
-      </ReactCrop>
-      {!imgRef.current && (
-        <Stack miw={350} mih={250} justify="center">
-          <RateupLoader />
-        </Stack>
-      )}
+      <Box className={styles["react-crop-container"]}>
+        <ReactCrop
+          crop={crop}
+          onChange={(_, percentCrop) => setCrop(percentCrop)}
+          onComplete={(c) => setCompletedCrop(c)}
+          aspect={aspect}
+          minHeight={100}
+          keepSelection
+          className={styles["react-crop-div"]}
+        >
+          <Image
+            src={image}
+            onLoad={onImageLoad}
+            ref={imgRef}
+            style={{
+              transform: `scale(${scale})`,
+            }}
+            alt="cropping image"
+            fit="contain"
+          />
+        </ReactCrop>
+
+        {!imgRef.current && (
+          <Stack miw={350} mih={250} justify="center">
+            <RateupLoader />
+          </Stack>
+        )}
+      </Box>
+
       <canvas
         ref={previewCanvasRef}
         style={{
@@ -208,6 +224,15 @@ export const ImageCropModal = ({
           height: completedCrop?.height,
         }}
       />
-    </FormModalLayout>
+
+      <Group className={styles["cancel-save-btn-container"]} justify="right">
+        <Button className={styles["cancel-btn"]} onClick={onclose}>
+          Cancel
+        </Button>
+        <Button className={styles["save-btn"]} onClick={handleCropSubmit}>
+          Save
+        </Button>
+      </Group>
+    </Modal>
   );
 };

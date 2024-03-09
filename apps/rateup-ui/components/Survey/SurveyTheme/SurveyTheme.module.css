@@ -34,6 +34,10 @@
   border-radius: 1rem;
 }
 
+.theme-preview-container :global(.mantine-Overlay-root) {
+  z-index: 100;
+}
+
 .survey-theme-preview-tab-panels-root {
   height: 100%;
 }
@@ -45,7 +49,6 @@
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  z-index: 205;
 }
 
 .welcome-page-switch {
@@ -85,6 +88,10 @@
     rgba(0, 0, 0, 0.05) 0px 1px 0px,
     rgba(0, 0, 0, 0.11) 0px 0px 8px;
   border-radius: 1rem;
+}
+
+.styles-component-container :global(.mantine-Overlay-root) {
+  z-index: 100;
 }
 
 /* styles for different preview view components */

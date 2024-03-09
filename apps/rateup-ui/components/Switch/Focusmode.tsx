@@ -28,7 +28,7 @@ export default function FocusMode({ focus, toggleFocus }: focusmodeInterface) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          zIndex: 205,
+          zIndex: 150,
         }}
         onClick={() => toggleFocus(!focus)}
         bg="var(--tertiary-color)"
