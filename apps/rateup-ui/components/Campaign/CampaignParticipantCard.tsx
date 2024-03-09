@@ -42,9 +42,7 @@ const CampaignParticipantMenu = ({ campaign, participantId }) => {
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to remove this customer from campaign? This
-          action is destructive and you will have to contact support to restore
-          your data.
+          Are you sure you want to remove this participant from campaign?
         </Text>
       ),
       labels: { confirm: "Ok", cancel: "cancel" },

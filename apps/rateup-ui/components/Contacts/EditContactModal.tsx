@@ -87,7 +87,7 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
         <SimpleGrid cols={2}>
           <TextInput
             label="Name"
-            placeholder="Enter customer name"
+            placeholder="Enter name"
             {...form.getInputProps("name")}
             size="md"
             radius={"md"}

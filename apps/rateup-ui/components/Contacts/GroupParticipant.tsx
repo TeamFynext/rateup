@@ -30,13 +30,11 @@ const ParticipantMenu = ({ contactId, groupId }) => {
   const removeContactsMutation = useRemoveContactsFromGroup(groupId);
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: "Remove customer",
+      title: "Remove member",
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to remove this customer from group? This action
-          is destructive and you will have to contact support to restore your
-          data.
+          Are you sure you want to remove this member from group?
         </Text>
       ),
       labels: { confirm: "Ok", cancel: "cancel" },
@@ -58,7 +56,7 @@ const ParticipantMenu = ({ contactId, groupId }) => {
           leftSection={<IconTrash size="1rem" />}
           onClick={openDeleteModal}
         >
-          Remove customer
+          Remove member
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

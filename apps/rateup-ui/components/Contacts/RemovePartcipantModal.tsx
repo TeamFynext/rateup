@@ -64,7 +64,7 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
         <Table.Td />
         <Table.Td colSpan={2} align="center">
           {" "}
-          No Customers found
+          No members found
         </Table.Td>
       </Table.Tr>
     );
@@ -96,7 +96,7 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
         </Group>
         <PaperLayout>
           <ScrollArea h={200}>
-            <Table w={500}>
+            <Table w={500} stickyHeader>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th />
@@ -112,7 +112,7 @@ const RemovePartcipantModal = ({ customerList, groupId, close }) => {
       <Group justify={"flex-end"} py={"sm"}>
         <RateupButtonSecondary title="cancel" onClick={close} />
         <RateupButtonPrimary
-          title="Remove customers"
+          title="Remove members"
           onClick={handleRemoveCustomers}
         />
       </Group>

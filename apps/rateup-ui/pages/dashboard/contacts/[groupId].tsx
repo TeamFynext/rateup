@@ -11,7 +11,6 @@ import {
   TextInput,
   Center,
   Loader,
-  Container,
   Badge,
 } from "@mantine/core";
 import { IconEdit, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
@@ -35,6 +34,7 @@ import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import GroupParticipant from "../../../components/Contacts/GroupParticipant";
 import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 
 export default function () {
   const [opened, { open, close }] = useDisclosure(false);
@@ -186,7 +186,7 @@ export default function () {
                       </Title>
                     </Center>
 
-                    <Text>customers</Text>
+                    <Text>members</Text>
                   </Stack>
                 </Group>
               </Group>
@@ -198,7 +198,7 @@ export default function () {
                     leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
                     radius="xl"
                     size="md"
-                    placeholder={"Search Customer"}
+                    placeholder={"Search member"}
                     rightSectionWidth={60}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -212,7 +212,7 @@ export default function () {
                     onClick={openEditCustomer}
                   />
                   <RateupButtonBlue
-                    title="New customer"
+                    title="Add member"
                     rightIcon={<IconPlus />}
                     radius="xl"
                     size="md"
@@ -222,7 +222,7 @@ export default function () {
               </Center>
             </Box>
             <Box>
-              <Title order={2}>Customer List</Title>
+              <Title order={2}>Members</Title>
               <SimpleGrid
                 mt={"md"}
                 cols={{ base: 1, sm: 2, lg: 3 }}
@@ -238,9 +238,7 @@ export default function () {
                     ></GroupParticipant>
                   ))
                 ) : (
-                  <Container p="xl">
-                    <Title order={5}>No Contacts found</Title>
-                  </Container>
+                  <NothingFound text="No members found" />
                 )}
               </SimpleGrid>
             </Box>
@@ -248,7 +246,7 @@ export default function () {
           <FormModalLayout
             onClose={close}
             opened={opened}
-            title={`Add customer to ${groupDetails?.name}`}
+            title={`Add members`}
             size="xl"
             centered
           >
@@ -262,7 +260,7 @@ export default function () {
           <FormModalLayout
             centered
             onClose={closeEditCustomer}
-            title="Remove contacts"
+            title="Remove members"
             size="lg"
             opened={openedEditCustomer}
           >

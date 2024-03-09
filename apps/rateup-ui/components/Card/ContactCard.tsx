@@ -72,10 +72,7 @@ const ContactMenu = ({ contact, groupId }) => {
       title: "Delete contact",
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete this customer contact? This action is
-          destructive and you will have to contact support to restore your data.
-        </Text>
+        <Text size="sm">Are you sure you want to delete this contact?</Text>
       ),
       labels: { confirm: "Ok", cancel: "cancel" },
       confirmProps: { color: "red" },

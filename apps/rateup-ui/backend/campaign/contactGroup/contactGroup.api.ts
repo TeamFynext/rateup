@@ -97,3 +97,9 @@ export const addExistingContactsToMultipleGroups = ({
   });
   return res;
 };
+
+export const deleteManyContactGroups = async (contactGroupIds: string[]) => {
+  return await axiosClient.delete(CONTACT_GROUP_BASE_URL, {
+    data: { contactGroupIds },
+  });
+};

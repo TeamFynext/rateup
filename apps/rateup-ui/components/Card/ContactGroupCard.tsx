@@ -52,7 +52,7 @@ export const ContactGroupCard = ({ group }) => {
           <Title c="var(--tertiary-color)" order={3}>
             {group?._count.contacts}
           </Title>
-          <Text>customers</Text>
+          <Text>members</Text>
         </Stack>
       </Group>
       <Group justify="space-between" mt="md">

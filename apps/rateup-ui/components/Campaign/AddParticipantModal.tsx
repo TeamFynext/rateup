@@ -124,7 +124,7 @@ const AddParticipantModal = ({ close, campaign }) => {
         <SimpleGrid cols={2}>
           <Stack gap={1}>
             <Group justify="space-between" mb={"xs"}>
-              <Title order={6}>Select customers</Title>
+              <Title order={6}>Select Contacts</Title>
               <Checkbox
                 label="Select all"
                 c={"#149a8a"}
@@ -133,7 +133,7 @@ const AddParticipantModal = ({ close, campaign }) => {
               />
             </Group>
             <ContainedTextField
-              placeholder="Select customers"
+              placeholder="Search contacts"
               radius={"lg"}
               size="md"
               value={searchText}

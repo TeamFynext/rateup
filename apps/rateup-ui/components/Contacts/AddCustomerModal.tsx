@@ -338,7 +338,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                     form.setFieldValue("importMethod", value)
                   }
                   name="importmethod"
-                  label="Import Customers"
+                  label="Import Contacts"
                   styles={custominputstyle}
                 >
                   <Group>
@@ -370,7 +370,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                 <SimpleGrid cols={2}>
                   <TextInput
                     label="Name"
-                    placeholder="Enter customer name"
+                    placeholder="Enter name"
                     {...form.getInputProps("name")}
                     radius={"md"}
                     size="md"
@@ -442,12 +442,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                     customerList.includes(id),
                   )}
                   onChange={(event) => {
-                    // const allCustomers = contactDataByTeamId?.data?.map(
-                    //   (customer) => customer?.id,
-                    // );
-                    // const remainingCustomers = allCustomers.filter(
-                    //   (c) => !existingContactIds?.includes(c),
-                    // );
                     setCustomerList(
                       event.currentTarget.checked ? remainingContactIds : [],
                     );
@@ -489,7 +483,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
               onClick={close}
             ></RateupButtonSecondary>
             <RateupButtonBlue
-              title="Add Customer"
+              title="Add Member"
               onClick={handleSubmit}
               loading={isCreating}
               disabled={

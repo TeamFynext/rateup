@@ -5,6 +5,7 @@ import {
   addNewContact,
   createContactGroup,
   deleteContactGroup,
+  deleteManyContactGroups,
   getContactGroupById,
   getContactGroupList,
   getContactGroupsByTeamId,
@@ -70,15 +71,15 @@ export const useAddNewContactMutation = (groupId: string) => {
       }),
         queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
         showSuccessToast(
-          "Added new customer successfully.",
-          "contact-group-add-customer",
+          "Added new member successfully.",
+          "contact-group-add-member",
           <IconCheck />,
         );
     },
     onError: (error: any) => {
       showErrorToast(
-        `Error adding customer: ${error?.response?.data?.error}`,
-        "contact-group-add-customer",
+        `Error adding member: ${error?.response?.data?.error}`,
+        "contact-group-add-member",
         <IconX />,
       );
     },
@@ -150,14 +151,14 @@ export const useAddExistingContactMutation = (groupId: string) => {
         queryKey: ["campaignContactGroupsData"],
       });
       showSuccessToast(
-        "Customers added to  group successfully.",
+        "Members added to  group successfully.",
         "contact-group-add-existing",
         <IconCheck />,
       );
     },
     onError: (error: any) => {
       showErrorToast(
-        `Error adding customer to group: ${error?.response?.data?.error}`,
+        `Error adding members to group: ${error?.response?.data?.error}`,
         "contact-group-add-existing",
         <IconX />,
       );
@@ -171,7 +172,7 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
     mutationFn: removeContactsFromGroup,
     onSuccess() {
       showSuccessToast(
-        "Customers removed from  group successfully.",
+        "Members removed from  group successfully.",
         "contact-group-remove",
         <IconCheck />,
       );
@@ -184,7 +185,7 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
     },
     onError(error: any) {
       showErrorToast(
-        `Error removing customer from group: ${error?.response?.data?.error}`,
+        `Error removing members from group: ${error?.response?.data?.error}`,
         "contact-group-remove",
         <IconX />,
       );
@@ -217,6 +218,30 @@ export const useAddExistingContactToMultipleGroupsMutation = (
       showErrorToast(
         `Error adding contacts to groups: ${error?.response?.data?.error}`,
         "contact-group-add-existing",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useDeleteManyContactGroupsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteManyContactGroups,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
+      });
+      showSuccessToast(
+        "Contact Groups Deleted successfully",
+        "contact-group-delete",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error deleting contact groups: ${error?.response?.data?.error}`,
+        "contact-group-delete",
         <IconX />,
       );
     },

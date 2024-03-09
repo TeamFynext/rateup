@@ -230,6 +230,7 @@ export default function Contacts() {
 export enum ContactAcions {
   DELETE_CONTACTS = "Delete Contacts",
   ADD_CONTACTS_TO_GROUP = "Add Contacts to Group",
+  DELETE_GROUPS = "Delete Groups",
 }
 
 const ContactActionMenu = ({ contacts, groups }) => {
@@ -285,6 +286,18 @@ const ContactActionMenu = ({ contacts, groups }) => {
             }
           >
             Delete Contacts
+          </Menu.Item>
+          <Menu.Item
+            color="red"
+            onClick={() => {
+              setSelectedAction(ContactAcions.DELETE_GROUPS);
+              openActionModal();
+            }}
+            leftSection={
+              <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
+            }
+          >
+            Delete Groups
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

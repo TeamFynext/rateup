@@ -209,7 +209,7 @@ const CreateContactModal = ({ contactClose, close }) => {
               value={form.values.importMethod}
               onChange={(value) => form.setFieldValue("importMethod", value)}
               name="importMethod"
-              label="Import Customers"
+              label="Import Contacts"
             >
               <Group>
                 <Radio value={importMethod.MANUAL} label="Manual" />
@@ -230,7 +230,7 @@ const CreateContactModal = ({ contactClose, close }) => {
             <SimpleGrid cols={2}>
               <TextInput
                 label="Name"
-                placeholder="Enter customer name"
+                placeholder="Enter name"
                 {...form.getInputProps("name")}
                 radius={"md"}
                 size="md"
@@ -296,8 +296,8 @@ const CreateContactModal = ({ contactClose, close }) => {
             <RateupButtonBlue
               title={
                 form.values.importMethod == importMethod.MANUAL
-                  ? "Add Customer"
-                  : "Import Customers"
+                  ? "Add Contact"
+                  : "Import Contacts"
               }
               type="button"
               loading={isCreating}
