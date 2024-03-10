@@ -125,53 +125,54 @@ const SurveyTemplatesModal = ({
                           <Box key={i} style={{ minWidth: "400px" }}>
                             <Tabs.Panel key={category} value={category}>
                               <SimpleGrid cols={2}>
-                                {allTemplates[category]?.map((survey, j) => (
-                                  <Stack
-                                    m="md"
-                                    key={j}
-                                    style={{
-                                      padding: "15px",
-                                      borderRadius: "10px",
-                                      border:
-                                        selectedTemplate?.id === survey?.id
-                                          ? "2px solid var(--tertiary-color)"
-                                          : "2px solid #fff",
-                                    }}
-                                  >
-                                    <Paper
-                                      radius={"lg"}
-                                      shadow="md"
-                                      mr="md"
-                                      onClick={() => {
-                                        setSelectedTemplate(survey);
-                                      }}
+                                {Array.isArray(allTemplates[category]) &&
+                                  allTemplates[category]?.map((survey, j) => (
+                                    <Stack
+                                      m="md"
+                                      key={j}
                                       style={{
-                                        ...(survey?.WelcomeTheme?.bgType ===
-                                        "bgcolor"
-                                          ? survey?.WelcomeTheme?.bgStyles
-                                          : bgTemp),
-                                        width: "230px",
-                                        height: "150px",
-                                        minHeight: "150px",
-                                        cursor: "pointer",
+                                        padding: "15px",
+                                        borderRadius: "10px",
+                                        border:
+                                          selectedTemplate?.id === survey?.id
+                                            ? "2px solid var(--tertiary-color)"
+                                            : "2px solid #fff",
                                       }}
                                     >
-                                      {survey?.WelcomeTheme?.bgUrl && (
-                                        <ImageWithThumb
-                                          radius="md"
-                                          fit="fill"
-                                          h={150}
-                                          src={`${survey?.WelcomeTheme?.bgUrl}`}
-                                        />
-                                      )}
-                                    </Paper>
-                                    <Center>
-                                      <Text style={{ maxWidth: "200px" }}>
-                                        {survey?.title}
-                                      </Text>
-                                    </Center>
-                                  </Stack>
-                                ))}
+                                      <Paper
+                                        radius={"lg"}
+                                        shadow="md"
+                                        mr="md"
+                                        onClick={() => {
+                                          setSelectedTemplate(survey);
+                                        }}
+                                        style={{
+                                          ...(survey?.WelcomeTheme?.bgType ===
+                                          "bgcolor"
+                                            ? survey?.WelcomeTheme?.bgStyles
+                                            : bgTemp),
+                                          width: "230px",
+                                          height: "150px",
+                                          minHeight: "150px",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        {survey?.WelcomeTheme?.bgUrl && (
+                                          <ImageWithThumb
+                                            radius="md"
+                                            fit="fill"
+                                            h={150}
+                                            src={`${survey?.WelcomeTheme?.bgUrl}`}
+                                          />
+                                        )}
+                                      </Paper>
+                                      <Center>
+                                        <Text style={{ maxWidth: "200px" }}>
+                                          {survey?.title}
+                                        </Text>
+                                      </Center>
+                                    </Stack>
+                                  ))}
                               </SimpleGrid>
                             </Tabs.Panel>
                           </Box>
