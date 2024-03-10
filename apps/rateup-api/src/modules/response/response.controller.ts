@@ -149,7 +149,7 @@ export async function createResponseHandler(
       await sendEmailOnResponseCreation(data.surveyTeamMapId, response);
       const coords = (response.location as any)?.coordinates;
       const ip = getIp(request);
-      let location = await fetchLocation(ip, coords);
+      let location = await fetchLocation(coords);
       if (!location) {
         location = undefined;
       }

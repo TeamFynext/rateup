@@ -6,6 +6,7 @@ import {
   AddNewContactsToGroupInput,
   ByContactGroupIdParams,
   CreateContactGroupInput,
+  DeleteManyGroupsInput,
   GetContactGroupsQuery,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
@@ -22,6 +23,7 @@ import {
   getContactsByContactGroupId,
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
+  deleteManyContactGroups,
 } from "./contactGroup.service";
 import { verifyRole } from "../../../utils/auth";
 import { Prisma, Role } from "@prisma/client";
@@ -189,6 +191,20 @@ export async function addExistingContactsToMultipleGroupsHandler(
       contactIds,
       contactGroupIds,
     );
+    reply.code(200).send(contactGroup);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function deleteManyContactGroupsHandler(
+  request: FastifyRequest<{ Body: DeleteManyGroupsInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactGroupIds } = request.body;
+    const contactGroup = await deleteManyContactGroups(contactGroupIds);
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);

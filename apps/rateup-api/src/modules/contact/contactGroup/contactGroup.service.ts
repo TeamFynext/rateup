@@ -215,3 +215,13 @@ export async function addExistingContactsToMultipleGroups(
     }),
   );
 }
+
+export async function deleteManyContactGroups(groupIds: string[]) {
+  return await prisma.contactGroup.deleteMany({
+    where: {
+      id: {
+        in: groupIds,
+      },
+    },
+  });
+}
