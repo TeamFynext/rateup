@@ -294,8 +294,10 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
           setIsReviewPage(true)
         : fromShortUrl
-        ? router.push(`/ws/${router.query.shortId}/end`)
-        : router.push(`${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}`);
+          ? router.push(`/ws/${router.query.shortId}/end`)
+          : router.push(
+              `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}`,
+            );
     });
   };
 
@@ -325,7 +327,9 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     const value = item.response[key];
     return value;
   });
+
   if (IsLoading) return <RateupLoader h={"100dvh"} />;
+
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
