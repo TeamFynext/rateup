@@ -86,6 +86,7 @@ const surveyThemeSchema = z.object({
       primaryColor: z.string().default("rateup-blue"),
     })
     .optional(),
+  orgLogoEnabled: z.boolean().default(true),
 });
 
 const thankyouThemeSchema = z.object({

@@ -68,6 +68,7 @@ export const defaultTheme: SurveyTheme & surveyThemeSchemaCore = {
     input: {
       primaryColor: "#1C518E",
     },
+    orgLogoEnabled: true,
   },
   thankyouTheme: {
     bg: background,
