@@ -204,7 +204,7 @@ const SurveySettings = ({
                     withAsterisk
                     placeholder="time in seconds"
                     required
-                    label={"Redirect to Survey After How Many Seconds:"}
+                    label={"Redirect After (in seconds):"}
                     defaultValue={redirect?.time}
                     onChange={(e: number) => {
                       if (e < 2 || e > 60) {
