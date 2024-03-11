@@ -1,4 +1,14 @@
-import { Badge, Button, Group, Menu, Stack, Text, rem } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Center,
+  Group,
+  Menu,
+  Stack,
+  Text,
+  Tooltip,
+  rem,
+} from "@mantine/core";
 import {
   IconChevronDown,
   IconEye,
@@ -85,6 +95,42 @@ export const useSurveyResponseColumns = ({
           },
         };
       })),
+    {
+      header: () => (
+        <Text c="dark.3" truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
+          Ticket
+        </Text>
+      ),
+      filterFn: fuzzyFilter,
+      accessorKey: "ticket",
+      cell: (info) => {
+        let ticketData = info.row.original.Ticket;
+        let ticketExist = ticketData?.length > 0;
+        return (
+          <Center
+            pr="80px"
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              if (ticketExist) {
+                let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                window.open(url, "_blank");
+              }
+            }}
+          >
+            {ticketExist && (
+              <Tooltip withArrow label="View Ticket" position="right-start">
+                <Stack>
+                  <IconTicket
+                    color="orange"
+                    style={{ width: rem(35), height: rem(35) }}
+                  />
+                </Stack>
+              </Tooltip>
+            )}
+          </Center>
+        );
+      },
+    },
     {
       header: () => (
         <Text c="dark.3" truncate="end" fw={600} fz={"lg"}>
@@ -257,7 +303,7 @@ function ActionMenu({
               <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
             }
           >
-            Delete
+            Delete Response
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
