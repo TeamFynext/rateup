@@ -79,7 +79,6 @@ export function registerRoutes(server: FastifyInstance): void {
     reviewSuggestionSchemas,
     menuBannerSchemas,
     unsplashSchemas,
-    subscriptionSchemas,
     surveyThemeSchemas,
     paymentSchemas,
     testimonialSchemas,
