@@ -59,7 +59,7 @@ export function SurveysPage({
 
   useEffect(() => {
     if (action === "create") {
-      openCreateSurvey();
+      openSurveyTemplates();
     }
   }, [action]);
 
@@ -80,8 +80,8 @@ export function SurveysPage({
   const surveys =
     selectedTeamId === "all" || !selectedTeamId
       ? allSurveys
-      : allSurveys?.filter(
-          (s: Survey) => s?.teams?.some((team) => team?.id === selectedTeamId),
+      : allSurveys?.filter((s: Survey) =>
+          s?.teams?.some((team) => team?.id === selectedTeamId),
         );
   //--------handle check box click ----------
 

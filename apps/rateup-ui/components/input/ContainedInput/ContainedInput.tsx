@@ -72,8 +72,25 @@ export function ContainedColorInput(props: ColorInputProps) {
   return <ColorInput disallowInput classNames={classes} {...props} />;
 }
 
+const isToday = (date) => {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
+
+const getDayProps = (date) => ({
+  style: {
+    backgroundColor: isToday(date) && "#73C2FB",
+  },
+});
+
 export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
-  return <DateTimePicker classNames={classes} {...props} />;
+  return (
+    <DateTimePicker classNames={classes} getDayProps={getDayProps} {...props} />
+  );
 }
 
 export function ContainedTimeInput(props: Readonly<TimeInputProps>) {

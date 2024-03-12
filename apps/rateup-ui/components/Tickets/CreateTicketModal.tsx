@@ -174,6 +174,8 @@ const CreateTicketModal = ({
             {...form.getInputProps("priority")}
           />
           <ContainedDateTimePickerInput
+            minDate={new Date()}
+            clearable
             label={"Deadline:"}
             placeholder="Select a deadline for the ticket"
             {...form.getInputProps("deadline")}
