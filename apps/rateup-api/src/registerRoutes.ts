@@ -58,6 +58,7 @@ import { testimonialCollectionSchemas } from "./modules/testimonial/testimonialC
 import { ticketRoutes } from "./modules/ticket/ticket.route";
 import { ticketSchemas } from "./modules/ticket/ticket.schema";
 import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic.route";
+import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -78,12 +79,12 @@ export function registerRoutes(server: FastifyInstance): void {
     reviewSuggestionSchemas,
     menuBannerSchemas,
     unsplashSchemas,
-    subscriptionSchemas,
     surveyThemeSchemas,
     paymentSchemas,
     testimonialSchemas,
     testimonialCollectionSchemas,
     ticketSchemas,
+    subscriptionSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -133,4 +134,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(testimonialPublicRoutes, {
     prefix: "api/public/testimonials",
   });
+  server.register(loyaltyRoutes, { prefix: "api/loyalty/" });
 }

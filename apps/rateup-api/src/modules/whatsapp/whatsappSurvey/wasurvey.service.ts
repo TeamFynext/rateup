@@ -1,4 +1,4 @@
-import { ResponsePlatform, SurveyResponse } from "@prisma/client";
+import { ResponsePlatform, SurveyResponse, WaSession } from "@prisma/client";
 import {
   CampaignParticipantStatus,
   LogicAction,
@@ -89,7 +89,7 @@ export async function getSession(orgId: string, phone: string) {
   if (!session) {
     throw new Error("Session not found");
   }
-  return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
+  return session;
 }
 export async function deleteSession(orgId: string, phone: string) {
   log.info("Deleting session for %o", { phone, orgId });
@@ -370,12 +370,12 @@ export async function saveResponses(session: WaSessionWithRelations) {
 }
 
 export async function sendTextMessage(
-  session: WaSessionWithRelations,
+  to: { phone: string; orgId: string },
   title: string,
   description: string = "",
 ) {
-  const messageData = createTextMessage(session.phone, title, description);
-  await sendMessage(session.orgId, messageData);
+  const messageData = createTextMessage(to.phone, title, description);
+  await sendMessage(to.orgId, messageData);
 }
 interface sendSurveyToParticipantParams {
   campaignParticipantId: string;

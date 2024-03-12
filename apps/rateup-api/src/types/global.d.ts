@@ -13,7 +13,8 @@ import {
   WaFlowFormElementType,
 } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
-import { toBeIncludedWaSessionRelations } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
+import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
+import prisma from "../utils/prisma";
 
 type GoogleReview = {
   minRating?: number;
@@ -152,10 +153,7 @@ declare global {
     acceptButton: string;
     orgId: string;
   };
-  type WaSessionWithRelations = Omit<
-    Prisma.WaSessionGetPayload<typeof fullWaSession>,
-    "responses"
-  > & { responses: Array<QuestionResponse> }; // overriding JSON type
+  type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
 
   type subscriptionCountRestrictionCountType = {
     max: number;
@@ -278,9 +276,6 @@ export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
   action: LogicAction;
 }
-const fullWaSession = Prisma.validator<Prisma.WaSessionArgs>()({
-  include: toBeIncludedWaSessionRelations,
-});
 declare module "fastify" {
   interface FastifyRequest {
     userId: string;

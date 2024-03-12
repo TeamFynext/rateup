@@ -30,6 +30,7 @@ import {
   WaTemplateStatus,
   QuestionType,
   WaFlowStatus,
+  LoyaltyCampaignType,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
@@ -56,6 +57,10 @@ import {
   sendGReviewLink,
 } from "../flows/flow.service";
 import { createResponse } from "../../response/response.service";
+import {
+  getCampaignById,
+  registerCampaign,
+} from "../../loyalty/internal/campaign/campaign.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -149,14 +154,55 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
   }
 }
 
+async function handleRegisterMessage(orgId: string, waMessage: WaMessageBody) {
+  const { from, message } = parseMessage(waMessage);
+  const [_, campaignId] = message.split(" "); // format: /register <campaignId>
+  if (!campaignId) {
+    log.error("Invalid register message");
+    return;
+  }
+  const campaign = await getCampaignById(campaignId);
+  if (!campaign) {
+    log.error("Campaign not found");
+    return;
+  }
+  if (
+    ![
+      LoyaltyCampaignType.Referral,
+      LoyaltyCampaignType.ReferralTransaction,
+    ].includes(campaign.type as LoyaltyCampaignType)
+  ) {
+    log.error("Invalid campaign type");
+    return;
+  }
+
+  const { referralCode } = await registerCampaign({
+    phone: from,
+    orgId,
+    campaignId,
+  });
+  await sendTextMessage(
+    {
+      phone: from,
+      orgId,
+    },
+    "Registration Successful",
+    `Your referral code is: ${referralCode.referralCode}`,
+  );
+  return;
+}
+
 async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
   // check for '/start' command
   const parsedMessage = parseMessage(waMessage);
   const { message: tempMessage, from, type } = parsedMessage;
-  const message = tempMessage?.split("\n")?.slice(1)?.join(" ");
+  const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   if (message.startsWith("/start")) {
     await handleStartMessage(orgId, waMessage);
+  }
+  if (message.startsWith("/register")) {
+    await handleRegisterMessage(orgId, waMessage);
   } else {
     let session = await getSession(orgId, from);
     if (parsedMessage.type === "nfm_reply") {
