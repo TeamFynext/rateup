@@ -20,6 +20,8 @@ import {
   IconWaveSine,
   IconMessageChatbot,
   IconTicket,
+  IconGift,
+  IconPigMoney,
 } from "@tabler/icons-react";
 
 import { UserRole } from "../../../utils/enums";
@@ -191,6 +193,32 @@ export function getNavTopData(subscription?: Subscription) {
         ]
       : []),
     { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
+    ...(hiddenModules.includes("loyalty") || !true
+      ? []
+      : [
+          {
+            Icon: IconGift,
+            label: "Loyalty",
+            href: "/dashboard/loyalty",
+            submenus: [
+              {
+                Icon: IconSpeakerphone,
+                label: "Campaign",
+                href: "/dashboard/loyalty/campaign",
+              },
+              {
+                Icon: IconPigMoney,
+                label: "Rewards",
+                href: "/dashboard/loyalty/reward",
+              },
+              {
+                Icon: IconUsers,
+                label: "Customers",
+                href: "/dashboard/loyalty/customer",
+              },
+            ],
+          },
+        ]),
   ];
   return navTopData;
 }

@@ -9,7 +9,7 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { StatusBadge } from "../SurveyCardList";
-import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
+import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -58,8 +58,9 @@ export const ShareFlow = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+          setShareUrl(generateWaSurveyShareUrl(surveyTeamMapId));
         }
+
       }
     }
   }, [

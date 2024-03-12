@@ -1,4 +1,5 @@
 import {
+  LoyaltyCampaignType,
   QuestionType,
   SentimentClass,
   WaFlowFormElementType,
@@ -142,6 +143,15 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "WhatsApp Campaign";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
+  }
+}
+
+export function getLoyaltyCampaignTypeLabel(type: LoyaltyCampaignType): string {
+  switch (type) {
+    case LoyaltyCampaignType.ReferralTransaction:
+      return "Referral Transaction";
+    default:
+      return type;
   }
 }
 

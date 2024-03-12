@@ -49,7 +49,7 @@ import { TabEnum } from "../SurveyId";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
 import NothingFound from "../../NothingFound/NothingFound";
-import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
+import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import TagManager from "./TagManager";
 import { SurveyType } from "../../../types/enums";
 
@@ -100,7 +100,7 @@ const ShareSurvey = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyUrl(surveyTeamMapId));
+          setShareUrl(generateWaSurveyShareUrl(surveyTeamMapId));
         }
       }
     } else {

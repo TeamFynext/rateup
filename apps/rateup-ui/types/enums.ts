@@ -193,3 +193,16 @@ export enum SaveStatus {
   notSaved = "Pending Save",
   saving = "Saving",
 }
+export enum LoyaltyCampaignType {
+  Referral = "Referral",
+  ReferralTransaction = "ReferralTransaction",
+  Transaction = "Transaction",
+}
+export enum CampaignRewardType {
+  Fixed = "Fixed",
+  Percentage = "Percentage",
+}
+export enum LoyaltyCustomerRewardType {
+  Referrer = "Referrer", // the one who referred
+  Customer = "Customer", // the one who was referred or made the transaction
+}

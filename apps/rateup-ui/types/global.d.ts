@@ -9,6 +9,7 @@ import {
   WaFlowFormElementType,
   WaFlowStatus,
   SurveyType,
+  LoyaltyCampaignType,
 } from "./enums";
 
 type GoogleReview = {
@@ -581,8 +582,40 @@ declare global {
     surveyId: string;
     templateMessage: WaFlowTemplateMessage;
   };
-}
 
+  type LoyaltyCampaign = {
+    id: string;
+    createdAt: Date;
+    name: string;
+    type: LoyaltyCampaignType;
+    active: boolean;
+    maxPerReferrer: number | null;
+    maxPerUser: number | null;
+    referrerRewardId: string | null;
+    userRewardId: string | null;
+    orgId: string;
+  };
+
+  type LoyaltyCustomer = {
+    id: string;
+    createdAt: Date;
+    name: string | null;
+    phone: string;
+    email: string | null;
+    points: number;
+    orgId: string;
+  };
+  type LoyaltyCampaignRewardEvent = {
+    id: string;
+    createdAt: Date;
+    loyaltyCampaignId: string;
+    referrerId: string | null;
+    referrer?: { phone: string };
+    customerId: string | null;
+    customer?: { phone: string };
+    transactionAmount: number | null;
+  };
+}
 export interface MenuLanding {
   success: boolean;
   data: Data;

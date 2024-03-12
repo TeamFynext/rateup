@@ -3,7 +3,7 @@ import ResourceSelector from "./ResourceSelector";
 import styles from "./ShareQRPage.module.css";
 import LinkWithCopyBtn from "./LinkWithCopyBtn";
 import { v4 as uuid } from "uuid";
-import { generateWaSurveyUrl } from "../../../utils/whatsapp/wa_url";
+import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import ShareQR from "../../Survey/ShareSurvey/ShareQR";
 
 const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
@@ -22,7 +22,7 @@ function ShareQRPage() {
       }
       case "Whatsapp Survey": {
         const surveyTeamMapId = uuid();
-        const link = generateWaSurveyUrl(surveyTeamMapId);
+        const link = generateWaSurveyShareUrl(surveyTeamMapId);
         setLink(link);
         break;
       }

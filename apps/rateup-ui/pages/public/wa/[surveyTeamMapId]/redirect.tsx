@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { usePublicSurvey } from "../../../../backend/surveys/surveys.query";
-import { generateWaSurveyUrl } from "../../../../utils/whatsapp/wa_url";
+import { generateWaSurveyShareUrl } from "../../../../utils/whatsapp/wa_url";
 import { tokenizeIp } from "../../../../backend/whatsapp/whatsapp.api";
 
 export default function Redirect({ shortId = null, tag = null }) {
@@ -23,11 +23,11 @@ export default function Redirect({ shortId = null, tag = null }) {
     if (survey.getLocation) {
       tokenizeIp().then((res) => {
         router.push(
-          generateWaSurveyUrl(`${teamMapId} ${res.token}${tagInLink}`),
+          generateWaSurveyShareUrl(`${teamMapId} ${res.token}${tagInLink}`),
         );
       });
     } else {
-      router.push(generateWaSurveyUrl(`${teamMapId}${tagInLink}`));
+      router.push(generateWaSurveyShareUrl(`${teamMapId}${tagInLink}`));
     }
   }
   if (isLoading) return <div>Redirecting to whatsapp...</div>;
