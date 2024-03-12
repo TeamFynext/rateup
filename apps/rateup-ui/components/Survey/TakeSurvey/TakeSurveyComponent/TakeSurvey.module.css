@@ -75,6 +75,26 @@
   margin-top: 5px;
 }
 
+.ring-progress svg circle {
+  transition: all 0.3s linear;
+}
+
+.question-form-title-desc-container {
+  position: relative;
+  min-height: 56vh;
+  min-height: 56dvh;
+  overflow: hidden;
+}
+
+.question-form-title-desc-motion-div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 @media (max-width: 480px) {
   .rating svg {
     height: 50px;
@@ -95,6 +115,11 @@
     height: auto;
     white-space: normal;
     font-size: "16px";
+  }
+
+  .question-form-title-desc-container {
+    min-height: calc(100vh - 230px);
+    min-height: calc(100dvh - 230px);
   }
 }
 

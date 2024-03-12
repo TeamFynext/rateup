@@ -45,8 +45,7 @@ import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import styles from "./StylesComponent.module.css";
 import { useEditSurveyMutation } from "../../../../../backend/surveys/surveys.query";
 import { theme } from "../../../../../config/mantineTheme";
-import ConfettiSwitch from "./ConfettiSwitch";
-import OrgLogoSwitch from "./OrgLogoSwitch";
+import CustomSwitch from "./CustomSwitch";
 
 type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
 interface StylesComponentProps {
@@ -231,20 +230,27 @@ function StylesComponent({
                 <Tabs.Panel value={SelectedItemEnum.BACKGROUND}>
                   <Stack w="100%">
                     {selectedTab === ThemeTabEnum.THANKYOU && (
-                      <ConfettiSwitch
-                        confettiEnabled={confettiEnabled}
-                        updateSelectedTabStyle={updateSelectedTabStyle}
+                      <CustomSwitch
+                        checked={confettiEnabled}
+                        onChange={(e) =>
+                          updateSelectedTabStyle(
+                            "confettiEnabled",
+                            e?.target?.checked,
+                          )
+                        }
+                        label={"Confetti Enabled"}
                       />
                     )}
                     {selectedTab === ThemeTabEnum.SURVEY && (
-                      <OrgLogoSwitch
-                        isOrgLogoEnabled={isOrgLogoEnabled}
+                      <CustomSwitch
+                        checked={isOrgLogoEnabled}
                         onChange={(e) =>
                           updateSelectedTabStyle(
                             "orgLogoEnabled",
                             e?.target?.checked,
                           )
                         }
+                        label={"Organization Logo"}
                       />
                     )}
                     <BackgroundStyles
