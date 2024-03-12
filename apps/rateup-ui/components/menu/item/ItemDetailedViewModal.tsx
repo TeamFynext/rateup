@@ -151,7 +151,7 @@ export function ItemDetailedViewModal({
             )}
           </Box>
 
-          <Box maw={"350px"}>
+          <Box maw={"350px"} w={"100%"}>
             <Text
               fz="clamp(18px, -268px + 20vw, 20px)"
               fw={600}
@@ -170,7 +170,7 @@ export function ItemDetailedViewModal({
               {item?.foodLabels?.length > 0 && (
                 <>
                   <Text>Allergen Info</Text>
-                  <Flex align={"center"} gap={0}>
+                  <Flex align={"center"} gap={0} w={"100%"}>
                     <Group
                       maw={"calc(100% - 80px"}
                       style={{
@@ -184,11 +184,17 @@ export function ItemDetailedViewModal({
                         fz={9}
                       />
                     </Group>
-                    <RateupButtonPrimary
-                      title="Show All"
-                      size="xs"
-                      onClick={() => setAlleryView(true)}
-                    />
+                    {item?.foodLabels?.length > 1 && (
+                      <RateupButtonPrimary
+                        title="Show All"
+                        sx={{
+                          height: "20px",
+                          width: "80px",
+                        }}
+                        size="xs"
+                        onClick={() => setAlleryView(true)}
+                      />
+                    )}
                   </Flex>
                 </>
               )}
