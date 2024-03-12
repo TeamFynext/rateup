@@ -46,7 +46,6 @@ import {
   useGetAuthorizationUrl,
   useGetGoogleAccessToken,
 } from "../../../backend/org/org.query";
-import useLocalStorage from "../../../hooks/localStorage";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { TicketType } from "../../../utils/enums/ticket";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
@@ -70,6 +69,7 @@ const Responses = ({
     { open: openTicketModal, close: closeTicketModal },
   ] = useDisclosure(false);
   const [selectedResponseId, setSelectedResponseId] = useState("");
+  const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
   const { data: authUrl } = useGetAuthorizationUrl();
@@ -167,8 +167,8 @@ const Responses = ({
   }, [opened]);
 
   useEffect(() => {
-    selectedResponseId && openTicketModal();
-  }, [selectedResponseId]);
+    selectedResponseId && responseTeamId && openTicketModal();
+  }, [selectedResponseId, responseTeamId]);
 
   useEffect(() => {
     !createTicketOpened && setSelectedResponseId("");
@@ -203,6 +203,7 @@ const Responses = ({
     setSelectedRowId,
     open,
     setSelectedResponseId,
+    setResponseTeamId,
   });
 
   const handleSyncGoogleSheet = () => {
@@ -255,7 +256,7 @@ const Responses = ({
         createTicketOpened={createTicketOpened}
         openTicketModal={openTicketModal}
         closeTicketModal={closeTicketModal}
-        selectedTeamId={selectedTeamId}
+        selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
