@@ -347,7 +347,7 @@ export function QuestionDetailedView({
                   {ticketIssueSupportedTypes.includes(question?.type) && (
                     <Menu.Item>
                       <RateupButtonSecondary
-                        title={"Issue Tickets"}
+                        title={"Create Tickets"}
                         leftIcon={<IconTicket stroke={4} size={"1rem"} />}
                         size="sm"
                         fullWidth

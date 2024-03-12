@@ -189,12 +189,12 @@ const TicketIssueEditor = ({
   const { primaryColor } = useMantineTheme();
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
-      <Title order={3}>Automated Ticket Issue Setup</Title>
+      <Title order={3}>Automated Ticket Creation</Title>
       <Stack px="lg" h="100%">
         <>
           <Switch
-            label="Ticket Issue"
-            description="Setup automated ticket issue for user responses."
+            label="Enable Auto-Ticket Creation"
+            description="Setup automated ticket creation for negative responses."
             labelPosition="left"
             checked={enableTicketIssue}
             onChange={(event) => handleSwitch(event)}
@@ -218,7 +218,7 @@ const TicketIssueEditor = ({
                         return (
                           <SimpleGrid cols={3} spacing={30}>
                             <Text fw={500}>
-                              Select the emojis for which Ticket issuing to be
+                              Select the emojis for which Ticket creation to be
                               enabled:
                             </Text>
                             <Text fw={500}> : </Text>
@@ -249,7 +249,8 @@ const TicketIssueEditor = ({
                         return (
                           <SimpleGrid cols={3} spacing={30}>
                             <Text fw={500}>
-                              Select rating until which Ticket should be raised:
+                              Select rating until which Ticket should be
+                              created:
                             </Text>
                             <Text fw={500}> : </Text>
                             <Stack align="center">
@@ -267,7 +268,7 @@ const TicketIssueEditor = ({
                           <SimpleGrid cols={3} spacing={30}>
                             <Text fw={500}>
                               {" "}
-                              Select scale until which Ticket should be raised:{" "}
+                              Select scale until which Ticket should be created:{" "}
                             </Text>
                             <Text fw={500}> : </Text>
                             <Stack>
