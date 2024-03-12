@@ -77,7 +77,9 @@ import RateupLoader from "../../../Loaders/RateupLoader";
 import {
   checkGoogleReviewForQuestion,
   checkRaiseTicketIssueQuestion,
+  validateResponse,
 } from "./util";
+import AddressForm from "./QuestionForms/AddressForm";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -414,7 +416,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                                   }
                                   return <li>{responseData}</li>;
 
-                                case Q.DateTime:
+                                case Q.Date:
                                   return dayjs(
                                     Object.values(response?.response)[0],
                                   ).format("DD, MMM , YYYY");
@@ -521,6 +523,40 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                                           <Text fw="300">{res?.email}</Text>
                                         </Group>
                                       )}
+                                    </Stack>
+                                  );
+                                case Q.Address:
+                                  const address = Object.values(
+                                    response?.response,
+                                  )[0];
+                                  return (
+                                    <Stack>
+                                      <Group>
+                                        <Text fw="400">Adress 1: </Text>
+                                        <Text fw="300">
+                                          {address?.address1}
+                                        </Text>
+                                      </Group>
+                                      <Group>
+                                        <Text fw="400">Address 2: </Text>
+                                        <Text fw="300">
+                                          {address?.address2}
+                                        </Text>
+                                      </Group>
+                                      <Group>
+                                        <Text fw="400">City: </Text>
+                                        <Text fw="300">{address?.city}</Text>
+                                      </Group>
+                                      <Group>
+                                        <Text fw="400">Postal Code: </Text>
+                                        <Text fw="300">
+                                          {address?.postalCode}
+                                        </Text>
+                                      </Group>
+                                      <Group>
+                                        <Text fw="400">Country: </Text>
+                                        <Text fw="300">{address?.country}</Text>
+                                      </Group>
                                     </Stack>
                                   );
                                 default:
@@ -691,7 +727,7 @@ function QuestionForm() {
     <Group className={classes[className]}>
       {(() => {
         switch (type) {
-          case Q.DateTime:
+          case Q.Date:
             return getQuestionForm(type, selectedQ);
           default:
             return getQuestionForm(type, selectedQ);
@@ -739,7 +775,7 @@ function getQuestionForm(type, selectedQ) {
       );
     case Q.EmailPhone:
       return <EmailPhoneForm key={selectedQ?.id} />;
-    case Q.DateTime:
+    case Q.Date:
       return <DateForm key={selectedQ?.id} />;
     case Q.CustomNPS:
       return <CustomNPSForm key={selectedQ?.id} />;
@@ -753,6 +789,8 @@ function getQuestionForm(type, selectedQ) {
       );
     case Q.InfoMessage:
       return <></>;
+    case Q.Address:
+      return <AddressForm key={selectedQ?.id} />;
     default:
       return <div>not implemented</div>;
   }
@@ -768,117 +806,13 @@ function NextPrev({ prev, next, num, total, themeStyles, survey }) {
 
   useEffect(() => {
     // TODO: check if rebase was done correctly
-    // if (
-    //   ((selectedQ?.required && response) || response?.length > 0) &&
-    //   selectedQ?.type === Q.Email //for email input
-    // ) {
-    //   if (emailPattern.test(response)) {
-    //     setIsErrorInput(false);
-    //     setErrorMsg("");
-    //   } else {
-    //     setIsErrorInput(true);
-    //     setErrorMsg("Enter a valid email");
-    //   }
-    // } else if (
-    //   ((selectedQ?.required && response) || response?.length > 0) &&
-    //   selectedQ?.type === Q.Phone //for phone input
-    // ) {
-    //   if (isValidPhoneNumber(response)) {
-    //     setIsErrorInput(false);
-    //     setErrorMsg("");
-    //   } else {
-    //     setIsErrorInput(true);
-    //     setErrorMsg("Enter a valid phone");
-    //   }
-    // } else
-    if (
-      ((selectedQ?.required && response) ||
-        response?.email?.length > 0 ||
-        response?.phone?.length) &&
-      selectedQ?.type === Q.EmailPhone //for contact qn - both email, phone
-    ) {
-      const { email, phone } = response;
 
-      const isEmailValid = emailPattern.test(email || "");
-      const isPhoneValid = isValidPhoneNumber(phone || "");
-
-      if (
-        selectedQ?.required &&
-        (response?.email?.length < 1 || response?.phone?.length < 1)
-      ) {
-        setIsErrorInput(true);
-        setErrorMsg("Please input all fields");
-      } else if (selectedQ?.required && (!isEmailValid || !isPhoneValid)) {
-        setIsErrorInput(true);
-        if (!isEmailValid && !isPhoneValid) {
-          setErrorMsg("Enter a valid email and phone");
-        } else if (!isEmailValid) {
-          setErrorMsg("Enter a valid email");
-        } else {
-          setErrorMsg("Enter a valid phone number");
-        }
-      } else if (
-        !selectedQ?.required &&
-        ((email?.length > 0 && !isEmailValid) ||
-          (phone?.length > 0 && !isPhoneValid))
-      ) {
-        setIsErrorInput(true);
-        if (email?.length > 0 && !isEmailValid) {
-          setErrorMsg("Enter a valid email");
-        } else {
-          setErrorMsg("Enter a valid phone number");
-        }
-      } else {
-        setErrorMsg("");
-        setIsErrorInput(false);
-      }
-    } else if (
-      selectedQ?.required &&
-      response &&
-      selectedQ?.type === Q.Testimonial
-    ) {
-      const { name, testimonial } = response;
-      if (name?.length < 3 || testimonial?.length < 5) {
-        setErrorMsg(
-          "Name - min 3 characters, and \n testimonial - min 5 characters",
-        );
-        setIsErrorInput(true);
-      } else {
-        setErrorMsg("");
-        setIsErrorInput(false);
-      }
-    } else if (
-      selectedQ?.required &&
-      [Q.Contact, Q.Email, Q.Phone].includes(selectedQ.type)
-    ) {
-      if (
-        selectedQ.features?.[selectedLanguage]?.name.isEnabled &&
-        !response?.name?.length
-      ) {
-        setErrorMsg("Name cannot be blank");
-      } else if (
-        selectedQ.features?.[selectedLanguage]?.phone.isEnabled &&
-        (!response?.phone || !isValidPhoneNumber(response?.phone))
-      ) {
-        if (!response?.phone) setErrorMsg("phone number cannot be blank");
-        else if (!isValidPhoneNumber(response?.phone))
-          setErrorMsg("Enter a valid phone number");
-      } else if (
-        selectedQ.features?.[selectedLanguage]?.email.isEnabled &&
-        (!response?.email?.length || !emailPattern.test(response?.email))
-      ) {
-        if (!response?.email?.length) setErrorMsg("Email cannot be blank");
-        else if (!emailPattern.test(response?.email))
-          setErrorMsg("Enter a valid email");
-      } else {
-        setErrorMsg("");
-        setIsErrorInput(false);
-      }
-    } else {
-      setErrorMsg("");
-      setIsErrorInput(false);
+    if (response) {
+      const errMsg = validateResponse(response, selectedQ, selectedLanguage);
+      setErrorMsg(errMsg);
+      if (errMsg.length) setIsErrorInput(true);
+      else setIsErrorInput(false);
     }
-
     //custom validation rules
     if (
       selectedQ?.validationRules &&

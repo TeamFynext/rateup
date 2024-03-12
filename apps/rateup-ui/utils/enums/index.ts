@@ -80,8 +80,8 @@ export function getQuestionTypeLabel(
       return "Number";
     case QuestionType.InfoMessage:
       return "Message";
-    case QuestionType.DateTime:
-      return "DateTime";
+    case QuestionType.Date:
+      return "Date";
     case QuestionType.CustomNPS:
       return "Custom NPS";
     case QuestionType.PCQ:
@@ -94,6 +94,8 @@ export function getQuestionTypeLabel(
       return "Contact";
     case QuestionType.TnC:
       return "Terms & Conditions";
+    case QuestionType.Address:
+      return "Address";
     case WaFlowFormNonInputElementType.textBody:
       return "Text Body";
     case WaFlowFormNonInputElementType.textCaption:

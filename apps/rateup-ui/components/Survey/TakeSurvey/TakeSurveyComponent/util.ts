@@ -1,4 +1,6 @@
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { QuestionType } from "../../../../types/enums";
+import { emailPattern } from "../../../../utils/constants";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -58,4 +60,61 @@ export const checkRaiseTicketIssueQuestion = (questions, responses) => {
     }
   }
   return false;
+};
+
+export const validateResponse = (
+  response,
+  selectedQ: Question,
+  selectedLanguage,
+) => {
+  let errMsg = "";
+  switch (selectedQ.type) {
+    case QuestionType.Contact:
+    case QuestionType.Email:
+    case QuestionType.Phone:
+      if (
+        selectedQ.features?.[selectedLanguage]?.name.isEnabled &&
+        !response?.name?.length &&
+        selectedQ.required
+      ) {
+        errMsg = "Name cannot be blank";
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.phone.isEnabled &&
+        (!response?.phone ||
+          (!isValidPhoneNumber(response?.phone) && selectedQ.required))
+      ) {
+        if (!response?.phone) errMsg = "phone number cannot be blank";
+        else if (!isValidPhoneNumber(response?.phone))
+          errMsg = "Enter a valid phone number";
+      } else if (
+        selectedQ.features?.[selectedLanguage]?.email.isEnabled &&
+        (!response?.email?.length || !emailPattern.test(response?.email))
+      ) {
+        if (!response?.email?.length && selectedQ.required)
+          errMsg = "Email cannot be blank";
+        else if (!emailPattern.test(response?.email))
+          errMsg = "Enter a valid email";
+      }
+      break;
+    case QuestionType.Address:
+      const { address1, city, postalCode, country } = response;
+      if (selectedQ.required) {
+        if (!address1?.length) errMsg = "Address 1 cannot be blank";
+        else if (!city?.length) errMsg = "City cannot be blank";
+        else if (!postalCode?.length) errMsg = "Postal code cannot be blank";
+        else if (postalCode?.length < 5)
+          errMsg = "Please enter valid postal code";
+        else if (!country?.length) errMsg = "Country cannot be blank";
+      }
+      break;
+    case QuestionType.Testimonial:
+      const { name, testimonial } = response;
+      if ((selectedQ.required && name?.length < 3) || testimonial?.length < 5)
+        errMsg =
+          "Name - min 3 characters, and \n testimonial - min 5 characters";
+      break;
+    default:
+      errMsg = "";
+  }
+  return errMsg;
 };

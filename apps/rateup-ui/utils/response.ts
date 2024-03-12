@@ -23,13 +23,15 @@ export function getResponse(type: any, response: any) {
   switch (type) {
     case QuestionType.Testimonial:
       return formatTestimonialResponse(response);
-    case QuestionType.DateTime:
+    case QuestionType.Date:
       return formatDateTime(response);
     case QuestionType.Contact:
     case QuestionType.Phone:
     case QuestionType.Email:
     case QuestionType.EmailPhone:
       return formatContactInfo(response);
+    case QuestionType.Address:
+      return formattedAddressInfo(response);
     case QuestionType.DDMS:
     case QuestionType.MSQ:
       return formatChoiceTypeQuestions(response);
@@ -59,6 +61,17 @@ function formatChoiceTypeQuestions(response) {
     formattedValue = response.map((item) => item?.value?.trim()).join(", ");
   }
   return formattedValue;
+}
+
+function formattedAddressInfo(response) {
+  if (typeof response === "string") return response;
+  return [
+    `Address 1: ${response?.address1 ?? "NA"}`,
+    `Address 2: ${response?.address2 ?? "NA"}`,
+    `City: ${response?.city ?? "NA"}`,
+    `Postal Code: ${response?.postalCode ?? "NA"}`,
+    `Country: ${response?.country ?? "NA"}`,
+  ];
 }
 
 function formatWaList(response) {

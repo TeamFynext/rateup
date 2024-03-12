@@ -10,6 +10,7 @@ export const ContactQuestions = [
   QuestionType.Email,
   QuestionType.Phone,
   // QuestionType.EmailPhone,
+  QuestionType.Address,
 ];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
@@ -42,7 +43,7 @@ export const OtherQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
   QuestionType.Number,
-  QuestionType.DateTime,
+  QuestionType.Date,
   QuestionType.Photo,
   QuestionType.Testimonial,
   QuestionType.MCQ,
@@ -58,7 +59,7 @@ export const WaOtherQuestions = [
   QuestionType.Text,
   QuestionType.Number,
   QuestionType.MCQ,
-  QuestionType.DateTime,
+  QuestionType.Date,
   QuestionType.Photo,
   QuestionType.Testimonial,
 ];
@@ -67,7 +68,7 @@ const FlowOtherQuestions = [
   QuestionType.MCQ,
   QuestionType.MSQ,
   QuestionType.DDSS,
-  QuestionType.DateTime,
+  QuestionType.Date,
 ];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];

@@ -44,7 +44,7 @@ export const waFlowFormToQuestionTypeMaps = {
   ],
   [wft.dropDown]: [qt.YN, qt.LD, qt.MCQ, qt.Rating, qt.Smiley, qt.Opinion],
   [wft.checkboxGroup]: [qt.MSQ],
-  [wft.datePicker]: [qt.DateTime],
+  [wft.datePicker]: [qt.Date],
   [wft.optIn]: [qt.YN, qt.LD],
 };
 
@@ -70,7 +70,7 @@ export function getQuestionTypesFromFlowElement(
     case wft.checkboxGroup:
       return [qt.MSQ];
     case wft.datePicker:
-      return [qt.DateTime];
+      return [qt.Date];
     case wft.optIn:
       return [qt.YN, qt.LD];
     default:
@@ -539,7 +539,7 @@ export const flow_supported_questions = [
   qt.Phone,
   qt.Number,
   qt.TextArea,
-  qt.DateTime,
+  qt.Date,
   qt.DDSS,
   qt.MCQ,
   qt.YN,
@@ -559,7 +559,7 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.textInput;
     case qt.TextArea:
       return WaFlowFormElementType.textArea;
-    case qt.DateTime:
+    case qt.Date:
       return WaFlowFormElementType.datePicker;
     case qt.DDSS:
       return WaFlowFormElementType.dropDown;

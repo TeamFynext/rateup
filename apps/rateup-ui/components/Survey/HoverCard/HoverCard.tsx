@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import { QuestionType } from "../../../types/enums";
 
 export const HoverCardComponent = ({
   content,
@@ -8,6 +9,7 @@ export const HoverCardComponent = ({
   fz = "md",
   c = "dark.3",
   lineClamp = 1,
+  questionType = null,
 }) => {
   return (
     <HoverCard
@@ -17,15 +19,30 @@ export const HoverCardComponent = ({
       styles={{ dropdown: { maxWidth: 400 } }}
       position="bottom-start"
     >
-      <HoverCard.Target>
-        {typeof content === "object" ? (
-          <Image src={getFileUrlFromKey(content?.value?.image)} w={30} />
-        ) : (
+      {[QuestionType.Address].includes(questionType) ? (
+        <HoverCard.Target>
           <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
-            {typeof content === "boolean" ? content.toString() : content}
+            {content[0]}
           </Text>
-        )}
-      </HoverCard.Target>
+        </HoverCard.Target>
+      ) : (
+        <HoverCard.Target>
+          {typeof content === "object" ? (
+            <Image src={getFileUrlFromKey(content?.value?.image)} w={30} />
+          ) : (
+            <Text
+              c={c}
+              miw={200}
+              maw={200}
+              fw={fw}
+              fz={fz}
+              lineClamp={lineClamp}
+            >
+              {typeof content === "boolean" ? content.toString() : content}
+            </Text>
+          )}
+        </HoverCard.Target>
+      )}
       <HoverCard.Dropdown>
         <ScrollAreaAutosize>
           <Box
@@ -36,7 +53,13 @@ export const HoverCardComponent = ({
             }}
             mah={250}
           >
-            {typeof content === "object" ? (
+            {[QuestionType.Address].includes(questionType) ? (
+              content?.map((c) => (
+                <Text c={c} miw={200} maw={200} fw={fw} fz={fz}>
+                  {c}
+                </Text>
+              ))
+            ) : typeof content === "object" ? (
               <>
                 <Image src={getFileUrlFromKey(content?.value?.image)} w={200} />
                 <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>

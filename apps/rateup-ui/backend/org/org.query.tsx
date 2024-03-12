@@ -174,6 +174,7 @@ export const useDeleteAuthToken = () => {
         autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["googleAuthAccessToken"] });
     },

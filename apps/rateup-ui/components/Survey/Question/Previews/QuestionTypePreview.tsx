@@ -21,6 +21,7 @@ import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQF
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
 import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
 import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/InfoMessageForm";
+import AddressForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/AddressForm";
 
 const QuestionTypePreview = ({ type, choices, features, tnc }) => {
   switch (type) {
@@ -58,7 +59,7 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       return <TestimonialForm features={features} isPreview={true} />;
     case Q.EmailPhone:
       return <EmailPhoneForm />;
-    case Q.DateTime:
+    case Q.Date:
       return <DateForm isPreview={true} />;
     case Q.CustomNPS:
       return <CustomNPSForm previewChoices={choices} />;
@@ -70,6 +71,8 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       return <InfoMessage />;
     case Q.TnC:
       return <TermsNConditionsForm tncData={tnc} />;
+    case Q.Address:
+      return <AddressForm />;
     default:
       return <div>not implemented</div>;
   }
