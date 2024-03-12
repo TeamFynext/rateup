@@ -56,6 +56,7 @@ export function ItemDetailedViewModal({
             true,
             item?.unsplashImage?.find((data) => data === url)?.length > 0,
           )}
+          h={"clamp(220px, 162.864px + 9.524vw, 300px)"}
           alt="menu item image"
         />
       </CreditsCard>
@@ -123,7 +124,7 @@ export function ItemDetailedViewModal({
               maxWidth: smallScreen
                 ? "80vw"
                 : "clamp(220px, 163.6624px + 15.0235vw, 380px)",
-              minHeight: "180px",
+              height: "clamp(220px, 162.864px + 9.524vw, 300px)",
               overflow: "clip",
             }}
           >

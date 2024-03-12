@@ -386,34 +386,26 @@ export function CreateMenuItemModal({
           </Group>
           <Flex>
             {form.values.images?.map((image: File | string, index) => (
-              <CreditsCard
-                enableCredits={
+              <Image
+                onClick={() => setSelectedImage(image)}
+                style={{ borderRadius: "8px", cursor: "pointer" }}
+                src={getImageValue(
+                  image,
+                  false,
                   form?.values?.unsplashImage?.find((data) => data === image)
-                    ?.length > 0
-                }
-                url={image}
-                fz={6}
+                    ?.length > 0,
+                )}
+                h={50}
+                miw={80}
+                maw={80}
+                fallbackSrc={fallbackImage}
+                alt="thumbnail image of menu item"
                 key={
                   typeof image === "object" && image !== null
                     ? (image as File).name + index
                     : String(image)
                 }
-              >
-                <Image
-                  onClick={() => setSelectedImage(image)}
-                  style={{ borderRadius: "8px", cursor: "pointer" }}
-                  src={getImageValue(
-                    image,
-                    false,
-                    form?.values?.unsplashImage?.find((data) => data === image)
-                      ?.length > 0,
-                  )}
-                  h={50}
-                  maw={80}
-                  fallbackSrc={fallbackImage}
-                  alt="thumbnail image of menu item"
-                />
-              </CreditsCard>
+              />
             ))}
             {form?.values?.images?.length < 3 && (
               <>
