@@ -26,6 +26,7 @@ const CreateMenuItemInput = {
   categoryId: z.string(),
   videoUrl: z.string().optional(),
   foodLabels: z.array(z.string()).optional(),
+  unsplashImage: z.array(z.string()).optional(),
 };
 const createMenuItemInputSchema = z.object(CreateMenuItemInput);
 
