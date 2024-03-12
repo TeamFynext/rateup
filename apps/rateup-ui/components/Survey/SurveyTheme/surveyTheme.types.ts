@@ -46,6 +46,7 @@ export interface _SurveyTheme {
   subtitle: Subtitle;
   button: Button;
   input: Input;
+  orgLogoEnabled: boolean;
 }
 export interface ThankyouTheme {
   bg: Bg;

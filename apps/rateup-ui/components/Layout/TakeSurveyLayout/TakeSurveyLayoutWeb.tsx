@@ -103,6 +103,11 @@ export const TakeSurveyLayoutWeb = ({
   const surveyThemeDataPrimaryColor =
     surveyThemeData?.surveyTheme?.input?.primaryColor;
 
+  const orgLogoEnabled =
+    surveyThemeData?.surveyTheme?.orgLogoEnabled === false && startClicked
+      ? false
+      : true;
+
   return (
     <MantineProvider
       theme={{
@@ -228,6 +233,7 @@ export const TakeSurveyLayoutWeb = ({
                     style={{
                       maxHeight: isMobile ? "65px" : "100px",
                       maxWidth: "30%",
+                      visibility: orgLogoEnabled ? "visible" : "hidden",
                     }}
                   >
                     <Image

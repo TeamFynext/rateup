@@ -93,7 +93,7 @@ export const questionTypeEnumArray = [
   QuestionType.Text,
   QuestionType.TextArea,
   QuestionType.Number,
-  QuestionType.DateTime,
+  QuestionType.Date,
   QuestionType.CustomNPS,
   QuestionType.PCQ,
   QuestionType.TnC,

@@ -87,7 +87,7 @@ const SurveyResponsesView = ({
                     }
                     return <li>{responseData}</li>;
 
-                  case Q.DateTime:
+                  case Q.Date:
                     return dayjs(Object.values(response?.response)[0]).format(
                       "DD, MMM , YYYY",
                     );

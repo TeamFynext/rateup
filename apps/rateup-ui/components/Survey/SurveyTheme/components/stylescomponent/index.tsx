@@ -23,6 +23,7 @@ import TabsCommon from "../../../../menu/landingPage/Tabs/TabsCommon";
 import { SelectedItemEnum, ThemeTabEnum } from "../../SurveyTheme.enums";
 import { SurveyThemeContext } from "../../SurveyThemeContext";
 import {
+  SurveyTheme,
   ThankyouTheme,
   WelcomeTheme,
   _SurveyTheme,
@@ -44,6 +45,7 @@ import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import styles from "./StylesComponent.module.css";
 import { useEditSurveyMutation } from "../../../../../backend/surveys/surveys.query";
 import { theme } from "../../../../../config/mantineTheme";
+import CustomSwitch from "./CustomSwitch";
 
 type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
 interface StylesComponentProps {
@@ -164,6 +166,11 @@ function StylesComponent({
 
   const confettiEnabled = (selectedTabStyles as ThankyouTheme)?.confettiEnabled;
 
+  const isOrgLogoEnabled =
+    (selectedTabStyles as _SurveyTheme)?.orgLogoEnabled === false
+      ? false
+      : true;
+
   return (
     <>
       <MantineProvider theme={theme}>
@@ -223,30 +230,28 @@ function StylesComponent({
                 <Tabs.Panel value={SelectedItemEnum.BACKGROUND}>
                   <Stack w="100%">
                     {selectedTab === ThemeTabEnum.THANKYOU && (
-                      <>
-                        {/* <Divider label="Confetti" variant="dashed" w={"100%"} /> */}
-                        <Paper>
-                          <Switch
-                            h={"fit-content"}
-                            fw={400}
-                            size="md"
-                            label={`${confettiEnabled ? "Confetti Enabled:" : "Confetti Disabled:"}`}
-                            checked={confettiEnabled}
-                            color="var(--tertiary-color)"
-                            onChange={() =>
-                              updateSelectedTabStyle(
-                                "confettiEnabled",
-                                !confettiEnabled,
-                              )
-                            }
-                            classNames={{
-                              track: `${!confettiEnabled ? styles["switch-disabled-track"] : ""}`,
-                              body: styles["switch-body"],
-                            }}
-                            labelPosition="left"
-                          />
-                        </Paper>
-                      </>
+                      <CustomSwitch
+                        checked={confettiEnabled}
+                        onChange={(e) =>
+                          updateSelectedTabStyle(
+                            "confettiEnabled",
+                            e?.target?.checked,
+                          )
+                        }
+                        label={"Confetti Enabled"}
+                      />
+                    )}
+                    {selectedTab === ThemeTabEnum.SURVEY && (
+                      <CustomSwitch
+                        checked={isOrgLogoEnabled}
+                        onChange={(e) =>
+                          updateSelectedTabStyle(
+                            "orgLogoEnabled",
+                            e?.target?.checked,
+                          )
+                        }
+                        label={"Organization Logo"}
+                      />
                     )}
                     <BackgroundStyles
                       currentStyles={selectedTabStyles?.bg}

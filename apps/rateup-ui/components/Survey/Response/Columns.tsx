@@ -234,11 +234,16 @@ function BadgeorTextorPreview({
             />
           </>
         ) : null}
-        <HoverCardComponent content={response?.content} />
+        <HoverCardComponent
+          content={response?.content}
+          questionType={questionType}
+        />
       </Stack>
     );
   } else {
-    return <HoverCardComponent content={response} />;
+    return (
+      <HoverCardComponent content={response} questionType={questionType} />
+    );
   }
 }
 

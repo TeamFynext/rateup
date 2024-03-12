@@ -32,6 +32,7 @@ import {
   IconAddressBook,
   IconCheckbox,
   IconPhoto,
+  IconMapPin,
 } from "@tabler/icons-react";
 import {
   QuestionType,
@@ -153,7 +154,7 @@ const questionIcons = {
   [QuestionType.Email]: IconMailFilled,
   [QuestionType.Phone]: IconPhoneFilled,
   [QuestionType.Photo]: IconCameraFilled,
-  [QuestionType.DateTime]: IconCalendarTime,
+  [QuestionType.Date]: IconCalendarTime,
   [QuestionType.LD]: IconThumbUpFilled,
   [QuestionType.YN]: IconClick,
   [QuestionType.Rating]: IconStarsFilled,
@@ -170,6 +171,7 @@ const questionIcons = {
   [QuestionType.Contact]: IconAddressBook,
   [QuestionType.TnC]: IconCheckbox,
   [QuestionType.InfoMessage]: IconMailFilled,
+  [QuestionType.Address]: IconMapPin,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.textBody]: IconTextSize,

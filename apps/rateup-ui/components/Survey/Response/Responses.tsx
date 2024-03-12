@@ -81,10 +81,7 @@ const Responses = ({
     { open: redirectModalOpen, close: redirectModalClose },
   ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
-  const [callbackRoute, setCallBackRoute] = useLocalStorage(
-    "google-callback-route",
-    "/dashboard/settings",
-  );
+  const [alertMsg, setAlertMsg] = useState("");
   const router = useRouter();
   const hasContactQuestion =
     responses &&
@@ -212,6 +209,7 @@ const Responses = ({
     setIsSyncing(true);
     if (!googleAuthAccessToken.isExist) {
       setIsSyncing(false);
+      setAlertMsg("Please sync your Google account in the settings.");
       redirectModalOpen();
     } else {
       syncResponseToGoogleSheet.mutate(
@@ -228,11 +226,13 @@ const Responses = ({
           },
           onError: (error: any) => {
             setIsSyncing(false);
-            toggle();
             if (error.response.data?.error === "invalid_grant") {
-              setCallBackRoute(`/dashboard/surveys/${surveyId}?tab=Result`);
-              window.open(authUrl);
+              setAlertMsg(
+                "Your access has been revoked. Please sign out and sign in again in the settings",
+              );
+              redirectModalOpen();
             } else {
+              toggle();
               showErrorToast("Error in syncing response");
             }
           },
@@ -336,7 +336,7 @@ const Responses = ({
                     opened={redirectModalOpened}
                     onClose={redirectModalClose}
                     headerTitle="Sync Google Sheet"
-                    headerLabel="Please sync your Google account in the settings."
+                    headerLabel={alertMsg}
                     confirmLabel="Go to Settings"
                     onConfirm={() => {
                       router.push("/dashboard/settings?activeTab=advanced");

@@ -218,6 +218,13 @@ declare global {
         phone?: string;
         email?: string;
       };
+      [QuestionType.Address]?: {
+        address1: string;
+        address2?: string;
+        city: string;
+        postalCode: string;
+        country: string;
+      };
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
       [QuestionType.Rating]?: number;
@@ -233,7 +240,7 @@ declare global {
         email?: string;
       };
       [QuestionType.Photo]?: string;
-      [QuestionType.DateTime]?: Date;
+      [QuestionType.Date]?: Date;
       [QuestionType.CustomNPS]?: Choice;
       [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };

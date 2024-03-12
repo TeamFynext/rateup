@@ -25,11 +25,12 @@ export enum QuestionType {
   TextArea = "TextArea",
   InfoMessage = "InfoMessage",
   Number = "Number",
-  DateTime = "DateTime",
+  Date = "Date",
   CustomNPS = "Custom NPS",
   PCQ = "Picture Choice",
   TnC = "Terms & Conditions",
   Contact = "Contact",
+  Address = "Address",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List

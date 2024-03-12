@@ -32,7 +32,7 @@ export function WaQuestionPreview({
     case Q.Text: {
       return <WaResponseMessage header={title} body={description} />;
     }
-    case Q.DateTime: {
+    case Q.Date: {
       return (
         <>
           <WaResponseMessage

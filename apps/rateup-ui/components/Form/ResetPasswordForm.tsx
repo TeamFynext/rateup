@@ -9,7 +9,6 @@ import {
 import {
   Title,
   Text,
-  PasswordInput,
   Anchor,
   Group,
   Image,
@@ -29,7 +28,10 @@ import styles from "./AuthForm.module.css";
 import { useCheckEmailExistMutation } from "../../backend/user/user.query";
 import { showNotification } from "../../utils/auth";
 import { rateupLogoUrl } from "../HomePage/constants";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedPasswordInput,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../utils/constants";
 
@@ -194,16 +196,14 @@ const ResetPasswordForm = ({ mode }) => {
               />
             ) : (
               <>
-                <PasswordInput
-                  classNames={styles}
+                <ContainedPasswordInput
                   placeholder="Password"
                   required
                   {...pwdForm.getInputProps("password")}
                   mt="md"
                 />
 
-                <PasswordInput
-                  classNames={styles}
+                <ContainedPasswordInput
                   placeholder="Confirm Password"
                   required
                   {...pwdForm.getInputProps("confirmPassword")}

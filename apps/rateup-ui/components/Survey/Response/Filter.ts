@@ -19,7 +19,7 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
     )
   ) {
     formatedResponse = Object.values(cellValue).join(" , ");
-  } else if ([QuestionType.DateTime].includes(responseType)) {
+  } else if ([QuestionType.Date].includes(responseType)) {
     formatedResponse = dayjs(cellValue as string).format("DD, MMM YYYY");
   } else if (
     [QuestionType.DDMS, QuestionType.MSQ].includes(responseType as QuestionType)
