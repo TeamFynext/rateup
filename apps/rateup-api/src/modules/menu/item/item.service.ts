@@ -23,6 +23,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
     images: data?.images,
     videoUrl: data?.videoUrl,
     foodLabels: data?.foodLabels,
+    unsplashImage: data?.unsplashImage,
   };
 
   if (existingMenuData) {
