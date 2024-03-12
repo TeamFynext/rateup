@@ -165,3 +165,16 @@ export const ChoiceTypeQuestions = [
   QuestionType.CustomNPS,
   QuestionType.WaButtons,
 ];
+export enum LoyaltyCampaignType {
+  Referral = "Referral",
+  ReferralTransaction = "ReferralTransaction",
+  Transaction = "Transaction",
+}
+export enum CampaignRewardType {
+  Fixed = "Fixed",
+  Percentage = "Percentage",
+}
+export enum LoyaltyCustomerRewardType {
+  Referrer = "Referrer", // the one who referred
+  Customer = "Customer", // the one who was referred or made the transaction
+}

@@ -183,7 +183,7 @@ export function createTextMessage(
     type: "text",
     text: {
       preview_url: false,
-      body: title ? `*${title}*\n\n` : "" + description,
+      body: (title ? `*${title}*\n\n` : "") + description,
     },
   };
 }
