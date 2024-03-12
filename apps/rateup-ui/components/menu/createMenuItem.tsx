@@ -200,20 +200,28 @@ export function CreateMenuItemModal({
         });
         setImageLoading(false);
       } else {
-        setImageLoading(true);
-        const imageResponse = imageArray?.map((data) => uploadFile(data));
-        const response = await Promise.allSettled(imageResponse);
-        errors = response?.filter(
-          (r) => r.status === "rejected",
-        ) as PromiseRejectedResult[];
-        const successes = response
-          .filter(
-            (r): r is PromiseFulfilledResult<string> =>
-              r.status === "fulfilled",
-          )
-          .map((r) => r?.value);
+        const newImages: File[] = [];
+        for (const image of imageArray) {
+          setImageLoading(true);
+          if (typeof image !== "string") {
+            newImages.push(image);
+          }
+        }
+        if (newImages?.length > 0) {
+          const imageResponse = imageArray?.map((data) => uploadFile(data));
+          const response = await Promise.allSettled(imageResponse);
+          errors = response?.filter(
+            (r) => r.status === "rejected",
+          ) as PromiseRejectedResult[];
+          const successes = response
+            .filter(
+              (r): r is PromiseFulfilledResult<string> =>
+                r.status === "fulfilled",
+            )
+            .map((r) => r?.value);
 
-        values.images = successes;
+          values.images = successes;
+        }
         createMenuItemMutation.mutate(values);
         for (const imageUploadError of errors) {
           showErrorToast(imageUploadError.reason);
@@ -396,8 +404,9 @@ export function CreateMenuItemModal({
                     ?.length > 0,
                 )}
                 h={50}
-                miw={80}
-                maw={80}
+                miw={70}
+                maw={70}
+                mr={"md"}
                 fallbackSrc={fallbackImage}
                 alt="thumbnail image of menu item"
                 key={
