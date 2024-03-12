@@ -37,6 +37,7 @@ export const useSurveyResponseColumns = ({
   setSelectedRowId,
   open,
   setSelectedResponseId,
+  setResponseTeamId,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
@@ -144,7 +145,9 @@ export const useSurveyResponseColumns = ({
           <ActionMenu
             open={open}
             resId={info.row.original.id}
+            resTeamId={info.row.original.teamId}
             setSelectedResponseId={setSelectedResponseId}
+            setResponseTeamId={setResponseTeamId}
             setSelectedRowId={setSelectedRowId}
             ticketData={info.row.original.Ticket}
           />
@@ -249,8 +252,10 @@ function BadgeorTextorPreview({
 
 function ActionMenu({
   resId,
+  resTeamId,
   open,
   setSelectedResponseId,
+  setResponseTeamId,
   setSelectedRowId,
   ticketData,
 }) {
@@ -290,6 +295,7 @@ function ActionMenu({
                 window.open(url, "_blank");
               } else {
                 setSelectedResponseId(resId);
+                setResponseTeamId(resTeamId);
               }
             }}
             leftSection={

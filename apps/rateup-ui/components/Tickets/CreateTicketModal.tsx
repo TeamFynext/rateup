@@ -75,6 +75,10 @@ const CreateTicketModal = ({
   }, [rid]);
 
   useEffect(() => {
+    if (selectedTeamId) form.setFieldValue("teamId", selectedTeamId);
+  }, [selectedTeamId]);
+
+  useEffect(() => {
     if (surveyResponseId)
       form.setFieldValue("surveyResponseId", surveyResponseId);
   }, [surveyResponseId]);
