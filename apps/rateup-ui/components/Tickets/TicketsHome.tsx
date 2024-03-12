@@ -178,7 +178,9 @@ const TicketsHome = () => {
         </SurveyCardLayout>
       ) : (
         <Stack mt="xl">
-          <NothingFound text={`No "${status}" Tickets Found`} />
+          <NothingFound
+            text={`No ${filterParam !== "all" ? ` "${filterParam}" ` : ""} Tickets Found`}
+          />
         </Stack>
       )}
     </Stack>
