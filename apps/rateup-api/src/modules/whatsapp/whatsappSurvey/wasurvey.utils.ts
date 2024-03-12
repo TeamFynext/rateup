@@ -307,7 +307,7 @@ export async function generateMessageDataFromQuestion(
     case Q.WaButtons:
       choices = question.choices![lang]?.map((ch) => ch?.value);
       break;
-    case Q.DateTime:
+    case Q.Date:
       description += "\n\nPlease enter date in DD/MM/YYYY format";
       break;
     case Q.Rating: {
@@ -355,9 +355,7 @@ export async function generateMessageDataFromQuestion(
     }
   } else {
     // text question
-    if (
-      [Q.Text, Q.Email, Q.Photo, Q.DateTime, Q.Number].includes(question.type)
-    ) {
+    if ([Q.Text, Q.Email, Q.Photo, Q.Date, Q.Number].includes(question.type)) {
       return createTextMessage(to, title, description);
     } else if ([Q.MSQ, Q.MCQ, Q.CustomNPS].includes(question.type)) {
       let bodyText = description;
@@ -457,7 +455,7 @@ export async function parseResponse(
           waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply
             .id,
         );
-      case Q.DateTime:
+      case Q.Date:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
           return "";
         }

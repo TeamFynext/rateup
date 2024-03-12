@@ -125,7 +125,7 @@ export async function downloadExcelResponse(
               responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
               break;
             }
-            case QuestionType.DateTime: {
+            case QuestionType.Date: {
               responseValue = dayjs(responseValue).format("DD-MM-YYYY");
               break;
             }
@@ -671,6 +671,11 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
 export function getFormattedResponse(response, type) {
   let formattedResponse = "";
   switch (type) {
+    case QuestionType.Address:
+      formattedResponse = Object.entries(response)
+        .map(([key, value]) => `${key}: ${String(value)}`)
+        .join(", ");
+      break;
     case QuestionType.CustomNPS:
     case QuestionType.MCQ:
     case QuestionType.DDSS:
@@ -682,7 +687,7 @@ export function getFormattedResponse(response, type) {
         .map((item) => item?.value?.trim())
         .join(", ");
       break;
-    case QuestionType.DateTime:
+    case QuestionType.Date:
       formattedResponse = dayjs(response).format("DD, MMM YYYY");
       break;
     case QuestionType.Photo:

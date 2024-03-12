@@ -193,7 +193,7 @@ export function parseFlowResponse({
       return response;
     case qt.Phone:
       return { phone: response };
-    case qt.DateTime:
+    case qt.Date:
       return new Date(parseInt(response));
     case qt.YN:
     case qt.LD:
@@ -486,7 +486,7 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.textInput;
     case qt.TextArea:
       return WaFlowFormElementType.textArea;
-    case qt.DateTime:
+    case qt.Date:
       return WaFlowFormElementType.datePicker;
     case qt.DDSS:
       return WaFlowFormElementType.dropDown;

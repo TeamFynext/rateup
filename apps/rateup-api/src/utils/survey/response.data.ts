@@ -78,7 +78,7 @@ const getResponseFromQuestion = (question = []) => {
         response = faker.number.bigInt();
         break;
 
-      case QuestionType.DateTime:
+      case QuestionType.Date:
         response = faker.date.anytime()?.toString();
         break;
 
