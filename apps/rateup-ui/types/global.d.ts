@@ -178,7 +178,7 @@ declare global {
     Ticket?: {
       id: string;
     };
-    teamId: string;
+    teamId?: string;
   };
   type Coordinates = {
     latitude: number;
