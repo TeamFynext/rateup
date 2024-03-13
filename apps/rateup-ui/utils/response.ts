@@ -95,7 +95,7 @@ function formatTestimonialResponse(response) {
 function formatDefaultResponse(type, response) {
   // Handle other types or default case
   if (ChoiceTypeQuestions.includes(type)) {
-    return response ? response.value : "";
+    return response ? response.value || `Other : ${response?.other}` : "";
   }
   return response;
 }

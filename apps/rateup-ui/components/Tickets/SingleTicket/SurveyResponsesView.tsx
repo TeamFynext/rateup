@@ -136,9 +136,15 @@ const SurveyResponsesView = ({
                         </Group>
                       </Stack>
                     );
-
-                  case Q.CustomNPS:
                   case Q.MCQ:
+                    let selectedValue = Object.values(response?.response)[0];
+                    return (
+                      <Text>
+                        {selectedValue?.value ||
+                          `Other: ${selectedValue?.other}`}
+                      </Text>
+                    );
+                  case Q.CustomNPS:
                   case Q.DDSS:
                     let selectedChoice = Object.values(response?.response)[0];
                     return <Text>{selectedChoice?.value}</Text>;

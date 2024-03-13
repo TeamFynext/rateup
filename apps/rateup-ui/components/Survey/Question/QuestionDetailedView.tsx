@@ -17,7 +17,7 @@ import {
   Menu,
 } from "@mantine/core";
 import { useRouter } from "next/router";
-import { NPSWeightage, QuestionType } from "../../../types/enums";
+import { NPSWeightage, QuestionType, SurveyType } from "../../../types/enums";
 import { IconDeviceSdCard, IconEdit, IconEye } from "@tabler/icons-react";
 import { QuestionTabsEnum } from "../EditSurvey";
 import {
@@ -209,7 +209,11 @@ export function QuestionDetailedView({
                   }}
                 />
               )}
-              <ExtraProps form={form} question={question} />
+              <ExtraProps
+                form={form}
+                question={question}
+                surveyType={SurveyType.Web}
+              />
             </Stack>
             <LanguageCompletionView
               selectedLanguage={selectedLanguage}
@@ -401,15 +405,22 @@ export function getNpsColor(npstype) {
 interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
+  surveyType: SurveyType;
 }
-function ExtraProps({ form, question }: ExtraPropsProps) {
+function ExtraProps({ form, question, surveyType }: ExtraPropsProps) {
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
     case QuestionType.DDSS:
     case QuestionType.DDMS:
     case QuestionType.CustomNPS:
-      return <ChoicesCreator qId={question?.id} form={form} />;
+      return (
+        <ChoicesCreator
+          qId={question?.id}
+          form={form}
+          surveyType={surveyType}
+        />
+      );
     case QuestionType.PCQ:
       return <ChoicesCreator qId={question?.id} form={form} image />;
     case QuestionType.Testimonial:

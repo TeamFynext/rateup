@@ -10,6 +10,7 @@ import {
   ScrollArea,
   FileButton,
   Button,
+  Switch,
 } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure, useHover } from "@mantine/hooks";
@@ -26,7 +27,7 @@ import {
 } from "../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../input/LengthTracker";
 import inputStyles from "../../input/InputStyles.module.css";
-import { NPSWeightage, QuestionType } from "../../../types/enums";
+import { NPSWeightage, QuestionType, SurveyType } from "../../../types/enums";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { getNpsColor } from "./QuestionDetailedView";
 import SurveyContext from "../../../context/SurveyContext";
@@ -40,6 +41,7 @@ import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartSt
 import { uploadFile } from "../../../utils/file-upload/upload";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { useResponses } from "../../../backend/surveys/response/response.query";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
@@ -47,6 +49,7 @@ interface ChoicesCreatorProps {
   maxChoiceCount?: number;
   maxCharCount?: number;
   image?: boolean;
+  surveyType?: SurveyType;
 }
 export function ChoicesCreator({
   form,
@@ -54,6 +57,7 @@ export function ChoicesCreator({
   maxCharCount,
   maxChoiceCount,
   image = false,
+  surveyType,
 }: ChoicesCreatorProps) {
   const [newChoice, setNewChoice] = useState<string>("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
@@ -76,8 +80,10 @@ export function ChoicesCreator({
   const buttonRef = useRef<HTMLButtonElement>();
 
   const choices = form.values.choices?.[selectedLanguage] || [];
+  const features = form.values.features?.[selectedLanguage] || {
+    other: false,
+  };
 
-  const { surveyTeamMapId } = useContext(SurveyContext);
   const { updateImageArray } = useImageStore();
   const [inputError, setInputError] = useState("");
 
@@ -276,6 +282,24 @@ export function ChoicesCreator({
           />
         </Group>
       )}
+      {form.values.type === QuestionType.MCQ &&
+        surveyType == SurveyType.Web && (
+          <PaperLayout w={"fit-content"}>
+            <Switch
+              label={"Enable Other"}
+              checked={features?.other}
+              onChange={(e) => {
+                form.setFieldValue("features", {
+                  ...form.values.features,
+                  [selectedLanguage]: {
+                    ...features,
+                    other: e.currentTarget.checked,
+                  },
+                });
+              }}
+            />
+          </PaperLayout>
+        )}
     </>
   );
 }

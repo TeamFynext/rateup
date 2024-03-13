@@ -29,8 +29,7 @@ import {
 import { stringToColour } from "../../../utils/essential";
 import RateupLoader from "../../Loaders/RateupLoader";
 
-const ResultsOverview = () => {
-  const { surveyId } = useRouter().query as { surveyId: string };
+const ResultsOverview = ({ surveyId }) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -196,6 +195,12 @@ const ResultsOverview = () => {
         csat: csatScore,
         choicesInAllLang: choicesInAllLang,
         enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
+        enabledOther:
+          question?.type == QuestionType.MCQ
+            ? question?.features?.[
+                selectedLanguage ? selectedLanguage : defaultLanguage
+              ]?.other
+            : false,
       };
     });
   };
@@ -273,6 +278,7 @@ const ResultsOverview = () => {
                       data={item?.responses}
                       questionType={item?.type}
                       choicesInAllLang={item?.choicesInAllLang}
+                      enabledOther={item?.enabledOther}
                     />
                     {index < chartData?.length - 1 && <Divider my="md" />}
                   </React.Fragment>
