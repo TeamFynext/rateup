@@ -65,6 +65,7 @@ export type downloadExcelResponseType = {
   defaultLanguage: string;
   visibleColumn: string[];
   title: string;
+  tz: string;
 };
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {

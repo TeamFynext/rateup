@@ -49,6 +49,12 @@ import {
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { TicketType } from "../../../utils/enums/ticket";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import dayjs from "dayjs";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const Responses = ({
   survey,
@@ -159,6 +165,7 @@ const Responses = ({
       surveyId,
       visibleColumn: useVisibleColumnStore.getState().visibleColumn,
       title: survey?.title,
+      tz: dayjs.tz.guess(),
     });
   }, [defaultLanguage, downloadExcelResponse, survey?.title, surveyId]);
 
