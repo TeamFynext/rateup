@@ -111,9 +111,11 @@ export async function addNewContactsToGroupHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const contactGroup = await addNewContactsToGroup(
       request.params.contactGroupId,
       request.body,
+      orgId,
     );
     reply.code(200).send(contactGroup);
   } catch (error) {
