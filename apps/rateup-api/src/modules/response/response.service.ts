@@ -33,7 +33,7 @@ export async function getAllResponses(
   surveyId: string,
   teamIds: Array<string>,
 ) {
-  const responses = await prisma.surveyTeamMap.findMany({
+  const responsesQuery = await prisma.surveyTeamMap.findMany({
     where: {
       surveyId: surveyId,
       teamId: {
@@ -67,6 +67,11 @@ export async function getAllResponses(
           responses: true,
           createdAt: true,
           encryptedResponses: true,
+          surveyTeamMap: {
+            select: {
+              teamId: true,
+            },
+          },
           Ticket: {
             select: {
               id: true,
@@ -76,7 +81,18 @@ export async function getAllResponses(
       },
     },
   });
-  return responses;
+
+  let responseData = responsesQuery.map(({ responses, ...rest }) => {
+    return {
+      ...rest,
+      responses: responses.map(({ surveyTeamMap, ...restD }) => ({
+        ...restD,
+        teamId: surveyTeamMap.teamId,
+      })),
+    };
+  });
+
+  return responseData;
 }
 
 export async function downloadExcelResponse(
