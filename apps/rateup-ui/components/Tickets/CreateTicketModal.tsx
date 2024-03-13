@@ -158,6 +158,9 @@ const CreateTicketModal = ({
           placeholder={"Enter Comment"}
           label={"Comment"}
           withAsterisk
+          autosize
+          maxRows={4}
+          minRows={4}
           {...form.getInputProps("firstComment")}
         />
         <Group>
