@@ -7,6 +7,7 @@ import {
   UpdateTicketInput,
 } from "./ticket.schema";
 import { Role } from "../../utils/enums";
+import { formatDateT2 } from "../../utils/date";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -275,13 +276,30 @@ export async function updateTicket(
   userId: string,
   input: UpdateTicketInput,
 ) {
+  let updateData;
+
+  if (input.assignedToId) {
+    let assignedTo = {
+      assignedTo: {
+        connect: {
+          id: input.assignedToId,
+        },
+      },
+    };
+    updateData = {
+      ...assignedTo,
+    };
+  } else {
+    updateData = {
+      ...input,
+    };
+  }
+
   const updatedTicket = await prisma.ticket.update({
     where: {
       id: ticketId,
     },
-    data: {
-      ...input,
-    },
+    data: updateData,
   });
 
   if (updatedTicket) {
@@ -290,7 +308,13 @@ export async function updateTicket(
     let ticketData = {
       ticketId: updatedTicket.id,
       createdBy: userId,
-      msg: `Note: Updated the ticket ${updatedProperties}.`,
+      msg: input.assignedToName
+        ? `Note: Ticket re-assigned to ${input.assignedToName}.`
+        : input.priority
+          ? `Note: Ticket priority changed to ${input.priority}.`
+          : input.deadline
+            ? `Note: Deadline changed to ${formatDateT2(input.deadline)}.`
+            : `Note: Updated the ticket ${updatedProperties}.`,
     };
     createComment(ticketData);
   }

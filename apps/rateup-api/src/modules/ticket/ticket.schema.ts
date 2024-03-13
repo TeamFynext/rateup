@@ -45,6 +45,8 @@ const updateStatusRequestSchema = z.object({
 const updateTicketRequestSchema = z.object({
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
   deadline: z.string().optional(),
+  assignedToId: z.string().optional(),
+  assignedToName: z.string().optional(),
 });
 
 const createCommentRequestSchema = z.object({
