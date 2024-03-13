@@ -13,11 +13,10 @@ import {
   ActionIcon,
   rem,
   ScrollArea,
-  Modal,
 } from "@mantine/core";
 import { titleStyle } from "../styled/Heading/Heading";
 import {
-  ContainedDateTimePickerInput,
+  ContainedDateInput,
   ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
@@ -29,10 +28,7 @@ import {
   IUpdateTicketStatusRequest,
 } from "../../backend/tickets/tickets";
 import { showLoadingToast } from "../../utils/notifications";
-import {
-  formatIsoDateString,
-  formatIsoDateStringWithTime,
-} from "../../utils/dateTime";
+import { formatIsoDateString } from "../../utils/dateTime";
 import {
   PlatformIcon,
   RatingBadge,
@@ -53,6 +49,7 @@ import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 const SingleTicket = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -273,16 +270,14 @@ const SingleTicket = ({ id }: { id: string }) => {
           <Text>Priority : </Text>
           <PriorityMenu priority={priority} setPriority={setPriority} />
         </TicketDetailBlock>
-        <TicketDetailBlock mawInp="350">
+        <TicketDetailBlock mawInp="320">
           <Text>Deadline: </Text>
           <Text
             size="sm"
             fw="700"
             style={{ maxWidth: "300px", maxHeight: "30px" }}
           >
-            {ticket?.deadline
-              ? formatIsoDateStringWithTime(ticket?.deadline)
-              : "n/a"}
+            {ticket?.deadline ? formatIsoDateString(ticket?.deadline) : "n/a"}
           </Text>
           <ActionIcon
             variant="default"
@@ -294,8 +289,17 @@ const SingleTicket = ({ id }: { id: string }) => {
         </TicketDetailBlock>
       </Group>
 
-      <Modal opened={opened} onClose={close} title="Update Deadline" centered>
-        <ContainedDateTimePickerInput
+      <FormModalLayout
+        opened={opened}
+        onClose={closeDeadlineModal}
+        title={"Update Deadline"}
+        centered
+        onSubmit={updateDeadline}
+        buttonTitle={"Update"}
+        includeCancelButton
+      >
+        <ContainedDateInput
+          my="xl"
           minDate={new Date()}
           clearable
           label={"Deadline:"}
@@ -303,11 +307,7 @@ const SingleTicket = ({ id }: { id: string }) => {
           defaultValue={new Date(ticket?.deadline)}
           onChange={(date) => setDeadline(date)}
         />
-        <Group mt="xl" justify="flex-end">
-          <RateupButtonSecondary title="close" onClick={closeDeadlineModal} />
-          <RateupButtonPrimary title="Update" onClick={updateDeadline} />
-        </Group>
-      </Modal>
+      </FormModalLayout>
 
       <Group gap={30} mb="lg">
         <PaperLayout

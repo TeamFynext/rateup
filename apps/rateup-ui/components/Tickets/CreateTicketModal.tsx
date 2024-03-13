@@ -6,7 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
 import {
-  ContainedDateTimePickerInput,
+  ContainedDateInput,
   ContainedSelection,
   ContainedTextArea,
   ContainedTextField,
@@ -180,7 +180,7 @@ const CreateTicketModal = ({
             placeholder="Select priority for the ticket"
             {...form.getInputProps("priority")}
           />
-          <ContainedDateTimePickerInput
+          <ContainedDateInput
             minDate={new Date()}
             clearable
             label={"Deadline:"}
