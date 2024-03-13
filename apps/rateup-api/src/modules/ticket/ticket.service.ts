@@ -7,7 +7,7 @@ import {
   UpdateTicketInput,
 } from "./ticket.schema";
 import { Role } from "../../utils/enums";
-import { formatDateT2 } from "../../utils/date";
+import { formatDateT1 } from "../../utils/date";
 import { createEmailBodyTicketAssigned } from "../../utils/email/tickets/ticketAssigned";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 
@@ -365,7 +365,7 @@ export async function updateTicket(
         : input.priority
           ? `Note: Ticket priority changed to ${input.priority}.`
           : input.deadline
-            ? `Note: Deadline changed to ${formatDateT2(input.deadline)}.`
+            ? `Note: Deadline changed to ${formatDateT1(input.deadline)}.`
             : `Note: Updated the ticket ${updatedProperties}.`,
     };
     createComment(ticketData);
