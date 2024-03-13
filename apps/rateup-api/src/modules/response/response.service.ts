@@ -175,7 +175,9 @@ export async function downloadExcelResponse(
             if (ChoiceTypeQuestions.includes(responseType)) {
               responseValue = Array.isArray(responseValue)
                 ? responseValue?.map((res) => res.value).join(", ")
-                : responseValue?.value;
+                : responseType == QuestionType.MCQ
+                  ? responseValue?.value || `Other:${responseValue?.other}`
+                  : responseValue?.value;
             } else if (typeof responseValue === "object") {
               responseValue = responseValue?.value
                 ? Object.values(responseValue?.value).join(", ")
@@ -700,8 +702,11 @@ export function getFormattedResponse(response, type) {
         .map(([key, value]) => `${key}: ${String(value)}`)
         .join(", ");
       break;
-    case QuestionType.CustomNPS:
     case QuestionType.MCQ:
+      formattedResponse =
+        response?.value?.trim() || `other: ${response?.other?.trim()}`;
+      break;
+    case QuestionType.CustomNPS:
     case QuestionType.DDSS:
       formattedResponse = response.value.trim();
       break;
