@@ -225,6 +225,12 @@ const SingleTicket = ({ id }: { id: string }) => {
     });
   };
 
+  function handleKeyPress(event) {
+    if (event.key === "Enter") {
+      onSubmit();
+    }
+  }
+
   return (
     <Stack mt="-20px">
       <Group>
@@ -413,6 +419,7 @@ const SingleTicket = ({ id }: { id: string }) => {
                     withAsterisk
                     style={{ width: "83%" }}
                     {...form.getInputProps("msg")}
+                    onKeyDown={handleKeyPress}
                   />
                   <ActionIcon
                     onClick={onSubmit}
