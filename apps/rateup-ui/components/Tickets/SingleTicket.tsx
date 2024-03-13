@@ -15,8 +15,10 @@ import {
   ScrollArea,
 } from "@mantine/core";
 import { titleStyle } from "../styled/Heading/Heading";
-import { useUser } from "../../context/UserContext";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
 import { IconSend } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
@@ -41,6 +43,9 @@ import { CommentCard } from "./SingleTicket/CommentCard";
 import { TicketType } from "../../utils/enums/ticket";
 import SurveyResponsesView from "./SingleTicket/SurveyResponsesView";
 import RateupLoader from "../Loaders/RateupLoader";
+import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
+import { useUser } from "../../context/UserContext";
+import { UserRole } from "../../utils/enums";
 
 const SingleTicket = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -51,6 +56,18 @@ const SingleTicket = ({ id }: { id: string }) => {
     refetch,
   } = useTicket(id);
 
+  const {
+    isLoading: isLoadingMembers,
+    data: teamsMembersData,
+    refetch: refetchInvitedTeamMembers,
+  } = useTeamMembersFromInvitation(ticket?.teamId) as UseTeamResult;
+
+  const memberOptions = teamsMembersData?.members?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
+  }));
+
+  const [value, setValue] = useState<string | null>("");
   const [priority, setPriority] = useState(ticket?.priority || "");
   const [status, setStatus] = useState(ticket?.status || "");
   const updateTicket = useUpdateTicketMutation(id);
@@ -79,7 +96,8 @@ const SingleTicket = ({ id }: { id: string }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [ticket]);
+    setValue(ticket?.assignedToId);
+  }, [ticket, memberOptions]);
 
   useEffect(() => {
     if (priority && ticket?.priority !== priority) {
@@ -100,6 +118,31 @@ const SingleTicket = ({ id }: { id: string }) => {
       });
     }
   }, [priority]);
+
+  useEffect(() => {
+    if (value && ticket?.assignedToId !== value) {
+      let data: IUpdateTicketRequest = {
+        assignedToId: value,
+        assignedToName:
+          memberOptions?.find((member) => member.value === value)?.label ||
+          "**",
+      };
+      showLoadingToast(
+        "Hold..ticket is getting updated..",
+        "update-ticket",
+        true,
+        "Updating Ticket",
+      );
+      updateTicket.mutate(data, {
+        onSuccess: () => {
+          scrollToBottom();
+        },
+        onError: () => {
+          //setPriority(ticket?.priority);
+        },
+      });
+    }
+  }, [value]);
 
   useEffect(() => {
     if (status && ticket?.status !== status) {
@@ -169,28 +212,43 @@ const SingleTicket = ({ id }: { id: string }) => {
           {ticket?.title}
         </Title>
       </Group>
-
       <Group justify="flex-start" gap="10" mt="-1px">
-        <TicketDetailBlock>
+        <TicketDetailBlock mawInp="400" miwInput="85" pt="lg">
           <Text>Team :</Text>
           <Text size="xl" fw="700">
             {ticket?.teamName}
           </Text>
         </TicketDetailBlock>
+        <TicketDetailBlock mawInp="400" miwInput="85">
+          <Text>Assigned To :</Text>
+          <ContainedSelection
+            allowDeselect={false}
+            data={memberOptions}
+            withAsterisk
+            my="0"
+            placeholder="Select a team member to assign ticket to"
+            value={ticket?.assignedToId}
+            onChange={setValue}
+            defaultChecked={ticket?.assignedTo}
+            disabled={user.role !== UserRole.SUPADM}
+          />
+        </TicketDetailBlock>
+      </Group>
+      <Group justify="flex-start" gap="10" mt="-1px">
         <TicketDetailBlock>
-          <Text>Status</Text>
+          <Text>Status : </Text>
           <StatusMenu status={status} setStatus={setStatus} />
         </TicketDetailBlock>
         <TicketDetailBlock>
-          <Text>Priority</Text>
+          <Text>Priority : </Text>
           <PriorityMenu priority={priority} setPriority={setPriority} />
         </TicketDetailBlock>
-        <TicketDetailBlock>
+        <TicketDetailBlock mawInp="350">
           <Text>Deadline: </Text>
           <Text
             size="sm"
             fw="700"
-            style={{ maxWidth: "130px", maxHeight: "30px" }}
+            style={{ maxWidth: "300px", maxHeight: "30px" }}
           >
             {ticket?.deadline
               ? formatIsoDateStringWithTime(ticket?.deadline)
