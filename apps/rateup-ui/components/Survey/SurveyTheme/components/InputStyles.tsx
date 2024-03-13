@@ -8,7 +8,7 @@ import {
   Box,
 } from "@mantine/core";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Input } from "../surveyTheme.types";
 import CustomColorSwatch from "./customelements/CustomColorSwatch";
 import { defaultThemeName } from "../SurveyTheme.enums";
@@ -21,6 +21,17 @@ function InputStyles({
   currentStyles: Input;
   setCurrentstyles: (key: string, value: any) => void;
 }) {
+  const handleColorPickerChange = useCallback(
+    (valueObj) => {
+      const { themeObjKey, propertyChanged, value } = valueObj;
+      setCurrentstyles(themeObjKey, {
+        ...currentStyles,
+        [propertyChanged]: value,
+      });
+    },
+    [currentStyles],
+  );
+
   return (
     <>
       <Stack align="center" w={"100%"}>
@@ -29,17 +40,12 @@ function InputStyles({
           <Box className={"custom-color-picker-and-heading-container"}>
             <h2>Text Color</h2>
             <CustomColorPicker
-              value={
-                currentStyles?.primaryColor === "rateup-blue"
-                  ? "#1C518E"
-                  : currentStyles?.primaryColor
-              }
-              onChange={(e) => {
-                setCurrentstyles("input", {
-                  ...currentStyles,
-                  primaryColor: e,
-                });
+              optionalDataObj={{
+                themeObjKey: "input",
+                propertyChanged: "primaryColor",
               }}
+              value={currentStyles?.primaryColor}
+              onChange={handleColorPickerChange}
             />
           </Box>
           {/* <Text c={"dimmed"} fz="xs">

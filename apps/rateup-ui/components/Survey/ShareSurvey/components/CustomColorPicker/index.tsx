@@ -5,7 +5,17 @@ import styles from "./CustomColorPicker.module.css";
 import buttonStyles from "./MantineButtonStyles.module.css";
 import { useCallback, useState } from "react";
 
-function CustomColorPicker({ value, onChange }) {
+type CustomColorPickerProps = {
+  value: string;
+  onChange: any;
+  optionalDataObj?: any;
+};
+
+function CustomColorPicker({
+  value,
+  onChange,
+  optionalDataObj,
+}: CustomColorPickerProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
 
@@ -13,7 +23,7 @@ function CustomColorPicker({ value, onChange }) {
     (e) => {
       setIsColorPickerOpen(false);
       if (!value?.length) {
-        onChange("#000000");
+        handleInputChange("#000000");
       }
     },
     [value],
@@ -23,14 +33,30 @@ function CustomColorPicker({ value, onChange }) {
     setIsColorPickerOpen(true);
   }, []);
 
-  const handleInputChange = useCallback((e) => {
-    onChange(`${e.target.value}`);
-  }, []);
+  const handleInputChange = useCallback(
+    (eventOrValue) => {
+      let value =
+        typeof eventOrValue === "object"
+          ? eventOrValue.target.value
+          : eventOrValue;
+      if (!value.length) value = "#000000";
+
+      if (optionalDataObj) {
+        onChange({
+          ...optionalDataObj,
+          value,
+        });
+      } else {
+        onChange(value);
+      }
+    },
+    [optionalDataObj],
+  );
 
   const pickEyeDropperColor = async () => {
     try {
       const { sRGBHex } = (await open())!;
-      onChange(sRGBHex);
+      handleInputChange(sRGBHex);
     } catch (e) {}
   };
 
@@ -75,7 +101,7 @@ function CustomColorPicker({ value, onChange }) {
         <ColorPicker
           format="hex"
           value={value}
-          onChange={onChange}
+          onChange={handleInputChange}
           swatches={[
             "#25262b",
             "#868e96",

@@ -12,6 +12,7 @@ import { FontWeights } from "../SurveyTheme.constants";
 
 import styles from "./stylescomponent/StylesComponent.module.css";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
+import { useCallback } from "react";
 
 function HeaderStyles({
   currentStyles,
@@ -20,6 +21,18 @@ function HeaderStyles({
   currentStyles: Title;
   setCurrentstyles: (key: string, value: any) => void;
 }) {
+  const handleColorPickerChange = useCallback(
+    (valueObj) => {
+      const { themeObjKey, propertyChanged, value } = valueObj;
+      if (currentStyles?.styles)
+        setCurrentstyles(themeObjKey, {
+          ...currentStyles,
+          styles: { ...currentStyles.styles, [propertyChanged]: value },
+        });
+    },
+    [currentStyles],
+  );
+
   return (
     <>
       <Stack align="start" w={"100%"} gap={"1.5rem"}>
@@ -78,13 +91,9 @@ function HeaderStyles({
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Text Color</h2>
           <CustomColorPicker
+            optionalDataObj={{ themeObjKey: "title", propertyChanged: "color" }}
             value={currentStyles?.styles?.color}
-            onChange={(e) => {
-              setCurrentstyles("title", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, color: e },
-              });
-            }}
+            onChange={handleColorPickerChange}
           />
         </Box>
       </Stack>

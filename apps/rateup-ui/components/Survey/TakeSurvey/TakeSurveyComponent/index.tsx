@@ -161,6 +161,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     setSelectedQ(question);
     setPageSwitchTransition("bottomSlideIn");
     questionsHistoryHandlers.append(question.id);
+    setApDirection(1);
   };
 
   const goBack = () => {
@@ -168,6 +169,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     setSelectedQ(survey.questions.find((q) => q.id === prevQId));
     setPageSwitchTransition("bottomSlideOut");
     questionsHistoryHandlers.pop();
+    setApDirection(-1);
   };
 
   const handleNext = () => {
@@ -205,7 +207,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         }
       }
       goTo(survey.questions[index + 1]);
-      setApDirection(1);
     } else {
       // Survey completed
       openConfirmationModal();
@@ -270,7 +271,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const handlePrev = () => {
     goBack();
-    setApDirection(-1);
   };
 
   const updateResponse = (response: object) => {
