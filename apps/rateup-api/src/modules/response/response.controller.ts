@@ -83,6 +83,7 @@ export async function downloadExcelResponseHandler(
       question,
       request.body.defaultLanguage,
       request.body.visibleColumn,
+      request.body.tz,
     );
     reply.header("filename", `${title}.xlsx`);
     reply.status(200).type("application/xlsx").send(data);
