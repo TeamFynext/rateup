@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { createContactSchema } from "../contact.schema";
+import { contactCoreSchema } from "../contact.schema";
 
 const coreContactGroupSchema = z.object({
   name: z.string(),
@@ -35,9 +35,7 @@ const getContactGroupsQuerySchema = z.object({
 
 const removeGroupContactsSchema = z.array(z.string());
 
-const addNewContactsToGroupInputSchema = z.array(
-  createContactSchema.omit({ teamId: true }),
-);
+const addNewContactsToGroupInputSchema = z.array(contactCoreSchema);
 
 const deleteManyGroupSchema = z.object({
   contactGroupIds: z.array(z.string()),
