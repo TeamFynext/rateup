@@ -23,9 +23,6 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   const [searchText, setSearchText] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const contactsByTeam = allContacts?.filter(
-    (contact) => selectedTeamId === contact?.teamId,
-  );
   const groupByTeams = allGroups?.filter(
     (group) => selectedTeamId === group?.teamId,
   );
@@ -46,13 +43,13 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
     value: g?.id,
   }));
   const filteredContacts = searchText
-    ? contactsByTeam?.filter(
+    ? allContacts?.filter(
         (contact) =>
           contact?.name.toLowerCase().includes(searchText.toLowerCase()) ||
           contact?.phone?.includes(searchText) ||
           contact?.email?.includes(searchText),
       )
-    : contactsByTeam;
+    : allContacts;
 
   const handleSubmit = () => {
     switch (action) {
@@ -161,14 +158,16 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       submitButtonDisabled={isDisabledSubmit}
     >
       <Stack>
-        <TeamSelector
-          value={selectedTeamId}
-          onChange={(value) => {
-            setSelectedGroups([]);
-            setSelectedIds([]);
-            setSelectedTeamId(value);
-          }}
-        />
+        {action !== ContactAcions.DELETE_GROUPS && (
+          <TeamSelector
+            value={selectedTeamId}
+            onChange={(value) => {
+              setSelectedGroups([]);
+              setSelectedIds([]);
+              setSelectedTeamId(value);
+            }}
+          />
+        )}
         <Group justify="space-between">
           <Checkbox
             aria-label="select all"
@@ -179,8 +178,8 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
                   groupByTeams?.every((group) =>
                     selectedIds.includes(group?.id),
                   )
-                : contactsByTeam?.length &&
-                  contactsByTeam?.every((customer) =>
+                : allContacts?.length &&
+                  allContacts?.every((customer) =>
                     selectedIds.includes(customer?.id),
                   )
             }
@@ -189,7 +188,7 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
                 setSelectedIds(
                   action == ContactAcions.DELETE_GROUPS
                     ? groupByTeams.map((group) => group.id)
-                    : contactsByTeam.map((customer) => customer?.id),
+                    : allContacts.map((customer) => customer?.id),
                 );
               } else setSelectedIds([]);
             }}

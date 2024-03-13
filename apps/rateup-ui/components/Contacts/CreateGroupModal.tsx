@@ -152,7 +152,7 @@ const CreateGroupModal = ({
             <Stack></Stack>
           )}
           <Stack gap={0}>
-            <Text>Upload profile picture</Text>
+            <Text>Upload Profile Picture</Text>
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
               {(props) => (
                 <Button

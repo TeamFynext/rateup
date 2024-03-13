@@ -471,7 +471,6 @@ declare global {
   // for contacts
   type ContactsData = {
     id: string;
-    teamId: string;
     name: string;
     phone: string;
     email: string;

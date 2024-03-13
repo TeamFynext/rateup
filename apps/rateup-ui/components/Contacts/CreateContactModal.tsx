@@ -8,10 +8,8 @@ import {
   Radio,
   SimpleGrid,
   TextInput,
-  Flex,
   Progress,
 } from "@mantine/core";
-import { TeamSelector } from "../input/TeamSelector";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import {
@@ -54,7 +52,6 @@ const CreateContactModal = ({ contactClose, close }) => {
       name: "",
       phone: "",
       email: "",
-      teamId: null,
       importMethod: importMethod.MANUAL,
       contactType: ["phone"],
       countryCode: "91",
@@ -74,7 +71,6 @@ const CreateContactModal = ({ contactClose, close }) => {
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         (value.length ? null : "Name cannot be blank"),
-      teamId: (value) => (value ? null : "Must select a team"),
       email: (value) => {
         if (
           form.values.importMethod == importMethod.MANUAL &&
@@ -196,14 +192,6 @@ const CreateContactModal = ({ contactClose, close }) => {
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
       >
         <Stack>
-          <Text>Select Team</Text>
-          <Flex justify={"flex-start"}>
-            <TeamSelector
-              value={form.values.teamId}
-              onChange={(value) => form.setFieldValue("teamId", value)}
-            ></TeamSelector>
-          </Flex>
-
           <Group justify="space-between">
             <Radio.Group
               value={form.values.importMethod}

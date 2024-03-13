@@ -12,14 +12,7 @@ const CONTACT_BASE_URL = "/contact";
 
 export const getContactsList = async () => {
   let contactsData: ContactsResponse = await axiosClient.get(CONTACT_BASE_URL);
-  return contactsData;
-};
-
-export const getContactListByTeamId = async (teamId: string) => {
-  let contactsData: ContactsResponse = await axiosClient.get(
-    `${CONTACT_BASE_URL}?teamId=${teamId}`,
-  );
-  return contactsData;
+  return contactsData.data as ContactsData[];
 };
 
 export const createContact = async (data: ICreateContact) => {

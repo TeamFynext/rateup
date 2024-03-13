@@ -59,10 +59,7 @@ const OpenCreateModal = ({ close }) => {
         title="Create contact"
         size={"xl"}
       >
-        <CreateContactModal
-          contactClose={contactClose}
-          close={close}
-        ></CreateContactModal>
+        <CreateContactModal contactClose={contactClose} close={close} />
       </FormModalLayout>
       <FormModalLayout
         centered

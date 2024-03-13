@@ -22,7 +22,7 @@ import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useCampaignContactsByTeamId } from "../../backend/campaign/contacts/contacts.query";
+import { useCampaignContacts } from "../../backend/campaign/contacts/contacts.query";
 import { contactAddType, importMethod } from "../../utils/enums";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import { ImportContact } from "./CreateContactModal";
@@ -57,12 +57,12 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
 
   const {
     isLoading: isLoading,
-    data: contactDataByTeamId,
+    data: contactData,
     error: error,
     refetch: refetch,
-  } = useCampaignContactsByTeamId(teamId) as {
+  } = useCampaignContacts() as {
     isLoading: boolean;
-    data: ContactsResponse;
+    data: ContactsData[];
     error: any;
     refetch: any;
   };
@@ -113,9 +113,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
   });
   const createNewContactMutation = useAddNewContactMutation(groupId);
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
-  const allContactIds = contactDataByTeamId?.data?.map(
-    (customer) => customer?.id,
-  );
+  const allContactIds = contactData?.map((customer) => customer?.id);
   const remainingContactIds = allContactIds?.filter(
     (c) => !existingContactIds?.includes(c),
   );
@@ -124,12 +122,12 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
     form.values.contactType = contactType;
   }, [contactType]);
   useEffect(() => {
-    if (!searchTerm.length && contactDataByTeamId?.data) {
-      setFilteredCustomerList(contactDataByTeamId?.data);
+    if (!searchTerm.length && contactData) {
+      setFilteredCustomerList(contactData);
     } else {
-      if (contactDataByTeamId?.data) {
+      if (contactData) {
         setFilteredCustomerList(
-          contactDataByTeamId?.data?.filter((contact) => {
+          contactData?.filter((contact) => {
             return (
               contact?.name
                 .toLowerCase()
@@ -140,7 +138,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
         );
       }
     }
-  }, [searchTerm, contactDataByTeamId?.data]);
+  }, [searchTerm, contactData]);
   useEffect(() => {
     if (csvfile == null) return;
 
@@ -446,7 +444,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                       event.currentTarget.checked ? remainingContactIds : [],
                     );
                   }}
-                  disabled={contactDataByTeamId?.data?.every((customer) =>
+                  disabled={contactData.every((customer) =>
                     existingContactIds.includes(customer?.id),
                   )}
                 />
@@ -488,7 +486,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
               loading={isCreating}
               disabled={
                 isUpload ||
-                contactDataByTeamId?.data?.every((customer) =>
+                contactData?.every((customer) =>
                   existingContactIds.includes(customer?.id),
                 )
               }
