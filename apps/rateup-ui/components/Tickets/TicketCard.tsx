@@ -14,9 +14,8 @@ import router from "next/router";
 import { getTimeSince } from "../../utils";
 import { ITicket } from "../../backend/tickets/tickets";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { RateupButtonSecondary } from "../Button/RateupButtons";
-import { TicketType } from "../../utils/enums/ticket";
-import { IconMaximize, IconTrash } from "@tabler/icons-react";
+import { TicketStatus, TicketType } from "../../utils/enums/ticket";
+import { IconTrash } from "@tabler/icons-react";
 
 interface TicketCardProps {
   ticket: ITicket;
@@ -99,23 +98,7 @@ export function TicketCard({
             <PriorityBadge priority={ticket?.priority} />
           </Group>
           <Group justify={"space-between"} align={"center"}>
-            <PaperLayout
-              p={0}
-              radius={5}
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`${router.pathname}/${ticket?.id}?tab=Result`);
-              }}
-            >
-              <RateupButtonSecondary
-                leftIcon={<IconMaximize size={15} />}
-                title="View"
-                variant="subtle"
-                size="xs"
-                radius={5}
-                fullWidth
-              />
-            </PaperLayout>
+            <StatusBadge status={ticket?.status} />
           </Group>
         </Group>
       </Stack>
@@ -139,6 +122,28 @@ function PriorityBadge({ priority }) {
       variant="light"
     >
       {priority}
+    </Badge>
+  );
+}
+
+function StatusBadge({ status }) {
+  return (
+    // swtich case for 4 priority levels
+    <Badge
+      color={
+        status === TicketStatus.OPEN
+          ? "blue"
+          : status === TicketStatus.IN_PROGRESS
+            ? "yellow"
+            : status === TicketStatus.RESOLVED
+              ? "orange"
+              : status === TicketStatus.CLOSED
+                ? "green"
+                : "black"
+      }
+      variant="filled"
+    >
+      {status}
     </Badge>
   );
 }
