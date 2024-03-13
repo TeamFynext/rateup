@@ -35,7 +35,7 @@ export interface IUpdateTicketStatusRequest {
 
 export interface IUpdateTicketRequest {
   priority?: string;
-  deadline?: string;
+  deadline?: Date;
   assignedToId?: string;
   assignedToName?: string;
 }

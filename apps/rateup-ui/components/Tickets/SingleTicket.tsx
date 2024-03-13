@@ -13,13 +13,15 @@ import {
   ActionIcon,
   rem,
   ScrollArea,
+  Modal,
 } from "@mantine/core";
 import { titleStyle } from "../styled/Heading/Heading";
 import {
+  ContainedDateTimePickerInput,
   ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { IconSend } from "@tabler/icons-react";
+import { IconEdit, IconSend } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import {
@@ -46,6 +48,11 @@ import RateupLoader from "../Loaders/RateupLoader";
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
 import { useUser } from "../../context/UserContext";
 import { UserRole } from "../../utils/enums";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
 
 const SingleTicket = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -67,11 +74,14 @@ const SingleTicket = ({ id }: { id: string }) => {
     label: team?.name,
   }));
 
-  const [value, setValue] = useState<string | null>("");
+  const [value, setValue] = useState<string | null>(""); //for assignedToId
+  const [deadline, setDeadline] = useState<Date | null>(null);
   const [priority, setPriority] = useState(ticket?.priority || "");
   const [status, setStatus] = useState(ticket?.status || "");
   const updateTicket = useUpdateTicketMutation(id);
   const updateTicketStatus = useUpdateTicketStatusMutation(id);
+  const [opened, { open: openDeadlineEdit, close: closeDeadlineModal }] =
+    useDisclosure(false);
 
   useEffect(() => {
     setPriority(ticket?.priority);
@@ -118,7 +128,6 @@ const SingleTicket = ({ id }: { id: string }) => {
       });
     }
   }, [priority]);
-
   useEffect(() => {
     if (value && ticket?.assignedToId !== value) {
       let data: IUpdateTicketRequest = {
@@ -136,9 +145,6 @@ const SingleTicket = ({ id }: { id: string }) => {
       updateTicket.mutate(data, {
         onSuccess: () => {
           scrollToBottom();
-        },
-        onError: () => {
-          //setPriority(ticket?.priority);
         },
       });
     }
@@ -166,6 +172,24 @@ const SingleTicket = ({ id }: { id: string }) => {
       });
     }
   }, [status]);
+
+  function updateDeadline() {
+    if (deadline && new Date(ticket?.deadline) !== deadline) {
+      let data: IUpdateTicketRequest = { deadline };
+      showLoadingToast(
+        "Hold..ticket is getting updated..",
+        "update-ticket",
+        true,
+        "Updating Ticket",
+      );
+      updateTicket.mutate(data, {
+        onSuccess: () => {
+          closeDeadlineModal();
+          scrollToBottom();
+        },
+      });
+    }
+  }
 
   const createComment = useCreateCommentMutation(id);
   const viewport = useRef<HTMLDivElement>(null);
@@ -254,8 +278,30 @@ const SingleTicket = ({ id }: { id: string }) => {
               ? formatIsoDateStringWithTime(ticket?.deadline)
               : "n/a"}
           </Text>
+          <ActionIcon
+            variant="default"
+            disabled={user.role !== UserRole.SUPADM}
+            onClick={openDeadlineEdit}
+          >
+            <IconEdit style={{ width: "70%", height: "70%" }} stroke={1.5} />
+          </ActionIcon>
         </TicketDetailBlock>
       </Group>
+
+      <Modal opened={opened} onClose={close} title="Update Deadline" centered>
+        <ContainedDateTimePickerInput
+          minDate={new Date()}
+          clearable
+          label={"Deadline:"}
+          placeholder="Select a deadline for the ticket"
+          defaultValue={new Date(ticket?.deadline)}
+          onChange={(date) => setDeadline(date)}
+        />
+        <Group mt="xl" justify="flex-end">
+          <RateupButtonSecondary title="close" onClick={closeDeadlineModal} />
+          <RateupButtonPrimary title="Update" onClick={updateDeadline} />
+        </Group>
+      </Modal>
 
       <Group gap={30} mb="lg">
         <PaperLayout
