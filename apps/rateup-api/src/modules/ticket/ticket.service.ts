@@ -8,6 +8,8 @@ import {
 } from "./ticket.schema";
 import { Role } from "../../utils/enums";
 import { formatDateT2 } from "../../utils/date";
+import { createEmailBodyTicketAssigned } from "../../utils/email/tickets/ticketAssigned";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -94,11 +96,61 @@ export async function createTicket(
           },
         });
 
+        sendTicketAssignEmail(newTicket);
+
         return newTicket;
       }
     }
   } catch (error) {
     throw new Error(error);
+  }
+}
+
+async function sendTicketAssignEmail(newTicket) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: newTicket.assignedToId,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  const team = await prisma.team.findUnique({
+    where: {
+      id: newTicket.teamId,
+    },
+    include: {
+      org: true,
+    },
+  });
+
+  let teamName = team.name;
+  let orgName = team.org.name;
+
+  if (newTicket && user?.email && teamName && orgName) {
+    console.log("sending ticket email....");
+    let ticket_link =
+      `${process.env.FRONTEND_URL}/dashboard/tickets/` + newTicket.id;
+    const msg = {
+      to: user.email, // Change to your recipient
+      // from: 'hello@rateup.app', // Change to your verified sender
+      subject: `Ticket Assigned to You - ${orgName}`,
+      text: `A ticket has been assigned to you on Rateup.app`,
+      html: createEmailBodyTicketAssigned(
+        ticket_link,
+        newTicket.number,
+        teamName,
+        orgName,
+        newTicket.priority,
+      ),
+    };
+    try {
+      sendAWSEmail(msg);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
+    }
   }
 }
 
@@ -317,6 +369,10 @@ export async function updateTicket(
             : `Note: Updated the ticket ${updatedProperties}.`,
     };
     createComment(ticketData);
+  }
+
+  if (input.assignedToId) {
+    sendTicketAssignEmail(updatedTicket);
   }
 
   return updatedTicket;
