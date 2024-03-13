@@ -12,6 +12,11 @@ import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
 import xlsx from "node-xlsx";
 import { autoGenerateTicket } from "../ticket/ticket.service";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
@@ -100,6 +105,7 @@ export async function downloadExcelResponse(
   questions,
   defaultLanguage,
   visibleColumn = [],
+  tz = "Asia/Calcutta",
 ) {
   const responses = allResponses && allResponses[0].responses;
   const filteredSecondArray = questions.filter((item) =>
@@ -142,7 +148,9 @@ export async function downloadExcelResponse(
               break;
             }
             case QuestionType.Date: {
-              responseValue = dayjs(responseValue).format("DD-MM-YYYY");
+              responseValue = dayjs(responseValue)
+                .tz(tz)
+                .format("DD-MM-YYYY hh:mm A");
               break;
             }
             case QuestionType.PCQ: {
@@ -175,9 +183,9 @@ export async function downloadExcelResponse(
             }
           }
         } else if (question === createdAt) {
-          const createdAtFormatted = dayjs(response.createdAt).format(
-            "DD-MM-YYYY hh:mm A",
-          );
+          const createdAtFormatted = dayjs(response.createdAt)
+            .tz(tz)
+            .format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
         } else {
           responseValue = "";
