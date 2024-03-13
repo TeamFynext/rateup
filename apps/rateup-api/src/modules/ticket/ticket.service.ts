@@ -7,6 +7,7 @@ import {
   UpdateTicketInput,
 } from "./ticket.schema";
 import { Role } from "../../utils/enums";
+import { formatDateT2 } from "../../utils/date";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -309,7 +310,11 @@ export async function updateTicket(
       createdBy: userId,
       msg: input.assignedToName
         ? `Note: Ticket re-assigned to ${input.assignedToName}.`
-        : `Note: Updated the ticket ${updatedProperties}.`,
+        : input.priority
+          ? `Note: Ticket priority changed to ${input.priority}.`
+          : input.deadline
+            ? `Note: Deadline changed to ${formatDateT2(input.deadline)}.`
+            : `Note: Updated the ticket ${updatedProperties}.`,
     };
     createComment(ticketData);
   }
