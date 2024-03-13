@@ -251,7 +251,6 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
           px={largeScreen ? "lg" : "xs"}
           m="sm"
           wrap="nowrap"
-          py="sm"
           pos={"sticky"}
           top={0}
           bg={"white"}
@@ -260,7 +259,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
           <ActionIcon onClick={open} variant="transparent">
             <IconMenu2 color="var(--grey-color)" />
           </ActionIcon>
-          <ScrollArea h={"min-content"} w={"100vw"} py={2}>
+          <ScrollArea h={"min-content"} w={"100vw"}>
             <Box w={"max-content"}>
               {categoryChipLabel?.map((c) => (
                 <CategoryChip
@@ -269,6 +268,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
                   name={c.name}
                   selected={selectedCategory === c.id}
                   onClick={handleCategoryChipClick}
+                  largeScreen={largeScreen}
                 />
               ))}
             </Box>
