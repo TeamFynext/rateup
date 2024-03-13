@@ -22,10 +22,11 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const options: any = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage] &&
-      previewChoices?.[selectedLanguage]?.length > 0
-    ? previewChoices?.[selectedLanguage]
-    : samplePictureChoices;
-  const publicRoute = router.pathname.startsWith("/public");
+        previewChoices?.[selectedLanguage]?.length > 0
+      ? previewChoices?.[selectedLanguage]
+      : samplePictureChoices;
+  const publicRoute =
+    router.pathname.startsWith("/public") || router.pathname.startsWith("/ws");
 
   useEffect(() => {
     if (response) {
