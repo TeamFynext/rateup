@@ -92,6 +92,7 @@ model Org {
   WaFlow            WaFlow[]
   googleAccessToken GoogleAccessToken?
   driveFolderId     String?
+  contacts          Contact[]
   loyaltyCampaigns LoyaltyCampaign[]
   loyaltyCustomers LoyaltyCustomer[]
   LcReward         LcReward[]
@@ -135,7 +136,6 @@ model Team {
   members                TeamMember[]
   surveys                SurveyTeamMap[]
   invitations            Invitation[]
-  contacts               Contact[]
   contactGroups          ContactGroup[]
   menu                   Menu[]
   campaigns              Campaign[]
@@ -300,14 +300,14 @@ model Contact {
   email  String?
   source String?
 
-  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId               String                @db.Uuid
+  org                  Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                String                @db.Uuid
   responses            SurveyResponse[]
   contactGroups        ContactGroupMap[]
   campaignParticipants CampaignParticipant[]
 
-  @@unique([phone, teamId], name: "contact_phone_team_id_unique")
-  @@unique([email, teamId], name: "contact_email_team_id_unique")
+  @@unique([phone, orgId], name: "contact_phone_team_id_unique")
+  @@unique([email, orgId], name: "contact_email_team_id_unique")
 }
 
 model ContactGroup {

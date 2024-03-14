@@ -1,37 +1,28 @@
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
-  CreateContactInput,
+  ContactCore,
   createMultipleContactInput,
+  updateContactSchema,
 } from "./contact.schema";
 
-export async function createContact(contact: CreateContactInput) {
+export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone && !contact.email) {
     throw new Error("Phone or email must be provided");
   }
   const user = await prisma.contact.create({
-    data: {
-      teamId: contact.teamId,
-      name: contact.name,
-      phone: contact.phone,
-      email: contact.email,
-      source: contact.source,
-    },
+    data: contact,
   });
   return user;
 }
 
 export async function createMultipleContacts(
   contacts: createMultipleContactInput,
+  orgId: string,
 ) {
+  const contactsData = contacts.map((contact) => ({ ...contact, orgId }));
   const result = await prisma.contact.createMany({
-    data: contacts.map((contact) => ({
-      name: contact.name,
-      teamId: contact.teamId,
-      phone: contact.phone,
-      email: contact.email,
-      source: contact.source,
-    })),
+    data: contactsData,
   });
 }
 
@@ -44,20 +35,10 @@ export async function getContactById(contactId: string) {
   return user;
 }
 
-export async function getContactsByTeamId(teamId: string) {
-  const users = await prisma.contact.findMany({
-    where: {
-      teamId,
-    },
-  });
-  return users;
-}
 export async function getContactsByOrgId(orgId: string) {
   const users = await prisma.contact.findMany({
     where: {
-      team: {
-        orgId,
-      },
+      orgId,
     },
   });
   return users;
@@ -74,7 +55,7 @@ export async function deleteContactById(contactId: string) {
 
 export async function updateContactById(
   contactId: string,
-  contact: CreateContactInput,
+  contact: updateContactSchema,
 ) {
   const user = await prisma.contact.update({
     where: {
@@ -89,13 +70,13 @@ export async function updateContactById(
   return user;
 }
 
-export async function getOrCreateContactByPhone(phone: string, teamId: string) {
+export async function getOrCreateContactByPhone(phone: string, orgId: string) {
   try {
     const contact = await prisma.contact.findFirst({
       // TODO: findout why findUnique is giving error
       where: {
         phone: phone,
-        teamId: teamId,
+        orgId: orgId,
       },
     });
 
@@ -105,7 +86,7 @@ export async function getOrCreateContactByPhone(phone: string, teamId: string) {
       return await prisma.contact.create({
         data: {
           phone,
-          teamId,
+          orgId,
         },
       });
     }
