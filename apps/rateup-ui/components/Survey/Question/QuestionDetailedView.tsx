@@ -190,25 +190,28 @@ export function QuestionDetailedView({
                 placeholder={
                   question.type !== QuestionType.InfoMessage
                     ? "Enter question title here *"
-                    : "Enter the Message here"
+                    : "Enter the title here"
                 }
                 {...form.getInputProps(`title.${selectedLanguage}`)}
                 value={form.values.title[selectedLanguage]}
               />
-              {question.type !== QuestionType.InfoMessage && (
-                <Textarea
-                  variant="unstyled"
-                  placeholder="Enter question description here"
-                  {...form.getInputProps(`description.${selectedLanguage}`)}
-                  value={form.values.description[selectedLanguage]}
-                  styles={{
-                    input: {
-                      fontSize: "1.1rem",
-                      fontWeight: 400, // set custom font size for this TextInput
-                    },
-                  }}
-                />
-              )}
+
+              <Textarea
+                variant="unstyled"
+                placeholder={
+                  question.type !== QuestionType.InfoMessage
+                    ? "Enter question description here"
+                    : "Enter description here"
+                }
+                {...form.getInputProps(`description.${selectedLanguage}`)}
+                value={form.values.description[selectedLanguage]}
+                styles={{
+                  input: {
+                    fontSize: "1.1rem",
+                    fontWeight: 400, // set custom font size for this TextInput
+                  },
+                }}
+              />
               <ExtraProps
                 form={form}
                 question={question}
@@ -271,100 +274,107 @@ export function QuestionDetailedView({
             )}
 
             <Stack px="sm">
-              <Menu
-                position="bottom-end"
-                offset={4}
-                withArrow
-                arrowPosition="side"
-                transitionProps={{ transition: "rotate-right", duration: 150 }}
-              >
-                <Menu.Target>
-                  <Button
-                    variant="outline"
-                    color="dark.2"
-                    radius="lg"
-                    size="sm"
-                    rightSection={<IconChevronDown size="1rem" />}
-                  >
-                    <Text size="sm" c="dark.5" fw="700">
-                      Addon Actions
-                    </Text>
-                  </Button>
-                </Menu.Target>
+              {question.type !== QuestionType.InfoMessage && (
+                <Menu
+                  position="bottom-end"
+                  offset={4}
+                  withArrow
+                  arrowPosition="side"
+                  transitionProps={{
+                    transition: "rotate-right",
+                    duration: 150,
+                  }}
+                >
+                  <Menu.Target>
+                    <Button
+                      variant="outline"
+                      color="dark.2"
+                      radius="lg"
+                      size="sm"
+                      rightSection={<IconChevronDown size="1rem" />}
+                    >
+                      <Text size="sm" c="dark.5" fw="700">
+                        Addon Actions
+                      </Text>
+                    </Button>
+                  </Menu.Target>
 
-                <Menu.Dropdown>
-                  {logicSupportedTypes.includes(question?.type) && (
-                    <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Logic Jump"}
-                        leftIcon={
-                          <Image
-                            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                            h={30}
-                            w={30}
-                            fit="contain"
-                          />
-                        }
-                        size="sm"
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(QuestionTabsEnum.LogicEditor);
-                        }}
-                      />
-                    </Menu.Item>
-                  )}
+                  <Menu.Dropdown>
+                    {logicSupportedTypes.includes(question?.type) && (
+                      <Menu.Item>
+                        <RateupButtonSecondary
+                          title={"Logic Jump"}
+                          leftIcon={
+                            <Image
+                              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                              h={30}
+                              w={30}
+                              fit="contain"
+                            />
+                          }
+                          size="sm"
+                          onClick={async () => {
+                            let save = await handleSave();
+                            save === "saved" &&
+                              setActiveTab(QuestionTabsEnum.LogicEditor);
+                          }}
+                        />
+                      </Menu.Item>
+                    )}
 
-                  {googleReviewSupportedTypes.includes(question?.type) && (
-                    <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Google Review"}
-                        leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
-                        size="sm"
-                        fullWidth
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
-                        }}
-                      />
-                    </Menu.Item>
-                  )}
+                    {googleReviewSupportedTypes.includes(question?.type) && (
+                      <Menu.Item>
+                        <RateupButtonSecondary
+                          title={"Google Review"}
+                          leftIcon={
+                            <IconBrandGoogle stroke={4} size={"1rem"} />
+                          }
+                          size="sm"
+                          fullWidth
+                          onClick={async () => {
+                            let save = await handleSave();
+                            save === "saved" &&
+                              setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                          }}
+                        />
+                      </Menu.Item>
+                    )}
 
-                  {validationSupportedTypes.includes(question?.type) && (
-                    <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Custom Validation"}
-                        leftIcon={<IconEdit />}
-                        size="sm"
-                        fullWidth
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(
-                              QuestionTabsEnum.ValidationRulesEditor,
-                            );
-                        }}
-                      />
-                    </Menu.Item>
-                  )}
-                  {ticketIssueSupportedTypes.includes(question?.type) && (
-                    <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Create Tickets"}
-                        leftIcon={<IconTicket stroke={4} size={"1rem"} />}
-                        size="sm"
-                        fullWidth
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-                        }}
-                      />
-                    </Menu.Item>
-                  )}
-                </Menu.Dropdown>
-              </Menu>
+                    {validationSupportedTypes.includes(question?.type) && (
+                      <Menu.Item>
+                        <RateupButtonSecondary
+                          title={"Custom Validation"}
+                          leftIcon={<IconEdit />}
+                          size="sm"
+                          fullWidth
+                          onClick={async () => {
+                            let save = await handleSave();
+                            save === "saved" &&
+                              setActiveTab(
+                                QuestionTabsEnum.ValidationRulesEditor,
+                              );
+                          }}
+                        />
+                      </Menu.Item>
+                    )}
+                    {ticketIssueSupportedTypes.includes(question?.type) && (
+                      <Menu.Item>
+                        <RateupButtonSecondary
+                          title={"Create Tickets"}
+                          leftIcon={<IconTicket stroke={4} size={"1rem"} />}
+                          size="sm"
+                          fullWidth
+                          onClick={async () => {
+                            let save = await handleSave();
+                            save === "saved" &&
+                              setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                          }}
+                        />
+                      </Menu.Item>
+                    )}
+                  </Menu.Dropdown>
+                </Menu>
+              )}
             </Stack>
           </Group>
 

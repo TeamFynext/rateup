@@ -80,7 +80,7 @@ export function getQuestionTypeLabel(
     case QuestionType.Number:
       return "Number";
     case QuestionType.InfoMessage:
-      return "Message";
+      return "InfoMessage";
     case QuestionType.Date:
       return "Date";
     case QuestionType.CustomNPS:
