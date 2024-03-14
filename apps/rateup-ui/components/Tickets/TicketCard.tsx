@@ -42,6 +42,19 @@ export function TicketCard({
     }
   }, []);
 
+  let color;
+  switch (ticket?.type) {
+    case TicketType.REVIEW:
+      color = "purple";
+      break;
+    case TicketType.CUSTOM:
+      color = "green";
+      break;
+    default:
+      color = "blue";
+      break;
+  }
+
   return (
     <PaperLayout
       hoveractive
@@ -79,10 +92,7 @@ export function TicketCard({
           <Title order={5} c="gray.5">
             TICKET: #{ticket.number}
           </Title>
-          <Badge
-            variant="outline"
-            color={ticket?.type !== TicketType.REVIEW ? "blue" : "#149a8a"}
-          >
+          <Badge variant="outline" color={color}>
             {ticket?.type}
           </Badge>
         </Group>

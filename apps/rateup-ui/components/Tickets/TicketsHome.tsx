@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Grid,
   Group,
   Loader,
   Paper,
@@ -10,7 +9,7 @@ import {
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import Heading from "../styled/Heading/Heading";
-import { IconRefresh, IconSelector } from "@tabler/icons-react";
+import { IconPlus, IconRefresh, IconSelector } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
 import {
@@ -21,14 +20,18 @@ import { SurveysPageError } from "../Survey/SurveysPage/SurveyPageError";
 import { SurveyCardLayout } from "../Card/SurveyCard/SurveyCardLayout";
 import NothingFound from "../NothingFound/NothingFound";
 import { TicketCard } from "./TicketCard";
-import styles from "../../components/Survey/SurveyId.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import { TeamSelector } from "../input/TeamSelector";
 import { StatusFilterMenu } from "./StatusFIlterMenu";
+import { useUser } from "../../context/UserContext";
+import { UserRole } from "../../utils/enums";
+import CreateTicketModal from "./CreateTicketModal";
+import { TicketType } from "../../utils/enums/ticket";
 
 const TicketsHome = () => {
   const [sort, setSort] = useState(true);
+  const { user } = useUser();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const {
     isLoading: ticketLoading,
@@ -41,6 +44,10 @@ const TicketsHome = () => {
   const [opened, { open: toggleDelete, close }] = useDisclosure(false);
   const [filterParam, setFilterParam] = useState("all");
   const [filteredTickets, setFilteredTickets] = useState([]);
+  const [
+    createTicketOpened,
+    { open: openTicketModal, close: closeTicketModal },
+  ] = useDisclosure(false);
 
   useEffect(() => {
     deleteTicketId && toggleDelete();
@@ -71,7 +78,6 @@ const TicketsHome = () => {
     <Stack>
       <ConfirmationModal
         forDeleteFunctionality
-        // includeEmailConfirmation
         deleteQuotion="All the associated comments & actions will be deleted"
         opened={opened}
         onClose={close}
@@ -94,6 +100,14 @@ const TicketsHome = () => {
         confirmLabel="Delete"
         headerLabel="Are you sure to delete this ticket?"
         headerTitle="Delete Ticket"
+      />
+
+      <CreateTicketModal
+        createTicketOpened={createTicketOpened}
+        openTicketModal={openTicketModal}
+        closeTicketModal={closeTicketModal}
+        selectedTeamId={""}
+        type={TicketType.CUSTOM}
       />
 
       <Group justify="space-between">
@@ -123,6 +137,13 @@ const TicketsHome = () => {
               />
             </ActionIcon>
           </Tooltip>
+          {user?.role === UserRole.SUPADM && (
+            <RateupButtonPrimary
+              rightIcon={<IconPlus />}
+              title="Create Ticket"
+              onClick={openTicketModal}
+            />
+          )}
         </Group>
         <Group>
           <RateupButtonPrimary

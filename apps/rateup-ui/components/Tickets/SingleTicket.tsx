@@ -45,10 +45,6 @@ import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
 import { useUser } from "../../context/UserContext";
 import { UserRole } from "../../utils/enums";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const SingleTicket = ({ id }: { id: string }) => {
@@ -304,7 +300,7 @@ const SingleTicket = ({ id }: { id: string }) => {
           clearable
           label={"Deadline:"}
           placeholder="Select a deadline for the ticket"
-          defaultValue={new Date(ticket?.deadline)}
+          defaultValue={ticket?.deadline && new Date(ticket?.deadline)}
           onChange={(date) => setDeadline(date)}
         />
       </FormModalLayout>
@@ -350,13 +346,13 @@ const SingleTicket = ({ id }: { id: string }) => {
                   </Group>
                   <Text lineClamp={2}>{ticket?.review?.review}</Text>
                 </Stack>
-              ) : (
+              ) : ticket?.type === TicketType.SURVEY_RESPONSE ? (
                 <Stack>
                   <Title order={2} c="gray.5">
                     User Response Details
                   </Title>
                   <ScrollArea h={380} viewportRef={viewport}>
-                    {ticket?.surveyResponse.map((response: any, index) => {
+                    {ticket?.surveyResponse?.map((response: any, index) => {
                       return (
                         <SurveyResponsesView
                           response={response}
@@ -370,6 +366,15 @@ const SingleTicket = ({ id }: { id: string }) => {
                       );
                     })}
                   </ScrollArea>
+                </Stack>
+              ) : (
+                <Stack justify="flex-start">
+                  <Title order={2} c="gray.5" mb="md">
+                    Ticket Description
+                  </Title>
+                  <Group pl="md">
+                    <Text c="dark.3">{ticket?.description}</Text>
+                  </Group>
                 </Stack>
               )}
             </>
