@@ -24,23 +24,36 @@ export async function createTicket(
     reviewId,
     surveyResponseId,
     firstComment,
+    type,
   } = input;
 
+  let isCustomTicket = type === TicketType.CUSTOM;
+  let description = "";
+  if (isCustomTicket) {
+    description = firstComment;
+  }
+
   try {
-    if (!reviewId && !surveyResponseId) {
+    if (!isCustomTicket && !reviewId && !surveyResponseId) {
       throw new Error("ReviewId or SurveyResponseId is required");
     } else {
       let ticketType = reviewId
         ? TicketType.REVIEW
-        : TicketType.SURVEY_RESPONSE;
+        : isCustomTicket
+          ? TicketType.CUSTOM
+          : TicketType.SURVEY_RESPONSE;
 
-      const ticket = await prisma.ticket.findFirst({
-        where: {
-          ...(ticketType === TicketType.SURVEY_RESPONSE
-            ? { surveyResponseId }
-            : { reviewId }),
-        },
-      });
+      let ticket;
+
+      if (reviewId || surveyResponseId) {
+        ticket = await prisma.ticket.findFirst({
+          where: {
+            ...(ticketType === TicketType.SURVEY_RESPONSE
+              ? { surveyResponseId }
+              : { reviewId }),
+          },
+        });
+      }
 
       if (ticket) {
         throw new Error(
@@ -55,6 +68,7 @@ export async function createTicket(
                 id: createdBy,
               },
             },
+            description: description,
             type: ticketType,
             status: TicketStatus.OPEN,
             priority: priority,
@@ -85,7 +99,9 @@ export async function createTicket(
             }),
             comments: {
               create: {
-                text: firstComment,
+                text: isCustomTicket
+                  ? `Ticket created on ${formatDateT1(Date.now())}`
+                  : firstComment,
                 createdBy: {
                   connect: {
                     id: createdBy,
