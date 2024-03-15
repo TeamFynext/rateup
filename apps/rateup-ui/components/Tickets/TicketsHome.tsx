@@ -28,9 +28,10 @@ import { useUser } from "../../context/UserContext";
 import { UserRole } from "../../utils/enums";
 import CreateTicketModal from "./CreateTicketModal";
 import { TicketStatus, TicketType } from "../../utils/enums/ticket";
+import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 
 const TicketsHome = () => {
-  const [sort, setSort] = useState(true);
+  const [sortOption, setSortOption] = useState("deadline");
   const { user } = useUser();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const {
@@ -74,6 +75,12 @@ const TicketsHome = () => {
     return <SurveysPageError refetch={refetch} />;
   }
   const TicketStatusValues = Object.values(TicketStatus) as string[];
+  const sortOptions = [
+    { value: "deadline", label: "Sort by Deadline" },
+    { value: "latest", label: "Sort by Latest First" },
+    { value: "old", label: "Sort by Old First" },
+  ];
+  const handleSortChange = (value) => setSortOption(value);
 
   return (
     <Stack>
@@ -147,11 +154,13 @@ const TicketsHome = () => {
           )}
         </Group>
         <Group>
-          <RateupButtonPrimary
-            onClick={() => setSort(!sort)}
-            title={"Sort"}
-            variant="subtle"
-            rightIcon={<IconSelector size="1rem" />}
+          <ContainedSelection
+            allowDeselect={false}
+            data={sortOptions}
+            defaultValue={sortOptions[0].value}
+            value={sortOption}
+            onChange={handleSortChange}
+            placeholder="Select Sort Option"
           />
           <TeamSelector
             value={selectedTeamId}
@@ -181,7 +190,7 @@ const TicketsHome = () => {
           <TicketPanel
             filteredTickets={filteredTickets}
             setDeleteTicketId={setDeleteTicketId}
-            sort={sort}
+            sortOption={sortOption}
             filterParam={filterParam}
           />
         </Tabs.Panel>
@@ -190,7 +199,7 @@ const TicketsHome = () => {
             <TicketPanel
               filteredTickets={filteredTickets}
               setDeleteTicketId={setDeleteTicketId}
-              sort={sort}
+              sortOption={sortOption}
               filterParam={filterParam}
             />
           </Tabs.Panel>
@@ -203,9 +212,44 @@ const TicketsHome = () => {
 function TicketPanel({
   filteredTickets,
   setDeleteTicketId,
-  sort,
+  sortOption,
   filterParam,
 }) {
+  const sortedTickets = filteredTickets.sort((a, b) => {
+    if (sortOption === "deadline") {
+      const statusOrder = {
+        OPEN: 1,
+        IN_PROGRESS: 1,
+        RESOLVED: 2,
+        CLOSED: 3,
+      };
+
+      // Sort by status first
+      const statusOrderA = statusOrder[a.status] || 4;
+      const statusOrderB = statusOrder[b.status] || 4;
+      if (statusOrderA !== statusOrderB) {
+        return statusOrderA - statusOrderB;
+      }
+
+      // For tickets with the same status, sort by deadline
+      // If no deadline, consider it as the latest possible date
+      const deadlineA = a.deadline
+        ? new Date(a.deadline).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      const deadlineB = b.deadline
+        ? new Date(b.deadline).getTime()
+        : Number.MAX_SAFE_INTEGER;
+
+      // Sort by deadline within the same status category
+      return deadlineA - deadlineB;
+    } else if (sortOption === "old") {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    } else if (sortOption === "latest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return 0;
+  });
+
   return (
     <Stack>
       <Title order={3} mt="xl" ml="lg">
@@ -213,23 +257,15 @@ function TicketPanel({
         {filterParam === "all" ? "All Tickets" : `Tickets - ${filterParam}`}
       </Title>
       <ScrollArea h={"64vh"}>
-        {filteredTickets?.length > 0 ? (
+        {sortedTickets?.length > 0 ? (
           <SurveyCardLayout>
-            {filteredTickets
-              ?.sort((a, b) =>
-                sort
-                  ? new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
-                  : new Date(a.createdAt).getTime() -
-                    new Date(b.createdAt).getTime(),
-              )
-              .map((ticket) => (
-                <TicketCard
-                  setDeleteTicketId={setDeleteTicketId}
-                  key={ticket.id}
-                  ticket={ticket}
-                />
-              ))}
+            {sortedTickets.map((ticket) => (
+              <TicketCard
+                setDeleteTicketId={setDeleteTicketId}
+                key={ticket.id}
+                ticket={ticket}
+              />
+            ))}
           </SurveyCardLayout>
         ) : (
           <Stack mt="xl">
