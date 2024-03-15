@@ -176,7 +176,8 @@ export async function downloadExcelResponse(
               responseValue = Array.isArray(responseValue)
                 ? responseValue?.map((res) => res.value).join(", ")
                 : responseType == QuestionType.MCQ
-                  ? responseValue?.value || `Other:${responseValue?.other}`
+                  ? responseValue?.value ||
+                    `${question?.features?.[defaultLanguage]?.other?.title}:${responseValue?.other}`
                   : responseValue?.value;
             } else if (typeof responseValue === "object") {
               responseValue = responseValue?.value
@@ -560,7 +561,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           else
             resObj[qstnTitle] = getFormattedResponse(
               res.response[res.type],
-              res.type,
+              qstn,
+              lang,
             );
         });
         responseForSheet.push(resObj);
@@ -680,7 +682,7 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
         );
       else
         resObj[QIndex + "_" + qstn.title[response.language].trim()] =
-          getFormattedResponse(res.response[res.type], res.type);
+          getFormattedResponse(res.response[res.type], qstn, response.language);
     });
     const newRow = await sheet.addRow(resObj);
     const dateColumnIndex = sheet.headerValues.indexOf("Created At");
@@ -694,9 +696,9 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
   return spreadSheetId;
 }
 
-export function getFormattedResponse(response, type) {
+export function getFormattedResponse(response, qstn, language) {
   let formattedResponse = "";
-  switch (type) {
+  switch (qstn?.type) {
     case QuestionType.Address:
       formattedResponse = Object.entries(response)
         .map(([key, value]) => `${key}: ${String(value)}`)
@@ -704,7 +706,9 @@ export function getFormattedResponse(response, type) {
       break;
     case QuestionType.MCQ:
       formattedResponse =
-        response?.value?.trim() || `other: ${response?.other?.trim()}`;
+        response?.value?.trim() ||
+        `${qstn?.features?.[language]?.other
+          ?.title}: ${response?.other?.trim()}`;
       break;
     case QuestionType.CustomNPS:
     case QuestionType.DDSS:
