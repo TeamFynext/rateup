@@ -1,25 +1,30 @@
-import { Group } from "@mantine/core";
+import { Group, Box } from "@mantine/core";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 export function TicketDetailBlock({
   children,
-  mawInp = "300",
-  miwInput = "70",
+  mawInp = "385",
+  mihInput = "110",
   ...rest
 }) {
   return (
     <PaperLayout
       hoveractive
-      mah={80}
-      mih={miwInput}
+      mah={85}
+      mih={mihInput}
       miw={150}
       maw={mawInp}
       p="md"
       shadow="xl"
       radius="lg"
       {...rest}
+      style={{ display: "flex" }}
     >
-      <Group align="center">{children}</Group>
+      <Box style={{ display: "flex" }}>
+        <Group align="center" style={{}}>
+          {children}
+        </Group>
+      </Box>
     </PaperLayout>
   );
 }

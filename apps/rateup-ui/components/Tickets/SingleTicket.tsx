@@ -224,6 +224,21 @@ const SingleTicket = ({ id }: { id: string }) => {
     }
   }
 
+  function calculateDaysLeft(deadlineDate) {
+    const today = new Date().getTime();
+    const deadline = new Date(deadlineDate).getTime();
+    const differenceMs = deadline - today;
+    const differenceDays = Math.ceil(differenceMs / (1000 * 60 * 60 * 24));
+
+    if (differenceDays < 0) {
+      return `Overdue by ${Math.abs(differenceDays)} days`;
+    } else if (differenceDays === 0) {
+      return `Today is the deadline`;
+    } else {
+      return `${differenceDays} ${differenceDays !== 1 ? "days" : "day"} left`;
+    }
+  }
+
   return (
     <Stack mt="-20px">
       <Group>
@@ -236,13 +251,13 @@ const SingleTicket = ({ id }: { id: string }) => {
         </Title>
       </Group>
       <Group justify="flex-start" gap="10" mt="-1px">
-        <TicketDetailBlock mawInp="400" miwInput="85" pt="lg">
+        <TicketDetailBlock mawInp="550" mihInput="85" pt="lg">
           <Text>Team :</Text>
           <Text size="xl" fw="700">
             {ticket?.teamName}
           </Text>
         </TicketDetailBlock>
-        <TicketDetailBlock mawInp="400" miwInput="85">
+        <TicketDetailBlock mawInp="550" mihInput="85">
           <Text>Assigned To :</Text>
           <ContainedSelection
             allowDeselect={false}
@@ -267,21 +282,35 @@ const SingleTicket = ({ id }: { id: string }) => {
           <PriorityMenu priority={priority} setPriority={setPriority} />
         </TicketDetailBlock>
         <TicketDetailBlock mawInp="320">
-          <Text>Deadline: </Text>
-          <Text
-            size="sm"
-            fw="700"
-            style={{ maxWidth: "300px", maxHeight: "30px" }}
-          >
-            {ticket?.deadline ? formatIsoDateString(ticket?.deadline) : "n/a"}
-          </Text>
-          <ActionIcon
-            variant="default"
-            disabled={user.role !== UserRole.SUPADM}
-            onClick={openDeadlineEdit}
-          >
-            <IconEdit style={{ width: "70%", height: "70%" }} stroke={1.5} />
-          </ActionIcon>
+          <Stack>
+            <Group>
+              <Text>Deadline: </Text>
+              <Text
+                size="sm"
+                fw="700"
+                style={{ maxWidth: "300px", maxHeight: "30px" }}
+              >
+                {ticket?.deadline
+                  ? formatIsoDateString(ticket?.deadline)
+                  : "n/a"}
+              </Text>
+              <ActionIcon
+                variant="default"
+                disabled={user.role !== UserRole.SUPADM}
+                onClick={openDeadlineEdit}
+              >
+                <IconEdit
+                  style={{ width: "70%", height: "70%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+              {ticket?.deadline && (
+                <Text pl="lg" c="orange">
+                  * {calculateDaysLeft(ticket?.deadline)}
+                </Text>
+              )}
+            </Group>
+          </Stack>
         </TicketDetailBlock>
       </Group>
 

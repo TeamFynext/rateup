@@ -2,9 +2,10 @@ import {
   ActionIcon,
   Group,
   Loader,
-  Paper,
+  ScrollArea,
   Stack,
-  Text,
+  Tabs,
+  Title,
   Tooltip,
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
@@ -23,11 +24,10 @@ import { TicketCard } from "./TicketCard";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import { TeamSelector } from "../input/TeamSelector";
-import { StatusFilterMenu } from "./StatusFIlterMenu";
 import { useUser } from "../../context/UserContext";
 import { UserRole } from "../../utils/enums";
 import CreateTicketModal from "./CreateTicketModal";
-import { TicketType } from "../../utils/enums/ticket";
+import { TicketStatus, TicketType } from "../../utils/enums/ticket";
 
 const TicketsHome = () => {
   const [sort, setSort] = useState(true);
@@ -73,6 +73,7 @@ const TicketsHome = () => {
     console.error(tickets, error);
     return <SurveysPageError refetch={refetch} />;
   }
+  const TicketStatusValues = Object.values(TicketStatus) as string[];
 
   return (
     <Stack>
@@ -152,25 +153,6 @@ const TicketsHome = () => {
             variant="subtle"
             rightIcon={<IconSelector size="1rem" />}
           />
-          <Paper>
-            <Group
-              mx="xl"
-              px="sm"
-              py="7px"
-              justify="space-between"
-              style={{
-                minWidth: "230px",
-                borderRadius: "10px",
-                border: "1px solid var(--light-grey-color-4)",
-              }}
-            >
-              <Text size="sm">Status: </Text>
-              <StatusFilterMenu
-                filterParam={filterParam}
-                setFilterParam={setFilterParam}
-              />
-            </Group>
-          </Paper>
           <TeamSelector
             value={selectedTeamId}
             onChange={(teamId) => setSelectedTeamId(teamId)}
@@ -179,33 +161,86 @@ const TicketsHome = () => {
         </Group>
       </Group>
 
-      {filteredTickets?.length > 0 ? (
-        <SurveyCardLayout>
-          {filteredTickets
-            ?.sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime(),
-            )
-            .map((ticket) => (
-              <TicketCard
-                setDeleteTicketId={setDeleteTicketId}
-                key={ticket.id}
-                ticket={ticket}
-              />
-            ))}
-        </SurveyCardLayout>
-      ) : (
-        <Stack mt="xl">
-          <NothingFound
-            text={`No ${filterParam !== "all" ? ` "${filterParam}" ` : ""} Tickets Found`}
+      <Tabs defaultValue="all" mt="sm">
+        <Tabs.List>
+          <Tabs.Tab value="all" onClick={() => setFilterParam("all")}>
+            All
+          </Tabs.Tab>
+          {TicketStatusValues.map((status) => (
+            <Tabs.Tab
+              key={status}
+              value={status}
+              onClick={() => setFilterParam(status)}
+            >
+              {status}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+
+        <Tabs.Panel value="all">
+          <TicketPanel
+            filteredTickets={filteredTickets}
+            setDeleteTicketId={setDeleteTicketId}
+            sort={sort}
+            filterParam={filterParam}
           />
-        </Stack>
-      )}
+        </Tabs.Panel>
+        {TicketStatusValues.map((status) => (
+          <Tabs.Panel value={status}>
+            <TicketPanel
+              filteredTickets={filteredTickets}
+              setDeleteTicketId={setDeleteTicketId}
+              sort={sort}
+              filterParam={filterParam}
+            />
+          </Tabs.Panel>
+        ))}
+      </Tabs>
     </Stack>
   );
 };
+
+function TicketPanel({
+  filteredTickets,
+  setDeleteTicketId,
+  sort,
+  filterParam,
+}) {
+  return (
+    <Stack>
+      <Title order={3} mt="xl" ml="lg">
+        {" "}
+        {filterParam === "all" ? "All Tickets" : `Tickets - ${filterParam}`}
+      </Title>
+      <ScrollArea h={"64vh"}>
+        {filteredTickets?.length > 0 ? (
+          <SurveyCardLayout>
+            {filteredTickets
+              ?.sort((a, b) =>
+                sort
+                  ? new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                  : new Date(a.createdAt).getTime() -
+                    new Date(b.createdAt).getTime(),
+              )
+              .map((ticket) => (
+                <TicketCard
+                  setDeleteTicketId={setDeleteTicketId}
+                  key={ticket.id}
+                  ticket={ticket}
+                />
+              ))}
+          </SurveyCardLayout>
+        ) : (
+          <Stack mt="xl">
+            <NothingFound
+              text={`No ${filterParam !== "all" ? ` "${filterParam}" ` : ""} Tickets Found`}
+            />
+          </Stack>
+        )}
+      </ScrollArea>
+    </Stack>
+  );
+}
 
 export default TicketsHome;
