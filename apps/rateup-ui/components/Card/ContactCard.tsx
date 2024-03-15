@@ -1,17 +1,7 @@
-import {
-  Badge,
-  Flex,
-  Group,
-  Menu,
-  Paper,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Badge, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
-import { useTeamsByUser } from "../../backend/team/team.query";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../Modal/FormModalLayout";
 import EditContactModal from "../Contacts/EditContactModal";
@@ -23,43 +13,26 @@ interface ContactCardProps {
 }
 
 const ContactCard = ({ contact, groupId }: ContactCardProps) => {
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsData,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser() as {
-    isLoading: boolean;
-    error: any;
-    data: TeamsResponse;
-    refetch: any;
-  };
-
-  const teamObj = teamsData?.data?.find((team) => {
-    return team?.id === contact?.teamId;
-  });
-
   return (
     <Paper shadow="xl" radius="md" p="xl">
-      <Group justify="space-between">
-        <Title order={5}>{contact?.name}</Title>
-        <ContactMenu contact={contact} groupId={groupId}></ContactMenu>
-      </Group>
-      <Stack gap={0}>
-        <Text c="dimmed">{contact?.phone}</Text>
-        <Text c="dimmed">{contact?.email}</Text>
+      <Stack h={"100%"}>
+        <Group justify="space-between">
+          <Title order={5}>{contact?.name}</Title>
+          <ContactMenu contact={contact} groupId={groupId}></ContactMenu>
+        </Group>
+        <Stack gap={0}>
+          <Text c="dimmed">{contact?.phone}</Text>
+          <Text c="dimmed">{contact?.email}</Text>
+        </Stack>
+        <Group justify="space-between" mt={"auto"}>
+          <Text c="dimmed">
+            created on {dayjs(contact?.createdAt).format("DD-MM-YYYY")}
+          </Text>
+          <Badge size="md" variant="light" color="green" mt={"auto"}>
+            source: {contact?.source ?? "NA"}
+          </Badge>
+        </Group>
       </Stack>
-      <Group justify="space-between">
-        <Text c="dimmed">
-          created on {dayjs(contact?.createdAt).format("DD-MM-YYYY")}
-        </Text>
-        <Badge color="var(--tertiary-color)" variant="outline" size="lg">
-          {teamObj?.name}
-        </Badge>
-      </Group>
-      <Badge size="md" variant="light" color="green" mt={"xs"}>
-        source: {contact?.source ?? "NA"}
-      </Badge>
     </Paper>
   );
 };

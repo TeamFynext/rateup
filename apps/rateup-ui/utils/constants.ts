@@ -39,18 +39,25 @@ export const FlowNpsQ = [
   QuestionType.YN,
   QuestionType.Opinion,
 ];
-export const OtherQuestions = [
-  QuestionType.Text,
-  QuestionType.TextArea,
-  QuestionType.Number,
-  QuestionType.Date,
-  QuestionType.Photo,
-  QuestionType.Testimonial,
+
+export const ChoiceQuestions = [
   QuestionType.MCQ,
   QuestionType.MSQ,
   QuestionType.DDSS,
   QuestionType.DDMS,
   QuestionType.PCQ,
+];
+
+export const InputQuestions = [
+  QuestionType.Text,
+  QuestionType.TextArea,
+  QuestionType.Number,
+  QuestionType.Date,
+  QuestionType.Photo,
+];
+
+export const OtherQuestions = [
+  QuestionType.Testimonial,
   QuestionType.TnC,
   QuestionType.InfoMessage,
 ];
@@ -63,19 +70,22 @@ export const WaOtherQuestions = [
   QuestionType.Photo,
   QuestionType.Testimonial,
 ];
-const FlowOtherQuestions = [
-  QuestionType.Text,
+
+export const FlowChoiceQuestions = [
   QuestionType.MCQ,
   QuestionType.MSQ,
   QuestionType.DDSS,
-  QuestionType.Date,
 ];
+
+const FlowInputQuestions = [QuestionType.Text, QuestionType.Date];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
 export const QuestionTypesGroup = [
   { title: "Contact Questions", questionTypes: ContactQuestions },
   { title: "NPS Questions", questionTypes: NPSQuestions },
+  { title: "Choice Questions", questionTypes: ChoiceQuestions },
+  { title: "Input Questions", questionTypes: InputQuestions },
   { title: "Other Questions", questionTypes: OtherQuestions },
 ];
 
@@ -86,17 +96,17 @@ export const WaSurveyQuestionTypes = [
   { title: "WhatsApp Exclusive Questions", questionTypes: WaExclusive },
 ];
 const flowNonInputElements = [
-  wft.textHeading,
-  wft.textSubHeading,
-  wft.textBody,
-  wft.textCaption,
+  wft.nonInputText,
   wft.image,
+  // not currectly working
+  // , wft.embeddedLink,wft.optIn
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links
   { title: "Contact Questions", questionTypes: WaContactQuestions },
   { title: "NPS Questions", questionTypes: FlowNpsQ },
-  { title: "Other Questions", questionTypes: FlowOtherQuestions },
+  { title: "Choice Questions", questionTypes: FlowChoiceQuestions },
+  { title: "Input Questions", questionTypes: FlowInputQuestions },
   { title: "Non-Input Elements", questionTypes: flowNonInputElements },
 ];
 

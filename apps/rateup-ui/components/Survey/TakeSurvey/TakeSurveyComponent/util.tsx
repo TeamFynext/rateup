@@ -147,7 +147,7 @@ export function getQuestionForm(type, selectedQ) {
     case Q.Photo:
       return <ImageForm key={selectedQ?.id} />;
     case Q.MCQ:
-      return <MCQForm key={selectedQ?.id} />;
+      return <MCQForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.MSQ:
       return <MSQForm key={selectedQ?.id} />;
     case Q.DDSS:
@@ -217,7 +217,7 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
         if (!address1?.length) errMsg = "Address 1 cannot be blank";
         else if (!city?.length) errMsg = "City cannot be blank";
         else if (!postalCode?.length) errMsg = "Postal code cannot be blank";
-        else if (postalCode?.length < 5)
+        else if (postalCode?.length < 4)
           errMsg = "Please enter valid postal code";
         else if (!country?.length) errMsg = "Country cannot be blank";
       }

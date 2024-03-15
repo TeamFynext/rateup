@@ -20,6 +20,7 @@ import { getNestedProperty } from "../misc/obj.utils";
 import {
   WA_FLOW_BODY_CHAR_LIMIT,
   WA_FLOW_CAPTION_CHAR_LIMIT,
+  WA_FLOW_EMBEDDED_LINK_LIMIT,
   WA_FLOW_HEADING_CHAR_LIMIT,
   WA_FLOW_SUBHEADING_CHAR_LIMIT,
 } from "../../components/whatsapp/whatsappConfig";
@@ -173,6 +174,13 @@ export function getFlowFormElementsFromScreen(
   }
 }
 
+export function getFlowFooterElementsFromScreen(screen: WaFlowScreen) {
+  const elementsWithoutFooter = screen.layout.children
+    .find((se) => se.type === "Form")
+    .children.filter((fe) => fe.type === WaFlowFormElementType.footer);
+  return elementsWithoutFooter;
+}
+
 export function getQuestionsFromScreen(
   screen: WaFlowScreen,
   survey: Survey,
@@ -211,7 +219,7 @@ export function getQuestionFromFlowElementId(
   map: any,
 ) {
   const formElement = getFlowFormElementById(id, flowJson);
-  return getQuestionFromFlowFormElementName(formElement.name, questions, map);
+  return getQuestionFromFlowFormElementName(formElement?.name, questions, map);
 }
 
 export function getFlowTextLimit(type: WaFlowFormElementType) {
@@ -224,6 +232,10 @@ export function getFlowTextLimit(type: WaFlowFormElementType) {
       return WA_FLOW_SUBHEADING_CHAR_LIMIT;
     case WaFlowFormElementType.textCaption:
       return WA_FLOW_CAPTION_CHAR_LIMIT;
+    case WaFlowFormElementType.embeddedLink:
+      return WA_FLOW_EMBEDDED_LINK_LIMIT;
+    case WaFlowFormElementType.optIn:
+      return WA_FLOW_EMBEDDED_LINK_LIMIT;
     default:
       throw new Error("Invalid form element type");
   }
@@ -356,7 +368,6 @@ export const updateFlowJsonNavigationAndDataPassing = (
       {},
     );
     if (currentScreenIsNotLast) {
-      footerObject["label"] = "Continue";
       footerObject["on-click-action"] = {
         name: flowHasLogic ? "data_exchange" : "navigate",
         next: flowHasLogic
@@ -394,7 +405,6 @@ export const updateFlowJsonNavigationAndDataPassing = (
         ...screenDataForNextScreen,
       };
     } else {
-      footerObject["label"] = "Submit";
       screen["terminal"] = true;
       footerObject["on-click-action"] = flowHasLogic
         ? {
@@ -489,6 +499,8 @@ export const getFormObjFromScreenId = (
 };
 
 export function getFlowElementJsonFromQuestion(question: Question) {
+  // console.log(question);
+
   const { dataSource, mapData } = generateDataSourceFromQuestion(question);
   const type = questionTypeToFlowFormElementType(question.type);
   const questionElement: WaFlowFormElement = {

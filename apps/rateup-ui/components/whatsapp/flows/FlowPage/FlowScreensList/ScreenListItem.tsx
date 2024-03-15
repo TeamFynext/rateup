@@ -1,3 +1,4 @@
+import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   ActionIcon,
   Badge,
@@ -9,39 +10,42 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
+  IconCheck,
   IconChevronDown,
   IconChevronUp,
   IconEdit,
   IconGripVertical,
   IconTrash,
 } from "@tabler/icons-react";
+import { useRouter } from "next/router";
 import { useContext, useRef, useState } from "react";
-import {
-  getScreenObjById,
-  updateFlowJsonNavigationAndDataPassing,
-  getFlowElementText,
-  getFlowFormElementsFromScreen,
-  getQuestionsFromScreen,
-  moveFlowScreen,
-} from "../../../../../utils/whatsapp/flow.utils";
-import { EditableText } from "../../../../input/EditableText";
-import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
-import { EditFlowContext } from "../EditFlow/EditFlowContext";
-import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
-import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { useRouter } from "next/router";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
+import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
 import { showErrorToast } from "../../../../../utils/notifications";
+import {
+  getFlowElementText,
+  getFlowFooterElementsFromScreen,
+  getFlowFormElementsFromScreen,
+  getFormObjFromScreenId,
+  getQuestionsFromScreen,
+  getScreenObjById,
+  moveFlowScreen,
+  updateFlowJsonNavigationAndDataPassing,
+} from "../../../../../utils/whatsapp/flow.utils";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import ConfirmationModal from "../../../../Modal/ConfirmationModal";
-import { useDisclosure } from "@mantine/hooks";
+import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
+import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
+import { EditableText } from "../../../../input/EditableText";
+import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -83,6 +87,10 @@ function ScreenListItem({
   );
 
   const elements = getFlowFormElementsFromScreen(screen);
+  const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
+  const [footerLabel, setFooterLabel] = useState(
+    footerElement.label ?? "Continue",
+  );
 
   const handleDeleteScreen = () => {
     if (!flowEditable) return;
@@ -120,6 +128,17 @@ function ScreenListItem({
       screenToBeEdited["title"] = title;
     });
   }
+
+  const handleButtonTextUpdate = () => {
+    if (!flowEditable) return;
+    updateFlowJson((draft) => {
+      const formEl = getFormObjFromScreenId(draft.screens, screen.id);
+      const footer = formEl.children.filter(
+        (data) => data.type === "Footer",
+      )?.[0];
+      footer.label = footerLabel;
+    });
+  };
 
   function handleAddElementClick() {
     if (!flowEditable) return;
@@ -269,6 +288,19 @@ function ScreenListItem({
                 );
               })}
               {provided.placeholder}
+              <Group w={"100%"}>
+                <ContainedTextField
+                  value={footerLabel}
+                  label={"Next button text"}
+                  mb={"xs"}
+                  placeholder="Enter the next button text"
+                  onChange={(e) => setFooterLabel(e?.target?.value)}
+                  w={"80%"}
+                />
+                <ActionIcon mt={"xs"} onClick={handleButtonTextUpdate}>
+                  <IconCheck />
+                </ActionIcon>
+              </Group>
               <RateupButtonBlue
                 onClick={handleAddElementClick}
                 title={"Add Element"}

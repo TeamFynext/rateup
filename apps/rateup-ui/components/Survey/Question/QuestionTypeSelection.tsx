@@ -2,49 +2,48 @@ import {
   Badge,
   Box,
   Button,
-  Center,
   Flex,
   Grid,
-  ScrollArea,
   Stack,
+  Text,
   Title,
 } from "@mantine/core";
-import { Text } from "@mantine/core";
+import { useHover } from "@mantine/hooks";
+import { IconScaleOutline } from "@tabler/icons";
 import {
   Icon123,
-  IconListCheck,
-  IconList,
-  IconCircuitPushbutton,
-  IconTextSize,
+  IconAddressBook,
+  IconAdjustmentsQuestion,
   IconAlignBoxLeftMiddleFilled,
-  IconMailFilled,
-  IconCameraFilled,
   IconCalendarTime,
-  IconThumbUpFilled,
-  IconClick,
-  IconStarsFilled,
-  IconMoodSmileFilled,
-  IconMessageChatbot,
-  IconListDetails,
+  IconCameraFilled,
   IconCaretDownFilled,
   IconCaretUpDown,
-  IconAdjustmentsQuestion,
-  IconAddressBook,
   IconCheckbox,
-  IconPhoto,
+  IconCircuitPushbutton,
+  IconClick,
+  IconLink,
+  IconList,
+  IconListCheck,
+  IconListDetails,
+  IconMailFilled,
   IconMapPin,
+  IconMessageChatbot,
+  IconMoodSmileFilled,
+  IconPhoneFilled,
+  IconPhoto,
+  IconStarsFilled,
+  IconTextSize,
+  IconThumbUpFilled,
 } from "@tabler/icons-react";
+import { useState } from "react";
 import {
   QuestionType,
   WaFlowFormNonInputElementType,
 } from "../../../types/enums";
-import { useState } from "react";
-import { IconPhoneFilled } from "@tabler/icons-react";
-import { IconScaleOutline } from "@tabler/icons";
-import { useHover } from "@mantine/hooks";
-import { GoogleIcon } from "../../Button/GoogleIcon";
 import { googleReviewSupportedTypes } from "../../../utils/data";
 import { getQuestionTypeLabel } from "../../../utils/enums";
+import { GoogleIcon } from "../../Button/GoogleIcon";
 
 interface QuestionTypeSelectionProps {
   questionTypeGroups: Array<{
@@ -174,11 +173,10 @@ const questionIcons = {
   [QuestionType.Address]: IconMapPin,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
-  [WaFlowFormNonInputElementType.textBody]: IconTextSize,
-  [WaFlowFormNonInputElementType.textCaption]: IconTextSize,
-  [WaFlowFormNonInputElementType.textHeading]: IconTextSize,
-  [WaFlowFormNonInputElementType.textSubHeading]: IconTextSize,
+  [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,
   [WaFlowFormNonInputElementType.image]: IconPhoto,
+  [WaFlowFormNonInputElementType.embeddedLink]: IconLink,
+  [WaFlowFormNonInputElementType.optIn]: IconLink,
 };
 
 export { questionIcons };

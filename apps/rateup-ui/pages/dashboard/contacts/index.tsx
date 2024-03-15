@@ -18,7 +18,6 @@ import {
 import {
   IconChevronDown,
   IconPlus,
-  IconTicket,
   IconTrashXFilled,
   IconUserPlus,
 } from "@tabler/icons-react";
@@ -31,10 +30,7 @@ import { useDisclosure } from "@mantine/hooks";
 import OpenCreateModal from "../../../components/Contacts/OpenCreateModal";
 import { useCampaignContacts } from "../../../backend/campaign/contacts/contacts.query";
 import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
-import {
-  RateupButtonBlue,
-  RateupButtonOutline,
-} from "../../../components/Button/RateupButtons";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import ContactCard from "../../../components/Card/ContactCard";
 import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
@@ -66,7 +62,7 @@ export default function Contacts() {
   const { isLoading: isLoadingContacts, data: contactData } =
     useCampaignContacts() as {
       isLoading: boolean;
-      data: ContactsResponse;
+      data: ContactsData[];
       error: any;
       refetch: any;
     };
@@ -74,22 +70,16 @@ export default function Contacts() {
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
 
-  const contacts =
-    selectedTeamID == "all" || !selectedTeamID
-      ? contactData?.data
-      : contactData?.data?.filter(
-          (contact) => contact?.teamId === selectedTeamID,
-        );
   const filteredContacts = (
     searchTerm
-      ? contacts.filter((contact) => {
+      ? contactData.filter((contact) => {
           return (
             contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             contact?.phone?.includes(searchTerm) ||
             contact?.email?.includes(searchTerm)
           );
         })
-      : contacts
+      : contactData
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
 
   const contactGroups =
@@ -133,11 +123,13 @@ export default function Contacts() {
             <OpenCreateModal close={close}></OpenCreateModal>
           </FormModalLayout>
         </Group>
-        <TeamSelector
-          value={selectedTeamID}
-          onChange={setSelectedTeamID}
-          enableAll={true}
-        ></TeamSelector>
+        {activeTab === ContactTabs.GROUPS && (
+          <TeamSelector
+            value={selectedTeamID}
+            onChange={setSelectedTeamID}
+            enableAll={true}
+          />
+        )}
       </Flex>
       <Tabs
         value={activeTab}
@@ -171,7 +163,7 @@ export default function Contacts() {
           />
           {/* <RateupButtonOutline title="Select" onClick={openSelect}/> */}
           <ContactActionMenu
-            contacts={contactData?.data}
+            contacts={contactData}
             groups={contactGroupData?.data}
           />
         </Group>

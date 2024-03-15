@@ -16,6 +16,7 @@ import Heading from "../../../styled/Heading/Heading";
 import { ChoiceTypeQuestions } from "../../../../utils/constants";
 import SurveySummaryNew from "../SurveySummaryNew";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { stringToColour } from "../../../../utils/essential";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
@@ -23,6 +24,7 @@ interface QuestionBarChartProps {
   questionType: QuestionType;
   no: number;
   choicesInAllLang: Question["choices"];
+  mcqOtherFeature: any;
 }
 interface CustomTooltipProps {
   active?: boolean;
@@ -85,6 +87,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   questionType,
   no,
   choicesInAllLang,
+  mcqOtherFeature,
 }) => {
   let choicesToUse = choices;
   if (!choicesToUse) {
@@ -113,6 +116,18 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     })?.length,
     fill: choice?.color,
   }));
+
+  if (mcqOtherFeature && mcqOtherFeature.isEnabled) {
+    let otherValueCount = data?.filter((item) => {
+      const response = item?.response[questionType];
+      return response?.other?.length;
+    })?.length;
+    choiceCounts.push({
+      name: mcqOtherFeature?.title,
+      count: otherValueCount,
+      fill: stringToColour(mcqOtherFeature?.title),
+    });
+  }
 
   return (
     <Stack miw={300}>

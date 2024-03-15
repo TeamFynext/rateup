@@ -141,7 +141,7 @@ const Result = ({
           />
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
-          <ResultsOverview />
+          <ResultsOverview surveyId={survey?.id} />
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
           <ResultComparison surveyId={survey?.id} />

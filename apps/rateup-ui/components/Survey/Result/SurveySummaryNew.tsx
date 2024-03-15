@@ -11,44 +11,6 @@ import { IconThumbUpFilled, IconThumbDownFilled } from "@tabler/icons-react";
 import { QuestionType } from "../../../types/enums";
 import { getResponseArrayByQuestionType } from "../../../utils/response";
 
-const countResponses = (surveyResponses) => {
-  const counts = {};
-  for (const question of surveyResponses) {
-    const responseType = question.type;
-    let responseValue = question.response[responseType];
-    if (
-      responseType === QuestionType.MSQ ||
-      responseType === QuestionType.DDMS
-    ) {
-      if (typeof responseValue === "string") {
-        responseValue = responseValue.split(",");
-      } else if (Array.isArray(responseValue)) {
-        // do nothing, it's already in the correct format
-      } else {
-        console.error(
-          `Invalid format for 'Multiple Select' responseValue: ${responseValue}`,
-        );
-        continue;
-      }
-
-      for (const option of responseValue) {
-        const trimmedOption = option.value.trim();
-        counts[trimmedOption] = (counts[trimmedOption] || 0) + 1;
-      }
-    } else if (
-      responseType === QuestionType.MCQ ||
-      responseType === QuestionType.CustomNPS ||
-      responseType === QuestionType.DDSS
-    ) {
-      counts[responseValue?.value] = (counts[responseValue?.value] || 0) + 1;
-    } else {
-      counts[responseValue] = (counts[responseValue] || 0) + 1;
-    }
-  }
-
-  return counts;
-};
-
 const SurveySummaryNew = ({
   response,
   questionType,
@@ -112,22 +74,17 @@ const SurveySummaryNew = ({
       return (
         <ScrollArea.Autosize mah={500} maw={450}>
           <SimpleGrid cols={1}>
-            {choices?.map((choice) => {
-              const resObj = responseArray.find(
-                (res) => res?.response == choice?.value,
-              );
+            {responseArray?.map((choice) => {
               return (
-                <Group pb="sm" key={choice?.value}>
-                  <Tooltip label={choice?.value}>
+                <Group pb="sm" key={choice?.response}>
+                  <Tooltip label={choice?.response}>
                     <Badge color="indigo" variant="light" w={100}>
-                      {choice?.value}
+                      {choice?.response}
                     </Badge>
                   </Tooltip>
                   :
                   <Text maw={150}>
-                    {resObj
-                      ? `${resObj?.count} ${resObj?.voteText} ( ${resObj?.percentage}%)`
-                      : "0 vote (0.00%)"}
+                    {`${choice?.count} ${choice?.voteText} ( ${choice?.percentage}%)`}
                   </Text>
                 </Group>
               );

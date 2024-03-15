@@ -1,11 +1,12 @@
 import { Group, Image, Rating, Stack, Text, Title, Paper } from "@mantine/core";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { mapSmileyIcon } from "../../Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { QuestionType as Q } from "../../../types/enums";
 import dayjs from "dayjs";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { OpinionScaleForm } from "../../Survey/TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 
 const SurveyResponsesView = ({
   question,
@@ -18,6 +19,9 @@ const SurveyResponsesView = ({
   type: string;
   no: number;
 }) => {
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
   return (
     <PaperLayout
       hoveractive
@@ -136,9 +140,15 @@ const SurveyResponsesView = ({
                         </Group>
                       </Stack>
                     );
-
-                  case Q.CustomNPS:
                   case Q.MCQ:
+                    let selectedValue = Object.values(response?.response)[0];
+                    return (
+                      <Text>
+                        {selectedValue?.value ||
+                          `${question?.features?.[selectedLanguage || defaultLanguage].other?.title}: ${selectedValue?.other}`}
+                      </Text>
+                    );
+                  case Q.CustomNPS:
                   case Q.DDSS:
                     let selectedChoice = Object.values(response?.response)[0];
                     return <Text>{selectedChoice?.value}</Text>;

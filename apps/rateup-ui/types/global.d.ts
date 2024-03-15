@@ -471,7 +471,6 @@ declare global {
   // for contacts
   type ContactsData = {
     id: string;
-    teamId: string;
     name: string;
     phone: string;
     email: string;
@@ -717,6 +716,8 @@ export type WaFlowFormElement = {
   "scale-type"?: "cover" | "contain";
   "aspect-ratio"?: number; // default
   "alt-text"?: string; // for accessibility (Talkback, voice over)
+  "font-weight"?: string;
+  strikethrough?: boolean;
 };
 
 export type WaFlowMap = {

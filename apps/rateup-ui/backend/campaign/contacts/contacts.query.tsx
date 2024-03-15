@@ -4,7 +4,6 @@ import {
   deleteContact,
   deleteManyContacts,
   editContact,
-  getContactListByTeamId,
   getContactsList,
   importContacts,
 } from "./contacts.api";
@@ -15,13 +14,6 @@ export const useCampaignContacts = () => {
   return useQuery({
     queryKey: ["campaignContactsData"],
     queryFn: () => getContactsList(),
-  });
-};
-
-export const useCampaignContactsByTeamId = (teamId) => {
-  return useQuery({
-    queryKey: ["campaignContactsDataByTeamId", teamId],
-    queryFn: () => getContactListByTeamId(teamId),
   });
 };
 

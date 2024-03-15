@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconUser, IconUsers } from "@tabler/icons-react";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import { useCampaignContactsByTeamId } from "../../backend/campaign/contacts/contacts.query";
+import { useCampaignContacts } from "../../backend/campaign/contacts/contacts.query";
 import { useState } from "react";
 import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -30,14 +30,13 @@ const AddParticipantModal = ({ close, campaign }) => {
   const [selectedGroups, selectedGroupsHandlers] = useListState([]);
 
   const [searchText, setSearchText] = useState("");
-  const { data: contacts, isLoading: contactIsLoading } =
-    useCampaignContactsByTeamId(campaign?.teamId);
+  const { data: contacts, isLoading: contactIsLoading } = useCampaignContacts();
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
 
   const isSelectedAll =
     selectedTab === CampaignParticipantSource.INDIVIDUAL
-      ? selectedContacts.length === contacts?.data.length
+      ? selectedContacts.length === contacts?.length
       : selectedGroups.length === contactGroup?.data.length;
 
   const addCampaignParticipants = useAddCampaignParticipants(campaign?.id);
@@ -62,7 +61,7 @@ const AddParticipantModal = ({ close, campaign }) => {
   function handleSelectAll(e) {
     if (e.target.checked) {
       if (selectedTab == CampaignParticipantSource.INDIVIDUAL) {
-        selectedContactsHandlers.setState(contacts.data);
+        selectedContactsHandlers.setState(contacts);
       } else {
         selectedGroupsHandlers.setState(contactGroup.data);
       }
@@ -76,12 +75,12 @@ const AddParticipantModal = ({ close, campaign }) => {
   }
 
   const filteredContacts = searchText
-    ? contacts?.data.filter(
+    ? contacts?.filter(
         (c) =>
           c.name.toLowerCase().includes(searchText.toLowerCase()) ||
           c.phone.includes(searchText),
       )
-    : contacts?.data?.filter((c) => c.phone != null);
+    : contacts?.filter((c) => c.phone != null);
   const filteredGroups = searchText
     ? contactGroup?.data.filter((g) =>
         g.name.toLowerCase().includes(searchText.toLowerCase()),

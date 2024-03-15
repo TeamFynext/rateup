@@ -24,7 +24,7 @@ const ContactExtraProps = ({ form }) => {
   const style = {
     input: {
       border: "none",
-      borderBottom: "1px solid var(--mantine-color-gray-3",
+      borderBottom: "1px solid var(--mantine-color-gray-3)",
       borderRadius: 0,
     },
   };

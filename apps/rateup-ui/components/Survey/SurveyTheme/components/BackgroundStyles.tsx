@@ -16,7 +16,7 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
-import React, { useState, useRef, ReactNode } from "react";
+import React, { useState, useRef, ReactNode, useCallback } from "react";
 import { UnsplashModal } from "../../../Modal/UnsplashModal";
 import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../../Modal/ImageUploadMethodModal";
@@ -154,6 +154,19 @@ function BackgroundStyles({
   };
 
   const [bgTab, setBgTab] = useState<BgTab>(BgTab.BGCOLOR);
+
+  const handleColorPickerChange = useCallback(
+    (valueObj) => {
+      const { themeObjKey, propertyChanged, value } = valueObj;
+      if (currentStyles?.styles)
+        setCurrentstyles(themeObjKey, {
+          ...currentStyles,
+          styles: { ...currentStyles.styles, [propertyChanged]: value },
+        });
+    },
+    [currentStyles],
+  );
+
   return (
     <Stack align="start" w={"100%"} gap={"1.5rem"}>
       <UnsplashModal
@@ -197,13 +210,12 @@ function BackgroundStyles({
       <Box className={"custom-color-picker-and-heading-container"}>
         <h2>Background Color</h2>
         <CustomColorPicker
-          value={currentStyles?.styles?.backgroundColor}
-          onChange={(value) => {
-            setCurrentstyles("bg", {
-              ...currentStyles,
-              styles: { ...currentStyles.styles, backgroundColor: value },
-            });
+          optionalDataObj={{
+            themeObjKey: "bg",
+            propertyChanged: "backgroundColor",
           }}
+          value={currentStyles?.styles.backgroundColor}
+          onChange={handleColorPickerChange}
         />
       </Box>
 

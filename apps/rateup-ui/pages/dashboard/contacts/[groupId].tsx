@@ -157,7 +157,7 @@ export default function () {
                           groupClose={closeEditModal}
                           isEdit={true}
                           groupDetails={groupDetails}
-                        ></CreateGroupModal>
+                        />
                       </FormModalLayout>
 
                       <Button
@@ -255,7 +255,7 @@ export default function () {
               close={close}
               teamId={groupDetails?.teamId}
               existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
-            ></AddCustomerModal>
+            />
           </FormModalLayout>
           <FormModalLayout
             centered

@@ -8,7 +8,7 @@ import {
   Box,
   Slider,
 } from "@mantine/core";
-import React from "react";
+import React, { useCallback } from "react";
 import { Button as ButtonType } from "../surveyTheme.types";
 // import CustomColorPicker from "./customelements/CustomColorPicker";
 // import CustomColorInput from "./customelements/CustomColorInput";
@@ -23,6 +23,18 @@ function ButtonStyles({
   currentStyles: ButtonType;
   setCurrentstyles: (key: string, value: any) => void;
 }) {
+  const handleColorPickerChange = useCallback(
+    (valueObj) => {
+      const { themeObjKey, propertyChanged, value } = valueObj;
+      if (currentStyles?.styles)
+        setCurrentstyles(themeObjKey, {
+          ...currentStyles,
+          styles: { ...currentStyles.styles, [propertyChanged]: value },
+        });
+    },
+    [currentStyles],
+  );
+
   return (
     <>
       <Stack align="start" w={"100%"} gap={"1.5rem"}>
@@ -52,13 +64,12 @@ function ButtonStyles({
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Background Color</h2>
           <CustomColorPicker
-            value={currentStyles?.styles?.backgroundColor}
-            onChange={(e) => {
-              setCurrentstyles("button", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, backgroundColor: e },
-              });
+            optionalDataObj={{
+              themeObjKey: "button",
+              propertyChanged: "backgroundColor",
             }}
+            value={currentStyles?.styles?.backgroundColor}
+            onChange={handleColorPickerChange}
           />
         </Box>
 
@@ -87,13 +98,12 @@ function ButtonStyles({
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Text Color</h2>
           <CustomColorPicker
-            value={currentStyles?.styles?.color}
-            onChange={(e) => {
-              setCurrentstyles("button", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, color: e },
-              });
+            optionalDataObj={{
+              themeObjKey: "button",
+              propertyChanged: "color",
             }}
+            value={currentStyles?.styles?.color}
+            onChange={handleColorPickerChange}
           />
         </Box>
 

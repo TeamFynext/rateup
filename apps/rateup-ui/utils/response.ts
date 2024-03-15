@@ -16,11 +16,13 @@ import {
 import { ChoiceTypeQuestions } from "./constants";
 import { decryptPrivateKey, decryptResponse } from "./encryption";
 import { TeamWiseResponses } from "../backend/surveys/response/response.api";
+import { useContext } from "react";
+import SelectedLanguageContext from "../context/SelectedLanguage";
 
-export function getResponse(type: any, response: any) {
+export function getResponse(q: any, response: any) {
   if (!response) return "";
 
-  switch (type) {
+  switch (q?.type) {
     case QuestionType.Testimonial:
       return formatTestimonialResponse(response);
     case QuestionType.Date:
@@ -38,7 +40,7 @@ export function getResponse(type: any, response: any) {
     case QuestionType.WaList:
       return formatWaList(response);
     default:
-      return formatDefaultResponse(type, response);
+      return formatDefaultResponse(q, response);
   }
 }
 
@@ -92,10 +94,16 @@ function formatTestimonialResponse(response) {
   };
 }
 
-function formatDefaultResponse(type, response) {
+function formatDefaultResponse(q, response) {
   // Handle other types or default case
-  if (ChoiceTypeQuestions.includes(type)) {
-    return response ? response.value : "";
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
+  if (ChoiceTypeQuestions.includes(q?.type)) {
+    return response
+      ? response.value ||
+          `${q?.features?.[selectedLanguage || defaultLanguage].other?.title} : ${response?.other}`
+      : "";
   }
   return response;
 }

@@ -8,7 +8,7 @@ import {
   Box,
 } from "@mantine/core";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Subtitle } from "../surveyTheme.types";
 import { FontWeights } from "../SurveyTheme.constants";
 // import CustomColorPicker from "./customelements/CustomColorPicker";
@@ -23,6 +23,18 @@ function DescStyles({
   currentStyles: Subtitle;
   setCurrentstyles: (key: string, value: any) => void;
 }) {
+  const handleColorPickerChange = useCallback(
+    (valueObj) => {
+      const { themeObjKey, propertyChanged, value } = valueObj;
+      if (currentStyles?.styles)
+        setCurrentstyles(themeObjKey, {
+          ...currentStyles,
+          styles: { ...currentStyles.styles, [propertyChanged]: value },
+        });
+    },
+    [currentStyles],
+  );
+
   return (
     <>
       <Stack align="start" w={"100%"} gap={"1.5rem"}>
@@ -84,13 +96,12 @@ function DescStyles({
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Text Color</h2>
           <CustomColorPicker
-            value={currentStyles?.styles?.color}
-            onChange={(e) => {
-              setCurrentstyles("subtitle", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, color: e },
-              });
+            optionalDataObj={{
+              themeObjKey: "subtitle",
+              propertyChanged: "color",
             }}
+            value={currentStyles?.styles?.color}
+            onChange={handleColorPickerChange}
           />
         </Box>
       </Stack>
