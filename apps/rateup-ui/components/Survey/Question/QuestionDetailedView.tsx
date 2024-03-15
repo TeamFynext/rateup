@@ -294,7 +294,7 @@ export function QuestionDetailedView({
                       rightSection={<IconChevronDown size="1rem" />}
                     >
                       <Text size="sm" c="dark.5" fw="700">
-                        Addon Actions
+                        Actions
                       </Text>
                     </Button>
                   </Menu.Target>
@@ -304,6 +304,7 @@ export function QuestionDetailedView({
                       <Menu.Item>
                         <RateupButtonSecondary
                           title={"Logic Jump"}
+                          fullWidth
                           leftIcon={
                             <Image
                               src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}

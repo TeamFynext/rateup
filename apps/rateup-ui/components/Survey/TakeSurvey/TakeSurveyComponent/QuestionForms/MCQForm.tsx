@@ -1,11 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Radio, Stack, TextInput } from "@mantine/core";
+import { Input, Radio, Stack } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import FormPaperLayout from "./layout/FormPaperLayout";
+import classes from "../TakeSurvey.module.css";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -53,14 +54,14 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   }
 
   return (
-    <Stack w={"100%"}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+    <Stack w={"100%"} mr="sm">
+      <Radio.Group value={selectedOp} onChange={handleSelectedOp}>
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
       {selectedFeature?.other?.isEnabled &&
       selectedOp === selectedFeature?.other?.title ? (
         <FormPaperLayout>
-          <TextInput
+          <Input
             placeholder={selectedFeature?.other?.placeholder}
             value={response?.other || ""}
             onChange={(e) =>
@@ -69,6 +70,9 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
                 : updateResponse({ other: e.currentTarget.value })
             }
             variant="unstyled"
+            classNames={{
+              input: classes.input,
+            }}
           />
         </FormPaperLayout>
       ) : null}
