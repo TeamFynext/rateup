@@ -7,17 +7,7 @@ import {
 } from "../../utils/survey/question/question.utils";
 
 // Copied from frontend. Update accordingly.
-export const logicSupportedTypes = [
-  Q.LD,
-  Q.YN,
-  Q.Rating,
-  Q.Smiley,
-  Q.Opinion,
-  Q.MCQ,
-  Q.MSQ,
-  Q.DDSS,
-  Q.DDMS,
-];
+export const logicSupportedTypes = Object.values(Q);
 export function parseLogicAction(
   question: Question,
   userResponse: Choice | string | Choice[] | number,
