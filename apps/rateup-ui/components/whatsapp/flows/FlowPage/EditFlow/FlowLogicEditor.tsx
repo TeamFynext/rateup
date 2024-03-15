@@ -217,7 +217,7 @@ function AtomicConditionBlock({
   );
 
   const [selectedQId, setSelectedQId] = useState(
-    condition.questionId || editingQuestion.id,
+    condition?.questionId || editingQuestion?.id,
   );
   const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
   if (!selectedQ) throw new Error("Selected question not found in screen");

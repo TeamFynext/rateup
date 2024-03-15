@@ -223,7 +223,6 @@ export function getConditions(qType: Q): Array<any> {
         LogicCondition.Submitted,
       ];
     default:
-      console.error("type", qType);
-      throw new Error("Logic not implemented for this question type");
+      return [LogicCondition.Submitted];
   }
 }

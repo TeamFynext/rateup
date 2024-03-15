@@ -219,7 +219,7 @@ export function getQuestionFromFlowElementId(
   map: any,
 ) {
   const formElement = getFlowFormElementById(id, flowJson);
-  return getQuestionFromFlowFormElementName(formElement.name, questions, map);
+  return getQuestionFromFlowFormElementName(formElement?.name, questions, map);
 }
 
 export function getFlowTextLimit(type: WaFlowFormElementType) {
