@@ -5,7 +5,6 @@ import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
-import FormPaperLayout from "./layout/FormPaperLayout";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -17,6 +16,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
+  const selectedFeature = features?.[selectedLanguage];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
@@ -29,33 +29,51 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   useEffect(() => {
     if (response) {
-      setSelectedOp(response.value);
+      if (response?.value) setSelectedOp(response.value);
+      else if (response?.other) setSelectedOp(selectedFeature?.other?.title);
     }
   }, [response]);
 
   const handleSelectedOp = (value) => {
-    const res = options?.find((op) => op?.value === value);
-    updateResponse(res);
+    if (value !== selectedFeature?.other?.title) {
+      const res = options?.find((op) => op?.value === value);
+      updateResponse(res);
+    } else {
+      setSelectedOp(value);
+    }
   };
+
+  if (selectedFeature?.other?.isEnabled) {
+    data.push(selectedFeature?.other?.title);
+  } else {
+    data.filter((op) => op !== selectedFeature?.other?.title);
+  }
+
   return (
     <Stack w={"100%"}>
       <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
-      {features?.[selectedLanguage]?.other && (
-        <FormPaperLayout>
-          <TextInput
-            placeholder="other"
-            value={response?.other || ""}
-            onChange={(e) =>
-              !e.currentTarget.value?.length
-                ? updateResponse(null)
-                : updateResponse({ other: e.currentTarget.value })
-            }
-            variant="unstyled"
-          />
-        </FormPaperLayout>
-      )}
+      {selectedFeature?.other?.isEnabled &&
+      selectedOp === selectedFeature?.other?.title ? (
+        <TextInput
+          placeholder={selectedFeature?.other?.placeholder}
+          value={response?.other || ""}
+          onChange={(e) =>
+            !e.currentTarget.value?.length
+              ? updateResponse(null)
+              : updateResponse({ other: e.currentTarget.value })
+          }
+          variant="unstyled"
+          styles={{
+            input: {
+              border: "none",
+              borderBottom: "1px solid var(--mantine-color-gray-3)",
+              borderRadius: 0,
+            },
+          }}
+        />
+      ) : null}
     </Stack>
   );
 }

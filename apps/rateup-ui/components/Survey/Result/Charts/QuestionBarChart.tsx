@@ -24,7 +24,7 @@ interface QuestionBarChartProps {
   questionType: QuestionType;
   no: number;
   choicesInAllLang: Question["choices"];
-  enabledOther: boolean;
+  mcqOtherFeature: any;
 }
 interface CustomTooltipProps {
   active?: boolean;
@@ -87,7 +87,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   questionType,
   no,
   choicesInAllLang,
-  enabledOther,
+  mcqOtherFeature,
 }) => {
   let choicesToUse = choices;
   if (!choicesToUse) {
@@ -117,15 +117,15 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     fill: choice?.color,
   }));
 
-  if (enabledOther) {
+  if (mcqOtherFeature && mcqOtherFeature.isEnabled) {
     let otherValueCount = data?.filter((item) => {
       const response = item?.response[questionType];
       return response?.other?.length;
     })?.length;
     choiceCounts.push({
-      name: "Other",
+      name: mcqOtherFeature?.title,
       count: otherValueCount,
-      fill: stringToColour("Other"),
+      fill: stringToColour(mcqOtherFeature?.title),
     });
   }
 

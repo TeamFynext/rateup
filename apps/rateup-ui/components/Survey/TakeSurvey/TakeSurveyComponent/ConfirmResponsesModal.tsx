@@ -174,7 +174,7 @@ function ConfirmResponsesModal({
                             return (
                               <Text>
                                 {selectedValue?.value ||
-                                  `Other: ${selectedValue?.other}`}
+                                  `${question?.features?.[selectedLanguage]?.other?.title}: ${selectedValue?.other}`}
                               </Text>
                             );
 

@@ -81,7 +81,11 @@ export function ChoicesCreator({
 
   const choices = form.values.choices?.[selectedLanguage] || [];
   const features = form.values.features?.[selectedLanguage] || {
-    other: false,
+    other: {
+      isEnabled: false,
+      title: "Other",
+      placeholder: `Please enter your Other input`,
+    },
   };
 
   const { updateImageArray } = useImageStore();
@@ -284,21 +288,79 @@ export function ChoicesCreator({
       )}
       {form.values.type === QuestionType.MCQ &&
         surveyType == SurveyType.Web && (
-          <PaperLayout w={"fit-content"}>
-            <Switch
-              label={"Enable Other"}
-              checked={features?.other}
-              onChange={(e) => {
-                form.setFieldValue("features", {
-                  ...form.values.features,
-                  [selectedLanguage]: {
-                    ...features,
-                    other: e.currentTarget.checked,
-                  },
-                });
-              }}
-            />
-          </PaperLayout>
+          <Stack>
+            <PaperLayout w={"fit-content"}>
+              <Switch
+                label={"Enable Other"}
+                checked={features?.other?.isEnabled}
+                onChange={(e) => {
+                  form.setFieldValue("features", {
+                    ...form.values.features,
+                    [selectedLanguage]: {
+                      ...features,
+                      other: {
+                        ...features.other,
+                        isEnabled: e.currentTarget.checked,
+                      },
+                    },
+                  });
+                }}
+              />
+            </PaperLayout>
+
+            {features?.other?.isEnabled && (
+              <>
+                <ContainedTextArea
+                  label="Title for 'Other'"
+                  styles={{
+                    input: {
+                      border: "none",
+                      borderBottom: "1px solid var(--mantine-color-gray-3)",
+                      borderRadius: 0,
+                    },
+                  }}
+                  size="sm"
+                  onChange={(e) => {
+                    form.setFieldValue("features", {
+                      ...form.values.features,
+                      [selectedLanguage]: {
+                        ...features,
+                        other: {
+                          ...features.other,
+                          title: e.currentTarget.value,
+                        },
+                      },
+                    });
+                  }}
+                  value={features?.other?.title}
+                />
+                <ContainedTextArea
+                  label="Placeholder text for other input"
+                  styles={{
+                    input: {
+                      border: "none",
+                      borderBottom: "1px solid var(--mantine-color-gray-3)",
+                      borderRadius: 0,
+                    },
+                  }}
+                  size="sm"
+                  onChange={(e) => {
+                    form.setFieldValue("features", {
+                      ...form.values.features,
+                      [selectedLanguage]: {
+                        ...features,
+                        other: {
+                          ...features.other,
+                          placeholder: e.currentTarget.value,
+                        },
+                      },
+                    });
+                  }}
+                  value={features?.other?.placeholder}
+                />
+              </>
+            )}
+          </Stack>
         )}
     </>
   );

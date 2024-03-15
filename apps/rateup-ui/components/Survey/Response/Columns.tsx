@@ -90,7 +90,7 @@ export const useSurveyResponseColumns = ({
             return (
               <BadgeorTextorPreview
                 questionType={q?.type}
-                response={getResponse(q.type, info.getValue())}
+                response={getResponse(q, info.getValue())}
               />
             );
           },

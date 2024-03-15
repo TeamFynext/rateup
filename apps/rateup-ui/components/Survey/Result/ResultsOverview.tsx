@@ -195,7 +195,7 @@ const ResultsOverview = ({ surveyId }) => {
         csat: csatScore,
         choicesInAllLang: choicesInAllLang,
         enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
-        enabledOther:
+        mcqOtherFeature:
           question?.type == QuestionType.MCQ
             ? question?.features?.[
                 selectedLanguage ? selectedLanguage : defaultLanguage
@@ -278,7 +278,7 @@ const ResultsOverview = ({ surveyId }) => {
                       data={item?.responses}
                       questionType={item?.type}
                       choicesInAllLang={item?.choicesInAllLang}
-                      enabledOther={item?.enabledOther}
+                      mcqOtherFeature={item?.mcqOtherFeature}
                     />
                     {index < chartData?.length - 1 && <Divider my="md" />}
                   </React.Fragment>
