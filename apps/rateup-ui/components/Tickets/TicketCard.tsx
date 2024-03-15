@@ -55,6 +55,21 @@ export function TicketCard({
       break;
   }
 
+  function calculateDaysLeft(deadlineDate) {
+    const today = new Date().getTime();
+    const deadline = new Date(deadlineDate).getTime();
+    const differenceMs = deadline - today;
+    const differenceDays = Math.ceil(differenceMs / (1000 * 60 * 60 * 24));
+
+    if (differenceDays < 0) {
+      return `Overdue by ${Math.abs(differenceDays)} days`;
+    } else if (differenceDays === 0) {
+      return `Today is the deadline`;
+    } else {
+      return `${differenceDays} ${differenceDays !== 1 ? "days" : "day"} left`;
+    }
+  }
+
   return (
     <PaperLayout
       hoveractive
@@ -96,11 +111,19 @@ export function TicketCard({
             {ticket?.type}
           </Badge>
         </Group>
-        <Group gap="xs">
-          <Avatar radius={"xl"} />
-          <Text size="sm" c="dimmed">
-            Created {timeSince}
-          </Text>
+        <Group gap="xs" justify="space-between">
+          <Group>
+            <Avatar radius={"xl"} />
+            <Text size="sm" c="dimmed">
+              Created {timeSince}
+            </Text>
+          </Group>
+
+          {ticket?.deadline && (
+            <Text size="sm" c="red">
+              * {calculateDaysLeft(ticket?.deadline)}
+            </Text>
+          )}
         </Group>
         <Group justify="space-between">
           <Group>

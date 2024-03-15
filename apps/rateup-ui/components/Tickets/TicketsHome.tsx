@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import Heading from "../styled/Heading/Heading";
-import { IconPlus, IconRefresh, IconSelector } from "@tabler/icons-react";
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
 import {
