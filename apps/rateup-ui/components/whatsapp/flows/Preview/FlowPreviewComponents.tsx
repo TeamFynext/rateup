@@ -1,14 +1,14 @@
 import {
-  TextInput,
-  Textarea,
+  ActionIcon,
+  Button,
+  Checkbox,
+  Divider,
+  Group,
+  Image,
   Radio,
   Stack,
-  Checkbox,
-  ActionIcon,
-  Group,
-  Button,
-  Divider,
-  Image,
+  TextInput,
+  Textarea,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import {
@@ -21,17 +21,32 @@ import {
   WaFlowFormElementType,
   WaFlowFormNonInputElementType,
 } from "../../../../types/enums";
-import styles from "./preview.module.css";
 import { WaFlowFormElement } from "../../../../types/global";
+import { getTextStyle } from "../FlowPage/EditFlow/FlowTextDetailedView";
+import styles from "./preview.module.css";
 
 export function FlowTextPreview({
   text,
   type,
+  fontWeight,
+  strikethrough,
 }: {
   text: string;
   type: WaFlowFormNonInputElementType;
+  fontWeight?: string;
+  strikethrough?: boolean;
 }) {
-  return <span className={styles[type]}>{text}</span>;
+  return (
+    <span
+      className={styles[type]}
+      style={{
+        ...getTextStyle(fontWeight, true),
+        textDecoration: strikethrough ? "line-through" : "normal",
+      }}
+    >
+      {text}
+    </span>
+  );
 }
 
 export function FlowTextInputPreview({ label = "Label" }: { label?: string }) {
@@ -272,10 +287,18 @@ function FlowContainerHeader(onClose: any) {
 export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
   switch (fe.type) {
     case WaFlowFormElementType.textHeading:
+    case WaFlowFormElementType.textSubHeading:
     case WaFlowFormElementType.textBody:
     case WaFlowFormElementType.textCaption:
-    case WaFlowFormElementType.textSubHeading:
-      return <FlowTextPreview text={fe.text} type={fe.type as any} />;
+    case WaFlowFormElementType.nonInputText:
+      return (
+        <FlowTextPreview
+          text={fe.text}
+          type={fe.type as any}
+          fontWeight={fe["font-weight"]}
+          strikethrough={fe.strikethrough}
+        />
+      );
 
     case WaFlowFormElementType.textInput:
       return <FlowTextInputPreview label={fe.label} />;
@@ -306,6 +329,8 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       );
     case WaFlowFormElementType.optIn:
       return <FlowOptInPreview label={fe.label} />;
+    case WaFlowFormElementType.embeddedLink:
+      return <>slfkjlksd</>;
     case WaFlowFormElementType.image:
       return (
         <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />

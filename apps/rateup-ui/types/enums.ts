@@ -154,11 +154,13 @@ export enum WaFlowLayoutType {
 }
 export enum WaFlowFormElementType {
   // Non interactive
+  nonInputText = "NonText",
   textBody = "TextBody",
   textHeading = "TextHeading",
   textSubHeading = "TextSubheading",
   textCaption = "TextCaption",
   image = "Image",
+  embeddedLink = "EmbeddedLink",
 
   // interactive
   textInput = "TextInput",
@@ -178,7 +180,7 @@ export enum WaFlowFormInputElementType {
   radioButtonsGroup = "RadioButtonsGroup",
   checkboxGroup = "CheckboxGroup",
   dropDown = "Dropdown",
-  optIn = "OptIn",
+  // optIn = "OptIn",
 }
 export enum WaFlowFormNonInputElementType {
   textBody = "TextBody",
@@ -186,6 +188,9 @@ export enum WaFlowFormNonInputElementType {
   textSubHeading = "TextSubheading",
   textCaption = "TextCaption",
   image = "Image",
+  nonInputText = "NonText",
+  embeddedLink = "EmbeddedLink",
+  optIn = "OptIn",
 }
 
 export enum SaveStatus {
@@ -205,4 +210,10 @@ export enum CampaignRewardType {
 export enum LoyaltyCustomerRewardType {
   Referrer = "Referrer", // the one who referred
   Customer = "Customer", // the one who was referred or made the transaction
+}
+export enum WhatsappFlowFontWeight {
+  bold = "bold",
+  italic = "italic",
+  boldAndItalic = "bold_italic",
+  normal = "normal",
 }

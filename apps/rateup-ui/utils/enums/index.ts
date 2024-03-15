@@ -6,7 +6,6 @@ import {
   WaFlowFormNonInputElementType,
   SubscriptionFeaturePathName as sfpn,
 } from "../../types/enums";
-import { WaFlowFormElement } from "../../types/global";
 
 export const AuthMode = {
   VERIFY: "VERIFY",
@@ -74,7 +73,7 @@ export function getQuestionTypeLabel(
     case QuestionType.EmailPhone:
       return "Email & Phone";
     case QuestionType.Text:
-      return "Text";
+      return "Text Input";
     case QuestionType.TextArea:
       return "Large Text";
     case QuestionType.Number:
@@ -97,16 +96,14 @@ export function getQuestionTypeLabel(
       return "Terms & Conditions";
     case QuestionType.Address:
       return "Address";
-    case WaFlowFormNonInputElementType.textBody:
-      return "Text Body";
-    case WaFlowFormNonInputElementType.textCaption:
-      return "Text Caption";
-    case WaFlowFormNonInputElementType.textHeading:
-      return "Text Heading";
-    case WaFlowFormNonInputElementType.textSubHeading:
-      return "Text Sub Heading";
     case WaFlowFormNonInputElementType.image:
       return "Image";
+    case WaFlowFormNonInputElementType.nonInputText:
+      return "Text";
+    case WaFlowFormNonInputElementType.embeddedLink:
+      return "Embedded Link";
+    case WaFlowFormNonInputElementType.optIn:
+      return "Opt In";
     default:
       throw new Error("Invalid Question Type");
   }
@@ -169,16 +166,12 @@ export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
       return "Radio Buttons Group";
     case WaFlowFormElementType.checkboxGroup:
       return "Checkbox Group";
-    case WaFlowFormElementType.textBody:
-      return "Text: Body";
-    case WaFlowFormElementType.textCaption:
-      return "Text: Caption";
-    case WaFlowFormElementType.textHeading:
-      return "Text: Heading";
-    case WaFlowFormElementType.textSubHeading:
-      return "Text: Sub Heading";
     case WaFlowFormElementType.image:
       return "Image";
+    case WaFlowFormElementType.embeddedLink:
+      return "Embedded Link";
+    case WaFlowFormElementType.optIn:
+      return "Opt In";
     default:
       throw new Error("Invalid WaFlowFormElementType" + type);
   }

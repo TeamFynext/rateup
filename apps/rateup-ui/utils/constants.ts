@@ -96,11 +96,10 @@ export const WaSurveyQuestionTypes = [
   { title: "WhatsApp Exclusive Questions", questionTypes: WaExclusive },
 ];
 const flowNonInputElements = [
-  wft.textHeading,
-  wft.textSubHeading,
-  wft.textBody,
-  wft.textCaption,
+  wft.nonInputText,
   wft.image,
+  // not currectly working
+  // , wft.embeddedLink,wft.optIn
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links
