@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Input, Radio, Stack } from "@mantine/core";
+import { FocusTrap, Input, Radio, Stack } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
@@ -20,6 +20,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [selectedOp, setSelectedOp] = useState("");
   const selectedFeature = features?.[selectedLanguage];
+  const [active, setActive] = useState(false);
 
   const options = selectedQ
     ? choices
@@ -44,7 +45,11 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     if (value !== selectedFeature?.other?.title) {
       const res = options?.find((op) => op?.value === value);
       updateResponse(res);
-    } else updateResponse(null);
+      setActive(false);
+    } else {
+      setActive(true);
+      updateResponse(null);
+    }
   };
 
   if (selectedFeature?.other?.isEnabled) {
@@ -61,19 +66,22 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
       {selectedFeature?.other?.isEnabled &&
       selectedOp === selectedFeature?.other?.title ? (
         <FormPaperLayout>
-          <Input
-            placeholder={selectedFeature?.other?.placeholder}
-            value={response?.other || ""}
-            onChange={(e) =>
-              !e.currentTarget.value?.length
-                ? updateResponse(null)
-                : updateResponse({ other: e.currentTarget.value })
-            }
-            variant="unstyled"
-            classNames={{
-              input: classes.input,
-            }}
-          />
+          <FocusTrap active={active}>
+            <Input
+              placeholder={selectedFeature?.other?.placeholder}
+              value={response?.other || ""}
+              onChange={(e) =>
+                !e.currentTarget.value?.length
+                  ? updateResponse(null)
+                  : updateResponse({ other: e.currentTarget.value })
+              }
+              variant="unstyled"
+              classNames={{
+                input: classes.input,
+              }}
+              data-autofocus
+            />
+          </FocusTrap>
         </FormPaperLayout>
       ) : null}
     </Stack>
