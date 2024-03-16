@@ -7,6 +7,7 @@ import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import classes from "../TakeSurvey.module.css";
+import { useRouter } from "next/router";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -21,6 +22,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const [selectedOp, setSelectedOp] = useState("");
   const selectedFeature = features?.[selectedLanguage];
   const [active, setActive] = useState(false);
+  const router = useRouter();
 
   const options = selectedQ
     ? choices
@@ -48,6 +50,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
       setActive(false);
     } else {
       setActive(true);
+      router.push("#other-input");
       updateResponse(null);
     }
   };
@@ -59,13 +62,13 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   }
 
   return (
-    <Stack w={"100%"} mr="sm">
+    <Stack w={"100%"} mr="sm" py={"xs"}>
       <Radio.Group value={selectedOp} onChange={handleSelectedOp}>
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
       {selectedFeature?.other?.isEnabled &&
       selectedOp === selectedFeature?.other?.title ? (
-        <FormPaperLayout>
+        <FormPaperLayout id={"other-input"}>
           <FocusTrap active={active}>
             <Input
               placeholder={selectedFeature?.other?.placeholder}
