@@ -1,6 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { FocusTrap, Input, Radio, Stack } from "@mantine/core";
+import {
+  Box,
+  FocusTrap,
+  Input,
+  Radio,
+  Stack,
+  useMantineTheme,
+} from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
@@ -8,6 +15,7 @@ import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import classes from "../TakeSurvey.module.css";
 import { useRouter } from "next/router";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -23,6 +31,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const selectedFeature = features?.[selectedLanguage];
   const [active, setActive] = useState(false);
   const router = useRouter();
+  const theme = useMantineTheme();
 
   const options = selectedQ
     ? choices
@@ -62,31 +71,52 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   }
 
   return (
-    <Stack w={"100%"} mr="sm" py={"xs"}>
+    <Stack w={"100%"} mr="sm" py={"xs"} style={{ overflow: "hidden" }}>
       <Radio.Group value={selectedOp} onChange={handleSelectedOp}>
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
-      {selectedFeature?.other?.isEnabled &&
-      selectedOp === selectedFeature?.other?.title ? (
-        <FormPaperLayout id={"other-input"}>
-          <FocusTrap active={active}>
-            <Input
-              placeholder={selectedFeature?.other?.placeholder}
-              value={response?.other || ""}
-              onChange={(e) =>
-                !e.currentTarget.value?.length
-                  ? updateResponse(null)
-                  : updateResponse({ other: e.currentTarget.value })
-              }
-              variant="unstyled"
-              classNames={{
-                input: classes.input,
+      <AnimatePresence initial={false}>
+        {selectedFeature?.other?.isEnabled &&
+          selectedOp === selectedFeature?.other?.title && (
+            <motion.div
+              transition={{
+                type: "tween",
+                duration: 0.5,
+                delay: 0.25,
               }}
-              data-autofocus
-            />
-          </FocusTrap>
-        </FormPaperLayout>
-      ) : null}
+              initial={{ x: "100vw" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100vw" }}
+              key={"other-option-input"}
+            >
+              <Box
+                className={classes.inputBox}
+                style={{
+                  borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
+                  boxShadow: `0 0 4px 4px rgba(0, 0, 0, 0.05rgba(0, 0, 0, 0.05) 0px 1px 0px,
+                rgba(0, 0, 0, 0.11) 0px 0px 8px)`,
+                }}
+              >
+                <FocusTrap active={active}>
+                  <Input
+                    placeholder={selectedFeature?.other?.placeholder}
+                    value={response?.other || ""}
+                    onChange={(e) =>
+                      !e.currentTarget.value?.length
+                        ? updateResponse(null)
+                        : updateResponse({ other: e.currentTarget.value })
+                    }
+                    variant="unstyled"
+                    classNames={{
+                      input: classes.input,
+                    }}
+                    data-autofocus
+                  />
+                </FocusTrap>
+              </Box>
+            </motion.div>
+          )}
+      </AnimatePresence>
     </Stack>
   );
 }
