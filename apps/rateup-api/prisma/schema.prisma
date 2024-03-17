@@ -198,6 +198,8 @@ model Survey {
   skipPreview             Boolean         @default(true)
   enableNotificationEmail Boolean         @default(false)
   notificationEmail       String          @default("")
+  enableTickets           Boolean         @default(false)
+  enableTicketEmailAlerts Boolean         @default(false)
   shareSettings           Json?
   publicKey               String?
   isEncrypted             Boolean         @default(false)
