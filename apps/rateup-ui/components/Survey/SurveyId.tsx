@@ -237,6 +237,7 @@ export default function SurveyID() {
                             "notificationEmail",
                             "endtoendencryption",
                             "redirect",
+                            "tickets",
                           ]
                     }
                   />

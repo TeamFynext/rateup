@@ -211,6 +211,7 @@ const Responses = ({
     open,
     setSelectedResponseId,
     setResponseTeamId,
+    enableTicket: survey?.enableTickets,
   });
 
   const handleSyncGoogleSheet = () => {

@@ -1,5 +1,4 @@
 import {
-  Grid,
   Group,
   SimpleGrid,
   Stack,
@@ -29,6 +28,7 @@ import {
   updateSkipPreview,
 } from "./updateSettings";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
+import TicketSettings from "./TicketSettings";
 
 const defaultEnabledModules = [
   "name",
@@ -42,6 +42,7 @@ const defaultEnabledModules = [
   "notificationEmail",
   "endtoendencryption",
   "redirect",
+  "tickets",
 ];
 const SurveySettings = ({
   surveyId,
@@ -141,6 +142,9 @@ const SurveySettings = ({
         )}
         {enabledModules.includes("password") && (
           <PasswordSettings survey={survey} surveyId={surveyId} />
+        )}
+        {enabledModules.includes("tickets") && (
+          <TicketSettings survey={survey} surveyId={surveyId} />
         )}
       </SimpleGrid>
       <SimpleGrid cols={2} spacing={"lg"}>
