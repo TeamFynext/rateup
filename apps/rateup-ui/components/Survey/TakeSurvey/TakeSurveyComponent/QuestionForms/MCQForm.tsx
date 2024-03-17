@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import {
   Box,
@@ -29,10 +29,12 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [selectedOp, setSelectedOp] = useState("");
   const selectedFeature = features?.[selectedLanguage];
-  const [active, setActive] = useState(false);
+  // const [active, setActive] = useState(false);
   const router = useRouter();
   const theme = useMantineTheme();
+  const otherInputContainerRef = useRef(null);
 
+  const bDivRef = useRef(null);
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
@@ -56,13 +58,27 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     if (value !== selectedFeature?.other?.title) {
       const res = options?.find((op) => op?.value === value);
       updateResponse(res);
-      setActive(false);
+      // setActive(false);
     } else {
-      setActive(true);
-      router.push("#other-input");
+      // setActive(true);
+      // router.push("#other-input");
+      if (otherInputContainerRef.current) {
+        const inputElement =
+          otherInputContainerRef.current.querySelector("input");
+        console.log(inputElement);
+      }
       updateResponse(null);
     }
   };
+
+  useEffect(() => {
+    if (
+      selectedOp === selectedFeature?.other?.title &&
+      otherInputContainerRef.current
+    ) {
+      bDivRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedOp]);
 
   if (selectedFeature?.other?.isEnabled) {
     data.push(selectedFeature?.other?.title);
@@ -88,6 +104,14 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
               animate={{ x: 0 }}
               exit={{ x: "-100vw" }}
               key={"other-option-input"}
+              ref={otherInputContainerRef}
+              onAnimationComplete={(defObj) => {
+                if (otherInputContainerRef.current && defObj["x"] === 0) {
+                  const inputElement =
+                    otherInputContainerRef.current?.querySelector("input");
+                  inputElement?.focus();
+                }
+              }}
             >
               <Box
                 className={classes.inputBox}
@@ -97,26 +121,27 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
                 rgba(0, 0, 0, 0.11) 0px 0px 8px)`,
                 }}
               >
-                <FocusTrap active={active}>
-                  <Input
-                    placeholder={selectedFeature?.other?.placeholder}
-                    value={response?.other || ""}
-                    onChange={(e) =>
-                      !e.currentTarget.value?.length
-                        ? updateResponse(null)
-                        : updateResponse({ other: e.currentTarget.value })
-                    }
-                    variant="unstyled"
-                    classNames={{
-                      input: classes.input,
-                    }}
-                    data-autofocus
-                  />
-                </FocusTrap>
+                <Input
+                  placeholder={selectedFeature?.other?.placeholder}
+                  value={response?.other || ""}
+                  onChange={(e) =>
+                    !e.currentTarget.value?.length
+                      ? updateResponse(null)
+                      : updateResponse({ other: e.currentTarget.value })
+                  }
+                  variant="unstyled"
+                  classNames={{
+                    input: classes.input,
+                  }}
+                  data-autofocus
+                />
               </Box>
             </motion.div>
           )}
       </AnimatePresence>
+
+      {/* using this div to scroll to bottom, If we use motion.div to scrollIntoView animation will not work properly. */}
+      <div ref={bDivRef}></div>
     </Stack>
   );
 }
