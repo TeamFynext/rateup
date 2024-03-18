@@ -12,7 +12,6 @@ import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
-import FormPaperLayout from "./layout/FormPaperLayout";
 import classes from "../TakeSurvey.module.css";
 import { useRouter } from "next/router";
 import { AnimatePresence, motion } from "framer-motion";
@@ -29,7 +28,8 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [selectedOp, setSelectedOp] = useState("");
   const selectedFeature = features?.[selectedLanguage];
-  // const [active, setActive] = useState(false);
+  const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] =
+    useState(false);
   const router = useRouter();
   const theme = useMantineTheme();
   const otherInputContainerRef = useRef(null);
@@ -58,15 +58,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     if (value !== selectedFeature?.other?.title) {
       const res = options?.find((op) => op?.value === value);
       updateResponse(res);
-      // setActive(false);
     } else {
-      // setActive(true);
-      // router.push("#other-input");
-      if (otherInputContainerRef.current) {
-        const inputElement =
-          otherInputContainerRef.current.querySelector("input");
-        console.log(inputElement);
-      }
       updateResponse(null);
     }
   };
@@ -77,6 +69,8 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
       otherInputContainerRef.current
     ) {
       bDivRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (isOtherInputFocusTrapActive) {
+      setIsOtherInputFocusTrapActive(false);
     }
   }, [selectedOp]);
 
@@ -107,9 +101,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
               ref={otherInputContainerRef}
               onAnimationComplete={(defObj) => {
                 if (otherInputContainerRef.current && defObj["x"] === 0) {
-                  const inputElement =
-                    otherInputContainerRef.current?.querySelector("input");
-                  inputElement?.focus();
+                  setIsOtherInputFocusTrapActive(true);
                 }
               }}
             >
@@ -121,20 +113,22 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
                 rgba(0, 0, 0, 0.11) 0px 0px 8px)`,
                 }}
               >
-                <Input
-                  placeholder={selectedFeature?.other?.placeholder}
-                  value={response?.other || ""}
-                  onChange={(e) =>
-                    !e.currentTarget.value?.length
-                      ? updateResponse(null)
-                      : updateResponse({ other: e.currentTarget.value })
-                  }
-                  variant="unstyled"
-                  classNames={{
-                    input: classes.input,
-                  }}
-                  data-autofocus
-                />
+                <FocusTrap active={isOtherInputFocusTrapActive}>
+                  <Input
+                    placeholder={selectedFeature?.other?.placeholder}
+                    value={response?.other || ""}
+                    onChange={(e) =>
+                      !e.currentTarget.value?.length
+                        ? updateResponse(null)
+                        : updateResponse({ other: e.currentTarget.value })
+                    }
+                    variant="unstyled"
+                    classNames={{
+                      input: classes.input,
+                    }}
+                    data-autofocus
+                  />
+                </FocusTrap>
               </Box>
             </motion.div>
           )}
