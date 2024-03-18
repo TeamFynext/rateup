@@ -1,8 +1,8 @@
 import {
   Box,
   Center,
+  Flex,
   Group,
-  Paper,
   ScrollArea,
   SimpleGrid,
   Stack,
@@ -17,8 +17,8 @@ import {
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
 import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
-import { ImageWithThumb } from "./Template/ImageWithThumb";
 import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
+import SurveyTemplates from "../../pages/dashboard/surveys/templates/surveyTemplates";
 
 const SurveyTemplatesModal = ({
   opened,
@@ -139,33 +139,26 @@ const SurveyTemplatesModal = ({
                                             : "2px solid #fff",
                                       }}
                                     >
-                                      <Paper
-                                        radius={"lg"}
-                                        shadow="md"
-                                        mr="md"
-                                        onClick={() => {
-                                          setSelectedTemplate(survey);
-                                        }}
+                                      <Flex
                                         style={{
                                           ...(survey?.WelcomeTheme?.bgType ===
                                           "bgcolor"
                                             ? survey?.WelcomeTheme?.bgStyles
                                             : bgTemp),
-                                          width: "230px",
-                                          height: "150px",
-                                          minHeight: "150px",
                                           cursor: "pointer",
                                         }}
                                       >
-                                        {survey?.WelcomeTheme?.bgUrl && (
-                                          <ImageWithThumb
-                                            radius="md"
-                                            fit="fill"
-                                            h={150}
-                                            src={`${survey?.WelcomeTheme?.bgUrl}`}
-                                          />
-                                        )}
-                                      </Paper>
+                                        <SurveyTemplates
+                                          survey={survey}
+                                          setSelectedTemplate={
+                                            setSelectedTemplate
+                                          }
+                                          bgTemp={bgTemp}
+                                          open={() => {
+                                            setSelectedTemplate(survey);
+                                          }}
+                                        />
+                                      </Flex>
                                       <Center>
                                         <Text style={{ maxWidth: "200px" }}>
                                           {survey?.title}
