@@ -38,6 +38,7 @@ export const useSurveyResponseColumns = ({
   open,
   setSelectedResponseId,
   setResponseTeamId,
+  enableTicket,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
@@ -98,42 +99,57 @@ export const useSurveyResponseColumns = ({
           };
         })
       : []),
-    {
-      header: () => (
-        <Text c="dark.3" truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
-          Ticket
-        </Text>
-      ),
-      filterFn: fuzzyFilter,
-      accessorKey: "ticket",
-      cell: (info) => {
-        let ticketData = info.row.original.Ticket;
-        let ticketExist = ticketData?.length > 0;
-        return (
-          <Center
-            pr="80px"
-            style={{ cursor: "pointer" }}
-            onClick={() => {
-              if (ticketExist) {
-                let url = `/dashboard/tickets/${ticketData[0]?.id}`;
-                window.open(url, "_blank");
-              }
-            }}
-          >
-            {ticketExist && (
-              <Tooltip withArrow label="View Ticket" position="right-start">
-                <Stack>
-                  <IconTicket
-                    color="orange"
-                    style={{ width: rem(35), height: rem(35) }}
-                  />
-                </Stack>
-              </Tooltip>
-            )}
-          </Center>
-        );
-      },
-    },
+    ...(enableTicket
+      ? [
+          {
+            header: () => (
+              <Text
+                c="dark.3"
+                truncate="end"
+                miw={70}
+                maw={70}
+                fw={600}
+                fz={"lg"}
+              >
+                Ticket
+              </Text>
+            ),
+            filterFn: fuzzyFilter,
+            accessorKey: "ticket",
+            cell: (info) => {
+              let ticketData = info.row.original.Ticket;
+              let ticketExist = ticketData?.length > 0;
+              return (
+                <Center
+                  pr="80px"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    if (ticketExist) {
+                      let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                      window.open(url, "_blank");
+                    }
+                  }}
+                >
+                  {ticketExist && (
+                    <Tooltip
+                      withArrow
+                      label="View Ticket"
+                      position="right-start"
+                    >
+                      <Stack>
+                        <IconTicket
+                          color="orange"
+                          style={{ width: rem(35), height: rem(35) }}
+                        />
+                      </Stack>
+                    </Tooltip>
+                  )}
+                </Center>
+              );
+            },
+          },
+        ]
+      : []),
     {
       header: () => (
         <Text c="dark.3" truncate="end" fw={600} fz={"lg"}>
@@ -152,6 +168,7 @@ export const useSurveyResponseColumns = ({
             setResponseTeamId={setResponseTeamId}
             setSelectedRowId={setSelectedRowId}
             ticketData={info.row.original.Ticket}
+            enableTicket={enableTicket}
           />
         );
       },
@@ -260,6 +277,7 @@ function ActionMenu({
   setResponseTeamId,
   setSelectedRowId,
   ticketData,
+  enableTicket,
 }) {
   const ticketExist = ticketData?.length > 0;
 
@@ -289,23 +307,25 @@ function ActionMenu({
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Item
-            color={ticketExist ? "orange" : "blue.7"}
-            onClick={() => {
-              if (ticketExist) {
-                let url = `/dashboard/tickets/${ticketData[0]?.id}`;
-                window.open(url, "_blank");
-              } else {
-                setSelectedResponseId(resId);
-                setResponseTeamId(resTeamId);
+          {enableTicket && (
+            <Menu.Item
+              color={ticketExist ? "orange" : "blue.7"}
+              onClick={() => {
+                if (ticketExist) {
+                  let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                  window.open(url, "_blank");
+                } else {
+                  setSelectedResponseId(resId);
+                  setResponseTeamId(resTeamId);
+                }
+              }}
+              leftSection={
+                <IconTicket style={{ width: rem(14), height: rem(14) }} />
               }
-            }}
-            leftSection={
-              <IconTicket style={{ width: rem(14), height: rem(14) }} />
-            }
-          >
-            {ticketExist ? " View Ticket" : "Create Ticket"}
-          </Menu.Item>
+            >
+              {ticketExist ? " View Ticket" : "Create Ticket"}
+            </Menu.Item>
+          )}
           <Menu.Item
             color="red"
             onClick={() => {

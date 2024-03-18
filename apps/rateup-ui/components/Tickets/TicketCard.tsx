@@ -14,9 +14,8 @@ import router from "next/router";
 import { getTimeSince } from "../../utils";
 import { ITicket } from "../../backend/tickets/tickets";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { RateupButtonSecondary } from "../Button/RateupButtons";
-import { TicketType } from "../../utils/enums/ticket";
-import { IconMaximize, IconTrash } from "@tabler/icons-react";
+import { TicketStatus, TicketType } from "../../utils/enums/ticket";
+import { IconTrash } from "@tabler/icons-react";
 
 interface TicketCardProps {
   ticket: ITicket;
@@ -42,6 +41,34 @@ export function TicketCard({
       return () => clearInterval(timeoutID);
     }
   }, []);
+
+  let color;
+  switch (ticket?.type) {
+    case TicketType.REVIEW:
+      color = "purple";
+      break;
+    case TicketType.CUSTOM:
+      color = "green";
+      break;
+    default:
+      color = "blue";
+      break;
+  }
+
+  function calculateDaysLeft(deadlineDate) {
+    const today = new Date().getTime();
+    const deadline = new Date(deadlineDate).getTime();
+    const differenceMs = deadline - today;
+    const differenceDays = Math.ceil(differenceMs / (1000 * 60 * 60 * 24));
+
+    if (differenceDays < 0) {
+      return `Overdue by ${Math.abs(differenceDays)} days`;
+    } else if (differenceDays === 0) {
+      return `Today is the deadline`;
+    } else {
+      return `${differenceDays} ${differenceDays !== 1 ? "days" : "day"} left`;
+    }
+  }
 
   return (
     <PaperLayout
@@ -80,18 +107,23 @@ export function TicketCard({
           <Title order={5} c="gray.5">
             TICKET: #{ticket.number}
           </Title>
-          <Badge
-            variant="outline"
-            color={ticket?.type !== TicketType.REVIEW ? "blue" : "#149a8a"}
-          >
+          <Badge variant="outline" color={color}>
             {ticket?.type}
           </Badge>
         </Group>
-        <Group gap="xs">
-          <Avatar radius={"xl"} />
-          <Text size="sm" c="dimmed">
-            Created {timeSince}
-          </Text>
+        <Group gap="xs" justify="space-between">
+          <Group>
+            <Avatar radius={"xl"} />
+            <Text size="sm" c="dimmed">
+              Created {timeSince}
+            </Text>
+          </Group>
+
+          {ticket?.deadline && (
+            <Text size="sm" c="red">
+              * {calculateDaysLeft(ticket?.deadline)}
+            </Text>
+          )}
         </Group>
         <Group justify="space-between">
           <Group>
@@ -99,23 +131,7 @@ export function TicketCard({
             <PriorityBadge priority={ticket?.priority} />
           </Group>
           <Group justify={"space-between"} align={"center"}>
-            <PaperLayout
-              p={0}
-              radius={5}
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`${router.pathname}/${ticket?.id}?tab=Result`);
-              }}
-            >
-              <RateupButtonSecondary
-                leftIcon={<IconMaximize size={15} />}
-                title="View"
-                variant="subtle"
-                size="xs"
-                radius={5}
-                fullWidth
-              />
-            </PaperLayout>
+            <StatusBadge status={ticket?.status} />
           </Group>
         </Group>
       </Stack>
@@ -139,6 +155,28 @@ function PriorityBadge({ priority }) {
       variant="light"
     >
       {priority}
+    </Badge>
+  );
+}
+
+function StatusBadge({ status }) {
+  return (
+    // swtich case for 4 priority levels
+    <Badge
+      color={
+        status === TicketStatus.OPEN
+          ? "blue"
+          : status === TicketStatus.IN_PROGRESS
+            ? "yellow"
+            : status === TicketStatus.RESOLVED
+              ? "orange"
+              : status === TicketStatus.CLOSED
+                ? "green"
+                : "black"
+      }
+      variant="filled"
+    >
+      {status}
     </Badge>
   );
 }

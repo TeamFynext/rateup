@@ -8,4 +8,5 @@ export const subscriptionColorMap = {
   [sfpn.WhatsAppSurvey]: "teal",
   [sfpn.WhatsAppCampaign]: "lime",
   [sfpn.TeamMember]: "yellow",
+  [sfpn.Ticket]: "orange",
 };

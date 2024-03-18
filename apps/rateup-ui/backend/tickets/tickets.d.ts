@@ -4,6 +4,7 @@ export interface ICreateTicketResponse {
   createdAt: string;
   type: string;
   title: string;
+  description?: string;
   priority: string;
   teamId: string;
   deadline: string;
@@ -16,6 +17,7 @@ export interface ITicket {
   id: string;
   number: number;
   title: string;
+  description?: string;
   type: string;
   createdById: string;
   createdAt: string;

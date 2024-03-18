@@ -29,6 +29,8 @@ import {
   TimeInput,
   TimeInputProps,
   DateTimePickerProps,
+  DateInputProps,
+  DateInput,
 } from "@mantine/dates";
 import { IconClock } from "@tabler/icons-react";
 
@@ -90,6 +92,12 @@ const getDayProps = (date) => ({
 export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
   return (
     <DateTimePicker classNames={classes} getDayProps={getDayProps} {...props} />
+  );
+}
+
+export function ContainedDateInput(props: DateInputProps) {
+  return (
+    <DateInput classNames={classes} getDayProps={getDayProps} {...props} />
   );
 }
 

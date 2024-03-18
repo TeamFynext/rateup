@@ -1,6 +1,7 @@
 export enum TicketType {
   REVIEW = "REVIEW",
   SURVEY_RESPONSE = "SURVEY_RESPONSE",
+  CUSTOM = "CUSTOM",
 }
 
 export enum TicketPriority {

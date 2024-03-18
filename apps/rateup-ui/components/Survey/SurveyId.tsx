@@ -22,12 +22,14 @@ import { useUser } from "../../context/UserContext";
 import SurveyTheme from "./SurveyTheme/SurveyTheme";
 import SurveyContext from "../../context/SurveyContext";
 import { UserRole } from "../../utils/enums";
-import { SurveyType } from "../../types/enums";
+import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";
 import { EditWhatsappSurvey } from "../whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../config/mantineTheme";
 import styles from "./SurveyId.module.css";
 import { getFromSessionStorage } from "../../utils/essential";
 import RateupLoader from "../Loaders/RateupLoader";
+import { useSubscription } from "../../backend/subscription/subscription.query";
+import { hasFeature } from "../../utils/subscription/subscription";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -57,6 +59,8 @@ export default function SurveyID() {
   useEffect(() => {
     update({ surveyId: survey?.title });
   }, [survey?.title]);
+
+  const { data: subscription, isPending } = useSubscription();
 
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [defaultLanguage, setdefaultLanguage] = useState(null);
@@ -237,6 +241,10 @@ export default function SurveyID() {
                             "notificationEmail",
                             "endtoendencryption",
                             "redirect",
+                            hasFeature(
+                              subscription,
+                              SubscriptionFeaturePathName.Ticket,
+                            ) && "tickets",
                           ]
                     }
                   />
@@ -249,6 +257,7 @@ export default function SurveyID() {
                   setFilterTags={setFilterTags}
                   encryptionpassword={encryptionpassword}
                   setEncryptionPassword={setEncryptionPassword}
+                  subscription={subscription}
                 />
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Share}>

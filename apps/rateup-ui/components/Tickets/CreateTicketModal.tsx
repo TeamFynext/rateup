@@ -6,7 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
 import {
-  ContainedDateTimePickerInput,
+  ContainedDateInput,
   ContainedSelection,
   ContainedTextArea,
   ContainedTextField,
@@ -16,6 +16,7 @@ import { useCreateTicketMutation } from "../../backend/tickets/tickets.query";
 import { TicketType } from "../../utils/enums/ticket";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
+import { TeamSelector } from "../input/TeamSelector";
 
 interface iProps {
   createTicketOpened: boolean;
@@ -35,21 +36,22 @@ const CreateTicketModal = ({
   rid,
   surveyResponseId,
 }: iProps) => {
-  const {
-    isLoading: isLoadingMembers,
-    data: teamsMembersData,
-    refetch: refetchInvitedTeamMembers,
-  } = useTeamMembersFromInvitation(selectedTeamId) as UseTeamResult;
-
-  const memberOptions = teamsMembersData?.members?.map((team) => ({
-    value: team.id,
-    label: team.name,
-  }));
+  let isCustomTicket = type === TicketType.CUSTOM;
 
   const form = useForm({
     initialValues: {
       title:
-        type === TicketType.REVIEW ? "Review Ticket" : "Survey Response Ticket",
+        type === TicketType.REVIEW
+          ? "Review Ticket"
+          : isCustomTicket
+            ? ""
+            : "Survey Response Ticket",
+      type:
+        type === TicketType.REVIEW
+          ? TicketType.REVIEW
+          : isCustomTicket
+            ? TicketType.CUSTOM
+            : TicketType.SURVEY_RESPONSE,
       firstComment: "",
       assignedToId: "",
       priority: "",
@@ -70,13 +72,26 @@ const CreateTicketModal = ({
     },
   });
 
+  const {
+    isLoading: isLoadingMembers,
+    data: teamsMembersData,
+    refetch: refetchInvitedTeamMembers,
+  } = useTeamMembersFromInvitation(
+    selectedTeamId || form.values.teamId,
+  ) as UseTeamResult;
+
+  const memberOptions = teamsMembersData?.members?.map((team) => ({
+    value: team.id,
+    label: team.name,
+  }));
+
   useEffect(() => {
     if (rid) form.setFieldValue("reviewId", rid);
   }, [rid]);
 
   useEffect(() => {
     if (selectedTeamId) form.setFieldValue("teamId", selectedTeamId);
-  }, [selectedTeamId]);
+  }, [selectedTeamId, createTicketOpened]);
 
   useEffect(() => {
     if (surveyResponseId)
@@ -147,16 +162,29 @@ const CreateTicketModal = ({
       />
 
       <Stack mt="lg">
-        <ContainedTextField
-          placeholder={"Enter Ticket Name"}
-          label={"Name:"}
-          withAsterisk
-          {...form.getInputProps("title")}
-        />
+        <Group>
+          <ContainedTextField
+            placeholder={"Enter Ticket Name"}
+            label={"Name:"}
+            withAsterisk
+            {...form.getInputProps("title")}
+            style={{ minWidth: "65%" }}
+          />
+          {isCustomTicket && (
+            <TeamSelector
+              value={form.values.teamId}
+              onChange={(teamId) => form.setFieldValue("teamId", teamId)}
+              enableAll={false}
+              label="Select Team"
+              style={{ minWidth: "32%" }}
+              withAsterisk
+            />
+          )}
+        </Group>
 
         <ContainedTextArea
-          placeholder={"Enter Comment"}
-          label={"Comment"}
+          placeholder={isCustomTicket ? "Enter description" : "Enter Comment"}
+          label={isCustomTicket ? "Description" : "Comment"}
           withAsterisk
           autosize
           maxRows={4}
@@ -180,7 +208,7 @@ const CreateTicketModal = ({
             placeholder="Select priority for the ticket"
             {...form.getInputProps("priority")}
           />
-          <ContainedDateTimePickerInput
+          <ContainedDateInput
             minDate={new Date()}
             clearable
             label={"Deadline:"}

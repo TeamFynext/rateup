@@ -86,6 +86,8 @@ declare global {
     kioskMode: boolean;
     type: SurveyType;
     getLocation: boolean;
+    enableTickets: boolean;
+    enableTicketEmailAlerts: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
     surveyTeamMapId?: string;
@@ -535,6 +537,7 @@ declare global {
       subscriptionCountRestriction;
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
+    [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
   }
   interface SPlan {
     id: string;

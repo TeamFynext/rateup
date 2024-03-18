@@ -138,6 +138,8 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Team Members";
     case sfpn.WhatsAppCampaign:
       return "WhatsApp Campaign";
+    case sfpn.Ticket:
+      return "Ticket";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
   }

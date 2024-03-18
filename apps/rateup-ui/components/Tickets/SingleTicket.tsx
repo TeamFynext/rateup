@@ -13,11 +13,10 @@ import {
   ActionIcon,
   rem,
   ScrollArea,
-  Modal,
 } from "@mantine/core";
 import { titleStyle } from "../styled/Heading/Heading";
 import {
-  ContainedDateTimePickerInput,
+  ContainedDateInput,
   ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
@@ -29,10 +28,7 @@ import {
   IUpdateTicketStatusRequest,
 } from "../../backend/tickets/tickets";
 import { showLoadingToast } from "../../utils/notifications";
-import {
-  formatIsoDateString,
-  formatIsoDateStringWithTime,
-} from "../../utils/dateTime";
+import { formatIsoDateString } from "../../utils/dateTime";
 import {
   PlatformIcon,
   RatingBadge,
@@ -49,10 +45,7 @@ import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
 import { useUser } from "../../context/UserContext";
 import { UserRole } from "../../utils/enums";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 const SingleTicket = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -225,6 +218,27 @@ const SingleTicket = ({ id }: { id: string }) => {
     });
   };
 
+  function handleKeyPress(event) {
+    if (event.key === "Enter") {
+      onSubmit();
+    }
+  }
+
+  function calculateDaysLeft(deadlineDate) {
+    const today = new Date().getTime();
+    const deadline = new Date(deadlineDate).getTime();
+    const differenceMs = deadline - today;
+    const differenceDays = Math.ceil(differenceMs / (1000 * 60 * 60 * 24));
+
+    if (differenceDays < 0) {
+      return `Overdue by ${Math.abs(differenceDays)} days`;
+    } else if (differenceDays === 0) {
+      return `Today is the deadline`;
+    } else {
+      return `${differenceDays} ${differenceDays !== 1 ? "days" : "day"} left`;
+    }
+  }
+
   return (
     <Stack mt="-20px">
       <Group>
@@ -237,13 +251,13 @@ const SingleTicket = ({ id }: { id: string }) => {
         </Title>
       </Group>
       <Group justify="flex-start" gap="10" mt="-1px">
-        <TicketDetailBlock mawInp="400" miwInput="85" pt="lg">
+        <TicketDetailBlock mawInp="550" mihInput="85" pt="lg">
           <Text>Team :</Text>
           <Text size="xl" fw="700">
             {ticket?.teamName}
           </Text>
         </TicketDetailBlock>
-        <TicketDetailBlock mawInp="400" miwInput="85">
+        <TicketDetailBlock mawInp="550" mihInput="85">
           <Text>Assigned To :</Text>
           <ContainedSelection
             allowDeselect={false}
@@ -267,41 +281,58 @@ const SingleTicket = ({ id }: { id: string }) => {
           <Text>Priority : </Text>
           <PriorityMenu priority={priority} setPriority={setPriority} />
         </TicketDetailBlock>
-        <TicketDetailBlock mawInp="350">
-          <Text>Deadline: </Text>
-          <Text
-            size="sm"
-            fw="700"
-            style={{ maxWidth: "300px", maxHeight: "30px" }}
-          >
-            {ticket?.deadline
-              ? formatIsoDateStringWithTime(ticket?.deadline)
-              : "n/a"}
-          </Text>
-          <ActionIcon
-            variant="default"
-            disabled={user.role !== UserRole.SUPADM}
-            onClick={openDeadlineEdit}
-          >
-            <IconEdit style={{ width: "70%", height: "70%" }} stroke={1.5} />
-          </ActionIcon>
+        <TicketDetailBlock mawInp="320">
+          <Stack>
+            <Group>
+              <Text>Deadline: </Text>
+              <Text
+                size="sm"
+                fw="700"
+                style={{ maxWidth: "300px", maxHeight: "30px" }}
+              >
+                {ticket?.deadline
+                  ? formatIsoDateString(ticket?.deadline)
+                  : "n/a"}
+              </Text>
+              <ActionIcon
+                variant="default"
+                disabled={user.role !== UserRole.SUPADM}
+                onClick={openDeadlineEdit}
+              >
+                <IconEdit
+                  style={{ width: "70%", height: "70%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+              {ticket?.deadline && (
+                <Text pl="lg" c="orange">
+                  * {calculateDaysLeft(ticket?.deadline)}
+                </Text>
+              )}
+            </Group>
+          </Stack>
         </TicketDetailBlock>
       </Group>
 
-      <Modal opened={opened} onClose={close} title="Update Deadline" centered>
-        <ContainedDateTimePickerInput
+      <FormModalLayout
+        opened={opened}
+        onClose={closeDeadlineModal}
+        title={"Update Deadline"}
+        centered
+        onSubmit={updateDeadline}
+        buttonTitle={"Update"}
+        includeCancelButton
+      >
+        <ContainedDateInput
+          my="xl"
           minDate={new Date()}
           clearable
           label={"Deadline:"}
           placeholder="Select a deadline for the ticket"
-          defaultValue={new Date(ticket?.deadline)}
+          defaultValue={ticket?.deadline && new Date(ticket?.deadline)}
           onChange={(date) => setDeadline(date)}
         />
-        <Group mt="xl" justify="flex-end">
-          <RateupButtonSecondary title="close" onClick={closeDeadlineModal} />
-          <RateupButtonPrimary title="Update" onClick={updateDeadline} />
-        </Group>
-      </Modal>
+      </FormModalLayout>
 
       <Group gap={30} mb="lg">
         <PaperLayout
@@ -344,13 +375,13 @@ const SingleTicket = ({ id }: { id: string }) => {
                   </Group>
                   <Text lineClamp={2}>{ticket?.review?.review}</Text>
                 </Stack>
-              ) : (
+              ) : ticket?.type === TicketType.SURVEY_RESPONSE ? (
                 <Stack>
                   <Title order={2} c="gray.5">
                     User Response Details
                   </Title>
                   <ScrollArea h={380} viewportRef={viewport}>
-                    {ticket?.surveyResponse.map((response: any, index) => {
+                    {ticket?.surveyResponse?.map((response: any, index) => {
                       return (
                         <SurveyResponsesView
                           response={response}
@@ -364,6 +395,15 @@ const SingleTicket = ({ id }: { id: string }) => {
                       );
                     })}
                   </ScrollArea>
+                </Stack>
+              ) : (
+                <Stack justify="flex-start">
+                  <Title order={2} c="gray.5" mb="md">
+                    Ticket Description
+                  </Title>
+                  <Group pl="md">
+                    <Text c="dark.3">{ticket?.description}</Text>
+                  </Group>
                 </Stack>
               )}
             </>
@@ -413,6 +453,7 @@ const SingleTicket = ({ id }: { id: string }) => {
                     withAsterisk
                     style={{ width: "83%" }}
                     {...form.getInputProps("msg")}
+                    onKeyDown={handleKeyPress}
                   />
                   <ActionIcon
                     onClick={onSubmit}
