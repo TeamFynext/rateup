@@ -39,7 +39,7 @@ const Result = ({
   setFilterTags,
   encryptionpassword,
   setEncryptionPassword,
-  subscription,
+  subscription = null,
 }) => {
   const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
