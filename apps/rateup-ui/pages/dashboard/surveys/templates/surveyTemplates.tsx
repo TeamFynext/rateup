@@ -1,0 +1,59 @@
+import { Stack, Paper, Text, Center } from "@mantine/core";
+import SurveyThemeContextProvider from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
+import WelcomePageThemeView from "../../../../components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
+import { useState } from "react";
+import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
+import {
+  PreviewTypeEnum,
+  SelectedItemEnum,
+} from "../../../../components/Survey/SurveyTheme/SurveyTheme.enums";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import TestTemplate from "./templateCard";
+import TemplateCard from "./templateCard";
+
+const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
+  const { data: surveyTheme, isLoading: isThemeloading } = useSurveyTheme(
+    survey?.id,
+  );
+
+  const [selectedPreview, setSelectedPreview] = useState(
+    PreviewTypeEnum.DESKTOP,
+  );
+  const [selectedType, setSelectedType] = useState<SelectedItemEnum>(
+    SelectedItemEnum.BACKGROUND,
+  );
+  if (isThemeloading) return <RateupLoader />;
+
+  return (
+    <SurveyThemeContextProvider
+      surveyTheme={surveyTheme}
+      mobileOrDesktop={selectedPreview}
+      setMobileOrDesktop={setSelectedPreview}
+    >
+      <Stack>
+        <Paper
+          radius={"lg"}
+          shadow="md"
+          mr="md"
+          onClick={() => {
+            setSelectedTemplate(survey);
+            open();
+          }}
+          style={{
+            ...(survey?.WelcomeTheme?.bgType === "bgcolor"
+              ? survey?.WelcomeTheme?.bgStyles
+              : bgTemp),
+            width: "300px",
+            minHeight: "150px",
+            cursor: "pointer",
+            marginTop: "2rem",
+          }}
+        >
+          <TemplateCard {...{ selectedType, setSelectedType }} />
+        </Paper>
+      </Stack>
+    </SurveyThemeContextProvider>
+  );
+};
+
+export default SurveyTemplates;

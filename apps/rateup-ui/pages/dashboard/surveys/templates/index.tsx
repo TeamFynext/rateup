@@ -1,3 +1,14 @@
+import React, { useContext, useState } from "react";
+import { useRouter } from "next/router";
+import { useUser } from "../../../../context/UserContext";
+import { useTeamsByUser } from "../../../../backend/team/team.query";
+import {
+  useCreateSurveyMutation,
+  useSurveyTemplates,
+} from "../../../../backend/surveys/surveys.query";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
 import {
   ActionIcon,
   BackgroundImage,
@@ -11,37 +22,34 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import React, { useState } from "react";
-import { IconPlus, IconRefresh } from "@tabler/icons-react";
-import { useUser } from "../../../../context/UserContext";
 import Heading from "../../../../components/styled/Heading/Heading";
+import FormModalLayout from "../../../../components/Modal/FormModalLayout";
+import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
+import SurveyTemplates from "./surveyTemplates";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import SurveyThemeContextProvider, {
+  SurveyThemeContext,
+} from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
 import { UserRole } from "../../../../utils/enums";
 import {
   RateupButtonBlue,
   RateupButtonPrimary,
 } from "../../../../components/Button/RateupButtons";
-import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
-import { useDisclosure } from "@mantine/hooks";
-import { useRouter } from "next/router";
-import { lexend300 } from "../../../../utils/fonts";
-import { notifications } from "@mantine/notifications";
 import { Tooltip as MantineTooltip } from "@mantine/core";
-import FormModalLayout from "../../../../components/Modal/FormModalLayout";
-import { THUMBNAIL_URL } from "../../../../utils/constants";
-import { ImageWithThumb } from "../../../../components/Survey/Template/ImageWithThumb";
 
-const Templates = () => {
+const Templates = ({ survey }) => {
   const { user } = useUser();
-  const [opened, { open, close }] = useDisclosure(false);
+  const { data: teamRes, isLoading: teamsLoading, isError } = useTeamsByUser();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const router = useRouter();
+  const [opened, { open, close }] = useDisclosure(false);
 
-  const {
-    isLoading,
-    error,
-    data: allTemplates,
-    refetch,
-  } = useSurveyTemplates("web");
+  const [
+    createSurveyOpened,
+    { open: openCreateSurvey, close: closeCreateSurvey },
+  ] = useDisclosure(false);
+
+  const { isLoading, data: allTemplates, refetch } = useSurveyTemplates("web");
 
   const bgTemp = {
     backgroundColor: "#fff",
@@ -52,96 +60,86 @@ const Templates = () => {
       <h2>{categoryName}</h2>
       <Group mt="-30px" align="flex-start">
         {surveys?.map((survey, index) => (
-          <Survey key={index} survey={survey} />
+          <Box>
+            <SurveyTemplates
+              key={index}
+              survey={survey}
+              setSelectedTemplate={setSelectedTemplate}
+              bgTemp={bgTemp}
+              open={open}
+            />
+            <Text
+              style={{
+                marginLeft: "3rem",
+                marginTop: "12px",
+                marginBottom: "15px",
+              }}
+            >
+              {" "}
+              {survey.title}
+            </Text>
+          </Box>
         ))}
       </Group>
     </Stack>
   );
 
-  const Survey = ({ survey }) => (
-    <Stack>
-      <Paper
-        radius={"lg"}
-        shadow="md"
-        mr="md"
-        onClick={() => {
-          setSelectedTemplate(survey);
-          open();
-        }}
-        style={{
-          ...(survey?.WelcomeTheme?.bgType === "bgcolor"
-            ? survey?.WelcomeTheme?.bgStyles
-            : bgTemp),
-          width: "230px",
-          minHeight: "150px",
-          cursor: "pointer",
-          marginTop: "2rem",
-        }}
-      >
-        {survey?.WelcomeTheme?.bgUrl && (
-          <ImageWithThumb
-            radius="md"
-            fit="fill"
-            h={150}
-            src={`${survey?.WelcomeTheme?.bgUrl}`}
-          />
-        )}
-      </Paper>
-      <Center>
-        <Text style={{ maxWidth: "200px" }}>{survey.title}</Text>
-      </Center>
-    </Stack>
-  );
+  if (isLoading || teamsLoading) return <RateupLoader />;
 
   return (
     <>
       {/* <Modal opened={opened} onClose={close} title="Create Survey from Template" size="auto" centered> */}
-      <FormModalLayout
-        opened={opened}
-        title="Create Survey from Template"
-        onClose={close}
-        centered
-        size="auto"
-      >
-        <Group p="xl">
-          <Flex
-            h={"70vh"}
-            w={"50vw"}
-            style={
-              selectedTemplate?.WelcomeTheme?.bgType === "bgcolor"
-                ? selectedTemplate?.WelcomeTheme?.bgStyles
-                : bgTemp
-            }
-            ff={lexend300.style.fontFamily}
-          >
-            <BackgroundImage
-              style={{
-                height: "85%",
-                width: "90%",
-                objectFit: "contain",
-                borderRadius: "10px",
-              }}
-              src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedTemplate?.WelcomeTheme?.bgUrl}`}
-            />
-          </Flex>
 
-          <Stack style={{ minWidth: "300px", maxWidth: "300px" }}>
-            <Text mb="sm">Template: </Text>
-            <Title order={3} mb="sm">
+      <Group
+        p="xl"
+        style={{ textAlign: "center", alignItems: "center", margin: "auto" }}
+      >
+        <FormModalLayout
+          opened={opened}
+          title="Create Survey from Template"
+          onClose={close}
+          centered
+          size={"lg"}
+        >
+          <Stack style={{ Width: "100%", textAlign: "center" }}>
+            <Title
+              order={3}
+              style={{ alignItems: "center", color: "var(--shade-of-blue-3)" }}
+            >
               {selectedTemplate?.title || "Template"}
             </Title>
+            <Text
+              style={{
+                alignItems: "center",
+                textAlign: "center",
+                marginBottom: "1rem",
+              }}
+            >
+              Customize and deploy this survey effortlessly to uncover
+              actionable data that drives informed decisions and enhances your
+              business strategies
+            </Text>
             <RateupButtonPrimary
-              onClick={() =>
-                router.push(
-                  `/dashboard/surveys?action=create&tmp=${selectedTemplate?.id}&tn=${selectedTemplate?.title}`,
-                )
-              }
-              title="Choose Template"
+              title="Try this Template"
+              onClick={() => {
+                setSelectedTemplate(selectedTemplate);
+                close();
+                openCreateSurvey();
+              }}
             />
           </Stack>
-        </Group>
-        {/* </Modal> */}
-      </FormModalLayout>
+        </FormModalLayout>
+      </Group>
+      {/* </Modal> */}
+
+      <CreateSurveyModal
+        open={createSurveyOpened}
+        close={closeCreateSurvey}
+        surveyType={"web"}
+        teamsData={teamRes?.data}
+        template={selectedTemplate}
+        setTemplate={setSelectedTemplate}
+      />
 
       <Group gap="md" justify="space-between">
         <Group ml="md">

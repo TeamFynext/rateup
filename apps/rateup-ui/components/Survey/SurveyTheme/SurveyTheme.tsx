@@ -31,7 +31,7 @@ import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
 import PageSelector from "./components/PageSelector";
 
 function SurveyTheme({ survey }) {
-  const [selectedPreveiw, setSelectedPreveiw] = useState(
+  const [selectedPreview, setSelectedPreview] = useState(
     PreviewTypeEnum.DESKTOP,
   );
   const [selectedPageTab, setSelectedPageTab] = useState(ThemeTabEnum.WELCOME);
@@ -71,14 +71,14 @@ function SurveyTheme({ survey }) {
   return (
     <SurveyThemeContextProvider
       surveyTheme={surveyTheme}
-      mobileOrDesktop={selectedPreveiw}
-      setMobileOrDesktop={setSelectedPreveiw}
+      mobileOrDesktop={selectedPreview}
+      setMobileOrDesktop={setSelectedPreview}
     >
       <Box className={styles["survey-theme-root-div"]}>
         <Group className={styles["tabs-and-other-options-container"]}>
           <PreviewDeviceSelector
-            value={selectedPreveiw}
-            onChange={setSelectedPreveiw}
+            value={selectedPreview}
+            onChange={setSelectedPreview}
           />
           <PageSelector onChange={setSelectedPageTab} value={selectedPageTab} />
           <Box
@@ -99,7 +99,7 @@ function SurveyTheme({ survey }) {
               isLoading={isLoading}
               survey={survey}
               themeType={selectedPageTab}
-              mobileOrDesktop={selectedPreveiw}
+              mobileOrDesktop={selectedPreview}
             >
               <Tabs
                 value={selectedPageTab}
@@ -128,7 +128,11 @@ function SurveyTheme({ survey }) {
                 <Switch
                   className={styles["welcome-page-switch"]}
                   classNames={{
-                    track: `${!isWelcomePageEnabled ? styles["switched-on-track"] : styles["switched-off-track"]}`,
+                    track: `${
+                      !isWelcomePageEnabled
+                        ? styles["switched-on-track"]
+                        : styles["switched-off-track"]
+                    }`,
                     body: styles["switch-body"],
                   }}
                   size="md"

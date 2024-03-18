@@ -76,7 +76,8 @@ export function CreateSurveyModal({
       getLocation: false,
     },
     validate: {
-      title: (value) => (value?.length ? null : "Cannot be empty"),
+      title: (value) =>
+        templateName || value?.length ? null : "Cannot be empty",
       languages: (values) =>
         values?.length ? null : "Must contain atleast one language",
       teamIds: (values) =>
