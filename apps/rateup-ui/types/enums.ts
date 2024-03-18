@@ -136,6 +136,7 @@ export enum SubscriptionFeaturePathName {
   ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
+  Ticket = "ticket",
 }
 
 export enum PaymentType {

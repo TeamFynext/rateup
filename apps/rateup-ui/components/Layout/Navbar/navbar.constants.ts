@@ -165,7 +165,7 @@ export function getNavTopData(subscription?: Subscription) {
             href: "/dashboard/rm",
           },
         ]),
-    ...(hiddenModules.includes("tickets")
+    ...(hiddenModules.includes("tickets") || !hasFeature(sfpn.Ticket)
       ? []
       : [
           {
