@@ -112,7 +112,36 @@ export async function createTicket(
           },
         });
 
-        sendTicketAssignEmail(newTicket);
+        if (surveyResponseId) {
+          const sRes = await prisma.surveyResponse.findUnique({
+            where: {
+              id: surveyResponseId,
+            },
+            select: {
+              surveyTeamMapId: true,
+            },
+          });
+
+          const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
+            where: {
+              id: sRes.surveyTeamMapId,
+            },
+            include: {
+              survey: {
+                select: {
+                  id: true,
+                  enableTicketEmailAlerts: true,
+                },
+              },
+            },
+          });
+
+          if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
+            sendTicketAssignEmail(newTicket);
+          }
+        } else {
+          sendTicketAssignEmail(newTicket);
+        }
 
         return newTicket;
       }
