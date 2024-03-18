@@ -29,7 +29,10 @@ import {
 } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
-import { QuestionType } from "../../../types/enums";
+import {
+  QuestionType,
+  SubscriptionFeaturePathName,
+} from "../../../types/enums";
 import { ContactQuestions } from "../../../utils/constants";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import FormModalLayout from "../../Modal/FormModalLayout";
@@ -52,6 +55,7 @@ import ConfirmationModal from "../../Modal/ConfirmationModal";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
+import { hasFeature } from "../../../utils/subscription/subscription";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -62,6 +66,7 @@ const Responses = ({
   defaultLanguage,
   isLoading,
   selectedTeamId,
+  subscription,
 }) => {
   const surveyId = survey?.id;
   const { surveyTeamMapId } = useContext(SurveyContext);
@@ -211,7 +216,9 @@ const Responses = ({
     open,
     setSelectedResponseId,
     setResponseTeamId,
-    enableTicket: survey?.enableTickets,
+    enableTicket:
+      survey?.enableTickets &&
+      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
   });
 
   const handleSyncGoogleSheet = () => {

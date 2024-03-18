@@ -39,6 +39,7 @@ const Result = ({
   setFilterTags,
   encryptionpassword,
   setEncryptionPassword,
+  subscription,
 }) => {
   const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -138,6 +139,7 @@ const Result = ({
             defaultLanguage={defaultLanguage}
             isLoading={isLoading}
             selectedTeamId={selectedTeamId}
+            subscription={subscription}
           />
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
