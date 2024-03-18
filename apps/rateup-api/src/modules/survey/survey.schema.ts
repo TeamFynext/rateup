@@ -82,6 +82,8 @@ const getSurveyPublicResponseSchema = z.object({
   googleLink: z.string(),
   reviews: z.array(z.any()),
   isEncrypted: z.boolean(),
+  enableTickets: z.boolean(),
+  enableTicketEmailAlerts: z.boolean(),
   publicKey: z.string().optional(),
   redirect: z
     .object({
@@ -110,6 +112,8 @@ const updateSurveyRequestSchema = z.object({
   enableNotificationEmail: z.boolean().optional(),
   notificationEmail: z.string().email().optional(),
   isEncrypted: z.boolean().optional(),
+  enableTickets: z.boolean().optional(),
+  enableTicketEmailAlerts: z.boolean().optional(),
   publicKey: z.string().optional(),
   redirect: z
     .object({

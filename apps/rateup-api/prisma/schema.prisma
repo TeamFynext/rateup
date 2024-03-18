@@ -93,10 +93,10 @@ model Org {
   googleAccessToken GoogleAccessToken?
   driveFolderId     String?
   contacts          Contact[]
-  loyaltyCampaigns LoyaltyCampaign[]
-  loyaltyCustomers LoyaltyCustomer[]
-  LcReward         LcReward[]
-  LcReferralCode   LcReferralCode[]
+  loyaltyCampaigns  LoyaltyCampaign[]
+  loyaltyCustomers  LoyaltyCustomer[]
+  LcReward          LcReward[]
+  LcReferralCode    LcReferralCode[]
 }
 
 model WhatsappSettings {
@@ -198,6 +198,8 @@ model Survey {
   skipPreview             Boolean         @default(true)
   enableNotificationEmail Boolean         @default(false)
   notificationEmail       String          @default("")
+  enableTickets           Boolean         @default(false)
+  enableTicketEmailAlerts Boolean         @default(false)
   shareSettings           Json?
   publicKey               String?
   isEncrypted             Boolean         @default(false)
@@ -713,6 +715,7 @@ model Ticket {
   id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   number           Int             @unique @default(autoincrement())
   title            String
+  description      String?
   type             TicketType
   createdBy        User            @relation("CreatedTicket", fields: [createdById], references: [id])
   createdById      String          @db.Uuid
@@ -750,6 +753,7 @@ enum TicketPriority {
 enum TicketType {
   REVIEW
   SURVEY_RESPONSE
+  CUSTOM
 }
 
 model TicketComment {
@@ -775,13 +779,13 @@ model GoogleAccessToken {
 model LoyaltyCampaign {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt      DateTime @default(now())
-  name           String @unique
+  name           String   @unique
   type           String // enums.ts: LoyaltyCampaignType
   maxPerReferrer Int? // max number of referrals a referrer can make
   maxPerUser     Int? // max number of referralCode-redeems/transactions a user can make
   // for eg: if maxPerReferrer is 1, then a referrer can only refer a user once
   // for eg: if maxPerUser is 1, then a user can only redeem a referralCode once
-  active        Boolean @default(true)
+  active         Boolean  @default(true)
 
   referrerReward   LcReward? @relation("ReferrerReward", fields: [referrerRewardId], references: [id])
   referrerRewardId String?   @db.Uuid

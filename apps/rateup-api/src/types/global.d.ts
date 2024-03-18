@@ -178,6 +178,7 @@ declare global {
       subscriptionCountRestriction;
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
+    [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
   }
 
   interface SPlan {

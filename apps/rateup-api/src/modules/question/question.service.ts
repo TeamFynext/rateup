@@ -112,7 +112,7 @@ export async function updateQuestionsOnSurvey(
   surveyId: string,
   questions: Array<Question>,
 ) {
-  await prisma.survey.update({
+  let surveyQns = await prisma.survey.update({
     where: {
       id: surveyId,
     },
@@ -120,4 +120,20 @@ export async function updateQuestionsOnSurvey(
       questions: questions as any,
     },
   });
+
+  if (surveyQns) {
+    for (const question of questions) {
+      if (question.ticketIssue !== undefined) {
+        await prisma.survey.update({
+          where: {
+            id: surveyId,
+          },
+          data: {
+            enableTickets: true,
+          },
+        });
+        break;
+      }
+    }
+  }
 }

@@ -3,12 +3,14 @@ import { z } from "zod";
 
 const ticketCore = {
   title: z.string(),
+  description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
   teamId: z.string(),
   deadline: z.string().optional(),
   assignedToId: z.string(),
   reviewId: z.string().optional(),
   surveyResponseId: z.string().optional(),
+  type: z.string().optional(),
 };
 
 const createTicketRequestSchema = z.object({
@@ -19,7 +21,7 @@ const createTicketRequestSchema = z.object({
 const createTicketResponseSchema = z.object({
   id: z.string(),
   createdAt: z.string(),
-  type: z.enum(["REVIEW", "SURVEY_RESPONSE"]),
+  type: z.enum(["REVIEW", "SURVEY_RESPONSE", "CUSTOM"]),
   ...ticketCore,
 });
 
