@@ -91,7 +91,7 @@ const CreateTicketModal = ({
 
   useEffect(() => {
     if (selectedTeamId) form.setFieldValue("teamId", selectedTeamId);
-  }, [selectedTeamId]);
+  }, [selectedTeamId, createTicketOpened]);
 
   useEffect(() => {
     if (surveyResponseId)
