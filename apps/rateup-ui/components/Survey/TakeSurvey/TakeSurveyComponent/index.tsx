@@ -336,32 +336,40 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
                   >
-                    <Box
-                      pb={smallScreen ? "sm" : "lg"}
-                      ref={boxRef}
-                      className={lexend.className}
+                    <motion.div
+                      layout="position"
+                      transition={{
+                        type: "tween",
+                        duration: 0.2,
+                      }}
                     >
-                      <QuestionTitle
-                        largeScreen={largeScreen}
-                        themeStyles={
-                          surveyThemeData?.surveyTheme?.title?.styles
-                        }
-                      />
-                      <QuestionDesc
-                        largeScreen={largeScreen}
-                        themeStyles={
-                          surveyThemeData?.surveyTheme?.subtitle?.styles
-                        }
-                      />
-                    </Box>
-                    <ScrollArea.Autosize
-                      mah={formMaxHeight}
-                      p={0}
-                      m={0}
-                      w={"100%"}
-                    >
-                      <QuestionForm />
-                    </ScrollArea.Autosize>
+                      <Box
+                        pb={smallScreen ? "sm" : "lg"}
+                        ref={boxRef}
+                        className={lexend.className}
+                      >
+                        <QuestionTitle
+                          largeScreen={largeScreen}
+                          themeStyles={
+                            surveyThemeData?.surveyTheme?.title?.styles
+                          }
+                        />
+                        <QuestionDesc
+                          largeScreen={largeScreen}
+                          themeStyles={
+                            surveyThemeData?.surveyTheme?.subtitle?.styles
+                          }
+                        />
+                      </Box>
+                      <ScrollArea.Autosize
+                        mah={formMaxHeight}
+                        p={0}
+                        m={0}
+                        w={"100%"}
+                      >
+                        <QuestionForm />
+                      </ScrollArea.Autosize>
+                    </motion.div>
                   </motion.div>
                 </Box>
               </AnimatePresence>

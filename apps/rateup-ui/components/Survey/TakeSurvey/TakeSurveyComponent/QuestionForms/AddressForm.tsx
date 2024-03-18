@@ -7,7 +7,7 @@ import classes from "../TakeSurvey.module.css";
 const AddressForm = () => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Stack w={"100%"} gap={"sm"}>
+    <Stack w={"100%"} gap={"xs"}>
       <FormPaperLayout>
         <Input
           placeholder="Address 1"

@@ -193,6 +193,12 @@ function ConditionBlock({
       response: matchData,
     });
   }, [selectedCondition, selectedAction, matchData]);
+
+  useEffect(() => {
+    setSelectedCondition(currentLogicJump.condition);
+    setMatchData(currentLogicJump.response);
+    setSelectedAction(currentLogicJump.action);
+  }, [currentLogicJump]);
   return (
     <Group
       gap="xs"
@@ -231,6 +237,7 @@ function ConditionBlock({
           onChange={setMatchData}
           placeholder="Select Responses"
           searchable
+          w={250}
         />
       ) : (
         <Select
@@ -238,6 +245,7 @@ function ConditionBlock({
           value={Array.isArray(matchData) ? "" : matchData}
           data={getResponses(selectedQ, selectedLanguage)}
           onChange={setMatchData}
+          w={250}
         />
       )}
       <Text>then</Text>
