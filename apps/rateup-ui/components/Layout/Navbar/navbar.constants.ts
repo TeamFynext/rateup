@@ -22,6 +22,7 @@ import {
   IconTicket,
   IconGift,
   IconPigMoney,
+  IconMessageCog,
 } from "@tabler/icons-react";
 
 import { UserRole } from "../../../utils/enums";
@@ -146,6 +147,11 @@ export function getNavTopData(subscription?: Subscription) {
                       href: "/dashboard/contacts",
                     },
                   ]),
+              {
+                Icon: IconMessageCog,
+                label: "Automation",
+                href: "/dashboard/whatsapp/automated-replies",
+              },
               {
                 Icon: IconSettings,
                 label: "Settings",

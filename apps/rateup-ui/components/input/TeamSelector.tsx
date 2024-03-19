@@ -4,8 +4,8 @@ import { useTeamsByUser } from "../../backend/team/team.query";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface TeamSelectorProps extends SelectProps {
-  value: string;
-  onChange: (teamId: string) => void;
+  value?: string;
+  onChange?: (teamId: string) => void;
   label?: string;
   enableAll?: boolean;
 }

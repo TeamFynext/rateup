@@ -10,6 +10,8 @@ import {
   WaFlowStatus,
   SurveyType,
   LoyaltyCampaignType,
+  WaAutomatedReplyMatchType,
+  WaAutomatedReplyResponseType,
 } from "./enums";
 
 type GoogleReview = {
@@ -820,4 +822,23 @@ export type Testimonial = {
     id: string;
     name: string;
   };
+};
+export type WaAutomatedReplyKeyword = {
+  keyword: string;
+  caseSensitive: boolean;
+};
+export type WaAutomatedReplyMatchData = {
+  keywords?: Array<WaAutomatedReplyKeyword>;
+  exactText?: string;
+};
+export type WaAutomatedReply = {
+  id: string;
+  name: string;
+  createdAt: Date;
+  teamId: string;
+  matchData: WaAutomatedReplyMatchData;
+  matchType: WaAutomatedReplyMatchType;
+  responseType: WaAutomatedReplyResponseType;
+  responseText: string | null;
+  responseTemplateId: string | null;
 };

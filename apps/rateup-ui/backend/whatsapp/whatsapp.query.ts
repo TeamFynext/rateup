@@ -13,7 +13,7 @@ import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 export const useWaTemplates = () =>
   useQuery({
     queryKey: ["watemplates"],
-    queryFn: async () => await getWaTemplates(),
+    queryFn: getWaTemplates,
   });
 
 export const useCreateTemplateMutation = (onSuccess, onError) => {

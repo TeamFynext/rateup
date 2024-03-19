@@ -218,3 +218,12 @@ export enum WhatsappFlowFontWeight {
   boldAndItalic = "bold_italic",
   normal = "normal",
 }
+export enum WaAutomatedReplyMatchType {
+  ContainsAnyOf = "ContainsAnyOf",
+  ContainsAllOf = "ContainsAllOf",
+  Exact = "Exact",
+}
+export enum WaAutomatedReplyResponseType {
+  Text = "Text",
+  Template = "Template",
+}

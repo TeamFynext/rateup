@@ -1,14 +1,30 @@
 import { WHATSAPP_URL } from ".";
+import { WaTemplateStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 const TEMPLATES_URL = `${WHATSAPP_URL}/templates`;
 const REDIRECT_URL = `${WHATSAPP_URL}/redirect`;
+
+export type WaTemplate = {
+  id: string;
+  createdAt: Date;
+  data: {
+    name: string;
+    components: Array<any>;
+    id: string;
+    status: WaTemplateStatus;
+    language: string;
+  };
+  acceptButton: string;
+  orgId: string;
+};
+
 /**
  * Fetches whatsapp templates using orgId user belongs to.
  */
 export const getWaTemplates = async () => {
   const res = await axiosClient.get(TEMPLATES_URL);
-  return res.data;
+  return res.data as WaTemplate[];
 };
 
 export const createWaTemplate = async (templateData: any) => {
