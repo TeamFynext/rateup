@@ -38,7 +38,7 @@ export async function createTrialSubscription(orgId: string, pClient = prisma) {
 }
 
 export async function getSubscription(orgId: string) {
-  return (await prisma.subscription.findFirst({
+  let sub = (await prisma.subscription.findFirst({
     where: {
       orgId,
     },
@@ -57,6 +57,46 @@ export async function getSubscription(orgId: string) {
       subscriptionRef: true,
     },
   })) as unknown as Subscription;
+
+  //TODO - Resolve the temp solution
+  //here is a temp solution for missing features for existing users
+  if (!sub.features.ticket) {
+    const ticket = {
+      count: {
+        max: 500,
+      },
+      active: true,
+    };
+
+    sub.features.ticket = ticket;
+
+    let updatedSub = (await prisma.subscription.update({
+      where: {
+        orgId: sub.orgId,
+      },
+      data: {
+        features: sub.features,
+      },
+      select: {
+        orgId: true,
+        features: true,
+        renewedAt: true,
+        expiresAt: true,
+        createdAt: true,
+        basePlan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        subscriptionRef: true,
+      },
+    })) as unknown as Subscription;
+
+    return updatedSub;
+  }
+
+  return sub;
 }
 
 export async function getAllSubscriptions() {
