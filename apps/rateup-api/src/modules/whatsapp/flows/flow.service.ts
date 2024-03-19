@@ -4,6 +4,7 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import {
   generateFlowMessageData,
+  generateQuestionResponsesFromFlowResponse,
   getFlowFormElementNameFromQuestionId,
   injectIdToFlowJson,
   parseFlowResponse,
@@ -18,6 +19,7 @@ import { LogicAction, WaFlowStatus } from "../../../types/enums";
 import { FlowLogicJump } from "../../../types/global";
 import { getSurveyById } from "../../survey/survey.service";
 import {
+  deleteSession,
   getSession,
   saveResponses,
   sendMessage,
@@ -25,11 +27,15 @@ import {
   updateSession,
 } from "../whatsappSurvey/wasurvey.service";
 import { validateLogic } from "../../question/question.utils";
-import { createCTAButtonMessage } from "../whatsappSurvey/wasurvey.utils";
+import {
+  createCTAButtonMessage,
+  parseMessage,
+} from "../whatsappSurvey/wasurvey.utils";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
 } from "../../../utils/commnUtils";
+import { WaMessageBody } from "../../../types/whatsapp.types";
 
 /**
  * Get flows from whatsapp
@@ -750,4 +756,44 @@ export function removeDuplicateResponses(responses: QuestionResponse[]) {
   const reversedRes = responses.reverse();
 
   return uniqueQIds.map((qId) => reversedRes.find((r) => r.questionId === qId));
+}
+
+export async function handleStaticFlowReply(
+  orgId: string,
+  waMessage: WaMessageBody,
+) {
+  log.trace("handling flow reply");
+  const { from, flowResponse } = parseMessage(waMessage);
+  if (flowResponse["responses_saved"]) {
+    log.trace("Flow response already saved. Ignoring...");
+    return;
+  }
+
+  let session = await getSession(orgId, from);
+  const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
+  const flow = await getFlowFromDb(dbFlowId);
+
+  const questionResponses = generateQuestionResponsesFromFlowResponse({
+    flow,
+    flowResponses: flowResponse,
+    surveyTeamMapId: session.surveyTeamMapId,
+  });
+
+  const uniqueResponses = removeDuplicateResponses(questionResponses);
+  session.responses = uniqueResponses;
+  await saveResponses(session);
+
+  if (
+    shouldShowGoogleReview({
+      questions: session.surveyTeamMap.survey.questions,
+      responses: uniqueResponses,
+    })
+  ) {
+    await sendGReviewLink({
+      phone: session.phone,
+      surveyTeamMapId: session.surveyTeamMapId,
+      orgId: session.orgId,
+    });
+  }
+  await deleteSession(session.orgId, session.phone);
 }

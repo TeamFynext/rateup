@@ -16,6 +16,7 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { WaSession } from "@prisma/client";
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -50,7 +51,14 @@ export function getMessageObject(data: WaMessageBody) {
   return data.entry[0].changes[0].value.messages[0];
 }
 
-export function parseMessage(data: WaMessageBody) {
+export type WaParsedMessage = {
+  from: string;
+  timestamp: string;
+  message: string;
+  flowResponse: any;
+  type: string;
+};
+export function parseMessage(data: WaMessageBody): WaParsedMessage {
   if (!getMessageObject(data)) {
     throw new Error("No messages found");
   }
@@ -568,6 +576,11 @@ export function getQuestionByIdFromSession(
     throw new Error("Question not found");
   }
   return question;
+}
+
+export function validateSession(session: WaSession) {
+  if (!session) return false;
+  return !(dayjs(session.createdAt).diff(dayjs(), "day") >= 1);
 }
 
 const _templateStatusChangeEventSampleData = {

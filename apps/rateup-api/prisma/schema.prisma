@@ -144,6 +144,8 @@ model Team {
   RM_Topic               RM_Topic[]
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
+  WaAutomatedReply WaAutomatedReply[]
+
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -886,4 +888,21 @@ model LCustomerRewardEvent {
   type String // enums.ts: LoyaltyCustomerRewardType
 
   pointsEarned Int
+}
+
+model WaAutomatedReply {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String  @db.Uuid
+
+  /// [PWaAutomatedReplyMatchData]
+  matchData Json
+  matchType String // enums.ts: WaAutomatedReplyMatchType
+
+  responseType String // enums.ts: WaAutomatedReplyResponseType
+  responseText String?
+  responseTemplateId    String?
 }

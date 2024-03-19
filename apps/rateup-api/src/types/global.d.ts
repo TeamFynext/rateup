@@ -257,6 +257,11 @@ declare global {
     footer?: string;
     cta: string;
   };
+  type WaAutomatedReplyMatchData = {
+    keywords?: Array<string>;
+    exactText?: string;
+    caseSensitive: boolean;
+  };
 
   // PRISMA JSON TYPES
   namespace PrismaJson {
@@ -266,6 +271,7 @@ declare global {
 
     type PQuestion = Question;
     type PQuestionResponse = QuestionResponse;
+    type PWaAutomatedReplyMatchData = WaAutomatedReplyMatchData;
   }
 }
 export interface FlowLogicCondition {

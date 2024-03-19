@@ -86,9 +86,6 @@ export async function getSession(orgId: string, phone: string) {
     },
     include: toBeIncludedWaSessionRelations,
   });
-  if (!session) {
-    throw new Error("Session not found");
-  }
   return session;
 }
 export async function deleteSession(orgId: string, phone: string) {
