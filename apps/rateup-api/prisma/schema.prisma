@@ -97,6 +97,7 @@ model Org {
   loyaltyCustomers  LoyaltyCustomer[]
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
+  WaContact         WaContact[]
 }
 
 model WhatsappSettings {
@@ -309,6 +310,7 @@ model Contact {
   responses            SurveyResponse[]
   contactGroups        ContactGroupMap[]
   campaignParticipants CampaignParticipant[]
+  waContact            WaContact?
 
   @@unique([phone, orgId], name: "contact_phone_team_id_unique")
   @@unique([email, orgId], name: "contact_email_team_id_unique")
@@ -888,6 +890,28 @@ model LCustomerRewardEvent {
   type String // enums.ts: LoyaltyCustomerRewardType
 
   pointsEarned Int
+}
+
+model WaContact {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now())
+  contactId String      @unique @db.Uuid
+  contact   Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  orgId     String      @db.Uuid
+  org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  waInbox   WaMessage[]
+
+  @@unique([contactId, orgId])
+}
+
+model WaMessage {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime  @default(now())
+  waContactId String    @db.Uuid
+  /// [PWaMessageBody]
+  messageBody Json
+  waContact   WaContact @relation(fields: [waContactId], references: [id], onDelete: Cascade)
 }
 
 model WaAutomatedReply {

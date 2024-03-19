@@ -65,6 +65,7 @@ import {
   checkIfMessageMatchesAnyAutomation,
   sendAutomatedReplyMessage,
 } from "../automatedReply/wa_automatedReply.utils";
+import { handleWaMessages } from "../inbox/message/wamessage.controller";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -161,8 +162,20 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
 async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
   // check for '/start' command
   const parsedMessage = parseMessage(waMessage);
-
-  const { message: tempMessage, from } = parsedMessage;
+  const {
+    message: tempMessage,
+    from,
+    type,
+    completeMessageObject,
+    userName,
+  } = parsedMessage;
+  const saveMessage = await handleWaMessages(
+    "receive",
+    completeMessageObject,
+    from,
+    userName,
+    orgId,
+  );
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
 

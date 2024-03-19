@@ -44,6 +44,31 @@ export async function getContactsByOrgId(orgId: string) {
   return users;
 }
 
+export async function getContactByPhoneNumberAndOrgId(
+  phone: string,
+  orgId: string,
+) {
+  const contact = await prisma.contact.findFirst({
+    where: {
+      phone,
+      orgId,
+    },
+  });
+  return contact;
+}
+
+export async function getContactsNotInWaContact(orgId: string) {
+  const contacts = await prisma.contact.findMany({
+    where: {
+      orgId,
+      waContact: {
+        is: null,
+      },
+    },
+  });
+  return contacts;
+}
+
 export async function deleteContactById(contactId: string) {
   const user = await prisma.contact.delete({
     where: {

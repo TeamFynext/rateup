@@ -13,6 +13,7 @@ import {
   deleteContactById,
   deleteManyContacts,
   getContactsByOrgId,
+  getContactsNotInWaContact,
   updateContactById,
 } from "./contact.service";
 import { Prisma } from "@prisma/client";
@@ -69,6 +70,20 @@ export async function getAllContactsHandler(
   try {
     const { orgId } = request.user;
     const contacts = await getContactsByOrgId(orgId);
+    return reply.code(200).send(contacts);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getContactsNotInWaContactHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const contacts = await getContactsNotInWaContact(orgId);
     return reply.code(200).send(contacts);
   } catch (error) {
     log.error(error);

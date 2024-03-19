@@ -15,6 +15,7 @@ import {
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
 import prisma from "../utils/prisma";
+import { WaReceiveMessageBody, WaSendMessageBody } from "./whatsapp.types";
 
 type GoogleReview = {
   minRating?: number;
@@ -262,7 +263,11 @@ declare global {
     exactText?: string;
     caseSensitive: boolean;
   };
-
+  type WaInboxMessageBody = {
+    exchangeProcess: "send" | "receive";
+    send?: WaSendMessageBody;
+    receive?: WaReceiveMessageBody;
+  };
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
@@ -272,6 +277,8 @@ declare global {
     type PQuestion = Question;
     type PQuestionResponse = QuestionResponse;
     type PWaAutomatedReplyMatchData = WaAutomatedReplyMatchData;
+
+    type PWaMessageBody = WaInboxMessageBody;
   }
 }
 export interface FlowLogicCondition {

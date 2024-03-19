@@ -39,6 +39,7 @@ import {
   updateVisitedSurvey,
 } from "../../survey/survey.service";
 import { getOrCreateContactByPhone } from "../../contact/contact.service";
+import { handleWaMessages } from "../inbox/message/wamessage.controller";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -58,7 +59,7 @@ export async function sendMessage(
   messageData: WaSendMessageBody,
 ) {
   const waSettings = await getWaSettings(orgId);
-
+  const { to } = messageData;
   log.trace(`sending message to %s \n%o`, messageData.to, messageData);
   try {
     const res = await callWhatsappApi(
@@ -68,6 +69,7 @@ export async function sendMessage(
       messageData,
     );
     log.trace(`sent successfully %o %o `, res.data, res.statusText);
+    await handleWaMessages("send", messageData, to);
     return true;
   } catch (e: any) {
     log.error("Error sending message");
@@ -509,8 +511,11 @@ export async function handleTestimonialReply(
     else response.rating = rating;
   } else if (features?.photo && !response.photo) {
     //assume its photo
-    const message = getMessageObject(reply);
-    const uniqueFilename = await downloadAndUpload(session, message.image.id);
+    const { message } = getMessageObject(reply);
+    const uniqueFilename = await downloadAndUpload(
+      session?.orgId,
+      message.image.id,
+    );
     if (!(message.type === "image")) {
       return undefined;
     }
