@@ -3,12 +3,12 @@
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 5px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: rgb(223, 223, 223);
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {

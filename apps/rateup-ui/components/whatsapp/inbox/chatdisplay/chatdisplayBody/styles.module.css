@@ -1,0 +1,32 @@
+.wrapper {
+  height: 400px;
+  flex: 1;
+  position: relative;
+}
+
+.inner {
+  height: 100%;
+  background-color: #f5f6fa;
+  overflow: auto;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-xl)
+    var(--mantine-spacing-lg) var(--mantine-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+}
+.affix {
+  position: absolute !important;
+  background-color: #ffffff;
+  right: 6px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-lg);
+  bottom: 15px;
+  border-radius: var(--mantine-radius-md);
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  box-shadow: var(--mantine-shadow-xs);
+  color: var(--mantine-primary-color-6);
+}

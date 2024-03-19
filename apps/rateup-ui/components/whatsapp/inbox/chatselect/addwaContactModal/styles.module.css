@@ -1,0 +1,13 @@
+.modal_target {
+  border-radius: var(--mantine-radius-xl);
+}
+.add_button {
+  margin-left: auto;
+  border-radius: var(--mantine-radius-xl);
+}
+.alert_icon {
+  color: #eed202;
+}
+.alert_text {
+  font-size: var(--mantine-font-size-sm);
+}

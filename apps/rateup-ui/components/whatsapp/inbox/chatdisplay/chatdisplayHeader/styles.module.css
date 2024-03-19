@@ -1,0 +1,17 @@
+.wrapper {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-xl);
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  display: flex;
+  gap: var(--mantine-spacing-sm);
+  align-items: center;
+}
+.name_phone_wrapper {
+  gap: 0;
+}
+.name {
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 600;
+}
+.phone {
+  font-size: var(--mantine-font-size-xs);
+}

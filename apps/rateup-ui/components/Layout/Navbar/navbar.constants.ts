@@ -23,6 +23,7 @@ import {
   IconGift,
   IconPigMoney,
   IconMessageCog,
+  IconInbox,
 } from "@tabler/icons-react";
 
 import { UserRole } from "../../../utils/enums";
@@ -131,6 +132,11 @@ export function getNavTopData(subscription?: Subscription) {
                 Icon: IconWaveSine,
                 label: "Flows",
                 href: "/dashboard/whatsapp/flows",
+              },
+              {
+                Icon: IconInbox,
+                label: "Inbox",
+                href: "/dashboard/whatsapp/inbox",
               },
               ...(hiddenModules.includes("campaign") ||
               !hasFeature(sfpn.WhatsAppCampaign)

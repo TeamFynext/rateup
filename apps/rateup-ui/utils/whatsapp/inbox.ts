@@ -1,0 +1,87 @@
+import { WaInboxMessageBody } from "../../types/global";
+
+export type ParsedWaMessageReturn = {
+  timeStamp: string;
+  messageType: string;
+  messageContent: string;
+};
+export function parseWaMessage(
+  messageBody: WaInboxMessageBody,
+): ParsedWaMessageReturn {
+  let timeStamp: string = new Date().toLocaleTimeString();
+  let messageType: string = "text";
+  let messageContent: string = "No messages yet";
+  if (messageBody?.exchangeProcess === "send") {
+    const { send } = messageBody;
+    messageType = send.type;
+    switch (messageType) {
+      case "text":
+        messageContent = send?.text?.body;
+        break;
+      case "image":
+        messageContent = send?.image?.link;
+        break;
+      case "template":
+        messageContent = send.template;
+        break;
+    }
+  }
+  if (messageBody?.exchangeProcess === "receive") {
+    const { receive } = messageBody;
+    timeStamp = receive.messages[0].timestamp;
+    messageType = receive.messages[0].type;
+    switch (messageType) {
+      case "text":
+        messageContent = receive.messages[0].text.body;
+        break;
+      case "image":
+        messageContent = receive.messages[0].image.link;
+        break;
+      case "button":
+        messageContent = receive.messages[0].button;
+        break;
+      case "interactive":
+        switch (receive.messages[0].interactive.type) {
+          case "button_reply":
+            messageContent = receive.messages[0].interactive.button_reply.title;
+            break;
+          case "list_reply":
+            messageContent = receive.messages[0].interactive.list_reply.title;
+            break;
+          case "nfm_reply":
+            messageContent = receive.messages[0].interactive.nfm_reply.name;
+            break;
+        }
+        break;
+    }
+  }
+  return { timeStamp, messageType, messageContent };
+}
+
+export function returnMessageContentBasedOnParsedMessage(
+  parsedMessage: ParsedWaMessageReturn,
+) {
+  if (parsedMessage.messageType === "text") {
+    return parsedMessage.messageContent;
+  } else if (parsedMessage.messageType === "image") {
+    return "Image";
+  } else if (parsedMessage.messageType === "video") {
+    return "Video";
+  } else if (parsedMessage.messageType === "audio") {
+    return "Audio";
+  } else if (parsedMessage.messageType === "document") {
+    return "Document";
+  } else if (parsedMessage.messageType === "location") {
+    return "Location";
+  } else if (parsedMessage.messageType === "contact") {
+    return "Contact";
+  } else if (parsedMessage.messageType === "sticker") {
+    return "Sticker";
+  } else if (parsedMessage.messageType === "voice") {
+    return "Voice";
+  } else if (parsedMessage.messageType === "gif") {
+    return "GIF";
+  } else {
+    return "Unsupported message type";
+  }
+}

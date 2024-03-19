@@ -227,3 +227,10 @@ export enum WaAutomatedReplyResponseType {
   Text = "Text",
   Template = "Template",
 }
+
+export enum WaMessageTypes {
+  text = "text",
+  image = "image",
+  interactive = "interactive",
+  button = "button",
+}

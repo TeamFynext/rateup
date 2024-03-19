@@ -5,6 +5,7 @@ import {
   deleteManyContacts,
   editContact,
   getContactsList,
+  getContactsNotInWaContact,
   importContacts,
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -14,6 +15,14 @@ export const useCampaignContacts = () => {
   return useQuery({
     queryKey: ["campaignContactsData"],
     queryFn: () => getContactsList(),
+  });
+};
+
+export const useContactsNotInWaContact = (opened: boolean) => {
+  return useQuery({
+    queryKey: ["contactsNotInWaContact"],
+    queryFn: () => getContactsNotInWaContact(),
+    enabled: opened,
   });
 };
 
