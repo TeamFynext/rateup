@@ -13,7 +13,7 @@ export enum TicketPriority {
 
 export enum TicketStatus {
   OPEN = "OPEN",
-  CLOSED = "CLOSED",
   IN_PROGRESS = "IN_PROGRESS",
   RESOLVED = "RESOLVED",
+  CLOSED = "CLOSED",
 }
