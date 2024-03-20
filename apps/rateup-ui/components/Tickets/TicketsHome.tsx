@@ -55,6 +55,10 @@ const TicketsHome = () => {
   }, [deleteTicketId]);
 
   useEffect(() => {
+    !opened && setDeleteTicketId("");
+  }, [opened]);
+
+  useEffect(() => {
     const filtered = tickets?.filter((t) => {
       const statusMatches = filterParam === "all" || t?.status === filterParam;
       const teamMatches =

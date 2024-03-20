@@ -89,7 +89,7 @@ export function TicketCard({
           <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
             {ticket?.title}
           </Text>
-          <Tooltip label="Remove this survey from group">
+          <Tooltip label="Delete ticket">
             <ActionIcon
               onClick={(e) => {
                 e.stopPropagation();

@@ -114,7 +114,8 @@ export const useSurveyResponseColumns = ({
                 Ticket
               </Text>
             ),
-            filterFn: fuzzyFilter,
+            enableColumnFilter: false,
+            enableSorting: false,
             accessorKey: "ticket",
             cell: (info) => {
               let ticketData = info.row.original.Ticket;
