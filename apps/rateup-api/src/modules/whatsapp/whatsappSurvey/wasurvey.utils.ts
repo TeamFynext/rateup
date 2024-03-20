@@ -16,6 +16,7 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { WaSession } from "@prisma/client";
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -47,14 +48,28 @@ export function getMessageObject(data: WaMessageBody) {
       "This shouldn't have occured. Multiple messages not supported",
     );
   }
-  return data.entry[0].changes[0].value.messages[0];
+  const message = data.entry[0].changes[0].value.messages[0];
+  const completeMessageObject = data.entry[0].changes[0].value;
+  return { message, completeMessageObject };
 }
-
-export function parseMessage(data: WaMessageBody) {
+export function getUserName(data: WaMessageBody) {
+  return data.entry[0].changes[0].value.contacts[0].profile.name;
+}
+export type WaParsedMessage = {
+  from: string;
+  userName: string;
+  timestamp: string;
+  message: string;
+  flowResponse: any;
+  type: string;
+  completeMessageObject: any;
+};
+export function parseMessage(data: WaMessageBody): WaParsedMessage {
   if (!getMessageObject(data)) {
     throw new Error("No messages found");
   }
-  const message = getMessageObject(data);
+  const { message, completeMessageObject } = getMessageObject(data);
+  const userName = getUserName(data);
   const { from, timestamp, type } = message;
   let subtype = type as any;
 
@@ -82,7 +97,15 @@ export function parseMessage(data: WaMessageBody) {
       body = message.button.text;
       break;
   }
-  return { from, timestamp, message: body, flowResponse, type: subtype };
+  return {
+    from,
+    userName,
+    timestamp,
+    message: body,
+    flowResponse,
+    type: subtype,
+    completeMessageObject,
+  };
 }
 
 export function createReplyButtonsMessage(
@@ -489,7 +512,7 @@ export async function parseResponse(
         }
       case Q.WaList: {
         try {
-          const message = getMessageObject(waMessage);
+          const { message } = getMessageObject(waMessage);
           const { id, ...response } = message.interactive["list_reply"];
           return response;
         } catch (error) {
@@ -498,9 +521,9 @@ export async function parseResponse(
         }
       }
       case Q.Photo: {
-        const message = getMessageObject(waMessage);
+        const { message } = getMessageObject(waMessage);
         const uniqueFilename = await downloadAndUpload(
-          session,
+          session?.orgId,
           message.image.id,
         );
         if (!(message.type === "image")) {
@@ -520,11 +543,8 @@ export async function parseResponse(
 }
 
 /* Downloads image from whatsapp & uploads it to s3 */
-export async function downloadAndUpload(
-  session: WaSessionWithRelations,
-  imageId: string,
-) {
-  const waSettings = await getWaSettings(session.orgId);
+export async function downloadAndUpload(orgId: string, imageId: string) {
+  const waSettings = await getWaSettings(orgId);
   const res = await callWhatsappApi(
     `/${imageId}`,
     "GET",
@@ -550,10 +570,10 @@ export async function downloadAndUpload(
     ContentType: mime_type,
     Body: imageBuffer,
   };
-  await uploadFile(s3Params);
+  const obj = await uploadFile(s3Params);
   log.trace("uploaded image to s3 key => %s", uniqueFilename);
 
-  return uniqueFilename;
+  return obj["Key"] ? obj["Key"] : null;
 }
 
 export function getQuestionByIdFromSession(
@@ -568,6 +588,11 @@ export function getQuestionByIdFromSession(
     throw new Error("Question not found");
   }
   return question;
+}
+
+export function validateSession(session: WaSession) {
+  if (!session) return false;
+  return !(dayjs(session.createdAt).diff(dayjs(), "day") >= 1);
 }
 
 const _templateStatusChangeEventSampleData = {

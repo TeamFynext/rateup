@@ -179,3 +179,13 @@ export enum LoyaltyCustomerRewardType {
   Referrer = "Referrer", // the one who referred
   Customer = "Customer", // the one who was referred or made the transaction
 }
+
+export enum WaAutomatedReplyMatchType {
+  ContainsAnyOf = "ContainsAnyOf",
+  ContainsAllOf = "ContainsAllOf",
+  Exact = "Exact",
+}
+export enum WaAutomatedReplyResponseType {
+  Text = "Text",
+  Template = "Template",
+}
