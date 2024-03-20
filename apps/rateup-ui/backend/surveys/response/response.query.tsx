@@ -212,7 +212,7 @@ export function useDownloadExcelResponse() {
         color: "red",
         loading: false,
         title: "Failed Response Downloading",
-        message: error?.response?.data?.message ?? error?.response?.data,
+        message: "Try again after some time",
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
