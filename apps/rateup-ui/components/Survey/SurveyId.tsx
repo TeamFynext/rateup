@@ -228,6 +228,7 @@ export default function SurveyID() {
                   <SurveySettings
                     surveyId={surveyId}
                     survey={survey}
+                    setSelectedLanguage={setSelectedLanguage}
                     enabledModules={
                       survey?.type === SurveyType.WhatsApp
                         ? ["name", "language", "teams", "location"]

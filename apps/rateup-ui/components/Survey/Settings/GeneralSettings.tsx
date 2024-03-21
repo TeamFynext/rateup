@@ -21,7 +21,7 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
-const GeneralSettings = ({ survey, enabledModules }) => {
+const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   const settingsForm = useForm({
     initialValues: {
       title: survey?.title || "",
@@ -42,6 +42,7 @@ const GeneralSettings = ({ survey, enabledModules }) => {
     editSurvey.mutate(values, {
       onSettled: () => {
         setIsLoading(false);
+        setSelectedLanguage && setSelectedLanguage(values.languages[0]);
       },
     });
   };
