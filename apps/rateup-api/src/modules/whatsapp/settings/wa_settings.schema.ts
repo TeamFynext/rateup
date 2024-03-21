@@ -6,6 +6,7 @@ const createWaSettingsInput = {
   businessId: z.string(),
   phoneId: z.string(),
   webhookPassword: z.string(),
+  appId: z.string(),
 };
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
 
@@ -14,12 +15,14 @@ const updateWaSettingsInputSchema = z.object({
   businessId: z.string().optional(),
   phoneId: z.string().optional(),
   webhookPassword: z.string().optional(),
+  appId: z.string().optional(),
   encryption: z
     .object({
       publicKey: z.string().optional(),
       privateKey: z.string().optional(),
     })
-    .optional(),
+    .optional()
+    .nullable(),
 });
 export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
   buildJsonSchemas(

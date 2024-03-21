@@ -198,12 +198,12 @@ export async function uploadHandler(
     const size: any = data.fields.size;
     const id = await uploadFileToWaTemplate(data, size?.value, orgId);
     if (id === "error") return reply.code(400).send("image upload failed");
-    reply.code(200).send({ id });
+    return reply.code(200).send({ id: id });
   } catch (e) {
-    log.error(
-      "Error uploading image to whatsapp templates \n%o",
-      e?.response?.data,
-    );
-    reply.code(500).send(e?.response?.data);
+    const error =
+      typeof e?.message === "string" ? e?.message : e?.response?.data;
+    log.error("Error uploading image to whatsapp templates \n%o", error);
+
+    reply.code(500).send(error);
   }
 }
