@@ -163,9 +163,11 @@ export default function SurveyID() {
                 <Title
                   styles={{
                     root: {
-                      fontSize: "32px",
+                      fontSize: survey?.title?.length > 25 ? "20px " : "32px",
                       width: "100%",
-                      whiteSpace: "nowrap",
+                      // whiteSpace: "nowrap",
+                      whiteSpace: "normal",
+                      wordWrap: "break-word",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                     },
@@ -226,6 +228,7 @@ export default function SurveyID() {
                   <SurveySettings
                     surveyId={surveyId}
                     survey={survey}
+                    setSelectedLanguage={setSelectedLanguage}
                     enabledModules={
                       survey?.type === SurveyType.WhatsApp
                         ? ["name", "language", "teams", "location"]

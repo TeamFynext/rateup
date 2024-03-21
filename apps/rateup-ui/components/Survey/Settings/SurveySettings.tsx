@@ -44,11 +44,18 @@ const defaultEnabledModules = [
   "redirect",
   "tickets",
 ];
+interface SurveySettingsProps {
+  surveyId: string;
+  survey: any;
+  enabledModules?: string[];
+  setSelectedLanguage?: (lang: string) => void;
+}
 const SurveySettings = ({
   surveyId,
   survey,
   enabledModules = defaultEnabledModules,
-}) => {
+  setSelectedLanguage = null,
+}: SurveySettingsProps) => {
   const [kioskMode, setKioskMode] = useState(survey?.kioskMode);
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
@@ -77,7 +84,11 @@ const SurveySettings = ({
   return (
     <Stack px={"xl"} py={"lg"} gap={survey?.type == "web" ? "lg" : "xs"}>
       <Heading subtitle="General settings" label="Edit your survey info" />
-      <GeneralSettings enabledModules={enabledModules} survey={survey} />
+      <GeneralSettings
+        enabledModules={enabledModules}
+        survey={survey}
+        setSelectedLanguage={setSelectedLanguage}
+      />
       <SimpleGrid cols={3}>
         {enabledModules.includes("kiosk") && (
           <PaperLayout shadow="xl" p={"xl"}>
