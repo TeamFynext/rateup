@@ -1,11 +1,14 @@
 import {
+  ActionIcon,
   Box,
   Button,
+  Flex,
   Group,
   Loader,
   Popover,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -56,6 +59,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
 import { hasFeature } from "../../../utils/subscription/subscription";
+import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -75,6 +79,8 @@ const Responses = ({
   const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -96,8 +102,9 @@ const Responses = ({
   const router = useRouter();
   const hasContactQuestion =
     responses &&
-    responses?.some((response) =>
-      response?.responses?.some((res) => QuestionType.Contact === res.type),
+    responses?.some(
+      (response) =>
+        response?.responses?.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -257,6 +264,21 @@ const Responses = ({
     }
   };
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    queryClient.invalidateQueries([
+      "allresponses",
+      surveyId,
+    ] as InvalidateQueryFilters);
+    // or use queryClient.refetchQueries("responseQueryKey") for refetching
+  };
+
+  useEffect(() => {
+    if (refreshing) {
+      setRefreshing(false);
+    }
+  }, [refreshing]);
+
   if (isQLoading) return <Loader type="bars" />;
   if (QError) return <Text>An error has occurred</Text>;
   if (isLoading) return <Loader type="bars" />;
@@ -278,7 +300,31 @@ const Responses = ({
 
       <PaperLayout className={styles["total-responses-heading-container"]}>
         <Group justify="space-between" align="center">
-          <Heading subtitle={`Total Responses : ${responseCount}`} />
+          <Flex>
+            <Heading subtitle={`Total Responses : ${responseCount}`} />
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                ml="15px"
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                  handleRefresh();
+                  notifications.show({
+                    id: "data-reload",
+                    color: "teal",
+                    title: "Refreshing data",
+                    loading: true,
+                    message: "Hold.. your data is getting update...",
+                    autoClose: 2000,
+                  });
+                }}
+              >
+                <IconRefresh
+                  style={{ width: "90%", height: "90%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+          </Flex>
           {responseCount > 0 && !survey?.isEncrypted && (
             <Popover
               position="bottom-end"

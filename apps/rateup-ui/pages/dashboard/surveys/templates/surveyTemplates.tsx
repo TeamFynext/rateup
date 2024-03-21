@@ -47,6 +47,8 @@ const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
             minHeight: "150px",
             cursor: "pointer",
             marginTop: "2rem",
+            overflow: "hidden",
+            objectFit: "cover",
           }}
         >
           <TemplateCard {...{ selectedType, setSelectedType }} />

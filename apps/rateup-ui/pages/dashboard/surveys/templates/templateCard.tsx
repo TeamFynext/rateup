@@ -76,7 +76,8 @@ export default function TemplateCard({ selectedType, setSelectedType }) {
                 marginBottom: "2rem",
               }}
             >
-              {subtitle}
+              {subtitle.split(" ").slice(0, 10).join(" ")}{" "}
+              {subtitle.split(" ").length > 10 && "..."}
             </Stack>
           </Flex>
         </BackgroundImage>
