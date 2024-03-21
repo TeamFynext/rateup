@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { log } from "../../utils/logger";
 
-const WA_API_VERSION = "v18.0";
+const WA_API_VERSION = "v19.0";
 export async function callWhatsappApi(
   url: string,
   method: AxiosRequestConfig["method"],
@@ -10,12 +10,15 @@ export async function callWhatsappApi(
   otherConfig: AxiosRequestConfig = {},
   headerConfig: AxiosRequestConfig["headers"] = {},
 ): Promise<AxiosResponse<any, any>> {
+  const headAuth = accessToken
+    ? { Authorization: `Bearer ${accessToken}` }
+    : {};
   const config: AxiosRequestConfig = {
     url: `https://graph.facebook.com/${WA_API_VERSION}${url}`,
     method,
     data,
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...headAuth,
       ...headerConfig,
     },
     ...otherConfig,
