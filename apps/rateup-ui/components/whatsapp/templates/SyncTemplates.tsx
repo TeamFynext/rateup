@@ -330,6 +330,7 @@ export function SyncTemplatesButton() {
         }
         variant="outline"
         onClick={open}
+        radius={"lg"}
       >
         Sync
       </Button>

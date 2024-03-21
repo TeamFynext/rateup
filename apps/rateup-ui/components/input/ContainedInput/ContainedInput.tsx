@@ -22,6 +22,9 @@ import {
   TagsInput,
   JsonInputProps,
   JsonInput,
+  Button,
+  FileButton,
+  FileButtonProps,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
 import {
@@ -72,6 +75,17 @@ export function ContainedNumberInput(props: NumberInputProps) {
 
 export function ContainedColorInput(props: ColorInputProps) {
   return <ColorInput disallowInput classNames={classes} {...props} />;
+}
+interface fileButtonPropsExtend extends FileButtonProps {
+  label: string;
+}
+export function ContainedFileButton(props: fileButtonPropsExtend) {
+  const { label, ...restProps } = props;
+  return (
+    <FileButton {...props}>
+      {(props) => <Button {...props}>{label}</Button>}
+    </FileButton>
+  );
 }
 
 const isToday = (date) => {

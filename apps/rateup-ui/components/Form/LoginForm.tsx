@@ -102,7 +102,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           className={styles["login-signup-with-google-btn"]}
           buttonText={"Login with Google"}
         />
-        <RateupButtonSecondary
+        {/* <RateupButtonSecondary
           type="button"
           title="Login with Phone Number"
           onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_PHONE)}
@@ -111,7 +111,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           mt="md"
           leftIcon={<IconPhone size={16} />}
           fw={600}
-        />
+        /> */}
       </>
     );
   }

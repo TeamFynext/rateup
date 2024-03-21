@@ -3,6 +3,7 @@ import {
   createWaTemplate,
   deleteWaTemplate,
   getUnregisteredTemplates,
+  getWaTemplateById,
   getWaTemplates,
   registerTemplates,
   syncTemplates,
@@ -16,6 +17,13 @@ export const useWaTemplates = () =>
     queryFn: getWaTemplates,
   });
 
+export const useWaTemplateById = (id: string) =>
+  useQuery({
+    enabled: !!id,
+    queryKey: ["watemplate", id],
+    queryFn: () => getWaTemplateById(id),
+  });
+
 export const useCreateTemplateMutation = (onSuccess, onError) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
@@ -25,8 +33,12 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error creating template!");
+    onError: (error: any) => {
+      showErrorToast(
+        typeof error?.response?.data === "string"
+          ? error?.response?.data
+          : "Error creating template!",
+      );
       onError();
     },
   });
@@ -34,7 +46,7 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
   return createMutation;
 };
 
-export const useUpdateTemplateMutation = (onSuccess?, onError?) => {
+export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ templateId, templateData }: any) =>
@@ -42,10 +54,15 @@ export const useUpdateTemplateMutation = (onSuccess?, onError?) => {
     onSuccess: () => {
       showSuccessToast("Template Updated Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
+      queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
       onSuccess?.();
     },
-    onError: () => {
-      showErrorToast("Error updating template!");
+    onError: (error: any) => {
+      showErrorToast(
+        typeof error?.response?.data === "string"
+          ? error?.response?.data
+          : "Error updating template!",
+      );
       onError?.();
     },
   });

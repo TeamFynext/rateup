@@ -3,10 +3,15 @@ import { Group, Text } from "@mantine/core";
 export interface LengthTrackerProps {
   length: number;
   maxValue: number;
+  atStart?: boolean;
 }
-export function LengthTracker({ maxValue, length }: LengthTrackerProps) {
+export function LengthTracker({
+  maxValue,
+  length,
+  atStart = false,
+}: LengthTrackerProps) {
   return (
-    <Group justify="flex-end" miw={"80px"}>
+    <Group justify={atStart ? "start" : "flex-end"} miw={"80px"}>
       <Text c="dimmed" fz={".8rem"} pr="sm">
         <span
           style={{
