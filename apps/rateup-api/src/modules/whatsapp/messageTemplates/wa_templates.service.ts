@@ -357,9 +357,12 @@ export async function uploadFileToWaTemplate(
   const fileLength = size;
   const fileType = file.mimetype;
   const waSettings = await getWaSettings(orgId);
-  const { accessToken } = waSettings;
+  const { accessToken, appId } = waSettings;
+  if (!accessToken || !appId) {
+    throw Error("AccessToken and AppId should be present in whatsapp settings");
+  }
   const imageUploadSessionRes = callWhatsappApi(
-    `/${process.env.WA_APP_ID}/uploads?file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`,
+    `/${appId}/uploads?file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`,
     "POST",
   );
   const response = (await imageUploadSessionRes).data;
