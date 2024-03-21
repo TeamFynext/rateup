@@ -79,7 +79,7 @@ export default function WhatsappTemplateById() {
           typeof value !== "string"
         ) {
           return (
-            !["image/png", "image.jpg", "image.jpeg"].includes(value?.type) &&
+            !["image/png", "image/jpg", "image/jpeg"].includes(value?.type) &&
             "Incorrect Type"
           );
         } else if (
@@ -153,6 +153,8 @@ export default function WhatsappTemplateById() {
         values.header instanceof File
       ) {
         const file = await uploadTemplateMedia(values.header);
+        console.log(file);
+
         values.header = file?.id ?? "";
       }
       if (editingItem) {
@@ -172,7 +174,13 @@ export default function WhatsappTemplateById() {
       }
     } catch (error) {
       setIsSubmitting(false);
-      showErrorToast(typeof error === "string" ? error : "error in uploading");
+      showErrorToast(
+        typeof error === "string"
+          ? error
+          : typeof error.message === "string"
+            ? error.message
+            : "error in uploading",
+      );
     }
   }
   const handleSelect = () => {
