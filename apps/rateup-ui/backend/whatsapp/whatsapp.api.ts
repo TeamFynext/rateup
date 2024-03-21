@@ -68,6 +68,7 @@ export async function uploadTemplateMedia(file: File) {
       `${TEMPLATES_URL}/upload`,
       formData,
       {
+        timeout: 25000,
         headers: {
           "Content-Type": "multipart/form-data",
         },
