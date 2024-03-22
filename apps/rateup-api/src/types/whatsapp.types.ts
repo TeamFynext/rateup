@@ -8,72 +8,73 @@ export type WaMessageBody = {
       id: string;
       changes: [
         {
-          value: {
-            messaging_product: string;
-            metadata: {
-              display_phone_number: string;
-              phone_number_id: string;
-            };
-            contacts: [
-              {
-                profile: {
-                  name: string;
-                };
-                wa_id: string;
-              },
-            ];
-            messages: [
-              {
-                from: string;
-                id: string;
-                timestamp: string;
-                text: {
-                  body: string;
-                };
-                interactive: {
-                  type: "list_reply" | "button_reply" | "nfm_reply";
-                  list_reply: {
-                    id: string;
-                    title: string;
-                  };
-                  button_reply: {
-                    id: string;
-                    title: string;
-                  };
-                  nfm_reply: {
-                    response_json: string;
-                    name: string;
-                  };
-                };
-                image: {
-                  id: string;
-                  mime_type: string;
-                  sha256: string;
-                  link?: string;
-                };
-                type: WaMessageTypes;
-                button?: any;
-              },
-            ];
-            statuses: [
-              {
-                id: string;
-                status: string;
-                timestamp: string;
-                recipient_id: string;
-                conversation: {
-                  id: string;
-                };
-              },
-            ];
-          };
+          value: WaReceiveMessageBody;
           field: string;
         },
       ];
     },
   ];
 };
-
+export interface WaReceiveMessageBody {
+  messaging_product: "whatsapp";
+  metadata: {
+    display_phone_number: string;
+    phone_number_id: string;
+  };
+  contacts: [
+    {
+      profile: {
+        name: string;
+      };
+      wa_id: string;
+    },
+  ];
+  messages: [
+    {
+      from: string;
+      id: string;
+      timestamp: string;
+      type: WaMessageTypes;
+      text: {
+        body: string;
+      };
+      interactive?: {
+        type: "list_reply" | "button_reply" | "nfm_reply";
+        list_reply: {
+          id: string;
+          title: string;
+        };
+        button_reply: {
+          id: string;
+          title: string;
+        };
+        nfm_reply: {
+          response_json: string;
+          name: string;
+        };
+      };
+      image: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        link?: string;
+        caption?: string;
+      };
+      button?: any;
+    },
+  ];
+  statuses: [
+    {
+      id: string;
+      status: string;
+      timestamp: string;
+      recipient_id: string;
+      conversation: {
+        id: string;
+      };
+    },
+  ];
+}
 export interface WaSendMessageBody {
   messaging_product: "whatsapp";
   recipient_type: "individual";

@@ -5,7 +5,8 @@ import {
   createMultipleContactsHandler,
   deleteContactByIdHandler,
   deleteManyContactsHandler,
-  getContactsHandler,
+  getAllContactsHandler,
+  getContactsNotInWaContactHandler,
   updateContactByIdHandler,
 } from "./contact.controller";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
@@ -22,7 +23,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $contactRef("createContactSchema"),
+        body: $contactRef("contactCoreSchema"),
       },
     },
     createContactHandler,
@@ -38,15 +39,8 @@ export async function contactRoutes(server: FastifyInstance) {
     createMultipleContactsHandler,
   );
 
-  server.get(
-    "/",
-    {
-      schema: {
-        querystring: $contactRef("getContactQuerySchema"),
-      },
-    },
-    getContactsHandler,
-  );
+  server.get("/", getAllContactsHandler);
+  server.get("/notinwa", getContactsNotInWaContactHandler);
 
   server.put(
     "/:contactId",

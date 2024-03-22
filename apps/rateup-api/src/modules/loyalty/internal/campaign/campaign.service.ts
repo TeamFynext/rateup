@@ -3,9 +3,11 @@ import prisma from "../../../../utils/prisma";
 import { LoyaltyCampaignType } from "../../../../types/enums";
 import { log } from "../../../../utils/logger";
 import { getOrCreateLCustomerByPhone } from "../customer/customer.service";
-import { randomUUID } from "crypto";
 import { generateRandomAlphaId } from "../../../../utils/misc/random.utils";
 import { createReferralCode } from "../referralCode/referralCode.service";
+import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service";
+import { parseMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.utils";
+import { WaMessageBody } from "../../../../types/whatsapp.types";
 
 export async function getCampaigns(orgId: string) {
   const campaigns = await prisma.loyaltyCampaign.findMany({
@@ -191,4 +193,45 @@ export async function registerCampaign({
   };
   const referralCode = await createReferralCode(newRcode);
   return { referralCode };
+}
+
+export async function handleRegisterMessage(
+  orgId: string,
+  waMessage: WaMessageBody,
+) {
+  const { from, message } = parseMessage(waMessage);
+  const [_, campaignId] = message.split(" "); // format: /register <campaignId>
+  if (!campaignId) {
+    log.error("Invalid register message");
+    return;
+  }
+  const campaign = await getCampaignById(campaignId);
+  if (!campaign) {
+    log.error("Campaign not found");
+    return;
+  }
+  if (
+    ![
+      LoyaltyCampaignType.Referral,
+      LoyaltyCampaignType.ReferralTransaction,
+    ].includes(campaign.type as LoyaltyCampaignType)
+  ) {
+    log.error("Invalid campaign type");
+    return;
+  }
+
+  const { referralCode } = await registerCampaign({
+    phone: from,
+    orgId,
+    campaignId,
+  });
+  await sendTextMessage(
+    {
+      phone: from,
+      orgId,
+    },
+    "Registration Successful",
+    `Your referral code is: ${referralCode.referralCode}`,
+  );
+  return;
 }

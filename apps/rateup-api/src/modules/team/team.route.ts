@@ -180,7 +180,8 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        // checkRoleHandler(["SUPER_ADMIN"]),
+        //TODO check team member
       ],
       schema: {
         params: $Tref("getTeamMembersRequestSchema"),

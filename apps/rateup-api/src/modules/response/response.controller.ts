@@ -27,6 +27,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
 import { getQuestionsBySurveyId } from "../question/question.service";
+import { log } from "../../utils/logger";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -83,10 +84,12 @@ export async function downloadExcelResponseHandler(
       question,
       request.body.defaultLanguage,
       request.body.visibleColumn,
+      request.body.tz,
     );
     reply.header("filename", `${title}.xlsx`);
     reply.status(200).type("application/xlsx").send(data);
   } catch (e) {
+    log.trace("Error downloading excel", e);
     reply.status(500).send(e);
   }
 }

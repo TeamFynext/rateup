@@ -79,6 +79,7 @@ const generateXlsxSchema = z.object({
   surveyId: z.string().min(1),
   defaultLanguage: z.string().min(1),
   visibleColumn: z.array(z.string()),
+  tz: z.string().default("Asia/Calcutta"),
 });
 
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({

@@ -13,9 +13,15 @@ import { checkSession } from "../../utils/checkSession";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { verifyTeamAccess } from "../team/team.auth";
 import { verifyTicketAccess } from "./ticket.auth";
+import { getVerifySubscriptionHandler } from "../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export async function ticketRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]),
+  );
 
   server.post(
     "/create",

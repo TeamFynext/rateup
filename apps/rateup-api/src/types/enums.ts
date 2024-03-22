@@ -80,6 +80,10 @@ export enum WaTemplateCategory {
 }
 export enum WaTemplateSupportedFormats {
   TEXT = "TEXT",
+  IMAGE = "IMAGE",
+  LOCATION = "LOCATION",
+  DOCUMENT = "DOCUMENT",
+  VIDEO = "VIDEO",
 }
 export enum WaTemplateStatus {
   APPROVED = "APPROVED",
@@ -138,6 +142,7 @@ export enum SubscriptionFeaturePathName {
   ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
+  Ticket = "ticket",
 }
 export enum WaFlowLayoutType {
   scl = "SingleColumnLayout",
@@ -177,4 +182,14 @@ export enum CampaignRewardType {
 export enum LoyaltyCustomerRewardType {
   Referrer = "Referrer", // the one who referred
   Customer = "Customer", // the one who was referred or made the transaction
+}
+
+export enum WaAutomatedReplyMatchType {
+  ContainsAnyOf = "ContainsAnyOf",
+  ContainsAllOf = "ContainsAllOf",
+  Exact = "Exact",
+}
+export enum WaAutomatedReplyResponseType {
+  Text = "Text",
+  Template = "Template",
 }

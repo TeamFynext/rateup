@@ -7,6 +7,9 @@ import {
   UpdateTicketInput,
 } from "./ticket.schema";
 import { Role } from "../../utils/enums";
+import { formatDateT1 } from "../../utils/date";
+import { createEmailBodyTicketAssigned } from "../../utils/email/tickets/ticketAssigned";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -21,23 +24,36 @@ export async function createTicket(
     reviewId,
     surveyResponseId,
     firstComment,
+    type,
   } = input;
 
+  let isCustomTicket = type === TicketType.CUSTOM;
+  let description = "";
+  if (isCustomTicket) {
+    description = firstComment;
+  }
+
   try {
-    if (!reviewId && !surveyResponseId) {
+    if (!isCustomTicket && !reviewId && !surveyResponseId) {
       throw new Error("ReviewId or SurveyResponseId is required");
     } else {
       let ticketType = reviewId
         ? TicketType.REVIEW
-        : TicketType.SURVEY_RESPONSE;
+        : isCustomTicket
+          ? TicketType.CUSTOM
+          : TicketType.SURVEY_RESPONSE;
 
-      const ticket = await prisma.ticket.findFirst({
-        where: {
-          ...(ticketType === TicketType.SURVEY_RESPONSE
-            ? { surveyResponseId }
-            : { reviewId }),
-        },
-      });
+      let ticket;
+
+      if (reviewId || surveyResponseId) {
+        ticket = await prisma.ticket.findFirst({
+          where: {
+            ...(ticketType === TicketType.SURVEY_RESPONSE
+              ? { surveyResponseId }
+              : { reviewId }),
+          },
+        });
+      }
 
       if (ticket) {
         throw new Error(
@@ -52,6 +68,7 @@ export async function createTicket(
                 id: createdBy,
               },
             },
+            description: description,
             type: ticketType,
             status: TicketStatus.OPEN,
             priority: priority,
@@ -82,7 +99,9 @@ export async function createTicket(
             }),
             comments: {
               create: {
-                text: firstComment,
+                text: isCustomTicket
+                  ? `Ticket created on ${formatDateT1(Date.now())}`
+                  : firstComment,
                 createdBy: {
                   connect: {
                     id: createdBy,
@@ -93,11 +112,90 @@ export async function createTicket(
           },
         });
 
+        if (surveyResponseId) {
+          const sRes = await prisma.surveyResponse.findUnique({
+            where: {
+              id: surveyResponseId,
+            },
+            select: {
+              surveyTeamMapId: true,
+            },
+          });
+
+          const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
+            where: {
+              id: sRes.surveyTeamMapId,
+            },
+            include: {
+              survey: {
+                select: {
+                  id: true,
+                  enableTicketEmailAlerts: true,
+                },
+              },
+            },
+          });
+
+          if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
+            sendTicketAssignEmail(newTicket);
+          }
+        } else {
+          sendTicketAssignEmail(newTicket);
+        }
+
         return newTicket;
       }
     }
   } catch (error) {
     throw new Error(error);
+  }
+}
+
+async function sendTicketAssignEmail(newTicket) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: newTicket.assignedToId,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  const team = await prisma.team.findUnique({
+    where: {
+      id: newTicket.teamId,
+    },
+    include: {
+      org: true,
+    },
+  });
+
+  let teamName = team.name;
+  let orgName = team.org.name;
+
+  if (newTicket && user?.email && teamName && orgName) {
+    console.log("sending ticket email....");
+    let ticket_link =
+      `${process.env.FRONTEND_URL}/dashboard/tickets/` + newTicket.id;
+    const msg = {
+      to: user.email, // Change to your recipient
+      // from: 'hello@rateup.app', // Change to your verified sender
+      subject: `Ticket Assigned to You - ${orgName}`,
+      text: `A ticket has been assigned to you on Rateup.app`,
+      html: createEmailBodyTicketAssigned(
+        ticket_link,
+        newTicket.number,
+        teamName,
+        orgName,
+        newTicket.priority,
+      ),
+    };
+    try {
+      sendAWSEmail(msg);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
+    }
   }
 }
 
@@ -275,13 +373,30 @@ export async function updateTicket(
   userId: string,
   input: UpdateTicketInput,
 ) {
+  let updateData;
+
+  if (input.assignedToId) {
+    let assignedTo = {
+      assignedTo: {
+        connect: {
+          id: input.assignedToId,
+        },
+      },
+    };
+    updateData = {
+      ...assignedTo,
+    };
+  } else {
+    updateData = {
+      ...input,
+    };
+  }
+
   const updatedTicket = await prisma.ticket.update({
     where: {
       id: ticketId,
     },
-    data: {
-      ...input,
-    },
+    data: updateData,
   });
 
   if (updatedTicket) {
@@ -290,9 +405,19 @@ export async function updateTicket(
     let ticketData = {
       ticketId: updatedTicket.id,
       createdBy: userId,
-      msg: `Note: Updated the ticket ${updatedProperties}.`,
+      msg: input.assignedToName
+        ? `Note: Ticket re-assigned to ${input.assignedToName}.`
+        : input.priority
+          ? `Note: Ticket priority changed to ${input.priority}.`
+          : input.deadline
+            ? `Note: Deadline changed to ${formatDateT1(input.deadline)}.`
+            : `Note: Updated the ticket ${updatedProperties}.`,
     };
     createComment(ticketData);
+  }
+
+  if (input.assignedToId) {
+    sendTicketAssignEmail(updatedTicket);
   }
 
   return updatedTicket;

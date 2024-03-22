@@ -10,6 +10,7 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
     whatsappSurvey: { count: { max: count }, active: true },
     whatsappCampaign: { count: { max: count }, active: true },
     reputationManagement: { count: { max: count }, active: true },
+    ticket: { count: { max: count }, active: true },
   };
 }
 export const SampleSubscriptionFeatures = getSampleSubscriptionFeatures(10);

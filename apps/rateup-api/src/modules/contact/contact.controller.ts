@@ -1,11 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
   ByContactIdParams,
-  CreateContactInput,
-  GetContactQuery,
   createMultipleContactInput,
   deleteManyContactsInput,
   updateContactSchema,
+  ContactCore,
 } from "./contact.schema";
 import { log } from "../../utils/logger";
 import {
@@ -13,21 +12,19 @@ import {
   createMultipleContacts,
   deleteContactById,
   deleteManyContacts,
-  getContactById,
   getContactsByOrgId,
-  getContactsByTeamId,
+  getContactsNotInWaContact,
   updateContactById,
 } from "./contact.service";
-import { ByTeamIdParams } from "../team/team.schema";
-import { verifyRole } from "../../utils/auth";
-import { Prisma, Role } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export async function createContactHandler(
-  request: FastifyRequest<{ Body: CreateContactInput }>,
+  request: FastifyRequest<{ Body: ContactCore }>,
   reply: FastifyReply,
 ) {
   try {
-    const contact = await createContact(request.body);
+    const { orgId } = request.user;
+    const contact = await createContact({ ...request.body, orgId });
     reply.code(201).send(contact);
   } catch (error) {
     log.error(error);
@@ -46,19 +43,19 @@ export async function createMultipleContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const existingcontacts = await getContactsByOrgId(request.user.orgId);
-    const contacts = request.body;
-    const newContacts = contacts.filter(
-      (c) =>
-        !existingcontacts.some(
-          (contact) =>
-            contact.teamId == c.teamId &&
-            ((contact.phone && contact.phone == c.phone) ||
-              (contact.email && contact.email == c.email)),
-        ),
-    );
-    if (!newContacts.length) throw new Error("Contacts already Exist");
-    const res = await createMultipleContacts(newContacts);
+    const newContacts = request.body;
+    const { orgId } = request.user;
+    const existingcontacts = await getContactsByOrgId(orgId);
+    const filterNewContacts = newContacts.filter((contact) => {
+      return !existingcontacts.some(
+        (existContact) =>
+          existContact.email === contact.email ||
+          existContact.phone === contact.phone,
+      );
+    });
+    if (!filterNewContacts.length)
+      throw new Error("All contacts already exist");
+    const res = await createMultipleContacts(newContacts, orgId);
     reply.code(201).send(res);
   } catch (error) {
     log.error(error);
@@ -66,25 +63,28 @@ export async function createMultipleContactsHandler(
   }
 }
 
-export async function getContactsHandler(
-  request: FastifyRequest<{ Querystring: GetContactQuery }>,
+export async function getAllContactsHandler(
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    let res = null;
-    if (request.query.contactId) {
-      // get individual contact group by id
-      res = await getContactById(request.query.contactId);
-    } else if (request.query.teamId) {
-      // get all contact groups for a specific team
-      res = await getContactsByTeamId(request.query.teamId);
-    } else {
-      // get all contact groups for all teams
-      if (verifyRole(request, reply, Role.SUPER_ADMIN)) {
-        res = await getContactsByOrgId(request.user.orgId);
-      }
-    }
-    reply.code(200).send(res);
+    const { orgId } = request.user;
+    const contacts = await getContactsByOrgId(orgId);
+    return reply.code(200).send(contacts);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getContactsNotInWaContactHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const contacts = await getContactsNotInWaContact(orgId);
+    return reply.code(200).send(contacts);
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });

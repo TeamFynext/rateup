@@ -1,74 +1,119 @@
-import { FastifyRequest, FastifyReply } from "fastify";
-import { createTemplate, deleteTemplate, deleteTemplateFromDb, getDbTemplate, getTemplatesByOrgId, getUnregisteredTemplates, registerTemplatesInDb, saveTemplate, syncTemplates, updateTemplate } from "./wa_templates.service";
-import { CreateWaTemplateInput, ByTemplateIdParamsSchema, WaTemplateFormatted, RegisterTemplatesInDbBodySchema } from "./wa_templates.schema";
-import { generateTemplate } from "./wa_templates.utils";
-import { log } from "../../../utils/logger";
-import Session from "supertokens-node/recipe/session";
-import { getOrgIdAndRole } from "../../user/user.service";
 import { Role } from "@prisma/client";
+import { FastifyReply, FastifyRequest } from "fastify";
+import { log } from "../../../utils/logger";
+import { getOrgIdAndRole } from "../../user/user.service";
+import {
+  ByTemplateIdParamsSchema,
+  CreateWaTemplateInput,
+  RegisterTemplatesInDbBodySchema,
+  WaTemplateFormatted,
+} from "./wa_templates.schema";
+import {
+  createTemplate,
+  deleteTemplate,
+  deleteTemplateFromDb,
+  getDbTemplate,
+  getTemplateByIdAndOrgId,
+  getTemplatesByOrgId,
+  getUnregisteredTemplates,
+  registerTemplatesInDb,
+  saveTemplate,
+  syncTemplates,
+  updateTemplate,
+  uploadFileToWaTemplate,
+} from "./wa_templates.service";
+import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { orgId } = await getOrgIdAndRole({ id: request.userId });
   const templates = await getTemplatesByOrgId(orgId);
   reply.code(200).send(templates);
 }
 
+export async function getTemplateByIdHandler(
+  request: FastifyRequest<{
+    Params: ByTemplateIdParamsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  const { orgId } = await getOrgIdAndRole({ id: request.userId });
+  const templates = await getTemplateByIdAndOrgId(
+    request.params.templateId,
+    orgId,
+  );
+  reply.code(200).send(templates);
+}
+
 export async function createTemplateHandler(
   request: FastifyRequest<{
-    Body: CreateWaTemplateInput
+    Body: CreateWaTemplateInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId })
+    const { orgId } = await getOrgIdAndRole({ id: request.userId });
     // TODO: restrict access to super admin and admin?
 
-    const formattedTemplate = generateTemplate(request.body)
+    const formattedTemplate = generateTemplate(request.body);
     const template = await createTemplate(orgId, formattedTemplate);
-    await saveTemplate(template, request.body.acceptButton, orgId)
+    await saveTemplate(template, request.body.acceptButton, orgId);
     reply.code(200);
   } catch (e) {
-    log.error("Error creating template \n%o", e)
-    reply.code(500);
+    log.error("Error creating template \n%o", e?.response?.data);
+    reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
   }
 }
 
 export async function updateTemplateHandler(
   request: FastifyRequest<{
-    Params: ByTemplateIdParamsSchema,
-    Body: CreateWaTemplateInput
+    Params: ByTemplateIdParamsSchema;
+    Body: CreateWaTemplateInput;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
-  const { orgId } = await getOrgIdAndRole({ id: request.userId });
-  const template = await getDbTemplate(request.params.templateId);
+  try {
+    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const template = await getDbTemplate(request.params.templateId);
 
-  if (!template) {
-    reply.status(404);
-    log.trace("Template not found")
-    return;
-  } else if (template.orgId !== orgId) {
-    log.trace("User %s tried to update template %s from another org", request.userId, request.params.templateId)
-    reply.status(403);
-    return;
-  }
+    if (!template) {
+      reply.status(404);
+      log.trace("Template not found");
+      return;
+    } else if (template.orgId !== orgId) {
+      log.trace(
+        "User %s tried to update template %s from another org",
+        request.userId,
+        request.params.templateId,
+      );
+      reply.status(403);
+      return;
+    }
 
-  const updatedTemplate = await updateTemplate(request.params.templateId, request.body);
-  if (updatedTemplate) {
-    reply.status(200).send(updatedTemplate)
-  } else {
-    reply.status(500)
+    const updatedTemplate = await updateTemplate(
+      request.params.templateId,
+      request.body,
+    );
+    if (updatedTemplate) {
+      reply.status(200).send(updatedTemplate);
+    } else {
+      reply
+        .status(400)
+        .send("You can only edit an active template once in 24 hours.");
+    }
+  } catch (e) {
+    log.error("Error updating template \n%o", e?.response?.data);
+    reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
   }
 }
 
 export async function deleteTemplateHandler(
   request: FastifyRequest<{
-    Params: ByTemplateIdParamsSchema
+    Params: ByTemplateIdParamsSchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { templateId } = request.params;
   try {
@@ -87,13 +132,13 @@ export async function deleteTemplateHandler(
       reply.code(500);
     }
   } catch (e) {
-    reply.code(500)
+    reply.code(500);
   }
 }
 
 export async function syncTemplatesHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { orgId, role } = await getOrgIdAndRole({ id: request.userId });
 
@@ -111,30 +156,54 @@ export async function syncTemplatesHandler(
 
 export async function getUnregisteredTemplatesHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
     const unregisteredTemplates = await getUnregisteredTemplates(orgId);
     reply.code(200).send(unregisteredTemplates);
   } catch (e) {
-    log.error("Error getting unregistered templates \n%o", e)
+    log.error("Error getting unregistered templates \n%o", e);
     reply.code(500);
   }
 }
 
 export async function registerTemplatesInDbHandler(
   request: FastifyRequest<{
-    Body: RegisterTemplatesInDbBodySchema
+    Body: RegisterTemplatesInDbBodySchema;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    await registerTemplatesInDb(request.body, orgId)
+    await registerTemplatesInDb(request.body, orgId);
     reply.code(200);
   } catch (e) {
-    log.error("Error registering templates \n%o", e)
+    log.error("Error registering templates \n%o", e);
     reply.code(500);
+  }
+}
+
+export async function uploadHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const data = await request.file();
+    if (!waAllowedMimeTypes.includes(data?.mimetype) || data.type !== "file")
+      return reply
+        .code(400)
+        .send({ message: "This file type is not permitted." });
+    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const size: any = data.fields.size;
+    const id = await uploadFileToWaTemplate(data, size?.value, orgId);
+    if (id === "error") return reply.code(400).send("image upload failed");
+    return reply.code(200).send({ id: id });
+  } catch (e) {
+    const error =
+      typeof e?.message === "string" ? e?.message : e?.response?.data;
+    log.error("Error uploading image to whatsapp templates \n%o", error);
+
+    reply.code(500).send(error);
   }
 }

@@ -12,6 +12,11 @@ import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
 import xlsx from "node-xlsx";
 import { autoGenerateTicket } from "../ticket/ticket.service";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
@@ -33,7 +38,7 @@ export async function getAllResponses(
   surveyId: string,
   teamIds: Array<string>,
 ) {
-  const responses = await prisma.surveyTeamMap.findMany({
+  const responsesQuery = await prisma.surveyTeamMap.findMany({
     where: {
       surveyId: surveyId,
       teamId: {
@@ -67,6 +72,11 @@ export async function getAllResponses(
           responses: true,
           createdAt: true,
           encryptedResponses: true,
+          surveyTeamMap: {
+            select: {
+              teamId: true,
+            },
+          },
           Ticket: {
             select: {
               id: true,
@@ -76,7 +86,18 @@ export async function getAllResponses(
       },
     },
   });
-  return responses;
+
+  let responseData = responsesQuery.map(({ responses, ...rest }) => {
+    return {
+      ...rest,
+      responses: responses.map(({ surveyTeamMap, ...restD }) => ({
+        ...restD,
+        teamId: surveyTeamMap.teamId,
+      })),
+    };
+  });
+
+  return responseData;
 }
 
 export async function downloadExcelResponse(
@@ -84,6 +105,7 @@ export async function downloadExcelResponse(
   questions,
   defaultLanguage,
   visibleColumn = [],
+  tz = "Asia/Calcutta",
 ) {
   const responses = allResponses && allResponses[0].responses;
   const filteredSecondArray = questions.filter((item) =>
@@ -126,7 +148,9 @@ export async function downloadExcelResponse(
               break;
             }
             case QuestionType.Date: {
-              responseValue = dayjs(responseValue).format("DD-MM-YYYY");
+              responseValue = dayjs(responseValue)
+                .tz(tz)
+                .format("DD-MM-YYYY hh:mm A");
               break;
             }
             case QuestionType.PCQ: {
@@ -151,7 +175,10 @@ export async function downloadExcelResponse(
             if (ChoiceTypeQuestions.includes(responseType)) {
               responseValue = Array.isArray(responseValue)
                 ? responseValue?.map((res) => res.value).join(", ")
-                : responseValue?.value;
+                : responseType == QuestionType.MCQ
+                  ? responseValue?.value ||
+                    `${question?.features?.[defaultLanguage]?.other?.title}:${responseValue?.other}`
+                  : responseValue?.value;
             } else if (typeof responseValue === "object") {
               responseValue = responseValue?.value
                 ? Object.values(responseValue?.value).join(", ")
@@ -159,9 +186,9 @@ export async function downloadExcelResponse(
             }
           }
         } else if (question === createdAt) {
-          const createdAtFormatted = dayjs(response.createdAt).format(
-            "DD-MM-YYYY hh:mm A",
-          );
+          const createdAtFormatted = dayjs(response.createdAt)
+            .tz(tz)
+            .format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
         } else {
           responseValue = "";
@@ -179,9 +206,11 @@ export async function downloadExcelResponse(
       options.push({ width: width > 40 ? 40 : width });
     });
     let fileName = allResponses?.[0].survey?.title ?? "download";
+    const truncatedName =
+      fileName.length > 30 ? fileName.substring(0, 30) : fileName;
     let buffer = xlsx.build([
       {
-        name: fileName,
+        name: truncatedName,
         data: [headerArray, ...bodyArray],
         options: {
           "!cols": options,
@@ -189,7 +218,7 @@ export async function downloadExcelResponse(
       },
     ]);
 
-    return [fileName, buffer];
+    return [truncatedName, buffer];
   }
 }
 function getMaxContentWidth(data, columnIndex: number) {
@@ -534,7 +563,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           else
             resObj[qstnTitle] = getFormattedResponse(
               res.response[res.type],
-              res.type,
+              qstn,
+              lang,
             );
         });
         responseForSheet.push(resObj);
@@ -654,7 +684,7 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
         );
       else
         resObj[QIndex + "_" + qstn.title[response.language].trim()] =
-          getFormattedResponse(res.response[res.type], res.type);
+          getFormattedResponse(res.response[res.type], qstn, response.language);
     });
     const newRow = await sheet.addRow(resObj);
     const dateColumnIndex = sheet.headerValues.indexOf("Created At");
@@ -668,16 +698,21 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
   return spreadSheetId;
 }
 
-export function getFormattedResponse(response, type) {
+export function getFormattedResponse(response, qstn, language) {
   let formattedResponse = "";
-  switch (type) {
+  switch (qstn?.type) {
     case QuestionType.Address:
       formattedResponse = Object.entries(response)
         .map(([key, value]) => `${key}: ${String(value)}`)
         .join(", ");
       break;
-    case QuestionType.CustomNPS:
     case QuestionType.MCQ:
+      formattedResponse =
+        response?.value?.trim() ||
+        `${qstn?.features?.[language]?.other
+          ?.title}: ${response?.other?.trim()}`;
+      break;
+    case QuestionType.CustomNPS:
     case QuestionType.DDSS:
       formattedResponse = response.value.trim();
       break;

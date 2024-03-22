@@ -1,7 +1,22 @@
 export const formatDateT1 = (date) => {
-  return date.toLocaleDateString("en-US", {
+  const dateString = new Date(date);
+
+  return dateString.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 }; // Output:  February 27, 2024
+
+export const formatDateT2 = (dateString) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  };
+  return date.toLocaleString("en-US", options);
+}; // March 31, 2024 at 12:00 AM.
