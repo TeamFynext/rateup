@@ -6,7 +6,6 @@ import {
   ICreateGoogleUser,
   IUpdateProfile,
   IUpdateProfilePhoto,
-  IUserInfoApiResponse,
   changeUserPassword,
   checkEmailExist,
   createGoogleUser,
@@ -25,7 +24,7 @@ export const useGetUserProfile = () =>
   });
 
 export const useUserInfo = () =>
-  useQuery<IUserInfoApiResponse>({
+  useQuery({
     queryKey: ["userInfoQuery"],
     queryFn: fetchUserInfo,
     notifyOnChangeProps: ["data"],

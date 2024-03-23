@@ -44,13 +44,15 @@ export interface IUserInfoApiResponse {
 }
 const PUBLICUSER_URL = "/public/user/";
 
-export const fetchUserInfo = async (): Promise<IUserInfoApiResponse> => {
-  const response = await axiosClient({
-    url: "/user/info",
-    method: "GET",
-  });
-  return response.data as IUserInfoApiResponse;
-};
+export async function fetchUserInfo() {
+  try {
+    let response: IUserInfoApiResponse = (await axiosClient.get("/user/info"))
+      .data;
+    return response as IUserInfoApiResponse;
+  } catch (e) {
+    return { error: e.response.data }; //TODO: improve error handling for react query
+  }
+}
 
 export const fetchUserProfile = () =>
   axiosClient({
