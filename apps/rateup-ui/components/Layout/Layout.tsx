@@ -1,10 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Flex, Transition } from "@mantine/core";
 import { HeaderTabs } from "./Header/Header";
-import {
-  IUserInfoApiResponse,
-  fetchUserInfo,
-} from "../../backend/user/user.api";
+import { IUserInfoApiResponse } from "../../backend/user/user.api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "../../context/UserContext";
 import { RouteParamsProvider } from "../../context/RouteParamsContext";
@@ -34,13 +31,31 @@ export default function Layout({ children }) {
     error: errorUserInfo,
     refetch,
   } = useUserInfo();
+
+  if (router.query.msg === "welcome") {
+    refetch();
+  }
+
   useEffect(() => {
-    if (userQueryData?.data) {
-      setUserInfo(userQueryData); // update localStorage
-    }
-    if (userQueryData?.data?.email && !userQueryData?.data?.orgId) {
-      if (router.query.msg !== "welcome") {
-        router.push("/signup?auth=google");
+    if (userQueryData && "data" in userQueryData) {
+      if (userQueryData?.data) {
+        setUserInfo(userQueryData); // update localStorage
+      }
+      if (userQueryData?.data?.email && !userQueryData?.data?.orgId) {
+        if (router.query.msg !== "welcome") {
+          router.push("/signup?auth=google");
+        }
+      }
+    } else if (userQueryData && "error" in userQueryData) {
+      if (userQueryData?.error?.message === "Google User missing in Rateup") {
+        console.error("Google User missing in Rateup");
+        if (router.query.msg !== "welcome") {
+          // welcome is to avoid repeatation of push
+          router.push("/signup?auth=google");
+        }
+      } else if (userQueryData?.error?.message === "User missing in Rateup") {
+        console.error("User missing in Rateup");
+        //TODO : handle case of email user missing signup in rateup db
       }
     }
 
