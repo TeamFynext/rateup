@@ -246,7 +246,11 @@ export function useNavBottomData() {
 
   if (isLoading || isError) return navBottomData;
 
-  if (data?.data?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG) {
+  if (
+    data &&
+    "data" in data &&
+    data?.data?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
+  ) {
     return [
       { Icon: IconTerminal2, label: "Admin", href: "/admin" },
       ...navBottomData,
