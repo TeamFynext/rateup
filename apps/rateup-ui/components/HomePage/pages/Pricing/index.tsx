@@ -126,6 +126,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             pos={"absolute"}
             bottom={"40px"}
             left={"40px"}
+            alt="image of arrow"
           />
           <Stack gap={0} fz={"clamp(14px, 12.576px + 0.238vw, 16px)"}>
             <Text

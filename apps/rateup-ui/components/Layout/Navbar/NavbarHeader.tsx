@@ -11,6 +11,7 @@ const NavbarHeader = (props: UserCardInterface) => {
         <Avatar
           src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.orgLogo}`}
           radius="sm"
+          style={{ width: "20%", height: "20%", objectFit: "cover" }}
         />
         {props.opened && (
           <div style={{ flex: 1 }}>

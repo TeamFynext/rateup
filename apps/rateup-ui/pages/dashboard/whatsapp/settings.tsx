@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Box,
-  Button,
   Center,
   CopyButton,
   Divider,
@@ -9,22 +8,24 @@ import {
   Group,
   Stack,
   Text,
-  TextInput,
-  Textarea,
   Tooltip,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconChecks, IconCopy, IconHelp } from "@tabler/icons-react";
+import { useEffect } from "react";
+import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import {
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "../../../backend/whatsapp/settings/waSettings.query";
-import { useEffect } from "react";
-import { IconChecks, IconCopy, IconHelp } from "@tabler/icons-react";
-import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
+import {
+  ContainedTextArea,
+  ContainedTextField,
+} from "../../../components/input/ContainedInput/ContainedInput";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 export default function WhatappSettings() {
   const { data: waSettings, isLoading } = useWaSettings();
   const form = useForm({
@@ -33,6 +34,14 @@ export default function WhatappSettings() {
       phoneId: "",
       accessToken: "",
       webhookPassword: "",
+      appId: "",
+    },
+    validate: {
+      businessId: isNotEmpty("BusnessId is required"),
+      phoneId: isNotEmpty("phoneId is required"),
+      accessToken: isNotEmpty("AccessToken is required"),
+      webhookPassword: isNotEmpty("Webhook Password is required"),
+      appId: isNotEmpty("AppId is required"),
     },
   });
 
@@ -64,19 +73,25 @@ export default function WhatappSettings() {
           ])}
         >
           <Stack px="md">
-            <TextInput
+            <ContainedTextField
               label="Business ID"
               placeholder="Enter your business ID"
               {...form.getInputProps("businessId")}
               required
             />
-            <TextInput
+            <ContainedTextField
               label="Phone ID"
               placeholder="Enter your phone ID"
               required
               {...form.getInputProps("phoneId")}
             />
-            <Textarea
+            <ContainedTextField
+              label="App Id"
+              placeholder="Enter your app ID"
+              required
+              {...form.getInputProps("appId")}
+            />
+            <ContainedTextArea
               label="Access Token"
               placeholder="Enter your access token"
               autosize
@@ -85,7 +100,13 @@ export default function WhatappSettings() {
               required
               {...form.getInputProps("accessToken")}
             />
-            <TextInput
+            <ContainedTextField
+              label="Webhook Password"
+              placeholder="Create a webhook password"
+              required
+              {...form.getInputProps("webhookPassword")}
+            />
+            <ContainedTextField
               label="Webhook Password"
               placeholder="Create a webhook password"
               required
@@ -116,7 +137,7 @@ export default function WhatappSettings() {
                 </ActionIcon>
               </Tooltip>
             </Group>
-            <TextInput
+            <ContainedTextField
               readOnly
               value={webhookUrl}
               rightSection={

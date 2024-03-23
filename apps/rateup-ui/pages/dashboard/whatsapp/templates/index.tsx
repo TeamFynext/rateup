@@ -1,64 +1,48 @@
 import {
-  Flex,
-  Title,
-  Menu,
-  Space,
-  SimpleGrid,
-  Paper,
-  Center,
-  Stack,
-  Text,
-  Avatar,
-  Group,
-  Button,
   ActionIcon,
+  Flex,
+  Group,
+  Menu,
+  SimpleGrid,
+  Space,
+  Text,
+  Title,
 } from "@mantine/core";
-import {
-  IconChevronDown,
-  IconPlus,
-  IconCheck,
-  IconX,
-  IconDots,
-  IconTrash,
-  IconPencil,
-} from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { useRouter } from "next/router";
+import { useState } from "react";
 import {
   useDeleteWaTemplateMutation,
   useWaTemplates,
 } from "../../../../backend/whatsapp/whatsapp.query";
-import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
-import { CreateWaTemplateModal } from "../../../../components/whatsapp/templates/CreateWaTemplateModal";
-import { useDisclosure } from "@mantine/hooks";
-import { getTimeSince } from "../../../../utils";
-import { StopPropagation } from "../../../../components/containers/StopPropagation";
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
 import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/SyncTemplates";
+import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
 import { whatsappOptions } from "../../../../utils/constants";
-import { useRouter } from "next/router";
+import { lexend500 } from "../../../../utils/fonts";
 
 export default function Template() {
-  const { data: templates, isLoading, error } = useWaTemplates();
+  const { data: templates, isPending, error } = useWaTemplates();
   const templateDeleteMutation = useDeleteWaTemplateMutation();
-  const [isCreateModalOpened, { open, close }] = useDisclosure(false);
-  const [editingItem, setEditingItem] = useState(null);
+  const [sort, setSort] = useState(true);
+
   const router = useRouter();
   if (!whatsappOptions?.includes("templates")) {
     router.push("/dashboard/whatsapp/flows");
     return;
   }
+  if (isPending) return <RateupLoader h={"100dvh"} />;
   // TODO: handle error
   function handleCreateClick() {
-    setEditingItem(null);
-    open();
+    router.push(`/dashboard/whatsapp/templates/create`);
   }
   function handleEditClick(template) {
-    setEditingItem(template);
-    open();
+    router.push(`/dashboard/whatsapp/templates/${template.id}`);
   }
-  function handleClose() {
-    close();
-    setEditingItem(null);
-  }
+  // TODO: delete template modal
   return (
     <>
       <Flex
@@ -78,20 +62,25 @@ export default function Template() {
           wrap="wrap"
           mb="md"
         >
-          <Title order={1}>Templates</Title>
-          {/* TODO: Add sync button*/}
+          <Title order={1} c={"var(--grey-color)"}>
+            All Templates
+          </Title>
+          <RateupButtonBlue
+            title="Create Templates"
+            rightIcon={<IconPlus size={"1rem"} />}
+            onClick={handleCreateClick}
+          />
         </Flex>
 
         <Flex
           mih={50}
-          gap="md"
+          gap="4"
           justify="flex-start"
           align="flex-start"
           direction="row"
           wrap="wrap"
         >
-          <SyncTemplatesButton />
-          <Menu shadow="md" width={200}>
+          {/* <Menu shadow="md" withArrow>
             <Menu.Target>
               <Button
                 variant="subtle"
@@ -111,28 +100,24 @@ export default function Template() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
+          <RateupButtonPrimary
+            onClick={() => setSort(!sort)}
+            title={"Sort"}
+            variant="subtle"
+            color="black"
+            sx={{
+              fontSize: "15px",
+              fontFamily: lexend400.style.fontFamily,
+            }}
+            rightIcon={<IconChevronDown size="1rem" />}
+          /> */}
+          <SyncTemplatesButton />
         </Flex>
       </Flex>
 
       <Space h="xl" />
 
-      <SimpleGrid spacing={"lg"} cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}>
-        <Paper
-          p="md"
-          shadow="lg"
-          radius="lg"
-          style={{ cursor: "pointer" }}
-          onClick={handleCreateClick}
-        >
-          <Center h="100%">
-            <Stack align="center">
-              <IconPlus size={36} />
-              <Text size="xl" fw={700}>
-                Add Template
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
+      <SimpleGrid spacing={"lg"} cols={{ base: 1, sm: 2, lg: 3, xl: 3 }}>
         {templates &&
           templates.map((t) => (
             <TemplateCard
@@ -144,62 +129,46 @@ export default function Template() {
             />
           ))}
       </SimpleGrid>
-      <CreateWaTemplateModal
-        opened={isCreateModalOpened}
-        onClose={handleClose}
-        editingItem={editingItem}
-      />
     </>
   );
 }
 
 function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
-  const [timeSince, setTimeSince] = useState("");
-
-  // TODO: create custom hook for this?
-  useEffect(() => {
-    setTimeSince(getTimeSince(template.createdAt));
-    const timeoutID = setInterval(
-      () => setTimeSince(getTimeSince(template.createdAt)),
-      5000,
-    );
-    return () => clearInterval(timeoutID);
-  }, []);
-
   return (
     <>
-      <Paper
-        p="md"
-        shadow="lg"
-        withBorder
-        radius="lg"
-        style={{ cursor: "pointer" }}
-        onClick={onClick}
-      >
+      <PaperLayout hoveractive={true} onClick={onClick}>
         <Flex justify={"space-between"} align={"center"}>
-          <Text mr={"sm"} truncate size="xl" fw={700}>
+          <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>
             {template.data.name}
           </Text>
-          <StopPropagation>
-            <TemplateMenu
-              template={template}
-              deleteMutation={deleteMutation}
-              onEditClick={onEditClick}
-            />
-          </StopPropagation>
+          <Group>
+            {/* <ActionIcon variant="transparent" c={"var(--light-grey-color-5)"}>
+              <IconCopy />
+            </ActionIcon> */}
+            <ActionIcon
+              variant="transparent"
+              c={"var(--light-grey-color-5)"}
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteMutation.mutate(template.id);
+              }}
+            >
+              <IconTrash />
+            </ActionIcon>
+          </Group>
         </Flex>
-        <Group align={"center"} mt="sm" gap="xs">
-          <Avatar radius={"xl"} />
-          <Text size="sm" c="dimmed">
-            Created {timeSince}
-          </Text>
-        </Group>
+        <WaTemplateStatusBadge status={template.data.category} defaultType />
+        <Text c={"var(--light-grey-color-5)"} tt={"capitalize"}>
+          Language: {template.data.language}
+        </Text>
         <Space h="xl" />
-        <Space h="lg" />
-        <Group>
+        <Group justify="space-between">
+          <Text c={"var(--grey-color)"} ff={lexend500.style.fontFamily}>
+            {dayjs(template.createdAt).format("DD/MM/YYYY")}
+          </Text>
           <WaTemplateStatusBadge status={template.data.status} />
         </Group>
-      </Paper>
+      </PaperLayout>
     </>
   );
 }
@@ -208,7 +177,7 @@ function TemplateMenu({ template, deleteMutation, onEditClick }) {
   return (
     <Menu width={200}>
       <Menu.Target>
-        <ActionIcon>
+        <ActionIcon variant="transparent">
           <IconDots />
         </ActionIcon>
       </Menu.Target>

@@ -162,12 +162,16 @@ const OrgSettings = () => {
           p="lg"
           miw={"300px"}
         >
-          <Paper withBorder p={5} radius="50%" style={{ borderWidth: 3 }}>
+          <Paper withBorder p={5} radius="5%" style={{ borderWidth: 3 }}>
             <Avatar
               src={avatarSrc}
               alt={"Profile Picture"}
-              radius="50%"
-              size={200}
+              radius="5%"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
             />
           </Paper>
           <Group>

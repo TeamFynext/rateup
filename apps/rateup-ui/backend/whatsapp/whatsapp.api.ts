@@ -27,6 +27,11 @@ export const getWaTemplates = async () => {
   return res.data as WaTemplate[];
 };
 
+export const getWaTemplateById = async (id: string) => {
+  const res = await axiosClient.get(`${TEMPLATES_URL}/${id}`);
+  return res.data;
+};
+
 export const createWaTemplate = async (templateData: any) => {
   return axiosClient.post(`${TEMPLATES_URL}`, templateData);
 };
@@ -49,4 +54,28 @@ export const registerTemplates = async (
 };
 export async function tokenizeIp() {
   return (await axiosClient.post(`${REDIRECT_URL}`)).data;
+}
+
+type imageResponse = {
+  id: string;
+};
+export async function uploadTemplateMedia(file: File) {
+  const formData = new FormData();
+  formData.append("size", file.size?.toString());
+  formData.append("file", file);
+  try {
+    const response = await axiosClient.post(
+      `${TEMPLATES_URL}/upload`,
+      formData,
+      {
+        timeout: 25000,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response?.data as imageResponse;
+  } catch (error) {
+    throw Error(error?.response?.data);
+  }
 }

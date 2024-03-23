@@ -54,6 +54,7 @@
     "dom-to-image-more": "^3.2.0",
     "embla-carousel-autoplay": "^7.1.0",
     "embla-carousel-react": "^8.0.0",
+    "emoji-picker-react": "^4.8.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^10.16.4",
     "fs": "^0.0.1-security",

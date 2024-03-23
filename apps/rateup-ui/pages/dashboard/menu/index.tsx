@@ -68,7 +68,7 @@ export default function MenuPage() {
       <SimpleGrid
         p={"0.875rem"}
         spacing={"lg"}
-        cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
+        cols={{ base: 1, xs: 1, sm: 2, md: 3, lg: 3, xl: 3 }}
         style={{ overflow: "auto" }}
       >
         <SelectedTeamContext.Provider

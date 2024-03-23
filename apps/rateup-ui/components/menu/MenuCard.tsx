@@ -37,9 +37,6 @@ export function MenuCard({
 
   return (
     <PaperLayout
-      p="md"
-      shadow="lg"
-      radius="lg"
       mih={"175px"}
       hoveractive={true}
       onClick={() => {

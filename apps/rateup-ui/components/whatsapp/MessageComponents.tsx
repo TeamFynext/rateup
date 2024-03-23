@@ -1,8 +1,8 @@
 import {
   ActionIcon,
   Box,
-  BoxComponentProps,
   Container,
+  Flex,
   Group,
   Image,
   MantineStyleProp,
@@ -11,8 +11,14 @@ import {
   TextInput,
   useMantineTheme,
 } from "@mantine/core";
+import {
+  IconCamera,
+  IconList,
+  IconMicrophone,
+  IconNote,
+  IconPlus,
+} from "@tabler/icons-react";
 import classes from "./Message.module.css";
-import { IconList, IconMoodHappy, IconSend } from "@tabler/icons-react";
 export interface ResponseMessageContainerProps {
   children: React.ReactNode;
   style?: MantineStyleProp;
@@ -130,20 +136,37 @@ export function WaListButton({
 
 export function SendMessageMock() {
   return (
-    <Group p="sm" wrap="nowrap" bg="white">
-      <ActionIcon variant="transparent" c="dimmed">
-        <IconMoodHappy />
-      </ActionIcon>
-      <TextInput
-        radius={"md"}
-        placeholder="Type a message"
-        style={{
-          flexGrow: 1,
-        }}
-      />
-      <ActionIcon variant="transparent" c="dimmed">
-        <IconSend />
-      </ActionIcon>
+    <Group
+      p="2px"
+      wrap="nowrap"
+      bg={"var(--wa-gray)"}
+      style={{
+        borderRadius: "0px 0px 12px 12px",
+      }}
+      gap={0}
+    >
+      <Flex mb={"md"}>
+        <ActionIcon variant="transparent" c="var(--wa-blue)">
+          <IconPlus size={15} />
+        </ActionIcon>
+        <TextInput
+          radius={"md"}
+          size="20px"
+          mt={4}
+          readOnly
+          rightSection={
+            <ActionIcon variant="transparent" c="var(--wa-blue)">
+              <IconNote size={15} />
+            </ActionIcon>
+          }
+        />
+        <ActionIcon variant="transparent" c="var(--wa-blue)">
+          <IconCamera size={15} />
+        </ActionIcon>
+        <ActionIcon variant="transparent" c="var(--wa-blue)">
+          <IconMicrophone size={15} />
+        </ActionIcon>
+      </Flex>
     </Group>
   );
 }

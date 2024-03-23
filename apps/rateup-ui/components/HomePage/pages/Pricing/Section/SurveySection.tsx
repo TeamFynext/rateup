@@ -12,14 +12,16 @@ export const SurveySection = ({
     ?.filter((item) => !item?.name?.includes("Menu"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
 
-  surveyPlan?.push({
-    displayName: "Enterprise",
-    paymentPlan: {
-      amount: "Lets Talk!",
-      currency: "",
-      period: "",
-    },
-  });
+  if (surveyPlan?.length > 0) {
+    surveyPlan?.push({
+      displayName: "Enterprise",
+      paymentPlan: {
+        amount: "Lets Talk!",
+        currency: "",
+        period: "",
+      },
+    });
+  }
   const inversePeriod =
     surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 

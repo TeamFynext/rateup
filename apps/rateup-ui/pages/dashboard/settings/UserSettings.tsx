@@ -205,7 +205,7 @@ const ProfileSettings = () => {
         imageName={selectedImage.name}
         handleCropImageSave={handleCropImageSave}
         image={selectedImage.url}
-        aspect={4 / 3}
+        aspect={1}
       />
       <Title order={2}>User Settings</Title>
       <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
@@ -218,7 +218,12 @@ const ProfileSettings = () => {
           p="lg"
           miw={"300px"}
         >
-          <Paper withBorder p={5} radius="50%" style={{ borderWidth: 3 }}>
+          <Paper
+            withBorder
+            p={5}
+            radius="50%"
+            style={{ borderWidth: 3, objectFit: "cover" }}
+          >
             <Avatar
               src={avatarSrc}
               alt={"Profile Picture"}

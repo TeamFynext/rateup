@@ -141,3 +141,16 @@ export const SAVE_HOTKEY = "mod+s";
 export const COORDINATESX = ["LEFT", "CENTER", "RIGHT"];
 export const COORDINATESY = ["TOP", "MIDDLE", "BOTTOM", "DEFAULT"];
 export const whatsappOptions = ["templates"];
+export const WHATSAPP_TEMPLATE_CATEGORY = [
+  "MARKETING",
+  "UTILITY",
+  "AUTHENTICATION",
+];
+export const WHATSAPP_TEMPLATE_BROADCAST_TYPE = [
+  "NONE",
+  "TEXT",
+  "IMAGE",
+  "VIDEO",
+  "DOCUMENT",
+  "LOCATION",
+];
