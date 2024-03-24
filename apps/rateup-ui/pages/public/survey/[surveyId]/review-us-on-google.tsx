@@ -21,6 +21,7 @@ export async function getServerSideProps(context) {
   const orgLogoUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${orgLogo}`;
   propsToPass.googleLink = googleLink;
   propsToPass.reviews = reviews;
+  // TODO: add surveyTeamMapId
   propsToPass.orgLogoUrl =
     orgLogo && orgLogo !== "REMOVED_PHOTO" ? orgLogoUrl : null;
 
@@ -29,12 +30,18 @@ export async function getServerSideProps(context) {
   };
 }
 
-export function ReviewUsOnGoogle({ googleLink, reviews, orgLogoUrl }) {
+export function ReviewUsOnGoogle({
+  googleLink,
+  reviews,
+  orgLogoUrl,
+  surveyTeamMapId,
+}) {
   return (
     <GoogleReview
       googleLink={googleLink}
       reviewSuggestions={reviews}
       orgLogoUrl={orgLogoUrl}
+      surveyTeamMapId={surveyTeamMapId}
     />
   );
 }

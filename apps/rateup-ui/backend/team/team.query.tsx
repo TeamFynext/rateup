@@ -4,6 +4,7 @@ import {
   createTeam,
   deleteInviteById,
   editTeam,
+  getSurveyLanguagesFromTeam,
   getTeamMembersFromInvitation,
   getTeamsByUser,
   resendInviteTeamMember,
@@ -191,5 +192,13 @@ export function useDeleteInviteMutation(teamId) {
         });
       close();
     },
+  });
+}
+
+export function useSurveyLanguagesFromTeam(teamId: string) {
+  return useQuery({
+    queryKey: ["surveyLanguages", teamId],
+    queryFn: () => getSurveyLanguagesFromTeam(teamId),
+    enabled: !!teamId,
   });
 }

@@ -95,3 +95,8 @@ export const getTeamSurveys = (teamId: String) =>
     url: `/survey/team/${teamId}`,
     method: "GET",
   });
+
+export async function getSurveyLanguagesFromTeam(teamId: string) {
+  const res = await axiosClient.get(`/team/${teamId}/survey-languages`);
+  return res.data as string[];
+}

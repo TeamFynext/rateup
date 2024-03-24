@@ -260,11 +260,11 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
       shouldShowGoogleReview
         ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
-          setIsReviewPage(true)
+          setIsReviewPage(selectedLanguage)
         : fromShortUrl
           ? router.push(`/ws/${router.query.shortId}/end`)
           : router.push(
-              `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}`,
+              `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
             );
     });
   };

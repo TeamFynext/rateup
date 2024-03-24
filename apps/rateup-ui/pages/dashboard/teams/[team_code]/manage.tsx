@@ -6,7 +6,7 @@ import { Stack, Button, Badge, Loader } from "@mantine/core";
 import { ReviewSuggestionModal } from "../../../../components/reviewSuggestion/ReviewSuggestionModal";
 import { useReviewSuggestionsCount } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 
-export default function () {
+export default function GoogleReviewSuggestionsEditorPage() {
   const router = useRouter();
   const { team_code } = router.query;
 

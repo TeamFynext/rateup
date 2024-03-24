@@ -19,9 +19,12 @@ import { lexend500 } from "../../../../utils/fonts";
 import { useDisclosure } from "@mantine/hooks";
 import RateupRedirectCard from "../../../Card/RateupRedirectCard";
 
-function GoogleReview({ googleLink, reviewSuggestions, orgLogoUrl }) {
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
+function GoogleReview({
+  googleLink,
+  reviewSuggestions,
+  orgLogoUrl,
+  surveyTeamMapId,
+}) {
   const [
     isSuggestionCopiedModalOpen,
     { open: openSuggestionCopiedModal, close: closeSuggestionCopiedModal },
@@ -33,8 +36,6 @@ function GoogleReview({ googleLink, reviewSuggestions, orgLogoUrl }) {
   const [fakeLoading, setFakeLoading] = useState(false);
   const [lastCopiedReview, setLastCopiedReview] =
     useState<ReviewSuggestion>(null);
-
-  const suggestionPRef = useRef(null);
 
   useEffect(() => {
     if (reviewSuggestions) {
@@ -62,7 +63,7 @@ function GoogleReview({ googleLink, reviewSuggestions, orgLogoUrl }) {
   }
 
   const deleteReviewMutation = useDeleteReviewSuggestionMutation(
-    null, // TODO
+    surveyTeamMapId,
     true,
   );
   // if user clicks on go to review page, delete the last copied review
@@ -76,12 +77,13 @@ function GoogleReview({ googleLink, reviewSuggestions, orgLogoUrl }) {
   }
 
   const handleCopyBtnClick = useCallback(() => {
-    const suggestionP = suggestionPRef.current;
-    if (suggestionP) {
-      navigator.clipboard.writeText(suggestionP.textContent);
+    const currentReview = shuffledArray[reviewIndex];
+    if (currentReview) {
+      navigator.clipboard.writeText(currentReview.review);
       openSuggestionCopiedModal();
+      setLastCopiedReview(currentReview);
     }
-  }, [isSuggestionCopiedModalOpen]);
+  }, [isSuggestionCopiedModalOpen, shuffledArray, reviewIndex]);
 
   return (
     <Stack mih={"100dvh"}>
@@ -135,7 +137,6 @@ function GoogleReview({ googleLink, reviewSuggestions, orgLogoUrl }) {
                       wordBreak: "break-word",
                     }}
                     className={styles["suggestion-p"]}
-                    ref={suggestionPRef}
                   >
                     {shuffledArray?.[reviewIndex]?.review}
                   </Text>

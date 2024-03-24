@@ -2,9 +2,10 @@ import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyCompo
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ReviewUsOnGoogle from "./review-us-on-google";
 import { mimeTypesForImage } from "../../../../utils/constants";
+import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -27,7 +28,14 @@ export const getServerSideProps = async (context: {
 };
 
 export default function Page({ survey, error_occured, fromShortUrl = false }) {
-  const [isReviewPage, setIsReviewPage] = useState(false);
+  // empty if its not review page, contains surveyLanguage if its review page
+  const [isReviewPage, setIsReviewPage] = useState<string>("");
+
+  const { data: gReview } = usePublicReviewSuggestions(
+    !!isReviewPage && !!survey?.surveyTeamMapId,
+    survey.surveyTeamMapId,
+    isReviewPage,
+  );
 
   useEffect(() => {
     if (error_occured) {
@@ -97,10 +105,11 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Org Icon" />
       </Head>
-      {isReviewPage ? (
+      {isReviewPage && gReview ? (
         <ReviewUsOnGoogle
-          googleLink={survey.googleLink}
-          reviews={survey.reviews}
+          googleLink={gReview.reviewLink}
+          reviews={gReview.reviews}
+          surveyTeamMapId={survey.surveyTeamMapId}
           orgLogoUrl={
             survey.orgLogo && survey.orgLogo !== "REMOVED_PHOTO"
               ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey.orgLogo}`

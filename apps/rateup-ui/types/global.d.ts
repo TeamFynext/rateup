@@ -672,6 +672,7 @@ export type ReviewSuggestion = {
   id: string;
   teamId: string;
   review: string;
+  language: string;
 };
 
 export type WaFlowJson = {

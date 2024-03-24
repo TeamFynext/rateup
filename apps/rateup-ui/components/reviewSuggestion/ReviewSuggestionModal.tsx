@@ -7,6 +7,8 @@ import {
   Flex,
   Group,
   Modal,
+  Select,
+  SelectProps,
   Space,
   Stack,
   Tabs,
@@ -21,16 +23,19 @@ import {
 } from "../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { showErrorToast } from "../../utils/notifications";
 import { ReviewSuggestion } from "../../types/global";
-import { ContainedTextArea } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedSelection,
+  ContainedTextArea,
+} from "../input/ContainedInput/ContainedInput";
 import {
   IconCheck,
   IconPencil,
-  IconPlus,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
+import { useSurveyLanguagesFromTeam } from "../../backend/team/team.query";
 
 enum ReviewSuggestionTab {
   Custom = "custom",
@@ -123,6 +128,7 @@ const expectedJsonFormat = `[
 
 function ImportJsonPanel({ handleClose, teamId }) {
   const [file, setFile] = useState<File | null>(null);
+  const [language, setLanguage] = useState("");
 
   useEffect(() => {
     if (!file) {
@@ -163,10 +169,23 @@ function ImportJsonPanel({ handleClose, teamId }) {
     createMutation.mutate({
       reviewSuggestions: reviews,
       teamId: teamId,
+      language: language,
     });
   }
   return (
     <Stack>
+      <TeamSurveyLanguageSelector
+        value={language}
+        onChange={setLanguage}
+        teamId={teamId}
+        w={150}
+        styles={{
+          input: {
+            fontSize: "0.8rem",
+            borderRadius: "8px",
+          },
+        }}
+      />
       <Textarea
         label="Paste JSON"
         placeholder={expectedJsonFormat}
@@ -225,18 +244,21 @@ interface ReviewCardProps {
 }
 function ReviewCard({
   index,
-  review: { review, id, teamId },
+  review: { review, id, teamId, language: initialLanguage },
   isEditing,
   setEditingItem,
 }: ReviewCardProps) {
   const [value, setValue] = useState(review);
+  const [language, setLanguage] = useState(initialLanguage);
   const updateMutation = useUpdateReviewSuggestionMutation(teamId);
   const deleteMutation = useDeleteReviewSuggestionMutation(teamId);
+
   function handleUpdate() {
     if (value !== review) {
       updateMutation.mutate(
         {
           review: value,
+          language: language,
           id,
         },
         {
@@ -266,6 +288,18 @@ function ReviewCard({
               autoFocus
               style={{
                 flexGrow: 1,
+              }}
+            />
+            <TeamSurveyLanguageSelector
+              value={language}
+              onChange={setLanguage}
+              teamId={teamId}
+              w={150}
+              styles={{
+                input: {
+                  fontSize: "0.8rem",
+                  borderRadius: "8px",
+                },
               }}
             />
             <ActionIcon
@@ -312,11 +346,13 @@ function ReviewCard({
 function CreateReviewSuggestionComponent({ teamId }) {
   const createReviewMutation = useCreateReviewSuggestionsMutation(teamId);
   const [newReview, setNewReview] = useState("");
+  const [language, setLanguage] = useState("");
 
   function handleAddReview() {
     createReviewMutation.mutate({
       reviewSuggestions: [newReview],
       teamId,
+      language: language,
     });
     setNewReview("");
   }
@@ -346,16 +382,60 @@ function CreateReviewSuggestionComponent({ teamId }) {
         value={newReview}
         onChange={(e) => setNewReview(e.currentTarget.value)}
       />
+      <TeamSurveyLanguageSelector
+        value={language}
+        onChange={setLanguage}
+        teamId={teamId}
+        w={150}
+        styles={{
+          input: {
+            fontSize: "0.8rem",
+            borderRadius: "8px",
+          },
+        }}
+      />
+
       <Button
         style={{
           height: "inherit",
           minWidth: "80px",
         }}
-        radius={"xl"}
+        radius={"8px"}
         onClick={handleAddReview}
+        h={45}
       >
         Add
       </Button>
     </Flex>
+  );
+}
+
+interface TeamSurveyLanguageSelectorProps extends SelectProps {
+  teamId: string;
+  value?: string;
+  onChange?: (value: string) => void;
+}
+export function TeamSurveyLanguageSelector({
+  teamId,
+  value,
+  onChange,
+  ...props
+}: TeamSurveyLanguageSelectorProps) {
+  const { data: languages } = useSurveyLanguagesFromTeam(teamId);
+
+  useEffect(() => {
+    if (!value && languages?.length > 0) {
+      onChange(languages[0]);
+    }
+  }, [languages]);
+
+  return (
+    <ContainedSelection
+      data={languages}
+      value={value}
+      onChange={onChange}
+      placeholder="Select language"
+      {...props}
+    />
   );
 }

@@ -15,11 +15,15 @@ export const useReviewSuggestions = (enabled: boolean, teamId: string) =>
     queryKey: ["reviewSuggestion", teamId],
     queryFn: () => getReviewsByTeamId(teamId),
   });
-export const usePublicReviewSuggestions = (surveyTeamMapId: string) =>
+export const usePublicReviewSuggestions = (
+  enabled: boolean,
+  surveyTeamMapId: string,
+  language: string,
+) =>
   useQuery({
-    enabled: !!surveyTeamMapId,
+    enabled: !!enabled,
     queryKey: ["reviewSuggestion", surveyTeamMapId],
-    queryFn: () => getPublicReviewsBySurveyTeamMapId(surveyTeamMapId),
+    queryFn: () => getPublicReviewsBySurveyTeamMapId(surveyTeamMapId, language),
   });
 export const useReviewSuggestionsCount = (enabled: boolean, teamId: string) =>
   useQuery({

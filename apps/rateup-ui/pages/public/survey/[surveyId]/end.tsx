@@ -26,9 +26,10 @@ import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyThe
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
+
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
-  const { msg } = context.query;
+  const { msg, language } = context.query;
 
   let propsToPass: any = {
     enableGoogleReview: false,
@@ -36,7 +37,7 @@ export async function getServerSideProps(context) {
   if (msg == "thanks") {
     const [googleLink, reviews, survey] = await Promise.all([
       getPublicSurveyGoogleLink(surveyId),
-      getPublicReviewsBySurveyTeamMapId(surveyId),
+      getPublicReviewsBySurveyTeamMapId(surveyId, language),
       getPublicSurvey(surveyId),
     ]);
     propsToPass.googleLink = googleLink;
@@ -240,6 +241,7 @@ export default function ThankYou({
                   googleLink={googleLink}
                   reviewSuggestions={reviews}
                   orgLogoUrl={surveyThemeData?.thankyouTheme?.logo?.logo}
+                  surveyTeamMapId={surveyId}
                 />
               )}
 
