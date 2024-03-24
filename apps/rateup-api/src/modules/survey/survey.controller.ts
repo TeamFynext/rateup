@@ -10,6 +10,7 @@ import {
   getSurveyById,
   getSurveyBylandingId,
   getSurveyLandingByUserId,
+  getSurveyLanguagesFromTeamId,
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
   getSurveysByTeam,
@@ -38,7 +39,7 @@ import {
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { getLandingPageById } from "../landingPage/landingpage.service";
-import { BySurveyTeamMapIdParams } from "../team/team.schema";
+import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
 import { SurveyType, WaFlowStatus } from "../../types/enums";
@@ -536,4 +537,12 @@ export async function updateGoogleLinkHandler(
     console.log(e);
     reply.code(500);
   }
+}
+
+export async function getSurveyLanguagesByTeamIdHandler(
+  req: FastifyRequest<{ Params: ByTeamIdParams }>,
+  reply: FastifyReply,
+) {
+  const languages = await getSurveyLanguagesFromTeamId(req.params.teamId);
+  reply.send(languages);
 }

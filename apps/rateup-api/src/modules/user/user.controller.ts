@@ -34,7 +34,7 @@ export async function getLoggedUserInfoHandler(
     }
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: `Internal server error :  ${e}` });
+    reply.code(500).send({ message: `${e.message}` });
   }
 }
 

@@ -13,6 +13,7 @@ import supertokens from "supertokens-node";
 import { log } from "../../utils/logger";
 import { createTrialSubscription } from "../subscription/subscription.service";
 import PasswordLess from "supertokens-node/recipe/passwordless";
+import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 
 const prisma = new PrismaClient();
 
@@ -98,6 +99,7 @@ export async function getLoggedUserInfo(
   let session = await Session.getSession(request, reply);
 
   const accessTokenPayload = session.getAccessTokenPayload();
+
   let role = accessTokenPayload.role;
   let email = accessTokenPayload.email;
   let orgId = accessTokenPayload.orgId;
@@ -106,6 +108,7 @@ export async function getLoggedUserInfo(
     throw Error("No session available");
   }
   let userId = session.getUserId();
+  let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
 
   if (!role) {
     const user = await getOrgIdAndRole({ id: userId });
@@ -127,6 +130,18 @@ export async function getLoggedUserInfo(
       },
     },
   });
+
+  if (email && !profile) {
+    if (userInfo?.thirdParty?.id) {
+      throw Error("Google User missing in Rateup");
+    } else {
+      throw Error("User missing in Rateup");
+    }
+  }
+
+  if (!profile && !email) {
+    throw Error("User not found in Rateup");
+  }
 
   let orgData = await prisma.org.findUnique({
     where: { id: orgId },

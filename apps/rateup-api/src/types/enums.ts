@@ -80,6 +80,10 @@ export enum WaTemplateCategory {
 }
 export enum WaTemplateSupportedFormats {
   TEXT = "TEXT",
+  IMAGE = "IMAGE",
+  LOCATION = "LOCATION",
+  DOCUMENT = "DOCUMENT",
+  VIDEO = "VIDEO",
 }
 export enum WaTemplateStatus {
   APPROVED = "APPROVED",

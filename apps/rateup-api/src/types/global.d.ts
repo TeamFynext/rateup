@@ -150,6 +150,7 @@ declare global {
       id: string;
       status: WaTemplateStatus;
       language: string;
+      category: WaTemplateCategory;
     };
     acceptButton: string;
     orgId: string;
