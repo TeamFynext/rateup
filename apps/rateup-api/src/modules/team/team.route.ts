@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
 import {
   completeInviteHandler,
   createTeamHandler,
@@ -16,6 +15,7 @@ import {
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import {
+  verifyTeamAccess,
   verifyTeamAdminAccess,
   verifyTeamMaxCountRestriction,
   verifyTeamMemberMaxCountRestriction,
@@ -23,6 +23,7 @@ import {
 import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { SubscriptionFeaturePathName as sf } from "../../types/enums";
+import { getSurveyLanguagesByTeamIdHandler } from "../survey/survey.controller";
 
 // TODO: add checkSession as server.addHook instead of defining it in every route
 // move routes which doesn't need checkSession to another route (invitation)
@@ -188,5 +189,20 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     getTeamMembersFromInviteHandler,
+  );
+
+  server.get(
+    `/:teamId/survey-languages`,
+    {
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        verifyTeamAccess,
+      ],
+      schema: {
+        params: $Tref("getTeamMembersRequestSchema"),
+      },
+    },
+    getSurveyLanguagesByTeamIdHandler,
   );
 }

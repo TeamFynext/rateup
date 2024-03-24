@@ -502,6 +502,7 @@ model ReviewSuggestion {
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId String @db.Uuid
   review String
+  language String @default("English")
 }
 
 model Review {

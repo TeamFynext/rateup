@@ -79,8 +79,6 @@ const getSurveyPublicResponseSchema = z.object({
   welcomePageEnabled: z.boolean(),
   orgLogo: z.string(),
   skipPreview: z.boolean(),
-  googleLink: z.string(),
-  reviews: z.array(z.any()),
   isEncrypted: z.boolean(),
   enableTickets: z.boolean(),
   enableTicketEmailAlerts: z.boolean(),

@@ -225,15 +225,11 @@ export async function getPublicSurveyById(id: string) {
   });
 
   let orgLogo = { orgLogo: org?.org?.logo };
-  let googleLink = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
-  let reviewSuggestion = await getReviewsBySurveyTeamMapId(surveyTeamMapId);
 
   let publicSurvey = {
     surveyTeamMapId,
     ...surveyTeamMap.survey,
     ...orgLogo,
-    googleLink: googleLink,
-    reviews: reviewSuggestion,
   };
 
   return publicSurvey;
@@ -982,4 +978,28 @@ export async function saveSheetIdToSurvey(sheetId: string, surveyId) {
     },
   });
   return res;
+}
+
+/**
+ * Gets all used languages from surveys of a team
+ * */
+export async function getSurveyLanguagesFromTeamId(teamId: string) {
+  const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
+    where: {
+      teamId,
+    },
+    select: {
+      survey: {
+        select: {
+          languages: true,
+        },
+      },
+    },
+  });
+
+  const languages = surveyTeamMaps?.flatMap(
+    (surveyTeamMap) => surveyTeamMap.survey.languages,
+  );
+  const uniqueLanguages = [...new Set(languages)];
+  return uniqueLanguages;
 }
