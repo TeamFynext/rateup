@@ -59,7 +59,7 @@ export async function createTemplateHandler(
 
     const formattedTemplate = generateTemplate(request.body);
     const template = await createTemplate(orgId, formattedTemplate);
-    await saveTemplate(template, request.body.acceptButton, orgId);
+    await saveTemplate(template, orgId);
     reply.code(200);
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);

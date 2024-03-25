@@ -137,14 +137,13 @@ export async function createTemplate(orgId: string, template: any) {
  */
 export async function saveTemplate(
   template: WaTemplateFormatted,
-  acceptButton: string,
   orgId: string,
 ) {
   try {
     const res = await prisma.waTemplate.create({
       data: {
         data: template,
-        acceptButton: acceptButton,
+        acceptButton: "",
         orgId: orgId,
       },
     });

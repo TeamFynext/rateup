@@ -1,5 +1,4 @@
 import {
-  WaButtonType,
   WaTemplateCategory,
   WaTemplateComponentType,
   WaTemplateSupportedFormats,
@@ -18,20 +17,14 @@ export function generateTemplate(
       type: WaTemplateComponentType.BODY,
       text: input.body,
     },
-    {
-      type: WaTemplateComponentType.BUTTONS,
-      buttons: [
-        {
-          type: WaButtonType.QUICK_REPLY,
-          text: input.declineButton,
-        },
-        {
-          type: WaButtonType.QUICK_REPLY,
-          text: input.acceptButton,
-        },
-      ],
-    },
   ];
+
+  if (input.buttons?.length > 0) {
+    components.push({
+      type: WaTemplateComponentType.BUTTONS,
+      buttons: input.buttons,
+    });
+  }
 
   if (input.header) {
     if (input.format === WaTemplateSupportedFormats.TEXT) {
