@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import {
@@ -51,11 +51,12 @@ import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartSt
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import ContactExtraProps from "./ContactExtraProps";
 import TncExtraProps from "./TncExtraProps";
-import styles from "./QuestionDetailedView.module.css";
 import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconChevronDown } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { useBeforeUnload, useClickAway } from "react-use";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -93,12 +94,25 @@ export function QuestionDetailedView({
   const form = useForm({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
+
+  useEffect(() => {
+    form.setInitialValues(getInitialQuestionValues(question, surveyLanguages));
+    form.reset();
+  }, [question, surveyLanguages]);
+
   const incompleteLanguages = validateAllLanguagesArePopulated(
     form.values as Question,
     surveyLanguages,
     ["title", "choices"],
   );
   const { imageToDelete, resetImage } = useImageStore();
+  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const formRef = useRef<HTMLDivElement | null>(null);
+  useClickAway(formRef, () => {
+    !dialogOpened && form.isDirty() && toggle();
+  });
+  useDisableClickOutside(formRef, form.isDirty(), toggle, dialogOpened);
+  useBeforeUnload(form.isDirty(), "You have unsaved changes, are you sure?");
 
   const handleSave = async () => {
     try {
@@ -164,7 +178,22 @@ export function QuestionDetailedView({
         [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSave)(event)],
       ])}
     >
-      <Stack style={{ height: "100%" }}>
+      <ConfirmationModal
+        opened={dialogOpened}
+        onClose={() => {
+          form.reset();
+          closeDialog();
+        }}
+        headerLabel="If you don't Save, Your changes will be lost."
+        headerTitle="Do you want to save your changes?"
+        confirmLabel="Save Changes"
+        closeLabel="Discard Changes"
+        onConfirm={async () => {
+          await handleSave();
+        }}
+      />
+
+      <Stack style={{ height: "100%" }} ref={formRef}>
         <ScrollArea style={{ flex: "1 1 0", overflow: "auto" }}>
           <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
             {question.type}
@@ -447,3 +476,23 @@ function ExtraProps({ form, question, surveyType }: ExtraPropsProps) {
       return null;
   }
 }
+
+const useDisableClickOutside = (ref, isDirty, toggle, dialogOpened) => {
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isDirty && ref.current && !ref.current.contains(event.target)) {
+        event.stopPropagation();
+      }
+    };
+
+    // Add event listener when the form is dirty
+    if (isDirty && !dialogOpened) {
+      document.addEventListener("click", handleClickOutside, true);
+    }
+
+    // Remove event listener when the form is not dirty
+    return () => {
+      document.removeEventListener("click", handleClickOutside, true);
+    };
+  }, [isDirty, ref, toggle]);
+};

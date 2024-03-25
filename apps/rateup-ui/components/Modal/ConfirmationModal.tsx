@@ -7,7 +7,7 @@ import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { useState } from "react";
 import { useUser } from "../../context/UserContext";
 import { showErrorToast } from "../../utils/notifications";
-import { IconAlertOctagon, IconAlertOctagonFilled } from "@tabler/icons-react";
+import { IconAlertOctagon } from "@tabler/icons-react";
 
 interface ConfirmationModalProps {
   forDeleteFunctionality?: boolean;
@@ -16,6 +16,7 @@ interface ConfirmationModalProps {
   headerTitle: string;
   headerLabel: string;
   confirmLabel: string;
+  closeLabel?: string;
   onConfirm: (e?: any) => void;
   includeEmailConfirmation?: boolean;
   deleteQuotion?: string;
@@ -24,6 +25,7 @@ export default function ConfirmationModal({
   opened,
   onClose,
   confirmLabel,
+  closeLabel,
   headerLabel,
   onConfirm,
   headerTitle,
@@ -90,7 +92,10 @@ export default function ConfirmationModal({
             </Stack>
           )}
           <Group justify="flex-end" mt="md">
-            <RateupButtonSecondary title={"Cancel"} onClick={onClose} />
+            <RateupButtonSecondary
+              title={closeLabel || "Cancel"}
+              onClick={onClose}
+            />
             <RateupButtonBlue
               title={confirmLabel ?? "Submit"}
               onClick={confirmation}
