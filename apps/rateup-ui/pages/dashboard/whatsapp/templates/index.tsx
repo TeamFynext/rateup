@@ -23,11 +23,22 @@ import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/S
 import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
 import { whatsappOptions } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
+import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
+import { useDisclosure } from "@mantine/hooks";
 
 export default function Template() {
-  const { data: templates, isPending, error } = useWaTemplates();
-  const templateDeleteMutation = useDeleteWaTemplateMutation();
+  const { data: templates, isPending } = useWaTemplates();
   const [sort, setSort] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [deleteDialogOpened, { toggle, close }] = useDisclosure();
+  const templateDeleteMutation = useDeleteWaTemplateMutation(
+    () => {
+      setSelectedTemplate(null);
+    },
+    () => {
+      setSelectedTemplate(null);
+    },
+  );
 
   const router = useRouter();
   if (!whatsappOptions?.includes("templates")) {
@@ -116,84 +127,67 @@ export default function Template() {
       </Flex>
 
       <Space h="xl" />
-
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={deleteDialogOpened}
+        onClose={close}
+        headerLabel="Are you sure you want to delete this Template?"
+        headerTitle="Delete Template"
+        confirmLabel="Delete"
+        onConfirm={() =>
+          selectedTemplate && templateDeleteMutation.mutate(selectedTemplate)
+        }
+      />
       <SimpleGrid spacing={"lg"} cols={{ base: 1, sm: 2, lg: 3, xl: 3 }}>
-        {templates &&
-          templates.map((t) => (
-            <TemplateCard
-              key={t.id}
-              template={t}
-              deleteMutation={templateDeleteMutation}
-              onClick={() => handleEditClick(t)}
-              onEditClick={() => handleEditClick(t)}
-            />
-          ))}
+        {templates?.map((t) => (
+          <TemplateCard
+            key={t.id}
+            template={t}
+            onClick={() => handleEditClick(t)}
+            toggle={toggle}
+            setSelectedTemplate={setSelectedTemplate}
+          />
+        ))}
       </SimpleGrid>
     </>
   );
 }
 
-function TemplateCard({ template, deleteMutation, onClick, onEditClick }) {
+function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
   return (
-    <>
-      <PaperLayout hoveractive={true} onClick={onClick}>
-        <Flex justify={"space-between"} align={"center"}>
-          <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>
-            {template.data.name}
-          </Text>
-          <Group>
-            {/* <ActionIcon variant="transparent" c={"var(--light-grey-color-5)"}>
+    <PaperLayout hoveractive={true} onClick={onClick}>
+      <Flex justify={"space-between"} align={"center"}>
+        <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>
+          {template.data.name}
+        </Text>
+        <Group>
+          {/* <ActionIcon variant="transparent" c={"var(--light-grey-color-5)"}>
               <IconCopy />
             </ActionIcon> */}
-            <ActionIcon
-              variant="transparent"
-              c={"var(--light-grey-color-5)"}
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteMutation.mutate(template.id);
-              }}
-            >
-              <IconTrash />
-            </ActionIcon>
-          </Group>
-        </Flex>
-        <WaTemplateStatusBadge status={template.data.category} defaultType />
-        <Text c={"var(--light-grey-color-5)"} tt={"capitalize"}>
-          Language: {template.data.language}
-        </Text>
-        <Space h="xl" />
-        <Group justify="space-between">
-          <Text c={"var(--grey-color)"} ff={lexend500.style.fontFamily}>
-            {dayjs(template.createdAt).format("DD/MM/YYYY")}
-          </Text>
-          <WaTemplateStatusBadge status={template.data.status} />
+          <ActionIcon
+            variant="transparent"
+            c={"var(--light-grey-color-5)"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedTemplate(template.id);
+              toggle();
+            }}
+          >
+            <IconTrash />
+          </ActionIcon>
         </Group>
-      </PaperLayout>
-    </>
-  );
-}
-
-function TemplateMenu({ template, deleteMutation, onEditClick }) {
-  return (
-    <Menu width={200}>
-      <Menu.Target>
-        <ActionIcon variant="transparent">
-          <IconDots />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item leftSection={<IconPencil />} onClick={onEditClick}>
-          Edit
-        </Menu.Item>
-        <Menu.Item
-          leftSection={<IconTrash />}
-          onClick={() => {
-            deleteMutation.mutate(template.id);
-          }}
-        >
-          Delete
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+      </Flex>
+      <WaTemplateStatusBadge status={template.data.category} defaultType />
+      <Text c={"var(--light-grey-color-5)"} tt={"capitalize"}>
+        Language: {template.data.language}
+      </Text>
+      <Space h="xl" />
+      <Group justify="space-between">
+        <Text c={"var(--grey-color)"} ff={lexend500.style.fontFamily}>
+          {dayjs(template.createdAt).format("DD/MM/YYYY")}
+        </Text>
+        <WaTemplateStatusBadge status={template.data.status} />
+      </Group>
+    </PaperLayout>
   );
 }
