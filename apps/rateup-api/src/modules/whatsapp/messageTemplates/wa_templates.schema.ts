@@ -4,7 +4,6 @@ import {
   WaTemplateComponentType,
   WaButtonType,
   WaTemplateCategory,
-  WaTemplateSupportedFormats,
 } from "../../../types/enums";
 
 const templateNameRegex = /^[a-z_]+$/;
@@ -14,11 +13,16 @@ const waTemplateInput = {
   header: z.string(),
   body: z.string().max(1024).min(1),
   footer: z.string().max(60),
-  declineButton: z.string().max(20),
-  acceptButton: z.string().max(20),
   category: z.string(),
   format: z.string(),
-  buttons: z.string(),
+  buttons: z
+    .array(
+      z.object({
+        text: z.string().min(1).max(24),
+        type: z.string().min(1),
+      }),
+    )
+    .optional(),
 };
 
 const waTemplateFormattedInput = {
