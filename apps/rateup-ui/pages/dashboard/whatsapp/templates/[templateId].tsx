@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Card, Flex, Grid, Stack, Text, Textarea, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Card,
+  Flex,
+  Grid,
+  Group,
+  Stack,
+  Text,
+  Textarea,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useRouter } from "next/router";
 
+import { IconX } from "@tabler/icons-react";
 import { uploadTemplateMedia } from "../../../../backend/whatsapp/whatsapp.api";
 import {
   useCreateTemplateMutation,
@@ -24,6 +35,7 @@ import {
   ResponseMessageContainer,
 } from "../../../../components/whatsapp/MessageComponents";
 import { BroadCastTypeValue } from "../../../../components/whatsapp/templates/Details/BroadCastTypeValue";
+import { ButtonSelection } from "../../../../components/whatsapp/templates/Details/ButtonSelectionMenu";
 import { HeaderWithFormatting } from "../../../../components/whatsapp/templates/Details/HeaderWithFormating";
 import { TextFormateToolBar } from "../../../../components/whatsapp/templates/Details/TextFormateToolBar";
 import TextWithFormatting from "../../../../components/whatsapp/templates/Details/TextWithFormating";
@@ -55,11 +67,9 @@ export default function WhatsappTemplateById() {
       header: null,
       body: "Would you like to start survey?",
       footer: "",
-      declineButton: "No",
-      acceptButton: "Yes",
       category: "MARKETING",
       format: "NONE",
-      buttons: "NONE",
+      buttons: [],
     },
     validate: {
       name: (value) => {
@@ -106,12 +116,8 @@ export default function WhatsappTemplateById() {
           return value.size > MAX_FILE_SIZE_IN_BYTE && "Max file size is 10 MB";
         }
       },
-      body: (value) => value.trim().length > 1024 && !(value.trim().length > 0),
+      body: (value) => value.trim().length > 1024 && value.trim().length <= 0,
       footer: (value) => value.trim().length > 60,
-      declineButton: (value) =>
-        value.trim().length > 25 && !(value.trim().length > 0),
-      acceptButton: (value) =>
-        value.trim().length < 25 && !(value.trim().length > 0),
     },
   });
 
@@ -145,6 +151,16 @@ export default function WhatsappTemplateById() {
   if (templateId && isPending) return <RateupLoader />;
 
   async function handleSubmit(values: typeof form.values) {
+    const buttonArray = values.buttons?.filter(
+      (data) => data?.text?.trim().length > 24,
+    );
+    if (buttonArray?.length > 0) {
+      showErrorToast(`Max length of text in button should be 25`);
+      return;
+    } else if (values?.buttons?.length > 12) {
+      showErrorToast(`Max number of button in buttons should be 12`);
+      return;
+    }
     try {
       setIsSubmitting(true);
       if (
@@ -153,8 +169,6 @@ export default function WhatsappTemplateById() {
         values.header instanceof File
       ) {
         const file = await uploadTemplateMedia(values.header);
-        console.log(file);
-
         values.header = file?.id ?? "";
       }
       if (editingItem) {
@@ -216,243 +230,248 @@ export default function WhatsappTemplateById() {
     input.setSelectionRange(newCursorPosition, newCursorPosition);
     input.focus();
   };
-
+  const handleMenuSelection = (e: string) => {
+    const newObject = { type: e, text: "" };
+    form.setValues((prevValues) => ({
+      ...prevValues,
+      buttons: [...prevValues.buttons, newObject],
+    }));
+  };
+  const deleteButton = (index: number) => {
+    form.setValues((prevValues) => ({
+      ...prevValues,
+      buttons: prevValues.buttons.filter((btn, i) => i !== index),
+    }));
+  };
   return (
-    <>
-      <form
-        onSubmit={form.onSubmit(handleSubmit)}
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
-        ])}
+    <form
+      onSubmit={form.onSubmit(handleSubmit)}
+      onKeyDown={getHotkeyHandler([
+        [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+      ])}
+    >
+      <Flex
+        mih={50}
+        gap="md"
+        justify="space-between"
+        align="center"
+        direction="row"
+        wrap="wrap"
       >
+        <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
+          {editingItem ? editingItem?.data?.name : "Create Template"}
+        </Title>
+
         <Flex
           mih={50}
-          gap="md"
-          justify="space-between"
-          align="center"
+          gap="4"
+          justify="flex-start"
+          align="flex-start"
           direction="row"
           wrap="wrap"
         >
-          <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
-            {editingItem ? editingItem?.data?.name : "Create Template"}
-          </Title>
-
-          <Flex
-            mih={50}
-            gap="4"
-            justify="flex-start"
-            align="flex-start"
-            direction="row"
-            wrap="wrap"
-          >
-            <RateupButtonBlue
-              title="Save & Submit"
-              loading={isSubmitting}
-              type={"submit"}
-            />
-          </Flex>
+          <RateupButtonBlue
+            title="Save & Submit"
+            loading={isSubmitting}
+            type={"submit"}
+          />
         </Flex>
-        <Grid align="stretch">
-          <Grid.Col span={9}>
-            <PaperLayout p={"xl"} h={"80dvh"}>
-              <Stack gap={"xs"}>
-                <ContainedTextField
-                  label={
-                    <Text fz={14} ff={lexend500.style.fontFamily}>
-                      Template Name
-                    </Text>
-                  }
-                  placeholder="Name"
-                  {...form.getInputProps("name")}
-                  rightSection={
-                    <LengthTracker
-                      length={form.values.name.length}
-                      maxValue={512}
-                      atStart
+      </Flex>
+      <Grid align="stretch">
+        <Grid.Col span={9}>
+          <PaperLayout p={"xl"} h={"80dvh"}>
+            <Stack gap={"xs"}>
+              <ContainedTextField
+                label={
+                  <Text fz={14} ff={lexend500.style.fontFamily}>
+                    Template Name
+                  </Text>
+                }
+                placeholder="Name"
+                {...form.getInputProps("name")}
+                rightSection={
+                  <LengthTracker
+                    length={form.values.name.length}
+                    maxValue={512}
+                    atStart
+                  />
+                }
+                disabled={!!editingItem}
+              />
+              <ContainedSelection
+                label={
+                  <Text fz={14} ff={lexend500.style.fontFamily}>
+                    Category
+                  </Text>
+                }
+                placeholder="Category"
+                {...form.getInputProps("category")}
+                data={WHATSAPP_TEMPLATE_CATEGORY}
+                allowDeselect={false}
+              />
+              <Grid>
+                <Grid.Col span={4}>
+                  <ContainedSelection
+                    label={
+                      <>
+                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                          Broadcast header
+                        </Text>
+                        <Text fz={10}>
+                          Highlight your brand here, use images or videos, to
+                          stand out
+                        </Text>
+                      </>
+                    }
+                    placeholder="Broadcast Type"
+                    {...form.getInputProps("format")}
+                    data={WHATSAPP_TEMPLATE_BROADCAST_TYPE}
+                    allowDeselect={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={"auto"}>
+                  <Stack
+                    h={"100%"}
+                    justify="center"
+                    w={form.values?.format === "TEXT" ? "100%" : 300}
+                  >
+                    <BroadCastTypeValue
+                      form={form}
+                      type={form.values?.format}
                     />
-                  }
-                  disabled={!!editingItem}
-                />
-                <ContainedSelection
-                  label={
-                    <Text fz={14} ff={lexend500.style.fontFamily}>
-                      Category
-                    </Text>
-                  }
-                  placeholder="Category"
-                  {...form.getInputProps("category")}
-                  data={WHATSAPP_TEMPLATE_CATEGORY}
-                  allowDeselect={false}
-                />
-                <Grid>
-                  <Grid.Col span={4}>
-                    <ContainedSelection
-                      label={
-                        <>
-                          <Text fz={14} ff={lexend500.style.fontFamily}>
-                            Broadcast title
-                          </Text>
-                          <Text fz={10}>
-                            Highlight your brand here, use images or videos, to
-                            stand out
-                          </Text>
-                        </>
-                      }
-                      placeholder="Broadcast Type"
-                      {...form.getInputProps("format")}
-                      data={WHATSAPP_TEMPLATE_BROADCAST_TYPE}
-                      allowDeselect={false}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={"auto"}>
-                    <Stack
-                      h={"100%"}
-                      justify="center"
-                      w={form.values?.format === "TEXT" ? "100%" : 300}
-                    >
-                      <BroadCastTypeValue
-                        form={form}
-                        type={form.values?.format}
-                      />
-                    </Stack>
-                  </Grid.Col>
-                </Grid>
-                <Textarea
-                  ref={inputRef}
-                  label={
-                    <>
-                      <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Body
-                      </Text>
-                      <Text fz={10}>
-                        Make your messages personal using variables and get more
-                        replies!
-                      </Text>
-                    </>
-                  }
-                  description={
-                    <TextFormateToolBar
-                      applyFormatting={applyFormatting}
-                      insertValue={insertValue}
-                      undo={undo}
-                    />
-                  }
-                  styles={{
-                    input: {
-                      borderRadius: "0px 0px 12px 12px",
-                    },
-                  }}
-                  placeholder={`Enter the text`}
-                  autosize
-                  minRows={3}
-                  maxRows={3}
-                  onSelect={handleSelect}
-                  {...form.getInputProps("body")}
-                />
-                <ContainedTextField
-                  label={
-                    <>
-                      <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Footer (Optional)
-                      </Text>
-                      <Text fz={10}>
-                        Footers are great to add any disclaimers or to add a
-                        thoughtful PS
-                      </Text>
-                    </>
-                  }
-                  placeholder="Footer"
-                  {...form.getInputProps("footer")}
-                  rightSection={
-                    <LengthTracker
-                      length={form.values.footer.length}
-                      maxValue={60}
-                      atStart
-                    />
-                  }
-                />
-                {/* <ContainedSelection
-                  label={
-                    <>
-                      <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Buttons (Optional)
-                      </Text>
-                      <Text fz={10}>
-                        Insert buttons so your customers can take action and
-                        engage with your message!
-                      </Text>
-                    </>
-                  }
-                  data={["NONE", "QUICK_REPLY"]}
-                  {...form.getInputProps("buttons")}
-                />
-                {form.values?.buttons === "QUICK_REPLY" && (
-                  <> */}
-                <ContainedTextField
-                  label="Decline Button (Does nothing)"
-                  withAsterisk
-                  {...form.getInputProps("declineButton")}
-                  rightSection={
-                    <LengthTracker
-                      length={form.values.declineButton.length}
-                      maxValue={25}
-                      atStart
-                    />
-                  }
-                />
-                <ContainedTextField
-                  label="Accept Button (Starts survey on clicking)"
-                  withAsterisk
-                  {...form.getInputProps("acceptButton")}
-                  rightSection={
-                    <LengthTracker
-                      length={form.values.acceptButton.length}
-                      maxValue={25}
-                      atStart
-                    />
-                  }
-                />
-                {/* </>
-                )} */}
-              </Stack>
-            </PaperLayout>
-          </Grid.Col>
-          <Grid.Col span={3}>
-            <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
-              <Stack h={"100%"} align="center" gap={0}>
-                <Text fz="24px" ff={lexend500.style.fontFamily}>
-                  Preview
-                </Text>
-                <WaChatPreview>
-                  <Stack miw="200px" gap={3} p={"md"}>
-                    <ResponseMessageContainer>
-                      <Text
-                        fw="bold"
-                        style={{
-                          color: "#444",
-                        }}
-                      >
-                        {HeaderWithFormatting(
-                          form.values?.header,
-                          form.values?.format,
-                        )}
-                      </Text>
-                      <Text fz={"0.95rem"}>
-                        {TextWithFormatting(form.values.body)}
-                      </Text>
-                      <Text c="dimmed" fz={"0.9rem"}>
-                        {form.values.footer}
-                      </Text>
-                    </ResponseMessageContainer>
-                    <QuickReplyButton text={form.values.declineButton} />
-                    <QuickReplyButton text={form.values.acceptButton} />
                   </Stack>
-                </WaChatPreview>
-              </Stack>
-            </Card>
-          </Grid.Col>
-        </Grid>
-      </form>
-    </>
+                </Grid.Col>
+              </Grid>
+              <Textarea
+                ref={inputRef}
+                label={
+                  <>
+                    <Text fz={14} ff={lexend500.style.fontFamily}>
+                      Body
+                    </Text>
+                    <Text fz={10}>
+                      Make your messages personal using variables and get more
+                      replies!
+                    </Text>
+                  </>
+                }
+                description={
+                  <TextFormateToolBar
+                    applyFormatting={applyFormatting}
+                    insertValue={insertValue}
+                    undo={undo}
+                  />
+                }
+                styles={{
+                  input: {
+                    borderRadius: "0px 0px 12px 12px",
+                  },
+                }}
+                placeholder={`Enter the text`}
+                autosize
+                minRows={3}
+                maxRows={3}
+                onSelect={handleSelect}
+                {...form.getInputProps("body")}
+              />
+              <ContainedTextField
+                label={
+                  <>
+                    <Text fz={14} ff={lexend500.style.fontFamily}>
+                      Footer (Optional)
+                    </Text>
+                    <Text fz={10}>
+                      Footers are great to add any disclaimers or to add a
+                      thoughtful PS
+                    </Text>
+                  </>
+                }
+                placeholder="Footer"
+                {...form.getInputProps("footer")}
+                rightSection={
+                  <LengthTracker
+                    length={form.values.footer.length}
+                    maxValue={60}
+                    atStart
+                  />
+                }
+              />
+              <ButtonSelection handleMenuSelection={handleMenuSelection} />
+              {form.values?.buttons?.length > 0 && (
+                <>
+                  {form.values?.buttons?.map((data, index) => (
+                    <Group key={index}>
+                      <ContainedTextField
+                        label={
+                          <Text fz={14} ff={lexend500.style.fontFamily}>
+                            Button text
+                          </Text>
+                        }
+                        rightSection={
+                          <LengthTracker
+                            length={form.values?.buttons?.[index]?.text?.length}
+                            maxValue={25}
+                            atStart
+                          />
+                        }
+                        w={"90%"}
+                        {...form.getInputProps(`buttons.${index}.text`)}
+                      />
+                      <ActionIcon
+                        mt={24}
+                        variant="transparent"
+                        onClick={() => deleteButton(index)}
+                      >
+                        <IconX />
+                      </ActionIcon>
+                    </Group>
+                  ))}
+                </>
+              )}
+            </Stack>
+          </PaperLayout>
+        </Grid.Col>
+        <Grid.Col span={3}>
+          <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
+            <Stack h={"100%"} align="center" gap={0}>
+              <Text fz="24px" ff={lexend500.style.fontFamily}>
+                Preview
+              </Text>
+              <WaChatPreview>
+                <Stack miw="200px" gap={3} p={"md"}>
+                  <ResponseMessageContainer>
+                    <Text
+                      fw="bold"
+                      style={{
+                        color: "#444",
+                      }}
+                    >
+                      {HeaderWithFormatting(
+                        form.values?.header,
+                        form.values?.format,
+                      )}
+                    </Text>
+                    <Text fz={"0.95rem"}>
+                      {TextWithFormatting(form.values.body)}
+                    </Text>
+                    <Text c="dimmed" fz={"0.9rem"}>
+                      {form.values.footer}
+                    </Text>
+                  </ResponseMessageContainer>
+                  {form.values?.buttons
+                    ?.slice(0, 2)
+                    .map((data) => (
+                      <QuickReplyButton text={data?.text} key={data?.text} />
+                    ))}
+                  {form.values?.buttons?.length > 2 && (
+                    <QuickReplyButton text={"See all options"} />
+                  )}
+                </Stack>
+              </WaChatPreview>
+            </Stack>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </form>
   );
 }
