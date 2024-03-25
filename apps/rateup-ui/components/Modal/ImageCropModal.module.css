@@ -27,20 +27,7 @@
 
 .react-crop-container {
   position: relative;
-  flex: 1;
-  min-height: 300px;
-}
-
-.react-crop-div {
-  height: 100%;
-  width: 100%;
-  position: absolute;
-}
-
-.react-crop-div :global(.ReactCrop__child-wrapper),
-.react-crop-div img {
-  width: 100%;
-  height: 100%;
+  height: 300px;
 }
 
 .cancel-btn {

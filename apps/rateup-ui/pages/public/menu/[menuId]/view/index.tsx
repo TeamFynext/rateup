@@ -192,7 +192,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
               bgp={"center"}
               bgsz={"cover"}
               c={"white"}
-              h={"33vh"}
+              h={largeScreen ? "33dvh" : "25dvh"}
               maw={largeScreen ? "2440px" : "768px"}
             >
               <Stack

@@ -1,4 +1,4 @@
-import { Flex, Group, Text, Menu, Box, Badge } from "@mantine/core";
+import { Flex, Group, Text, Menu, Box, Badge, Space } from "@mantine/core";
 import {
   IconDots,
   IconMapPinFilled,
@@ -37,7 +37,6 @@ export function MenuCard({
 
   return (
     <PaperLayout
-      mih={"175px"}
       hoveractive={true}
       onClick={() => {
         router.push(`/dashboard/menu/${menu.id}`);
@@ -50,7 +49,7 @@ export function MenuCard({
       >
         <Box>
           <Flex justify={"space-between"} align={"center"}>
-            <Text mr={"sm"} truncate size="xl" fw={700}>
+            <Text mr={"sm"} truncate size="xl" fw={700} tt={"capitalize"}>
               {menu.name}
             </Text>
             <Group align={"center"} mt="sm" gap="xs">
@@ -64,24 +63,29 @@ export function MenuCard({
               <MenuCardMenu menuId={menu.id} teamId={menu.teamId} />
             </Group>
           </Flex>
-          <Text size="lg">{menu.displayName}</Text>
+          <Text size="md">{menu.displayName}</Text>
         </Box>
-        {menu?.team?.code && (
-          <Badge color="var(--tertiary-color)" variant="outline">
-            {menu?.team?.code}
-          </Badge>
-        )}
-        <Flex align={"center"} justify={"space-between"}>
-          <Flex>
-            <Text size="sm" c="dimmed">
-              Created {timeSince}
-            </Text>
+        <Space h="xl" />
+        <Box>
+          {menu?.team?.code && (
+            <Badge color="var(--tertiary-color)" variant="light">
+              {menu?.team?.code}
+            </Badge>
+          )}
+          <Flex align={"center"} justify={"space-between"}>
+            <Flex>
+              <Text size="sm" c="dimmed">
+                Created {timeSince}
+              </Text>
+            </Flex>
+            <Flex align={"center"}>
+              <IconMapPinFilled size={16} />
+              <Text ml={4} truncate maw={200}>
+                {menu.locationText}
+              </Text>
+            </Flex>
           </Flex>
-          <Flex align={"center"}>
-            <IconMapPinFilled size={16} />
-            <Text ml={4}>{menu.locationText}</Text>
-          </Flex>
-        </Flex>
+        </Box>
       </Flex>
     </PaperLayout>
   );

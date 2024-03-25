@@ -3,7 +3,7 @@ import {
   Card,
   Center,
   Flex,
-  Group,
+  Grid,
   Image,
   Paper,
   ScrollArea,
@@ -14,10 +14,10 @@ import { useMediaQuery } from "@mantine/hooks";
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { lexend } from "../../../utils/fonts";
+import { CreditsCard } from "../../Card/CreditsCard";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
-import { CreditsCard } from "../../Card/CreditsCard";
 interface ItemDisplayProps {
   readonly item: any;
   readonly setSelectedItem: (item: MenuItem) => void;
@@ -31,6 +31,12 @@ export function ItemDisplay({
   currency = "0",
 }: ItemDisplayProps) {
   const smallScreen = useMediaQuery("(max-width: 40em)");
+  let descriptionLineClamp = 3;
+  if (smallScreen) {
+    if (item?.price?.variants?.length > 0 || item?.name?.length > 21) {
+      descriptionLineClamp = 2;
+    }
+  }
   return (
     <PaperLayout
       p="0"
@@ -45,13 +51,8 @@ export function ItemDisplay({
       }
     >
       <Card radius="md" p={0} ff={lexend.style.fontFamily}>
-        <Group wrap="nowrap" gap={0} pos={"relative"}>
-          <Box
-            h={215}
-            style={{
-              display: "grid",
-            }}
-          >
+        <Grid>
+          <Grid.Col span={5} pr={0} display={"grid"}>
             <CreditsCard
               // enableCredits={
               //   item?.unsplashImage?.find((data) => data === item?.images[0])
@@ -66,8 +67,7 @@ export function ItemDisplay({
             >
               <Image
                 w={"100%"}
-                h={"100%"}
-                miw={120}
+                mih={smallScreen ? 152 : 215}
                 maw={"164px"}
                 alt="image of menu item"
                 src={
@@ -90,6 +90,7 @@ export function ItemDisplay({
                     item?.disabled || categoryDisabled
                       ? "grayscale(1)"
                       : "grayscale(0)",
+                  aspectRatio: 4 / 3,
                 }}
                 opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
                 fallbackSrc={fallbackImage}
@@ -103,8 +104,7 @@ export function ItemDisplay({
                   fw={600}
                   w={"max-content"}
                   radius={"sm"}
-                  px={"sm"}
-                  py={5}
+                  p={5}
                   style={{
                     zIndex: 1,
                   }}
@@ -113,85 +113,89 @@ export function ItemDisplay({
                 </Paper>
               </Center>
             )}
-          </Box>
-          <Box
-            c={"var(--grey-color)"}
-            fw={"600"}
-            w={"100%"}
-            maw={"180px"}
-            opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
-            style={{
-              filter:
-                item?.disabled || categoryDisabled
-                  ? "grayscale(1)"
-                  : "grayscale(0)",
-            }}
-          >
-            <Stack pl={10} gap={0}>
-              <Text
-                fz="clamp(16px, 13.136px + 0.476vw, 20px)"
-                lineClamp={2}
-                tt={"capitalize"}
-                fw={500}
-              >
-                {item?.name}
-              </Text>
-              <ScrollArea h={"30px"} w={200}>
-                <Flex gap={4}>
-                  <MenuFoodLabelBadge
-                    foodLabels={item?.foodLabels ?? []}
-                    p={"5px"}
-                    label={false}
-                  />
-                </Flex>
-              </ScrollArea>
-              <Box mih={item?.price?.variants?.length > 0 ? "65px" : "70px"}>
-                <Text
-                  fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
-                  lineClamp={3}
-                >
-                  {item?.description}
-                </Text>
-              </Box>
-              <Flex justify="space-evenly" gap={"sm"}>
-                {item?.price?.variants?.length > 0 ? (
-                  item?.price?.variants.map((varient, index) => (
-                    <Stack align="center" gap={"0px"} key={index}>
-                      <Text
-                        fz="clamp(12px, 9.856px + 0.357vw, 15.008px)"
-                        tt={"capitalize"}
-                        style={{ whiteSpace: "nowrap" }}
-                      >
-                        {varient?.name}
-                      </Text>
+          </Grid.Col>
+          <Grid.Col span={7}>
+            <Box
+              c={"var(--grey-color)"}
+              fw={"600"}
+              w={"100%"}
+              opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
+              style={{
+                filter:
+                  item?.disabled || categoryDisabled
+                    ? "grayscale(1)"
+                    : "grayscale(0)",
+              }}
+              h={"100%"}
+            >
+              <Stack gap={0} h={"100%"}>
+                <Box>
+                  <Text
+                    fz="clamp(14px, 9.712px + 0.714vw, 20px)"
+                    lineClamp={2}
+                    tt={"capitalize"}
+                    fw={500}
+                    mih={smallScreen ? "auto" : 40}
+                  >
+                    {item?.name}
+                  </Text>
+                  <ScrollArea h={"30px"} w={200}>
+                    <Flex gap={4}>
+                      <MenuFoodLabelBadge
+                        foodLabels={item?.foodLabels ?? []}
+                        p={"5px"}
+                        label={false}
+                      />
+                    </Flex>
+                  </ScrollArea>
+                </Box>
+                <Stack h={"100%"} justify="space-between" gap={0}>
+                  <Text
+                    fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
+                    lineClamp={descriptionLineClamp}
+                  >
+                    {item?.description}
+                  </Text>
+                  <Flex justify="space-evenly" gap={"sm"}>
+                    {item?.price?.variants?.length > 0 ? (
+                      item?.price?.variants.map((varient, index) => (
+                        <Stack align="center" gap={"0px"} key={index}>
+                          <Text
+                            fz="clamp(12px, 9.856px + 0.357vw, 15.008px)"
+                            tt={"capitalize"}
+                            style={{ whiteSpace: "nowrap" }}
+                          >
+                            {varient?.name}
+                          </Text>
+                          <Text
+                            fz="clamp(14px, 11.136px + 0.476vw, 18px)"
+                            fw={500}
+                          >
+                            {varient?.price && (
+                              <>
+                                {currencyLabel[currency]?.symbol}
+                                {varient?.price}
+                              </>
+                            )}
+                          </Text>
+                        </Stack>
+                      ))
+                    ) : (
                       <Text fz="clamp(14px, 11.136px + 0.476vw, 18px)" fw={500}>
-                        {varient?.price && (
+                        {item?.price?.price && (
                           <>
                             {currencyLabel[currency]?.symbol}
-                            {varient?.price}
+                            {item?.price?.price}
                           </>
                         )}
                       </Text>
-                    </Stack>
-                  ))
-                ) : (
-                  <Text
-                    fz="clamp(14px, 11.136px + 0.476vw, 18px)"
-                    mt={"sm"}
-                    fw={500}
-                  >
-                    {item?.price?.price && (
-                      <>
-                        {currencyLabel[currency]?.symbol}
-                        {item?.price?.price}
-                      </>
                     )}
-                  </Text>
-                )}
-              </Flex>
-            </Stack>
-          </Box>
-        </Group>
+                  </Flex>
+                </Stack>
+              </Stack>
+            </Box>
+          </Grid.Col>
+        </Grid>
       </Card>
     </PaperLayout>
   );

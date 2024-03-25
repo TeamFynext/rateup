@@ -27,7 +27,7 @@ export const ButtonSelection = (props: ButtonSelectionProps) => {
       <Text fz={14} ff={lexend500.style.fontFamily}>
         Buttons (Optional)
       </Text>
-      <Text fz={10}>
+      <Text fz={13}>
         Insert buttons so your customers can take action and engage with your
         message!
       </Text>

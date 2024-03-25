@@ -1,38 +1,36 @@
 import { Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
-  IconChevronDown,
   IconFileImport,
   IconLayersSubtract,
   IconPlus,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import SearchBox from "../../../components/input/SearchBox";
 import { useEffect, useState } from "react";
+import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
 import {
   useCategories,
   useDeleteMenuCategoryMutation,
 } from "../../../backend/menu/category/mCategory.query";
-import { useDisclosure } from "@mantine/hooks";
-import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
-import { CategoryCard } from "../../../components/menu/category/CategoryCard";
-import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
+import NothingFound from "../../../components/NothingFound/NothingFound";
+import { MotionTransition } from "../../../components/animation/MotionTransition";
+import SearchBox from "../../../components/input/SearchBox";
+import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
 import MenuSettings from "../../../components/menu/Settings/MenuSettings";
 import ShareMenu from "../../../components/menu/Share/ShareMenu";
+import MenuAnalytics from "../../../components/menu/analytics/MenuAnalytics";
+import { CategoryCard } from "../../../components/menu/category/CategoryCard";
+import CategoryItemCsvModal from "../../../components/menu/category/CategoryItemCsvModal";
 import LandingPage from "../../../components/menu/landingPage/LandingPage";
-import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
 import { transformData } from "../../../components/menu/util/transformData";
 import Heading from "../../../components/styled/Heading/Heading";
-import NothingFound from "../../../components/NothingFound/NothingFound";
-import MenuAnalytics from "../../../components/menu/analytics/MenuAnalytics";
-import CategoryItemCsvModal from "../../../components/menu/category/CategoryItemCsvModal";
-import { IconUpload } from "@tabler/icons-react";
-import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
-import { MotionTransition } from "../../../components/animation/MotionTransition";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 
 enum TabEnum {
   Menu = "Menu",
@@ -42,7 +40,7 @@ enum TabEnum {
   Analytics = "Analytics",
 }
 
-export default ({ categories: initialCategories }) => {
+export default function MenuById({ categories: initialCategories }) {
   const router = useRouter();
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
@@ -248,4 +246,4 @@ export default ({ categories: initialCategories }) => {
       </StyledTabs>
     </Group>
   );
-};
+}

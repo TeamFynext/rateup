@@ -40,7 +40,7 @@ export const TextFormateToolBar = ({
           <Popover.Target>
             <Tooltip label="Insert an emoji">
               <ActionIcon variant={"transparent"} size={"xs"}>
-                <IconMoodHappy color="var(--grey-color)" size={10} />
+                <IconMoodHappy color="var(--grey-color)" size={14} />
               </ActionIcon>
             </Tooltip>
           </Popover.Target>
@@ -55,7 +55,7 @@ export const TextFormateToolBar = ({
             size={"xs"}
             onClick={() => applyFormatting("*")}
           >
-            <IconBold color="var(--grey-color)" size={10} />
+            <IconBold color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Italic">
@@ -64,7 +64,7 @@ export const TextFormateToolBar = ({
             size={"xs"}
             onClick={() => applyFormatting("_")}
           >
-            <IconItalic color="var(--grey-color)" size={10} />
+            <IconItalic color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="StikeThough">
@@ -73,7 +73,7 @@ export const TextFormateToolBar = ({
             size={"xs"}
             onClick={() => applyFormatting("~")}
           >
-            <IconStrikethrough color="var(--grey-color)" size={10} />
+            <IconStrikethrough color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Monospace">
@@ -82,12 +82,12 @@ export const TextFormateToolBar = ({
             size={"xs"}
             onClick={() => applyFormatting("```")}
           >
-            <IconCode color="var(--grey-color)" size={10} />
+            <IconCode color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Undo the last text formating">
           <ActionIcon variant={"transparent"} size={"xs"} onClick={undo}>
-            <IconArrowBackUp color="var(--grey-color)" size={10} />
+            <IconArrowBackUp color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
       </Group>

@@ -173,6 +173,7 @@ export const ImageCropModal = ({
         setScale(1);
       }}
       opened={opened}
+      radius={"lg"}
     >
       {image?.startsWith("blob:") && (
         <NumberInput
@@ -193,9 +194,8 @@ export const ImageCropModal = ({
           onChange={(_, percentCrop) => setCrop(percentCrop)}
           onComplete={(c) => setCompletedCrop(c)}
           aspect={aspect}
-          minHeight={100}
           keepSelection
-          className={styles["react-crop-div"]}
+          // className={styles["react-crop-div"]}
         >
           <Image
             src={image}
@@ -224,15 +224,16 @@ export const ImageCropModal = ({
           height: completedCrop?.height,
         }}
       />
-
-      <Group className={styles["cancel-save-btn-container"]} justify="right">
-        <Button className={styles["cancel-btn"]} onClick={onclose}>
-          Cancel
-        </Button>
-        <Button className={styles["save-btn"]} onClick={handleCropSubmit}>
-          Save
-        </Button>
-      </Group>
+      <Box bg={"white"} pos={"fixed"} right={0} bottom={0} w={"100%"} p={"xs"}>
+        <Group className={styles["cancel-save-btn-container"]} justify="right">
+          <Button className={styles["cancel-btn"]} onClick={onclose}>
+            Cancel
+          </Button>
+          <Button className={styles["save-btn"]} onClick={handleCropSubmit}>
+            Save
+          </Button>
+        </Group>
+      </Box>
     </Modal>
   );
 };

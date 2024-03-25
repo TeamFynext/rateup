@@ -464,6 +464,7 @@ export function CreateMenuItemModal({
             withAsterisk
             autosize
             minRows={5}
+            maxRows={5}
             {...form.getInputProps("description")}
           />
           <PriceSection form={form} currency={currency ?? "0"} />
