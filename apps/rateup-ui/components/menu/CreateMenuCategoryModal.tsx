@@ -259,7 +259,7 @@ export function CreateMenuCategoryModal({
           <Stack>
             <Group>
               <Title order={3} c={"var(--grey-color)"}>
-                Schedule Category
+                Timed Menu
               </Title>
               <Switch
                 {...form.getInputProps("scheduleEnabled")}
