@@ -14,15 +14,12 @@ import {
   createSession,
   deleteSession,
   getSession,
-  handleTestimonialQuestion,
   handleTestimonialReply,
-  saveResponses,
   sendMessage,
   sendNextQuestion,
   sendQuestion,
   sendSurveyToParticipant,
   sendTextMessage,
-  shouldShowGoogleReview,
   updateSession,
 } from "./wasurvey.service";
 import {
@@ -31,10 +28,6 @@ import {
   WaEvent,
   WaTemplateStatus,
   QuestionType,
-  WaFlowStatus,
-  LoyaltyCampaignType,
-  WaAutomatedReplyMatchType,
-  WaAutomatedReplyResponseType,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { ByOrgIdParams } from "../../org/org.schema";
@@ -48,18 +41,11 @@ import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
 import {
-  getSurveyById,
   updateStartedSurvey,
   updateVisitedSurvey,
 } from "../../survey/survey.service";
 import { getIpFromToken } from "../redirect/wa_redirect.service";
-import {
-  getFlowFromDb,
-  handleStaticFlowReply,
-  removeDuplicateResponses,
-  sendFlow,
-  sendGReviewLink,
-} from "../flows/flow.service";
+import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
 import { handleRegisterMessage } from "../../loyalty/internal/campaign/campaign.service";
 import {
   checkIfMessageMatchesAnyAutomation,
@@ -173,8 +159,8 @@ async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
     "receive",
     completeMessageObject,
     from,
-    userName,
     orgId,
+    userName,
   );
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);

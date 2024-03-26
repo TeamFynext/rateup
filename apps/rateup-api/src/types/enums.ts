@@ -75,8 +75,16 @@ export enum WaTemplateComponentType {
   HEADER = "header",
   FOOTER = "footer",
 }
+export enum WaTemplateComponentTypeUpperCase {
+  BODY = "BODY",
+  BUTTONS = "BUTTONS",
+  HEADER = "HEADER",
+  FOOTER = "FOOTER",
+}
 export enum WaTemplateCategory {
   MARKETING = "MARKETING",
+  UTILITY = "UTILITY",
+  AUTHENTICATION = "AUTHENTICATION",
 }
 export enum WaTemplateSupportedFormats {
   TEXT = "TEXT",

@@ -280,6 +280,7 @@ declare global {
     type PWaAutomatedReplyMatchData = WaAutomatedReplyMatchData;
 
     type PWaMessageBody = WaInboxMessageBody;
+    type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
   }
 }
 export interface FlowLogicCondition {

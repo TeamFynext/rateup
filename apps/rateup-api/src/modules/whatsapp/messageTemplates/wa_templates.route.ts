@@ -6,6 +6,7 @@ import {
   getTemplatesHandler,
   getUnregisteredTemplatesHandler,
   registerTemplatesInDbHandler,
+  sendTemplateToUserHandler,
   syncTemplatesHandler,
   updateTemplateHandler,
   uploadHandler,
@@ -85,5 +86,16 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
       },
     },
     uploadHandler,
+  );
+
+  server.post(
+    "/:templateId/send",
+    {
+      schema: {
+        params: $WTref("byTemplateIdParamsSchema"),
+        body: $WTref("waUserSendTemplateBodySchema"),
+      },
+    },
+    sendTemplateToUserHandler,
   );
 }

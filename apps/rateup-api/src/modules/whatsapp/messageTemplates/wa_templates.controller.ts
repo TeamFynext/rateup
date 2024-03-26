@@ -7,6 +7,7 @@ import {
   CreateWaTemplateInput,
   RegisterTemplatesInDbBodySchema,
   WaTemplateFormatted,
+  WaUserSendTemplateBodySchema,
 } from "./wa_templates.schema";
 import {
   createTemplate,
@@ -23,6 +24,13 @@ import {
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
 import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service";
+import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
+import {
+  WaTemplate,
+  WaTemplateSupportedParameters,
+} from "../../../types/whatsapp.types";
+import { WaTemplateComponentType } from "../../../types/enums";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -204,6 +212,34 @@ export async function uploadHandler(
       typeof e?.message === "string" ? e?.message : e?.response?.data;
     log.error("Error uploading image to whatsapp templates \n%o", error);
 
+    reply.code(500).send(error);
+  }
+}
+
+export async function sendTemplateToUserHandler(
+  request: FastifyRequest<{
+    Params: ByTemplateIdParamsSchema;
+    Body: WaUserSendTemplateBodySchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { templateId } = request.params;
+    const { phone } = request.body;
+    const orgId = request.user.orgId;
+    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+    const { data } = dbTemplate;
+    const templateQuery = {
+      name: data?.name,
+      language: {
+        code: dbTemplate.data?.language,
+      },
+    };
+    const templateMessage = createTemplateMessage(phone, templateQuery);
+    await sendMessage(orgId, templateMessage);
+    reply.code(200).send("Template send to user successfully");
+  } catch (error) {
+    log.error("Error sending template to user \n%o", error);
     reply.code(500).send(error);
   }
 }

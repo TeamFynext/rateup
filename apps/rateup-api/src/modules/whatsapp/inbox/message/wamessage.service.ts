@@ -3,11 +3,13 @@ import prisma from "../../../../utils/prisma";
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
   waContactId: string,
+  waCreatedAt: string,
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
       messageBody,
       waContactId,
+      waCreatedAt,
     },
   });
   return newMessage;
@@ -19,7 +21,7 @@ export async function getWaMessagesByWaContactId(waContactId: string) {
       waContactId,
     },
     orderBy: {
-      createdAt: "asc",
+      waCreatedAt: "asc",
     },
   });
   return messages;
