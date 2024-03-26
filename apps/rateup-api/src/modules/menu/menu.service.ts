@@ -311,8 +311,10 @@ export async function getMenuLanding(id: string) {
     menu.expiry = "Your free plan quota has been exceeded.";
   else if (isExpired) menu.expiry = "Your subscription plan has expired.";
 
-  if (menu) return menu;
-  else {
+  if (menu) {
+    menu.subscription = subscription?.basePlanId;
+    return menu;
+  } else {
     return {
       success: false,
       message: "Menu data not found",
