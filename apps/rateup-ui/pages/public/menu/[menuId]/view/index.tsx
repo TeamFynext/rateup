@@ -248,7 +248,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
           </CreditsCard>
         )}
         <Group
-          px={largeScreen ? "lg" : "xs"}
+          px={largeScreen ? "xl" : "xs"}
           m="sm"
           wrap="nowrap"
           pos={"sticky"}
@@ -259,7 +259,11 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
           <ActionIcon onClick={open} variant="transparent">
             <IconMenu2 color="var(--grey-color)" />
           </ActionIcon>
-          <ScrollArea h={"min-content"} w={"100vw"}>
+          <ScrollArea
+            h={"min-content"}
+            w={"100vw"}
+            scrollbarSize={largeScreen ? 10 : 0}
+          >
             <Box w={"max-content"}>
               {categoryChipLabel?.map((c) => (
                 <CategoryChip

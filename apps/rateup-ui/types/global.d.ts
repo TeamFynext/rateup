@@ -657,6 +657,7 @@ export interface Data {
     mobileBackgroundImage: boolean;
   };
   expiry?: string;
+  subscription?: string | null;
 }
 
 export interface Style {

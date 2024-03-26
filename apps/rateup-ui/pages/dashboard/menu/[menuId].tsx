@@ -240,6 +240,7 @@ export default function MenuById({ categories: initialCategories }) {
               surveyTeamMapId={menuLandingData?.surveyTeamMapId}
               visited={menuLandingData?.visited}
               surveyId={menuLandingData?.surveyTeamMap?.surveyId}
+              subscription={menuLandingData?.subscription}
             />
           </Tabs.Panel>
         </MotionTransition>
