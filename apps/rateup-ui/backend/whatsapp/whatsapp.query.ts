@@ -75,12 +75,17 @@ export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
   const deleteMutation = useMutation({
     mutationFn: deleteWaTemplate,
     onSuccess: () => {
-      showSuccessToast("Template Deleted Successfully");
+      showSuccessToast(
+        "Template Deleted Successfully",
+        "template-delete",
+        null,
+        true,
+      );
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess?.();
     },
     onError: () => {
-      showErrorToast("Error deleting template!");
+      showErrorToast("Error deleting template!", "template-delete", null, true);
       onError?.();
     },
   });
