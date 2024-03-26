@@ -110,12 +110,12 @@ const GeneralSettings = ({ editingItem }) => {
               allowDeselect={false}
               withAsterisk
               data={[
-                { value: "false", label: "show category" },
-                { value: "true", label: "hide category" },
+                { value: "false", label: "Disable" },
+                { value: "true", label: "Hide" },
               ]}
               defaultValue={form?.values?.hideUnavailableCategory}
               {...form.getInputProps("hideUnavailableCategory")}
-              label={"Hide the category outside its scheduled time."}
+              label={" Hide or Disable category outside its scheduled time"}
             />
           </SimpleGrid>
 
