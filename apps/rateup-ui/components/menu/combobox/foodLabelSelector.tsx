@@ -10,7 +10,7 @@ import {
   Text,
   useCombobox,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { menuLabelWithText } from "../util/menuLabelData";
 
 export function FoodLabelSelector({ form }) {
@@ -20,27 +20,25 @@ export function FoodLabelSelector({ form }) {
   });
 
   const [search, setSearch] = useState("");
-  const [value, setValue] = useState<string[]>([]);
 
   const handleValueSelect = (val: string) => {
-    setValue((current) =>
-      current.includes(val)
-        ? current.filter((v) => v !== val)
-        : [...current, val],
-    );
+    form.setValues((prevValues) => {
+      const updatedFoodLabels = prevValues?.foodLabels?.includes(val)
+        ? prevValues?.foodLabels?.filter((v) => v !== val)
+        : [...(prevValues?.foodLabels ?? []), val];
+      return {
+        ...prevValues,
+        foodLabels: updatedFoodLabels,
+      };
+    });
   };
-  useEffect(() => {
-    if (value) form?.setFieldValue("foodLabels", value);
-  }, [value]);
-
-  useEffect(() => {
-    if (form?.values?.foodLabels) setValue(form?.values?.foodLabels);
-  }, []);
-
   const handleValueRemove = (val: string) =>
-    setValue((current) => current.filter((v) => v !== val));
+    form.setValues((prevValues) => ({
+      ...prevValues,
+      foodLabels: prevValues?.foodLabels?.filter((v: string) => v !== val),
+    }));
 
-  const values = value.map((item) => (
+  const values = form?.values?.foodLabels?.map((item) => (
     <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
       <Flex align={"center"} h={"100%"} columnGap={5}>
         <Image
@@ -58,11 +56,17 @@ export function FoodLabelSelector({ form }) {
     .filter(({ image: item }) =>
       item.toLowerCase().includes(search.trim().toLowerCase()),
     )
-    .filter(({ label }) => !value.includes(label))
+    .filter(({ label }) => !form?.values?.foodLabels?.includes(label))
     .map(({ image, label }) => (
-      <Combobox.Option value={label} key={image} active={value.includes(image)}>
+      <Combobox.Option
+        value={label}
+        key={image}
+        active={form?.values?.foodLabels?.includes(image)}
+      >
         <Group gap="sm">
-          {value.includes(label) ? <CheckIcon size={12} /> : null}
+          {form?.values?.foodLabels?.includes(label) ? (
+            <CheckIcon size={12} />
+          ) : null}
           <Flex align={"center"} h={"100%"} columnGap={5}>
             <Image src={image} alt="it's me" h={15} w={15} />
             {label}
@@ -98,7 +102,11 @@ export function FoodLabelSelector({ form }) {
                 onKeyDown={(event) => {
                   if (event.key === "Backspace" && search.length === 0) {
                     event.preventDefault();
-                    handleValueRemove(value[value.length - 1]);
+                    handleValueRemove(
+                      form?.values?.foodLabels[
+                        form?.values?.foodLabels.length - 1
+                      ],
+                    );
                   }
                 }}
               />
