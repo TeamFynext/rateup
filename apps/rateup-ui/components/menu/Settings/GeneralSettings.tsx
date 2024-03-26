@@ -115,7 +115,7 @@ const GeneralSettings = ({ editingItem }) => {
               ]}
               defaultValue={form?.values?.hideUnavailableCategory}
               {...form.getInputProps("hideUnavailableCategory")}
-              label={"Hide the category if the schedule isn't right"}
+              label={"Hide the category outside its scheduled time."}
             />
           </SimpleGrid>
 

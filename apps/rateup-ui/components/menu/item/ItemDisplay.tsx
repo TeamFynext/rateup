@@ -67,7 +67,7 @@ export function ItemDisplay({
             >
               <Image
                 w={"100%"}
-                mih={smallScreen ? 152 : 215}
+                mih={smallScreen ? 165 : 215}
                 maw={"164px"}
                 alt="image of menu item"
                 src={
@@ -139,7 +139,7 @@ export function ItemDisplay({
                   >
                     {item?.name}
                   </Text>
-                  <ScrollArea h={"30px"} w={200}>
+                  <ScrollArea h={"30px"} w={200} mt={4}>
                     <Flex gap={4}>
                       <MenuFoodLabelBadge
                         foodLabels={item?.foodLabels ?? []}
@@ -150,13 +150,10 @@ export function ItemDisplay({
                   </ScrollArea>
                 </Box>
                 <Stack h={"100%"} justify="space-between" gap={0}>
-                  <Text
-                    fz="clamp(12px, calc(9.856px + 0.357vw), 15px)"
-                    lineClamp={descriptionLineClamp}
-                  >
+                  <Text fz={14} lineClamp={descriptionLineClamp}>
                     {item?.description}
                   </Text>
-                  <Flex justify="space-evenly" gap={"sm"}>
+                  <Flex justify="space-evenly" gap={"sm"} mt={4}>
                     {item?.price?.variants?.length > 0 ? (
                       item?.price?.variants.map((varient, index) => (
                         <Stack align="center" gap={"0px"} key={index}>
