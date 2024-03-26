@@ -39,6 +39,22 @@ function PrivacyPolicy() {
         </p>
       </section>
       <section>
+        <h2>Limited Use Disclosure</h2>
+        <p>
+          RateUp uses and transfers information received from Google APIs
+          according to Google API Services User Data Policy, including Limited
+          Use requirements.
+          <br />
+          Link to Google API Services User Data Policy: &nbsp;
+          <a
+            target="_blank"
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+          >
+            https://developers.google.com/terms/api-services-user-data-policy.
+          </a>
+        </p>
+      </section>
+      <section>
         <h2>Log Data</h2>
         <p>
           We want to inform you that whenever you visit our Service, we collect
