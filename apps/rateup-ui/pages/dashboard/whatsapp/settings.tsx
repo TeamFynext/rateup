@@ -106,12 +106,6 @@ export default function WhatappSettings() {
               required
               {...form.getInputProps("webhookPassword")}
             />
-            <ContainedTextField
-              label="Webhook Password"
-              placeholder="Create a webhook password"
-              required
-              {...form.getInputProps("webhookPassword")}
-            />
             <Center mt="xl">
               <RateupButtonPrimary type="submit" title={"Save Changes"} />
             </Center>
