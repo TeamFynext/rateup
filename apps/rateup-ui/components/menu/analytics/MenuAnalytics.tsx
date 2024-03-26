@@ -1,13 +1,18 @@
 import React from "react";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { Stack, Group, Badge, Text } from "@mantine/core";
+import { Stack, Group, Badge, Text, RingProgress } from "@mantine/core";
 import Heading from "../../styled/Heading/Heading";
 import { useGetSurveyStatsBySurveyTeamMapId } from "../../../backend/surveys/surveys.query";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import Link from "next/link";
 
-const MenuAnalytics = ({ surveyTeamMapId, visited, surveyId }) => {
+const MenuAnalytics = ({
+  surveyTeamMapId,
+  visited,
+  surveyId,
+  subscription,
+}) => {
   const {
     data: survayStats,
     isPending,
@@ -40,6 +45,21 @@ const MenuAnalytics = ({ surveyTeamMapId, visited, surveyId }) => {
             </Text>
           </Stack>
         </PaperLayout>
+        {!subscription && (
+          <>
+            <Heading subtitle="Your Free Quota" />
+            <RingProgress
+              sections={[
+                { value: visited ?? 0, color: "var(--tertiary-color)" },
+              ]}
+              label={
+                <Text c="var(--tertiary-color)" fw={700} ta="center" size="sm">
+                  {((visited ?? 0) / 100) * 100}% Used
+                </Text>
+              }
+            />
+          </>
+        )}
         {surveyTeamMapId && (
           <>
             <Group w={"100%"} justify="space-between" my={"md"}>
