@@ -8,6 +8,7 @@ import {
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
 } from "../../../../../utils/whatsapp/inbox";
+import WaInboxSessionBadge from "./sessionBadge";
 export default function WaInboxChatSelectCard(props: WaContact) {
   const router = useRouter();
   const params = useSearchParams();
@@ -24,11 +25,11 @@ export default function WaInboxChatSelectCard(props: WaContact) {
         <Group className={classes.chat_card_header}>
           <Text className={classes.chat_recepient_name}>{props?.name}</Text>
           <Group className={classes.chat_time_wrapper}>
-            {/* <Badge variant="light" className={classes.session_expiry_badge}>
-            Expired
-          </Badge> */}
+            <WaInboxSessionBadge
+              timeStamp={props?.userInitiatedFinalTimeStamp}
+            />
             <Text className={classes.chat_time}>
-              {formatToCustomTime(props?.lastMessage?.createdAt)}
+              {formatToCustomTime(props?.lastMessage?.waCreatedAt)}
             </Text>
           </Group>
         </Group>

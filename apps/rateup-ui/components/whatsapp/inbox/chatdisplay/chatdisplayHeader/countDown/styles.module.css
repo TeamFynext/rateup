@@ -1,0 +1,4 @@
+.timer_text {
+  font-size: var(--mantine-font-size-xs);
+  text-align: center;
+}

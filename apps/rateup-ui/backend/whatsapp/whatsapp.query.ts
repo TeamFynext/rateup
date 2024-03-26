@@ -6,6 +6,7 @@ import {
   getWaTemplateById,
   getWaTemplates,
   registerTemplates,
+  sendWaTemplateToUser,
   syncTemplates,
   updateWaTemplate,
 } from "./whatsapp.api";
@@ -123,4 +124,25 @@ export const useRegisterTemplatesMutation = (onSuccess?, onError?) => {
     },
   });
   return registerMutation;
+};
+
+export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ templateId }: { templateId: string }) =>
+      sendWaTemplateToUser(templateId, phone),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+      queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["wa-contact", contactId] });
+      showSuccessToast("Template sent successfully");
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        typeof error?.response?.data === "string"
+          ? error?.response?.data
+          : "Error sending template!",
+      );
+    },
+  });
 };

@@ -1,9 +1,11 @@
-import { WaInboxMessageBody } from "../../types/global";
+import dayjs from "dayjs";
+import { WaInboxMessageBody, WaTemplateFetchBody } from "../../types/global";
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
   messageContent: string;
+  template?: WaTemplateFetchBody;
 };
 export function parseWaMessage(
   messageBody: WaInboxMessageBody,
@@ -11,6 +13,7 @@ export function parseWaMessage(
   let timeStamp: string = new Date().toLocaleTimeString();
   let messageType: string = "text";
   let messageContent: string = "No messages yet";
+  let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   if (messageBody?.exchangeProcess === "send") {
     const { send } = messageBody;
     messageType = send.type;
@@ -22,7 +25,8 @@ export function parseWaMessage(
         messageContent = send?.image?.link;
         break;
       case "template":
-        messageContent = send.template;
+        messageContent = send.template.name;
+        template = send.template;
         break;
     }
   }
@@ -38,7 +42,7 @@ export function parseWaMessage(
         messageContent = receive.messages[0].image.link;
         break;
       case "button":
-        messageContent = receive.messages[0].button;
+        messageContent = receive.messages[0].button.text;
         break;
       case "interactive":
         switch (receive.messages[0].interactive.type) {
@@ -55,7 +59,7 @@ export function parseWaMessage(
         break;
     }
   }
-  return { timeStamp, messageType, messageContent };
+  return { timeStamp, messageType, messageContent, template };
 }
 
 export function returnMessageContentBasedOnParsedMessage(
@@ -81,7 +85,19 @@ export function returnMessageContentBasedOnParsedMessage(
     return "Voice";
   } else if (parsedMessage.messageType === "gif") {
     return "GIF";
+  } else if (parsedMessage.messageType === "template") {
+    return "Template";
+  } else if (parsedMessage.messageType === "button") {
+    return parsedMessage.messageContent;
   } else {
     return "Unsupported message type";
   }
+}
+
+export function isInboxSessionExpired(timeStamp: string) {
+  if (!timeStamp) return true;
+  const currentTime = dayjs().utc();
+  const givenTime = dayjs(timeStamp).utc();
+  const diffInHours = currentTime.diff(givenTime, "hours");
+  return diffInHours >= 24;
 }

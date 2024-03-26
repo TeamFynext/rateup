@@ -13,6 +13,9 @@ import {
   WaAutomatedReplyMatchType,
   WaAutomatedReplyResponseType,
   WaMessageTypes,
+  WaTemplateComponentTypeUpperCase,
+  WaTemplateStatus,
+  WaTemplateCategory,
 } from "./enums";
 
 type GoogleReview = {
@@ -908,7 +911,10 @@ export type WaReceiveMessageBody = {
         link?: string;
         caption?: string;
       };
-      button?: any;
+      button?: {
+        text: string;
+        payload: string;
+      };
     },
   ];
   statuses: [
@@ -941,7 +947,7 @@ export type WaSendMessageBody = {
     preview_url?: boolean;
     body: string;
   };
-  template?: any;
+  template?: WaTemplateFetchBody;
   image?: {
     link: string;
   };
@@ -1001,7 +1007,25 @@ export type WaContact = {
   name: string;
   phone: string;
   source: string;
-  lastMessage: { messageBody: WaInboxMessageBody; createdAt: string };
-  createdAt: string;
-  updatedAt: string;
+  lastMessage: { messageBody: WaInboxMessageBody; waCreatedAt: string };
+  userInitiatedFinalTimeStamp: string;
+};
+
+export type WaTemplateFetchBody = {
+  id: string;
+  name: string;
+  language: string;
+  status: WaTemplateStatus;
+  category: WaTemplateCategory;
+  components: WaTemplateFetchBodyComponent[];
+};
+
+export type WaTemplateFetchBodyComponent = {
+  type: WaTemplateComponentTypeUpperCase;
+  format?: "IMAGE" | "VIDEO" | "DOCUMENT" | "TEXT" | "LOCATION";
+  text?: string;
+  buttons?: {
+    type: WaButtonType.QUICK_REPLY;
+    text: string;
+  }[];
 };

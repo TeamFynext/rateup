@@ -234,3 +234,14 @@ export enum WaMessageTypes {
   interactive = "interactive",
   button = "button",
 }
+export enum WaTemplateCategory {
+  MARKETING = "MARKETING",
+  UTILITY = "UTILITY",
+  AUTHENTICATION = "AUTHENTICATION",
+}
+export enum WaTemplateComponentTypeUpperCase {
+  BODY = "BODY",
+  BUTTONS = "BUTTONS",
+  HEADER = "HEADER",
+  FOOTER = "FOOTER",
+}

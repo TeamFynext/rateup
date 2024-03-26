@@ -1,0 +1,8 @@
+.modal_inner {
+  padding: var(--mantine-spacing-md);
+}
+.modal_label {
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+  font-weight: 600;
+}

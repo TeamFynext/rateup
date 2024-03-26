@@ -1,17 +1,20 @@
-import { Group, Paper } from "@mantine/core";
+import { Group, Paper, Stack, Text } from "@mantine/core";
 import classes from "./styles.module.css";
+import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { formatToCustomTime } from "../../../../../../../utils/dateTime";
 interface Props {
   exchangeProcess: "send" | "receive";
+  messageObject: WaGetMessagesBody;
   children: any;
 }
 export default function WaInboxSingleMessageLayout(props: Props) {
-  const { exchangeProcess } = props;
+  const { exchangeProcess, messageObject } = props;
 
   function getWrapperProps() {
     if (exchangeProcess === "send") {
-      return { justify: "end" };
+      return { align: "end" };
     }
-    return { justify: "start" };
+    return { align: "start" };
   }
 
   function getInnerProps() {
@@ -22,10 +25,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   }
 
   return (
-    <Group className={classes.wrapper} {...getWrapperProps()}>
+    <Stack className={classes.wrapper} {...getWrapperProps()}>
       <Paper className={classes.inner} {...getInnerProps()}>
         {props?.children}
       </Paper>
-    </Group>
+      <Text fz={10}>
+        {formatToCustomTime(props?.messageObject?.waCreatedAt)}
+      </Text>
+    </Stack>
   );
 }

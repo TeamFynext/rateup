@@ -7,8 +7,9 @@ import { WaInboxMessageBody } from "../../../../../types/global";
 import WaInboxText from "./components/text";
 import { useIntersection, useScrollIntoView } from "@mantine/hooks";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import WaInboxImage from "./components/image";
+import WaInboxTemplate from "./components/template";
 interface Props {
   data: WaGetMessagesBody[];
 }
@@ -23,13 +24,17 @@ export default function WaInboxChatDisplayBody(props: Props) {
   });
 
   const singleMessage = (messageBody: WaInboxMessageBody) => {
-    const { messageContent, messageType, timeStamp } =
+    const { messageContent, messageType, template } =
       parseWaMessage(messageBody);
     switch (messageType) {
       case "text":
         return <WaInboxText messageContent={messageContent} />;
       case "image":
         return <WaInboxImage messageContent={messageContent} />;
+      case "button":
+        return <WaInboxText messageContent={messageContent} />;
+      case "template":
+        return <WaInboxTemplate {...template} />;
       default:
         return (
           <Text fz={"xs"} c={"red"}>
@@ -44,11 +49,12 @@ export default function WaInboxChatDisplayBody(props: Props) {
   return (
     <div className={classes.wrapper}>
       <div className={classes.inner} ref={scrollableRef}>
-        {props?.data?.map(({ messageBody }) => (
+        {props?.data?.map((message) => (
           <WaInboxSingleMessageLayout
-            exchangeProcess={messageBody?.exchangeProcess}
+            exchangeProcess={message?.messageBody?.exchangeProcess}
+            messageObject={message}
           >
-            {singleMessage(messageBody)}
+            {singleMessage(message?.messageBody)}
           </WaInboxSingleMessageLayout>
         ))}
         <div ref={targetRef}></div>

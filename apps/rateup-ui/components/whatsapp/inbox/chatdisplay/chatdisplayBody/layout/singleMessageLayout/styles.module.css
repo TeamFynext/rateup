@@ -1,9 +1,10 @@
 .wrapper {
   width: 100%;
+  gap: 5px;
 }
 .inner {
   padding: var(--mantine-spacing-sm);
   border-radius: var(--mantine-radius-md);
-  max-width: 300px;
+  max-width: 350px;
   box-shadow: var(--mantine-shadow-xs);
 }

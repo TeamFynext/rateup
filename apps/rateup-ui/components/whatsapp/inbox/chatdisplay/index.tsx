@@ -27,7 +27,7 @@ export default function WaInboxChatDisplay() {
         <>
           <WaInboxChatDisplayHeader {...waContactData} />
           <WaInboxChatDisplayBody data={data} />
-          <WaInboxChatDisplayFooter waContactId={contactId} />
+          <WaInboxChatDisplayFooter {...waContactData} />
         </>
       ) : (
         <NothingFound text="Select a chat to see messages" />

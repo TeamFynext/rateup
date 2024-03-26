@@ -79,3 +79,10 @@ export async function uploadTemplateMedia(file: File) {
     throw Error(error?.response?.data);
   }
 }
+
+export async function sendWaTemplateToUser(templateId: string, phone: string) {
+  return axiosClient.post(`${TEMPLATES_URL}/${templateId}/send`, {
+    templateId,
+    phone,
+  });
+}

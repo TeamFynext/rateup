@@ -66,13 +66,13 @@ export default function AddWaContactModal() {
                   <Table.Tr key={contact.id}>
                     <Table.Td>
                       <Checkbox
-                        checked={selectedRows.includes(contact.id)}
+                        checked={selectedRows?.includes(contact.id)}
                         onChange={(event) => {
                           if (event.target.checked) {
                             setSelectedRows([...selectedRows, contact.id]);
                           } else {
                             setSelectedRows(
-                              selectedRows.filter((id) => id !== contact.id),
+                              selectedRows?.filter((id) => id !== contact.id),
                             );
                           }
                         }}

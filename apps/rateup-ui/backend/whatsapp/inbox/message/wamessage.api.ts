@@ -7,6 +7,7 @@ export type WaGetMessagesBody = {
   id: string;
   waContctId: string;
   createdAt: string;
+  waCreatedAt: string;
   messageBody: WaInboxMessageBody;
 };
 export async function getMessagesByWaContactId(waContactId: string) {

@@ -41,7 +41,12 @@ export const formatedTime = (category) => {
 };
 
 export const formatToCustomTime = (timestamp) => {
+  if (!timestamp) return "-- : --";
   return dayjs(timestamp).format("HH:mm");
+};
+
+export const formatUnixTimeStamp = (timestamp: number) => {
+  return dayjs.unix(timestamp).format("HH:mm");
 };
 
 export const createCustomTimestamp = (customTime) => {

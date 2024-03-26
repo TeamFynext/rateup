@@ -4,6 +4,7 @@
   display: flex;
   gap: var(--mantine-spacing-sm);
   align-items: center;
+  justify-content: space-between;
 }
 .name_phone_wrapper {
   gap: 0;

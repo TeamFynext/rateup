@@ -1,4 +1,4 @@
-import { Container, Group, MantineProvider, Stack, Title } from "@mantine/core";
+import { Group, MantineProvider, Stack, Title } from "@mantine/core";
 import classes from "./styles.module.css";
 import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect";
 import WaInboxChatDisplay from "../../../../components/whatsapp/inbox/chatdisplay";

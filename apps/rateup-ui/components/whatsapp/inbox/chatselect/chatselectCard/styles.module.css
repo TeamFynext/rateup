@@ -30,9 +30,6 @@
 .chat_time_wrapper {
   justify-content: space-between;
 }
-.session_expiry_badge {
-  border-radius: var(--mantine-radius-sm);
-}
 .chat_time {
   font-size: var(--mantine-font-size-xs);
   font-weight: 100;

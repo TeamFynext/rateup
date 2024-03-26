@@ -1,11 +1,4 @@
-import {
-  Divider,
-  Group,
-  Loader,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Divider, Group, Loader, Stack, Text } from "@mantine/core";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
 import { IconSearch } from "@tabler/icons-react";
