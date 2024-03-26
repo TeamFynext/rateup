@@ -52,7 +52,7 @@ export function MenuCard({
             <Text mr={"sm"} truncate size="xl" fw={700} tt={"capitalize"}>
               {menu.name}
             </Text>
-            <Group align={"center"} mt="sm" gap="xs">
+            <Group align={"center"} mt="sm" gap="xs" miw={50}>
               <IconPencil
                 size={20}
                 onClick={(e) => {
@@ -63,7 +63,9 @@ export function MenuCard({
               <MenuCardMenu menuId={menu.id} teamId={menu.teamId} />
             </Group>
           </Flex>
-          <Text size="md">{menu.displayName}</Text>
+          <Text size="md" lineClamp={1}>
+            {menu.displayName}
+          </Text>
         </Box>
         <Space h="xl" />
         <Box>
@@ -79,9 +81,9 @@ export function MenuCard({
               </Text>
             </Flex>
             <Flex align={"center"}>
-              <IconMapPinFilled size={16} />
-              <Text ml={4} truncate maw={200}>
-                {menu.locationText}
+              {menu?.locationText && <IconMapPinFilled size={16} />}
+              <Text ml={4} maw={180} lineClamp={2} mih={50}>
+                {menu?.locationText}
               </Text>
             </Flex>
           </Flex>

@@ -25,6 +25,7 @@ import { whatsappOptions } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 
 export default function Template() {
   const { data: templates, isPending } = useWaTemplates();
@@ -134,9 +135,19 @@ export default function Template() {
         headerLabel="Are you sure you want to delete this Template?"
         headerTitle="Delete Template"
         confirmLabel="Delete"
-        onConfirm={() =>
-          selectedTemplate && templateDeleteMutation.mutate(selectedTemplate)
-        }
+        onConfirm={() => {
+          if (selectedTemplate) {
+            notifications.show({
+              id: "template-delete",
+              loading: true,
+              title: "Deleting Template",
+              message: `Hold on, Template is getting Deleted...`,
+              autoClose: false,
+              withCloseButton: false,
+            });
+            templateDeleteMutation.mutate(selectedTemplate);
+          }
+        }}
       />
       <SimpleGrid spacing={"lg"} cols={{ base: 1, sm: 2, lg: 3, xl: 3 }}>
         {templates?.map((t) => (

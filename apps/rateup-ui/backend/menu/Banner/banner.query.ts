@@ -56,6 +56,7 @@ export const useMenuBannerQuery = (menuId: string) => {
     enabled: !!menuId,
     queryKey: ["menu", menuId, "banner"],
     queryFn: () => getMenuBannerByMenuId(menuId),
+    staleTime: Infinity,
   });
   return data;
 };
