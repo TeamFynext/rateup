@@ -13,15 +13,22 @@ import {
 import { getContactByPhoneNumberAndOrgId } from "../../../contact/contact.service";
 import { createTextMessage } from "../../whatsappSurvey/wasurvey.utils";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
-import { handleWaReceivedImages } from "./wamessage.utils";
+import {
+  handleWaReceivedImages,
+  returnAppropriateTimeStamp,
+} from "./wamessage.utils";
+import {
+  fetchTemplate,
+  getTemplateByNameAndOrgId,
+} from "../../messageTemplates/wa_templates.service";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: any,
   phone: string,
+  orgId: string,
   userName?: string,
-  orgId?: string,
 ) {
   let waMessageBody: WaInboxMessageBody = {
     exchangeProcess: type,
@@ -31,6 +38,14 @@ export async function handleWaMessages(
   let waContactId = "";
   switch (type) {
     case "send": {
+      //condition to add template body to messageData if type is template
+      if (messageBody?.type === "template") {
+        const template = await getTemplateByNameAndOrgId(
+          messageBody.template.name,
+          orgId,
+        );
+        waMessageBody.send.template = template.data;
+      }
       const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
       const waContact = await getWaContactByContactId(contact.id);
       waContactId = waContact.id;
@@ -45,7 +60,12 @@ export async function handleWaMessages(
       waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
     }
   }
-  const waMessage = await addNewWaMessage(waMessageBody, waContactId);
+  const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
+  const waMessage = await addNewWaMessage(
+    waMessageBody,
+    waContactId,
+    waTimeStamp,
+  );
 }
 
 export async function sendNewWaMessageHandler(

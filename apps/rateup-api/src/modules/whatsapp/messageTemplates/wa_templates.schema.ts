@@ -88,12 +88,17 @@ const registerTemplatesInDbBodySchema = z.array(
   }),
 );
 
+const waUserSendTemplateBodySchema = z.object({
+  phone: z.string(),
+});
+
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
   {
     waTemplateInputSchema,
     waTemplateSchema,
     byTemplateIdParamsSchema,
     registerTemplatesInDbBodySchema,
+    waUserSendTemplateBodySchema,
   },
   { $id: "waTemplates" },
 );
@@ -107,4 +112,7 @@ export type WaTemplateFormatted = z.infer<typeof waTemplateFormattedSchema>;
 export type ByTemplateIdParamsSchema = z.infer<typeof byTemplateIdParamsSchema>;
 export type RegisterTemplatesInDbBodySchema = z.infer<
   typeof registerTemplatesInDbBodySchema
+>;
+export type WaUserSendTemplateBodySchema = z.infer<
+  typeof waUserSendTemplateBodySchema
 >;

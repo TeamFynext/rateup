@@ -69,6 +69,19 @@ export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
   });
   return template;
 }
+
+export async function getTemplateByNameAndOrgId(name: string, orgId: string) {
+  const template = await prisma.waTemplate.findFirst({
+    where: {
+      orgId: orgId,
+      data: {
+        path: ["name"],
+        equals: name,
+      },
+    },
+  });
+  return template;
+}
 export async function getDbTemplate(templateId: string) {
   try {
     const res = await prisma.waTemplate.findUnique({
@@ -135,10 +148,7 @@ export async function createTemplate(orgId: string, template: any) {
  * @param orgId
  * @returns
  */
-export async function saveTemplate(
-  template: WaTemplateFormatted,
-  orgId: string,
-) {
+export async function saveTemplate(template: any, orgId: string) {
   try {
     const res = await prisma.waTemplate.create({
       data: {
@@ -203,10 +213,7 @@ export async function deleteTemplateFromDb(templateId: string) {
   }
 }
 
-export async function updateTemplateInDb(
-  templateId: string,
-  template: WaTemplateFormatted,
-) {
+export async function updateTemplateInDb(templateId: string, template: any) {
   log.trace(`Updating template %o`, { templateId, data: template });
   try {
     const res = await prisma.waTemplate.update({

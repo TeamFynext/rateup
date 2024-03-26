@@ -7,6 +7,7 @@ import {
 import {
   WaMessageBody,
   WaSendMessageBody,
+  WaTemplateFetchBody,
 } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
@@ -40,6 +41,7 @@ import {
 } from "../../survey/survey.service";
 import { getOrCreateContactByPhone } from "../../contact/contact.service";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
+import { fetchTemplate } from "../messageTemplates/wa_templates.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -69,7 +71,7 @@ export async function sendMessage(
       messageData,
     );
     log.trace(`sent successfully %o %o `, res.data, res.statusText);
-    await handleWaMessages("send", messageData, to);
+    await handleWaMessages("send", messageData, to, orgId);
     return true;
   } catch (e: any) {
     log.error("Error sending message");

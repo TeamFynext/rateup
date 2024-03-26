@@ -1,4 +1,5 @@
 import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils";
+import dayjs from "dayjs";
 
 export async function handleWaReceivedImages(
   messageBody: WaInboxMessageBody,
@@ -29,4 +30,15 @@ export async function handleWaReceivedImages(
     };
   }
   return messageBody;
+}
+
+export async function returnAppropriateTimeStamp(
+  messageBody: WaInboxMessageBody,
+) {
+  if (messageBody.exchangeProcess === "receive") {
+    const unixTimeStamp = parseInt(messageBody.receive.messages[0].timestamp);
+    const utcTimeStamp = dayjs.unix(unixTimeStamp).utc().format();
+    return utcTimeStamp;
+  }
+  return dayjs().utc().format();
 }

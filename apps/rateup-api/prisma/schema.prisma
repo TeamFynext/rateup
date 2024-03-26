@@ -312,8 +312,8 @@ model Contact {
   campaignParticipants CampaignParticipant[]
   waContact            WaContact?
 
-  @@unique([phone, orgId], name: "contact_phone_team_id_unique")
-  @@unique([email, orgId], name: "contact_email_team_id_unique")
+  @@unique([phone, orgId], name: "contact_phone_org_id_unique")
+  @@unique([email, orgId], name: "contact_email_org_id_unique")
 }
 
 model ContactGroup {
@@ -466,6 +466,7 @@ model Media {
 model WaTemplate {
   id           String   @id @default(uuid()) @db.Uuid
   createdAt    DateTime @default(now())
+  /// [PWaTemplateWithTypesData]
   data         Json
   acceptButton String // QuickReplyButton text which on clicking will send the survey to the user
 
@@ -909,6 +910,7 @@ model WaContact {
 model WaMessage {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt   DateTime  @default(now())
+  waCreatedAt DateTime?
   waContactId String    @db.Uuid
   /// [PWaMessageBody]
   messageBody Json

@@ -87,6 +87,7 @@ export async function getAllWaContactsByOrgHandler(
     return reply.status(200).send(contacts);
   } catch (error) {
     log.error("Error in getAllWaContactsByOrgHandler: ", error);
+    return reply.status(500).send("Something went wrong");
   }
 }
 
@@ -100,5 +101,6 @@ export async function getWaContactByWaContactIdHandler(
     return reply.status(200).send(contact);
   } catch (error) {
     log.error("Error in getWaContactByContactIdHandler: ", error);
+    return reply.status(500).send("Something went wrong");
   }
 }
