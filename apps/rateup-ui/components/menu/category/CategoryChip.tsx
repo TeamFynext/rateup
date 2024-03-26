@@ -11,13 +11,13 @@ export function CategoryChip({
     <UnstyledButton
       bg={selected ? "var(--orange-400)" : "white"}
       c={selected ? "white" : "var(--grey-color, #494949)"}
-      py={largeScreen ? 4 : 8}
+      py={largeScreen ? 4 : 7}
       px={"md"}
       onClick={() => onClick(categoryId)}
       tt={"capitalize"}
       my={"xs"}
       fw={500}
-      fz={"clamp(15.008px, 11.424px + 0.595vw, 20px)"}
+      fz={"clamp(14px, 9.712px + 0.714vw, 20px)"}
       mx={4}
       style={{
         border: !selected
