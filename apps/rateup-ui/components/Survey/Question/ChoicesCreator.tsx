@@ -7,7 +7,6 @@ import {
   Flex,
   Select,
   Text,
-  ScrollArea,
   FileButton,
   Button,
   Switch,
@@ -264,7 +263,7 @@ export function ChoicesCreator({
                 resetRef={resetRef}
               >
                 {(props) => (
-                  <Button {...props}>
+                  <Button {...props} variant="outline">
                     <Text fz="sm" mr={4}>
                       {selectedImageFile?.name ?? "Select Image"}
                     </Text>
@@ -279,6 +278,7 @@ export function ChoicesCreator({
           <RateupButtonSecondary
             title={"Add choice"}
             size="sm"
+            variant={image ? "filled" : "outline"}
             leftIcon={<IconPlus size="1rem" />}
             onClick={handleAddChoice}
             loading={fileUploadLoading}
@@ -580,7 +580,7 @@ function Choice({
                 resetRef={resetRef}
               >
                 {(props) => (
-                  <Button {...props} radius={"lg"}>
+                  <Button {...props} radius={"lg"} variant="outline">
                     <Text fz="sm" mr={4}>
                       {selectedImageFile?.name ?? "Edit Image"}
                     </Text>
