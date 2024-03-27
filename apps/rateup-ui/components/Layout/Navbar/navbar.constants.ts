@@ -24,6 +24,7 @@ import {
   IconPigMoney,
   IconMessageCog,
   IconInbox,
+  IconApi,
 } from "@tabler/icons-react";
 
 import { UserRole } from "../../../utils/enums";
@@ -227,6 +228,11 @@ export function getNavTopData(subscription?: Subscription) {
                 Icon: IconUsers,
                 label: "Customers",
                 href: "/dashboard/loyalty/customer",
+              },
+              {
+                Icon: IconApi,
+                label: "API",
+                href: "/dashboard/loyalty/api",
               },
             ],
           },
