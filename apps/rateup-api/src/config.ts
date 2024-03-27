@@ -10,6 +10,7 @@ import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail";
 import { log } from "./utils/logger";
 import Passwordless from "supertokens-node/recipe/passwordless";
 import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery";
+import { SwaggerOptions } from "@fastify/swagger";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -304,4 +305,47 @@ export const SuperTokensConfig: TypeInput = {
     }),
     Dashboard.init(),
   ],
+};
+
+export const swaggerConfig: SwaggerOptions = {
+  openapi: {
+    openapi: "3.0.0",
+    info: {
+      title: "Fastify Swagger Example",
+      version: "1.0.0",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+        description: "Development server",
+      },
+    ],
+    tags: [
+      {
+        name: "Loyalty Campaign",
+        description: "Loyalty Campaign related endpoints",
+      },
+      {
+        name: "Loyalty Campaign Reward",
+        description: "Loyalty Campaign Reward related endpoints",
+      },
+      {
+        name: "Loyalty Customer",
+        description: "Loyalty Customer related endpoints",
+      },
+      {
+        name: "Loyalty Campaign -> RewardEvent",
+        description: "RewardEvent of a campaign related endpoints",
+      },
+      {
+        name: "Loyalty Customer -> RewardEvent",
+        description: "RewardEvent of a customer related endpoints",
+      },
+      {
+        name: "Loyalty ReferralCode",
+        description: "ReferralCode related endpoints",
+      },
+    ],
+  },
+  hideUntagged: true,
 };

@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ByCampaignIdParams } from "./campaign.schema";
+import { ByCampaignIdParams, CreateLCampaignInput } from "./campaign.schema";
 import {
   createCampaign,
   deleteCampaign,
@@ -10,18 +10,13 @@ import {
   getParticipantsByCampaignId,
   updateCampaign,
 } from "./campaign.service";
-import { CreateCampaignInput } from "../../../campaign/campaign.schema";
-import { BylCustomerIdParam } from "../customer/customer.schema";
-import {
-  getLCustomerById,
-  getLCustomerByPhone,
-} from "../customer/customer.service";
+import { getLCustomerByPhone } from "../customer/customer.service";
 import { randomUUID } from "crypto";
 import { createReferralCode } from "../referralCode/referralCode.service";
 
 export async function createCampaignHandler(
   req: FastifyRequest<{
-    Body: CreateCampaignInput;
+    Body: CreateLCampaignInput;
   }>,
   res: FastifyReply,
 ) {

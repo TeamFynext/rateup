@@ -98,6 +98,7 @@ model Org {
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
   WaContact         WaContact[]
+  LoyaltyApiKey     LoyaltyApiKey?
 }
 
 model WhatsappSettings {
@@ -499,10 +500,10 @@ model MenuLanding {
 }
 
 model ReviewSuggestion {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId String @db.Uuid
-  review String
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId   String @db.Uuid
+  review   String
   language String @default("English")
 }
 
@@ -932,4 +933,13 @@ model WaAutomatedReply {
   responseType       String // enums.ts: WaAutomatedReplyResponseType
   responseText       String?
   responseTemplateId String?
+}
+
+model LoyaltyApiKey {
+  orgId String @unique @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  // hashed key
+  apiKey    String
+  createdAt DateTime @default(now())
 }

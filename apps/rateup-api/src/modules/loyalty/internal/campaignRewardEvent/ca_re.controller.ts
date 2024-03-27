@@ -41,7 +41,7 @@ export async function createCampaignRewardEventHandler(
   reply.send(ca_REvent);
 }
 
-export async function getCampaignRewards_ByCampaignIdHandler(
+export async function getCampaignRewardEvents_ByCampaignIdHandler(
   request: FastifyRequest<{
     Params: ByCampaignIdParams;
   }>,

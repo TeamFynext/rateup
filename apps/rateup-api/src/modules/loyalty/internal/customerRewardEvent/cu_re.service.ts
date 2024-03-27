@@ -3,6 +3,7 @@ import { updateLCustomer } from "../customer/customer.service";
 import { CreateCustomerRewardEventInput } from "./cu_re.schema";
 
 /**
+ * Creates a CustomerRewardEvent-record.
  * Expected to be called automatically when a CampaignRewardEvent-record is created.
  */
 // TODO: add as a trigger?
@@ -31,4 +32,12 @@ export async function createCustomerRewardEvent(
   }
 
   return cure;
+}
+
+export async function getCustomerRewardEventsByCustomerId(customerId: string) {
+  return await prisma.lCustomerRewardEvent.findMany({
+    where: {
+      customerId,
+    },
+  });
 }

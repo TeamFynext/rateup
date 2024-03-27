@@ -24,7 +24,6 @@ export async function createCampaignRewardEvent(
         userReward: true,
       },
     });
-
   if (referrerReward) {
     await createCustomerRewardEvent({
       pointsEarned: calculatePointsEarned(
