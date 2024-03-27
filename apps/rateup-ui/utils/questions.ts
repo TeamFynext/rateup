@@ -71,7 +71,8 @@ export const getInitialQuestionValues = (
     emptyText[lang] = "";
   });
 
-  const required = question.type !== QuestionType.InfoMessage;
+  const required =
+    question.type !== QuestionType.InfoMessage ? question?.required : false;
 
   return {
     title: { ...emptyText, ...question?.title },

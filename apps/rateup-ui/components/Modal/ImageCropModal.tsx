@@ -174,6 +174,7 @@ export const ImageCropModal = ({
       }}
       opened={opened}
       radius={"lg"}
+      zIndex={9999}
     >
       {image?.startsWith("blob:") && (
         <NumberInput
