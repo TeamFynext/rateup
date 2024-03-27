@@ -264,7 +264,7 @@ export function ChoicesCreator({
                 resetRef={resetRef}
               >
                 {(props) => (
-                  <Button {...props}>
+                  <Button {...props} variant="outline">
                     <Text fz="sm" mr={4}>
                       {selectedImageFile?.name ?? "Select Image"}
                     </Text>
@@ -279,6 +279,7 @@ export function ChoicesCreator({
           <RateupButtonSecondary
             title={"Add choice"}
             size="sm"
+            variant={image ? "filled" : "outline"}
             leftIcon={<IconPlus size="1rem" />}
             onClick={handleAddChoice}
             loading={fileUploadLoading}
