@@ -37,6 +37,7 @@ import QuestionForm from "./QuestionForm";
 import QuestionDesc from "./QuestionDesc";
 import QuestionTitle from "./QuestionTitle";
 import styles from "./TakeSurvey.module.css";
+import { useBeforeUnload } from "react-use";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -46,6 +47,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   const surveyTeamMapId = survey.surveyTeamMapId;
+  useBeforeUnload(true, "Your inputs are not submitted yet, are you sure?");
 
   const { data: surveyThemeData, isLoading: IsLoading } = useSurveyTheme(
     survey?.id,
