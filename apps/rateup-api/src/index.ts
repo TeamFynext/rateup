@@ -5,11 +5,13 @@ import Fastify from "fastify";
 import supertokens from "supertokens-node";
 import { plugin } from "supertokens-node/framework/fastify";
 import { errorHandler } from "supertokens-node/framework/fastify";
-import { SuperTokensConfig } from "./config";
+import { SuperTokensConfig, swaggerConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
 import formDataPlugin from "@fastify/formbody";
 import { parseArrayString } from "./utils/array";
 import { log } from "./utils/logger";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 
 const server = Fastify({
   // logger: logOptions,
@@ -38,7 +40,6 @@ server.get("/api/ping", async (req, reply) => {
   }
 });
 
-registerRoutes(server);
 server.register(formDataPlugin);
 server.register(plugin);
 server.setErrorHandler(errorHandler());
@@ -57,6 +58,28 @@ async function main() {
       console.error(e);
       process.exit(1);
     });
+
+  if (process.env.SWAGGER == "1") {
+    server.after(() => {
+      server.register(swagger, swaggerConfig);
+      server.register(swaggerUi, {
+        routePrefix: "/docs",
+        uiConfig: {
+          defaultModelsExpandDepth: -1,
+        },
+      });
+      log.trace("Swagger registered. Exposing docs at /docs");
+    });
+  }
+
+  server.after(() => {
+    registerRoutes(server);
+  });
+
+  if (process.env.SWAGGER == "1") {
+    await server.ready();
+    server.swagger();
+  }
 }
 
 if (require.main === module) {

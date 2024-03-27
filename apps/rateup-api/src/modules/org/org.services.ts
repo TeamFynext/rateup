@@ -20,6 +20,14 @@ export async function createOrg(input: CreateOrgInput) {
   return org;
 }
 
+export async function getOrgById(orgId: string) {
+  return await prisma.org.findUnique({
+    where: {
+      id: orgId,
+    },
+  });
+}
+
 export async function getTeamsMembers(orgId: string) {
   const teams = await prisma.team.findMany({
     where: { orgId: orgId },
