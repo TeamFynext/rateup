@@ -7,7 +7,6 @@ import {
   Flex,
   Select,
   Text,
-  ScrollArea,
   FileButton,
   Button,
   Switch,
@@ -581,7 +580,7 @@ function Choice({
                 resetRef={resetRef}
               >
                 {(props) => (
-                  <Button {...props} radius={"lg"}>
+                  <Button {...props} radius={"lg"} variant="outline">
                     <Text fz="sm" mr={4}>
                       {selectedImageFile?.name ?? "Edit Image"}
                     </Text>

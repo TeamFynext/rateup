@@ -215,6 +215,7 @@ export const ImageCropModal = ({
             <RateupLoader />
           </Stack>
         )}
+        <Box h={100} />
       </Box>
 
       <canvas
