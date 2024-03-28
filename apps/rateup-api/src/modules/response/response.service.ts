@@ -84,7 +84,7 @@ export async function getAllResponses(
           },
         },
         orderBy: {
-          createdAt: "desc",
+          createdAt: "asc",
         },
       },
     },
