@@ -83,6 +83,9 @@ export async function getAllResponses(
             },
           },
         },
+        orderBy: {
+          createdAt: "desc",
+        },
       },
     },
   });
