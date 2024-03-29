@@ -7,12 +7,12 @@ function PageSelector({ onChange, value }) {
     <Tabs
       classNames={styles}
       onChange={onChange}
-      defaultValue={ThemeTabEnum.WELCOME}
+      defaultValue={ThemeTabEnum.SURVEY}
       value={value}
     >
       <Tabs.List>
-        <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>
         <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey</Tabs.Tab>
+        <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>
         <Tabs.Tab value={ThemeTabEnum.THANKYOU}>Thankyou Page</Tabs.Tab>
       </Tabs.List>
     </Tabs>

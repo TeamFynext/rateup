@@ -17,6 +17,7 @@ import {
   Box,
   MantineProvider,
   Portal,
+  Select,
 } from "@mantine/core";
 import LogoStyles from "../LogoStyles";
 import TabsCommon from "../../../../menu/landingPage/Tabs/TabsCommon";
@@ -46,6 +47,7 @@ import styles from "./StylesComponent.module.css";
 import { useEditSurveyMutation } from "../../../../../backend/surveys/surveys.query";
 import { theme } from "../../../../../config/mantineTheme";
 import CustomSwitch from "./CustomSwitch";
+import { IconEdit } from "@tabler/icons-react";
 
 type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
 interface StylesComponentProps {
@@ -55,6 +57,11 @@ interface StylesComponentProps {
   selectedTab: ThemeTabEnum;
   survey: any;
 }
+
+function RenderOption({ option, checked }) {
+  return <Box>{option.label}</Box>;
+}
+
 function StylesComponent({
   selectedType,
   setSelectedTab,
@@ -183,10 +190,10 @@ function StylesComponent({
             padding: "0.875rem",
           }}
         >
-          <TabsCommon
+          {/* <TabsCommon
             styles={{
               root: {
-                height: "100%",
+                // height: "100%",
                 display: "flex",
                 flexDirection: "column",
               },
@@ -222,7 +229,23 @@ function StylesComponent({
               mt="sm"
               mb="md"
             />
+          </TabsCommon> */}
 
+          <Select
+            className={styles["editor-select-dropdown"]}
+            value={tabState}
+            data={availableStyleComponents}
+            onChange={(value: string) => setTabState(value as SelectedItemEnum)}
+            leftSection={<IconEdit width={"1rem"} />}
+            renderOption={RenderOption}
+            classNames={{
+              option: styles["editor-select-dropdown-option"],
+              input: styles["editor-selector-dropdown-input"],
+            }}
+            allowDeselect={false}
+          />
+
+          <Tabs value={tabState}>
             <ScrollArea scrollbarSize={5} offsetScrollbars>
               {availableStyleComponents.includes(
                 SelectedItemEnum.BACKGROUND,
@@ -298,6 +321,7 @@ function StylesComponent({
               {availableStyleComponents.includes(SelectedItemEnum.BUTTON) && (
                 <Tabs.Panel value={SelectedItemEnum.BUTTON}>
                   <ButtonStyles
+                    selectedTab={selectedTab}
                     currentStyles={
                       (selectedTabStyles as _SurveyTheme | WelcomeTheme)?.button
                     }
@@ -314,35 +338,9 @@ function StylesComponent({
                 </Tabs.Panel>
               )}
             </ScrollArea>
-          </TabsCommon>
-
-          {/* <Button
-            loading={saveLoading}
-            radius={48}
-            size={"sm"}
-            pl={40}
-            pr={40}
-            onClick={saveStyles}
-            bg={"var(--tertiary-color)"}
-          >
-            Save
-          </Button> */}
+          </Tabs>
         </Box>
 
-        {/* <PaperLayout
-          style={{ overflow: "hidden" }}
-          mah={70}
-          mih={70}
-          p={"sm"}
-          mt={"auto"}
-          styles={{
-            root: {
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            },
-          }}
-        > */}
         <Portal target={"#save-btn-container-portal"}>
           <Group justify="center" w="100%">
             <Text
@@ -372,7 +370,6 @@ function StylesComponent({
             </Button>
           </Group>
         </Portal>
-        {/* </PaperLayout> */}
       </MantineProvider>
     </>
   );

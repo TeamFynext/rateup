@@ -34,7 +34,7 @@ function SurveyTheme({ survey }) {
   const [selectedPreview, setSelectedPreview] = useState(
     PreviewTypeEnum.DESKTOP,
   );
-  const [selectedPageTab, setSelectedPageTab] = useState(ThemeTabEnum.WELCOME);
+  const [selectedPageTab, setSelectedPageTab] = useState(ThemeTabEnum.SURVEY);
 
   const [selectedType, setSelectedType] = useState<SelectedItemEnum>(
     SelectedItemEnum.BACKGROUND,
@@ -129,7 +129,7 @@ function SurveyTheme({ survey }) {
                   className={styles["welcome-page-switch"]}
                   classNames={{
                     track: `${
-                      !isWelcomePageEnabled
+                      isWelcomePageEnabled
                         ? styles["switched-on-track"]
                         : styles["switched-off-track"]
                     }`,

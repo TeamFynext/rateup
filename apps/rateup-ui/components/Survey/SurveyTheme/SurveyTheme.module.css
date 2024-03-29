@@ -66,16 +66,6 @@
   border: none;
 }
 
-.welcome-page-switch .switched-on-track {
-  background-color: #ff0000;
-  cursor: pointer;
-}
-
-.welcome-page-switch .switched-off-track {
-  background-color: #40c057;
-  cursor: pointer;
-}
-
 .survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
   height: 100%;
   overflow: hidden;

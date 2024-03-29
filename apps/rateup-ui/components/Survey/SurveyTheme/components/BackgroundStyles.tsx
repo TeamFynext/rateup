@@ -221,7 +221,7 @@ function BackgroundStyles({
 
       {/* //------------BGIMAGE------------ */}
       {/* <Divider label="Background Image" variant="dashed" w={"100%"} /> */}
-      <Stack gap={"0.625rem"}>
+      <Stack gap={"1rem"}>
         <h2 className={styles["section-heading"]}>Background Image</h2>
         <Group w={"100%"} justify="space-between">
           <Group gap={"xs"}>

@@ -5,12 +5,12 @@ export enum ThemeTabEnum {
 }
 
 export enum SelectedItemEnum {
-  BACKGROUND = "bg",
-  LOGO = "logo",
-  TITLE = "title",
-  SUBTITLE = "subtitle",
-  BUTTON = "button",
-  INPUT = "input",
+  BACKGROUND = "Background",
+  LOGO = "Logo",
+  TITLE = "Title",
+  SUBTITLE = "Subtitle",
+  BUTTON = "Button",
+  INPUT = "Input",
 }
 
 export enum defaultThemeName {
