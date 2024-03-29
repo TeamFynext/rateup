@@ -8,17 +8,14 @@ import { responsePublicRoutes } from "./modules/response/response.public.route";
 import { responseRoutes } from "./modules/response/response.route";
 import { responseSchemas } from "./modules/response/response.schema";
 import { surveyPublicRoutes } from "./modules/survey/survey.public.routes";
-import { landingPagePublicRoutes } from "./modules/landingPage/landingpage.public.routes";
 import { surveyRoutes } from "./modules/survey/survey.route";
 import { surveySchemas } from "./modules/survey/survey.schema";
-import { landingPageSchemas } from "./modules/landingPage/landingpage.schema";
 import { teamRoutes } from "./modules/team/team.route";
 import { teamSchemas } from "./modules/team/team.schema";
 import { userRoutes } from "./modules/user/user.route";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route";
 import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema";
 import { userSchemas } from "./modules/user/user.schema";
-import { LandingPageRoutes } from "./modules/landingPage/landingpage.route";
 import { menuSchemas } from "./modules/menu/menu.schema";
 import { menuRoutes } from "./modules/menu/menu.route";
 import { menuCategorySchemas } from "./modules/menu/category/category.schema";
@@ -59,6 +56,8 @@ import { ticketRoutes } from "./modules/ticket/ticket.route";
 import { ticketSchemas } from "./modules/ticket/ticket.schema";
 import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic.route";
 import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes";
+import landingPageRoutes from "./modules/landingPage/landingPage.routes";
+import { landingPageSchemas } from "./modules/landingPage/landingPage.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -69,7 +68,6 @@ export function registerRoutes(server: FastifyInstance): void {
     responseSchemas,
     uploadSchemas,
     userSchemas,
-    landingPageSchemas,
     menuSchemas,
     menuCategorySchemas,
     menuItemSchemas,
@@ -85,6 +83,7 @@ export function registerRoutes(server: FastifyInstance): void {
     testimonialCollectionSchemas,
     ticketSchemas,
     subscriptionSchemas,
+    landingPageSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -92,7 +91,6 @@ export function registerRoutes(server: FastifyInstance): void {
     }
   }
   server.register(surveyRoutes, { prefix: "api/survey" });
-  server.register(LandingPageRoutes, { prefix: "api/landingpage" });
   server.register(surveyMenuShareSettingsRoutes, {
     prefix: "api/shareSettings",
   });
@@ -103,9 +101,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(teamRoutes, { prefix: "api/team" });
   server.register(responseRoutes, { prefix: "api/response" });
   server.register(surveyPublicRoutes, { prefix: "api/public/survey" });
-  server.register(landingPagePublicRoutes, {
-    prefix: "api/public/landingpage",
-  });
   server.register(responsePublicRoutes, { prefix: "api/public/response" });
   server.register(fileUploadPublicRoutes, { prefix: "api/public/upload" });
   server.register(whatsappRoutes, { prefix: "api/wa" });
@@ -135,4 +130,5 @@ export function registerRoutes(server: FastifyInstance): void {
     prefix: "api/public/testimonials",
   });
   server.register(loyaltyRoutes, { prefix: "api/loyalty/" });
+  server.register(landingPageRoutes, { prefix: "/api/landingPages" });
 }
