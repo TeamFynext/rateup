@@ -10,20 +10,32 @@ import { showErrorToast } from "../../../../utils/notifications";
 
 function Preview({
   url,
-  qrBgImgLogo = getLogoSrc(null),
-  qrBgImgFillType = "contain",
-  qrBgColor = "#FFFFFF",
-  qrColor = "#000000",
   surveyTitle,
   isSurveyPublished = true,
-  logoSize = 75,
-  logoBorderRadius = 50,
   customAttrForDownloadedQrFileName = "",
+  logoTabPanelState,
 }) {
+  const {
+    qrBgColor,
+    qrColor,
+    logoSize,
+    logoFillType: qrBgImgFillType,
+    logoBorderRadius,
+    logoFile: qrBgImgLogo,
+  } = logoTabPanelState;
+
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
     useState(false);
 
   const previewContainerRef = useRef();
+
+  const logoSrc = getLogoSrc(qrBgImgLogo);
+
+  useEffect(() => {
+    return () => {
+      URL.revokeObjectURL(logoSrc);
+    };
+  }, []);
 
   const downloadQrCode = async () => {
     const element: HTMLElement = previewContainerRef.current;
@@ -76,7 +88,7 @@ function Preview({
         >
           <Image
             className={styles["qr-bg-img"]}
-            src={qrBgImgLogo}
+            src={logoSrc}
             alt="bg-image"
             style={{
               width: logoSize,

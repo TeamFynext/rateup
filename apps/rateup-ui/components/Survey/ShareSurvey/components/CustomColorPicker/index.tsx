@@ -5,20 +5,26 @@ import styles from "./CustomColorPicker.module.css";
 import buttonStyles from "./MantineButtonStyles.module.css";
 import { useCallback, useState } from "react";
 
+enum Size {
+  md = "md",
+  lg = "lg",
+}
+
 type CustomColorPickerProps = {
   value: string;
   onChange: any;
   optionalDataObj?: any;
+  size?: string;
 };
 
 function CustomColorPicker({
   value,
   onChange,
   optionalDataObj,
+  size = "md",
 }: CustomColorPickerProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
-
   const handleBlur = useCallback(
     (e) => {
       setIsColorPickerOpen(false);
@@ -64,7 +70,7 @@ function CustomColorPicker({
     <Popover opened={isColorPickerOpen} onChange={setIsColorPickerOpen}>
       <Popover.Target>
         <Flex
-          className={`${styles["custom-color-picker-container"]} custom-color-picker-container`}
+          className={`${styles["custom-color-picker-container"]} custom-color-picker-container ${size === Size.md ? styles["size-md"] : ""}`}
         >
           <Button
             className={`${styles["color-indicator"]} color-indicator`}

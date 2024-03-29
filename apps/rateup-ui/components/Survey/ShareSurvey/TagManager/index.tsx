@@ -114,14 +114,6 @@ function TagManager({
   );
 
   const settingsData = shareSettings.data ? shareSettings.data : {};
-  const {
-    qrBgColor,
-    qrColor,
-    logoFile,
-    logoBorderRadius,
-    logoSize,
-    logoFillType,
-  } = settingsData;
 
   return (
     <>
@@ -242,15 +234,8 @@ function TagManager({
                       url={params.row?.col3}
                       isSurveyPublished={isPublished}
                       surveyTitle={surveyTitle}
-                      qrBgColor={qrBgColor}
-                      qrColor={qrColor}
-                      qrBgImgLogo={
-                        logoFile ? logoFile : "/images/rateup-star.svg"
-                      }
-                      qrBgImgFillType={logoFillType}
-                      logoSize={logoSize}
-                      logoBorderRadius={logoBorderRadius}
                       customAttrForDownloadedQrFileName={params.row.col1}
+                      logoTabPanelState={shareSettings}
                     />
                   </Group>
                 ),

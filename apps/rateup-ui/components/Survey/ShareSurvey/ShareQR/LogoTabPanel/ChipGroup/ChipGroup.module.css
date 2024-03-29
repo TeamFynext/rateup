@@ -1,5 +1,6 @@
 .root {
-  margin-bottom: 1rem;
+  height: 2.25rem;
+  margin-bottom: 0;
 }
 
 .root:nth-last-child(1) {
@@ -7,10 +8,10 @@
 }
 
 .root .label {
-  padding: 0.625rem 1.5rem;
+  padding: 0.3125rem 1.5rem;
   width: 100%;
-  height: auto;
-  font-size: 1.125rem;
+  height: 100%;
+  font-size: 0.875rem;
 }
 
 /* .root .label[data-checked="true"] { */

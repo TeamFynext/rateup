@@ -68,7 +68,8 @@ function CustomQRCode({
               ? findingPatternModuleTransform
               : dataModuleTransform
           }
-          shapeRendering={isFindingPatternModule ? "crispEdges" : "auto"}
+          shapeRendering={"crispEdges"}
+          // shapeRendering={isFindingPatternModule ? "crispEdges" : "auto"}
           // fill={qrData[i] === 0 ? "rgba(0, 0, 0, 0)" : `${qrColor?qrColor:'black'}`}
         />
       );

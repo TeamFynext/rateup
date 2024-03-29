@@ -11,6 +11,11 @@ import {
 } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import { getLogoFileValueForFileInput, getLogoSrc } from "./utils";
 import { showErrorToast } from "../../../../utils/notifications";
+import { useImmerReducer } from "use-immer";
+import {
+  initialLogoTabPanelState,
+  logoTabPanelReducer,
+} from "./LogoTabPanel/LogoTabPanelReducer";
 
 interface ShareQRProps {
   url: string;
@@ -31,15 +36,6 @@ type ShareQRState = {
   logoFile: null | File;
 };
 
-export enum statePropertiesEnum {
-  QrBgColor = "qrBgColor",
-  QrColor = "qrColor",
-  LogoSize = "logoSize",
-  LogoFillType = "logoFillType",
-  LogoBorderRadius = "logoBorderRadius",
-  LogoFile = "logoFile",
-}
-
 const ShareQR = ({
   url,
   sx,
@@ -49,17 +45,12 @@ const ShareQR = ({
   queryKey,
   resourceName,
 }: ShareQRProps) => {
-  const [state, setState] = useState<ShareQRState>({
-    qrBgColor: "#FFFFFF",
-    qrColor: "#000000",
-    logoSize: 75,
-    logoFillType: "contain",
-    logoBorderRadius: 50,
-    logoFile: null,
-  });
+  const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
+    logoTabPanelReducer,
+    initialLogoTabPanelState,
+  );
 
   // currently we are using only two resources(first arg below) survey, menu.
-
   const shareSettings = useGetShareSettings(queryKey, resourceName, id);
   // useUpdateShareSettingsMutation can return null.
   const shareSettingsMutation = useUpdateShareSettingsMutation(
@@ -68,42 +59,21 @@ const ShareQR = ({
     id,
   );
 
-  const {
-    qrBgColor,
-    qrColor,
-    logoSize,
-    logoFillType,
-    logoBorderRadius,
-    logoFile,
-  } = state;
-
-  const logoSrc = getLogoSrc(logoFile);
-
-  useEffect(() => {
-    return () => {
-      URL.revokeObjectURL(logoSrc);
-    };
-  }, []);
-
   useEffect(() => {
     const qrSettingsFromApi = shareSettings?.data;
     if (qrSettingsFromApi) {
-      setState(qrSettingsFromApi);
+      logoTabPanelDispatch({
+        type: "update-state-from-api",
+        payload: qrSettingsFromApi,
+      });
     }
   }, [shareSettings.data]);
-
-  const updateState = useCallback(
-    (stateObjectProperty: statePropertiesEnum) => {
-      return (value) => setState({ ...state, [stateObjectProperty]: value });
-    },
-    [state],
-  );
 
   const handleSaveOfSurveyShareSettings = useCallback(async () => {
     if (shareSettingsMutation) {
       const formData = new FormData();
-      for (const property in state) {
-        let value = state[property];
+      for (const property in logoTabPanelState) {
+        let value = logoTabPanelState[property];
         formData.append(property, value);
       }
       try {
@@ -118,20 +88,7 @@ const ShareQR = ({
         showErrorToast("Unable to save settings, Please try again later");
       }
     }
-  }, [state]);
-
-  const handleSelectLogoFileInputChange = (value) => {
-    if (value) {
-      updateState(statePropertiesEnum.LogoFile)(value);
-    } else {
-      const logoLink = shareSettings.data?.logoFile;
-      if (logoLink) {
-        updateState(statePropertiesEnum.LogoFile)(logoLink);
-      } else {
-        updateState(statePropertiesEnum.LogoFile)(`/images/rateup-star.svg`);
-      }
-    }
-  };
+  }, [logoTabPanelState]);
 
   return (
     <PaperLayout shadow="sm" p="xl" style={{ ...sx }}>
@@ -142,14 +99,9 @@ const ShareQR = ({
 
         <Group className={styles["options-preview-container"]}>
           <LogoTabpanel
-            logoFillType={logoFillType}
-            qrBgColor={qrBgColor}
-            qrColor={qrColor}
-            logoSize={logoSize}
-            logoBorderRadius={logoBorderRadius}
-            updateStateFunc={updateState}
-            selectLogoFileInputValue={getLogoFileValueForFileInput(logoFile)}
-            onSelectLogoFileInputChange={handleSelectLogoFileInputChange}
+            state={logoTabPanelState}
+            dispatch={logoTabPanelDispatch}
+            shareSettings={shareSettings}
           />
 
           {/*..... QR Editor - Preview ........ */}
@@ -157,15 +109,10 @@ const ShareQR = ({
           {url && (
             <Stack align="center">
               <Preview
+                logoTabPanelState={logoTabPanelState}
                 url={url}
-                qrBgImgLogo={logoSrc}
-                qrBgImgFillType={logoFillType}
-                qrBgColor={qrBgColor}
-                qrColor={qrColor}
                 surveyTitle={title}
                 isSurveyPublished={isPublished}
-                logoSize={logoSize}
-                logoBorderRadius={logoBorderRadius}
               />
               <RateupButtonBlue
                 loading={shareSettingsMutation?.isPending}

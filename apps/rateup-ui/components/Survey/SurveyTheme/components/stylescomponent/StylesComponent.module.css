@@ -70,51 +70,14 @@
   background-color: var(--mantine-color-gray-5);
 }
 
-/* Custom Color Picker styles used in stylescomponent */
 .styles-component-div :global(.custom-color-picker-and-heading-container) {
   width: 100%;
 }
 
-.styles-component-div :global(.custom-color-picker-and-heading-container h2) {
+.styles-component-div :global(.custom-color-picker-and-heading-container) h2 {
   font-size: 1rem;
   margin-bottom: 1rem;
   font-weight: 500;
-}
-
-.styles-component-div :global(.custom-color-picker-container) {
-  width: 100%;
-}
-
-.styles-component-div :global(.custom-color-picker-container .color-indicator) {
-  width: 3.125rem;
-  height: 2.5rem;
-}
-
-.styles-component-div
-  :global(.custom-color-picker-container .text-input-for-picking-color) {
-  font-size: 0.875rem;
-  padding: 0.625rem;
-  height: 2.5rem;
-  flex: 1;
-}
-
-.styles-component-div :global(.custom-color-picker-container .eye-dropper-btn) {
-  padding: 0.625rem;
-  font-size: 0.75rem;
-  height: 2.5rem;
-}
-
-.styles-component-div
-  :global(
-    .custom-color-picker-container .eye-dropper-btn .mantine-Button-section
-  ) {
-  margin-right: 0.3125rem;
-}
-
-.styles-component-div
-  :global(.custom-color-picker-container .eye-dropper-btn svg) {
-  width: 1.125rem;
-  height: 1.125rem;
 }
 
 .styles-component-div :global(.styles-section-div) {

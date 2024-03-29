@@ -33,6 +33,7 @@ import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
 import { lexend300 } from "../utils/fonts";
 import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
+import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -164,10 +165,10 @@ export default function App({
         <link rel="canonical" href={canonicalUrl} />
       </Head>
       <main className={lexend300.className}>
-        <MantineProvider theme={theme}>
-          <ModalsProvider>
-            <Notifications />
-            <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <MantineProvider theme={theme}>
+            <ModalsProvider modals={allModalManagerModalsObj}>
+              <Notifications />
               <HydrationBoundary state={pageProps.dehydratedState}>
                 <UserProvider>
                   <LayoutComponent>
@@ -196,10 +197,10 @@ export default function App({
                   />
                 )}
               </HydrationBoundary>
-            </QueryClientProvider>
-            <Notifications />
-          </ModalsProvider>
-        </MantineProvider>
+              <Notifications />
+            </ModalsProvider>
+          </MantineProvider>
+        </QueryClientProvider>
       </main>
     </>
   );

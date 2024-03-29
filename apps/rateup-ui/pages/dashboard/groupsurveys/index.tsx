@@ -1,43 +1,38 @@
 import {
-  Paper,
-  Text,
-  SimpleGrid,
-  Flex,
-  Menu,
-  Avatar,
   ActionIcon,
-  useMantineTheme,
+  Avatar,
+  Flex,
   Group,
-  Space,
-  Title,
   Loader,
+  Menu,
+  Paper,
+  SimpleGrid,
+  Space,
+  Text,
+  useMantineTheme,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconDots,
+  IconPencil,
   IconPlus,
   IconShare,
   IconTrash,
-  IconPencil,
-  IconCheck,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import { useMutation } from "@tanstack/react-query";
-import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 
-import { useSurveysLanding } from "../../../backend/surveys/surveys.query";
 import { useEffect, useState } from "react";
-import { getTimeSince } from "../../../utils";
-import { deleteLandingPage } from "../../../backend/LandingPage/landingpage.api";
-import { DeleteLandingPageConfirmation } from "../../../components/LandingPage/DeleteLandingConfirmation";
+import { useSurveysLanding } from "../../../backend/surveys/surveys.query";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
-import { UserRole } from "../../../utils/enums";
-import { useUser } from "../../../context/UserContext";
-import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
-import ShareLandingPageModal from "./ShareLandingPageModal";
+import { DeleteLandingPageConfirmation } from "../../../components/LandingPage/DeleteLandingConfirmation";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import Heading from "../../../components/styled/Heading/Heading";
+import { useUser } from "../../../context/UserContext";
+import { getTimeSince } from "../../../utils";
+import { UserRole } from "../../../utils/enums";
+import CreateSurveyLandingModal from "./CreateSurveyLandingModal";
+import ShareLandingPageModal from "./ShareLandingPageModal";
 export default function LandingPagesList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [landignOpened, { open: openlandingshare, close: closelandingshare }] =
@@ -82,50 +77,7 @@ export default function LandingPagesList() {
     });
   }, [surveyLandingsDataUser, queryClient]);
 
-  //------------delete landing page mutation ----------
-  const LandingPageDeleteMutation = useMutation({
-    mutationFn: deleteLandingPage,
-    onSuccess: () => {
-      notifications.update({
-        id: "load-data",
-        color: "teal",
-        title: "Success",
-        loading: false,
-        message: "Deleted Landing Page Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
-      });
-      setShowDeleteConfirmation(false);
-      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
-    },
-    onError: (error: any) => {
-      console.error("Error deleting Survey:", error.message);
-      notifications.update({
-        id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Delete Failed..!",
-        message: error?.response?.data?.error,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 4000,
-      });
-    },
-  });
-
-  const confirmDelete = (isDelete) => {
-    //-------if is delete is true then delete landing page ------
-    if (isDelete && deleteId != null) {
-      notifications.show({
-        id: "load-data",
-        loading: true,
-        title: "Deleting Landing page..",
-        message: `Hold on, landing page is getting deleted...`,
-        autoClose: false,
-        withCloseButton: false,
-      });
-      LandingPageDeleteMutation.mutate(deleteId);
-    }
-  };
+  const confirmDelete = (isDelete) => {};
 
   const deleteLanding = (landingPageid) => {
     setDeleteId(landingPageid);
@@ -305,32 +257,32 @@ function SurveyMenu({
 
   const [options, setOptions] = useState([]);
 
-  const LandingPageDeleteMutation = useMutation({
-    mutationFn: deleteLandingPage,
-    onSuccess: () => {
-      notifications.update({
-        id: "load-data",
-        color: "teal",
-        title: "Success",
-        loading: false,
-        message: "Deleted Landing Page Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
-      });
-      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
-    },
-    onError: (error: any) => {
-      notifications.update({
-        id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Delete Failed..!",
-        message: error?.response?.data?.error,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 4000,
-      });
-    },
-  });
+  // const LandingPageDeleteMutation = useMutation({
+  //   mutationFn: deleteLandingPage,
+  //   onSuccess: () => {
+  //     notifications.update({
+  //       id: "load-data",
+  //       color: "teal",
+  //       title: "Success",
+  //       loading: false,
+  //       message: "Deleted Landing Page Successfully!",
+  //       icon: <IconCheck size="1rem" />,
+  //       autoClose: 2000,
+  //     });
+  //     queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
+  //   },
+  //   onError: (error: any) => {
+  //     notifications.update({
+  //       id: "load-data",
+  //       color: "red",
+  //       loading: false,
+  //       title: "Delete Failed..!",
+  //       message: error?.response?.data?.error,
+  //       icon: <IconCheck size="1rem" />,
+  //       autoClose: 4000,
+  //     });
+  //   },
+  // });
 
   return (
     <Menu width={200}>

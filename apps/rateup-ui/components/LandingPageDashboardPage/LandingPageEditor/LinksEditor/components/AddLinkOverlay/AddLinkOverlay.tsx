@@ -1,0 +1,213 @@
+import { ActionIcon, Box, Button, Select } from "@mantine/core";
+import styles from "./AddLinkOverlay.module.css";
+import { IconX } from "@tabler/icons-react";
+import { linkTypeOptions } from "../../constants";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import SurveyTypeDropdowns from "./SurveyTypeDropdowns";
+import CustomLinkInputs from "./CustomLinkInputs";
+import { Form, useForm } from "@mantine/form";
+import { useUpdateLandingPageMutation } from "../../../../../../backend/landingPage/landingPage.query";
+import { useRouter } from "next/router";
+import { v4 as uuidv4 } from "uuid";
+
+function AddLinkOverlay({ title, opened, onClose, links }) {
+  const queryClient = useQueryClient();
+
+  const {
+    query: { shortUrlId },
+  } = useRouter();
+  // SurveyTypeDropdowns states
+  const [selectedLinkType, setSelectedLinkType] = useState("web-survey");
+  const [surveyTitleAutoCompleteSearch, setSurveyTitleAutoCompleteSearch] =
+    useState("");
+  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [dropdownErrors, setDropdownErrors] = useState({
+    selectedSurveyTitleErr: "",
+    selectedTeamErr: "",
+  });
+
+  // CustomLinkInputs states
+  const customLinksInputsForm = useForm({
+    initialValues: {
+      linkDisplayName: "",
+      linkUrl: "",
+    },
+    validate: {
+      linkDisplayName: (value) => {
+        if (value) return null;
+        else return "Link dispaly name is required.";
+      },
+      linkUrl: (value) => {
+        if (value) {
+          let url;
+          try {
+            url = new URL(value);
+          } catch (_) {
+            return "Please enter a valid url.";
+          }
+        } else return "Link url is required.";
+      },
+    },
+  });
+
+  const updateLandingPageMutation = useUpdateLandingPageMutation(shortUrlId);
+
+  const handleSelectedLinkTypeDropdownChange = useCallback(
+    (value) => {
+      if (selectedLinkType === "custom-link") {
+        queryClient.setQueryData(["linktype-options", selectedLinkType], null);
+      }
+      setSelectedLinkType(value);
+      setDropdownErrors({
+        selectedSurveyTitleErr: "",
+        selectedTeamErr: "",
+      });
+    },
+    [selectedLinkType],
+  );
+
+  const validateDropdownValues = useCallback(() => {
+    let isValid = true;
+    // const dropdownErrors = {};
+    const newErrState = {};
+    if (selectedSurveyTitle) {
+      newErrState["selectedSurveyTitleErr"] = "";
+    } else if (!selectedSurveyTitle) {
+      isValid = false;
+      newErrState["selectedSurveyTitleErr"] = "This value is required.";
+    }
+    if (selectedTeam) {
+      newErrState["selectedTeamErr"] = "";
+    } else if (!selectedTeam) {
+      isValid = false;
+      newErrState["selectedTeamErr"] = "This field is required";
+    }
+    // @ts-ignore
+    setDropdownErrors(newErrState);
+    return isValid;
+  }, [selectedLinkType, selectedSurveyTitle, selectedTeam, dropdownErrors]);
+
+  const onAddBtnClick = useCallback(async () => {
+    if (selectedLinkType !== "custom-link") {
+      const isDropdownValuesValid = validateDropdownValues();
+      if (isDropdownValuesValid) {
+        // selectedTeam value is shortUrlId of selected team.
+        const linkTypeInUrl = selectedLinkType === "web-survey" ? "ws" : "was";
+        const linkDisplayName = selectedSurveyTitle;
+        const linkUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${linkTypeInUrl}/${selectedTeam}`;
+        const reqBody = {
+          shortUrlId,
+          links: [
+            ...links,
+            {
+              id: uuidv4(),
+              linkDisplayName,
+              linkUrl,
+            },
+          ],
+        };
+        await updateLandingPageMutation.mutateAsync(reqBody);
+        onClose();
+      }
+    } else {
+      const isCustomInputsValid = !customLinksInputsForm.validate().hasErrors;
+      if (isCustomInputsValid) {
+        const reqBody = {
+          shortUrlId,
+          links: [
+            ...links,
+            {
+              id: uuidv4(),
+              ...customLinksInputsForm.values,
+            },
+          ],
+        };
+        await updateLandingPageMutation.mutateAsync(reqBody);
+        onClose();
+      }
+    }
+  }, [
+    selectedLinkType,
+    selectedSurveyTitle,
+    selectedTeam,
+    customLinksInputsForm,
+  ]);
+
+  useEffect(() => {
+    setSelectedSurveyTitle(null);
+    setSurveyTitleAutoCompleteSearch("");
+  }, [selectedLinkType]);
+
+  useEffect(() => {
+    setSelectedTeam(null);
+  }, [selectedSurveyTitle]);
+
+  useEffect(() => {
+    if (
+      dropdownErrors.selectedSurveyTitleErr ||
+      dropdownErrors.selectedTeamErr
+    ) {
+      validateDropdownValues();
+    }
+  }, [selectedSurveyTitle, selectedTeam]);
+
+  return (
+    <Box
+      className={`${styles["addlink-overlay-div"]} ${opened ? styles["opened"] : styles["closed"]}`}
+    >
+      <Box className={styles["header"]}>
+        <h1 className={styles["title"]}>{title}</h1>
+        <ActionIcon
+          className={styles["close-btn"]}
+          onClick={() => {
+            onClose();
+          }}
+        >
+          <IconX />
+        </ActionIcon>
+      </Box>
+
+      <Box className={styles["body"]}>
+        <Select
+          value={selectedLinkType}
+          label={"Select Link type"}
+          placeholder="Select Link Type"
+          data={linkTypeOptions}
+          onChange={handleSelectedLinkTypeDropdownChange}
+          allowDeselect={false}
+        />
+
+        {selectedLinkType !== "custom-link" ? (
+          <SurveyTypeDropdowns
+            selectedLinkType={selectedLinkType}
+            selectedSurveyTitle={selectedSurveyTitle}
+            onSurveyTitleDDChange={setSelectedSurveyTitle}
+            surveyTitleAutoCompleteSearch={surveyTitleAutoCompleteSearch}
+            onSurveyTitleAutoCompleteSearchChange={
+              setSurveyTitleAutoCompleteSearch
+            }
+            selectedTeam={selectedTeam}
+            onSelectedTeamDDChange={setSelectedTeam}
+            errors={dropdownErrors}
+          />
+        ) : (
+          <CustomLinkInputs form={customLinksInputsForm} />
+        )}
+
+        <Box className={styles["add-btn-container"]}>
+          <Button
+            className={styles["add-link-btn"]}
+            onClick={onAddBtnClick}
+            loading={updateLandingPageMutation.isPending}
+          >
+            Add Link
+          </Button>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+export default AddLinkOverlay;

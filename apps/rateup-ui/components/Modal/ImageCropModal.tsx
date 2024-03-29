@@ -142,7 +142,7 @@ export const ImageCropModal = ({
     const urlSegments = baseUrl?.split("/");
     const photoKey = urlSegments?.[urlSegments?.length - 1];
     const params = new URLSearchParams(urlParts[1]);
-    const auther = params.get("auther");
+    const author = params.get("author");
     const username = params.get("username");
     const ixid = params.get("ixid");
     const ixlib = params.get("ixlib");
@@ -157,7 +157,7 @@ export const ImageCropModal = ({
     const cropWidth = (crop.width / W) * nW;
     const cropHeigth = (crop.height / H) * nH;
 
-    return `${photoKey}?crop=focalpoint&fit=crop&q=${q}&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}&ixid=${ixid}&ixlib=${ixlib}&auther=${auther}&username=${username}`;
+    return `${photoKey}?crop=focalpoint&fit=crop&q=${q}&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}&ixid=${ixid}&ixlib=${ixlib}&author=${author}&username=${username}`;
   };
   return (
     <Modal

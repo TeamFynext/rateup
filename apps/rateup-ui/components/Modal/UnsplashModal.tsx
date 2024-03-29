@@ -152,7 +152,7 @@ const UnsplashPhoto = ({
   const triggeringDownload = useTriggeringDownload();
   const handleImageSelection = () => {
     handleUnsplashImageSave(
-      `${regular}&auther=${name}&username=${username}`,
+      `${regular}&author=${name}&username=${username}`,
       "unsplashImage" + id + ".jpg",
     );
     triggeringDownload.mutate({

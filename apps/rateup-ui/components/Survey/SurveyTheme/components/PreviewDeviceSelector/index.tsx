@@ -4,10 +4,15 @@ import { IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react";
 import styles from "./PreviewDeviceSelector.module.css";
 import { SurveyThemeContext } from "../../SurveyThemeContext";
 
-function PreviewDeviceSelector({ onChange, value }) {
+function PreviewDeviceSelector({
+  onChange,
+  value,
+  withLabel = true,
+  className = "",
+}) {
   return (
-    <Group className={styles["preview-device-selector-div"]}>
-      <p className={styles["label"]}>Preview:</p>
+    <Group className={`${styles["preview-device-selector-div"]} ${className}`}>
+      {withLabel && <p className={styles["label"]}>Preview:</p>}
       <Tabs
         value={value}
         onChange={onChange}
@@ -16,10 +21,10 @@ function PreviewDeviceSelector({ onChange, value }) {
       >
         <Tabs.List>
           <Tabs.Tab value={PreviewTypeEnum.DESKTOP}>
-            <IconDeviceDesktop />
+            <IconDeviceDesktop size={"1.25rem"} />
           </Tabs.Tab>
           <Tabs.Tab value={PreviewTypeEnum.MOBILE}>
-            <IconDeviceMobile />
+            <IconDeviceMobile size={"1.25rem"} />
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>

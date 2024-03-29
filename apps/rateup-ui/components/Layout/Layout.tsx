@@ -105,6 +105,7 @@ export default function Layout({ children }) {
               style={{ overflow: "auto" }}
               px="lg"
               py="sm"
+              pt={0}
               direction="column"
               m="auto"
             >

@@ -1,0 +1,107 @@
+.links-editor-root-div {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0.625rem;
+}
+
+.link-editor-contianer {
+  position: relative;
+  padding: 0.3125rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50rem;
+  border-radius: 1rem;
+  height: 100%;
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  /* gap: 0.625rem; */
+}
+
+.add-link-btn-container {
+  padding: 0.625rem 1rem;
+  width: 100%;
+}
+
+.add-link-btn {
+  width: 100%;
+  border-radius: 2rem;
+  height: auto;
+  flex: 0 0 auto;
+  padding: 0.3125rem 1rem;
+}
+
+.links-list-container {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  overflow: auto;
+  padding: 0.3125rem 1rem;
+}
+
+.links-list-container :global(.mantine-ScrollArea-viewport > div) {
+  height: 100%;
+}
+
+/* LinksList.tsx styles */
+
+.link-cards-container-div {
+  height: 100%;
+  padding: 0.3125rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.draggable-div-linkcard-parent {
+  pointer-events: none;
+}
+
+/* LinkCard.tsx styles */
+
+.link-card {
+  padding: 0.625rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--mantine-color-gray-0);
+  border-radius: 0.625rem;
+}
+
+.drag-handle-icon-and-link-info-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.drag-handle-div {
+  pointer-events: initial;
+}
+
+.drag-handle-div svg {
+  color: var(--mantine-color-gray-7);
+}
+
+.title-and-url-container h2 {
+  font-family: var(--font-lexend);
+  font-size: 1.125rem;
+  font-weight: normal;
+}
+
+.title-and-url-container p {
+  font-size: 1rem;
+}
+
+.delete-btn {
+  pointer-events: initial;
+  height: auto;
+  padding: 0.3125rem;
+  cursor: pointer;
+}
+
+.delete-btn :global(.mantine-Button-section) {
+  margin-right: 0.3125rem;
+  pointer-events: none;
+}

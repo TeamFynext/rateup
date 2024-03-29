@@ -1,0 +1,21 @@
+.upload-btn {
+  border-radius: 2rem;
+  height: auto;
+  line-height: normal;
+  padding: 0.5rem 1rem;
+}
+
+.delete-logo-btn {
+  background-color: #ff0000;
+  width: 2.1875rem;
+  height: 2.1875rem;
+  border-radius: 50%;
+}
+
+.delete-logo-btn:hover {
+  background-color: #ff0000;
+}
+
+.delete-logo-btn:disabled {
+  background-color: var(--mantine-color-gray-2);
+}

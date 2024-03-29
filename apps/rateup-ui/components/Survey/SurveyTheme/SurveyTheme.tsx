@@ -26,7 +26,6 @@ import {
 } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
 import RateupLoader from "../../Loaders/RateupLoader";
-import { IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react";
 import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
 import PageSelector from "./components/PageSelector";
 

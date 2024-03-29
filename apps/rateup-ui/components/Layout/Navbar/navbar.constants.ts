@@ -35,6 +35,7 @@ import {
 } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { whatsappOptions } from "../../../utils/constants";
+import { IconAppWindow } from "@tabler/icons-react";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -168,6 +169,11 @@ export function getNavTopData(subscription?: Subscription) {
           },
         ]
       : []),
+    {
+      Icon: IconAppWindow,
+      label: "Landing Pages",
+      href: "/dashboard/landingPages",
+    },
     ...(hiddenModules.includes("reputation_management") ||
     !hasFeature(sfpn.ReputationManagement)
       ? []

@@ -1,0 +1,12 @@
+.landingPage-dashboard-page-div {
+  height: 100%;
+}
+
+.create-landingPage-btn {
+  border-radius: 1rem;
+  font-weight: normal;
+}
+
+.landingPage-list-container {
+  flex: 1;
+}

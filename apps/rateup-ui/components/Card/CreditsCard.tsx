@@ -19,11 +19,11 @@ export const CreditsCard = ({
   pl = 0,
 }: CreditsCardProps) => {
   let params;
-  let auther = "";
+  let author = "";
   let username = "";
   if (typeof url === "string") {
     params = new URLSearchParams(url?.split("?")[1]);
-    auther = params.get("auther");
+    author = params.get("author");
     username = params.get("username");
   }
   const isMobile = useMediaQuery("(max-width: 480px)");
@@ -51,7 +51,7 @@ export const CreditsCard = ({
             target="_blank"
             fz={fz}
           >
-            {auther}
+            {author}
           </Anchor>{" "}
           on{" "}
           <Anchor

@@ -1,0 +1,38 @@
+.modal-header {
+  position: relative;
+}
+
+.modal-header h2 {
+  text-align: center;
+  font-weight: bold;
+  width: 100%;
+  font-size: 1.125rem;
+}
+
+.modal-header :global(.mantine-CloseButton-root) {
+  position: absolute;
+  top: 1rem;
+  right: 0.6875rem;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-body :global(.mantine-InputWrapper-label) {
+  margin-bottom: 0.3125rem;
+}
+
+.cancel-save-btns-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.cancel-save-btns-container .cancel-btn {
+  background-color: transparent;
+  border: 1px solid var(--mantine-color-gray-3);
+  color: var(--tertiary-color);
+}
