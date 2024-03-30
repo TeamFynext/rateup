@@ -102,9 +102,8 @@ const Responses = ({
   const router = useRouter();
   const hasContactQuestion =
     responses &&
-    responses?.some(
-      (response) =>
-        response?.responses?.some((res) => QuestionType.Contact === res.type),
+    responses?.some((response) =>
+      response?.responses?.some((res) => QuestionType.Contact === res.type),
     );
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -217,7 +216,7 @@ const Responses = ({
     }
   };
   const columns = useSurveyResponseColumns({
-    questions,
+    questions: questions.filter((q) => q.type !== QuestionType.InfoMessage),
     defaultLanguage,
     setSelectedRowId,
     open,
