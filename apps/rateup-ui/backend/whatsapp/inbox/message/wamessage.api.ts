@@ -1,5 +1,8 @@
 import { WA_INBOX_BASE_PATH } from "..";
-import { WaInboxMessageBody } from "../../../../types/global";
+import {
+  WaInboxMessageBody,
+  WaTemplateComponent,
+} from "../../../../types/global";
 import { axiosClient } from "../../../apiClient";
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
 
@@ -9,6 +12,7 @@ export type WaGetMessagesBody = {
   createdAt: string;
   waCreatedAt: string;
   messageBody: WaInboxMessageBody;
+  templateComponentParams: WaTemplateComponent[];
 };
 export async function getMessagesByWaContactId(waContactId: string) {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/${waContactId}`))

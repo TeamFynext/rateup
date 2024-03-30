@@ -1,5 +1,22 @@
 .modal_inner {
   padding: var(--mantine-spacing-md);
+  height: 600px;
+  max-height: 600px;
+}
+.template_card_list_preview_wrapper {
+  align-items: start;
+  flex: 1;
+  overflow-y: hidden;
+  gap: 7px;
+}
+.template_card_list_wrapper {
+  height: 100%;
+  border-right: 1px solid var(--mantine-color-gray-2);
+  padding: 0px var(--mantine-spacing-xs);
+  overflow-y: auto;
+}
+.template_card_list_wrapper::-webkit-scrollbar {
+  width: 1.5px;
 }
 .modal_label {
   font-size: var(--mantine-font-size-sm);

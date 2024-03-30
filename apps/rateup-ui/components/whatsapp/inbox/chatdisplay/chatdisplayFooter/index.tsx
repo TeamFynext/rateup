@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { WaContact } from "../../../../../types/global";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import WaInboxTemplateDisplayModal from "./templateDisplayModal";
+import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 
 export default function WaInboxChatDisplayFooter(props: WaContact) {
   const timeStamp = props.userInitiatedFinalTimeStamp;
@@ -21,6 +22,11 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
     sendnewWaMessage.mutate(form.values);
     form.reset();
   }
+  function insertEmoji(value: string) {
+    form.setValues({
+      text: { ...form.values.text, body: form.values.text.body + value },
+    });
+  }
   return (
     <div className={classes.wrapper}>
       <WaInboxTemplateDisplayModal
@@ -29,6 +35,7 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
       />
       <ContainedTextField
         disabled={isInboxSessionExpired(timeStamp)}
+        leftSection={<PopoverEmojiPicker onEmojiClick={insertEmoji} />}
         flex={1}
         value={form.values.text.body}
         onChange={(e) =>

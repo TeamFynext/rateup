@@ -1,5 +1,5 @@
 import { WHATSAPP_URL } from ".";
-import { WaTemplateStatus } from "../../types/enums";
+import { WaTemplateCategory, WaTemplateStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 const TEMPLATES_URL = `${WHATSAPP_URL}/templates`;
@@ -14,6 +14,7 @@ export type WaTemplate = {
     id: string;
     status: WaTemplateStatus;
     language: string;
+    category: WaTemplateCategory;
   };
   acceptButton: string;
   orgId: string;
@@ -80,9 +81,14 @@ export async function uploadTemplateMedia(file: File) {
   }
 }
 
-export async function sendWaTemplateToUser(templateId: string, phone: string) {
+export async function sendWaTemplateToUser(
+  templateId: string,
+  phone: string,
+  parameterData: any,
+) {
   return axiosClient.post(`${TEMPLATES_URL}/${templateId}/send`, {
     templateId,
     phone,
+    parameterData,
   });
 }

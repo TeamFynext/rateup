@@ -1,4 +1,4 @@
-import { Group, Paper, Stack, Text } from "@mantine/core";
+import { Paper, Stack, Text } from "@mantine/core";
 import classes from "./styles.module.css";
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { formatToCustomTime } from "../../../../../../../utils/dateTime";
@@ -6,13 +6,17 @@ interface Props {
   exchangeProcess: "send" | "receive";
   messageObject: WaGetMessagesBody;
   children: any;
+  forPreview?: boolean;
 }
 export default function WaInboxSingleMessageLayout(props: Props) {
-  const { exchangeProcess, messageObject } = props;
+  const { exchangeProcess } = props;
 
   function getWrapperProps() {
     if (exchangeProcess === "send") {
-      return { align: "end" };
+      return {
+        align: "end",
+        w: props?.forPreview ? "fit-content" : "100%",
+      };
     }
     return { align: "start" };
   }

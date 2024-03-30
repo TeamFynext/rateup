@@ -1,5 +1,10 @@
 import dayjs from "dayjs";
-import { WaInboxMessageBody, WaTemplateFetchBody } from "../../types/global";
+import {
+  WaInboxMessageBody,
+  WaTemplateComponent,
+  WaTemplateFetchBody,
+  WaTemplateFetchBodyComponent,
+} from "../../types/global";
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;
@@ -100,4 +105,45 @@ export function isInboxSessionExpired(timeStamp: string) {
   const givenTime = dayjs(timeStamp).utc();
   const diffInHours = currentTime.diff(givenTime, "hours");
   return diffInHours >= 24;
+}
+
+export function validateInboxTemplateSending(
+  createTemplateComponents: WaTemplateFetchBodyComponent[],
+  sendTemplateComponents: WaTemplateComponent[],
+) {
+  return createTemplateComponents.map((componentC) => {
+    switch (componentC.type) {
+      case "HEADER":
+        const sendHeaderComponent = sendTemplateComponents.find(
+          (componentS) => componentS.type === "header",
+        );
+        switch (componentC.format) {
+          case "IMAGE":
+          case "VIDEO":
+          case "DOCUMENT":
+            if (!sendHeaderComponent) return false;
+            if (
+              sendHeaderComponent?.parameters[0]?.[
+                componentC?.format.toLowerCase()
+              ]?.link
+            )
+              return true;
+            else return false;
+          case "LOCATION":
+            if (!sendHeaderComponent) return false;
+            if (
+              sendHeaderComponent?.parameters[0]?.location?.latitude &&
+              sendHeaderComponent?.parameters[0]?.location?.longitude &&
+              sendHeaderComponent?.parameters[0]?.location?.name &&
+              sendHeaderComponent?.parameters[0]?.location?.address
+            )
+              return true;
+            else return false;
+          default:
+            return true;
+        }
+      default:
+        return true;
+    }
+  });
 }

@@ -1,12 +1,24 @@
-import { Box, Paper } from "@mantine/core";
-import { WaTemplateFetchBody } from "../../../../../../../types/global";
+import { Box } from "@mantine/core";
+import {
+  WaTemplateComponent,
+  WaTemplateFetchBody,
+} from "../../../../../../../types/global";
 import WaInboxTemplateComponents from "./components";
 import classes from "./styles.module.css";
-export default function WaInboxTemplate(props: WaTemplateFetchBody) {
+interface Props {
+  templateBody: WaTemplateFetchBody;
+  parameters: WaTemplateComponent[];
+}
+export default function WaInboxTemplate(props: Props) {
   return (
     <Box className={classes.template_wrapper}>
-      {props?.components?.map((component) => (
-        <WaInboxTemplateComponents {...component} />
+      {props?.templateBody?.components?.map((component) => (
+        <WaInboxTemplateComponents
+          parameterData={props?.parameters?.find(
+            (param) => param?.type === component?.type.toLowerCase(),
+          )}
+          templateComponent={component}
+        />
       ))}
     </Box>
   );

@@ -3,7 +3,10 @@ import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message
 import classes from "./styles.module.css";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
-import { WaInboxMessageBody } from "../../../../../types/global";
+import {
+  WaInboxMessageBody,
+  WaTemplateComponent,
+} from "../../../../../types/global";
 import WaInboxText from "./components/text";
 import { useIntersection, useScrollIntoView } from "@mantine/hooks";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
@@ -23,7 +26,10 @@ export default function WaInboxChatDisplayBody(props: Props) {
     threshold: 1,
   });
 
-  const singleMessage = (messageBody: WaInboxMessageBody) => {
+  const singleMessage = (
+    messageBody: WaInboxMessageBody,
+    templateComponentParams: WaTemplateComponent[],
+  ) => {
     const { messageContent, messageType, template } =
       parseWaMessage(messageBody);
     switch (messageType) {
@@ -34,7 +40,12 @@ export default function WaInboxChatDisplayBody(props: Props) {
       case "button":
         return <WaInboxText messageContent={messageContent} />;
       case "template":
-        return <WaInboxTemplate {...template} />;
+        return (
+          <WaInboxTemplate
+            templateBody={template}
+            parameters={templateComponentParams}
+          />
+        );
       default:
         return (
           <Text fz={"xs"} c={"red"}>
@@ -54,7 +65,10 @@ export default function WaInboxChatDisplayBody(props: Props) {
             exchangeProcess={message?.messageBody?.exchangeProcess}
             messageObject={message}
           >
-            {singleMessage(message?.messageBody)}
+            {singleMessage(
+              message?.messageBody,
+              message?.templateComponentParams,
+            )}
           </WaInboxSingleMessageLayout>
         ))}
         <div ref={targetRef}></div>

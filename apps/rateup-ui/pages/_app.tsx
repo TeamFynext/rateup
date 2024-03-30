@@ -31,7 +31,7 @@ import Layout from "../components/Layout/Layout";
 import axios from "axios";
 import { ModalsProvider } from "@mantine/modals";
 import { useRouter } from "next/router";
-import { lexend300 } from "../utils/fonts";
+import { lexend300, notoColorEmogi } from "../utils/fonts";
 import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
 import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
 if (typeof window !== "undefined") {
@@ -164,7 +164,8 @@ export default function App({
         <link rel="shortcut icon" href="/favicon.png" />
         <link rel="canonical" href={canonicalUrl} />
       </Head>
-      <main className={lexend300.className}>
+      {/* notoColorEmogi is added as fallback for displaying emogies */}
+      <main className={`${lexend300.className},${notoColorEmogi.className}`}>
         <QueryClientProvider client={queryClient}>
           <MantineProvider theme={theme}>
             <ModalsProvider modals={allModalManagerModalsObj}>

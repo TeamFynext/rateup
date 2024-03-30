@@ -36,18 +36,7 @@ export const TextFormateToolBar = ({
         }}
         gap={4}
       >
-        <Popover withArrow shadow="md">
-          <Popover.Target>
-            <Tooltip label="Insert an emoji">
-              <ActionIcon variant={"transparent"} size={"xs"}>
-                <IconMoodHappy color="var(--grey-color)" size={14} />
-              </ActionIcon>
-            </Tooltip>
-          </Popover.Target>
-          <Popover.Dropdown p={0}>
-            <EmojiPicker onEmojiClick={(emoji) => insertValue(emoji.emoji)} />
-          </Popover.Dropdown>
-        </Popover>
+        <PopoverEmojiPicker onEmojiClick={insertValue} />
         <Divider size="sm" orientation="vertical" />
         <Tooltip label="Bold">
           <ActionIcon
@@ -92,5 +81,26 @@ export const TextFormateToolBar = ({
         </Tooltip>
       </Group>
     </Box>
+  );
+};
+
+export const PopoverEmojiPicker = ({
+  onEmojiClick,
+}: {
+  onEmojiClick: (emoji: string) => void;
+}) => {
+  return (
+    <Popover withArrow shadow="md">
+      <Popover.Target>
+        <Tooltip label="Insert an emoji">
+          <ActionIcon variant={"transparent"} size={"xs"}>
+            <IconMoodHappy color="var(--grey-color)" size={14} />
+          </ActionIcon>
+        </Tooltip>
+      </Popover.Target>
+      <Popover.Dropdown p={0}>
+        <EmojiPicker onEmojiClick={(emoji) => onEmojiClick(emoji.emoji)} />
+      </Popover.Dropdown>
+    </Popover>
   );
 };

@@ -1,8 +1,8 @@
 import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
-import { IconMessage2Code, IconSend } from "@tabler/icons-react";
+import { IconMessage2Code } from "@tabler/icons-react";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
-import { Grid, Loader, RadioGroup, Stack, Text } from "@mantine/core";
+import { Group, Loader, RadioGroup, Stack } from "@mantine/core";
 import classes from "./styles.module.css";
 import { WaContact } from "../../../../../../types/global";
 import {
@@ -11,64 +11,78 @@ import {
 } from "../../../../../../backend/whatsapp/whatsapp.query";
 import NothingFound from "../../../../../NothingFound/NothingFound";
 import WaInboxTemplateSelectCard from "./templateSelectCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import WaInboxTemplatePreview from "./templatePreview";
+import WaTemplateSF from "./templateSF";
+import { WaTemplate } from "../../../../../../backend/whatsapp/whatsapp.api";
 interface Props {
   sessionExpired: boolean;
   waContact: WaContact;
 }
 export default function WaInboxTemplateDisplayModal(props: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [opened, { close: onClose, open }] = useDisclosure(false);
+  const [opened, { close: onClose, open }] = useDisclosure(true);
+  const [sfTemplates, setSFTemplates] = useState<WaTemplate[]>([]);
 
   const sendTemplate = useSendWaTemplateToUser(
     props?.waContact?.phone,
     props?.waContact?.id,
   );
 
-  function handleSendTemplate() {
-    sendTemplate.mutate({ templateId: selectedTemplateId });
-    setSelectedTemplateId("");
-    onClose();
-  }
-
   const { data, isLoading, error } = useWaTemplates();
-
+  const acceptedTemplates = data?.filter(
+    (template) => template?.data?.status === "APPROVED",
+  );
+  useEffect(() => {
+    if (acceptedTemplates) {
+      setSFTemplates(acceptedTemplates);
+    }
+  }, [data]);
   if (isLoading) return <Loader />;
   if (error) return <div>Error: {error.message}</div>;
   return (
     <>
       <SimpleModalLayout
         {...{
-          size: "lg",
+          size: 1000,
           opened,
           onClose,
           title: props?.sessionExpired
             ? "Initiate conversation by sending a template"
             : "Send a template",
+          noCustomHeader: true,
         }}
       >
-        {data && data?.length > 0 ? (
+        {acceptedTemplates && acceptedTemplates?.length > 0 ? (
           <Stack className={classes.modal_inner}>
-            <Text className={classes.modal_label}>
-              {props?.sessionExpired
-                ? "Initiate Conversation by sending a template to the user"
-                : "Send a template to the user"}
-            </Text>
-            <RadioGroup onChange={setSelectedTemplateId}>
-              <Grid columns={6}>
-                {data.map((template) => (
-                  <Grid.Col key={template.id} span={2}>
+            <Group className={classes.template_card_list_preview_wrapper}>
+              <Stack className={classes.template_card_list_wrapper}>
+                <WaTemplateSF
+                  templateFullData={acceptedTemplates}
+                  setTemplateSFData={setSFTemplates}
+                />
+                <RadioGroup onChange={setSelectedTemplateId} h={"100%"}>
+                  {sfTemplates?.map((template) => (
                     <WaInboxTemplateSelectCard {...template} />
-                  </Grid.Col>
-                ))}
-              </Grid>
-            </RadioGroup>
-            <RateupButtonPrimary
-              ml="auto"
-              onClick={handleSendTemplate}
-              title="Send"
-              rightIcon={<IconSend />}
-            />
+                  ))}
+                </RadioGroup>
+              </Stack>
+              {selectedTemplateId ? (
+                <WaInboxTemplatePreview
+                  template={
+                    acceptedTemplates.find(
+                      (template) => template.id === selectedTemplateId,
+                    )?.data
+                  }
+                  selectedTemplateId={selectedTemplateId}
+                  sendTemplate={sendTemplate}
+                  onClose={onClose}
+                  setSelectedTemplateId={setSelectedTemplateId}
+                />
+              ) : (
+                <NothingFound text="No templates Selected" />
+              )}
+            </Group>
           </Stack>
         ) : (
           <NothingFound text="No templates found" />

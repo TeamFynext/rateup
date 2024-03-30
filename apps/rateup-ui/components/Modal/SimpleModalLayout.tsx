@@ -6,7 +6,7 @@ interface FormModalLayoutProps {
   title: string;
   children: React.ReactNode;
   noCustomHeader?: boolean;
-  size?: string;
+  size?: string | number;
   withCloseButton?: boolean;
 }
 export default function SimpleModalLayout({

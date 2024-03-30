@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import {
-  Badge,
-  Loader,
-  Progress,
-  RingProgress,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Badge, Loader, RingProgress, Text } from "@mantine/core";
 import classes from "./styles.module.css";
+import { isInboxSessionExpired } from "../../../../../../utils/whatsapp/inbox";
 dayjs.extend(utc);
 
 export default function WaInboxCountdownTimer({
@@ -34,7 +28,7 @@ export default function WaInboxCountdownTimer({
   const seconds = timeLeft % 60;
   const percentageDifference = (timeLeft / (24 * 3600)) * 100;
 
-  if (!timeStamp) {
+  if (!timeStamp || isInboxSessionExpired(timeStamp)) {
     return (
       <Badge variant="light" fz={10} color="red">
         No Session

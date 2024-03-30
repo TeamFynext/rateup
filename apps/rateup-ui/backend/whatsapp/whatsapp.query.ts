@@ -134,8 +134,13 @@ export const useRegisterTemplatesMutation = (onSuccess?, onError?) => {
 export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ templateId }: { templateId: string }) =>
-      sendWaTemplateToUser(templateId, phone),
+    mutationFn: ({
+      templateId,
+      parameterData,
+    }: {
+      templateId: string;
+      parameterData: any;
+    }) => sendWaTemplateToUser(templateId, phone, parameterData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
       queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });

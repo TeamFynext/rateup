@@ -1,26 +1,65 @@
-import { Button, Divider, Stack, Text } from "@mantine/core";
+import { Button, Divider, Image, Stack, Text } from "@mantine/core";
 import classes from "./styles.module.css";
-import { WaTemplateFetchBodyComponent } from "../../../../../../../../types/global";
+import {
+  WaTemplateComponent,
+  WaTemplateFetchBodyComponent,
+} from "../../../../../../../../types/global";
 import { IconMessageReply } from "@tabler/icons-react";
 
-export default function WaInboxTemplateComponents(
-  props: WaTemplateFetchBodyComponent,
-) {
-  switch (props?.type) {
+interface Props {
+  templateComponent: WaTemplateFetchBodyComponent;
+  parameterData: WaTemplateComponent;
+}
+export default function WaInboxTemplateComponents(props: Props) {
+  switch (props?.templateComponent?.type) {
     case "HEADER":
-      return <WaInboxTemplateHeader {...props} />;
+      return (
+        <WaInboxTemplateHeader
+          parameterData={props?.parameterData}
+          templateComponent={props?.templateComponent}
+        />
+      );
     case "BODY":
-      return <WaInboxTemplateBody {...props} />;
+      return <WaInboxTemplateBody {...props?.templateComponent} />;
     case "FOOTER":
-      return <WaInboxTemplateFooter {...props} />;
+      return <WaInboxTemplateFooter {...props?.templateComponent} />;
     case "BUTTONS":
-      return <WaInboxTemplateButtons {...props} />;
+      return <WaInboxTemplateButtons {...props?.templateComponent} />;
   }
 }
-const WaInboxTemplateHeader = (props: WaTemplateFetchBodyComponent) => {
-  switch (props?.format) {
+const WaInboxTemplateHeader = (props: Props) => {
+  function getUrlIfParameterIsPresent(): string {
+    if (props?.parameterData) {
+      if (
+        props?.parameterData?.parameters[0]?.[
+          props?.templateComponent?.format?.toLowerCase()
+        ]?.link instanceof File
+      ) {
+        return URL.createObjectURL(
+          props?.parameterData?.parameters[0]?.[
+            props?.templateComponent?.format?.toLowerCase()
+          ]?.link,
+        );
+      } else {
+        return props?.parameterData?.parameters[0]?.[
+          props?.templateComponent?.format?.toLowerCase()
+        ]?.link;
+      }
+    } else {
+      return props?.templateComponent?.example?.header_handle[0];
+    }
+  }
+  switch (props?.templateComponent?.format) {
     case "TEXT":
-      return <Text className={classes.header_text}>{props?.text}</Text>;
+      return (
+        <Text className={classes.header_text}>
+          {props?.templateComponent?.text}
+        </Text>
+      );
+    case "IMAGE":
+      return <Image src={getUrlIfParameterIsPresent()} mah={300} />;
+    case "DOCUMENT":
+      return <iframe src={getUrlIfParameterIsPresent()} />;
   }
 };
 

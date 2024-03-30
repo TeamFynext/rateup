@@ -1,5 +1,7 @@
 .wrapper {
+  margin-bottom: var(--mantine-spacing-xs);
   border-radius: var(--mantine-radius-md);
   box-shadow: var(--mantine-shadow-xs);
   cursor: pointer;
+  font-size: var(--mantine-font-size-xs);
 }

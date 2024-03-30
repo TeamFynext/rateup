@@ -1,4 +1,4 @@
-import { Lexend } from "next/font/google";
+import { Lexend, Noto_Color_Emoji } from "next/font/google";
 //use this export for theme page
 export const lexend = Lexend({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -7,6 +7,12 @@ export const lexend = Lexend({
   preload: false,
 });
 //
+export const notoColorEmogi = Noto_Color_Emoji({
+  weight: ["400"],
+  style: ["normal"],
+  variable: "--font-noto-color-emoji",
+  subsets: ["emoji"],
+});
 export const lexend100 = Lexend({
   weight: ["100"],
   style: ["normal"],

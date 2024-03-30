@@ -4,7 +4,7 @@ import classes from "./styles.module.css";
 export default function WaInboxTemplateSelectCard(props: WaTemplate) {
   return (
     <Card className={classes.wrapper}>
-      <Radio value={props?.id} label={props?.data?.name} />
+      <Radio value={props?.id} label={props?.data?.name} fz={"xs"} />
     </Card>
   );
 }
