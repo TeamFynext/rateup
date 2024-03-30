@@ -11,8 +11,6 @@ import {
   getWhatsappSurveysHandler,
   updateGoogleLinkHandler,
   getSurveysLandingHandler,
-  getSurveyBylandingIdhandler,
-  getLandingPageByIdHandler,
   getActiveSurveysSummaryHandler,
   getWebSurveysHandler,
   deleteTeamSurveyHandler,
@@ -76,27 +74,6 @@ export async function surveyRoutes(server: FastifyInstance) {
       },
     },
     getSurveyByIdHandler,
-  );
-  // get landingpage by id
-  server.get(
-    "/landingpage/:id",
-    {
-      //----------to do ------verify access to landingpage session
-      schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
-      },
-    },
-    getLandingPageByIdHandler,
-  );
-  // get survey by landingid
-  server.get(
-    "/landingsurveys/:id",
-    {
-      schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
-      },
-    },
-    getSurveyBylandingIdhandler,
   );
 
   //get all survey templates

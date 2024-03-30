@@ -38,7 +38,6 @@ import {
 } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
-import { getLandingPageById } from "../landingPage/landingpage.service";
 import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
@@ -100,44 +99,6 @@ export async function getPublicSurveyByIdHandler(
 ) {
   try {
     const survey = await getPublicSurveyById(request.params.id);
-    if (!survey) {
-      reply.code(404);
-    } else {
-      reply.send(survey);
-    }
-  } catch (e) {
-    reply.code(500);
-  }
-}
-
-//---------------get landing page by id ----------
-export async function getLandingPageByIdHandler(
-  request: FastifyRequest<{
-    Params: GetSurveyByIdParams;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const survey = await getLandingPageById(request.params.id);
-    if (!survey) {
-      reply.code(404);
-    } else {
-      reply.send(survey);
-    }
-  } catch (e) {
-    reply.code(500);
-  }
-}
-
-//-----------get survey by landingid------------
-export async function getSurveyBylandingIdhandler(
-  request: FastifyRequest<{
-    Params: GetSurveyByIdParams;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const survey = await getSurveyBylandingId(request.params.id);
     if (!survey) {
       reply.code(404);
     } else {

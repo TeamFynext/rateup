@@ -28,23 +28,19 @@ export const verifyLoyaltyApiKeyHook = async (
     const authHeader = request.headers.authorization;
     if (!authHeader.startsWith("Bearer ")) {
       log.error("No bearer token found in headers\n%o", request.headers);
-      reply
-        .code(400)
-        .send({
-          message: "Invalid request",
-          error: "No bearer token found in headers",
-        });
+      reply.code(400).send({
+        message: "Invalid request",
+        error: "No bearer token found in headers",
+      });
       return;
     }
     const accessToken = authHeader.split("Bearer ")[1];
     if (!accessToken) {
       log.error("No access token found in headers\n%o", request.headers);
-      reply
-        .code(401)
-        .send({
-          message: "Not authorized",
-          error: "No access token found in headers",
-        });
+      reply.code(401).send({
+        message: "Not authorized",
+        error: "No access token found in headers",
+      });
       return;
     }
 
@@ -54,12 +50,10 @@ export const verifyLoyaltyApiKeyHook = async (
       const org = await getOrgById(orgId);
       if (!org) {
         log.error("Org not found\n%o", request.headers);
-        reply
-          .code(404)
-          .send({
-            message: "Not found",
-            error: `Org with orgId='${orgId}' not found`,
-          });
+        reply.code(404).send({
+          message: "Not found",
+          error: `Org with orgId='${orgId}' not found`,
+        });
         return;
       } else {
         log.error("Invalid access token\n%o", request.headers);

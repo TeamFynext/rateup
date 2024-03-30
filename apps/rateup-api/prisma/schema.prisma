@@ -70,6 +70,7 @@ model User {
   assignedTicket Ticket[]        @relation("AssignedTicket")
   createdTicket  Ticket[]        @relation("CreatedTicket")
   TicketComment  TicketComment[]
+  landingPage    LandingPage[]
 }
 
 model Org {
@@ -97,6 +98,7 @@ model Org {
   loyaltyCustomers  LoyaltyCustomer[]
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
+  landingPage       LandingPage[]
   WaContact         WaContact[]
   LoyaltyApiKey     LoyaltyApiKey?
 }
@@ -895,6 +897,21 @@ model LCustomerRewardEvent {
   pointsEarned Int
 }
 
+model LandingPage {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  createdAt      DateTime @default(now())
+  createdById    String   @db.Uuid
+  ownerOrgId     String   @db.Uuid
+  shortUrlId     String   @unique
+  theme          Json?
+  links          Json?
+  additionalData Json?
+  shareSettings  Json?
+  isPublished    Boolean  @default(false)
+  owner          Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
+  createdBy      User     @relation(fields: [createdById], references: [id])
+}
 model WaContact {
   id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime    @default(now())

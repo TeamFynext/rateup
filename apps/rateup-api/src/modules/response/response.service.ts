@@ -463,7 +463,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   }
   await doc.loadInfo();
   const languages = survey?.languages;
-  const questions = survey?.questions as unknown as Array<Question>;
+  let questions = survey?.questions as unknown as Array<Question>;
+  questions = questions.filter((q) => q.type !== QuestionType.InfoMessage);
   const allResponses = await getAllResponses(
     surveyId,
     survey.teams.map((t) => t.team.id),

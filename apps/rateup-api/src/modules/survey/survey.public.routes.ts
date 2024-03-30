@@ -1,6 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { $Sref } from "./survey.schema";
-import { completedSurveyHandler, fetchGoogleUrlBySurveyIdHandler, getPublicSurveyByIdHandler, getSurveyByIdHandler, getSurveyBylandingIdhandler, startedSurveyHandler, verifySurveyPasswordHandler, visitedSurveyHandler } from "./survey.controller";
+import {
+  completedSurveyHandler,
+  fetchGoogleUrlBySurveyIdHandler,
+  getPublicSurveyByIdHandler,
+  startedSurveyHandler,
+  verifySurveyPasswordHandler,
+  visitedSurveyHandler,
+} from "./survey.controller";
 import { $Tref } from "../team/team.schema";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
@@ -12,22 +19,20 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
         // add response schema
         response: {
           200: $Sref("getSurveyPublicResponseSchema"),
-        }
-      },
-    },
-    getPublicSurveyByIdHandler
-  );
-  
-
-
-  server.post(
-      "/check-password/:id",
-      {
-        schema: {
-          params: $Sref("idParamsSchema"),
         },
       },
-      verifySurveyPasswordHandler
+    },
+    getPublicSurveyByIdHandler,
+  );
+
+  server.post(
+    "/check-password/:id",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    verifySurveyPasswordHandler,
   );
 
   server.post(
@@ -37,7 +42,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
         params: $Sref("idParamsSchema"),
       },
     },
-    visitedSurveyHandler
+    visitedSurveyHandler,
   );
 
   server.post(
@@ -47,7 +52,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
         params: $Sref("idParamsSchema"),
       },
     },
-    startedSurveyHandler
+    startedSurveyHandler,
   );
 
   server.post(
@@ -57,16 +62,16 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
         params: $Sref("idParamsSchema"),
       },
     },
-    completedSurveyHandler
+    completedSurveyHandler,
   );
 
   server.get(
     "/googlelink/:surveyTeamMapId",
     {
       schema: {
-        params: $Tref('bySurveyTeamMapIdParamsSchema'),
+        params: $Tref("bySurveyTeamMapIdParamsSchema"),
       },
     },
-    fetchGoogleUrlBySurveyIdHandler
+    fetchGoogleUrlBySurveyIdHandler,
   );
-  }
+}
