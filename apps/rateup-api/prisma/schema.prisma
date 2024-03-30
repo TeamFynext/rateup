@@ -926,13 +926,15 @@ model WaContact {
 }
 
 model WaMessage {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime  @default(now())
-  waCreatedAt DateTime?
-  waContactId String    @db.Uuid
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime  @default(now())
+  waCreatedAt             DateTime?
+  waContactId             String    @db.Uuid
   /// [PWaMessageBody]
-  messageBody Json
-  waContact   WaContact @relation(fields: [waContactId], references: [id], onDelete: Cascade)
+  messageBody             Json
+  /// [PWaTemplateComponentParams]
+  templateComponentParams Json?
+  waContact               WaContact @relation(fields: [waContactId], references: [id], onDelete: Cascade)
 }
 
 model WaAutomatedReply {

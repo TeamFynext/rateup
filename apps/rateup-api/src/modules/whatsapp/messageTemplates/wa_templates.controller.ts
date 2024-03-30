@@ -13,6 +13,7 @@ import {
   createTemplate,
   deleteTemplate,
   deleteTemplateFromDb,
+  fetchTemplate,
   getDbTemplate,
   getTemplateByIdAndOrgId,
   getTemplatesByOrgId,
@@ -26,11 +27,6 @@ import {
 import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
-import {
-  WaTemplate,
-  WaTemplateSupportedParameters,
-} from "../../../types/whatsapp.types";
-import { WaTemplateComponentType } from "../../../types/enums";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -67,7 +63,9 @@ export async function createTemplateHandler(
 
     const formattedTemplate = generateTemplate(request.body);
     const template = await createTemplate(orgId, formattedTemplate);
-    await saveTemplate(template, orgId);
+    //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
+    const fetchedTemplate = await fetchTemplate(template?.name, orgId);
+    await saveTemplate(fetchedTemplate, orgId);
     reply.code(200);
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);
@@ -225,7 +223,7 @@ export async function sendTemplateToUserHandler(
 ) {
   try {
     const { templateId } = request.params;
-    const { phone } = request.body;
+    const { phone, parameterData } = request.body;
     const orgId = request.user.orgId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     const { data } = dbTemplate;
@@ -234,8 +232,10 @@ export async function sendTemplateToUserHandler(
       language: {
         code: dbTemplate.data?.language,
       },
+      components: parameterData,
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
+
     await sendMessage(orgId, templateMessage);
     reply.code(200).send("Template send to user successfully");
   } catch (error) {

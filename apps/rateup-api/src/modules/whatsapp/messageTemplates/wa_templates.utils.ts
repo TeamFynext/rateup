@@ -1,12 +1,19 @@
 import {
   WaTemplateCategory,
   WaTemplateComponentType,
+  WaTemplateComponentTypeUpperCase,
   WaTemplateSupportedFormats,
 } from "../../../types/enums";
+import {
+  WaSendMessageBody,
+  WaTemplateFetchBody,
+  WaTemplateFetchComponents,
+} from "../../../types/whatsapp.types";
 import {
   CreateWaTemplateFormattedInput,
   CreateWaTemplateInput,
 } from "./wa_templates.schema";
+import { getTemplateByIdAndOrgId } from "./wa_templates.service";
 
 export function generateTemplate(
   input: CreateWaTemplateInput,
@@ -69,3 +76,135 @@ export const waAllowedMimeTypes = [
   "video/mp4",
   "application/pdf",
 ];
+
+export function getTemplateInMessageFormat(
+  messageBody: WaSendMessageBody,
+  parameterData: any,
+) {
+  function getHeaderObject(header: WaTemplateFetchComponents) {
+    const commonHeader = {
+      type: "header",
+      format: header.format?.toLowerCase(),
+    };
+    switch (header.format) {
+      case "IMAGE":
+      case "DOCUMENT":
+      case "VIDEO":
+        return {
+          ...commonHeader,
+          parameters: [
+            {
+              type: header.format.toLowerCase(),
+              [header.format.toLowerCase()]: {
+                link: parameterData?.header,
+              },
+            },
+          ],
+        };
+      case "TEXT":
+        return {
+          ...commonHeader,
+          [header.format.toLowerCase()]: header.text,
+        };
+      case "LOCATION":
+        return {
+          ...commonHeader,
+          [header.format.toLowerCase()]: parameterData?.header,
+        };
+    }
+  }
+
+  function getBodyObject(body: WaTemplateFetchComponents) {
+    return {
+      type: "body",
+      text: body.text,
+    };
+  }
+
+  function getFooterObject(footer: WaTemplateFetchComponents) {
+    return {
+      type: "footer",
+      text: footer.text,
+    };
+  }
+
+  function getButtonObject(buttons: WaTemplateFetchComponents["buttons"]) {
+    return buttons.map((button, i) => ({
+      type: "button",
+      sub_type: "quick_reply",
+      index: i.toString(),
+      text: button.text,
+    }));
+  }
+  return {
+    ...messageBody,
+    template: {
+      ...messageBody.template,
+      language: {
+        code: messageBody?.template?.language,
+      },
+      components: messageBody?.template?.components
+        .map((component) => {
+          switch (component.type) {
+            case WaTemplateComponentTypeUpperCase.HEADER:
+              return getHeaderObject(component);
+            case WaTemplateComponentTypeUpperCase.BODY:
+              return getBodyObject(component);
+            case WaTemplateComponentTypeUpperCase.FOOTER:
+              return getFooterObject(component);
+            case WaTemplateComponentTypeUpperCase.BUTTONS:
+              return getButtonObject(component.buttons);
+          }
+        })
+        .flat(),
+    },
+  };
+}
+
+export async function getTemplateQuery(
+  templateId: string,
+  orgId: string,
+  paramerterData: any,
+) {
+  const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+  const { data } = dbTemplate;
+  const commonQuery = {
+    name: data?.name,
+    language: {
+      code: data?.language,
+    },
+  };
+  if (paramerterData) {
+    return {
+      ...commonQuery,
+      components: data?.components.map((component) => {
+        switch (component.type) {
+          case WaTemplateComponentTypeUpperCase.HEADER:
+            switch (component?.format) {
+              case "IMAGE":
+              case "VIDEO":
+              case "DOCUMENT":
+              case "LOCATION":
+                if (!paramerterData?.header) {
+                  throw new Error("Header parameter is missing");
+                }
+                return {
+                  type: component?.type.toLowerCase(),
+                  paramteters: [
+                    {
+                      type: component?.format.toLowerCase(),
+                      [component?.format.toLowerCase()]: {
+                        link: paramerterData?.header,
+                      },
+                    },
+                  ],
+                };
+            }
+          default:
+            return null;
+        }
+      }),
+    };
+  }
+  return commonQuery;
+}
