@@ -192,7 +192,7 @@ type WaTemplateLanguage = {
   code: string;
 };
 
-type WaTemplateComponent = {
+export type WaTemplateComponent = {
   type: WaTemplateComponentType;
   sub_type?: "quick_reply" | "list_reply" | "button_reply" | "nfm_reply";
   index?: number;
@@ -241,32 +241,23 @@ export type WaTemplate = {
 };
 
 //types for adding waTemplates to waCloud starts here
+export type WaTemplateFetchComponents = {
+  type: WaTemplateComponentTypeUpperCase;
+  format?: "IMAGE" | "TEXT" | "LOCATION" | "DOCUMENT" | "VIDEO";
+  text?: string;
+  example?: {
+    header_handle: string[];
+  };
+  buttons?: {
+    type: WaButtonType.QUICK_REPLY;
+    text: string;
+  }[];
+};
 export type WaTemplateFetchBody = {
   id: string;
   name: string;
   language: string;
   status: WaTemplateStatus;
   category: WaTemplateCategory;
-  components: (
-    | {
-        type: WaTemplateComponentTypeUpperCase.BODY;
-        text: string;
-      }
-    | {
-        type: WaTemplateComponentTypeUpperCase.HEADER;
-        format: any;
-        text: string;
-      }
-    | {
-        type: WaTemplateComponentTypeUpperCase.FOOTER;
-        text: string;
-      }
-    | {
-        type: WaTemplateComponentTypeUpperCase.BUTTONS;
-        buttons: {
-          type: WaButtonType.QUICK_REPLY;
-          text: string;
-        }[];
-      }
-  )[];
+  components: WaTemplateFetchComponents[];
 };

@@ -90,6 +90,7 @@ const registerTemplatesInDbBodySchema = z.array(
 
 const waUserSendTemplateBodySchema = z.object({
   phone: z.string(),
+  parameterData: z.any(),
 });
 
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(

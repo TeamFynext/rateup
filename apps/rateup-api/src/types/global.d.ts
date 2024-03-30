@@ -15,7 +15,11 @@ import {
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
 import prisma from "../utils/prisma";
-import { WaReceiveMessageBody, WaSendMessageBody } from "./whatsapp.types";
+import {
+  WaReceiveMessageBody,
+  WaSendMessageBody,
+  WaTemplateComponent,
+} from "./whatsapp.types";
 
 type GoogleReview = {
   minRating?: number;
@@ -281,6 +285,7 @@ declare global {
 
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
+    type PWaTemplateComponentParams = WaTemplateComponent;
   }
 }
 export interface FlowLogicCondition {

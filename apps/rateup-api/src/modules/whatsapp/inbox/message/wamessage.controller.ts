@@ -36,6 +36,7 @@ export async function handleWaMessages(
     receive: type === "receive" ? messageBody : null,
   };
   let waContactId = "";
+  let parameterData = {};
   switch (type) {
     case "send": {
       //condition to add template body to messageData if type is template
@@ -44,6 +45,7 @@ export async function handleWaMessages(
           messageBody.template.name,
           orgId,
         );
+        parameterData = messageBody.template.components;
         waMessageBody.send.template = template.data;
       }
       const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
@@ -65,6 +67,7 @@ export async function handleWaMessages(
     waMessageBody,
     waContactId,
     waTimeStamp,
+    parameterData,
   );
 }
 
