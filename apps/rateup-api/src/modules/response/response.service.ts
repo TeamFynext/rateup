@@ -209,11 +209,9 @@ export async function downloadExcelResponse(
       options.push({ width: width > 40 ? 40 : width });
     });
     let fileName = allResponses?.[0].survey?.title ?? "download";
-    const truncatedName =
-      fileName.length > 30 ? fileName.substring(0, 30) : fileName;
     let buffer = xlsx.build([
       {
-        name: truncatedName,
+        name: "Sheet1",
         data: [headerArray, ...bodyArray],
         options: {
           "!cols": options,
@@ -221,7 +219,7 @@ export async function downloadExcelResponse(
       },
     ]);
 
-    return [truncatedName, buffer];
+    return [fileName, buffer];
   }
 }
 function getMaxContentWidth(data, columnIndex: number) {
