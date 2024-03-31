@@ -21,7 +21,7 @@ interface Props {
 }
 export default function WaInboxTemplateDisplayModal(props: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [opened, { close: onClose, open }] = useDisclosure(true);
+  const [opened, { close: onClose, open }] = useDisclosure(false);
   const [sfTemplates, setSFTemplates] = useState<WaTemplate[]>([]);
 
   const sendTemplate = useSendWaTemplateToUser(
