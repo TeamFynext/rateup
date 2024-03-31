@@ -177,3 +177,16 @@ export async function deleteWaContact(contactId: string, orgId: string) {
   });
   return deletedContact;
 }
+export async function updateWaContactUpdatedById(
+  id: string,
+  timeStamp: string,
+) {
+  const updatedContact = await prisma.waContact.update({
+    where: {
+      id,
+    },
+    data: {
+      updatedAt: timeStamp,
+    },
+  });
+}
