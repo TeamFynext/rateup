@@ -1,52 +1,151 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Checkbox } from "@mantine/core";
+import { Box, Checkbox, FocusTrap, Input, Stack } from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard";
+import { AnimatePresence, motion } from "framer-motion";
+import { theme } from "../../../../../config/mantineTheme";
+import classes from "../TakeSurvey.module.css";
 
-interface MCQFormProps {
+interface MSQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
+  features?: Record<string, any>;
 }
 
-export function MSQForm({ previewChoices }: Readonly<MCQFormProps>) {
+export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState([]);
+
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
-    ? previewChoices?.[selectedLanguage]
-    : sampleChoices;
+      ? previewChoices?.[selectedLanguage]
+      : sampleChoices;
+  const selectedFeature = features?.[selectedLanguage];
+  const otherInputContainerRef = useRef(null);
+  const bDivRef = useRef(null);
+  const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] =
+    useState(false);
 
   const data = options?.map((op) => op?.value);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const [otherInput, setOtherInput] = useState(
+    response?.find((r) => r?.other)?.other || "",
+  );
 
   useEffect(() => {
     if (response) {
-      setSelectedOp(response?.map((r) => r?.value));
+      setSelectedOp(
+        response?.map((r) =>
+          r?.other ? selectedFeature?.other.title : r?.value,
+        ),
+      );
     }
   }, [response]);
 
-  const handleSelectedOp = (values) => {
+  const handleSelectedOp = (values: string[]) => {
+    setSelectedOp(values);
     const res = options?.filter((op) => values?.includes(op?.value));
-    updateResponse(res);
+    if (values.includes(selectedFeature?.other?.title)) {
+      if (otherInput?.length) updateResponse([...res, { other: otherInput }]);
+      else updateResponse(null);
+    } else {
+      updateResponse(res);
+      setOtherInput("");
+    }
   };
 
+  useEffect(() => {
+    if (
+      selectedOp.includes(selectedFeature?.other?.title) &&
+      otherInputContainerRef.current
+    ) {
+      bDivRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (isOtherInputFocusTrapActive) {
+      setIsOtherInputFocusTrapActive(false);
+    }
+  }, [selectedOp]);
+
+  if (selectedFeature?.other?.isEnabled) {
+    data.push(selectedFeature?.other?.title);
+  } else {
+    data.filter((op) => op !== selectedFeature?.other?.title);
+  }
+
   return (
-    <Checkbox.Group
-      value={selectedOp}
-      onChange={handleSelectedOp}
-      mr={"sm"}
-      w={"100%"}
-    >
-      <MultipleSelectCard
-        data={data}
-        checkBoxEnable
-        selectedValue={selectedOp}
-      />
-    </Checkbox.Group>
+    <Stack w={"100%"} mr="sm" py={"xs"} style={{ overflow: "hidden" }}>
+      <Checkbox.Group
+        value={selectedOp}
+        onChange={handleSelectedOp}
+        mr={"sm"}
+        w={"100%"}
+      >
+        <MultipleSelectCard
+          data={data}
+          checkBoxEnable
+          selectedValue={selectedOp}
+        />
+      </Checkbox.Group>
+      <AnimatePresence initial={false}>
+        {selectedFeature?.other?.isEnabled &&
+          selectedOp.includes(selectedFeature?.other?.title) && (
+            <motion.div
+              transition={{
+                type: "tween",
+                duration: 0.5,
+                delay: 0.25,
+              }}
+              initial={{ x: "100vw" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100vw" }}
+              key={"other-option-input"}
+              ref={otherInputContainerRef}
+              onAnimationComplete={(defObj) => {
+                if (otherInputContainerRef.current && defObj["x"] === 0) {
+                  setIsOtherInputFocusTrapActive(true);
+                }
+              }}
+            >
+              <Box
+                className={classes.inputBox}
+                style={{
+                  borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
+                  boxShadow: `0 0 4px 4px rgba(0, 0, 0, 0.05rgba(0, 0, 0, 0.05) 0px 1px 0px,
+                 rgba(0, 0, 0, 0.11) 0px 0px 8px)`,
+                }}
+              >
+                <FocusTrap active={isOtherInputFocusTrapActive}>
+                  <Input
+                    placeholder={selectedFeature?.other?.placeholder}
+                    value={otherInput || ""}
+                    onChange={(e) => {
+                      setOtherInput(e.currentTarget.value);
+                      const res = options?.filter((op) =>
+                        selectedOp?.includes(op?.value),
+                      );
+                      updateResponse([
+                        ...res,
+                        { other: e.currentTarget.value },
+                      ]);
+                    }}
+                    variant="unstyled"
+                    classNames={{
+                      input: classes.input,
+                    }}
+                    data-autofocus
+                  />
+                </FocusTrap>
+              </Box>
+            </motion.div>
+          )}
+      </AnimatePresence>
+
+      {/* using this div to scroll to bottom, If we use motion.div to scrollIntoView animation will not work properly. */}
+      <div ref={bDivRef}></div>
+    </Stack>
   );
 }

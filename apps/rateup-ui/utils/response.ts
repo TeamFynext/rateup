@@ -13,7 +13,6 @@ import {
   IconMoodCrazyHappy,
   IconMoodSmileBeam,
 } from "@tabler/icons-react";
-import { ChoiceTypeQuestions } from "./constants";
 import { decryptPrivateKey, decryptResponse } from "./encryption";
 import { TeamWiseResponses } from "../backend/surveys/response/response.api";
 import { useContext } from "react";
@@ -36,7 +35,11 @@ export function getResponse(q: any, response: any) {
       return formattedAddressInfo(response);
     case QuestionType.DDMS:
     case QuestionType.MSQ:
-      return formatChoiceTypeQuestions(response);
+    case QuestionType.CustomNPS:
+    case QuestionType.MCQ:
+    case QuestionType.DDSS:
+    case QuestionType.WaButtons:
+      return formatChoiceTypeQuestions(q, response);
     case QuestionType.WaList:
       return formatWaList(response);
     default:
@@ -57,10 +60,32 @@ function formatContactInfo(response) {
     .join(", ");
 }
 
-function formatChoiceTypeQuestions(response) {
+function formatChoiceTypeQuestions(q, response) {
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
   let formattedValue = "";
   if (response) {
-    formattedValue = response.map((item) => item?.value?.trim()).join(", ");
+    if ([QuestionType.DDMS, QuestionType.MSQ].includes(q?.type)) {
+      formattedValue = response
+        .map(
+          (item) =>
+            item?.value?.trim() ||
+            `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${item?.other}`,
+        )
+        .join(", ");
+    } else if (
+      [
+        QuestionType.DDSS,
+        QuestionType.MCQ,
+        QuestionType.CustomNPS,
+        QuestionType.WaButtons,
+      ].includes(q?.type)
+    ) {
+      formattedValue =
+        response.value ||
+        `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${response?.other}`;
+    }
   }
   return formattedValue;
 }
@@ -96,15 +121,6 @@ function formatTestimonialResponse(response) {
 
 function formatDefaultResponse(q, response) {
   // Handle other types or default case
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
-  if (ChoiceTypeQuestions.includes(q?.type)) {
-    return response
-      ? response.value ||
-          `${q?.features?.[selectedLanguage || defaultLanguage].other?.title} : ${response?.other}`
-      : "";
-  }
   return response;
 }
 

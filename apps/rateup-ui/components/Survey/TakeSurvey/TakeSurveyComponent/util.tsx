@@ -149,7 +149,7 @@ export function getQuestionForm(type, selectedQ) {
     case Q.MCQ:
       return <MCQForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.MSQ:
-      return <MSQForm key={selectedQ?.id} />;
+      return <MSQForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.DDSS:
       return <DDSSForm key={selectedQ?.id} />;
     case Q.DDMS:

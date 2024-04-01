@@ -120,7 +120,9 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   if (mcqOtherFeature && mcqOtherFeature.isEnabled) {
     let otherValueCount = data?.filter((item) => {
       const response = item?.response[questionType];
-      return response?.other?.length;
+      return Array.isArray(response)
+        ? response.some((r) => r?.other?.length)
+        : response?.other?.length;
     })?.length;
     choiceCounts.push({
       name: mcqOtherFeature?.title,

@@ -50,7 +50,7 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
     case Q.MCQ:
       return <MCQForm previewChoices={choices} features={features} />;
     case Q.MSQ:
-      return <MSQForm previewChoices={choices} />;
+      return <MSQForm previewChoices={choices} features={features} />;
     case Q.DDSS:
       return <DDSSForm previewChoices={choices} />;
     case Q.DDMS:

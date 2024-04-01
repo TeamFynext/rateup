@@ -86,7 +86,12 @@ const SurveyResponsesView = ({
                     const responseData = Object.values(response?.response)[0];
                     if (Array.isArray(responseData)) {
                       return responseData.map((item, index) => {
-                        return <li key={index}>{item?.value}</li>;
+                        return (
+                          <li key={index}>
+                            {item?.value ||
+                              `${question?.features?.[selectedLanguage || defaultLanguage].other?.title}: ${item?.other}`}
+                          </li>
+                        );
                       });
                     }
                     return <li>{responseData}</li>;

@@ -286,7 +286,7 @@ export function ChoicesCreator({
           />
         </Group>
       )}
-      {form.values.type === QuestionType.MCQ &&
+      {[QuestionType.MCQ, QuestionType.MSQ].includes(form.values.type) &&
         surveyType == SurveyType.Web && (
           <Stack>
             <PaperLayout w={"fit-content"}>

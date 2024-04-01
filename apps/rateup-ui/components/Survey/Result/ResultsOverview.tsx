@@ -195,12 +195,13 @@ const ResultsOverview = ({ surveyId }) => {
         csat: csatScore,
         choicesInAllLang: choicesInAllLang,
         enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
-        mcqOtherFeature:
-          question?.type == QuestionType.MCQ
-            ? question?.features?.[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ]?.other
-            : false,
+        mcqOtherFeature: [QuestionType.MCQ, QuestionType.MSQ].includes(
+          question?.type,
+        )
+          ? question?.features?.[
+              selectedLanguage ? selectedLanguage : defaultLanguage
+            ]?.other
+          : false,
       };
     });
   };

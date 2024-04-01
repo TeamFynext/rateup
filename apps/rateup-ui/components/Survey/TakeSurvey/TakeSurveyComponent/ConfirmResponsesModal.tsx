@@ -102,6 +102,21 @@ function ConfirmResponsesModal({
                               </Text>
                             );
                           case Q.MSQ:
+                            const responses = Object.values(
+                              response?.response,
+                            )[0];
+                            if (Array.isArray(responses)) {
+                              return responses.map((item, index) => {
+                                return (
+                                  <li key={index}>
+                                    {item?.value ||
+                                      `${question?.features?.[selectedLanguage]?.other?.title}: ${item?.other}`}
+                                  </li>
+                                );
+                              });
+                            }
+                            return <li>{responses}</li>;
+
                           case Q.DDMS:
                             const responseData = Object.values(
                               response?.response,

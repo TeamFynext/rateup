@@ -57,6 +57,7 @@ import { IconChevronDown } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useBeforeUnload, useClickAway } from "react-use";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import { getQuestionTypeLabel } from "../../../utils/enums";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -196,7 +197,7 @@ export function QuestionDetailedView({
       <Stack style={{ height: "100%" }} ref={formRef}>
         <ScrollArea style={{ flex: "1 1 0", overflow: "auto" }}>
           <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
-            {question.type}
+            {getQuestionTypeLabel(question.type)}
           </Badge>
           <Group justify="space-between" p={2} gap={2}>
             <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
