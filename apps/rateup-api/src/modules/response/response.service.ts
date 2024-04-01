@@ -14,6 +14,7 @@ import xlsx from "node-xlsx";
 import { autoGenerateTicket } from "../ticket/ticket.service";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { updateMonthlyStat } from "../stats/stats.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -280,10 +281,18 @@ export async function createResponse(
               questions: true,
             },
           },
+          team: {
+            select: {
+              orgId: true,
+            },
+          },
         },
       },
     },
   });
+
+  surveyResponse &&
+    updateMonthlyStat("survey", surveyResponse?.surveyTeamMap?.team.orgId);
 
   if (shouldRaiseTicket && input?.responses?.length > 0) {
     //generate ticket

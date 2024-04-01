@@ -12,6 +12,8 @@ import { parseArrayString } from "./utils/array";
 import { log } from "./utils/logger";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
+import fastifyCron from "fastify-cron";
+import { resetMonthlyCounts } from "./modules/stats/stats.service";
 
 const server = Fastify({
   // logger: logOptions,
@@ -40,6 +42,27 @@ server.get("/api/ping", async (req, reply) => {
   }
 });
 
+server.register(fastifyCron, {
+  jobs: [
+    {
+      cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
+      onTick: async () => {
+        try {
+          await resetMonthlyCounts();
+          console.log("Monthly Stats reset successfully");
+        } catch (error) {
+          console.error("Failed to reset monthly counts:", error);
+        }
+      },
+      start: true, // Start the job immediately
+      timeZone: "Asia/Kolkata", // UTC India
+
+      // timeZone: 'UTC', // Specify the timezone if necessary
+      //  cronTime: '* * * * *', // Every minute - for testing purpose
+    },
+  ],
+});
+
 server.register(formDataPlugin);
 server.register(plugin);
 server.setErrorHandler(errorHandler());
@@ -53,6 +76,7 @@ async function main() {
     })
     .then(() => {
       console.log(`Server ready at ${port}`);
+      server.cron.startAllJobs();
     })
     .catch((e) => {
       console.error(e);

@@ -101,6 +101,35 @@ model Org {
   landingPage       LandingPage[]
   WaContact         WaContact[]
   LoyaltyApiKey     LoyaltyApiKey?
+  UsageStats        UsageStats?
+}
+
+model UsageStats {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org       Org      @relation(fields: [orgId], references: [id])
+  orgId     String   @unique @db.Uuid
+
+  teamsCount           Int @default(0)
+  teamMembersCount     Int @default(0)
+  surveysCount         Int @default(0)
+  surveyResponsesCount Int @default(0)
+  menusCount           Int @default(0)
+  menuViewsCount       Int @default(0)
+
+  monthlySurveyResponses Int @default(0)
+  monthlyMenuViews       Int @default(0)
+
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+
+  allowedTeams           Int @default(0)
+  allowedTeamMembers     Int @default(0)
+  allowedSurveys         Int @default(0)
+  allowedSurveyResponses Int @default(0)
+  allowedMenus           Int @default(0)
+  allowedMenuViews       Int @default(0)
 }
 
 model WhatsappSettings {
@@ -912,6 +941,7 @@ model LandingPage {
   owner          Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
   createdBy      User     @relation(fields: [createdById], references: [id])
 }
+
 model WaContact {
   id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime    @default(now())
