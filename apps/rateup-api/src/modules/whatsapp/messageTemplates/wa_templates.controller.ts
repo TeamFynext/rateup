@@ -1,7 +1,10 @@
 import { Role } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
+import { WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { getOrgIdAndRole } from "../../user/user.service";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service";
+import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import {
   ByTemplateIdParamsSchema,
   CreateWaTemplateInput,
@@ -22,11 +25,10 @@ import {
   saveTemplate,
   syncTemplates,
   updateTemplate,
+  updateTemplateInDb,
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
 import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
-import { sendMessage } from "../whatsappSurvey/wasurvey.service";
-import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -65,11 +67,41 @@ export async function createTemplateHandler(
     const template = await createTemplate(orgId, formattedTemplate);
     //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
     const fetchedTemplate = await fetchTemplate(template?.name, orgId);
-    await saveTemplate(fetchedTemplate, orgId);
-    reply.code(200);
+    if (request.body?.id) {
+      await updateTemplateInDb(request.body.id, fetchedTemplate);
+    } else {
+      await saveTemplate(fetchedTemplate, orgId);
+    }
+    reply.code(200).send("template created");
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);
     reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
+  }
+}
+
+export async function saveTemplateAsDraftHandler(
+  request: FastifyRequest<{
+    Body: CreateWaTemplateInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    let formattedTemplate: any = generateTemplate(request.body);
+    formattedTemplate.status = WaTemplateStatus.DRAFT;
+    if (request.body?.id) {
+      const template = await getDbTemplate(request.body.id);
+      template.data.name = request.body.name ?? template.data.name;
+      template.data.components = formattedTemplate.components ?? [];
+      template.data.status = WaTemplateStatus.DRAFT;
+      await updateTemplateInDb(request.body.id, template.data);
+    } else {
+      await saveTemplate(formattedTemplate, orgId);
+    }
+    reply.code(200);
+  } catch (e) {
+    log.error("Error saving template as Draft\n%o", e?.response?.data);
+    reply.code(500).send(e?.response?.data ?? e);
   }
 }
 
@@ -130,12 +162,17 @@ export async function deleteTemplateHandler(
       return;
     }
     const { id, name } = template as WaTemplateFormatted;
-    const deleted = await deleteTemplate(orgId, id, name);
-    if (deleted) {
-      await deleteTemplateFromDb(templateId);
-      reply.code(200);
+    if (id) {
+      const deleted = await deleteTemplate(orgId, id, name);
+      if (deleted) {
+        await deleteTemplateFromDb(templateId);
+        reply.code(204);
+      } else {
+        reply.code(500).send("error in deleteing from whatsapp");
+      }
     } else {
-      reply.code(500);
+      await deleteTemplateFromDb(templateId);
+      reply.code(204);
     }
   } catch (e) {
     reply.code(500);
