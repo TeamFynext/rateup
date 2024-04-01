@@ -95,6 +95,7 @@ export function submitSurvey({
   tag,
   encryptedResponses,
   shouldRaiseTicket,
+  checkUniqueDevice,
 }) {
   return createResponsePublic({
     surveyTeamMapId,
@@ -104,6 +105,7 @@ export function submitSurvey({
     location: { coordinates },
     tag: tag || null,
     shouldRaiseTicket,
+    checkUniqueDevice,
   })
     .then(() => {
       // notifications.show({
@@ -119,6 +121,9 @@ export function submitSurvey({
         color: "red",
       });
       setIsSavingResponses(false);
+      if (e?.response?.data === "ALREADY_RESPONDED") {
+        throw new Error("ALREADY_RESPONDED");
+      }
     });
 }
 

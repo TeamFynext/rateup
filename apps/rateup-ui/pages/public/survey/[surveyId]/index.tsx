@@ -2,7 +2,7 @@ import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyCompo
 import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import Head from "next/head";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ReviewUsOnGoogle from "./review-us-on-google";
 import { mimeTypesForImage } from "../../../../utils/constants";
 import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";

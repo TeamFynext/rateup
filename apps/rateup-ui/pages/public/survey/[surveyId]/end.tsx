@@ -74,6 +74,7 @@ export default function ThankYou({
 
   // const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
   // const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
+  let err = router.query.err && router.query.err === "oops";
   let k,
     sid,
     surveyId = "";
@@ -216,11 +217,15 @@ export default function ThankYou({
                   ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
                 }}
               >
-                {surveyThemeData?.thankyouTheme?.title?.title}
+                {!!err
+                  ? "Oops..!"
+                  : surveyThemeData?.thankyouTheme?.title?.title}
               </Title>
-              {surveyThemeData?.thankyouTheme?.subtitle?.subtitle && (
+              {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle || err) && (
                 <Text style={surveyThemeData?.thankyouTheme?.subtitle?.styles}>
-                  {surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
+                  {!!err
+                    ? "Sorry, You've already submitted the response earlier."
+                    : surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
                 </Text>
               )}
             </Stack>

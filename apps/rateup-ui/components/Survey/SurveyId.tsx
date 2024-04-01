@@ -244,6 +244,7 @@ export default function SurveyID() {
                             "notificationEmail",
                             "endtoendencryption",
                             "redirect",
+                            "uniqueDeviceResponse",
                             hasFeature(
                               subscription,
                               SubscriptionFeaturePathName.Ticket,

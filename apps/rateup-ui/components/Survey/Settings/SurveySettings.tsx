@@ -29,6 +29,7 @@ import {
 } from "./updateSettings";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import TicketSettings from "./TicketSettings";
+import UniqueDeviceSettings from "./UniqueDeviceSettings";
 
 const defaultEnabledModules = [
   "name",
@@ -43,6 +44,7 @@ const defaultEnabledModules = [
   "endtoendencryption",
   "redirect",
   "tickets",
+  "uniqueDeviceResponse",
 ];
 interface SurveySettingsProps {
   surveyId: string;
@@ -158,7 +160,7 @@ const SurveySettings = ({
           <TicketSettings survey={survey} surveyId={surveyId} />
         )}
       </SimpleGrid>
-      <SimpleGrid cols={2} spacing={"lg"}>
+      <SimpleGrid cols={3} spacing={"lg"}>
         {enabledModules.includes("redirect") && (
           <PaperLayout shadow="xl" p={"xl"}>
             <Group justify="space-between">
@@ -264,6 +266,9 @@ const SurveySettings = ({
         )}
         {enabledModules.includes("enableNotificationEmail") && (
           <NotificationEmailSettings surveyId={surveyId} survey={survey} />
+        )}
+        {enabledModules.includes("uniqueDeviceResponse") && (
+          <UniqueDeviceSettings surveyId={surveyId} survey={survey} />
         )}
       </SimpleGrid>
       <OtherSettings />

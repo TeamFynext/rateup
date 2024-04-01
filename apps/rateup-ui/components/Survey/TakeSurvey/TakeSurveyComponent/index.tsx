@@ -235,6 +235,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       responses,
     );
 
+    let checkUniqueDevice = survey?.uniqueDeviceResponse;
+
     //logic for encrypting the responses, to swap values between response variable and end to end encrypted response
     let defaultResponses = responses;
     let encryptedResponses = "";
@@ -256,19 +258,30 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       coordinates,
       tag: searchParams.get("tag"),
       shouldRaiseTicket,
-    }).then(() => {
-      updateCompleted.mutate(surveyTeamMapId);
-      let kioskMode = survey?.kioskMode ? "y" : "n";
-      kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
-      shouldShowGoogleReview
-        ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
-          setIsReviewPage(selectedLanguage)
-        : fromShortUrl
-          ? router.push(`/ws/${router.query.shortId}/end`)
-          : router.push(
-              `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
-            );
-    });
+      checkUniqueDevice,
+    })
+      .then(() => {
+        updateCompleted.mutate(surveyTeamMapId);
+        let kioskMode = survey?.kioskMode ? "y" : "n";
+        kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
+        shouldShowGoogleReview
+          ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
+            setIsReviewPage(selectedLanguage)
+          : fromShortUrl
+            ? router.push(`/ws/${router.query.shortId}/end`)
+            : router.push(
+                `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
+              );
+      })
+      .catch((e) => {
+        if (e?.message === "ALREADY_RESPONDED") {
+          fromShortUrl
+            ? router.push(`/ws/${router.query.shortId}/end?err=oops`)
+            : router.push(
+                `${surveyTeamMapId}/end?k=${false}&sid=${survey.id}&language=${selectedLanguage}&err=oops`,
+              );
+        }
+      });
   };
 
   const handlePrev = () => {

@@ -63,6 +63,14 @@ export const updateEmailSurvey = (setEnabledNotificationEmail, editSurvey) => {
   });
 };
 
+export const updateUniqueDevice = (setEnableUniqueDevice, editSurvey) => {
+  setEnableUniqueDevice((prev) => {
+    const isEnabled = !prev;
+    editSurvey.mutate({ uniqueDeviceResponse: isEnabled });
+    return isEnabled;
+  });
+};
+
 export const updateEndToEndEncryption = (
   setEndToEndEncryption,
   publicKey,

@@ -29,6 +29,7 @@ export async function getAllResponses(surveyId: string) {
 
 type CreateResponseType = Omit<SurveyResponse, "id" | "createdAt"> & {
   shouldRaiseTicket?: boolean;
+  checkUniqueDevice?: boolean;
 };
 export async function createResponsePublic(data: CreateResponseType) {
   return await axiosClient.post(`/public/response`, data);

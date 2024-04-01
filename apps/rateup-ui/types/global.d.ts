@@ -94,6 +94,7 @@ declare global {
     getLocation: boolean;
     enableTickets: boolean;
     enableTicketEmailAlerts: boolean;
+    uniqueDeviceResponse: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
     surveyTeamMapId?: string;
