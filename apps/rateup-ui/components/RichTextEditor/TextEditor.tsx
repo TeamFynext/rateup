@@ -22,7 +22,7 @@ export default function TextEditor({ form, selectedLanguage }) {
   }, [selectedLanguage]);
 
   return (
-    <RichTextEditor editor={editor} mt={"xs"}>
+    <RichTextEditor editor={editor} mt={"xs"} mr={"lg"}>
       <RichTextEditor.Toolbar sticky>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.Bold />
