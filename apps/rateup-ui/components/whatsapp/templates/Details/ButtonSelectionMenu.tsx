@@ -13,6 +13,8 @@ import {
   IconAdjustments,
   IconCopy,
   IconBulb,
+  IconPhone,
+  IconLink,
 } from "@tabler/icons-react";
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
@@ -62,14 +64,33 @@ export const ButtonSelection = (props: ButtonSelectionProps) => {
           <Menu.Label>Call-to-action buttons</Menu.Label>
           <Menu.Item
             leftSection={
+              <IconPhone style={{ width: rem(14), height: rem(14) }} />
+            }
+            onClick={() =>
+              handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)
+            }
+          >
+            Call phone number
+          </Menu.Item>
+          <Menu.Item
+            leftSection={
               <IconCopy style={{ width: rem(14), height: rem(14) }} />
             }
             onClick={() =>
               handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)
             }
-            disabled
           >
             Copy offer code
+          </Menu.Item>
+          <Menu.Item
+            leftSection={
+              <IconLink style={{ width: rem(14), height: rem(14) }} />
+            }
+            onClick={() =>
+              handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
+            }
+          >
+            Visit website
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

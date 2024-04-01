@@ -73,6 +73,7 @@ export enum WaTemplateStatus {
   APPROVED = "APPROVED",
   PENDING = "PENDING",
   REJECTED = "REJECTED",
+  DRAFT = "DRAFT",
 }
 export enum WaFlowStatus {
   PUBLISHED = "PUBLISHED",

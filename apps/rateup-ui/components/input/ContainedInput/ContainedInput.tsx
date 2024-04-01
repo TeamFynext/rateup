@@ -25,6 +25,8 @@ import {
   Button,
   FileButton,
   FileButtonProps,
+  Text,
+  Box,
 } from "@mantine/core";
 import classes from "./ContainedInput.module.css";
 import {
@@ -78,13 +80,19 @@ export function ContainedColorInput(props: ColorInputProps) {
 }
 interface fileButtonPropsExtend extends FileButtonProps {
   label: string;
+  error?: string;
 }
 export function ContainedFileButton(props: fileButtonPropsExtend) {
-  const { label, ...restProps } = props;
+  const { label, error, ...restProps } = props;
   return (
-    <FileButton {...props}>
-      {(props) => <Button {...props}>{label}</Button>}
-    </FileButton>
+    <Box mt={"xs"}>
+      <FileButton {...restProps}>
+        {(props) => <Button {...props}>{label}</Button>}
+      </FileButton>
+      <Text c={"var(--mantine-color-error)"} fz={"xs"}>
+        {error}
+      </Text>
+    </Box>
   );
 }
 

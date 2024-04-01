@@ -9,6 +9,7 @@ const colorMap = {
   [WaTemplateStatus.APPROVED]: "green",
   [WaTemplateStatus.PENDING]: "yellow",
   [WaTemplateStatus.REJECTED]: "red",
+  [WaTemplateStatus.DRAFT]: "blue",
 };
 export default function WaTemplateStatusBadge({
   status,

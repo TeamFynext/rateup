@@ -13,12 +13,16 @@ import {
 } from "@mantine/core";
 import {
   IconCamera,
+  IconCopy,
+  IconLink,
   IconList,
   IconMicrophone,
   IconNote,
+  IconPhone,
   IconPlus,
 } from "@tabler/icons-react";
 import classes from "./Message.module.css";
+import { WHATSAPP_BUTTON_TYPE } from "../../utils/constants";
 export interface ResponseMessageContainerProps {
   children: React.ReactNode;
   style?: MantineStyleProp;
@@ -72,11 +76,13 @@ interface QuickReplyButtonProps {
   text: string;
   style?: MantineStyleProp;
   onClick?: any;
+  type?: any;
 }
 export function QuickReplyButton({
   text,
   style,
   onClick,
+  type,
 }: QuickReplyButtonProps) {
   const theme = useMantineTheme();
   return (
@@ -92,12 +98,26 @@ export function QuickReplyButton({
       onClick={onClick || (() => {})}
       p="6px"
     >
-      <Text style={{ textAlign: "center" }} c={theme.colors.blue[5]}>
-        {text}
-      </Text>
+      <Group justify="center" c={theme.colors.blue[5]} gap={5}>
+        {getIcon(type)}
+        <Text>{text}</Text>
+      </Group>
     </Box>
   );
 }
+
+const getIcon = (type) => {
+  switch (type) {
+    case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
+      return <IconPhone size={14} />;
+    case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
+      return <IconCopy size={14} />;
+    case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
+      return <IconLink size={14} />;
+    default:
+      return <></>;
+  }
+};
 
 interface WaListButonProps {
   text?: string;

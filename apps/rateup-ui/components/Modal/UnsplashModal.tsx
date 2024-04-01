@@ -1,5 +1,3 @@
-import React, { useEffect, useRef, useState } from "react";
-import SimpleModalLayout from "./SimpleModalLayout";
 import {
   ActionIcon,
   Card,
@@ -11,14 +9,16 @@ import {
   Text,
   rem,
 } from "@mantine/core";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 import {
   useTriggeringDownload,
   useUnsplashPhotosList,
 } from "../../backend/unsplash/unsplash.query";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import useDebounce from "../menu/hook/useDebounce";
-import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import SimpleModalLayout from "./SimpleModalLayout";
 
 type UnsplashModalProps = {
   opened: boolean;

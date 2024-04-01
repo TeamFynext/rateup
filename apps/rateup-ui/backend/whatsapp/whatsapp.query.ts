@@ -6,6 +6,7 @@ import {
   getWaTemplateById,
   getWaTemplates,
   registerTemplates,
+  saveTemplateAsDraft,
   sendWaTemplateToUser,
   syncTemplates,
   updateWaTemplate,
@@ -47,6 +48,28 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
   return createMutation;
 };
 
+export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (templateData: any) => saveTemplateAsDraft(templateData),
+    onSuccess: () => {
+      showSuccessToast("Template Saved as Draft Successfully");
+      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
+      queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
+      onSuccess();
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        typeof error?.response?.data === "string"
+          ? error?.response?.data
+          : "Error saving as draft template!",
+      );
+      onError();
+    },
+  });
+
+  return createMutation;
+};
 export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({

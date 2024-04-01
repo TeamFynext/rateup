@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
-  ActionIcon,
-  Button,
+  Box,
   Card,
   Flex,
   Grid,
   Group,
   MantineProvider,
-  MantineThemeProvider,
   Stack,
   Text,
   Textarea,
@@ -18,14 +16,16 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useRouter } from "next/router";
 
-import { IconX } from "@tabler/icons-react";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { z } from "zod";
 import { uploadTemplateMedia } from "../../../../backend/whatsapp/whatsapp.api";
 import {
   useCreateTemplateMutation,
+  useSaveTemplateAsDraftMutation,
   useUpdateTemplateMutation,
   useWaTemplateById,
 } from "../../../../backend/whatsapp/whatsapp.query";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import {
   ContainedSelection,
@@ -42,21 +42,27 @@ import { ButtonSelection } from "../../../../components/whatsapp/templates/Detai
 import { HeaderWithFormatting } from "../../../../components/whatsapp/templates/Details/HeaderWithFormating";
 import { TextFormateToolBar } from "../../../../components/whatsapp/templates/Details/TextFormateToolBar";
 import TextWithFormatting from "../../../../components/whatsapp/templates/Details/TextWithFormating";
+import { templateSchema } from "../../../../components/whatsapp/templates/Schema/templateSchema";
 import WaChatPreview from "../../../../components/whatsapp/templates/WaChatPreview";
+import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
+import { whatsappTheme } from "../../../../config/mantineTheme";
 import { WaTemplateStatus } from "../../../../types/enums";
 import {
-  MAX_FILE_SIZE_IN_BYTE,
   SAVE_HOTKEY,
+  WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
   WHATSAPP_TEMPLATE_CATEGORY,
 } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
 import { showErrorToast, showWarnToast } from "../../../../utils/notifications";
 import { parseTemplate } from "../../../../utils/whatsapp/templates";
-import { whatsappTheme } from "../../../../config/mantineTheme";
+import ButtonInput from "../../../../components/whatsapp/templates/Details/ButtonInput";
+import styles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
 
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
+
   const router = useRouter();
   let templateId = router.query.templateId as string;
   templateId = templateId === "create" ? "" : templateId;
@@ -65,7 +71,7 @@ export default function WhatsappTemplateById() {
   const contentHistory = useRef([]); // Ref to store content history
   const inputRef = useRef(null);
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof templateSchema>>({
     initialValues: {
       name: "",
       header: null,
@@ -74,57 +80,10 @@ export default function WhatsappTemplateById() {
       category: "MARKETING",
       format: "NONE",
       buttons: [],
+      status: WaTemplateStatus.DRAFT,
     },
-    validate: {
-      name: (value) => {
-        if (value.trim().length === 1 || value.trim().length > 512) {
-          return null;
-        } else if (value.includes(" ")) {
-          return "Name cannot contain spaces. Replace it with underscore(_)";
-        } else if (/[A-Z]/.test(value)) {
-          return "Name cannot contain uppercase letters";
-        } else if (value.trim().length === 0) {
-          return "Name Required";
-        }
-      },
-      header: (value: string | File | null, values) => {
-        if (
-          values.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE[2] &&
-          typeof value !== "string"
-        ) {
-          return (
-            !["image/png", "image/jpg", "image/jpeg"].includes(value?.type) &&
-            "Incorrect Type"
-          );
-        } else if (
-          values.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE[3] &&
-          typeof value !== "string"
-        ) {
-          return !["video/mp4"].includes(value?.type) && "Incorrect Type";
-        } else if (
-          values.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE[4] &&
-          typeof value !== "string"
-        ) {
-          return !["application/pdf"].includes(value?.type) && "Incorrect Type";
-        } else if (
-          typeof value === "string" &&
-          values.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE[1]
-        ) {
-          return value.trim().length > 60 && "max text size is 60";
-        } else if (
-          value instanceof File &&
-          values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE[0] &&
-          values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE[1] &&
-          values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE[5]
-        ) {
-          return value.size > MAX_FILE_SIZE_IN_BYTE && "Max file size is 10 MB";
-        }
-      },
-      body: (value) => value.trim().length > 1024 && value.trim().length <= 0,
-      footer: (value) => value.trim().length > 60,
-    },
+    validate: zodResolver(templateSchema),
   });
-
   useEffect(() => {
     if (editingItem) {
       form.setValues(parseTemplate(editingItem));
@@ -152,9 +111,25 @@ export default function WhatsappTemplateById() {
       setIsSubmitting(false);
     },
   );
+  const saveTemplateAsDraftMutation = useSaveTemplateAsDraftMutation(
+    templateId,
+    () => {
+      setIsSubmittingDraft(false);
+      templateId?.length === 0 && router.push("/dashboard/whatsapp/templates/");
+    },
+    () => {
+      setIsSubmittingDraft(false);
+    },
+  );
   if (templateId && isPending) return <RateupLoader />;
 
-  async function handleSubmit(values: typeof form.values) {
+  async function handleSubmit(saveAsDraft: boolean = false) {
+    const { hasErrors, errors } = form.validate();
+    if (hasErrors) {
+      showErrorToast(JSON.stringify(errors) ?? "Error in Template");
+      return;
+    }
+    const values = form.values;
     const buttonArray = values.buttons?.filter(
       (data) => data?.text?.trim().length > 24,
     );
@@ -166,16 +141,17 @@ export default function WhatsappTemplateById() {
       return;
     }
     try {
-      setIsSubmitting(true);
+      if (saveAsDraft) setIsSubmittingDraft(true);
+      else setIsSubmitting(true);
       if (
-        values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE[0] &&
-        values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE[5] &&
+        values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE &&
+        values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.LOCATION &&
         values.header instanceof File
       ) {
         const file = await uploadTemplateMedia(values.header);
         values.header = file?.id ?? "";
       }
-      if (editingItem) {
+      if (editingItem?.data?.id) {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
           showWarnToast(
             "Cannot edit pending template. Please wait for approval",
@@ -183,15 +159,21 @@ export default function WhatsappTemplateById() {
           setIsSubmitting(false);
           return;
         }
-        updateTemplateMutation.mutate({
-          templateId: editingItem.id,
-          templateData: values,
-        });
+        const mutationData = saveAsDraft
+          ? { ...values, id: editingItem.id }
+          : { templateId: editingItem.id, templateData: values };
+        saveAsDraft
+          ? saveTemplateAsDraftMutation.mutate(mutationData)
+          : updateTemplateMutation.mutate(mutationData);
       } else {
-        createTemplateMutation.mutate(values);
+        const mutationData = { ...values, id: editingItem?.id };
+        saveAsDraft
+          ? saveTemplateAsDraftMutation.mutate(mutationData)
+          : createTemplateMutation.mutate(mutationData);
       }
     } catch (error) {
-      setIsSubmitting(false);
+      if (saveAsDraft) setIsSubmittingDraft(false);
+      else setIsSubmitting(false);
       showErrorToast(
         typeof error === "string"
           ? error
@@ -235,252 +217,276 @@ export default function WhatsappTemplateById() {
     input.focus();
   };
   const handleMenuSelection = (e: string) => {
-    const newObject = { type: e, text: "" };
-    form.setValues((prevValues) => ({
-      ...prevValues,
-      buttons: [...prevValues.buttons, newObject],
-    }));
+    const newObject =
+      e === WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE
+        ? { type: e, example: "" }
+        : { type: e, text: "" };
+    if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
+      const btn = form.values?.buttons?.filter(
+        (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
+      );
+      if (btn?.length > 0) {
+        showErrorToast(`Only one button allowed for this type`);
+        return;
+      }
+    }
+    const newData = form.values.buttons ?? [];
+    const lastIndex = newData.reduceRight((index, obj, currentIndex) => {
+      if (obj.type === "QUICK_REPLY" && index === -1) {
+        return currentIndex;
+      }
+      return index;
+    }, -1);
+
+    if (lastIndex === -1 || e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
+      newData.push(newObject);
+    } else {
+      newData.splice(lastIndex + 1, 0, newObject);
+    }
+    form.setFieldValue("buttons", newData);
   };
   const deleteButton = (index: number) => {
     form.setValues((prevValues) => ({
       ...prevValues,
-      buttons: prevValues.buttons.filter((btn, i) => i !== index),
+      buttons: prevValues.buttons.filter((_, i) => i !== index),
     }));
   };
   return (
     <MantineProvider theme={whatsappTheme}>
-      <form
-        onSubmit={form.onSubmit(handleSubmit)}
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
-        ])}
-      >
-        <Flex
-          mih={50}
-          gap="md"
-          justify="space-between"
-          align="center"
-          direction="row"
-          wrap="wrap"
+      <form>
+        <Box
+          onKeyDown={getHotkeyHandler([
+            [
+              SAVE_HOTKEY,
+              (event: any) => form.onSubmit((e) => handleSubmit(true))(event),
+            ],
+          ])}
         >
-          <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
-            {editingItem ? editingItem?.data?.name : "Create Template"}
-          </Title>
-
           <Flex
             mih={50}
-            gap="4"
-            justify="flex-start"
-            align="flex-start"
+            gap="md"
+            justify="space-between"
+            align="center"
             direction="row"
             wrap="wrap"
           >
-            <RateupButtonBlue
-              title="Save & Submit"
-              loading={isSubmitting}
-              type={"submit"}
-            />
+            <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
+              {editingItem ? editingItem?.data?.name : "Create Template"}
+            </Title>
+            <Flex
+              mih={50}
+              gap="xs"
+              justify="flex-start"
+              align="flex-start"
+              direction="row"
+              wrap="wrap"
+            >
+              <RateupButtonPrimary
+                title="Save as draft"
+                loading={isSubmittingDraft}
+                variant="outline"
+                onClick={() => handleSubmit(true)}
+              />
+              <RateupButtonPrimary
+                title="Save & Submit"
+                loading={isSubmitting}
+                onClick={() => handleSubmit(false)}
+              />
+            </Flex>
           </Flex>
-        </Flex>
-        <Grid align="stretch">
-          <Grid.Col span={9}>
-            <PaperLayout p={"xl"} h={"80dvh"}>
-              <Stack gap={"xs"}>
-                <ContainedTextField
-                  label={
-                    <Text fz={14} ff={lexend500.style.fontFamily}>
-                      Template Name
-                    </Text>
-                  }
-                  placeholder="Name"
-                  {...form.getInputProps("name")}
-                  rightSection={
-                    <LengthTracker
-                      length={form.values.name.length}
-                      maxValue={512}
-                      atStart
-                    />
-                  }
-                  disabled={!!editingItem}
-                />
-                <ContainedSelection
-                  label={
-                    <Text fz={14} ff={lexend500.style.fontFamily}>
-                      Category
-                    </Text>
-                  }
-                  placeholder="Category"
-                  {...form.getInputProps("category")}
-                  data={WHATSAPP_TEMPLATE_CATEGORY}
-                  allowDeselect={false}
-                />
-                <Grid>
-                  <Grid.Col span={5}>
-                    <ContainedSelection
-                      label={
-                        <>
-                          <Text fz={14} ff={lexend500.style.fontFamily}>
-                            Broadcast header
-                          </Text>
-                          <Text fz={13}>
-                            Highlight your brand here, use images or videos, to
-                            stand out
-                          </Text>
-                        </>
-                      }
-                      placeholder="Broadcast Type"
-                      {...form.getInputProps("format")}
-                      data={WHATSAPP_TEMPLATE_BROADCAST_TYPE.filter(
-                        (type) => type !== "LOCATION",
-                      )}
-                      allowDeselect={false}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={"auto"}>
-                    <Stack
-                      h={"100%"}
-                      justify="center"
-                      w={form.values?.format === "TEXT" ? "100%" : 300}
-                    >
-                      <BroadCastTypeValue
-                        form={form}
-                        type={form.values?.format}
+          <Grid>
+            <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }}>
+              <PaperLayout p={"xl"} h={"80dvh"}>
+                <Stack gap={"xs"}>
+                  <WaTemplateStatusBadge status={form.values.status} />
+                  <ContainedTextField
+                    label={
+                      <Text fz={14} ff={lexend500.style.fontFamily}>
+                        Template Name
+                      </Text>
+                    }
+                    placeholder="Name"
+                    {...form.getInputProps("name")}
+                    rightSection={
+                      <LengthTracker
+                        length={form.values.name.length}
+                        maxValue={512}
+                        atStart
                       />
-                    </Stack>
-                  </Grid.Col>
-                </Grid>
-                <Textarea
-                  ref={inputRef}
-                  label={
-                    <>
+                    }
+                    disabled={!!editingItem?.data?.id}
+                  />
+                  <ContainedSelection
+                    label={
                       <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Body
+                        Category
                       </Text>
-                      <Text fz={13}>
-                        Make your messages personal using variables and get more
-                        replies!
-                      </Text>
-                    </>
-                  }
-                  description={
-                    <TextFormateToolBar
-                      applyFormatting={applyFormatting}
-                      insertValue={insertValue}
-                      undo={undo}
-                    />
-                  }
-                  styles={{
-                    input: {
-                      borderRadius: "0px 0px 12px 12px",
-                    },
-                  }}
-                  placeholder={`Enter the text`}
-                  autosize
-                  minRows={3}
-                  maxRows={3}
-                  onSelect={handleSelect}
-                  {...form.getInputProps("body")}
-                />
-                <ContainedTextField
-                  label={
-                    <>
-                      <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Footer (Optional)
-                      </Text>
-                      <Text fz={13}>
-                        Footers are great to add any disclaimers or to add a
-                        thoughtful PS
-                      </Text>
-                    </>
-                  }
-                  placeholder="Footer"
-                  {...form.getInputProps("footer")}
-                  rightSection={
-                    <LengthTracker
-                      length={form.values.footer.length}
-                      maxValue={60}
-                      atStart
-                    />
-                  }
-                />
-                <ButtonSelection handleMenuSelection={handleMenuSelection} />
-                {form.values?.buttons?.length > 0 && (
-                  <>
-                    {form.values?.buttons?.map((data, index) => (
-                      <Group key={index}>
-                        <ContainedTextField
-                          label={
+                    }
+                    placeholder="Category"
+                    {...form.getInputProps("category")}
+                    data={WHATSAPP_TEMPLATE_CATEGORY}
+                    allowDeselect={false}
+                  />
+                  <Grid>
+                    <Grid.Col span={5}>
+                      <ContainedSelection
+                        label={
+                          <>
                             <Text fz={14} ff={lexend500.style.fontFamily}>
-                              Button text
+                              Broadcast header
                             </Text>
+                            <Text fz={13}>
+                              Highlight your brand here, use images or videos,
+                              to stand out
+                            </Text>
+                          </>
+                        }
+                        placeholder="Broadcast Type"
+                        onChange={(e) => {
+                          if (
+                            e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
+                            form.values.header instanceof File
+                          ) {
+                            form.setFieldValue("header", "");
                           }
-                          rightSection={
-                            <LengthTracker
-                              length={
-                                form.values?.buttons?.[index]?.text?.length
-                              }
-                              maxValue={25}
-                              atStart
-                            />
-                          }
-                          w={"90%"}
-                          {...form.getInputProps(`buttons.${index}.text`)}
-                        />
-                        <ActionIcon
-                          mt={24}
-                          variant="transparent"
-                          onClick={() => deleteButton(index)}
-                        >
-                          <IconX />
-                        </ActionIcon>
-                      </Group>
-                    ))}
-                  </>
-                )}
-              </Stack>
-            </PaperLayout>
-          </Grid.Col>
-          <Grid.Col span={3}>
-            <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
-              <Stack h={"100%"} align="center" gap={0}>
-                <Text fz="24px" ff={lexend500.style.fontFamily}>
-                  Preview
-                </Text>
-                <WaChatPreview>
-                  <Stack miw="200px" gap={3} p={"md"}>
-                    <ResponseMessageContainer>
-                      <Text
-                        fw="bold"
-                        style={{
-                          color: "#444",
+                          form.setFieldValue("format", e);
                         }}
+                        value={form.values.format}
+                        data={Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)}
+                        allowDeselect={false}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={"auto"}>
+                      <Stack
+                        h={"100%"}
+                        justify="center"
+                        w={form.values?.format === "TEXT" ? "100%" : 300}
                       >
-                        {HeaderWithFormatting(
-                          form.values?.header,
-                          form.values?.format,
-                        )}
-                      </Text>
-                      <Text fz={"0.95rem"}>
-                        {TextWithFormatting(form.values.body)}
-                      </Text>
-                      <Text c="dimmed" fz={"0.9rem"}>
-                        {form.values.footer}
-                      </Text>
-                    </ResponseMessageContainer>
-                    {form.values?.buttons
-                      ?.slice(0, 2)
-                      .map((data) => (
-                        <QuickReplyButton text={data?.text} key={data?.text} />
+                        <BroadCastTypeValue
+                          form={form}
+                          type={form.values?.format}
+                        />
+                      </Stack>
+                    </Grid.Col>
+                  </Grid>
+                  <Textarea
+                    ref={inputRef}
+                    label={
+                      <>
+                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                          Body
+                        </Text>
+                        <Text fz={13}>
+                          Make your messages personal using variables and get
+                          more replies!
+                        </Text>
+                      </>
+                    }
+                    description={
+                      <TextFormateToolBar
+                        applyFormatting={applyFormatting}
+                        insertValue={insertValue}
+                        undo={undo}
+                      />
+                    }
+                    styles={{
+                      input: {
+                        borderRadius: "0px 0px 12px 12px",
+                      },
+                    }}
+                    placeholder={`Enter the text`}
+                    autosize
+                    minRows={3}
+                    maxRows={3}
+                    onSelect={handleSelect}
+                    {...form.getInputProps("body")}
+                  />
+                  <ContainedTextField
+                    label={
+                      <>
+                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                          Footer (Optional)
+                        </Text>
+                        <Text fz={13}>
+                          Footers are great to add any disclaimers or to add a
+                          thoughtful PS
+                        </Text>
+                      </>
+                    }
+                    placeholder="Footer"
+                    {...form.getInputProps("footer")}
+                    rightSection={
+                      <LengthTracker
+                        length={form.values.footer.length}
+                        maxValue={60}
+                        atStart
+                      />
+                    }
+                  />
+                  <ButtonSelection handleMenuSelection={handleMenuSelection} />
+                  {form.values?.buttons?.length > 0 && (
+                    <>
+                      {form.values?.buttons?.map((data, index) => (
+                        <Group className={styles.buttonBox} key={index}>
+                          <ButtonInput
+                            form={form}
+                            deleteButton={deleteButton}
+                            index={index}
+                            data={data}
+                          />
+                        </Group>
                       ))}
-                    {form.values?.buttons?.length > 2 && (
-                      <QuickReplyButton text={"See all options"} />
-                    )}
-                  </Stack>
-                </WaChatPreview>
-              </Stack>
-            </Card>
-          </Grid.Col>
-        </Grid>
+                    </>
+                  )}
+                </Stack>
+              </PaperLayout>
+            </Grid.Col>
+            <Grid.Col span={{ xs: 12, sm: 5, xl: 3 }}>
+              <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
+                <Stack h={"100%"} align="center" gap={0}>
+                  <Text fz="24px" ff={lexend500.style.fontFamily}>
+                    Preview
+                  </Text>
+                  <WaChatPreview>
+                    <Stack miw="200px" gap={3} p={"md"}>
+                      <ResponseMessageContainer>
+                        <Text
+                          fw="bold"
+                          style={{
+                            color: "#444",
+                          }}
+                        >
+                          {HeaderWithFormatting(
+                            form.values?.header,
+                            form.values?.format,
+                          )}
+                        </Text>
+                        <Text fz={"0.95rem"}>
+                          {TextWithFormatting(form.values.body)}
+                        </Text>
+                        <Text c="dimmed" fz={"0.9rem"}>
+                          {form.values.footer}
+                        </Text>
+                      </ResponseMessageContainer>
+                      {form.values?.buttons
+                        ?.slice(0, 2)
+                        .map((data) => (
+                          <QuickReplyButton
+                            text={data?.text}
+                            key={data?.text}
+                            type={data.type}
+                          />
+                        ))}
+                      {form.values?.buttons?.length > 2 && (
+                        <QuickReplyButton text={"See all options"} />
+                      )}
+                    </Stack>
+                  </WaChatPreview>
+                </Stack>
+              </Card>
+            </Grid.Col>
+          </Grid>
+        </Box>
       </form>
     </MantineProvider>
   );

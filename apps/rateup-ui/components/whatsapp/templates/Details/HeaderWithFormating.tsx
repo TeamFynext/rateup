@@ -17,7 +17,7 @@ const MediaCardPreview = ({ children }) => {
 
 export function HeaderWithFormatting(text, type) {
   switch (type) {
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[1]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT:
       return (
         <Text
           fz={14}
@@ -28,25 +28,25 @@ export function HeaderWithFormatting(text, type) {
           {text}
         </Text>
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[2]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>
           <IconPhoto size={40} />
         </MediaCardPreview>
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[3]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:
       return (
         <MediaCardPreview>
           <IconVideo size={40} />
         </MediaCardPreview>
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[4]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT:
       return (
         <MediaCardPreview>
           <IconFileText size={40} />
         </MediaCardPreview>
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[5]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.LOCATION:
       return (
         <>
           <MediaCardPreview>

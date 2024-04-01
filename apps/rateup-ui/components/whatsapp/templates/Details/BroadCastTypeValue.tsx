@@ -6,10 +6,14 @@ import {
   ContainedFileButton,
 } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
+import { getFileNameFromFile } from "../../../../utils/file-upload/upload";
 
 export const BroadCastTypeValue = ({ form, type }) => {
+  const style = {
+    maxWidth: 400,
+  };
   switch (type) {
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[1]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT:
       return (
         <ContainedTextField
           label={
@@ -29,34 +33,37 @@ export const BroadCastTypeValue = ({ form, type }) => {
           }
         />
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[2]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <ContainedFileButton
-          label={"Image"}
+          label={getFileNameFromFile(form.values.header, "Image")}
           mt={"xl"}
           placeholder={"Select an image"}
           {...form.getInputProps("header")}
           accept="image/jpeg,image/jpg,image/png"
+          style={style}
         />
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[3]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:
       return (
         <ContainedFileButton
-          label={"Video"}
+          label={getFileNameFromFile(form.values.header, "Video")}
           mt={"xl"}
           placeholder={"Select an Video"}
           {...form.getInputProps("header")}
           accept="video/mp4"
+          style={style}
         />
       );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE[4]:
+    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT:
       return (
         <ContainedFileButton
-          label={"Document"}
+          label={getFileNameFromFile(form.values.header, "Document")}
           mt={"xl"}
           placeholder={"Select an Document"}
           {...form.getInputProps("header")}
           accept="application/pdf"
+          style={style}
         />
       );
     default:

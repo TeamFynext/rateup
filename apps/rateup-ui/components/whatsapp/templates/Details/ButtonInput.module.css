@@ -1,0 +1,13 @@
+.inputPhone > input {
+  height: 44px;
+  outline: none;
+  border-radius: 12px;
+  border: 1px solid var(--mantine-color-gray-4);
+}
+
+.buttonBox {
+  background-color: var(--light-grey-color-2);
+  border-radius: 12px;
+  border: 1px solid var(--light-grey-color-4);
+  padding: 10px;
+}

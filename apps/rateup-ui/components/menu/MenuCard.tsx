@@ -41,6 +41,7 @@ export function MenuCard({
       onClick={() => {
         router.push(`/dashboard/menu/${menu.id}`);
       }}
+      mih={200}
     >
       <Flex
         justify={"space-between"}

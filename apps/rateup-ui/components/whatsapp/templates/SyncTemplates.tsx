@@ -81,6 +81,7 @@ export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
       h="80vh"
       size={"lg"}
       closeOnClickOutside={false}
+      radius={"lg"}
     >
       {currentTemplateIndex === -1 ? (
         <DisplayTemplates
@@ -88,6 +89,7 @@ export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
           unregisteredTemplates={unregisteredTemplates}
           handlers={handlers}
           onImport={selectNextTemplate}
+          onClose={onClose}
         />
       ) : currentTemplateIndex < selectedTemplates.length ? (
         <ConfigureTemplate
@@ -214,6 +216,7 @@ function DisplayTemplates({
   unregisteredTemplates,
   handlers,
   onImport,
+  onClose,
 }) {
   function handleSelect(selected: boolean, id: string) {
     if (selected) {
@@ -297,7 +300,9 @@ function DisplayTemplates({
         }}
         pt="xs"
       >
-        <Button variant="outline">Cancel</Button>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
         <Button disabled={selectedTemplates.length === 0} onClick={onImport}>
           Import
         </Button>

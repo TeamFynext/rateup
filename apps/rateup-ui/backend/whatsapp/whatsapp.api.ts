@@ -36,6 +36,9 @@ export const getWaTemplateById = async (id: string) => {
 export const createWaTemplate = async (templateData: any) => {
   return axiosClient.post(`${TEMPLATES_URL}`, templateData);
 };
+export const saveTemplateAsDraft = async (templateData: any) => {
+  return axiosClient.post(`${TEMPLATES_URL}/save-as-draft`, templateData);
+};
 export const deleteWaTemplate = async (id: string) => {
   return axiosClient.delete(`${TEMPLATES_URL}/${id}`);
 };

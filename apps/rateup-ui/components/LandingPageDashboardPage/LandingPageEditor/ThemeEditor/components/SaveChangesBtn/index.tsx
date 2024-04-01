@@ -83,7 +83,6 @@ function SaveChangesBtn() {
       setIsSaving(false);
     } catch (err) {
       setIsSaving(false);
-      console.log(err);
     }
   }, [currentThemeObj]);
 
