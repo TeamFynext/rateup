@@ -175,9 +175,10 @@ const initFacebookSdk = () => {
       //@ts-ignore
       window.FB.init({
         appId: "3634460296824137",
+        cookie: true,
         autoLogAppEvents: true,
         xfbml: true,
-        version: "v18.0",
+        version: "v19.0",
       });
     };
   });
