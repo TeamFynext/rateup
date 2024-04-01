@@ -38,7 +38,6 @@ import QuestionDesc from "./QuestionDesc";
 import QuestionTitle from "./QuestionTitle";
 import styles from "./TakeSurvey.module.css";
 import { useBeforeUnload } from "react-use";
-import { RichTextEditor } from "@mantine/tiptap";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");

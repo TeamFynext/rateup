@@ -14,6 +14,9 @@ function QuestionTitle({ largeScreen, themeStyles, smallScreen }) {
       scrollbarSize={0}
     >
       <Text
+        style={{
+          color: themeStyles?.color,
+        }}
         dangerouslySetInnerHTML={{ __html: selectedQ.title[selectedLanguage] }}
       />
     </ScrollArea.Autosize>
