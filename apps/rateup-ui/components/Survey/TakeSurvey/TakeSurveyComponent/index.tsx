@@ -369,6 +369,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                           themeStyles={
                             surveyThemeData?.surveyTheme?.title?.styles
                           }
+                          smallScreen={smallScreen}
                         />
                         {selectedQ.type !== Q.InfoMessage && (
                           <QuestionDesc
