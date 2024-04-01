@@ -268,7 +268,22 @@ export async function deleteResponse(id: string) {
 export async function createResponse(
   input: CreateResponseInput,
   shouldRaiseTicket = false,
+  checkUniqueDevice = false,
+  ip = null,
 ) {
+  if (checkUniqueDevice) {
+    const existingResponse = await prisma.surveyResponse.findFirst({
+      where: {
+        surveyTeamMapId: input?.surveyTeamMapId,
+        ip: ip,
+      },
+    });
+
+    if (existingResponse) {
+      throw new Error("ALREADY_RESPONDED");
+    }
+  }
+
   const surveyResponse = await prisma.surveyResponse.create({
     data: {
       ...input,

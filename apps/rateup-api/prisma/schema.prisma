@@ -196,6 +196,7 @@ model Survey {
   isPublished             Boolean         @default(false)
   isProtected             Boolean         @default(false)
   kioskMode               Boolean         @default(false)
+  uniqueDeviceResponse    Boolean         @default(false) //avoid duplicate entry from same IP
   password                String?
   type                    String          @default("web")
   getLocation             Boolean         @default(false)
@@ -912,6 +913,7 @@ model LandingPage {
   owner          Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
   createdBy      User     @relation(fields: [createdById], references: [id])
 }
+
 model WaContact {
   id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime    @default(now())

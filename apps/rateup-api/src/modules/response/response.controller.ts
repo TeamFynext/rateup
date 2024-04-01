@@ -132,10 +132,16 @@ export async function createResponseHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { shouldRaiseTicket, ...data } = request.body;
+  const { shouldRaiseTicket, checkUniqueDevice, ...data } = request.body;
+  const ip = getIp(request);
 
   try {
-    const response = await createResponse(data, shouldRaiseTicket);
+    const response = await createResponse(
+      data,
+      shouldRaiseTicket,
+      checkUniqueDevice,
+      ip,
+    );
     reply.code(201).send(response);
     const { surveyTeamMapId, responses, language, createdAt } = response;
     await saveResponseToGoogleSheet({
@@ -151,7 +157,6 @@ export async function createResponseHandler(
     } else {
       await sendEmailOnResponseCreation(data.surveyTeamMapId, response);
       const coords = (response.location as any)?.coordinates;
-      const ip = getIp(request);
       let location = await fetchLocation(coords);
       if (!location) {
         location = undefined;
@@ -165,7 +170,7 @@ export async function createResponseHandler(
     }
   } catch (e) {
     console.error(e);
-    reply.code(500).send();
+    reply.code(500).send(e.message);
   }
 }
 export async function generateResponseHandler(
