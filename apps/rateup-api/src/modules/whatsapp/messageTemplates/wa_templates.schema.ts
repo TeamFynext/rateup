@@ -6,10 +6,16 @@ import {
   WaTemplateCategory,
 } from "../../../types/enums";
 
-const templateNameRegex = /^[a-z_]+$/;
-
 const waTemplateInput = {
-  name: z.string().regex(templateNameRegex).max(512),
+  id: z.string().optional(),
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(512)
+    .refine((text) => !text.includes(" "), {
+      message: "Name cannot contain spaces. Replace it with underscore(_)",
+    }),
   header: z.string(),
   body: z.string().max(1024).min(1),
   footer: z.string().max(60),
@@ -18,15 +24,25 @@ const waTemplateInput = {
   buttons: z
     .array(
       z.object({
-        text: z.string().min(1).max(24),
+        text: z.string().min(1).max(24).optional(),
         type: z.string().min(1),
+        phone_number: z.string().max(25).optional(),
+        url: z.string().max(2000).optional(),
+        example: z.string().max(15).optional(),
       }),
     )
     .optional(),
 };
 
 const waTemplateFormattedInput = {
-  name: z.string().regex(templateNameRegex),
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(512)
+    .refine((text) => !text.includes(" "), {
+      message: "Name cannot contain spaces. Replace it with underscore(_)",
+    }),
   components: z.array(
     z.union([
       z.object({

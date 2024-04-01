@@ -178,7 +178,13 @@ export async function downloadExcelResponse(
           } else if (!tempArray.includes({ [answerIndex]: questionId })) {
             if (ChoiceTypeQuestions.includes(responseType)) {
               responseValue = Array.isArray(responseValue)
-                ? responseValue?.map((res) => res.value).join(", ")
+                ? responseValue
+                    ?.map(
+                      (res) =>
+                        res?.value ||
+                        `${question?.features?.[defaultLanguage]?.other?.title}:${res?.other}`,
+                    )
+                    .join(", ")
                 : responseType == QuestionType.MCQ
                   ? responseValue?.value ||
                     `${question?.features?.[defaultLanguage]?.other?.title}:${responseValue?.other}`
@@ -730,7 +736,12 @@ export function getFormattedResponse(response, qstn, language) {
     case QuestionType.DDMS:
     case QuestionType.MSQ:
       formattedResponse = response
-        .map((item) => item?.value?.trim())
+        .map(
+          (item) =>
+            item?.value?.trim() ||
+            `${qstn?.features?.[language]?.other
+              ?.title}: ${item?.other?.trim()}`,
+        )
         .join(", ");
       break;
     case QuestionType.Date:
