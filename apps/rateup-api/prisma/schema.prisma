@@ -107,13 +107,13 @@ model WhatsappSettings {
   org   Org    @relation(fields: [orgId], references: [id])
   orgId String @unique @db.Uuid
 
-  accessToken     String
-  businessId      String
+  accessToken     String // encrypted
+  accessToken_iv  String
+  wabaId          String // WhatsApp Business Account ID
   phoneId         String
-  webhookPassword String
-  appId           String?
+  phone           String
 
-  encryption Json? // {publicKey: string, privateKey: string}
+  encryption Json? // for flow {publicKey: string, privateKey: string}
 }
 
 model OrgMember {

@@ -46,7 +46,7 @@ export async function getFlowsFromWa(orgId: string) {
   const waSettings = await getWaSettings(orgId);
 
   const res = await callWhatsappApi(
-    `/${waSettings.businessId}/flows`,
+    `/${waSettings.wabaId}/flows`,
     "GET",
     waSettings.accessToken,
   );
@@ -388,11 +388,11 @@ export async function createFlowInWa(
   orgId: string,
   createFlowInput: { name: string; categories: string[] },
 ) {
-  const { businessId, accessToken } = await getWaSettings(orgId);
+  const { wabaId, accessToken } = await getWaSettings(orgId);
   console.log(createFlowInput);
 
   const { data } = await callWhatsappApi(
-    `/${businessId}/flows`,
+    `/${wabaId}/flows`,
     "POST",
     accessToken,
     createFlowInput,
@@ -408,10 +408,10 @@ export async function cloneFlowInWa(
     clone_flow_id: string;
   },
 ) {
-  const { businessId, accessToken } = await getWaSettings(orgId);
+  const { wabaId, accessToken } = await getWaSettings(orgId);
 
   const { data } = await callWhatsappApi(
-    `/${businessId}/flows`,
+    `/${wabaId}/flows`,
     "POST",
     accessToken,
     createFlowInput,

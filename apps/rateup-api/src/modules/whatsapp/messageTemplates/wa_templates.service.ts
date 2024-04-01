@@ -22,7 +22,7 @@ export async function fetchTemplates(orgId: string) {
 
     log.trace("Fetching templates from whatsapp");
     const res = await callWhatsappApi(
-      `/${waSettings.businessId}/message_templates`,
+      `/${waSettings.wabaId}/message_templates`,
       "GET",
       waSettings.accessToken,
     );
@@ -41,7 +41,7 @@ export async function fetchTemplate(templateName: string, orgId: string) {
     const {
       data: { data: templates },
     } = await callWhatsappApi(
-      `/${waSettings.businessId}/message_templates?name=${templateName}`,
+      `/${waSettings.wabaId}/message_templates?name=${templateName}`,
       "GET",
       waSettings.accessToken,
     );
@@ -121,7 +121,7 @@ export async function getTemplateWithHSMId(hsmId: string) {
 export async function createTemplate(orgId: string, template: any) {
   const waSettings = await getWaSettings(orgId);
   const res = await callWhatsappApi(
-    `/${waSettings.businessId}/message_templates`,
+    `/${waSettings.wabaId}/message_templates`,
     "POST",
     waSettings.accessToken,
     template,
@@ -181,7 +181,7 @@ export async function deleteTemplate(
   try {
     const waSettings = await getWaSettings(orgId);
     const res = await callWhatsappApi(
-      `/${waSettings.businessId}/message_templates?hsm_id=${templateId}&name=${templateName}`,
+      `/${waSettings.wabaId}/message_templates?hsm_id=${templateId}&name=${templateName}`,
       "DELETE",
       waSettings.accessToken,
     );
@@ -356,12 +356,14 @@ export async function registerTemplatesInDb(
 export async function uploadFileToWaTemplate(
   file: MultipartFile,
   size: number,
-  orgId,
+  orgId: string,
 ) {
   const fileLength = size;
   const fileType = file.mimetype;
   const waSettings = await getWaSettings(orgId);
-  const { accessToken, appId } = waSettings;
+  const { accessToken } = waSettings;
+  const appId = process.env.wa_app_id;
+
   if (!accessToken || !appId) {
     throw Error("AccessToken and AppId should be present in whatsapp settings");
   }
