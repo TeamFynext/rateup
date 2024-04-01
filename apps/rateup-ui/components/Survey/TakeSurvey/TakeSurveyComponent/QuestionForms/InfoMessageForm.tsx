@@ -6,7 +6,7 @@ export function InfoMessage() {
   return (
     <Alert variant="light" color="blue" title="Use" icon={icon}>
       Survey Introduction or Before we proceed to the next set of questions,
-      here's a brief message to help transition smoothly.
+      here&apos;s a brief message to help transition smoothly.
     </Alert>
   );
 }

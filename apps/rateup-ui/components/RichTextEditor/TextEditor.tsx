@@ -15,6 +15,12 @@ export default function TextEditor({ form, selectedLanguage }) {
     }
   }, [editor?.getHTML()]);
 
+  useEffect(() => {
+    if (editor) {
+      editor.commands.setContent(form.values.title?.[selectedLanguage]);
+    }
+  }, [selectedLanguage]);
+
   return (
     <RichTextEditor editor={editor} mt={"xs"}>
       <RichTextEditor.Toolbar sticky>
