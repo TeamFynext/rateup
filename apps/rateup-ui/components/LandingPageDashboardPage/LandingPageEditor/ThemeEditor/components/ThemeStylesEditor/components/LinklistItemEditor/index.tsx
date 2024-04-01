@@ -1,4 +1,4 @@
-import { Box } from "@mantine/core";
+import { Box, Slider } from "@mantine/core";
 import styles from "./LinklistItemEditor.module.css";
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker";
 import { useCallback } from "react";
@@ -10,7 +10,7 @@ import {
 function LinklistItemEditor() {
   const {
     linkListItem: {
-      styles: { color, backgroundColor },
+      styles: { color, backgroundColor, borderRadius },
     },
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
@@ -29,6 +29,13 @@ function LinklistItemEditor() {
     });
   }, []);
 
+  const handleBorderRadiusChange = useCallback((value) => {
+    themeDispatch({
+      type: "linkListItem-border-radius-change",
+      payload: value,
+    });
+  }, []);
+
   return (
     <Box className={styles["link-list-editor"]}>
       <Box className={`style-section-div`}>
@@ -41,6 +48,19 @@ function LinklistItemEditor() {
         <CustomColorPicker
           value={backgroundColor}
           onChange={handleBackgroundColorChange}
+        />
+      </Box>
+
+      <Box className={`style-section-div`}>
+        <h2>Border Radius</h2>
+        <Slider
+          value={borderRadius}
+          onChange={handleBorderRadiusChange}
+          label={(value) => value}
+          step={1}
+          defaultValue={16}
+          min={0}
+          max={100}
         />
       </Box>
     </Box>

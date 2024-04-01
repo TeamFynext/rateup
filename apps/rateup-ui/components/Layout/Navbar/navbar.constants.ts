@@ -92,15 +92,6 @@ export function getNavTopData(subscription?: Subscription) {
                 label: "Templates",
                 href: "/dashboard/surveys/templates",
               },
-              ...(hiddenModules.includes("groupSurvey")
-                ? []
-                : [
-                    {
-                      Icon: IconPageBreak,
-                      label: "Group Surveys",
-                      href: "/dashboard/groupsurveys",
-                    },
-                  ]),
             ],
           },
         ]

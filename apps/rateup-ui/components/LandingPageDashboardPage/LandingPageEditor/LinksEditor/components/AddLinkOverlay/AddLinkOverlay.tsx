@@ -23,9 +23,12 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
     useState("");
   const [selectedSurveyTitle, setSelectedSurveyTitle] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  // Web Survey or Whatsapp Survey Link Display name.
+  const [wsOrWasLinkDisplayName, setWsOrWasLinkDisplayName] = useState("");
   const [dropdownErrors, setDropdownErrors] = useState({
     selectedSurveyTitleErr: "",
     selectedTeamErr: "",
+    wsOrWasLinkDisplayNameErr: "",
   });
 
   // CustomLinkInputs states
@@ -63,6 +66,7 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
       setDropdownErrors({
         selectedSurveyTitleErr: "",
         selectedTeamErr: "",
+        wsOrWasLinkDisplayNameErr: "",
       });
     },
     [selectedLinkType],
@@ -76,7 +80,7 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
       newErrState["selectedSurveyTitleErr"] = "";
     } else if (!selectedSurveyTitle) {
       isValid = false;
-      newErrState["selectedSurveyTitleErr"] = "This value is required.";
+      newErrState["selectedSurveyTitleErr"] = "This field is required.";
     }
     if (selectedTeam) {
       newErrState["selectedTeamErr"] = "";
@@ -84,10 +88,22 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
       isValid = false;
       newErrState["selectedTeamErr"] = "This field is required";
     }
+    if (wsOrWasLinkDisplayName) {
+      newErrState["wsOrWasLinkDisplayNameErr"] = "";
+    } else if (!wsOrWasLinkDisplayName) {
+      isValid = false;
+      newErrState["wsOrWasLinkDisplayNameErr"] = "This field is required";
+    }
     // @ts-ignore
     setDropdownErrors(newErrState);
     return isValid;
-  }, [selectedLinkType, selectedSurveyTitle, selectedTeam, dropdownErrors]);
+  }, [
+    selectedLinkType,
+    selectedSurveyTitle,
+    selectedTeam,
+    wsOrWasLinkDisplayName,
+    dropdownErrors,
+  ]);
 
   const onAddBtnClick = useCallback(async () => {
     if (selectedLinkType !== "custom-link") {
@@ -95,7 +111,7 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
       if (isDropdownValuesValid) {
         // selectedTeam value is shortUrlId of selected team.
         const linkTypeInUrl = selectedLinkType === "web-survey" ? "ws" : "was";
-        const linkDisplayName = selectedSurveyTitle;
+        const linkDisplayName = wsOrWasLinkDisplayName;
         const linkUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${linkTypeInUrl}/${selectedTeam}`;
         const reqBody = {
           shortUrlId,
@@ -138,6 +154,7 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
   useEffect(() => {
     setSelectedSurveyTitle(null);
     setSurveyTitleAutoCompleteSearch("");
+    setWsOrWasLinkDisplayName("");
   }, [selectedLinkType]);
 
   useEffect(() => {
@@ -147,11 +164,12 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
   useEffect(() => {
     if (
       dropdownErrors.selectedSurveyTitleErr ||
-      dropdownErrors.selectedTeamErr
+      dropdownErrors.selectedTeamErr ||
+      dropdownErrors.wsOrWasLinkDisplayNameErr
     ) {
       validateDropdownValues();
     }
-  }, [selectedSurveyTitle, selectedTeam]);
+  }, [selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName]);
 
   return (
     <Box
@@ -188,6 +206,8 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
             onSurveyTitleAutoCompleteSearchChange={
               setSurveyTitleAutoCompleteSearch
             }
+            onLinkDisplayNameChange={setWsOrWasLinkDisplayName}
+            linkDisplayName={wsOrWasLinkDisplayName}
             selectedTeam={selectedTeam}
             onSelectedTeamDDChange={setSelectedTeam}
             errors={dropdownErrors}

@@ -1,10 +1,10 @@
 import React from "react";
 import { Group, Stack, Tabs, Space, Flex } from "@mantine/core";
 import { useEffect, useState } from "react";
-import LandingWelcomeTheme from "../../../components/LandingPage/LandingWelcomeTheme/LandingWelcomeTheme";
+// import LandingWelcomeTheme from "../../../components/LandingPage/LandingWelcomeTheme/LandingWelcomeTheme";
 import LandingSurveysList from "./LandingSurveysList";
 import { useRouter } from "next/router";
-import ShareLandingPage from "../../../components/LandingPage/ShareLandingPage/ShareLandinPage";
+// import ShareLandingPage from "../../../components/LandingPage/ShareLandingPage/ShareLandinPage";
 import { useLandingPage } from "../../../backend/surveys/surveys.query";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 
@@ -79,16 +79,16 @@ export default () => {
             <LandingSurveysList />
           </Tabs.Panel>
 
-          <Tabs.Panel value={TabEnum.WelcomePage}>
+          {/* <Tabs.Panel value={TabEnum.WelcomePage}>
             <LandingWelcomeTheme
               LandingPageData={LandingPageData}
               LandingId={LandingId ? LandingId : null}
             />
-          </Tabs.Panel>
+          </Tabs.Panel> */}
 
-          <Tabs.Panel value={TabEnum.Share}>
+          {/* <Tabs.Panel value={TabEnum.Share}>
             <ShareLandingPage LandingId={LandingId ? LandingId : null} />
-          </Tabs.Panel>
+          </Tabs.Panel> */}
         </StyledTabs>
       </Stack>
     </Flex>

@@ -66,6 +66,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2rem;
   background-color: var(--mantine-color-gray-0);
   border-radius: 0.625rem;
 }
@@ -74,6 +75,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
 }
 
 .drag-handle-div {
@@ -84,14 +86,49 @@
   color: var(--mantine-color-gray-7);
 }
 
-.title-and-url-container h2 {
+.title-and-url-container {
+  flex: 1;
+}
+
+.link-card-input {
+  pointer-events: initial;
+  cursor: pointer;
+}
+
+.link-card-input input {
+  background-color: transparent;
+  border: none;
+  padding-left: 0;
+}
+
+.display-name-edit-btn,
+.link-url-edit-btn {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  color: black;
+  pointer-events: initial;
+  display: block;
+}
+
+.display-name-edit-btn:hover,
+.link-url-edit-btn:hover {
+  background-color: transparent;
+  color: black;
+}
+
+.display-name-input input,
+.display-name-edit-btn {
   font-family: var(--font-lexend);
   font-size: 1.125rem;
   font-weight: normal;
 }
 
-.title-and-url-container p {
+.linkurl-input input,
+.link-url-edit-btn {
+  font-weight: 300;
   font-size: 1rem;
+  padding-left: 2px;
 }
 
 .delete-btn {

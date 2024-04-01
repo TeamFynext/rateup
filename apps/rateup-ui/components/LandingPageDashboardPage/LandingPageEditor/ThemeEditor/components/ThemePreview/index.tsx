@@ -122,12 +122,6 @@ function ThemePreview() {
                   style={linkListItemStyles}
                 >
                   <span>This is Link{i + 1} Title</span>
-                  <span
-                    className={styles["icon-span"]}
-                    style={linkListItemStyles}
-                  >
-                    <IconChevronRight width={"100%"} height={"100%"} />
-                  </span>
                 </a>
               );
             })}

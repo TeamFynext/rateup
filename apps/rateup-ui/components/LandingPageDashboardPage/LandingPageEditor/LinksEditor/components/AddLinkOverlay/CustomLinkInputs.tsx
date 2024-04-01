@@ -5,7 +5,7 @@ function CustomLinkInputs({ form }) {
     <>
       <TextInput
         label="Link Display name"
-        placeholder="Enter Link Name"
+        placeholder="Enter Link Display Name"
         {...form.getInputProps("linkDisplayName")}
         withAsterisk
       />

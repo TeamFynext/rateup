@@ -33,6 +33,7 @@ const initialState = {
     styles: {
       backgroundColor: "#0A000D",
       color: "#FFFFFF",
+      borderRadius: 16,
     },
   },
 };

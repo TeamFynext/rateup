@@ -2,7 +2,7 @@ import { Stack, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import CreateSurveyLandingModal from "../../../pages/dashboard/groupsurveys/CreateSurveyLandingModal";
+// import CreateSurveyLandingModal from "../../../pages/dashboard/groupsurveys/CreateSurveyLandingModal";
 import { SurveyCard } from "../../Card/SurveyCard/SurveyCard";
 import { SurveyCardLayout } from "../../Card/SurveyCard/SurveyCardLayout";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -171,14 +171,14 @@ export function SurveysPage({
         surveyType={surveyType}
       />
       {/* //---------create landing page modal ------------ */}
-      <CreateSurveyLandingModal
+      {/* <CreateSurveyLandingModal
         open={mergeSurveyOpened}
         close={closeMergeSurvey}
         surveyType={"web"}
         landingPageId={null}
         surveyIdArray={surveyidArray}
         mergeSurvey={true}
-      ></CreateSurveyLandingModal>
+      ></CreateSurveyLandingModal> */}
     </Stack>
   );
 }

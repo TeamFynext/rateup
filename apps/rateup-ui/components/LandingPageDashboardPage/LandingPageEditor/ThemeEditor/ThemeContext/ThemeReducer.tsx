@@ -96,6 +96,10 @@ function themeReducer(themeObj, action) {
       themeObj["linkListItem"]["styles"]["backgroundColor"] = payload;
       break;
     }
+    case "linkListItem-border-radius-change": {
+      themeObj["linkListItem"]["styles"]["borderRadius"] = payload;
+      break;
+    }
 
     case "update-theme": {
       return payload;

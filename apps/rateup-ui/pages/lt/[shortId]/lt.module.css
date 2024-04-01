@@ -66,14 +66,6 @@
   text-decoration: none;
 }
 
-.link-list-item .icon-span {
-  position: absolute;
-  right: 1.25rem;
-  top: calc(50% - (1.5rem / 2));
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
 .root-div :global(.credit-text-p) {
   position: fixed;
 }

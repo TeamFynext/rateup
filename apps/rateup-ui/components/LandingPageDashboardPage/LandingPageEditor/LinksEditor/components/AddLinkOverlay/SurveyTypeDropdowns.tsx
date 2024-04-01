@@ -1,4 +1,10 @@
-import { Autocomplete, Combobox, Loader, Select } from "@mantine/core";
+import {
+  Autocomplete,
+  Combobox,
+  Loader,
+  Select,
+  TextInput,
+} from "@mantine/core";
 import styles from "./AddLinkOverlay.module.css";
 import {
   getLinkTypeLabel,
@@ -14,6 +20,8 @@ function SurveyTypeDropdowns({
   onSurveyTitleDDChange,
   surveyTitleAutoCompleteSearch,
   onSurveyTitleAutoCompleteSearchChange,
+  linkDisplayName,
+  onLinkDisplayNameChange,
   selectedTeam,
   onSelectedTeamDDChange,
   errors,
@@ -34,13 +42,37 @@ function SurveyTypeDropdowns({
     [selectedSurveyTitle],
   );
 
+  let selectedSurveyTitleOptions = getSelectedSurveyTitleOptions(
+    selectLinkTypeOptionsData,
+  );
+  let selectedTeamOptions = getSelectedTeamOptions(
+    selectLinkTypeOptionsData,
+    selectedSurveyTitle,
+  );
+
+  if (!selectedSurveyTitleOptions?.length) {
+    selectedSurveyTitleOptions = [
+      {
+        label: `There are No ${getLinkTypeLabel(selectedLinkType)}s`,
+        value: "",
+        disabled: true,
+      },
+    ];
+  }
+
+  if (!selectedTeamOptions?.length) {
+    selectedTeamOptions = [
+      { label: "Select survey to select team", value: "", disabled: true },
+    ];
+  }
+
   return (
     <>
       <Autocomplete
         value={surveyTitleAutoCompleteSearch}
         onChange={onSurveyTitleAutoCompleteSearchChange}
-        data={getSelectedSurveyTitleOptions(selectLinkTypeOptionsData)}
-        label={`Select ${getLinkTypeLabel(selectedLinkType)} Link`}
+        data={selectedSurveyTitleOptions}
+        label={`Select ${getLinkTypeLabel(selectedLinkType)}`}
         rightSection={
           isSelectedLinkTypeOptionsLoading ? (
             <Loader size={"xs"} />
@@ -68,14 +100,20 @@ function SurveyTypeDropdowns({
         label={"Select Team"}
         value={selectedTeam}
         onChange={onSelectedTeamDDChange}
-        data={getSelectedTeamOptions(
-          selectLinkTypeOptionsData,
-          selectedSurveyTitle,
-        )}
+        data={selectedTeamOptions}
         placeholder="Select Team"
         allowDeselect={false}
         error={errors?.selectedTeamErr}
         withAsterisk
+      />
+
+      <TextInput
+        label={"Link Display name"}
+        placeholder="Enter Link Display Name"
+        value={linkDisplayName}
+        onChange={(e) => onLinkDisplayNameChange(e.target.value)}
+        withAsterisk
+        error={errors?.wsOrWasLinkDisplayNameErr}
       />
     </>
   );
