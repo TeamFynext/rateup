@@ -73,6 +73,7 @@ const getSurveyPublicResponseSchema = z.object({
   questions: z.array(questionSchema),
   isProtected: z.boolean(),
   isPublished: z.boolean(),
+  uniqueDeviceResponse: z.boolean(),
   type: z.string(),
   kioskMode: z.boolean(),
   getLocation: z.boolean(),
@@ -112,6 +113,7 @@ const updateSurveyRequestSchema = z.object({
   isEncrypted: z.boolean().optional(),
   enableTickets: z.boolean().optional(),
   enableTicketEmailAlerts: z.boolean().optional(),
+  uniqueDeviceResponse: z.boolean().optional(),
   publicKey: z.string().optional(),
   redirect: z
     .object({
