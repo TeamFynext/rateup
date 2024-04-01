@@ -58,6 +58,7 @@ import { notifications } from "@mantine/notifications";
 import { useBeforeUnload, useClickAway } from "react-use";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { getQuestionTypeLabel } from "../../../utils/enums";
+import TextEditor from "../../RichTextEditor/TextEditor";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -201,47 +202,44 @@ export function QuestionDetailedView({
           </Badge>
           <Group justify="space-between" p={2} gap={2}>
             <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
-              <Textarea
-                fw={800}
-                fz="lg"
-                ref={textInputRef}
-                styles={{
-                  input: {
-                    fontSize: titleFontSize,
-                    fontWeight: 700, // set custom font size for this TextInput
-                  },
-                }}
-                style={{
-                  marginBottom: "20px", // add 30px bottom margin
-                }}
-                variant="unstyled"
-                autosize
-                maxRows={3}
-                placeholder={
-                  question.type !== QuestionType.InfoMessage
-                    ? "Enter question title here *"
-                    : "Enter the title here"
-                }
-                {...form.getInputProps(`title.${selectedLanguage}`)}
-                value={form.values.title[selectedLanguage]}
-              />
-
-              <Textarea
-                variant="unstyled"
-                placeholder={
-                  question.type !== QuestionType.InfoMessage
-                    ? "Enter question description here"
-                    : "Enter description here"
-                }
-                {...form.getInputProps(`description.${selectedLanguage}`)}
-                value={form.values.description[selectedLanguage]}
-                styles={{
-                  input: {
-                    fontSize: "1.1rem",
-                    fontWeight: 400, // set custom font size for this TextInput
-                  },
-                }}
-              />
+              {question.type === QuestionType.InfoMessage ? (
+                <TextEditor form={form} selectedLanguage={selectedLanguage} />
+              ) : (
+                <>
+                  <Textarea
+                    fw={800}
+                    fz="lg"
+                    ref={textInputRef}
+                    styles={{
+                      input: {
+                        fontSize: titleFontSize,
+                        fontWeight: 700, // set custom font size for this TextInput
+                      },
+                    }}
+                    style={{
+                      marginBottom: "20px", // add 30px bottom margin
+                    }}
+                    variant="unstyled"
+                    autosize
+                    maxRows={3}
+                    placeholder={"Enter question title here *"}
+                    {...form.getInputProps(`title.${selectedLanguage}`)}
+                    value={form.values.title[selectedLanguage]}
+                  />
+                  <Textarea
+                    variant="unstyled"
+                    placeholder={"Enter question description here"}
+                    {...form.getInputProps(`description.${selectedLanguage}`)}
+                    value={form.values.description[selectedLanguage]}
+                    styles={{
+                      input: {
+                        fontSize: "1.1rem",
+                        fontWeight: 400, // set custom font size for this TextInput
+                      },
+                    }}
+                  />
+                </>
+              )}
               <ExtraProps
                 form={form}
                 question={question}

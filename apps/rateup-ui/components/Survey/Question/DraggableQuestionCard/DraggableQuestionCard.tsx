@@ -23,6 +23,7 @@ import classes from "./DraggableQuestionCard.module.css";
 import cx from "clsx";
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import { QuestionType } from "../../../../types/enums";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -107,10 +108,22 @@ export function DraggableQuestionCard({
                   {index + 1}
                 </Flex>
               </Badge>
-              <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
-                {question.title[selectedLanguage] ||
-                  question.description[selectedLanguage]}
-              </Text>
+              {question.type === QuestionType.InfoMessage ? (
+                <Text
+                  mah={40}
+                  px="xs"
+                  lineClamp={1}
+                  dangerouslySetInnerHTML={{
+                    __html: question.title[selectedLanguage],
+                  }}
+                />
+              ) : (
+                <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
+                  {question.title[selectedLanguage] ||
+                    question.description[selectedLanguage]}
+                </Text>
+              )}
+
               <Group justify={"flex-end"} gap={4} ml={"auto"} miw={70}>
                 {question?.logic?.length && (
                   <Image
