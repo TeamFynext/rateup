@@ -11,6 +11,7 @@ import { flowEnpointRoutes } from "./flows/flow.endpoint-routes";
 import { waAutomatedReplySchemas } from "./automatedReply/wa_automatedReply.schema";
 import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route";
 import { waInboxRoutes } from "./inbox/wainbox.routes";
+import { waAuthRoutes } from "./auth/wa_auth.route";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [
@@ -27,6 +28,7 @@ export async function whatsappRoutes(server: FastifyInstance) {
   server.register(waTemplatesRoutes, { prefix: "/templates" });
   server.register(flowRoutes, { prefix: "/flows" });
   server.register(waSettingsRoutes, { prefix: "/settings" });
+  server.register(waAuthRoutes, { prefix: "/auth" });
   server.register(waWebhookRoutes, { prefix: "/webhook" });
   server.register(flowEnpointRoutes, { prefix: "/endpoint" });
   server.register(waRedirectRoutes, { prefix: "/redirect" });

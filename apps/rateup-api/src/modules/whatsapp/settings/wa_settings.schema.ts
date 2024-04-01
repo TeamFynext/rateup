@@ -3,19 +3,14 @@ import { z } from "zod";
 
 const createWaSettingsInput = {
   accessToken: z.string(),
-  businessId: z.string(),
+  wabaId: z.string(),
   phoneId: z.string(),
-  webhookPassword: z.string(),
-  appId: z.string(),
+  phone: z.string(),
 };
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
 
 const updateWaSettingsInputSchema = z.object({
   accessToken: z.string().optional(),
-  businessId: z.string().optional(),
-  phoneId: z.string().optional(),
-  webhookPassword: z.string().optional(),
-  appId: z.string().optional(),
   encryption: z
     .object({
       publicKey: z.string().optional(),
@@ -24,11 +19,18 @@ const updateWaSettingsInputSchema = z.object({
     .optional()
     .nullable(),
 });
+
+const getWaSettingsResponseSchema = z.object({
+  phone: z.string(),
+  wabaId: z.string(),
+});
+
 export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
   buildJsonSchemas(
     {
       createWaSettingsInputSchema,
       updateWaSettingsInputSchema,
+      getWaSettingsResponseSchema,
     },
     { $id: "waSettingsSchema" },
   );

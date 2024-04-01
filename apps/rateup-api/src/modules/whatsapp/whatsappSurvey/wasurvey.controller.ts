@@ -30,13 +30,12 @@ import {
   QuestionType,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
-import { ByOrgIdParams } from "../../org/org.schema";
 import {
   getTemplateWithHSMId,
   updateTemplateInDb,
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
-import { getWaSettings } from "../settings/wa_settings.service";
+import { getWaSettingsByWaBaId } from "../settings/wa_settings.service";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
@@ -52,6 +51,8 @@ import {
   sendAutomatedReplyMessage,
 } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
+import { getWaSettingsHandler } from "../settings/wa_settings.controller";
+import { WhatsappSettings } from "@prisma/client";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -60,23 +61,16 @@ interface subscribeQuery {
   "hub.challenge": string;
 }
 export async function webhookSubscribeHandler(
-  request: FastifyRequest<{
-    Params: ByOrgIdParams;
-  }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
     const query = request.query as subscribeQuery;
-    const orgId = request.params.orgId;
-    const waSettings = await getWaSettings(orgId);
-    if (!waSettings) {
-      throw new Error("WA settings not found");
-    }
     if (
       query["hub.mode"] === "subscribe" &&
-      query["hub.verify_token"] === waSettings.webhookPassword
+      query["hub.verify_token"] === process.env.wa_webhook_password
     ) {
-      log.trace("Webhook subscription successful\n%o", { orgId });
+      log.trace("Webhook subscription successful");
       reply.code(200).send(query["hub.challenge"]);
     } else {
       reply.code(403).send("Error, wrong validation token");
@@ -90,15 +84,15 @@ export async function webhookSubscribeHandler(
 // TODO: handle multiple changes (changes.length > 1)
 // TODO: Check for usable types in whatsapp sdk (discontinued project)
 export async function whatsappEventHandler(
-  request: FastifyRequest<{
-    Params: ByOrgIdParams;
-  }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
     const body = request.body as WaMessageBody;
-    const { orgId } = request.params;
     log.trace("WaEvent => %o", body); // Log all events
+    const wabaId = body.entry[0].id;
+    const waSettings = await getWaSettingsByWaBaId(wabaId);
+
     const eventType = getEventType(body);
     if (!eventType) {
       // Probably a message delivery status. Ignoring...
@@ -106,7 +100,7 @@ export async function whatsappEventHandler(
       return;
     } else if (eventType === WaEvent.Message) {
       log.trace("messageObject => %o", getMessageObject(body));
-      await whatsappMessageHandler(orgId, body);
+      await whatsappMessageHandler(waSettings, body);
     } else if (eventType === WaEvent.TemplateStatusChange) {
       log.trace("template status change => %o", body);
       await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
@@ -145,9 +139,13 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
   }
 }
 
-async function whatsappMessageHandler(orgId: string, waMessage: WaMessageBody) {
+async function whatsappMessageHandler(
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
+  waMessage: WaMessageBody,
+) {
   // check for '/start' command
   const parsedMessage = parseMessage(waMessage);
+  const { orgId } = waSettings;
   const {
     message: tempMessage,
     from,
