@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createWaSettings,
+  deRegisterBusinessClient,
   getWaSettings,
+  registerBusinessClient,
   upsertWaSettings,
 } from "./waSettings.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -46,4 +48,24 @@ export const useUpsertWaSettingsMutation = (onSuccess?, onError?) => {
   });
 
   return updateMutation;
+};
+
+export const useRegisterBusinessClientMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: registerBusinessClient,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["waSettings"] });
+    },
+  });
+};
+
+export const useDeregisterBusinessClientMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deRegisterBusinessClient,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["waSettings"] });
+    },
+  });
 };
