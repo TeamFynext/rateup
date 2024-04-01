@@ -6,6 +6,7 @@ import {
   getTemplatesHandler,
   getUnregisteredTemplatesHandler,
   registerTemplatesInDbHandler,
+  saveTemplateAsDraftHandler,
   sendTemplateToUserHandler,
   syncTemplatesHandler,
   updateTemplateHandler,
@@ -52,6 +53,15 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     },
     createTemplateHandler,
   );
+  server.post(
+    "/save-as-draft",
+    {
+      schema: {
+        body: $WTref("waTemplateInputSchema"),
+      },
+    },
+    saveTemplateAsDraftHandler,
+  );
 
   server.put(
     "/:templateId",
@@ -63,7 +73,6 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     },
     updateTemplateHandler,
   );
-
   server.delete(
     "/:templateId",
     {

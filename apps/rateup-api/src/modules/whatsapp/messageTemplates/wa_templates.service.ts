@@ -283,8 +283,6 @@ export async function updateTemplate(
     components,
     template.data.category,
   );
-  console.log(res);
-
   if (res) {
     const updatedTemplate = await fetchTemplate(
       template.data.name,
