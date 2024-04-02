@@ -1,5 +1,6 @@
 import SurveyID from "../../../components/Survey/SurveyId";
 
-export default () => {
+const SurveyById = () => {
   return <SurveyID />;
 };
+export default SurveyById;

@@ -1,53 +1,43 @@
-import React, { useContext, useEffect, useState } from "react";
-import BackgroundStyles from "../BackgroundStyles";
-import HeaderStyles from "../HeaderStyles";
-import DescStyles from "../DescStyles";
-import ButtonStyles from "../ButtonStyles";
 import {
-  Tabs,
-  Divider,
-  Switch,
-  Button,
-  Text,
-  Group,
-  Badge,
-  Paper,
-  Stack,
-  ScrollArea,
   Box,
+  Button,
+  Group,
   MantineProvider,
   Portal,
+  ScrollArea,
   Select,
+  Stack,
+  Tabs,
+  Text,
 } from "@mantine/core";
-import LogoStyles from "../LogoStyles";
-import TabsCommon from "../../../../menu/landingPage/Tabs/TabsCommon";
-import { SelectedItemEnum, ThemeTabEnum } from "../../SurveyTheme.enums";
-import { SurveyThemeContext } from "../../SurveyThemeContext";
-import {
-  SurveyTheme,
-  ThankyouTheme,
-  WelcomeTheme,
-  _SurveyTheme,
-} from "../../surveyTheme.types";
+import { useHotkeys } from "@mantine/hooks";
+import { IconEdit } from "@tabler/icons-react";
 import { produce } from "immer";
-import PaperLayout from "../../../../styled/Layouts/PaperLayout";
+import { useContext, useEffect, useState } from "react";
 import {
   useSurveyTheme,
   useUpdateSurveyTheme,
 } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import { theme } from "../../../../../config/mantineTheme";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import { SelectedItemEnum, ThemeTabEnum } from "../../SurveyTheme.enums";
 import {
   compareTwoObjects,
   destructureThemeAndUploadImagesIfAny,
-  getDividerLabel,
 } from "../../SurveyTheme.utils";
+import { SurveyThemeContext } from "../../SurveyThemeContext";
+import {
+  ThankyouTheme,
+  WelcomeTheme,
+  _SurveyTheme,
+} from "../../surveyTheme.types";
+import BackgroundStyles from "../BackgroundStyles";
+import ButtonStyles from "../ButtonStyles";
+import HeaderStyles from "../HeaderStyles";
 import InputStyles from "../InputStyles";
-import { useHotkeys } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../../../utils/constants";
-import styles from "./StylesComponent.module.css";
-import { useEditSurveyMutation } from "../../../../../backend/surveys/surveys.query";
-import { theme } from "../../../../../config/mantineTheme";
+import LogoStyles from "../LogoStyles";
 import CustomSwitch from "./CustomSwitch";
-import { IconEdit } from "@tabler/icons-react";
+import styles from "./StylesComponent.module.css";
 
 type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
 interface StylesComponentProps {
@@ -300,18 +290,6 @@ function StylesComponent({
                   <HeaderStyles
                     currentStyles={
                       (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.title
-                    }
-                    setCurrentstyles={updateSelectedTabStyle}
-                  />
-                </Tabs.Panel>
-              )}
-
-              {availableStyleComponents.includes(SelectedItemEnum.SUBTITLE) && (
-                <Tabs.Panel value={SelectedItemEnum.SUBTITLE}>
-                  <DescStyles
-                    currentStyles={
-                      (selectedTabStyles as ThankyouTheme | WelcomeTheme)
-                        ?.subtitle
                     }
                     setCurrentstyles={updateSelectedTabStyle}
                   />

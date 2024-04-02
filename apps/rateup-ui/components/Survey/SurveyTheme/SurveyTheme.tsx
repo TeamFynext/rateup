@@ -48,11 +48,7 @@ function SurveyTheme({ survey }) {
   };
 
   function availableThemeStyleComponents(): Array<SelectedItemEnum> {
-    const common = [
-      SelectedItemEnum.BACKGROUND,
-      SelectedItemEnum.TITLE,
-      SelectedItemEnum.SUBTITLE,
-    ];
+    const common = [SelectedItemEnum.BACKGROUND, SelectedItemEnum.TITLE];
     switch (selectedPageTab) {
       case ThemeTabEnum.WELCOME:
         return [...common, SelectedItemEnum.LOGO, SelectedItemEnum.BUTTON];

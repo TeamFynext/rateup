@@ -1,34 +1,29 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { useForm, UseFormReturnType } from "@mantine/form";
 import {
-  Checkbox,
-  Group,
-  Stack,
-  Center,
-  ScrollArea,
-  Divider,
-  Box,
   Badge,
-  Text,
-  Textarea,
+  Box,
   Button,
+  Center,
+  Checkbox,
+  Divider,
+  Group,
   Image,
   Menu,
+  ScrollArea,
+  Stack,
+  Text,
 } from "@mantine/core";
-import { useRouter } from "next/router";
-import { NPSWeightage, QuestionType, SurveyType } from "../../../types/enums";
+import { UseFormReturnType, useForm } from "@mantine/form";
+import { IconBrandGoogle, IconTicket } from "@tabler/icons";
 import { IconDeviceSdCard, IconEdit, IconEye } from "@tabler/icons-react";
-import { QuestionTabsEnum } from "../EditSurvey";
+import { useRouter } from "next/router";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "../../../backend/surveys/questions/questions.query";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import QuestionTypePreview from "./Previews/QuestionTypePreview";
+import { CurrentResponsesContext } from "../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { NPSWeightage, QuestionType, SurveyType } from "../../../types/enums";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
@@ -40,25 +35,29 @@ import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
-import { CurrentResponsesContext } from "../../../context/ResponseContext";
-import { IconBrandGoogle, IconTicket } from "@tabler/icons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
+import { QuestionTabsEnum } from "../EditSurvey";
+import QuestionTypePreview from "./Previews/QuestionTypePreview";
 
 import { LanguageCompletionView } from "./LanguageCompletionView";
 
-import { ChoicesCreator } from "./ChoicesCreator";
-import TestimonialExtraProps from "./TestimonialExtraProps";
-import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
-import ContactExtraProps from "./ContactExtraProps";
-import TncExtraProps from "./TncExtraProps";
-import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
-import { IconChevronDown } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { IconChevronDown } from "@tabler/icons-react";
 import { useBeforeUnload, useClickAway } from "react-use";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
+import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
 import { getQuestionTypeLabel } from "../../../utils/enums";
+import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
+import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 import TextEditor from "../../RichTextEditor/TextEditor";
+import { ChoicesCreator } from "./ChoicesCreator";
+import ContactExtraProps from "./ContactExtraProps";
+import TestimonialExtraProps from "./TestimonialExtraProps";
+import TncExtraProps from "./TncExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -80,8 +79,6 @@ export function QuestionDetailedView({
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   surveyId = surveyId || (router.query?.surveyId as string);
-  const [titleFontSize, setTitleFontSize] = useState("2rem");
-  const textInputRef = useRef(null);
 
   const [currentResponse, updateResponse] = useState(null || []); //temp state for preview
   const [deleteFileLoading, setDeleteFileLoading] = useState(false);
@@ -202,44 +199,7 @@ export function QuestionDetailedView({
           </Badge>
           <Group justify="space-between" p={2} gap={2}>
             <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
-              {question.type === QuestionType.InfoMessage ? (
-                <TextEditor form={form} selectedLanguage={selectedLanguage} />
-              ) : (
-                <>
-                  <Textarea
-                    fw={800}
-                    fz="lg"
-                    ref={textInputRef}
-                    styles={{
-                      input: {
-                        fontSize: titleFontSize,
-                        fontWeight: 700, // set custom font size for this TextInput
-                      },
-                    }}
-                    style={{
-                      marginBottom: "20px", // add 30px bottom margin
-                    }}
-                    variant="unstyled"
-                    autosize
-                    maxRows={3}
-                    placeholder={"Enter question title here *"}
-                    {...form.getInputProps(`title.${selectedLanguage}`)}
-                    value={form.values.title[selectedLanguage]}
-                  />
-                  <Textarea
-                    variant="unstyled"
-                    placeholder={"Enter question description here"}
-                    {...form.getInputProps(`description.${selectedLanguage}`)}
-                    value={form.values.description[selectedLanguage]}
-                    styles={{
-                      input: {
-                        fontSize: "1.1rem",
-                        fontWeight: 400, // set custom font size for this TextInput
-                      },
-                    }}
-                  />
-                </>
-              )}
+              <TextEditor form={form} selectedLanguage={selectedLanguage} />
               <ExtraProps
                 form={form}
                 question={question}
@@ -339,6 +299,7 @@ export function QuestionDetailedView({
                               h={30}
                               w={30}
                               fit="contain"
+                              alt="icon of login jump"
                             />
                           }
                           size="sm"

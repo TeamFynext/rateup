@@ -5,8 +5,14 @@ import { useEffect } from "react";
 import { Color } from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
+import { isHtml } from "../../utils";
 
 export default function TextEditor({ form, selectedLanguage }) {
+  const content = getContent(
+    form.values?.title?.[selectedLanguage],
+    form.values?.description?.[selectedLanguage],
+  );
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -15,18 +21,21 @@ export default function TextEditor({ form, selectedLanguage }) {
       Color,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
-    content: form.values.title?.[selectedLanguage],
+    content: content,
   });
 
   useEffect(() => {
     if (editor) {
       form.setFieldValue(`title.${selectedLanguage}`, editor?.getHTML());
+      if (form.values?.description?.[selectedLanguage]) {
+        form.setFieldValue(`description.${selectedLanguage}`, "");
+      }
     }
   }, [editor?.getHTML()]);
 
   useEffect(() => {
     if (editor) {
-      editor.commands.setContent(form.values.title?.[selectedLanguage]);
+      editor.commands.setContent(content);
     }
   }, [selectedLanguage]);
 
@@ -97,3 +106,13 @@ export default function TextEditor({ form, selectedLanguage }) {
     </RichTextEditor>
   );
 }
+
+const getContent = (title: string, desc: string) => {
+  if (isHtml(title)) {
+    return title;
+  } else if (desc) {
+    return `<h2>${title}</h2><p> ${desc}</p>`;
+  } else {
+    return `<h2>${title}</h2>`;
+  }
+};

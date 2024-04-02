@@ -1,43 +1,43 @@
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { useSearchParams } from "next/dist/client/components/navigation";
 import {
+  Box,
   Center,
   Container,
   Loader,
-  Text,
-  useMantineTheme,
-  Box,
-  LoadingOverlay,
   ScrollArea,
   Stack,
+  Text,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
+import { AnimatePresence, motion } from "framer-motion";
+import { useSearchParams } from "next/dist/client/components/navigation";
 import { useRouter } from "next/router";
-import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
 import { useContext, useEffect, useRef, useState } from "react";
-import { SelectedQContext } from "../../../../context/SelectedQ";
-import { LogicAction, QuestionType as Q } from "../../../../types/enums";
-import { CurrentResponsesContext } from "../../../../context/ResponseContext";
-import QuestionCountContext from "../../../../context/QuestionCountContext";
-import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
-import { encryptResponse } from "../../../../utils/encryption";
+import { useBeforeUnload } from "react-use";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
-import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
-import { motion, AnimatePresence } from "framer-motion";
+import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
+import QuestionCountContext from "../../../../context/QuestionCountContext";
+import { CurrentResponsesContext } from "../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../context/SelectedQ";
+import { LogicAction } from "../../../../types/enums";
+import { isHtml } from "../../../../utils";
+import { encryptResponse } from "../../../../utils/encryption";
 import { lexend } from "../../../../utils/fonts";
+import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import RateupLoader from "../../../Loaders/RateupLoader";
+import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
+import ConfirmResponsesModal from "./ConfirmResponsesModal";
+import NextPrev from "./NextPrev";
+import QuestionDesc from "./QuestionDesc";
+import QuestionForm from "./QuestionForm";
+import QuestionTitle from "./QuestionTitle";
+import styles from "./TakeSurvey.module.css";
 import {
   checkGoogleReviewForQuestion,
   checkRaiseTicketIssueQuestion,
   submitSurvey,
 } from "./util";
-import ConfirmResponsesModal from "./ConfirmResponsesModal";
-import NextPrev from "./NextPrev";
-import QuestionForm from "./QuestionForm";
-import QuestionDesc from "./QuestionDesc";
-import QuestionTitle from "./QuestionTitle";
-import styles from "./TakeSurvey.module.css";
-import { useBeforeUnload } from "react-use";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -370,7 +370,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                           }
                           smallScreen={smallScreen}
                         />
-                        {selectedQ.type !== Q.InfoMessage && (
+                        {!isHtml(selectedQ?.title[selectedLanguage]) && (
                           <QuestionDesc
                             largeScreen={largeScreen}
                             themeStyles={

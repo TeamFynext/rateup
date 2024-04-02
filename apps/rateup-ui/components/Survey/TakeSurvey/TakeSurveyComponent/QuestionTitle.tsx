@@ -3,12 +3,11 @@ import { useContext } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import classes from "./TakeSurvey.module.css";
-import { QuestionType } from "../../../../types/enums";
 
 function QuestionTitle({ largeScreen, themeStyles, smallScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  return selectedQ.type === QuestionType.InfoMessage ? (
+  return selectedQ?.title[selectedLanguage] ? (
     <ScrollArea.Autosize
       mah={smallScreen ? "65dvh" : "55dvh"}
       scrollbarSize={0}

@@ -1,7 +1,3 @@
-import { useContext, useState } from "react";
-import { SurveyThemeContext } from "../../../SurveyThemeContext";
-import { _SurveyTheme } from "../../../surveyTheme.types";
-import { SelectedItemEnum, PreviewTypeEnum } from "../../../SurveyTheme.enums";
 import {
   ActionIcon,
   BackgroundImage,
@@ -16,24 +12,26 @@ import {
   ScrollArea,
   Stack,
   Text,
-  createTheme,
 } from "@mantine/core";
-import { lexend, lexend300 } from "../../../../../../utils/fonts";
-import classes from "../../../SurveyTheme.module.css";
 import {
   IconChevronLeft,
   IconChevronRight,
   IconEdit,
 } from "@tabler/icons-react";
+import { useContext, useState } from "react";
+import { CurrentResponsesContext } from "../../../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../../../context/SelectedLanguage";
+import { lexend, lexend300 } from "../../../../../../utils/fonts";
+import { CreditsCard } from "../../../../../Card/CreditsCard";
+import QuestionTypePreview from "../../../../Question/Previews/QuestionTypePreview";
+import { questionTypeEnumArray } from "../../../SurveyTheme.constants";
+import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
+import classes from "../../../SurveyTheme.module.css";
 import {
   getFeaturesBasedOnQuestionType,
   getImageUrl,
 } from "../../../SurveyTheme.utils";
-import QuestionTypePreview from "../../../../Question/Previews/QuestionTypePreview";
-import { questionTypeEnumArray } from "../../../SurveyTheme.constants";
-import { CurrentResponsesContext } from "../../../../../../context/ResponseContext";
-import SelectedLanguageContext from "../../../../../../context/SelectedLanguage";
-import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { SurveyThemeContext } from "../../../SurveyThemeContext";
 
 export default function SurveyThemeView({ selectedType, setSelectedType }) {
   const { surveyTheme, mobileOrDesktop } = useContext(SurveyThemeContext);
@@ -44,7 +42,6 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
   //here subtitle, title and label are not customisable, its only added to preserve the consistency of the schema and ease of implementation.
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
-    subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
     button: { styles: buttonStyles, label },
     input: { primaryColor },
@@ -106,21 +103,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                 <IconEdit style={{ width: "70%", height: "70%" }} />
               </ActionIcon>
               <Text style={titleStyles}>Why is the sky blue?</Text>
-            </Box>
-            <Box className={classes.titleBox} w={"fit-content"}>
-              <ActionIcon
-                variant="default"
-                radius="lg"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation(),
-                    setSelectedType(SelectedItemEnum.SUBTITLE);
-                }}
-                className={classes.actionIcon}
-              >
-                <IconEdit style={{ width: "70%", height: "70%" }} />
-              </ActionIcon>
-              <Text style={subtitleStyles}>
+              <Text c={titleStyles?.color}>
                 This classic question is often asked by curious minds.
               </Text>
             </Box>

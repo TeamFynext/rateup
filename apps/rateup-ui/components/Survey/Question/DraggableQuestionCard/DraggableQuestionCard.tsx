@@ -1,12 +1,12 @@
 import {
-  Badge,
   ActionIcon,
-  Text,
-  Flex,
+  Badge,
   Box,
-  useMantineTheme,
+  Flex,
   Group,
   Image,
+  Text,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import {
@@ -14,16 +14,16 @@ import {
   IconGripVertical,
   IconTrash,
 } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { questionIcons } from "../QuestionTypeSelection";
-import React, { useContext } from "react";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { Draggable } from "react-beautiful-dnd";
-import classes from "./DraggableQuestionCard.module.css";
 import cx from "clsx";
+import { useRouter } from "next/router";
+import React, { useContext } from "react";
+import { Draggable } from "react-beautiful-dnd";
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { extractText } from "../../../../utils";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
-import { QuestionType } from "../../../../types/enums";
+import { questionIcons } from "../QuestionTypeSelection";
+import classes from "./DraggableQuestionCard.module.css";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -58,12 +58,7 @@ export function DraggableQuestionCard({
     e?.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
-  const extractText = (htmlContent) => {
-    // Regular expression to remove htmlContent tags
-    const regex = /(<([^>]+)>)/gi;
-    // Extract text from htmlContent by replacing htmlContent tags with an empty string
-    return htmlContent?.replace(regex, "");
-  };
+
   return (
     <>
       <ConfirmationModal

@@ -2,6 +2,7 @@ import React from "react";
 import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { QuestionType } from "../../../types/enums";
+import { extractText, isHtml } from "../../../utils";
 
 export const HoverCardComponent = ({
   content,
@@ -28,7 +29,11 @@ export const HoverCardComponent = ({
       ) : (
         <HoverCard.Target>
           {typeof content === "object" ? (
-            <Image src={getFileUrlFromKey(content?.value?.image)} w={30} />
+            <Image
+              src={getFileUrlFromKey(content?.value?.image)}
+              w={30}
+              alt="answer image of question"
+            />
           ) : (
             <Text
               c={c}
@@ -38,7 +43,7 @@ export const HoverCardComponent = ({
               fz={fz}
               lineClamp={lineClamp}
             >
-              {typeof content === "boolean" ? content.toString() : content}
+              {getContent(content)}
             </Text>
           )}
         </HoverCard.Target>
@@ -56,20 +61,24 @@ export const HoverCardComponent = ({
             {[QuestionType.Address].includes(questionType) ? (
               content?.length > 0 &&
               content?.map((c) => (
-                <Text c={c} miw={200} maw={200} fw={fw} fz={fz}>
+                <Text c={c} miw={200} maw={200} fw={fw} fz={fz} key={c}>
                   {c}
                 </Text>
               ))
             ) : typeof content === "object" ? (
               <>
-                <Image src={getFileUrlFromKey(content?.value?.image)} w={200} />
+                <Image
+                  src={getFileUrlFromKey(content?.value?.image)}
+                  w={200}
+                  alt="answer image of question"
+                />
                 <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
                   {content?.value?.value}
                 </Text>
               </>
             ) : (
               <Text c={c} miw={200} fw={fw} fz={fz}>
-                {typeof content === "boolean" ? content.toString() : content}
+                {getContent(content)}
               </Text>
             )}
           </Box>
@@ -77,4 +86,9 @@ export const HoverCardComponent = ({
       </HoverCard.Dropdown>
     </HoverCard>
   );
+};
+const getContent = (title: string | boolean) => {
+  if (typeof title === "boolean") return title?.toString();
+  else if (isHtml(title)) return extractText(title);
+  else return title;
 };
