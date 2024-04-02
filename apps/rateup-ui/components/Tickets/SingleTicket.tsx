@@ -240,7 +240,7 @@ const SingleTicket = ({ id }: { id: string }) => {
   }
 
   return (
-    <Stack mt="-20px">
+    <Stack>
       <Group>
         <Title
           order={2}
