@@ -8,7 +8,7 @@ import { QuestionType } from "../../../../types/enums";
 function QuestionTitle({ largeScreen, themeStyles, smallScreen }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  let mah = smallScreen ? "130px" : "110px";
+  let mah = smallScreen ? "155px" : "110px";
   if (selectedQ.type === QuestionType.InfoMessage) {
     mah = smallScreen ? "65dvh" : "55dvh";
   }

@@ -193,11 +193,11 @@ export function QuestionDetailedView({
       />
 
       <Stack style={{ height: "100%" }} ref={formRef}>
-        <ScrollArea style={{ flex: "1 1 0", overflow: "auto" }}>
+        <ScrollArea style={{ flex: "1 1 0" }} pr={"xs"}>
           <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
             {getQuestionTypeLabel(question.type)}
           </Badge>
-          <Group justify="space-between" p={2} gap={2}>
+          <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
             <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
               <TextEditor form={form} selectedLanguage={selectedLanguage} />
               <ExtraProps

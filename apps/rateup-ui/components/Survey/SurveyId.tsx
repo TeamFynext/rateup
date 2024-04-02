@@ -129,7 +129,7 @@ export default function SurveyID() {
   }, [savedEncryptionPassword]);
 
   if (isLoading || isSurveyLoading || !activeTab)
-    return <RateupLoader h={"100dvh"} />;
+    return <RateupLoader h={"80dvh"} />;
   if (error || surveyError) {
     return <p>An error has occurred</p>;
   }

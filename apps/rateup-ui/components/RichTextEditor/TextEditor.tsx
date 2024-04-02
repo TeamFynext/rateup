@@ -40,7 +40,7 @@ export default function TextEditor({ form, selectedLanguage }) {
   }, [selectedLanguage]);
 
   return (
-    <RichTextEditor editor={editor} mt={"xs"} mr={"lg"}>
+    <RichTextEditor editor={editor} mr={"lg"}>
       <RichTextEditor.Toolbar sticky>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.ColorPicker
