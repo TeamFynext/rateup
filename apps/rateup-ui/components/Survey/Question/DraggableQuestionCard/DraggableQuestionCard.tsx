@@ -58,6 +58,12 @@ export function DraggableQuestionCard({
     e?.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
+  const extractText = (htmlContent) => {
+    // Regular expression to remove htmlContent tags
+    const regex = /(<([^>]+)>)/gi;
+    // Extract text from htmlContent by replacing htmlContent tags with an empty string
+    return htmlContent?.replace(regex, "");
+  };
   return (
     <>
       <ConfirmationModal
@@ -108,21 +114,12 @@ export function DraggableQuestionCard({
                   {index + 1}
                 </Flex>
               </Badge>
-              {question.type === QuestionType.InfoMessage ? (
-                <Text
-                  mah={40}
-                  px="xs"
-                  lineClamp={1}
-                  dangerouslySetInnerHTML={{
-                    __html: question.title[selectedLanguage],
-                  }}
-                />
-              ) : (
-                <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
-                  {question.title[selectedLanguage] ||
-                    question.description[selectedLanguage]}
-                </Text>
-              )}
+              <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
+                {extractText(
+                  question.title[selectedLanguage] ||
+                    question.description[selectedLanguage],
+                )}
+              </Text>
 
               <Group justify={"flex-end"} gap={4} ml={"auto"} miw={70}>
                 {question?.logic?.length && (

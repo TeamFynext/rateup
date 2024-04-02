@@ -4,9 +4,17 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect } from "react";
 import { Color } from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
+import TextAlign from "@tiptap/extension-text-align";
+
 export default function TextEditor({ form, selectedLanguage }) {
   const editor = useEditor({
-    extensions: [StarterKit, Link, TextStyle, Color],
+    extensions: [
+      StarterKit,
+      Link,
+      TextStyle,
+      Color,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+    ],
     content: form.values.title?.[selectedLanguage],
   });
 
@@ -71,6 +79,12 @@ export default function TextEditor({ form, selectedLanguage }) {
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.Link />
           <RichTextEditor.Unlink />
+        </RichTextEditor.ControlsGroup>
+        <RichTextEditor.ControlsGroup>
+          <RichTextEditor.AlignLeft />
+          <RichTextEditor.AlignCenter />
+          <RichTextEditor.AlignJustify />
+          <RichTextEditor.AlignRight />
         </RichTextEditor.ControlsGroup>
 
         <RichTextEditor.ControlsGroup>
