@@ -202,3 +202,7 @@ export enum WaAutomatedReplyResponseType {
   Text = "Text",
   Template = "Template",
 }
+export enum WaConfigType {
+  Manual = "Manual",
+  Automated = "Automated", // through meta login
+}

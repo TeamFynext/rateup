@@ -136,13 +136,17 @@ model WhatsappSettings {
   org   Org    @relation(fields: [orgId], references: [id])
   orgId String @unique @db.Uuid
 
-  accessToken     String
-  businessId      String
+  accessToken     String // encrypted
+  accessToken_iv  String
+  wabaId          String // WhatsApp Business Account ID
   phoneId         String
-  webhookPassword String
-  appId           String?
+  phone           String
+  appId           String
+  webhookPassword String?
 
-  encryption Json? // {publicKey: string, privateKey: string}
+  type            String // enums.ts: WaConfigType
+
+  encryption Json? // for flow {publicKey: string, privateKey: string}
 }
 
 model OrgMember {
@@ -225,6 +229,7 @@ model Survey {
   isPublished             Boolean         @default(false)
   isProtected             Boolean         @default(false)
   kioskMode               Boolean         @default(false)
+  uniqueDeviceResponse    Boolean         @default(false) //avoid duplicate entry from same IP
   password                String?
   type                    String          @default("web")
   getLocation             Boolean         @default(false)
