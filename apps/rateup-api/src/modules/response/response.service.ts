@@ -3,7 +3,11 @@ import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunct
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail";
 import prisma from "../../utils/prisma";
-import { generateResponseData } from "../../utils/survey/response.data";
+import {
+  extractText,
+  generateResponseData,
+  isHtml,
+} from "../../utils/survey/response.data";
 import { getAccessToken, initializeAuthClient } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
 import { ChoiceTypeQuestions, QuestionType } from "../../types/enums";
@@ -102,6 +106,10 @@ export async function getAllResponses(
 
   return responseData;
 }
+const getContent = (title: string) => {
+  if (isHtml(title)) return extractText(title);
+  else return title;
+};
 
 export async function downloadExcelResponse(
   allResponses,
@@ -119,9 +127,11 @@ export async function downloadExcelResponse(
       question.type === QuestionType.Contact
         ? Object.entries(question.features?.[defaultLanguage])
             ?.filter((data: any) => data[1].isEnabled)
-            .map((data) => `${question.title[defaultLanguage]}: ${data[0]}`) ??
-          []
-        : [question.title[defaultLanguage]],
+            .map(
+              (data) =>
+                `${getContent(question.title[defaultLanguage])}: ${data[0]}`,
+            ) ?? []
+        : [getContent(question.title[defaultLanguage])],
     );
     const createdAt = "Date";
     if (visibleColumn.includes("createdAt")) {
