@@ -224,7 +224,7 @@ export default function ThankYou({
               {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle || err) && (
                 <Text style={surveyThemeData?.thankyouTheme?.subtitle?.styles}>
                   {!!err
-                    ? "You've already submited a response earlier."
+                    ? "You've already submitted a response earlier."
                     : surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
                 </Text>
               )}
