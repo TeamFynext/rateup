@@ -105,6 +105,10 @@ export default function OrgById() {
             label={["Participant", "Participants"]}
           />
         </CountSectionContainer>
+        <CountSectionContainer label={"Digitl Menu"}>
+          <CountCard count={stats.menu.total} label={["Menu", "Menu"]} />
+          <CountCard count={stats.menu.banners} label={["Banner", "Banners"]} />
+        </CountSectionContainer>
       </Group>
 
       <Group justify="center"></Group>
