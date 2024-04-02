@@ -218,7 +218,7 @@ export default function ThankYou({
                 }}
               >
                 {!!err
-                  ? "Error Submitting Response..!"
+                  ? "Thank You!"
                   : surveyThemeData?.thankyouTheme?.title?.title}
               </Title>
               {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle || err) && (
