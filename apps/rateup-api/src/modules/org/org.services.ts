@@ -256,8 +256,8 @@ export async function getOrgStats(orgId: string) {
     where: {
       teams: {
         some: {
-          id: {
-            in: teamIds,
+          team: {
+            orgId: orgId,
           },
         },
       },
@@ -271,8 +271,8 @@ export async function getOrgStats(orgId: string) {
         survey: {
           teams: {
             some: {
-              id: {
-                in: teamIds,
+              team: {
+                orgId: orgId,
               },
             },
           },
@@ -287,8 +287,8 @@ export async function getOrgStats(orgId: string) {
         survey: {
           teams: {
             some: {
-              id: {
-                in: teamIds,
+              team: {
+                orgId: orgId,
               },
             },
           },
