@@ -243,8 +243,7 @@ export const TakeSurveyLayoutWeb = ({
                           : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
                       }
                       alt="Logo"
-                      w={isMobile ? 70 : 80}
-                      h={isMobile ? 70 : 80}
+                      mih={isMobile ? 60 : 80}
                     />
                   </Stack>
                 </Group>
@@ -259,12 +258,7 @@ export const TakeSurveyLayoutWeb = ({
               >
                 {survey?.isPublished === true && survey?.active === true ? (
                   survey?.isProtected && isPasswordVerified === false ? null : (
-                    <Paper
-                      radius={0}
-                      pb={largeScreen && startClicked && "xl"}
-                      w={"100%"}
-                      bg={"transparent"}
-                    >
+                    <Paper radius={0} w={"100%"} bg={"transparent"}>
                       {startClicked &&
                         (!selectedLanguage && survey?.languages?.length > 1 ? (
                           <SelectLang

@@ -91,15 +91,7 @@ function NextPrev({
   const isLastQuestion =
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
-    <Stack
-      pt={4}
-      gap={0}
-      style={{
-        width: "100%",
-        minHeight: "74px",
-      }}
-      justify="flex-end"
-    >
+    <Stack gap={0} w={"100%"} justify="flex-end">
       <Text
         size={isMobile && "sm"}
         c={themeStyles?.backgroundColor}
@@ -121,33 +113,31 @@ function NextPrev({
         >
           Prev
         </Button>
-        <Center>
-          <RingProgress
-            className={styles["ring-progress"]}
-            sections={[
-              {
-                value: parseInt(getCompletionRate(num, total)),
-                color: themeStyles?.backgroundColor ?? "dark.2",
-              },
-              {
-                value: 100 - parseInt(getCompletionRate(num, total)),
-                color: themeStyles?.color ?? "dark",
-              },
-            ]}
-            size={isMobile ? 55 : 80}
-            thickness={isMobile ? 4 : 8}
-            label={
-              <Text
-                c={themeStyles?.backgroundColor ?? "dark.2"}
-                fw={700}
-                ta="center"
-                size={isMobile ? "xs" : "sm"}
-              >
-                {getCompletionRate(num, total)}%
-              </Text>
-            }
-          />
-        </Center>
+        <RingProgress
+          className={styles["ring-progress"]}
+          sections={[
+            {
+              value: parseInt(getCompletionRate(num, total)),
+              color: themeStyles?.backgroundColor ?? "dark.2",
+            },
+            {
+              value: 100 - parseInt(getCompletionRate(num, total)),
+              color: themeStyles?.color ?? "dark",
+            },
+          ]}
+          size={isMobile ? 55 : 80}
+          thickness={isMobile ? 4 : 8}
+          label={
+            <Text
+              c={themeStyles?.backgroundColor ?? "dark.2"}
+              fw={700}
+              ta="center"
+              size={isMobile ? "xs" : "sm"}
+            >
+              {getCompletionRate(num, total)}%
+            </Text>
+          }
+        />
         {isLastQuestion ? (
           <Button
             radius={"xl"}

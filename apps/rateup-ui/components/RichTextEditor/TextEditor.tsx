@@ -37,7 +37,7 @@ export default function TextEditor({ form, selectedLanguage }) {
     if (editor) {
       editor.commands.setContent(content);
     }
-  }, [selectedLanguage, form?.values?.title]);
+  }, [selectedLanguage]);
 
   return (
     <RichTextEditor editor={editor} mr={"lg"}>

@@ -4,6 +4,7 @@ import {
   Container,
   Loader,
   ScrollArea,
+  Stack,
   Text,
   useMantineTheme,
 } from "@mantine/core";
@@ -83,7 +84,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
   >("bottomSlideIn");
 
-  const formMaxHeight = smallScreen ? "calc(100dvh - 160PX)" : `70dvh`;
+  const formMaxHeight = smallScreen ? "calc(100dvh - 175px)" : `70dvh`;
 
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
@@ -291,86 +292,90 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
         <Container size={"md"}>
-          <ConfirmResponsesModal
-            opened={isConfirmResponsesModalOpen}
-            close={closeConfirmResponsesModal}
-            survey={survey}
-            questionsHistory={questionsHistory}
-            responses={responses}
-            selectedLanguage={selectedLanguage}
-            surveyThemeData={surveyThemeData}
-            finishSurvey={finishSurvey}
-            isSavingResponses={isSavingResponses}
-            largeScreen={largeScreen}
-          />
+          <Stack justify="space-between" h={"100%"} gap={0}>
+            <ConfirmResponsesModal
+              opened={isConfirmResponsesModalOpen}
+              close={closeConfirmResponsesModal}
+              survey={survey}
+              questionsHistory={questionsHistory}
+              responses={responses}
+              selectedLanguage={selectedLanguage}
+              surveyThemeData={surveyThemeData}
+              finishSurvey={finishSurvey}
+              isSavingResponses={isSavingResponses}
+              largeScreen={largeScreen}
+            />
 
-          <AnimatePresence initial={false}>
-            <Box className={`${styles["question-form-title-desc-container"]}`}>
-              <motion.div
-                className={styles["question-form-title-desc-motion-div"]}
-                key={selectedQ.id}
-                transition={{
-                  type: "tween",
-                  duration: 0.5,
-                }}
-                initial={{
-                  x: aPDirection > 0 ? "120%" : "-120%",
-                  opacity: 0,
-                }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
+            <AnimatePresence initial={false}>
+              <Box
+                className={`${styles["question-form-title-desc-container"]}`}
               >
                 <motion.div
-                  layout="position"
+                  className={styles["question-form-title-desc-motion-div"]}
+                  key={selectedQ.id}
                   transition={{
                     type: "tween",
-                    duration: 0.2,
+                    duration: 0.5,
                   }}
+                  initial={{
+                    x: aPDirection > 0 ? "120%" : "-120%",
+                    opacity: 0,
+                  }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
                 >
-                  <ScrollArea.Autosize
-                    mah={formMaxHeight}
-                    p={0}
-                    m={0}
-                    w={"100%"}
+                  <motion.div
+                    layout="position"
+                    transition={{
+                      type: "tween",
+                      duration: 0.2,
+                    }}
                   >
-                    <Box
-                      pb={smallScreen ? "sm" : "lg"}
-                      className={lexend.className}
-                      pr={smallScreen ? 0 : "md"}
+                    <ScrollArea.Autosize
+                      mah={formMaxHeight}
+                      p={0}
+                      m={0}
+                      w={"100%"}
                     >
-                      <QuestionTitle
-                        largeScreen={largeScreen}
-                        themeStyles={
-                          surveyThemeData?.surveyTheme?.title?.styles
-                        }
-                        smallScreen={smallScreen}
-                      />
-                      {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                        <QuestionDesc
+                      <Box
+                        pb={smallScreen ? "sm" : "lg"}
+                        className={lexend.className}
+                        pr={smallScreen ? 0 : "md"}
+                      >
+                        <QuestionTitle
                           largeScreen={largeScreen}
                           themeStyles={
-                            surveyThemeData?.surveyTheme?.subtitle?.styles
+                            surveyThemeData?.surveyTheme?.title?.styles
                           }
+                          smallScreen={smallScreen}
                         />
-                      )}
-                    </Box>
+                        {!isHtml(selectedQ?.title[selectedLanguage]) && (
+                          <QuestionDesc
+                            largeScreen={largeScreen}
+                            themeStyles={
+                              surveyThemeData?.surveyTheme?.subtitle?.styles
+                            }
+                          />
+                        )}
+                      </Box>
 
-                    <QuestionForm />
-                  </ScrollArea.Autosize>
+                      <QuestionForm />
+                    </ScrollArea.Autosize>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            </Box>
-          </AnimatePresence>
+              </Box>
+            </AnimatePresence>
 
-          <NextPrev
-            next={handleNext}
-            prev={handlePrev}
-            num={QnNo}
-            total={questionCount}
-            survey={survey}
-            themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
-            isSavingResponses={isSavingResponses}
-          />
+            <NextPrev
+              next={handleNext}
+              prev={handlePrev}
+              num={QnNo}
+              total={questionCount}
+              survey={survey}
+              themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
+              isSavingResponses={isSavingResponses}
+            />
+          </Stack>
         </Container>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>

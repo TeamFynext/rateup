@@ -118,8 +118,8 @@
   }
 
   .question-form-title-desc-container {
-    min-height: calc(100vh - 160px);
-    min-height: calc(100dvh - 160px);
+    min-height: calc(100vh - 175px);
+    min-height: calc(100dvh - 175px);
   }
 }
 
