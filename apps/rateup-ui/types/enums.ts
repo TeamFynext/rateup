@@ -246,3 +246,7 @@ export enum WaTemplateComponentTypeUpperCase {
   HEADER = "HEADER",
   FOOTER = "FOOTER",
 }
+export enum WaConfigType {
+  Manual = "Manual",
+  Automated = "Automated", // through meta login
+}

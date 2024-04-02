@@ -9,8 +9,8 @@ import {
   Group,
   Skeleton,
   Stack,
+  Tabs,
   Text,
-  Title,
   Tooltip,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
@@ -20,16 +20,21 @@ import {
   IconCopy,
   IconHelp,
   IconLogout,
+  IconTrash,
 } from "@tabler/icons-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import {
+  useDeleteWaSettingsMutation,
   useDeregisterBusinessClientMutation,
   useRegisterBusinessClientMutation,
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "../../../backend/whatsapp/settings/waSettings.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import {
   ContainedTextArea,
@@ -39,19 +44,21 @@ import { SAVE_HOTKEY } from "../../../utils/constants";
 import Script from "next/script";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
+import { WaConfigType } from "../../../types/enums";
+import styles from "./settings.style.module.css";
 
-function WhatsAppManualConfiguration() {
-  const { data: waSettings, isLoading } = useWaSettings();
+function WhatsAppManualConfiguration({ waSettings }) {
   const form = useForm({
     initialValues: waSettings || {
-      businessId: "",
+      wabaId: "",
       phoneId: "",
       accessToken: "",
       webhookPassword: "",
       appId: "",
     },
     validate: {
-      businessId: isNotEmpty("BusnessId is required"),
+      wabaId: isNotEmpty("BusnessId is required"),
       phoneId: isNotEmpty("phoneId is required"),
       accessToken: isNotEmpty("AccessToken is required"),
       webhookPassword: isNotEmpty("Webhook Password is required"),
@@ -66,15 +73,15 @@ function WhatsAppManualConfiguration() {
   }, [waSettings]);
 
   const upsertMutation = useUpsertWaSettingsMutation();
+  const deleteMutation = useDeleteWaSettingsMutation();
   const handleSubmit = (values: any) => {
     upsertMutation.mutate(values);
   };
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
-  const webhookUrl = `${
-    process.env.NEXT_PUBLIC_API_URL
-  }/api${WHATSAPP_URL}/webhook/${
-    JSON.parse(localStorage.getItem("userInfo")).data.orgId
-  }`;
+  const handleDelete = () => {
+    deleteMutation.mutate();
+  };
+
+  const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${WHATSAPP_URL}/webhook`;
   return (
     <>
       <Flex w="100%" align="stretch" gap={"sm"}>
@@ -87,9 +94,9 @@ function WhatsAppManualConfiguration() {
         >
           <Stack px="md">
             <ContainedTextField
-              label="Business ID"
-              placeholder="Enter your business ID"
-              {...form.getInputProps("businessId")}
+              label="WABA ID"
+              placeholder="Enter your Whatsapp Business Account ID"
+              {...form.getInputProps("wabaId")}
               required
             />
             <ContainedTextField
@@ -119,9 +126,18 @@ function WhatsAppManualConfiguration() {
               required
               {...form.getInputProps("webhookPassword")}
             />
-            <Center mt="xl">
+            <Group justify={"space-between"}>
+              <Button
+                color="red"
+                variant="outline"
+                leftSection={<IconTrash />}
+                onClick={handleDelete}
+                radius="lg"
+              >
+                Delete Configuration
+              </Button>
               <RateupButtonPrimary type="submit" title={"Save Changes"} />
-            </Center>
+            </Group>
           </Stack>
         </form>
         <Divider
@@ -240,30 +256,78 @@ function MetaLoginButton() {
 }
 
 export default function WhatsAppSettingsPage() {
+  const { data: waSettings, isLoading } = useWaSettings();
+  const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
+
+  useEffect(() => {
+    if (waSettings) {
+      setTab(waSettings.type);
+    }
+  }, [waSettings]);
+
+  if (isLoading) {
+    return <MetaLoginStatusLoaderSkeleton />;
+  }
+
+  const isAutomated = waSettings?.type === WaConfigType.Automated;
+  const isManual = waSettings?.type === WaConfigType.Manual;
+
   return (
     <Stack>
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
         crossOrigin="anonymous"
       ></Script>
-      <h2>WhatsApp Settings</h2>
-      <MetaLoginStatus />
+      <StyledTabs value={tab} onChange={setTab as any}>
+        <Flex className={styles.headerContainer} mb={"sm"}>
+          <h2>WhatsApp Settings</h2>
+          <Center pr={"xl"}>
+            <Tabs.List>
+              <Tooltip
+                label={
+                  isManual
+                    ? "You need to delete the manually configured details to switch to Automated Configuration"
+                    : "Automated Configuration"
+                }
+                openDelay={300}
+              >
+                <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
+                  Automated
+                </Tabs.Tab>
+              </Tooltip>
+              <Tooltip
+                label={
+                  isAutomated
+                    ? "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
+                    : "Manually Configure WhatsApp Business Account"
+                }
+                openDelay={300}
+              >
+                <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
+                  Manual
+                </Tabs.Tab>
+              </Tooltip>
+            </Tabs.List>
+          </Center>
+          <div />
+        </Flex>
+        <Tabs.Panel value={WaConfigType.Automated}>
+          <MetaLoginStatus waSettings={waSettings} />
+        </Tabs.Panel>
+        <Tabs.Panel value={WaConfigType.Manual}>
+          <WhatsAppManualConfiguration waSettings={waSettings} />
+        </Tabs.Panel>
+      </StyledTabs>
     </Stack>
   );
 }
 
-function MetaLoginStatus() {
-  const { data: waSettings, isLoading } = useWaSettings();
-
+function MetaLoginStatus({ waSettings }) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
 
   function handleDeRegister() {
     deRegisterMutation.mutate();
-  }
-
-  if (isLoading) {
-    return <MetaLoginStatusLoaderSkeleton />;
   }
 
   if (waSettings) {

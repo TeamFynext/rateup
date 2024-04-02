@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createWaSettings,
   deRegisterBusinessClient,
+  deleteWaSettings,
   getWaSettings,
   registerBusinessClient,
   upsertWaSettings,
@@ -48,6 +49,16 @@ export const useUpsertWaSettingsMutation = (onSuccess?, onError?) => {
   });
 
   return updateMutation;
+};
+
+export const useDeleteWaSettingsMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteWaSettings,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["waSettings"] });
+    },
+  });
 };
 
 export const useRegisterBusinessClientMutation = () => {
