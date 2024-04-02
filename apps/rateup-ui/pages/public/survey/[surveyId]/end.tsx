@@ -218,13 +218,13 @@ export default function ThankYou({
                 }}
               >
                 {!!err
-                  ? "Oops..!"
+                  ? "Error Submitting Response..!"
                   : surveyThemeData?.thankyouTheme?.title?.title}
               </Title>
               {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle || err) && (
                 <Text style={surveyThemeData?.thankyouTheme?.subtitle?.styles}>
                   {!!err
-                    ? "Sorry, You've already submitted the response earlier."
+                    ? "You've already submited a response earlier."
                     : surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
                 </Text>
               )}
