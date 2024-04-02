@@ -81,8 +81,8 @@
 
 .question-form-title-desc-container {
   position: relative;
-  min-height: 56vh;
-  min-height: 56dvh;
+  min-height: 70vh;
+  min-height: 70dvh;
   overflow: hidden;
 }
 
@@ -118,8 +118,8 @@
   }
 
   .question-form-title-desc-container {
-    min-height: calc(100vh - 230px);
-    min-height: calc(100dvh - 230px);
+    min-height: calc(100vh - 160px);
+    min-height: calc(100dvh - 160px);
   }
 }
 

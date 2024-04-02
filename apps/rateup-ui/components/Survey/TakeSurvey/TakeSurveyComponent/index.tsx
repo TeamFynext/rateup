@@ -4,7 +4,6 @@ import {
   Container,
   Loader,
   ScrollArea,
-  Stack,
   Text,
   useMantineTheme,
 } from "@mantine/core";
@@ -12,7 +11,7 @@ import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/dist/client/components/navigation";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useBeforeUnload } from "react-use";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
@@ -83,29 +82,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const [pageSwitchTransition, setPageSwitchTransition] = useState<
     "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
   >("bottomSlideIn");
-  const [boxHeight, setBoxHeight] = useState(0);
-  const boxRef = useRef(null);
 
-  if (!selectedLanguage) throw new Error("No language selected");
-  useEffect(() => {
-    const updateHeight = () => {
-      if (boxRef.current) {
-        setBoxHeight((prevHeight) => {
-          const newHeight = boxRef.current.offsetHeight;
-          return newHeight !== prevHeight ? newHeight : prevHeight;
-        });
-      }
-    };
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    return () => {
-      window.removeEventListener("resize", updateHeight);
-    };
-  }, [boxRef.current]);
-
-  const formMaxHeight = smallScreen
-    ? `calc(100dvh - ${boxHeight + 230}px)`
-    : `calc(100dvh - ${boxHeight + 360}px)`;
+  const formMaxHeight = smallScreen ? "calc(100dvh - 160PX)" : `70dvh`;
 
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
@@ -326,83 +304,73 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
             largeScreen={largeScreen}
           />
 
-          <Box pos="relative">
-            {/* <LoadingOverlay
-              visible={isSavingResponses}
-              zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 10 }}
-            /> */}
-            <Stack>
-              <AnimatePresence initial={false}>
-                <Box
-                  className={`${styles["question-form-title-desc-container"]}`}
+          <AnimatePresence initial={false}>
+            <Box className={`${styles["question-form-title-desc-container"]}`}>
+              <motion.div
+                className={styles["question-form-title-desc-motion-div"]}
+                key={selectedQ.id}
+                transition={{
+                  type: "tween",
+                  duration: 0.5,
+                }}
+                initial={{
+                  x: aPDirection > 0 ? "120%" : "-120%",
+                  opacity: 0,
+                }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
+              >
+                <motion.div
+                  layout="position"
+                  transition={{
+                    type: "tween",
+                    duration: 0.2,
+                  }}
                 >
-                  <motion.div
-                    className={styles["question-form-title-desc-motion-div"]}
-                    key={selectedQ.id}
-                    transition={{
-                      type: "tween",
-                      duration: 0.5,
-                    }}
-                    initial={{
-                      x: aPDirection > 0 ? "120%" : "-120%",
-                      opacity: 0,
-                    }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
+                  <ScrollArea.Autosize
+                    mah={formMaxHeight}
+                    p={0}
+                    m={0}
+                    w={"100%"}
                   >
-                    <motion.div
-                      layout="position"
-                      transition={{
-                        type: "tween",
-                        duration: 0.2,
-                      }}
+                    <Box
+                      pb={smallScreen ? "sm" : "lg"}
+                      className={lexend.className}
+                      pr={smallScreen ? 0 : "md"}
                     >
-                      <Box
-                        pb={smallScreen ? "sm" : "lg"}
-                        ref={boxRef}
-                        className={lexend.className}
-                      >
-                        <QuestionTitle
+                      <QuestionTitle
+                        largeScreen={largeScreen}
+                        themeStyles={
+                          surveyThemeData?.surveyTheme?.title?.styles
+                        }
+                        smallScreen={smallScreen}
+                      />
+                      {!isHtml(selectedQ?.title[selectedLanguage]) && (
+                        <QuestionDesc
                           largeScreen={largeScreen}
                           themeStyles={
-                            surveyThemeData?.surveyTheme?.title?.styles
+                            surveyThemeData?.surveyTheme?.subtitle?.styles
                           }
-                          smallScreen={smallScreen}
                         />
-                        {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                          <QuestionDesc
-                            largeScreen={largeScreen}
-                            themeStyles={
-                              surveyThemeData?.surveyTheme?.subtitle?.styles
-                            }
-                          />
-                        )}
-                      </Box>
-                      <ScrollArea.Autosize
-                        mah={formMaxHeight}
-                        p={0}
-                        m={0}
-                        w={"100%"}
-                      >
-                        <QuestionForm />
-                      </ScrollArea.Autosize>
-                    </motion.div>
-                  </motion.div>
-                </Box>
-              </AnimatePresence>
+                      )}
+                    </Box>
 
-              <NextPrev
-                next={handleNext}
-                prev={handlePrev}
-                num={QnNo}
-                total={questionCount}
-                survey={survey}
-                themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
-                isSavingResponses={isSavingResponses}
-              />
-            </Stack>
-          </Box>
+                    <QuestionForm />
+                  </ScrollArea.Autosize>
+                </motion.div>
+              </motion.div>
+            </Box>
+          </AnimatePresence>
+
+          <NextPrev
+            next={handleNext}
+            prev={handlePrev}
+            num={QnNo}
+            total={questionCount}
+            survey={survey}
+            themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
+            isSavingResponses={isSavingResponses}
+          />
         </Container>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>

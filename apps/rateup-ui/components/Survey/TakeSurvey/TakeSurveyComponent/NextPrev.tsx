@@ -92,7 +92,7 @@ function NextPrev({
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
     <Stack
-      pt={"md"}
+      pt={4}
       gap={0}
       style={{
         width: "100%",
