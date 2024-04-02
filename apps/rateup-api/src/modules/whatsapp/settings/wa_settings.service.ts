@@ -4,16 +4,25 @@ import {
   aes_encrypt,
 } from "../../../../utils/encryption/encryption.utils";
 import prisma from "../../../utils/prisma";
-import {
-  createWaSettingsInput,
-  updateWaSettingsInput,
-} from "./wa_settings.schema";
+import { getPhoneDetails } from "../auth/wa_auth.service";
+import { WaConfigType } from "../../../types/enums";
+import { log } from "../../../utils/logger";
 
 export async function createWaSettings(
   orgId: string,
-  data: createWaSettingsInput,
+  data: Omit<
+    WhatsappSettings,
+    "accessToken_iv" | "encryption" | "orgId" | "phone" | "webhookPassword"
+  > & { phone?: string; webhookPassword?: string },
 ) {
   const accessToken = data.accessToken;
+  if (!data.phone) {
+    const { display_phone_number } = await getPhoneDetails(
+      data.phoneId,
+      accessToken,
+    );
+    data.phone = display_phone_number;
+  }
   const encryptedToken = aes_encrypt(
     accessToken,
     Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
@@ -74,40 +83,49 @@ function getWaSettingsWithAccessTokenDecrypted(
 
 export async function updateWaSettings(
   orgId: string,
-  data: updateWaSettingsInput,
+  data: Partial<Omit<WhatsappSettings, "accessToken_iv" | "id" | "orgId">>,
 ) {
+  const dataToBeUpdated: Partial<WhatsappSettings> = data;
   if (data.accessToken) {
-    throw new Error("Cannot update access token"); // TODO
+    const encryptedToken = aes_encrypt(
+      data.accessToken,
+      Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
+    );
+    dataToBeUpdated.accessToken = encryptedToken.encryptedData;
+    dataToBeUpdated.accessToken_iv = encryptedToken.iv;
   }
   return await prisma.whatsappSettings.update({
     where: {
       orgId: orgId,
     },
     data: {
-      ...(data as any),
+      ...dataToBeUpdated,
     },
   });
 }
 
 export async function upsertWaSettings(
   orgId: string,
-  data: createWaSettingsInput,
+  data: Partial<Omit<WhatsappSettings, "accessToken_iv">>,
 ) {
-  return await prisma.whatsappSettings.upsert({
+  const existingSettings = await prisma.whatsappSettings.findUnique({
     where: {
       orgId: orgId,
     },
-    update: {
-      ...(data as any),
-    },
-    create: {
-      orgId: orgId,
-      ...(data as any),
-    },
   });
+
+  if (existingSettings) {
+    return await updateWaSettings(orgId, data);
+  } else {
+    return await createWaSettings(orgId, {
+      ...data,
+      type: WaConfigType.Manual,
+    } as any);
+  }
 }
 
 export async function deleteWaSettings(orgId: string) {
+  log.trace("Deleting WhatsApp settings for orgId: %s", orgId);
   return await prisma.whatsappSettings.delete({
     where: {
       orgId: orgId,

@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   createWaSettingsHandler,
+  deleteWaSettingsHandler,
   getWaSettingsHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller";
@@ -38,4 +39,5 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     upsertWaSettingsHandler,
   );
+  server.delete("/", deleteWaSettingsHandler);
 }

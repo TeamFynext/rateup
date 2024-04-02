@@ -98,3 +98,20 @@ export async function registerPhoneNumber(
   });
   return res.data;
 }
+
+type WaPhoneDetailsRes = {
+  verified_name: string;
+  code_verification_status: string;
+  display_phone_number: string;
+  quality_rating: string;
+  platform_type: string;
+  throughput: {
+    level: string;
+  };
+  id: string;
+};
+export async function getPhoneDetails(phoneId: string, accessToken: string) {
+  const url = `/${phoneId}`;
+  const res = await callWhatsappApi(url, "GET", accessToken);
+  return res.data as WaPhoneDetailsRes;
+}
