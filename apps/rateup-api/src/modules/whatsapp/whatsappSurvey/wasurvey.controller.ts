@@ -93,6 +93,11 @@ export async function whatsappEventHandler(
     const wabaId = body.entry[0].id;
     const waSettings = await getWaSettingsByWaBaId(wabaId);
 
+    if (!waSettings) {
+      log.error("WaSettings not found for wabaId %s", wabaId);
+      return;
+    }
+
     const eventType = getEventType(body);
     if (!eventType) {
       // Probably a message delivery status. Ignoring...

@@ -23,6 +23,16 @@ export async function callWhatsappApi(
     },
     ...otherConfig,
   };
-  log.trace("Calling WhatsApp API with config: %o", config);
-  return await axios(config);
+  log.trace(
+    "Calling WhatsApp API with config: %s %s \n%o",
+    config.method,
+    config.url,
+    config.data,
+  );
+  try {
+    return await axios(config);
+  } catch (error) {
+    log.error("Error calling WhatsApp API: %o", error);
+    throw error;
+  }
 }

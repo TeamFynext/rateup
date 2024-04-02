@@ -16,10 +16,6 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
-        // add response schema
-        response: {
-          200: $Sref("getSurveyPublicResponseSchema"),
-        },
       },
     },
     getPublicSurveyByIdHandler,

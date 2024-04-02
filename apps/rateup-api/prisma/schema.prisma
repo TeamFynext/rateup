@@ -112,6 +112,10 @@ model WhatsappSettings {
   wabaId          String // WhatsApp Business Account ID
   phoneId         String
   phone           String
+  appId           String
+  webhookPassword String?
+
+  type            String // enums.ts: WaConfigType
 
   encryption Json? // for flow {publicKey: string, privateKey: string}
 }

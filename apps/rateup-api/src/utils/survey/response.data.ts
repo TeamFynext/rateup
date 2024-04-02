@@ -126,3 +126,13 @@ const getResponseFromQuestion = (question = []) => {
     };
   });
 };
+export function isHtml(str: string) {
+  const regex = /<[^>]+>/g; // Matches any opening and closing tag (ignores content)
+  return regex?.test(str);
+}
+export const extractText = (htmlContent: string) => {
+  // Regular expression to remove htmlContent tags
+  const regex = /(<([^>]+)>)/gi;
+  // Extract text from htmlContent by replacing htmlContent tags with an empty string
+  return htmlContent?.replace(regex, "");
+};

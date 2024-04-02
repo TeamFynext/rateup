@@ -7,10 +7,13 @@ import { getOrgIdAndRole } from "../../user/user.service";
 import { Role } from "../../org/org.services";
 import {
   createWaSettings,
+  deleteWaSettings,
   getWaSettings,
   updateWaSettings,
   upsertWaSettings,
 } from "./wa_settings.service";
+import { getPhoneDetails } from "../auth/wa_auth.service";
+import { WaConfigType } from "../../../types/enums";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
@@ -23,7 +26,13 @@ export async function createWaSettingsHandler(
       message: "You are not authorized to perform this action",
     });
   }
-  const waSettings = await createWaSettings(org.orgId, req.body);
+  const waSettings = await createWaSettings(org.orgId, {
+    accessToken: req.body.accessToken,
+    wabaId: req.body.wabaId,
+    phoneId: req.body.phoneId,
+    appId: req.body.appId,
+    type: WaConfigType.Manual,
+  });
   return res.status(200).send(waSettings);
 }
 
@@ -67,4 +76,20 @@ export async function upsertWaSettingsHandler(
   }
   const waSettings = await upsertWaSettings(org.orgId, req.body);
   return res.status(200).send(waSettings);
+}
+
+export async function deleteWaSettingsHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  const org = await getOrgIdAndRole({ id: req.userId });
+  if (org.role !== Role.SUPER_ADMIN) {
+    return res.status(403).send({
+      statusCode: 403,
+      message: "You are not authorized to perform this action",
+    });
+  }
+
+  await deleteWaSettings(req.user.orgId);
+  return res.status(200).send();
 }

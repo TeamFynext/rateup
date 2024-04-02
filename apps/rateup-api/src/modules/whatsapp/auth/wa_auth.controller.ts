@@ -13,6 +13,7 @@ import {
   createWaSettings,
   deleteWaSettings,
 } from "../settings/wa_settings.service";
+import { WaConfigType } from "../../../types/enums";
 
 export async function registerBusinessClientHandler(
   req: FastifyRequest<{
@@ -27,6 +28,7 @@ export async function registerBusinessClientHandler(
     const accessToken = await getAccessTokenFromCode(code);
     const ourAccessToken = process.env.wa_access_token;
 
+    // Getting business details
     const { data: businessDetails } = await debug_token(
       accessToken,
       ourAccessToken,
@@ -37,6 +39,7 @@ export async function registerBusinessClientHandler(
       (scope) => scope.scope === "whatsapp_business_messaging",
     ).target_ids[0];
 
+    // Getting phone numbers & their ids
     const { data: phoneNumbers } = await getPhoneNumbersFromWABA(
       wabaId,
       accessToken,
@@ -45,19 +48,25 @@ export async function registerBusinessClientHandler(
 
     const phone = phoneNumbers[0];
 
+    // Subscribing to webhook
     const subRes = await subscribeWABAToWebhook(wabaId, accessToken);
     log.trace("App subscription response: %o", subRes);
+
+    // Registering phone number
     const registerRes = await registerPhoneNumber(phone.id, accessToken);
     log.trace("Phone registration response: %o", registerRes);
 
+    // Saving settings
     await createWaSettings(orgId, {
       wabaId,
       phone: phone.display_phone_number.replace(/ /g, ""),
       phoneId: phone.id,
       accessToken,
+      type: WaConfigType.Automated,
+      appId: process.env.wa_app_id,
     });
-    log.info("Business client registered successfully");
 
+    log.info("Business client registered successfully");
     rep
       .status(200)
       .send({ message: "Business client registered successfully" });
