@@ -243,7 +243,7 @@ export const TakeSurveyLayoutWeb = ({
                           : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
                       }
                       alt="Logo"
-                      mih={isMobile ? 60 : 80}
+                      h={isMobile ? 60 : 80}
                     />
                   </Stack>
                 </Group>
