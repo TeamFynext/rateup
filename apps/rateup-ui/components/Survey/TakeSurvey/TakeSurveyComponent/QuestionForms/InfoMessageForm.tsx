@@ -5,8 +5,7 @@ export function InfoMessage() {
   const icon = <IconInfoCircle />;
   return (
     <Alert variant="light" color="blue" title="Use" icon={icon}>
-      Survey Introduction or Before we proceed to the next set of questions,
-      here&apos;s a brief message to help transition smoothly.
+      Insert non-respondable text into your survey!
     </Alert>
   );
 }
