@@ -117,8 +117,8 @@ const getContent = (title: string, desc: string) => {
   if (isHtml(title)) {
     return title;
   } else if (desc) {
-    return `<h2>${title}</h2><p> ${desc}</p>`;
+    return `<h3>${title}</h3><p> ${desc}</p>`;
   } else {
-    return `<h2>${title}</h2>`;
+    return `<h3>${title}</h3>`;
   }
 };
