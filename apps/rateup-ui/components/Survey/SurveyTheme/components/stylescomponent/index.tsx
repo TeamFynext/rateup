@@ -38,6 +38,7 @@ import InputStyles from "../InputStyles";
 import LogoStyles from "../LogoStyles";
 import CustomSwitch from "./CustomSwitch";
 import styles from "./StylesComponent.module.css";
+import DescStyles from "../DescStyles";
 
 type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
 interface StylesComponentProps {
@@ -290,6 +291,18 @@ function StylesComponent({
                   <HeaderStyles
                     currentStyles={
                       (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.title
+                    }
+                    setCurrentstyles={updateSelectedTabStyle}
+                  />
+                </Tabs.Panel>
+              )}
+
+              {availableStyleComponents.includes(SelectedItemEnum.SUBTITLE) && (
+                <Tabs.Panel value={SelectedItemEnum.SUBTITLE}>
+                  <DescStyles
+                    currentStyles={
+                      (selectedTabStyles as ThankyouTheme | WelcomeTheme)
+                        ?.subtitle
                     }
                     setCurrentstyles={updateSelectedTabStyle}
                   />

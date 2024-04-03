@@ -24,6 +24,7 @@ import modalStyles from "./ModalStyles.module.css";
 import { mapSmileyIcon } from "./SmileyRating";
 import dayjs from "dayjs";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { extractText, isHtml } from "../../../../utils";
 
 function ConfirmResponsesModal({
   opened,
@@ -68,7 +69,7 @@ function ConfirmResponsesModal({
               return (
                 <Stack key={question.id}>
                   <Title pt="sm" order={5}>
-                    {question.title[selectedLanguage]}
+                    {getContent(question.title[selectedLanguage])}
                   </Title>
                   {response ? (
                     <Text pb="sm">
@@ -310,3 +311,9 @@ function ConfirmResponsesModal({
 }
 
 export default ConfirmResponsesModal;
+
+const getContent = (title: string | boolean) => {
+  if (typeof title === "boolean") return title?.toString();
+  else if (isHtml(title)) return extractText(title);
+  else return title;
+};
