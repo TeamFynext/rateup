@@ -313,7 +313,7 @@ export function useUpdateSurveyPwdMutation(surveyId) {
     onSuccess: (res: any) => {
       notifications.show({
         id: "load-data",
-        color: res?.data?.isProtected ? "green" : "red",
+        color: "green",
         title: res?.data?.isProtected
           ? "Success"
           : "Disabled Password - Success",

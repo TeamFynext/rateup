@@ -1,4 +1,5 @@
 import {
+  Box,
   CheckIcon,
   Combobox,
   Grid,
@@ -13,12 +14,13 @@ import {
 import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import React, { useEffect, useState } from "react";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
-import { useTeamsByUser } from "../../../backend/team/team.query";
-import { SAVE_HOTKEY } from "../../../utils/constants";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
+import { useTeamsByUser } from "../../../../backend/team/team.query";
+import { SAVE_HOTKEY } from "../../../../utils/constants";
+import { RateupButtonBlue } from "../../../Button/RateupButtons";
+import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import styles from "./GeneralSettings.module.css";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
@@ -61,7 +63,16 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   }, [languages]);
 
   return (
-    <PaperLayout shadow="xl" p={"xl"} px={50}>
+    <PaperLayout
+      className={`${styles["general-settings-root-div"]} section-div`}
+    >
+      <Box className={styles["heading-and-desc-container"]}>
+        <h2 className={"settings-section-heading"}>Survey Settings</h2>
+        <p className={"settings-section-description"}>
+          Choose the teams to be added
+        </p>
+      </Box>
+
       <form
         onSubmit={settingsForm.onSubmit(handleSubmit)}
         onKeyDown={getHotkeyHandler([
@@ -70,64 +81,49 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
             (event: any) => settingsForm.onSubmit(handleSubmit)(event),
           ],
         ])}
+        className={styles["form"]}
       >
-        <Stack gap={"lg"}>
-          {enabledModules.includes("name") && (
-            <Grid columns={10}>
-              <Grid.Col span={4}>
-                <Text>Survey Name :</Text>
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <ContainedTextField
-                  withAsterisk
-                  placeholder="Enter Survey name"
-                  required
-                  {...settingsForm.getInputProps("title")}
-                />
-              </Grid.Col>
-            </Grid>
-          )}
-          {enabledModules.includes("language") && (
-            <Grid columns={10}>
-              <Grid.Col span={4}>
-                <Text>Survey Languages :</Text>
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <MultiSelectCreatable
-                  value={languages}
-                  setValue={setLanguages}
-                  errors={settingsForm.errors.languages}
-                />
-              </Grid.Col>
-            </Grid>
-          )}
-          {enabledModules.includes("teams") && (
-            <Grid columns={10}>
-              <Grid.Col span={4}>
-                <Text>Select Teams :</Text>
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <MultiSelect
-                  radius="md"
-                  placeholder="Select teams"
-                  data={teamOptions}
-                  {...settingsForm.getInputProps("teams")}
-                  error={settingsForm.errors.teams}
-                />
-              </Grid.Col>
-            </Grid>
-          )}
-          <Grid columns={10}>
-            <Grid.Col span={4}></Grid.Col>
-            <Grid.Col span={6}>
-              <RateupButtonBlue
-                title="Save Changes"
-                type={"submit"}
-                loading={isLoading}
-              />
-            </Grid.Col>
-          </Grid>
-        </Stack>
+        {enabledModules.includes("name") && (
+          <Stack className={styles["form-input-container"]}>
+            <h3>Survey Name</h3>
+            <ContainedTextField
+              className={styles["form-input"]}
+              withAsterisk
+              placeholder="Enter Survey name"
+              required
+              {...settingsForm.getInputProps("title")}
+            />
+          </Stack>
+        )}
+        {enabledModules.includes("language") && (
+          <Stack className={styles["form-input-container"]}>
+            <h3>Survey Languages</h3>
+            <MultiSelectCreatable
+              value={languages}
+              setValue={setLanguages}
+              errors={settingsForm.errors.languages}
+            />
+          </Stack>
+        )}
+        {enabledModules.includes("teams") && (
+          <Stack className={styles["form-input-container"]}>
+            <h3>Select Teams</h3>
+            <MultiSelect
+              radius="md"
+              placeholder="Select teams"
+              data={teamOptions}
+              {...settingsForm.getInputProps("teams")}
+              error={settingsForm.errors.teams}
+            />
+          </Stack>
+        )}
+
+        <RateupButtonBlue
+          className={styles["save-changes-btn"]}
+          title="Save Changes"
+          type={"submit"}
+          loading={isLoading}
+        />
       </form>
     </PaperLayout>
   );

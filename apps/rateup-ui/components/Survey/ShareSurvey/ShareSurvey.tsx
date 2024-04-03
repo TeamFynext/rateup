@@ -240,14 +240,8 @@ const ShareSurvey = ({
   );
 
   return (
-    <Stack p={2} h={"fit-content"}>
-      <PaperLayout
-        p="30px"
-        style={{
-          boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-          overflowX: "auto",
-        }}
-      >
+    <Stack p={"0.625rem"} h={"fit-content"}>
+      <PaperLayout>
         <Group justify="space-between">
           <Switch
             fw={500}
@@ -341,9 +335,9 @@ const ShareSurvey = ({
           />
         </Center>
       </FormModalLayout>
-      <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>
+      <PaperLayout opacity={disableShare ? 0.5 : 1}>
         <Group gap="lg">
-          <Stack style={{ minWidth: 300, flex: 1 }} p="md">
+          <Stack style={{ minWidth: 300, flex: 1 }}>
             <Title order={4}>Share Survey</Title>
             <Group>
               <ContainedSelection
@@ -384,7 +378,7 @@ const ShareSurvey = ({
             <CopyLinkComponent value={shareUrl} disabled={disableShare} />
           </Stack>
 
-          <Stack style={{ minWidth: 300, flex: 1 }} p="md">
+          <Stack style={{ minWidth: 300, flex: 1 }}>
             <Title order={4} style={{ textAlign: "center" }}>
               How would you like to survey people?
             </Title>

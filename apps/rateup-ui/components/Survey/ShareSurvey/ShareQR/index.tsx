@@ -91,7 +91,7 @@ const ShareQR = ({
   }, [logoTabPanelState]);
 
   return (
-    <PaperLayout shadow="sm" p="xl" style={{ ...sx }}>
+    <PaperLayout style={{ ...sx }}>
       <>
         <Title order={1} mb="sm" pb="md" className={styles["heading"]}>
           Generate & Share QR Code
