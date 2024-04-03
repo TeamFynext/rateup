@@ -16,6 +16,7 @@ import {
   MultiSelect,
   useMantineTheme,
   ActionIcon,
+  ScrollAreaAutosize,
 } from "@mantine/core";
 import {
   LogicAction,
@@ -36,6 +37,7 @@ import {
   getResponses,
 } from "../../../utils/survey/logic/logic.utils";
 import { notifications } from "@mantine/notifications";
+import { extractText, isHtml } from "../../../utils";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -103,29 +105,31 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
 
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
-      <Stack gap={"xs"} style={{ overflowY: "auto", height: "100%" }}>
-        {currentLogicJumps.map((currentLogic, index) => (
-          <ConditionBlock
-            key={index}
-            selectedQ={selectedQ}
-            questions={questions}
-            currentLogicJump={currentLogic}
-            setCurrentLogicJump={(newLogicJump) =>
-              handlers.setItem(index, newLogicJump)
-            }
-            handleDelete={() => handlers.remove(index)}
-          />
-        ))}
-        <Button
-          variant="outline"
-          leftSection={<IconPlus />}
-          maw={200}
-          color="var(--tertiary-color)"
-          onClick={handleAddNewJump}
-        >
-          Add Logic Jump
-        </Button>
-      </Stack>
+      <ScrollAreaAutosize mah={"80dvh"}>
+        <Stack gap={"xs"} mr={"sm"}>
+          {currentLogicJumps.map((currentLogic, index) => (
+            <ConditionBlock
+              key={index}
+              selectedQ={selectedQ}
+              questions={questions}
+              currentLogicJump={currentLogic}
+              setCurrentLogicJump={(newLogicJump) =>
+                handlers.setItem(index, newLogicJump)
+              }
+              handleDelete={() => handlers.remove(index)}
+            />
+          ))}
+          <Button
+            variant="outline"
+            leftSection={<IconPlus />}
+            maw={200}
+            color="var(--tertiary-color)"
+            onClick={handleAddNewJump}
+          >
+            Add Logic Jump
+          </Button>
+        </Stack>
+      </ScrollAreaAutosize>
 
       <Group justify="space-between">
         <RateupButtonSecondary
@@ -174,7 +178,7 @@ function ConditionBlock({
     { label: "End Survey", value: LogicAction.EndSurvey },
     ...possibleQuestions?.map((q) => ({
       label: `JUMP TO => ${questions.findIndex((q1) => q1.id === q.id) + 1}) ${
-        q.title[selectedLanguage] || q.description[selectedLanguage]
+        getContent(q.title[selectedLanguage]) || q.description[selectedLanguage]
       }`, // TODO: truncate
       value: q.id,
     })),
@@ -270,6 +274,10 @@ function ConditionBlock({
 }
 
 export default LogicEditor;
+const getContent = (title: string) => {
+  if (isHtml(title)) return extractText(title);
+  else return title;
+};
 // TODO: add checks for conflicts in logicJumps?
 //       for example if there exists multiple conditions which matches a single response & has different actions,
 //       then the logic is ambiguous and should not be allowed
