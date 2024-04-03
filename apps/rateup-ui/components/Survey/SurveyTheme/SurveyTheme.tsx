@@ -51,11 +51,16 @@ function SurveyTheme({ survey }) {
     const common = [SelectedItemEnum.BACKGROUND, SelectedItemEnum.TITLE];
     switch (selectedPageTab) {
       case ThemeTabEnum.WELCOME:
-        return [...common, SelectedItemEnum.LOGO, SelectedItemEnum.BUTTON];
+        return [
+          ...common,
+          SelectedItemEnum.SUBTITLE,
+          SelectedItemEnum.LOGO,
+          SelectedItemEnum.BUTTON,
+        ];
       case ThemeTabEnum.SURVEY:
         return [...common, SelectedItemEnum.BUTTON, SelectedItemEnum.INPUT];
       case ThemeTabEnum.THANKYOU:
-        return [...common, SelectedItemEnum.LOGO];
+        return [...common, SelectedItemEnum.SUBTITLE, SelectedItemEnum.LOGO];
       default:
         return [];
     }

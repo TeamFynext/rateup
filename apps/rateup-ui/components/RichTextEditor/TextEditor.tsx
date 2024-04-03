@@ -1,10 +1,12 @@
-import { Link, RichTextEditor } from "@mantine/tiptap";
+import { useEffect } from "react";
+
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect } from "react";
 import { Color } from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
+import { Link, RichTextEditor } from "@mantine/tiptap";
+
 import { isHtml } from "../../utils";
 
 export default function TextEditor({ form, selectedLanguage }) {
@@ -22,8 +24,10 @@ export default function TextEditor({ form, selectedLanguage }) {
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content: content,
+    parseOptions: {
+      preserveWhitespace: "full",
+    },
   });
-
   useEffect(() => {
     if (editor) {
       form.setFieldValue(`title.${selectedLanguage}`, editor?.getHTML());
@@ -34,10 +38,12 @@ export default function TextEditor({ form, selectedLanguage }) {
   }, [editor?.getHTML()]);
 
   useEffect(() => {
-    if (editor) {
-      editor.commands.setContent(content);
+    if (editor && !form.isDirty()) {
+      editor.commands.setContent(content, false, {
+        preserveWhitespace: "full",
+      });
     }
-  }, [selectedLanguage]);
+  }, [content, editor, form, selectedLanguage]);
 
   return (
     <RichTextEditor editor={editor} mr={"lg"}>

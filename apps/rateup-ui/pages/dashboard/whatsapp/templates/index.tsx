@@ -46,7 +46,7 @@ export default function Template() {
     router.push("/dashboard/whatsapp/flows");
     return;
   }
-  if (isPending) return <RateupLoader h={"100dvh"} />;
+  if (isPending) return <RateupLoader h={"90dvh"} />;
   // TODO: handle error
   function handleCreateClick() {
     router.push(`/dashboard/whatsapp/templates/create`);
