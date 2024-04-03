@@ -10,11 +10,17 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
         monthlySurveyResponses:
           stat === "survey" ? { increment: 1 } : undefined,
         monthlyMenuViews: stat === "menu" ? { increment: 1 } : undefined,
+        surveyResponsesCount: stat === "survey" ? { increment: 1 } : undefined,
+        menuViewsCount: stat === "menu" ? { increment: 1 } : undefined,
       },
       create: {
         orgId: orgId,
         monthlySurveyResponses: stat === "survey" ? 1 : 0,
         monthlyMenuViews: stat === "menu" ? 1 : 0,
+
+        surveyResponsesCount: stat === "survey" ? 1 : 0,
+        menuViewsCount: stat === "menu" ? 1 : 0,
+
         //TODO: improve
         // Add other fields with default values as needed
       },

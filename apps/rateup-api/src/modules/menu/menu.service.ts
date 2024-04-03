@@ -8,6 +8,7 @@ import {
   updateMenuLandingInput,
 } from "./menu.schema";
 import { getShortUrlId } from "../../utils/commnUtils";
+import { updateMonthlyStat } from "../stats/stats.service";
 
 export async function createMenu(data: CreateMenuInput) {
   if (data.teamId === undefined) return;
@@ -404,5 +405,21 @@ export async function updateVisitedMenuLanding(id: string) {
     },
     update: { visited: { increment: 1 } },
   });
+
+  const menu = await prisma.menu.findUnique({
+    where: {
+      id: menuLandingVisited.menuId,
+    },
+    include: {
+      team: {
+        select: {
+          orgId: true,
+        },
+      },
+    },
+  });
+
+  menuLandingVisited && menu && updateMonthlyStat("menu", menu?.team.orgId);
+
   return menuLandingVisited;
 }
