@@ -21,6 +21,7 @@ export async function callWhatsappApi(
       ...headAuth,
       ...headerConfig,
     },
+    validateStatus: () => true,
     ...otherConfig,
   };
   log.trace(
@@ -29,10 +30,12 @@ export async function callWhatsappApi(
     config.url,
     config.data,
   );
-  try {
-    return await axios(config);
-  } catch (error) {
-    log.error("Error calling WhatsApp API: %o", error);
-    throw error;
+  const res = await axios(config);
+  if (res.status.toString().startsWith("2")) {
+    return res;
+  } else {
+    log.error("Error calling WhatsApp API: %o", res);
+    log.error("\nError Response => %o", res.data);
+    throw new Error(`Error calling WhatsApp API: ${res.status}`);
   }
 }

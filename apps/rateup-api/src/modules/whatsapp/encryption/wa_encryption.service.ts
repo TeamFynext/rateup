@@ -10,6 +10,7 @@ export async function setBusinessPublicKey(
   phoneId: string,
   accessToken: string,
 ) {
+  log.trace("Setting business public key: %s", businessPublicKey);
   const data = qs.stringify({
     business_public_key: businessPublicKey,
   });

@@ -10,6 +10,7 @@ import {
   getFlowFromDb,
   handleDecryptedFlowRequest,
 } from "../flows/flow.service";
+import { WhatsappSettings } from "@prisma/client";
 
 export function generateKeyPairsForWaEncryption(passphrase: string) {
   const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
@@ -117,6 +118,26 @@ export const FlowEndpointException = class FlowEndpointException extends Error {
   }
 };
 
+async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
+  const { phoneId, accessToken, orgId } = waSettings;
+  const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
+  log.trace("Passphrase: %s", passphrase);
+
+  if (!passphrase) {
+    throw new Error("WA_ENCRYPTION_PASSPHRASE is not set in .env file");
+  }
+
+  log.trace("Generating new key pairs for encryption");
+  const encryption = generateKeyPairsForWaEncryption(passphrase);
+  log.trace("Generated key pairs: %o", encryption);
+
+  await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
+
+  log.trace("Updating encryption keys in database");
+  await updateWaSettings(orgId, { encryption });
+  log.trace("Encryption keys updated successfully");
+}
+
 interface WaEncryptionKeys {
   publicKey: string;
   privateKey: string;
@@ -129,32 +150,28 @@ export async function handleFlowResponse(
   }>,
   res: FastifyReply,
 ) {
-  log.trace("Received request to handle flow response \n%o", req.body);
+  log.trace(
+    "Received request to handle flow response \n%o\n%o",
+    req.url,
+    req.body,
+  );
   const { orgId } = req.params;
 
   let { encryption: e, phoneId, accessToken } = await getWaSettings(orgId);
   let encryption = e as unknown as WaEncryptionKeys;
   if (!encryption) {
     log.warn("Encryption keys not found for org: %s", orgId);
-    const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
-    log.trace("Passphrase: %s", passphrase);
 
-    if (!passphrase) {
-      throw new Error("WA_ENCRYPTION_PASSPHRASE is not set in .env file");
+    if (!process.env.wa_flow_encryption) {
+      throw new Error("WA_FLOW_ENCRYPTION is not set in .env file");
     }
 
-    log.trace("Generating new key pairs for encryption");
-    encryption = generateKeyPairsForWaEncryption(passphrase);
-    log.trace("Generated key pairs: %o", encryption);
+    const encryption: WaEncryptionKeys = JSON.parse(
+      process.env.wa_flow_encryption,
+    );
 
-    log.trace("Setting business public key");
     await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
-    log.trace("Business public key set successfully");
-
-    log.trace("Updating encryption keys in database");
     await updateWaSettings(orgId, { encryption });
-    log.trace("Encryption keys updated successfully");
-    return;
   }
   const { privateKey, passphrase } = encryption as unknown as WaEncryptionKeys;
 
