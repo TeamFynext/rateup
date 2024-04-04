@@ -15,6 +15,7 @@ import { createTrialSubscription } from "../subscription/subscription.service";
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { cloneSurvey } from "../survey/survey.service";
+import { cloneMenu } from "../menu/menu.service";
 
 const prisma = new PrismaClient();
 
@@ -86,11 +87,13 @@ export async function createUserSignup({
       //create an initial default survey
       let teamIds = [team.id];
       let surveyId = process.env.INITIAL_SAMPLE_SURVEY_ID;
+      let clone;
       surveyId &&
-        (await cloneSurvey(surveyId, teamMember.userId, teamIds, true));
+        (clone = await cloneSurvey(surveyId, teamMember.userId, teamIds, true));
 
       //create an initial default menu
       let menuId = process.env.INITIAL_SAMPLE_MENU_ID;
+      menuId && (await cloneMenu(menuId, team.id, clone.teams[0].id));
     }
 
     // Commit the transaction

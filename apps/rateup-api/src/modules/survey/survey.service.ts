@@ -133,6 +133,9 @@ export async function cloneSurvey(
     const createClonedSurvey = async () => {
       const cloned = await prisma.survey.create({
         data: clonedSurvey,
+        include: {
+          teams: true,
+        },
       });
       return cloned;
     };
