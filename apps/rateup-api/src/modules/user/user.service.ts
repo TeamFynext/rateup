@@ -93,7 +93,9 @@ export async function createUserSignup({
 
       //create an initial default menu
       let menuId = process.env.INITIAL_SAMPLE_MENU_ID;
-      menuId && (await cloneMenu(menuId, team.id, clone.teams[0].id));
+      menuId &&
+        clone.teams[0].id &&
+        (await cloneMenu(menuId, team.id, clone.teams[0].id));
     }
 
     // Commit the transaction
