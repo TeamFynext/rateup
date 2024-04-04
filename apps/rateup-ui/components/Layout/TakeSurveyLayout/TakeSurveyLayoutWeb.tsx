@@ -46,7 +46,7 @@ export const TakeSurveyLayoutWeb = ({
     isLoading: boolean;
   };
 
-  const { surveyId } = useRouter().query as { surveyId: string };
+  const surveyTeamMapId = survey?.surveyTeamMapId;
   const { start } = useRouter().query as { start?: boolean };
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -75,16 +75,16 @@ export const TakeSurveyLayoutWeb = ({
   useEffect(() => {
     if (survey?.welcomePageEnabled) {
       setStartClicked(false);
-      surveyId && updateVisited.mutate(surveyId);
+      surveyTeamMapId && updateVisited.mutate(surveyTeamMapId);
     } else {
       setStartClicked(true);
-      surveyId && updateVisited.mutate(surveyId);
-      surveyId && updateStarted.mutate(surveyId);
+      surveyTeamMapId && updateVisited.mutate(surveyTeamMapId);
+      surveyTeamMapId && updateStarted.mutate(surveyTeamMapId);
     }
   }, [survey?.welcomePageEnabled]);
 
   const handleStartClick = () => {
-    surveyId && updateStarted.mutate(surveyId);
+    surveyTeamMapId && updateStarted.mutate(surveyTeamMapId);
     setStartClicked(true);
   };
 
