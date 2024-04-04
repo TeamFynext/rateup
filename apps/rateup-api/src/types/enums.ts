@@ -206,3 +206,9 @@ export enum WaConfigType {
   Manual = "Manual",
   Automated = "Automated", // through meta login
 }
+
+export enum ChatBotDataSourceType {
+  WEB = "WEB",
+  FILE = "FILE",
+  // API = "API"
+}

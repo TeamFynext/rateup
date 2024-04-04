@@ -11,6 +11,7 @@ import { log } from "./utils/logger";
 import Passwordless from "supertokens-node/recipe/passwordless";
 import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery";
 import { SwaggerOptions } from "@fastify/swagger";
+import jwt from "supertokens-node/recipe/jwt";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -304,6 +305,7 @@ export const SuperTokensConfig: TypeInput = {
       },
     }),
     Dashboard.init(),
+    jwt.init(),
   ],
 };
 
