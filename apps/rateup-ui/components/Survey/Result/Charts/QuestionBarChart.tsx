@@ -17,6 +17,7 @@ import { ChoiceTypeQuestions } from "../../../../utils/constants";
 import SurveySummaryNew from "../SurveySummaryNew";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { stringToColour } from "../../../../utils/essential";
+import { getContent } from "../../../../utils";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
@@ -140,7 +141,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
             {no}.{" "}
           </Text>
           <Text fw={800} c={"dark.3"}>
-            {question}
+            {getContent(question)}
           </Text>
         </Flex>
         <Badge variant="dot">{questionType}</Badge>

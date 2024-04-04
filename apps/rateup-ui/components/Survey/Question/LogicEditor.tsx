@@ -1,43 +1,45 @@
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
 import { useContext, useEffect, useState } from "react";
-import {
-  useQuestionUpdateMutation,
-  useQuestions,
-} from "../../../backend/surveys/questions/questions.query";
+
 import { useRouter } from "next/router";
+import { useListState } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
+  ActionIcon,
+  Button,
   Center,
   Group,
+  MultiSelect,
+  ScrollAreaAutosize,
   Select,
   Stack,
-  Button,
   Text,
-  MultiSelect,
   useMantineTheme,
-  ActionIcon,
-  ScrollAreaAutosize,
 } from "@mantine/core";
+
+import { getContent } from "../../../utils";
+import { QuestionTabsEnum } from "../EditSurvey";
+import { logicSupportedTypes } from "../../../utils/data";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import {
   LogicAction,
   LogicCondition,
   QuestionType as Q,
 } from "../../../types/enums";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { QuestionTabsEnum } from "../EditSurvey";
-import { logicSupportedTypes } from "../../../utils/data";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useListState } from "@mantine/hooks";
 import {
   getConditions,
   getResponses,
 } from "../../../utils/survey/logic/logic.utils";
-import { notifications } from "@mantine/notifications";
-import { extractText, isHtml } from "../../../utils";
+import {
+  useQuestions,
+  useQuestionUpdateMutation,
+} from "../../../backend/surveys/questions/questions.query";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -125,6 +127,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
             maw={200}
             color="var(--tertiary-color)"
             onClick={handleAddNewJump}
+            mb={4}
           >
             Add Logic Jump
           </Button>
@@ -274,10 +277,6 @@ function ConditionBlock({
 }
 
 export default LogicEditor;
-const getContent = (title: string) => {
-  if (isHtml(title)) return extractText(title);
-  else return title;
-};
 // TODO: add checks for conflicts in logicJumps?
 //       for example if there exists multiple conditions which matches a single response & has different actions,
 //       then the logic is ambiguous and should not be allowed
