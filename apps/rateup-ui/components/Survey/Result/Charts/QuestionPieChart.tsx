@@ -17,6 +17,7 @@ import {
 } from "@mantine/core";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Heading from "../../../styled/Heading/Heading";
+import { getContent } from "../../../../utils";
 interface DataItem {
   name: string;
   value: number;
@@ -149,7 +150,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
             {no}.
           </Text>
           <Text fw={800} c={"dark.3"}>
-            {question}
+            {getContent(question)}
           </Text>
         </Flex>
         <Badge variant="dot">{type}</Badge>
