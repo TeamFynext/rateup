@@ -124,6 +124,7 @@ export function QuestionDetailedView({
       } else {
         if (incompleteLanguages.length > 0) {
           setSelectedLanguage(incompleteLanguages[0]);
+          showErrorToast("The choice count does not match across languages");
           return "error";
         }
         if (imageToDelete?.length > 0) {
@@ -193,12 +194,15 @@ export function QuestionDetailedView({
       />
 
       <Stack style={{ height: "100%" }} ref={formRef}>
-        <ScrollArea style={{ flex: "1 1 0" }} pr={"xs"}>
+        <ScrollArea style={{ flex: "1 1 0" }}>
           <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
             {getQuestionTypeLabel(question.type)}
           </Badge>
           <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
-            <Stack style={{ minHeight: "150px", height: "100%", flex: 1 }}>
+            <Stack
+              style={{ minHeight: "150px", height: "100%", flex: 1 }}
+              mr={"xs"}
+            >
               <TextEditor form={form} selectedLanguage={selectedLanguage} />
               <ExtraProps
                 form={form}

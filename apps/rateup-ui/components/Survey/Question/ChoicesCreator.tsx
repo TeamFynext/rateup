@@ -248,6 +248,9 @@ export function ChoicesCreator({
               }}
               radius={"md"}
               allowDeselect={false}
+              comboboxProps={{
+                withinPortal: false,
+              }}
             />
           )}
           {image && (
@@ -527,6 +530,9 @@ function Choice({
             }}
             radius={"md"}
             allowDeselect={false}
+            comboboxProps={{
+              withinPortal: false,
+            }}
           />
         </Flex>
       ) : (
