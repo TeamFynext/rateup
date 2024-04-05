@@ -73,9 +73,10 @@ export function useEditTeamMutation(
   onlyTag?: boolean,
 ) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
-    onSuccess: () => {
+    onSuccess: (res) => {
       notifications.show({
         id: "load-data",
         color: "teal",
@@ -91,6 +92,7 @@ export function useEditTeamMutation(
       if (surveyId) {
         queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       }
+      router.push(`/dashboard/teams/${res?.data?.data?.code}`);
     },
     onError: (error: any) => {
       console.error("Error Team Update:", error.message);
