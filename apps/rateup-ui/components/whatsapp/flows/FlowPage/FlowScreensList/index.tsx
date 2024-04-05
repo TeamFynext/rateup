@@ -11,13 +11,11 @@ import ScreenListItem from "./ScreenListItem";
 import styles from "./FlowScreensList.module.css";
 import {
   IconAlertTriangle,
-  IconChevronDown,
-  IconChevronUp,
   IconChevronsDown,
   IconChevronsUp,
   IconPlus,
 } from "@tabler/icons-react";
-import { useDisclosure, useListState } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import CreateFlowScreenModal from "./CreateFlowScreenModal";
 import { useContext, useState } from "react";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
@@ -36,7 +34,6 @@ import { FlowMaxScreens } from "../../../whatsappConfig";
 import { showErrorToast } from "../../../../../utils/notifications";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 
 interface FlowScreensListProps {
   onAddElementClick: (screenId: string) => void;
@@ -144,6 +141,15 @@ function FlowScreensList({
           </Text>
         </Group>
         <Group gap={8}>
+          <Tooltip label="Add Screen" openDelay={500}>
+            <ActionIcon
+              onClick={handleCreateScreenClick}
+              variant="subtle"
+              disabled={!flowEditable}
+            >
+              <IconPlus />
+            </ActionIcon>
+          </Tooltip>
           <Tooltip label="Open all screens" openDelay={500}>
             <ActionIcon variant={"subtle"} onClick={handleOpenAll}>
               <IconChevronsDown />
@@ -157,13 +163,6 @@ function FlowScreensList({
           </Tooltip>
         </Group>
       </Group>
-      <RateupButtonBlue
-        onClick={handleCreateScreenClick}
-        title={"Add Screen"}
-        rightIcon={<IconPlus size="1rem" />}
-        size="md"
-        disabled={!flowEditable}
-      />
       <DragDropContext onDragEnd={onDragEnd}>
         <Box className={styles["screens-list-div"]}>
           {flowJson.screens.map((screen) => {

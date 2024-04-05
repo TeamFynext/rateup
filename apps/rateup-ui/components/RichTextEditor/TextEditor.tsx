@@ -33,13 +33,15 @@ export default function TextEditor({ form, selectedLanguage }) {
   });
 
   useEffect(() => {
-    if (editor && !form.isDirty()) {
-      editor.commands.setContent(content, null);
+    if (editor) {
+      editor.commands.setContent(content, null, {
+        preserveWhitespace: "full",
+      });
     }
-  }, [content, editor, form, selectedLanguage]);
+  }, [content, editor, selectedLanguage]);
 
   return (
-    <RichTextEditor editor={editor} mr={"lg"}>
+    <RichTextEditor editor={editor}>
       <RichTextEditor.Toolbar sticky>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.ColorPicker
@@ -59,6 +61,9 @@ export default function TextEditor({ form, selectedLanguage }) {
               "#fab005",
               "#fd7e14",
             ]}
+            popoverProps={{
+              withinPortal: false,
+            }}
           />
           <RichTextEditor.UnsetColor />
         </RichTextEditor.ControlsGroup>

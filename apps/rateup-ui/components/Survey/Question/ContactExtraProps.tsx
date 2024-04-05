@@ -1,6 +1,6 @@
 import { Flex, Paper, Stack, Switch } from "@mantine/core";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import { ContainedTextArea } from "../../input/ContainedInput/ContainedInput";
 import { QuestionType } from "../../../types/enums";
 
@@ -34,7 +34,7 @@ const ContactExtraProps = ({ form }) => {
       [selectedLanguage]: features,
     });
   }
-  useEffect(() => {
+  useCallback(() => {
     updateFeatures(features);
   }, [features]);
   return (
