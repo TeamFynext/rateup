@@ -148,6 +148,15 @@ export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
   return res.data as string;
 }
 
+export async function getPhoneNumberFromSurveyTeamMapId(
+  surveyTeamMapId: string,
+) {
+  const res = await axiosClientIP.get(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/phone`,
+  );
+  return res.data as { phone: string };
+}
+
 export async function deleteSurvey(surveyId: string) {
   return await axiosClient.delete(`${SURVEYURL}/${surveyId}`);
 }

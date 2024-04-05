@@ -14,6 +14,7 @@ import ReportBug from "../ReportBug";
 import styles from "./Layout.module.css";
 import { useUserInfo } from "../../backend/user/user.query";
 import { NavControlContext } from "../../context/NavControlContext";
+import ChatBot from "../../pages/dashboard/chatbot";
 // @ts-ignore
 export default function Layout({ children }) {
   const router = useRouter();
@@ -114,6 +115,7 @@ export default function Layout({ children }) {
               </NavControlContext.Provider>
             </Flex>
           </Flex>
+          {/* <ChatBot/> */}
           <FocusMode focus={focus} toggleFocus={toggleFocus} />
           <ReportBug />
         </Flex>

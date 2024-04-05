@@ -24,6 +24,7 @@ import {
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
   getSurveyWithQuestions,
+  getPhoneNumberFromSurveyTeamMapId,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -72,6 +73,13 @@ export const usePublicSurvey = (surveyId: string) => {
     queryFn: () => getPublicSurvey(surveyId),
   });
 };
+
+export const usePhoneFromSurveyTeamMapId = (surveyTeamMapId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: ["waSettings"],
+    queryFn: () => getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId),
+  });
 
 export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
   useQuery({
@@ -313,7 +321,7 @@ export function useUpdateSurveyPwdMutation(surveyId) {
     onSuccess: (res: any) => {
       notifications.show({
         id: "load-data",
-        color: res?.data?.isProtected ? "green" : "red",
+        color: "green",
         title: res?.data?.isProtected
           ? "Success"
           : "Disabled Password - Success",

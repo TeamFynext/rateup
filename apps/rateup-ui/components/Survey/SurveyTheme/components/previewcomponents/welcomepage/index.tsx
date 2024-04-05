@@ -166,33 +166,47 @@ export default function WelcomePageThemeView({
               </Box>
             </Tooltip>
             {/* //--------------------------- */}
-
-            <Textarea
-              className={lexend.className}
-              placeholder={"Please fill the survey"}
-              variant="unstyled"
-              onClick={(e) => e.stopPropagation()}
-              onFocus={(e) => {
-                e.stopPropagation(), setSelectedType(SelectedItemEnum.SUBTITLE);
-              }}
-              name="descText"
-              styles={{
-                input: {
-                  ...subtitleStyles,
-                  fontFamily: "inherit",
-                },
-              }}
-              mt="lg"
-              w={"80%"}
-              ta={"center"}
-              value={subtitle}
-              onChange={(e) =>
-                updateThemeText("subtitle", {
-                  ...welcomeTheme.subtitle,
-                  subtitle: e.target.value,
-                })
-              }
-            />
+            <Tooltip label="Edit subtitle">
+              <Box className={classes.titleBox} mt={20} w={"50%"}>
+                <ActionIcon
+                  variant="default"
+                  radius="lg"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation(),
+                      setSelectedType(SelectedItemEnum.SUBTITLE);
+                  }}
+                  className={classes.actionIcon}
+                >
+                  <IconEdit style={{ width: "70%", height: "70%" }} />
+                </ActionIcon>
+                <Textarea
+                  className={lexend.className}
+                  placeholder={"Please fill the survey"}
+                  variant="unstyled"
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => {
+                    e.stopPropagation(),
+                      setSelectedType(SelectedItemEnum.SUBTITLE);
+                  }}
+                  name="descText"
+                  styles={{
+                    input: {
+                      ...subtitleStyles,
+                      fontFamily: "inherit",
+                    },
+                  }}
+                  ta={"center"}
+                  value={subtitle}
+                  onChange={(e) =>
+                    updateThemeText("subtitle", {
+                      ...welcomeTheme.subtitle,
+                      subtitle: e.target.value,
+                    })
+                  }
+                />
+              </Box>
+            </Tooltip>
 
             <Box
               className={classes.buttonBox}

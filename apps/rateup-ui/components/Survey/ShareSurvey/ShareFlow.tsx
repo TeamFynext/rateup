@@ -21,6 +21,7 @@ import { FlowShareTemplateEditor } from "./FlowShareTemplateEditor";
 import { modals } from "@mantine/modals";
 import TagManager from "./TagManager";
 import NothingFound from "../../NothingFound/NothingFound";
+import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
 
 // TODO: add tag support
 export const ShareFlow = ({
@@ -42,12 +43,15 @@ export const ShareFlow = ({
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
 
   const queryClient = useQueryClient();
+  const { data: waSettings } = useWaSettings();
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
     if (
       survey.type === SurveyType.WhatsApp ||
       survey.type === SurveyType.WaFlow
     ) {
+      if (!waSettings) return;
+      const phone = waSettings.phone?.replace("+", "").replaceAll(" ", "");
       if (shortUrlId) {
         setShareUrl(
           `${process.env.NEXT_PUBLIC_FRONTEND_URL}/was/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
@@ -58,9 +62,8 @@ export const ShareFlow = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyShareUrl(surveyTeamMapId));
+          setShareUrl(generateWaSurveyShareUrl(phone, surveyTeamMapId));
         }
-
       }
     }
   }, [
@@ -70,6 +73,7 @@ export const ShareFlow = ({
     shortUrlId,
     survey?.type,
     survey?.getLocation,
+    waSettings,
   ]);
 
   const surveyUpdateMutation = useUpdateSurveyMutation();

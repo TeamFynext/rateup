@@ -37,6 +37,7 @@ import SurveyContext from "../../../context/SurveyContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 import RateupLoader from "../../Loaders/RateupLoader";
+import { getContent } from "../../../utils";
 //import end
 //.............................................................................
 // default export component start
@@ -112,11 +113,11 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
                 <Stack>
                   <Flex justify="space-between">
                     <Text c="dark.3" fw={900} w={"85%"}>
-                      {
+                      {getContent(
                         q.title[
                           selectedLanguage ? selectedLanguage : defaultLanguage
-                        ]
-                      }
+                        ],
+                      )}
                     </Text>
                     <Badge variant="dot">{q.type}</Badge>
                   </Flex>

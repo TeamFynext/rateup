@@ -14,7 +14,7 @@ import { useQuestions } from "../../../../backend/surveys/questions/questions.qu
 import { useSurvey } from "../../../../backend/surveys/surveys.query";
 import { WaFlowStatus } from "../../../../types/enums";
 import { WaFlowJson, WaFlowMap } from "../../../../types/global";
-import SurveySettings from "../../../Survey/Settings/SurveySettings";
+import SurveySettings from "../../../Survey/Settings";
 import {
   getFlowElementJsonFromQuestion,
   updateFlowJsonNavigationAndDataPassing,

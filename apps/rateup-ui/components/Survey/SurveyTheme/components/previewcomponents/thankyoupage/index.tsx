@@ -165,34 +165,48 @@ export default function ThankyouPageThemeView({
                 </Box>
               </Tooltip>
               {/* //--------------------------- */}
-
-              <Textarea
-                className={lexend.className}
-                onChange={(e) =>
-                  updateThemeText("subtitle", {
-                    ...thankyouTheme.subtitle,
-                    subtitle: e.target.value,
-                  })
-                }
-                value={subtitle}
-                placeholder={"Please fill the survey"}
-                variant="unstyled"
-                onClick={(e) => e.stopPropagation()}
-                onFocus={(e) => {
-                  e.stopPropagation(),
-                    setSelectedType(SelectedItemEnum.SUBTITLE);
-                }}
-                name="descText"
-                styles={{
-                  input: {
-                    ...subtitleStyles,
-                    fontFamily: "inherit",
-                  },
-                }}
-                mt="lg"
-                w={"80%"}
-                ta={"center"}
-              />
+              <Tooltip label="Edit subtitle">
+                <Box className={classes.titleBox} mt={20} w={"50%"}>
+                  <ActionIcon
+                    variant="default"
+                    radius="lg"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation(),
+                        setSelectedType(SelectedItemEnum.SUBTITLE);
+                    }}
+                    className={classes.actionIcon}
+                  >
+                    <IconEdit style={{ width: "70%", height: "70%" }} />
+                  </ActionIcon>
+                  <Textarea
+                    className={lexend.className}
+                    onChange={(e) =>
+                      updateThemeText("subtitle", {
+                        ...thankyouTheme.subtitle,
+                        subtitle: e.target.value,
+                      })
+                    }
+                    value={subtitle}
+                    placeholder={"Please fill the survey"}
+                    variant="unstyled"
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={(e) => {
+                      e.stopPropagation(),
+                        setSelectedType(SelectedItemEnum.SUBTITLE);
+                    }}
+                    name="descText"
+                    styles={{
+                      input: {
+                        ...subtitleStyles,
+                        fontFamily: "inherit",
+                      },
+                    }}
+                    mt="lg"
+                    ta={"center"}
+                  />
+                </Box>
+              </Tooltip>
             </Flex>
           </form>
         </BackgroundImage>

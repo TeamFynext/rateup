@@ -97,3 +97,8 @@ export const extractText = (htmlContent: string) => {
   // Extract text from htmlContent by replacing htmlContent tags with an empty string
   return htmlContent?.replace(regex, "");
 };
+
+export const getContent = (title: string) => {
+  if (isHtml(title)) return extractText(title);
+  else return title;
+};

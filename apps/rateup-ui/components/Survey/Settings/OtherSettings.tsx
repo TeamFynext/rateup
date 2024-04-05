@@ -89,7 +89,9 @@ const OtherSettings = () => {
             value={verifyEmail}
             onChange={(e) => setVerifyEmail(e.target.value)}
           />
-          <Text color="red">Once reset, all response data will be lost.</Text>
+          <Text style={{ color: "red" }}>
+            Once reset, all response data will be lost.
+          </Text>
         </Stack>
       </FormModalLayout>
     </>

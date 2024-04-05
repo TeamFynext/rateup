@@ -1,8 +1,9 @@
-import { Text } from "@mantine/core";
+import { ScrollArea, Text } from "@mantine/core";
 import { useContext } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import classes from "./TakeSurvey.module.css";
+import { QuestionType } from "../../../../types/enums";
 
 function QuestionTitle({ largeScreen, themeStyles, smallScreen }) {
   const { selectedQ } = useContext(SelectedQContext);

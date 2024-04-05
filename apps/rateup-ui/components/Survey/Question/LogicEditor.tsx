@@ -1,41 +1,45 @@
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
 import { useContext, useEffect, useState } from "react";
-import {
-  useQuestionUpdateMutation,
-  useQuestions,
-} from "../../../backend/surveys/questions/questions.query";
+
 import { useRouter } from "next/router";
+import { useListState } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
+  ActionIcon,
+  Button,
   Center,
   Group,
+  MultiSelect,
+  ScrollAreaAutosize,
   Select,
   Stack,
-  Button,
   Text,
-  MultiSelect,
   useMantineTheme,
-  ActionIcon,
 } from "@mantine/core";
+
+import { getContent } from "../../../utils";
+import { QuestionTabsEnum } from "../EditSurvey";
+import { logicSupportedTypes } from "../../../utils/data";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import {
   LogicAction,
   LogicCondition,
   QuestionType as Q,
 } from "../../../types/enums";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { QuestionTabsEnum } from "../EditSurvey";
-import { logicSupportedTypes } from "../../../utils/data";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useListState } from "@mantine/hooks";
 import {
   getConditions,
   getResponses,
 } from "../../../utils/survey/logic/logic.utils";
-import { notifications } from "@mantine/notifications";
+import {
+  useQuestions,
+  useQuestionUpdateMutation,
+} from "../../../backend/surveys/questions/questions.query";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -103,29 +107,32 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
 
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
-      <Stack gap={"xs"} style={{ overflowY: "auto", height: "100%" }}>
-        {currentLogicJumps.map((currentLogic, index) => (
-          <ConditionBlock
-            key={index}
-            selectedQ={selectedQ}
-            questions={questions}
-            currentLogicJump={currentLogic}
-            setCurrentLogicJump={(newLogicJump) =>
-              handlers.setItem(index, newLogicJump)
-            }
-            handleDelete={() => handlers.remove(index)}
-          />
-        ))}
-        <Button
-          variant="outline"
-          leftSection={<IconPlus />}
-          maw={200}
-          color="var(--tertiary-color)"
-          onClick={handleAddNewJump}
-        >
-          Add Logic Jump
-        </Button>
-      </Stack>
+      <ScrollAreaAutosize mah={"80dvh"}>
+        <Stack gap={"xs"} mr={"sm"}>
+          {currentLogicJumps.map((currentLogic, index) => (
+            <ConditionBlock
+              key={index}
+              selectedQ={selectedQ}
+              questions={questions}
+              currentLogicJump={currentLogic}
+              setCurrentLogicJump={(newLogicJump) =>
+                handlers.setItem(index, newLogicJump)
+              }
+              handleDelete={() => handlers.remove(index)}
+            />
+          ))}
+          <Button
+            variant="outline"
+            leftSection={<IconPlus />}
+            maw={200}
+            color="var(--tertiary-color)"
+            onClick={handleAddNewJump}
+            mb={4}
+          >
+            Add Logic Jump
+          </Button>
+        </Stack>
+      </ScrollAreaAutosize>
 
       <Group justify="space-between">
         <RateupButtonSecondary
@@ -174,7 +181,7 @@ function ConditionBlock({
     { label: "End Survey", value: LogicAction.EndSurvey },
     ...possibleQuestions?.map((q) => ({
       label: `JUMP TO => ${questions.findIndex((q1) => q1.id === q.id) + 1}) ${
-        q.title[selectedLanguage] || q.description[selectedLanguage]
+        getContent(q.title[selectedLanguage]) || q.description[selectedLanguage]
       }`, // TODO: truncate
       value: q.id,
     })),

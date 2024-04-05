@@ -16,7 +16,7 @@ import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import ShareSurvey from "./ShareSurvey/ShareSurvey";
 import StyledTabs from "../../components/styled/StyledTabs/StyledTabs";
 import { useRouteParams } from "../../context/RouteParamsContext";
-import SurveySettings from "./Settings/SurveySettings";
+import SurveySettings from "./Settings";
 import Result from "./Result/Result";
 import { useUser } from "../../context/UserContext";
 import SurveyTheme from "./SurveyTheme/SurveyTheme";
@@ -224,35 +224,33 @@ export default function SurveyID() {
                 )}
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Settings}>
-                <ScrollAreaAutosize scrollbarSize={0}>
-                  <SurveySettings
-                    surveyId={surveyId}
-                    survey={survey}
-                    setSelectedLanguage={setSelectedLanguage}
-                    enabledModules={
-                      survey?.type === SurveyType.WhatsApp
-                        ? ["name", "language", "teams", "location"]
-                        : [
-                            "name",
-                            "password",
-                            "language",
-                            "kiosk",
-                            "teams",
-                            "preview",
-                            "location",
-                            "enableNotificationEmail",
-                            "notificationEmail",
-                            "endtoendencryption",
-                            "redirect",
-                            "uniqueDeviceResponse",
-                            hasFeature(
-                              subscription,
-                              SubscriptionFeaturePathName.Ticket,
-                            ) && "tickets",
-                          ]
-                    }
-                  />
-                </ScrollAreaAutosize>
+                <SurveySettings
+                  surveyId={surveyId}
+                  survey={survey}
+                  setSelectedLanguage={setSelectedLanguage}
+                  enabledModules={
+                    survey?.type === SurveyType.WhatsApp
+                      ? ["name", "language", "teams", "location"]
+                      : [
+                          "name",
+                          "password",
+                          "language",
+                          "kiosk",
+                          "teams",
+                          "preview",
+                          "location",
+                          "enableNotificationEmail",
+                          "notificationEmail",
+                          "endtoendencryption",
+                          "redirect",
+                          "uniqueDeviceResponse",
+                          hasFeature(
+                            subscription,
+                            SubscriptionFeaturePathName.Ticket,
+                          ) && "tickets",
+                        ]
+                  }
+                />
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Result}>
                 <Result

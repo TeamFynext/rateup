@@ -24,7 +24,7 @@ function Flows() {
     useTeamsByUser();
 
   let teamsData = teamsDataUser?.data;
-  if (isPendingTeamsUser || isPending) return <RateupLoader h={"100dvh"} />;
+  if (isPendingTeamsUser || isPending) return <RateupLoader h={"90dvh"} />;
   let componentToBeRendered = null;
   if (flows && flows.length) {
     let filteredMenus =
