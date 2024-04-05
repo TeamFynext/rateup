@@ -1,0 +1,7 @@
+.combobox-input-base-root :global(.mantine-Input-input) {
+  border-radius: 0.875rem;
+}
+
+.label-span {
+  text-overflow: ellipsis;
+}

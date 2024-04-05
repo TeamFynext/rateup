@@ -46,12 +46,16 @@ export async function getServerSideProps(context) {
     if (survey) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
+      // @ts-ignore
+      propsToPass.surveyThemeId = survey?.surveyThemeId;
     }
   } else {
     const survey = await getPublicSurvey(surveyId);
     if (survey) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
+      // @ts-ignore
+      propsToPass.surveyThemeId = survey?.surveyThemeId;
     }
   }
   return {
@@ -67,6 +71,7 @@ export default function ThankYou({
   surveyIdValue,
   fromShortUrl,
   redirect = null,
+  surveyThemeId,
 }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
@@ -126,7 +131,9 @@ export default function ThankYou({
     return () => clearTimeout(timeout);
   }, [redirect, kioskMode, router]);
 
-  const { data: surveyThemeData, isLoading } = useSurveyTheme(sid) as {
+  const { data: surveyThemeData, isLoading } = useSurveyTheme(
+    surveyThemeId,
+  ) as {
     data: SurveyTheme;
     isLoading: boolean;
   };
