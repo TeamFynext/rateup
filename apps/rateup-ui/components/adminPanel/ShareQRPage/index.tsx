@@ -22,7 +22,7 @@ function ShareQRPage() {
       }
       case "Whatsapp Survey": {
         const surveyTeamMapId = uuid();
-        const link = generateWaSurveyShareUrl(surveyTeamMapId);
+        const link = generateWaSurveyShareUrl("PHONE_NUMBER", surveyTeamMapId);
         setLink(link);
         break;
       }

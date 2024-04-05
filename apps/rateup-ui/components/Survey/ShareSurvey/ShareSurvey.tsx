@@ -52,6 +52,7 @@ import NothingFound from "../../NothingFound/NothingFound";
 import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import TagManager from "./TagManager";
 import { SurveyType } from "../../../types/enums";
+import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
 
 const ShareSurvey = ({
   survey,
@@ -83,12 +84,20 @@ const ShareSurvey = ({
 
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
 
+  // TODO: since flow has a different share page (ShareFlow.tsx), remove the whatsapp related code
+  const isWhatsapp =
+    survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow;
+  const { data: waSettings } = useWaSettings(isWhatsapp);
+
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
     if (
       survey.type === SurveyType.WhatsApp ||
       survey.type === SurveyType.WaFlow
     ) {
+      if (!waSettings) return;
+      const phone = waSettings.phone?.replace("+", "").replaceAll(" ", "");
+      if (!phone) setShareUrl("Configure WhatsApp settings to get share link");
       if (shortUrlId) {
         // TODO: get phone number from phone id (add phone number field)
         setShareUrl(
@@ -100,7 +109,7 @@ const ShareSurvey = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyShareUrl(surveyTeamMapId));
+          setShareUrl(generateWaSurveyShareUrl(phone, surveyTeamMapId));
         }
       }
     } else {
@@ -116,7 +125,7 @@ const ShareSurvey = ({
         );
       }
     }
-  }, [surveyId, surveyTeamMapId, tag, shortUrlId]);
+  }, [surveyId, surveyTeamMapId, tag, shortUrlId, waSettings]);
 
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(surveyId, data),
