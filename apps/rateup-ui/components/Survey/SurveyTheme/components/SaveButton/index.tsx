@@ -1,0 +1,65 @@
+import { Button, Group, Text } from "@mantine/core";
+import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import { useCallback, useContext, useState } from "react";
+import { SurveyThemeContext } from "../../SurveyThemeContext";
+import _ from "lodash";
+import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
+import styles from "./SaveButton.module.css";
+import { useHotkeys } from "@mantine/hooks";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
+
+function SaveButton({ survey, themeSelectorState, allThemesArr }) {
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj) => obj.id === themeSelectorState,
+  );
+
+  const { surveyTheme: themeObj } = useContext(SurveyThemeContext);
+  let originalThemeObj = themeObj;
+  if (themeObjBeingEdited) {
+    originalThemeObj = themeObjBeingEdited.theme;
+  }
+
+  const hasUnsavedChanges = !_.isEqual(originalThemeObj, themeObj);
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const updateSurveyTheme = useUpdateSurveyTheme(
+    themeObjBeingEdited?.id,
+    survey?.id,
+  );
+
+  const handleSaveTheme = useCallback(async () => {
+    setIsSaving(true);
+    const newSurveyTheme = await destructureThemeAndUploadImagesIfAny(themeObj);
+    await updateSurveyTheme.mutateAsync({
+      surveyThemeId: themeObjBeingEdited?.id,
+      body: {
+        surveyId: survey?.id,
+        theme: newSurveyTheme,
+      },
+    });
+    setIsSaving(false);
+  }, [themeObjBeingEdited, themeObj]);
+
+  useHotkeys([[SAVE_HOTKEY, handleSaveTheme]]);
+
+  return (
+    <Group justify="center" w="100%">
+      <Text
+        className={styles["save-unsaved-text-p"]}
+        style={{ color: hasUnsavedChanges ? "red" : "green" }}
+      >
+        {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+      </Text>
+      <Button
+        className={styles["save-btn"]}
+        loading={isSaving}
+        onClick={handleSaveTheme}
+      >
+        Save
+      </Button>
+    </Group>
+  );
+}
+
+export default SaveButton;
