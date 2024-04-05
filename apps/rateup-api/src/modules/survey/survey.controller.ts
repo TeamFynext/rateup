@@ -6,6 +6,7 @@ import {
   deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
   getGoogleUrlBySurveyTeamMapId,
+  getPhoneBySurveyTeamMapId,
   getPublicSurveyById,
   getSurveyById,
   getSurveyBylandingId,
@@ -107,6 +108,18 @@ export async function getPublicSurveyByIdHandler(
   } catch (e) {
     reply.code(500);
   }
+}
+
+export async function getPhoneFromSurveyTeamMapIdHandler(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  const { id } = request.params;
+  const phone = await getPhoneBySurveyTeamMapId(id);
+
+  reply.send({ phone });
 }
 
 export async function fetchGoogleUrlBySurveyIdHandler(

@@ -3,6 +3,7 @@ import { $Sref } from "./survey.schema";
 import {
   completedSurveyHandler,
   fetchGoogleUrlBySurveyIdHandler,
+  getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
   startedSurveyHandler,
   verifySurveyPasswordHandler,
@@ -20,6 +21,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     },
     getPublicSurveyByIdHandler,
   );
+  server.get("/:id/phone", getPhoneFromSurveyTeamMapIdHandler);
 
   server.post(
     "/check-password/:id",
