@@ -9,8 +9,6 @@ export const getServerSideProps = async (context) => {
       surveyTeamMapId,
       kioskMode,
       redirect,
-      // @ts-ignore
-      surveyThemeId,
     } = await getPublicSurvey(shortId);
     return {
       props: {
@@ -18,7 +16,6 @@ export const getServerSideProps = async (context) => {
         surveyTeamMapId,
         kioskMode: kioskMode ? "y" : "n",
         redirect,
-        surveyThemeId,
       },
     };
   } catch (error) {
@@ -35,14 +32,13 @@ export const getServerSideProps = async (context) => {
   }
 };
 
-function End({ kioskMode, surveyId, redirect, surveyThemeId }) {
+function End({ kioskMode, surveyId, redirect }) {
   return (
     <ThankYou
       redirect={redirect}
       kioskMode={kioskMode}
       surveyIdValue={surveyId}
       fromShortUrl={true}
-      surveyThemeId={surveyThemeId}
     />
   );
 }

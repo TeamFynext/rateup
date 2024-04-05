@@ -1,27 +1,33 @@
-import { Box, Group, Overlay, Switch, Tabs } from "@mantine/core";
-import { useState } from "react";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
-import {
-  useAllThemes,
-  useSurveyTheme,
-} from "../../../backend/surveyTheme/surveyTheme.query";
-import RateupLoader from "../../Loaders/RateupLoader";
-import PageSelector from "./components/PageSelector";
+import React, { useState } from "react";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import StyledTabs from "../../styled/StyledTabs/StyledTabs";
+import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
+import StylesComponent from "./components/stylescomponent";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
-import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
-import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
-import SaveButton from "./components/SaveButton";
-import StylesComponent from "./components/stylescomponent";
-import ThemeSelector from "./components/ThemeSelector";
+import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
+import SurveyThemeContextProvider from "./SurveyThemeContext";
+import {
+  Stack,
+  Flex,
+  Switch,
+  Group,
+  Tabs,
+  Box,
+  Button,
+  Overlay,
+} from "@mantine/core";
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
 import {
   PreviewTypeEnum,
   SelectedItemEnum,
   ThemeTabEnum,
 } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
-import SurveyThemeContextProvider from "./SurveyThemeContext";
-import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
+import RateupLoader from "../../Loaders/RateupLoader";
+import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
+import PageSelector from "./components/PageSelector";
 
 function SurveyTheme({ survey }) {
   const [selectedPreview, setSelectedPreview] = useState(
@@ -33,17 +39,7 @@ function SurveyTheme({ survey }) {
     SelectedItemEnum.BACKGROUND,
   );
 
-  const { data: surveyTheme, isLoading } = useSurveyTheme(
-    survey?.surveyThemeId,
-  );
-
-  // selected surveyThemeId.
-  const [themeSelectorState, setThemeSelectorState] = useState(
-    survey?.surveyThemeId,
-  );
-
-  const { data: allThemesArr, isPending: isAllThemesFetchPending } =
-    useAllThemes();
+  const { data: surveyTheme, isLoading } = useSurveyTheme(survey?.id);
 
   const editSurvey = useEditSurveyMutation(survey?.id);
   const isWelcomePageEnabled = survey?.welcomePageEnabled;
@@ -80,23 +76,16 @@ function SurveyTheme({ survey }) {
     >
       <Box className={styles["survey-theme-root-div"]}>
         <Group className={styles["tabs-and-other-options-container"]}>
-          <ThemeSelector
-            allThemesArr={allThemesArr}
-            themeSelectorState={themeSelectorState}
-            setThemeSelectorState={setThemeSelectorState}
-            isAllThemesFetchPending={isAllThemesFetchPending}
-            survey={survey}
+          <PreviewDeviceSelector
+            value={selectedPreview}
+            onChange={setSelectedPreview}
           />
           <PageSelector onChange={setSelectedPageTab} value={selectedPageTab} />
           <Box
             className={styles["save-btn-container"]}
             id="save-btn-container-portal"
           >
-            <SaveButton
-              allThemesArr={allThemesArr}
-              themeSelectorState={themeSelectorState}
-              survey={survey}
-            />
+            {/* save button from styles component will be rendered here */}
           </Box>
         </Group>
 
@@ -106,12 +95,6 @@ function SurveyTheme({ survey }) {
           }
         >
           <Box className={styles["theme-preview-container"]}>
-            <PreviewDeviceSelector
-              className={`preview-device-selector ${selectedPageTab === ThemeTabEnum.WELCOME ? "welcome-tab-preview-device-selector" : ""}`}
-              value={selectedPreview}
-              onChange={setSelectedPreview}
-              withLabel={false}
-            />
             <SurveyThemePreviewLayout
               isLoading={isLoading}
               survey={survey}

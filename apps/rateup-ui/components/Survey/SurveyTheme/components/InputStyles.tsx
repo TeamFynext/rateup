@@ -10,6 +10,8 @@ import {
 
 import React, { useCallback } from "react";
 import { Input } from "../surveyTheme.types";
+import CustomColorSwatch from "./customelements/CustomColorSwatch";
+import { defaultThemeName } from "../SurveyTheme.enums";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 
 function InputStyles({

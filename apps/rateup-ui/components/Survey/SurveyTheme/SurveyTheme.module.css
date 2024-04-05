@@ -38,27 +38,13 @@
   z-index: 100;
 }
 
-.theme-preview-container :global(.preview-device-selector) {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 100;
-  background-color: white;
-  border-radius: 0.3125rem;
-}
-
-.theme-preview-container :global(.welcome-tab-preview-device-selector) {
-  left: 0.75rem;
-  right: initial;
-}
-
 .survey-theme-preview-tab-panels-root {
   height: 100%;
 }
 
 .welcome-page-switch-container {
   padding: 0.625rem;
-  background-color: white;
+  background-color: var(--mantine-color-gray-4);
   border-radius: 0.625rem;
   position: absolute;
   top: 0.75rem;
