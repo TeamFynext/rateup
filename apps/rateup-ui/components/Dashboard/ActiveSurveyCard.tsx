@@ -26,10 +26,16 @@ export default function ActiveSurveyCard({
         minWidth: "280px",
       }}
       onClick={(e) => {
-        e.stopPropagation(),
+        e.stopPropagation();
+        if (survey?.type === "waFlow") {
+          router.push(
+            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/flows/${survey?.id}?tab=Result`,
+          );
+        } else {
           router.push(
             `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,
           );
+        }
       }}
     >
       <Stack h={"100%"} gap={0}>
