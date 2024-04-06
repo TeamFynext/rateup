@@ -87,6 +87,7 @@ export enum SurveyTypeFilters {
   All = "All",
   Web = "Web",
   WhatsApp = "WhatsApp",
+  WhatsAppFlow = "WhatsAppFlow",
 }
 
 export enum CampaignStatus {
