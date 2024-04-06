@@ -491,6 +491,11 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
           },
         },
       },
+      WaFlow: {
+        select: {
+          dbFlowId: true,
+        },
+      },
     },
   });
   const data = activeSurveys?.map((survey) => {
