@@ -14,6 +14,7 @@ import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
 } from "../../utils/commnUtils";
+import { isShortId } from "./survey.utils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -236,6 +237,30 @@ export async function getPublicSurveyById(id: string) {
   };
 
   return publicSurvey;
+}
+
+export async function getPhoneBySurveyTeamMapId(id: string) {
+  const surveyTeamMapWhere = isShortId(id) ? { shortUrlId: id } : { id };
+  const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
+    where: surveyTeamMapWhere,
+    select: {
+      team: {
+        select: {
+          org: {
+            select: {
+              whatsappSettings: {
+                select: {
+                  phone: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return surveyTeamMap?.team?.org?.whatsappSettings?.phone;
 }
 
 //---------------get lnding page by landingId------------

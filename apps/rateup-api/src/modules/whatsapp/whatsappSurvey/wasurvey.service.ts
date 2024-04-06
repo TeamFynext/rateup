@@ -333,7 +333,11 @@ export async function sendQuestion(
  * -> updates completedSurvey count
  */
 export async function saveResponses(session: WaSessionWithRelations) {
-  log.trace("Saving responses for %o", session);
+  log.trace("Saving responses for %o", {
+    id: session.id,
+    phone: session.phone,
+    responses: session.responses,
+  });
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 

@@ -532,7 +532,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     let questionTitles = [];
     questions.map((q: Question, index: number) => {
       const qstnTitle =
-        index + 1 + "_" + q?.title[lang].trim() ||
+        index + 1 + "_" + getContent(q?.title[lang])?.trim() ||
         index + 1 + "_" + q?.description[lang].trim();
       if (
         [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
@@ -582,7 +582,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               return q;
             }
           });
-          let qstnTitle = QIndex + "_" + qstn.title[lang].trim();
+          let qstnTitle = QIndex + "_" + getContent(qstn.title[lang])?.trim();
           if (
             [
               QuestionType.Contact,
@@ -707,7 +707,8 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
           return q;
         }
       });
-      let qstnTitle = QIndex + "_" + qstn.title[response.language].trim();
+      let qstnTitle =
+        QIndex + "_" + getContent(qstn.title[response.language]).trim();
       if (
         [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
           qstn.type,

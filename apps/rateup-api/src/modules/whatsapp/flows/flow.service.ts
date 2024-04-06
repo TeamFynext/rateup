@@ -562,7 +562,7 @@ export const handleDecryptedFlowRequest = async (
         },
       };
     }
-    const session = await getSession(dbFlow.orgId, flow_token);
+    let session = await getSession(dbFlow.orgId, flow_token);
     const json = dbFlow.json as unknown as WaFlowJson;
 
     // handle initial request when opening the flow
@@ -586,20 +586,9 @@ export const handleDecryptedFlowRequest = async (
         data,
       );
       log.trace("Current screen responses: %o", currentScreenResponses);
-      updateSession(session.orgId, session.phone, {
+      session = await updateSession(session.orgId, session.phone, {
         responses: [...session.responses, ...currentScreenResponses],
-      })
-        .then(() => {
-          log.trace("Session updated with responses.");
-        })
-        .catch((e) => {
-          log.error(
-            "Failed to update session with responses: %o\n%o",
-            currentScreenResponses,
-            e,
-          );
-        });
-
+      });
       // handle the request based on the current screen
       let nextScreen = null;
       const currentIndex = json.screens.findIndex((s) => s.id === screen);
