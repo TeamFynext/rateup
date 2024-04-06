@@ -62,7 +62,9 @@ function StylesComponent({
 }: StylesComponentProps) {
   const [tabState, setTabState] = useState<string>(SelectedItemEnum.BACKGROUND);
   const { surveyTheme, setSurveyTheme } = useContext(SurveyThemeContext);
-  const { data: _savedSurveyTheme } = useSurveyTheme(survey?.surveyThemeId);
+  const { data: _savedSurveyTheme } = useSurveyTheme(
+    survey?.savedSurveyThemeId,
+  );
   const {
     id,
     welcomeTheme,

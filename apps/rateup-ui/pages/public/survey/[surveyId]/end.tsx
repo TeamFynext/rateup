@@ -47,7 +47,7 @@ export async function getServerSideProps(context) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
-      propsToPass.surveyThemeId = survey?.surveyThemeId;
+      propsToPass.surveyThemeId = survey?.savedSurveyThemeId;
     }
   } else {
     const survey = await getPublicSurvey(surveyId);
@@ -55,7 +55,7 @@ export async function getServerSideProps(context) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
-      propsToPass.surveyThemeId = survey?.surveyThemeId;
+      propsToPass.surveyThemeId = survey?.savedSurveyThemeId;
     }
   }
   return {

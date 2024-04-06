@@ -20,7 +20,6 @@ function ComboBoxComponent({
   renderOptionProps = {},
   isLoading = false,
 }) {
-  console.log(renderOptionProps, "from combobox comp");
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
     onDropdownOpen: (eventSource) => {
