@@ -146,6 +146,9 @@ declare global {
       };
       name: string;
     }[];
+    WaFlow?: {
+      dbFlowId?: string;
+    };
   }
 
   type dataError = {

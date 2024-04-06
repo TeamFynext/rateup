@@ -28,9 +28,10 @@ export default function ActiveSurveyCard({
       onClick={(e) => {
         e.stopPropagation();
         if (survey?.type === "waFlow") {
-          router.push(
-            `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/flows/${survey?.id}?tab=Result`,
-          );
+          survey?.WaFlow?.dbFlowId &&
+            router.push(
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/flows/${survey?.WaFlow?.dbFlowId}?tab=Result`,
+            );
         } else {
           router.push(
             `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,
