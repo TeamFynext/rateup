@@ -306,6 +306,7 @@ export default function DashboardHome() {
                   (surveysSummary?.surveys?.length > 0 ? (
                     surveysSummary?.surveys
                       ?.filter((s) => s.active === true)
+                      ?.filter((s) => s.isPublished === true)
                       .sort((a, b) =>
                         sort
                           ? new Date(b.createdAt).getTime() -
