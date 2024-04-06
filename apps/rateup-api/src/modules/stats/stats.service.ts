@@ -103,6 +103,27 @@ export async function createStats(orgId: string) {
       },
     });
 
+    const currentDate = new Date();
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+
+    const surveyResponsesCountCurrentMonth = await prisma.surveyResponse.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: currentDate,
+        },
+        surveyTeamMap: {
+          team: {
+            orgId: orgId,
+          },
+        },
+      },
+    });
+
     const menuCount = await prisma.menu.count({
       where: {
         team: {
@@ -128,8 +149,9 @@ export async function createStats(orgId: string) {
       teamCount,
       teamMemberCount,
       surveyCount,
-      menuCount,
       surveyResponsesCount,
+      surveyResponsesCountCurrentMonth,
+      menuCount,
       menuViewsCount: menuViewsCount._sum.visited,
     };
 
@@ -149,6 +171,7 @@ export async function updateUsageStats(
     teamMemberCount: number;
     surveyCount: number;
     surveyResponsesCount: number;
+    surveyResponsesCountCurrentMonth: number;
     menuCount: number;
     menuViewsCount: number;
   },
@@ -160,6 +183,7 @@ export async function updateUsageStats(
       teamMembersCount: stats.teamMemberCount,
       surveysCount: stats.surveyCount,
       surveyResponsesCount: stats.surveyResponsesCount,
+      monthlySurveyResponses: stats.surveyResponsesCountCurrentMonth,
       menusCount: stats.menuCount,
       menuViewsCount: stats.menuViewsCount,
     },
@@ -169,6 +193,7 @@ export async function updateUsageStats(
       teamMembersCount: stats.teamMemberCount,
       surveysCount: stats.surveyCount,
       surveyResponsesCount: stats.surveyResponsesCount,
+      monthlySurveyResponses: stats.surveyResponsesCountCurrentMonth,
       menusCount: stats.menuCount,
       menuViewsCount: stats.menuViewsCount,
     },
