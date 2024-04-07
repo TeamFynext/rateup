@@ -13,7 +13,7 @@ import TemplateCard from "./templateCard";
 
 const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
   const { data: surveyTheme, isLoading: isThemeloading } = useSurveyTheme(
-    survey?.savedSurveyThemeId,
+    survey?.webSurveyThemeId,
   );
 
   const [selectedPreview, setSelectedPreview] = useState(
