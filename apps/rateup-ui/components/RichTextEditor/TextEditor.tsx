@@ -38,7 +38,7 @@ export default function TextEditor({ form, selectedLanguage }) {
         preserveWhitespace: "full",
       });
     }
-  }, [content, editor, selectedLanguage]);
+  }, [content, selectedLanguage]);
 
   return (
     <RichTextEditor editor={editor}>

@@ -23,6 +23,7 @@ export function parseTemplate(template) {
       }
     } else if (["footer", "body"].includes(component.type.toLowerCase())) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
+      parsedTemplate["example"] = component.example?.body_text ?? [];
     } else if (component.type.toLowerCase() == "buttons") {
       component.buttons.map((data) => {
         if (data?.example && Array.isArray(data.example)) {
