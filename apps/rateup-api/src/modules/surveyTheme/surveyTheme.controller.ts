@@ -1,44 +1,93 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
-  bySurveyIdSchema,
-  bySurveyThemeIdSchema,
-  surveyThemeSchemaCore,
-} from "./surveyTheme.schema";
-import {
+  createNewThemeInDB,
+  deleteThemeInDB,
+  getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
-  getSurveyThemeBySurveyId,
-  updateSurveyTheme,
+  updateSurveyThemeActiveSurveyThemeInDB,
+  // getSurveyThemeBySurveyId,
 } from "./surveyTheme.service";
 import { log } from "../../utils/logger";
 
-export async function getSurveyThemeBySurveyIdHandler(
-  request: FastifyRequest<{ Params: bySurveyIdSchema }>,
-  reply: FastifyReply,
-) {
-  const { surveyId } = request.params;
-  const surveyTheme = await getSurveyThemeBySurveyId(surveyId);
-  reply.send(surveyTheme);
-}
+// export async function getSurveyThemeBySurveyIdHandler(
+//   request: FastifyRequest<{ Params: bySurveyIdSchema }>,
+//   reply: FastifyReply,
+// ) {
+//   const { surveyId } = request.params;
+//   const surveyTheme = await getSurveyThemeBySurveyId(surveyId);
+//   reply.send(surveyTheme);
+// }
 
 export async function getSurveyThemeByIdHandler(
-  request: FastifyRequest<{ Params: bySurveyThemeIdSchema }>,
+  request: FastifyRequest<{ Params: { webSurveyThemeId: string } }>,
   reply: FastifyReply,
 ) {
-  const { surveyThemeId } = request.params;
-  const surveyTheme = await getSurveyThemeById(surveyThemeId);
-  reply.send(surveyTheme);
+  const { webSurveyThemeId } = request.params;
+  const { theme } = await getSurveyThemeById(webSurveyThemeId);
+  reply.code(200).send(theme);
+}
+
+export async function getAllThemesOfUserOrg(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  let themes = await getAllThemesOfUserOrgFromDB(request);
+  if (themes) {
+    themes = themes.map((themeObj) => {
+      const tempThemeObj = { ...themeObj };
+      delete tempThemeObj.survey;
+      if (themeObj.survey.length) {
+        return {
+          ...tempThemeObj,
+          activeInAnotherSurvey: true,
+        };
+      } else {
+        return {
+          ...tempThemeObj,
+          activeInAnotherSurvey: false,
+        };
+      }
+    });
+  }
+  reply.code(200).send(themes);
 }
 
 export async function updateSurveyThemeHandler(
-  request: FastifyRequest<{
-    Params: bySurveyThemeIdSchema;
-    Body: surveyThemeSchemaCore;
-  }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const { surveyThemeId } = request.params;
-  const surveyTheme = await updateSurveyTheme(surveyThemeId, request.body);
+  const surveyTheme = await updateSurveyThemeActiveSurveyThemeInDB(request);
   reply.send(surveyTheme);
+}
+
+export async function createNewTheme(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const newThemeObj = await createNewThemeInDB(request);
+    reply.code(201).send(newThemeObj);
+  } catch (err) {
+    if (err.code === "P2002") {
+      reply.code(400).send({
+        success: false,
+        message: "A theme with the same name already exists.",
+      });
+    } else {
+      throw err;
+    }
+  }
+}
+
+export async function deleteTheme(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const deletedTheme = await deleteThemeInDB(request);
+  reply.code(200).send({
+    success: true,
+    message: "theme deleted successfully",
+  });
 }
 
 export function errorHandler(

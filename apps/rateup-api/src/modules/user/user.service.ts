@@ -14,6 +14,7 @@ import { log } from "../../utils/logger";
 import { createTrialSubscription } from "../subscription/subscription.service";
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import { defaultTheme } from "../surveyTheme/defaultTheme";
 
 const prisma = new PrismaClient();
 
@@ -51,6 +52,12 @@ export async function createUserSignup({
         data: {
           name: orgName,
           ownerId: newUser.id,
+          surveyThemes: {
+            create: {
+              name: "Default Theme",
+              theme: defaultTheme,
+            },
+          },
         },
       });
 
