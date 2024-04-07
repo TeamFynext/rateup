@@ -62,16 +62,17 @@ function StylesComponent({
 }: StylesComponentProps) {
   const [tabState, setTabState] = useState<string>(SelectedItemEnum.BACKGROUND);
   const { surveyTheme, setSurveyTheme } = useContext(SurveyThemeContext);
-  const { data: _savedSurveyTheme } = useSurveyTheme(survey?.id);
+  const { data: _savedSurveyTheme } = useSurveyTheme(
+    survey?.savedSurveyThemeId,
+  );
   const {
     id,
     welcomeTheme,
     surveyTheme: _surveyTheme,
     thankyouTheme,
   } = surveyTheme;
-  const updateSurveyTheme = useUpdateSurveyTheme(survey?.id);
   const [selectedTabStyles, setSelectedTabStyles] = useState<SelectedStyles>();
-  const [saveLoading, setSaveLoading] = useState<boolean>(false);
+
   useEffect(() => {
     switch (selectedTab) {
       case ThemeTabEnum.WELCOME:
@@ -145,19 +146,7 @@ function StylesComponent({
         break;
     }
   }
-  async function saveStyles() {
-    setSaveLoading(true);
-    const newSurveyTheme =
-      await destructureThemeAndUploadImagesIfAny(surveyTheme);
-    updateSurveyTheme.mutate({
-      surveyThemeId: id,
-      body: newSurveyTheme,
-    });
-    setTimeout(() => {
-      setSaveLoading(false);
-    }, 1000);
-  }
-  useHotkeys([[SAVE_HOTKEY, saveStyles]]);
+
   useEffect(() => {
     setSurveyTheme(_savedSurveyTheme);
   }, [_savedSurveyTheme]);
@@ -181,47 +170,6 @@ function StylesComponent({
             padding: "0.875rem",
           }}
         >
-          {/* <TabsCommon
-            styles={{
-              root: {
-                // height: "100%",
-                display: "flex",
-                flexDirection: "column",
-              },
-              list: {
-                fontSize: "10px",
-                gap: 2,
-                justifyContent: "space-around",
-              },
-              tabLabel: {
-                fontSize: "13px",
-                fontWeight: "100",
-              },
-              tab: {
-                borderRadius: 5,
-                padding: 5,
-              },
-              panel: {
-                flex: 1,
-                display: "flex",
-              },
-            }}
-            tabHeading={availableStyleComponents}
-            value={tabState}
-            onChange={(value: string) => setTabState(value as SelectedItemEnum)}
-          >
-            <Divider
-              label={
-                <Badge variant="light">
-                  {getDividerLabel(tabState as SelectedItemEnum)} Settings
-                </Badge>
-              }
-              labelPosition="left"
-              mt="sm"
-              mb="md"
-            />
-          </TabsCommon> */}
-
           <Select
             className={styles["editor-select-dropdown"]}
             value={tabState}
@@ -331,36 +279,6 @@ function StylesComponent({
             </ScrollArea>
           </Tabs>
         </Box>
-
-        <Portal target={"#save-btn-container-portal"}>
-          <Group justify="center" w="100%">
-            <Text
-              c={
-                compareTwoObjects(_savedSurveyTheme, surveyTheme)
-                  ? "green"
-                  : "red"
-              }
-              size="xs"
-              fw={900}
-            >
-              <sup>*</sup>
-              {!compareTwoObjects(_savedSurveyTheme, surveyTheme)
-                ? "unsaved changes"
-                : "All changes saved"}
-            </Text>
-            <Button
-              loading={saveLoading}
-              radius={48}
-              size={"sm"}
-              pl={40}
-              pr={40}
-              onClick={saveStyles}
-              bg={"var(--tertiary-color)"}
-            >
-              Save
-            </Button>
-          </Group>
-        </Portal>
       </MantineProvider>
     </>
   );

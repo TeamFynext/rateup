@@ -22,8 +22,6 @@ import { ImageCropModal } from "../../../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../../../Modal/ImageUploadMethodModal";
 import { useDisclosure } from "@mantine/hooks";
 import { Bg } from "../surveyTheme.types";
-// import CustomColorPicker from "./customelements/CustomColorPicker";
-// import CustomColorInput from "./customelements/CustomColorInput";
 import { BgTab } from "../SurveyTheme.enums";
 import { PreviewTypeEnum } from "../SurveyTheme.enums";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";

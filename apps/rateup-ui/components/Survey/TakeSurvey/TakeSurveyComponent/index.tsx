@@ -50,7 +50,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   useBeforeUnload(true, "Your inputs are not submitted yet, are you sure?");
 
   const { data: surveyThemeData, isLoading: IsLoading } = useSurveyTheme(
-    survey?.id,
+    survey?.savedSurveyThemeId,
   ) as {
     data: SurveyTheme;
     isLoading: boolean;

@@ -41,7 +41,9 @@ export const TakeSurveyLayoutWeb = ({
   survey: any;
   children: any;
 }) => {
-  const { data: surveyThemeData, isLoading } = useSurveyTheme(survey?.id) as {
+  const { data: surveyThemeData, isLoading } = useSurveyTheme(
+    survey?.savedSurveyThemeId,
+  ) as {
     data: SurveyTheme;
     isLoading: boolean;
   };

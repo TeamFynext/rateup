@@ -1,33 +1,27 @@
-import React, { useState } from "react";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import StyledTabs from "../../styled/StyledTabs/StyledTabs";
-import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
-import StylesComponent from "./components/stylescomponent";
+import { Box, Group, Overlay, Switch, Tabs } from "@mantine/core";
+import { useState } from "react";
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
+import {
+  useAllThemes,
+  useSurveyTheme,
+} from "../../../backend/surveyTheme/surveyTheme.query";
+import RateupLoader from "../../Loaders/RateupLoader";
+import PageSelector from "./components/PageSelector";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
-import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
-import SurveyThemeContextProvider from "./SurveyThemeContext";
-import {
-  Stack,
-  Flex,
-  Switch,
-  Group,
-  Tabs,
-  Box,
-  Button,
-  Overlay,
-} from "@mantine/core";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
-import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
+import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
+import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
+import SaveButton from "./components/SaveButton";
+import StylesComponent from "./components/stylescomponent";
+import ThemeSelector from "./components/ThemeSelector";
 import {
   PreviewTypeEnum,
   SelectedItemEnum,
   ThemeTabEnum,
 } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
-import RateupLoader from "../../Loaders/RateupLoader";
-import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
-import PageSelector from "./components/PageSelector";
+import SurveyThemeContextProvider from "./SurveyThemeContext";
+import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 
 function SurveyTheme({ survey }) {
   const [selectedPreview, setSelectedPreview] = useState(
@@ -39,7 +33,17 @@ function SurveyTheme({ survey }) {
     SelectedItemEnum.BACKGROUND,
   );
 
-  const { data: surveyTheme, isLoading } = useSurveyTheme(survey?.id);
+  const { data: surveyTheme, isLoading } = useSurveyTheme(
+    survey?.savedSurveyThemeId,
+  );
+
+  // selected surveyThemeId.
+  const [themeSelectorState, setThemeSelectorState] = useState(
+    survey?.savedSurveyThemeId,
+  );
+
+  const { data: allThemesArr, isPending: isAllThemesFetchPending } =
+    useAllThemes();
 
   const editSurvey = useEditSurveyMutation(survey?.id);
   const isWelcomePageEnabled = survey?.welcomePageEnabled;
@@ -76,16 +80,23 @@ function SurveyTheme({ survey }) {
     >
       <Box className={styles["survey-theme-root-div"]}>
         <Group className={styles["tabs-and-other-options-container"]}>
-          <PreviewDeviceSelector
-            value={selectedPreview}
-            onChange={setSelectedPreview}
+          <ThemeSelector
+            allThemesArr={allThemesArr}
+            themeSelectorState={themeSelectorState}
+            setThemeSelectorState={setThemeSelectorState}
+            isAllThemesFetchPending={isAllThemesFetchPending}
+            survey={survey}
           />
           <PageSelector onChange={setSelectedPageTab} value={selectedPageTab} />
           <Box
             className={styles["save-btn-container"]}
             id="save-btn-container-portal"
           >
-            {/* save button from styles component will be rendered here */}
+            <SaveButton
+              allThemesArr={allThemesArr}
+              themeSelectorState={themeSelectorState}
+              survey={survey}
+            />
           </Box>
         </Group>
 
@@ -95,6 +106,12 @@ function SurveyTheme({ survey }) {
           }
         >
           <Box className={styles["theme-preview-container"]}>
+            <PreviewDeviceSelector
+              className={`preview-device-selector ${selectedPageTab === ThemeTabEnum.WELCOME ? "welcome-tab-preview-device-selector" : ""}`}
+              value={selectedPreview}
+              onChange={setSelectedPreview}
+              withLabel={false}
+            />
             <SurveyThemePreviewLayout
               isLoading={isLoading}
               survey={survey}
