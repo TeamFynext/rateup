@@ -62,9 +62,7 @@ function StylesComponent({
 }: StylesComponentProps) {
   const [tabState, setTabState] = useState<string>(SelectedItemEnum.BACKGROUND);
   const { surveyTheme, setSurveyTheme } = useContext(SurveyThemeContext);
-  const { data: _savedSurveyTheme } = useSurveyTheme(
-    survey?.savedSurveyThemeId,
-  );
+  const { data: _webSurveyTheme } = useSurveyTheme(survey?.webSurveyThemeId);
   const {
     id,
     welcomeTheme,
@@ -148,8 +146,8 @@ function StylesComponent({
   }
 
   useEffect(() => {
-    setSurveyTheme(_savedSurveyTheme);
-  }, [_savedSurveyTheme]);
+    setSurveyTheme(_webSurveyTheme);
+  }, [_webSurveyTheme]);
 
   const confettiEnabled = (selectedTabStyles as ThankyouTheme)?.confettiEnabled;
 

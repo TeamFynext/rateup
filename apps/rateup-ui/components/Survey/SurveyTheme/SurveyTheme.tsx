@@ -34,12 +34,12 @@ function SurveyTheme({ survey }) {
   );
 
   const { data: surveyTheme, isLoading } = useSurveyTheme(
-    survey?.savedSurveyThemeId,
+    survey?.webSurveyThemeId,
   );
 
   // selected surveyThemeId.
   const [themeSelectorState, setThemeSelectorState] = useState(
-    survey?.savedSurveyThemeId,
+    survey?.webSurveyThemeId,
   );
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } =

@@ -30,7 +30,7 @@ function ThemeSelector({
         <Select 
           className={styles["choose-theme-dropdown"]}
           placeholder="choose theme"
-          data={getOptions(allThemesArr, survey?.savedSurveyThemeId)}
+          data={getOptions(allThemesArr, survey?.webSurveyThemeId)}
           allowDeselect={false}
           value={themeSelectorState}
           rightSection={isAllThemesFetchPending?<Loader size={"1rem"} />: <ComboboxChevron />}
@@ -51,7 +51,7 @@ function ThemeSelector({
         data={getOptions(allThemesArr)}
         onChange={handleChange}
         renderOptionProps={{
-          surveyActiveThemeId: survey?.savedSurveyThemeId,
+          surveyActiveThemeId: survey?.webSurveyThemeId,
           comboboxHandleChange: handleChange,
         }}
         isLoading={isAllThemesFetchPending}
