@@ -9,10 +9,11 @@ import {
 } from "./waSettings.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
-export const useWaSettings = () =>
+export const useWaSettings = (enabled = true) =>
   useQuery({
     queryKey: ["waSettings"],
     queryFn: getWaSettings,
+    enabled,
   });
 
 export const useCreateWaSettingsMutation = (onSuccess?, onError?) => {

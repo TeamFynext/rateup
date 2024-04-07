@@ -24,6 +24,7 @@ import {
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
   getSurveyWithQuestions,
+  getPhoneNumberFromSurveyTeamMapId,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -72,6 +73,13 @@ export const usePublicSurvey = (surveyId: string) => {
     queryFn: () => getPublicSurvey(surveyId),
   });
 };
+
+export const usePhoneFromSurveyTeamMapId = (surveyTeamMapId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapId,
+    queryKey: ["waSettings"],
+    queryFn: () => getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId),
+  });
 
 export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
   useQuery({

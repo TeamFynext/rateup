@@ -256,7 +256,7 @@ export default function DashboardHome() {
             <PaperLayout p={"lg"}>
               <Group justify="space-between">
                 <Group align="center">
-                  <Heading subtitle="Active Surveys" />
+                  <Heading subtitle="Active Surveys / Flows" />
                   <Text fz="17px" mt="5px" c="gray">
                     ( {filterParam} )
                   </Text>
@@ -306,6 +306,7 @@ export default function DashboardHome() {
                   (surveysSummary?.surveys?.length > 0 ? (
                     surveysSummary?.surveys
                       ?.filter((s) => s.active === true)
+                      ?.filter((s) => s.isPublished === true)
                       .sort((a, b) =>
                         sort
                           ? new Date(b.createdAt).getTime() -
@@ -318,6 +319,10 @@ export default function DashboardHome() {
                           return s.type === "web";
                         } else if (filterParam === SurveyTypeFilters.WhatsApp) {
                           return s.type === "whatsapp";
+                        } else if (
+                          filterParam === SurveyTypeFilters.WhatsAppFlow
+                        ) {
+                          return s.type === "waFlow";
                         } else {
                           return true;
                         }

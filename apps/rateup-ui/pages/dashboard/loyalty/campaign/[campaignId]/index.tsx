@@ -38,6 +38,7 @@ import { LinkCopyElement } from "../../../../../components/input/LinkCopyElement
 import { LCampaignTypeBadge } from "../../../../../components/loyalty/campaign/LCampaignTypeBadge";
 import { LoyaltyCampaignType } from "../../../../../types/enums";
 import { CampaignEventsTable } from "./event-history";
+import { useWaSettings } from "../../../../../backend/whatsapp/settings/waSettings.query";
 
 export default function LoyaltyCampaignPage() {
   const router = useRouter();
@@ -46,6 +47,7 @@ export default function LoyaltyCampaignPage() {
 
   const { data: campaign, isLoading: isCampaignLoading } =
     useCampaign(lcampaignId);
+  const { data: waSettings } = useWaSettings();
 
   // Updating breadcrumbs
   useEffect(() => {
@@ -66,7 +68,11 @@ export default function LoyaltyCampaignPage() {
     });
   }
 
-  const registerUrl = generateWaMessageUrl(`/register ${lcampaignId}`);
+  const phone = waSettings?.phone.replace("+", "").replaceAll(" ", "");
+
+  const registerUrl = phone
+    ? generateWaMessageUrl(phone, `/register ${lcampaignId}`)
+    : "Configure Whatsapp>Settings to enable registration.";
   return (
     <Stack gap={"xl"} pb={"md"}>
       <Group>
