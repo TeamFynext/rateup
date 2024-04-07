@@ -41,7 +41,7 @@ import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
-import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
+// import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
 import { SurveyType, WaFlowStatus } from "../../types/enums";
 import {
   getFlowBySurveyId,
@@ -58,10 +58,10 @@ export async function createSurveyHandler(
 ) {
   const data = request.body;
   try {
-    const survey = await createSurvey(data, request.userId, request.user.email);
+    const survey = await createSurvey(data, request);
     //creating a default survey theme once the survey is created
     if (typeof survey === "object" && survey !== null) {
-      await createDefaultSurveyTheme(survey.id);
+      // await createDefaultSurveyTheme(survey.id);
       reply.code(201).send(survey);
     }
     reply.code(201).send(survey);

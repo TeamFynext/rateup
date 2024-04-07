@@ -1,32 +1,38 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession";
-import { $surveyThemeRef } from "./surveyTheme.schema";
 import {
+  createNewTheme,
+  deleteTheme,
   errorHandler,
-  getSurveyThemeBySurveyIdHandler,
+  getAllThemesOfUserOrg,
+  getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
 } from "./surveyTheme.controller";
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
+  server.addHook("onRoute", (routeOptions) => {
+    if (routeOptions.config && routeOptions.config["isPublic"] === true) {
+      routeOptions.preHandler = [];
+      return;
+    } else {
+      routeOptions.preHandler = [checkSession];
+    }
+  });
+
   server.setErrorHandler(errorHandler);
+
   server.get(
-    "/:surveyId",
-    {
-      schema: {
-        params: $surveyThemeRef("bySurveyIdSchema"),
-      },
-    },
-    getSurveyThemeBySurveyIdHandler,
+    "/:webSurveyThemeId",
+    // @ts-ignore
+    { config: { isPublic: true } },
+    getSurveyThemeByIdHandler,
   );
-  server.put(
-    "/:surveyThemeId",
-    {
-      preHandler: checkSession,
-      schema: {
-        params: $surveyThemeRef("bySurveyThemeIdSchema"),
-        body: $surveyThemeRef("surveyThemeSchemaCore"),
-      },
-    },
-    updateSurveyThemeHandler,
-  );
+
+  server.get("/", getAllThemesOfUserOrg);
+
+  server.post("/", createNewTheme);
+
+  server.put("/:webSurveyThemeId", updateSurveyThemeHandler);
+
+  server.delete("/:webSurveyThemeId", deleteTheme);
 }
