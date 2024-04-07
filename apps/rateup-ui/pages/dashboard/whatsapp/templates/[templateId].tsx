@@ -81,6 +81,7 @@ export default function WhatsappTemplateById() {
       format: "NONE",
       buttons: [],
       status: WaTemplateStatus.DRAFT,
+      example: [],
     },
     validate: zodResolver(templateSchema),
   });
@@ -128,6 +129,19 @@ export default function WhatsappTemplateById() {
     if (hasErrors) {
       showErrorToast(JSON.stringify(errors) ?? "Error in Template");
       return;
+    }
+    const dynamicVariableArray = parseStringWithVariables(form.values.body);
+
+    if (dynamicVariableArray?.length > 0) {
+      if (!isArrayInCorrectOrder(dynamicVariableArray)) {
+        showErrorToast("Dynamic variables name should is numberic order");
+        return;
+      } else if (
+        form.values?.example?.length !== dynamicVariableArray?.length
+      ) {
+        showErrorToast("Dynamic variables example values should be given");
+        return;
+      }
     }
     const values = form.values;
     const buttonArray = values.buttons?.filter(
@@ -189,9 +203,15 @@ export default function WhatsappTemplateById() {
     setSelectedText(selectedText?.trim());
   };
   const applyFormatting = (style) => {
+    let content = form.values.body;
+
+    if (style.startsWith("{{")) {
+      let newContent = content + style;
+      form.setFieldValue("body", newContent);
+      return;
+    }
     if (!selectedText) return;
     const formattedText = `${style}${selectedText}${style}`;
-    let content = form.values.body;
     contentHistory.current.push(content);
     const newContent = content.replace(selectedText, formattedText);
     form.setFieldValue("body", newContent);
@@ -251,6 +271,8 @@ export default function WhatsappTemplateById() {
       buttons: prevValues.buttons.filter((_, i) => i !== index),
     }));
   };
+  const dynamicVariables = parseStringWithVariables(form.values.body);
+
   return (
     <MantineProvider theme={whatsappTheme}>
       <form>
@@ -387,6 +409,7 @@ export default function WhatsappTemplateById() {
                         applyFormatting={applyFormatting}
                         insertValue={insertValue}
                         undo={undo}
+                        dynamicVariables={dynamicVariables}
                       />
                     }
                     styles={{
@@ -401,6 +424,13 @@ export default function WhatsappTemplateById() {
                     onSelect={handleSelect}
                     {...form.getInputProps("body")}
                   />
+                  {dynamicVariables?.map((data, index) => (
+                    <ContainedTextField
+                      key={data}
+                      placeholder={`Enter the content for {{${data}}}`}
+                      {...form.getInputProps(`example.${index}`)}
+                    />
+                  ))}
                   <ContainedTextField
                     label={
                       <>
@@ -462,7 +492,10 @@ export default function WhatsappTemplateById() {
                           )}
                         </Text>
                         <Text fz={"0.95rem"}>
-                          {TextWithFormatting(form.values.body)}
+                          {TextWithFormatting(
+                            form.values?.body,
+                            form.values?.example,
+                          )}
                         </Text>
                         <Text c="dimmed" fz={"0.9rem"}>
                           {form.values.footer}
@@ -490,4 +523,24 @@ export default function WhatsappTemplateById() {
       </form>
     </MantineProvider>
   );
+}
+function parseStringWithVariables(string) {
+  const regex = /{{(.*?)}}/g;
+  let match;
+  const dynamicVariables = [];
+
+  // Find all matches of dynamic variables in the string
+  while ((match = regex.exec(string)) !== null) {
+    dynamicVariables.push(match[1]);
+  }
+
+  return dynamicVariables;
+}
+function isArrayInCorrectOrder(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] !== (i + 1).toString()) {
+      return false;
+    }
+  }
+  return true;
 }
