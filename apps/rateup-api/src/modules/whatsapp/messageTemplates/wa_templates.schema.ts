@@ -32,6 +32,7 @@ const waTemplateInput = {
       }),
     )
     .optional(),
+  example: z.array(z.string()).optional(),
 };
 
 const waTemplateFormattedInput = {
