@@ -5,18 +5,8 @@ import {
   getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
   updateSurveyThemeActiveSurveyThemeInDB,
-  // getSurveyThemeBySurveyId,
 } from "./surveyTheme.service";
 import { log } from "../../utils/logger";
-
-// export async function getSurveyThemeBySurveyIdHandler(
-//   request: FastifyRequest<{ Params: bySurveyIdSchema }>,
-//   reply: FastifyReply,
-// ) {
-//   const { surveyId } = request.params;
-//   const surveyTheme = await getSurveyThemeBySurveyId(surveyId);
-//   reply.send(surveyTheme);
-// }
 
 export async function getSurveyThemeByIdHandler(
   request: FastifyRequest<{ Params: { webSurveyThemeId: string } }>,

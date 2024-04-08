@@ -9,7 +9,8 @@ import {
   getPublicLandingPageWithShortId,
   updateLandingPageWithShortId,
 } from "./landingPage.controllers";
-import { landingPageSchemas, landingPageSchemaRef } from "./landingPage.schema";
+import { landingPageSchemaRef } from "./landingPage.schema";
+import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
 
 const getLandingPagesRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
@@ -63,20 +64,19 @@ const getLinkTypeDropdownOptionsRouteOptions: RouteShorthandOptionsWithHandler =
     handler: asyncErrHandler(getLinkTypeDropdownOptions),
   };
 
-const getPublicLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
+const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
   {
     schema: {},
-    // @ts-ignore
     config: { isPublic: true },
     handler: asyncErrHandler(getPublicLandingPageWithShortId),
   };
 
 export {
+  createLandingPageRouteOptions,
+  deleteLandingPageByIdRouteOptions,
   getLandingPagesRouteOptions,
   getLandingPageWithShortIdRouteOptions,
-  createLandingPageRouteOptions,
-  updateLandingPageWithShortIdRouteOptions,
-  deleteLandingPageByIdRouteOptions,
   getLinkTypeDropdownOptionsRouteOptions,
   getPublicLandingPageWithShortIdRouteOptions,
+  updateLandingPageWithShortIdRouteOptions,
 };
