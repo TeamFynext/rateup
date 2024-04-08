@@ -85,6 +85,7 @@ export async function getWaContactById(id: string) {
     name: waContact?.contact?.name,
     phone: waContact?.contact?.phone,
     source: waContact?.contact?.source,
+    updatedAt: waContact?.updatedAt,
     lastMessage: {
       messageBody:
         waContact?.waInbox.length > 0 ? waContact?.waInbox[0]?.messageBody : {},
@@ -156,6 +157,7 @@ export async function getAllWaContactsByOrgId(orgId: string) {
     name: contact?.contact?.name,
     phone: contact?.contact?.phone,
     source: contact?.contact?.source,
+    updatedAt: contact?.updatedAt,
     lastMessage: {
       messageBody:
         contact?.waInbox.length > 0 ? contact?.waInbox[0]?.messageBody : {},
@@ -189,4 +191,5 @@ export async function updateWaContactUpdatedById(
       updatedAt: timeStamp,
     },
   });
+  return updatedContact;
 }

@@ -10,29 +10,22 @@ import {
 } from "./surveyTheme.controller";
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
-  server.addHook("onRoute", (routeOptions) => {
-    if (routeOptions.config && routeOptions.config["isPublic"] === true) {
-      routeOptions.preHandler = [];
-      return;
-    } else {
-      routeOptions.preHandler = [checkSession];
-    }
-  });
-
   server.setErrorHandler(errorHandler);
 
-  server.get(
+  server.get("/:webSurveyThemeId", getSurveyThemeByIdHandler);
+  server.get("/", { preHandler: checkSession }, getAllThemesOfUserOrg);
+
+  server.post("/", { preHandler: checkSession }, createNewTheme);
+
+  server.put(
     "/:webSurveyThemeId",
-    // @ts-ignore
-    { config: { isPublic: true } },
-    getSurveyThemeByIdHandler,
+    { preHandler: checkSession },
+    updateSurveyThemeHandler,
   );
 
-  server.get("/", getAllThemesOfUserOrg);
-
-  server.post("/", createNewTheme);
-
-  server.put("/:webSurveyThemeId", updateSurveyThemeHandler);
-
-  server.delete("/:webSurveyThemeId", deleteTheme);
+  server.delete(
+    "/:webSurveyThemeId",
+    { preHandler: checkSession },
+    deleteTheme,
+  );
 }
