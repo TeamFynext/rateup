@@ -1,32 +1,31 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession";
-import { $surveyThemeRef } from "./surveyTheme.schema";
 import {
+  createNewTheme,
+  deleteTheme,
   errorHandler,
-  getSurveyThemeBySurveyIdHandler,
+  getAllThemesOfUserOrg,
+  getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
 } from "./surveyTheme.controller";
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
   server.setErrorHandler(errorHandler);
-  server.get(
-    "/:surveyId",
-    {
-      schema: {
-        params: $surveyThemeRef("bySurveyIdSchema"),
-      },
-    },
-    getSurveyThemeBySurveyIdHandler,
-  );
+
+  server.get("/:webSurveyThemeId", getSurveyThemeByIdHandler);
+  server.get("/", { preHandler: checkSession }, getAllThemesOfUserOrg);
+
+  server.post("/", { preHandler: checkSession }, createNewTheme);
+
   server.put(
-    "/:surveyThemeId",
-    {
-      preHandler: checkSession,
-      schema: {
-        params: $surveyThemeRef("bySurveyThemeIdSchema"),
-        body: $surveyThemeRef("surveyThemeSchemaCore"),
-      },
-    },
+    "/:webSurveyThemeId",
+    { preHandler: checkSession },
     updateSurveyThemeHandler,
+  );
+
+  server.delete(
+    "/:webSurveyThemeId",
+    { preHandler: checkSession },
+    deleteTheme,
   );
 }

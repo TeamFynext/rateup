@@ -9,6 +9,7 @@ import {
   WaTemplateFetchBody,
   WaTemplateFetchComponents,
 } from "../../../types/whatsapp.types";
+import { parseStringWithVariables } from "../../../utils/template";
 import {
   CreateWaTemplateFormattedInput,
   CreateWaTemplateInput,
@@ -19,12 +20,21 @@ export function generateTemplate(
   input: CreateWaTemplateInput,
 ): CreateWaTemplateFormattedInput {
   // TODO: remove 'any' type
-  let components: any = [
-    {
+  let components: any = [];
+  if (parseStringWithVariables(input.body)?.length > 0) {
+    components.push({
       type: WaTemplateComponentType.BODY,
       text: input.body,
-    },
-  ];
+      example: {
+        body_text: input.example,
+      },
+    });
+  } else {
+    components.push({
+      type: WaTemplateComponentType.BODY,
+      text: input.body,
+    });
+  }
 
   if (input.buttons?.length > 0) {
     components.push({

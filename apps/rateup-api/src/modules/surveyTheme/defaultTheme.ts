@@ -5,7 +5,7 @@ const background = {
   desktopbg: "",
   mobilebg: "",
   styles: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f7f7f7",
   },
 };
 const logo = {
@@ -42,11 +42,7 @@ const button = {
   position: { x: "CENTER", y: "DEFAULT" },
 };
 
-export const defaultTheme: SurveyTheme & surveyThemeSchemaCore = {
-  id: undefined,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  surveyId: undefined,
+export const defaultTheme = {
   welcomeTheme: {
     bg: background,
     logo: logo,

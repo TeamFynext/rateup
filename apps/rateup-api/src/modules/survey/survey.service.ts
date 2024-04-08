@@ -18,11 +18,9 @@ import { isShortId } from "./survey.utils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
-export async function createSurvey(
-  data: CreateSurveyInput,
-  createdBy: string,
-  notificationEmail?: string,
-) {
+export async function createSurvey(data: CreateSurveyInput, req) {
+  const { userId: createdBy, email: notificationEmail, orgId } = req?.user;
+
   const { templateId, ...input } = data;
   delete input.teamIds;
 
@@ -37,6 +35,13 @@ export async function createSurvey(
         };
       });
 
+      const { id: defaultThemeId } = await prisma.webSurveyTheme.findFirst({
+        where: {
+          orgId,
+          name: "Default Theme",
+        },
+      });
+
       const survey = await prisma.survey.create({
         data: {
           ...input,
@@ -47,6 +52,7 @@ export async function createSurvey(
           teams: {
             create: teamIds,
           },
+          webSurveyThemeId: defaultThemeId,
         },
       });
       return survey;
@@ -124,13 +130,7 @@ export async function cloneSurvey(
         create: teams,
       },
     };
-    const theme = await prisma.surveyTheme.findFirst({
-      where: {
-        surveyId: id,
-      },
-    });
-    delete theme["id"];
-    delete theme["surveyId"];
+
     const createClonedSurvey = async () => {
       const cloned = await prisma.survey.create({
         data: clonedSurvey,
@@ -142,12 +142,6 @@ export async function cloneSurvey(
     };
     const newClonedSurvey =
       await shortIdUniqueConstraintErrHandler(createClonedSurvey);
-    await prisma.surveyTheme.create({
-      data: {
-        ...theme,
-        surveyId: newClonedSurvey.id,
-      },
-    });
     return newClonedSurvey;
   } else {
     return "Survey not found to duplicate";
@@ -492,6 +486,11 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
               id: true,
             },
           },
+        },
+      },
+      WaFlow: {
+        select: {
+          dbFlowId: true,
         },
       },
     },

@@ -101,6 +101,7 @@ model Org {
   landingPage       LandingPage[]
   WaContact         WaContact[]
   LoyaltyApiKey     LoyaltyApiKey?
+  surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
 }
 
@@ -144,7 +145,7 @@ model WhatsappSettings {
   appId           String
   webhookPassword String?
 
-  type            String // enums.ts: WaConfigType
+  type String // enums.ts: WaConfigType
 
   encryption Json? // for flow {publicKey: string, privateKey: string}
 }
@@ -244,6 +245,8 @@ model Survey {
   publicKey               String?
   isEncrypted             Boolean         @default(false)
   surveyTheme             SurveyTheme?
+  webSurveyThemeId        String?         @db.Uuid
+  webSurveyTheme          WebSurveyTheme? @relation(fields: [webSurveyThemeId], references: [id])
   WaFlow                  WaFlow?
   spreadSheetId           String?
   redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
@@ -428,6 +431,19 @@ model SurveyTheme {
   welcomeTheme  Json
   surveyTheme   Json
   thankyouTheme Json
+}
+
+model WebSurveyTheme {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId     String    @db.Uuid
+  org       Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  name      String
+  theme     Json
+  survey    Survey[]
+
+  @@unique([orgId, name])
 }
 
 model Menu {

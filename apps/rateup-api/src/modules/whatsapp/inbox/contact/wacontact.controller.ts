@@ -13,42 +13,54 @@ import {
 import { ContactCore } from "../../../contact/contact.schema";
 import { log } from "../../../../utils/logger";
 import { AddMultipleWaContacts, ByWaContactId } from "./wacontact.schema";
+import { Contact, WaContact } from "@prisma/client";
 
 //this function is dedicated for listening to webhook from whatsapp
 export async function waContactHandler(contact: ContactCore, orgId: string) {
   try {
+    let globalContact = {} as Contact;
+    let waContact = {} as WaContact;
     const existingContact = await getContactByPhoneNumberAndOrgId(
       contact?.phone,
       orgId,
     );
     if (existingContact) {
+      globalContact = existingContact;
       const existingWaContact = await getWaContactByContactId(
         existingContact.id,
       );
       if (existingWaContact) {
-        return existingWaContact.id;
+        waContact = existingWaContact;
       } else {
         const addedWaContact = await addSingleWaContact(
           existingContact?.id,
           orgId,
         );
         if (addedWaContact) {
-          return addedWaContact.id;
+          waContact = addedWaContact;
         }
       }
     } else {
       const addedContact = await createContact({ ...contact, orgId });
       if (addedContact) {
+        globalContact = addedContact;
         const addedWaContact = await addSingleWaContact(
           addedContact?.id,
           orgId,
         );
         if (addedWaContact) {
-          return addedWaContact.id;
+          waContact = addedWaContact;
         }
       }
     }
-    return "";
+    return {
+      id: waContact.id,
+      contactId: globalContact.id,
+      name: globalContact.name,
+      phone: globalContact.phone,
+      source: globalContact.source,
+      updatedAt: waContact.updatedAt,
+    };
   } catch (error) {
     log.error("Error in WaContactHandler: ", error);
   }

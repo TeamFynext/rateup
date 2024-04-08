@@ -5,8 +5,10 @@ import {
   getWaContactByWaContactIdHandler,
 } from "./wacontact.controller";
 import { $waContact } from "./wacontact.schema";
+import { checkSession } from "../../../../utils/checkSession";
 
 export async function waContactRoutes(server: FastifyInstance) {
+  server.addHook("preHandler", checkSession);
   server.post("/", addMultipleWaContactsHandler);
   server.get("/", getAllWaContactsByOrgHandler);
   server.get(

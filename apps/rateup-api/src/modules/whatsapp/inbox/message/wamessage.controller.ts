@@ -7,11 +7,9 @@ import {
 import { ContactCore } from "../../../contact/contact.schema";
 import { waContactHandler } from "../contact/wacontact.controller";
 import {
-  getWaContactByContactId,
   getWaContactById,
   updateWaContactUpdatedById,
 } from "../contact/wacontact.service";
-import { getContactByPhoneNumberAndOrgId } from "../../../contact/contact.service";
 import { createTextMessage } from "../../whatsappSurvey/wasurvey.utils";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
 import {
@@ -20,6 +18,7 @@ import {
 } from "./wamessage.utils";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service";
 import { log } from "../../../../utils/logger";
+import { handleSendWsMessage } from "./wamessage.ws.controller";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
@@ -30,12 +29,20 @@ export async function handleWaMessages(
   userName?: string,
 ) {
   try {
+    // Create the message body
     let waMessageBody: WaInboxMessageBody = {
       exchangeProcess: type,
       send: type === "send" ? messageBody : null,
       receive: type === "receive" ? messageBody : null,
     };
-    let waContactId = "";
+    // Create the contact core
+    const contactCore: ContactCore = {
+      name: userName,
+      phone: phone,
+      source: "whatsapp",
+    };
+    // Handle the contact in either cases send or receive returns the merged format of contact and waContact
+    let waContact = await waContactHandler(contactCore, orgId);
     let parameterData = {};
     switch (type) {
       case "send": {
@@ -48,28 +55,30 @@ export async function handleWaMessages(
           parameterData = messageBody.template.components;
           waMessageBody.send.template = template.data;
         }
-        const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
-        const waContact = await getWaContactByContactId(contact.id);
-        waContactId = waContact.id;
       }
       case "receive": {
-        const contactCore: ContactCore = {
-          name: userName,
-          phone: phone,
-          source: "whatsapp",
-        };
-        waContactId = await waContactHandler(contactCore, orgId);
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
     }
     const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
+
     const waMessage = await addNewWaMessage(
       waMessageBody,
-      waContactId,
+      waContact?.id,
       waTimeStamp,
       parameterData,
     );
-    await updateWaContactUpdatedById(waContactId, waTimeStamp);
+    const updatedWaContact = await updateWaContactUpdatedById(
+      waContact?.id,
+      waTimeStamp,
+    );
+    // Update the waContact with the updated timestamp
+    waContact = { ...waContact, updatedAt: updatedWaContact.updatedAt };
+    // Send the message to the connected clients
+    await handleSendWsMessage(orgId, {
+      contact: waContact,
+      message: waMessage,
+    });
   } catch (error) {
     log.error("Error in handleWaMessages: ", error);
   }

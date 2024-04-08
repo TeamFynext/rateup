@@ -8,6 +8,7 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { google } from "googleapis";
+import { defaultTheme } from "../surveyTheme/defaultTheme";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -15,6 +16,12 @@ export async function createOrg(input: CreateOrgInput) {
     data: {
       name: input.name,
       ownerId: input.owner,
+      surveyThemes: {
+        create: {
+          name: "Default Theme",
+          theme: defaultTheme,
+        },
+      },
     },
   });
   return org;
