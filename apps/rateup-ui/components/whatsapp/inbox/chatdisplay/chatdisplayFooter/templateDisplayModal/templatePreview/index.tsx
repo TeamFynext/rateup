@@ -12,7 +12,7 @@ import WaTemplateFormElements from "./formElements";
 import { useImmer } from "use-immer";
 import { uploadFile } from "../../../../../../../utils/file-upload/upload";
 import { validateInboxTemplateSending } from "../../../../../../../utils/whatsapp/inbox";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 interface Props {
   template: WaTemplateFetchBody;
   sendTemplate: UseMutationResult<
@@ -30,6 +30,7 @@ interface Props {
 }
 export default function WaInboxTemplatePreview(props: Props) {
   const [parameterData, setParameterData] = useImmer<any>([]);
+  const [loading, setLoading] = useState(false);
   async function handleFilesIfAny(data: Array<any>) {
     const newData = await Promise.all(
       data.map(async (item, index) => {
@@ -62,11 +63,14 @@ export default function WaInboxTemplatePreview(props: Props) {
     return newData;
   }
   async function handleSendTemplate() {
+    setLoading(true);
     const modifiedParamData = await handleFilesIfAny(parameterData);
     props?.sendTemplate?.mutate({
       templateId: props?.selectedTemplateId,
       parameterData: modifiedParamData,
     });
+    setLoading(false);
+    props?.onClose();
   }
   useEffect(() => {
     setParameterData(() => []);
@@ -83,6 +87,7 @@ export default function WaInboxTemplatePreview(props: Props) {
           </Group>
         </Group>
         <RateupButtonPrimary
+          loading={loading}
           disabled={validateInboxTemplateSending(
             props?.template?.components,
             parameterData,

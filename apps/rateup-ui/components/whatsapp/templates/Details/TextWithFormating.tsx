@@ -1,4 +1,4 @@
-export default function TextWithFormatting(text) {
+export default function TextWithFormatting(text, examples) {
   // Function to parse the text and apply formatting
   const parseText = (text) => {
     return text
@@ -21,11 +21,16 @@ export default function TextWithFormatting(text) {
         }
       });
   };
+  const parsedValue = parseText(text);
+  return <div>{replacePlaceholdersWithValues(parsedValue?.[0], examples)}</div>;
+}
 
-  return (
-    <div>
-      {/* Render the parsed text */}
-      {parseText(text)}
-    </div>
-  );
+function replacePlaceholdersWithValues(inputString: string, values: string[]) {
+  for (let index = 0; index < values.length; index++) {
+    inputString = inputString?.replace(
+      new RegExp(`\\{\\{${index + 1}\\}\\}`, "g"),
+      values?.[index],
+    );
+  }
+  return inputString;
 }

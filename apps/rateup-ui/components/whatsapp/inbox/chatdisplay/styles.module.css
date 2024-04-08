@@ -7,3 +7,8 @@
   overflow: hidden;
   height: 100%;
 }
+.inner_animated {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}

@@ -59,8 +59,7 @@ export const templateSchema = z
             .string()
             .max(15)
             .refine((text) => !text.includes(" "), {
-              message:
-                "Name cannot contain spaces. Replace it with underscore(_)",
+              message: "Name cannot contain spaces",
             })
             .optional(),
           phone_number: z
@@ -73,6 +72,7 @@ export const templateSchema = z
       )
       .max(10),
     status: z.nativeEnum(WaTemplateStatus),
+    example: z.array(z.string().trim()).optional(),
   })
   .superRefine((values, ctx) => {
     const format = values.format;

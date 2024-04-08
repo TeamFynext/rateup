@@ -77,7 +77,11 @@ export const FlowChoiceQuestions = [
   QuestionType.DDSS,
 ];
 
-const FlowInputQuestions = [QuestionType.Text, QuestionType.Date];
+const FlowInputQuestions = [
+  QuestionType.Text,
+  QuestionType.TextArea,
+  QuestionType.Date,
+];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 

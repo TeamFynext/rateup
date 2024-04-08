@@ -1,14 +1,13 @@
-import { Divider, Group, Loader, Stack, Text } from "@mantine/core";
+import { Divider, Group, Stack, Text } from "@mantine/core";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
 import { IconSearch } from "@tabler/icons-react";
 import WaInboxChatSelectCard from "./chatselectCard";
 import AddWaContactModal from "./addwaContactModal";
-import { useGetAllWaContacts } from "../../../../backend/whatsapp/inbox/contact/wacontact.query";
-export default function WaInboxChatSelect() {
-  const { data, isLoading, error } = useGetAllWaContacts();
-  if (isLoading) return <Loader />;
-  if (error) return <div>Error: {error.message}</div>;
+import { WaContact } from "../../../../types/global";
+export default function WaInboxChatSelect(props: {
+  allWaContacts: WaContact[];
+}) {
   return (
     <Stack className={classes.wrapper}>
       <Stack className={classes.chat_select_header}>
@@ -21,7 +20,7 @@ export default function WaInboxChatSelect() {
             <Text className={classes.chat_select_filter_text}>All Chats</Text>
             <Group className={classes.chat_select_filter_indicator_wrapper}>
               <Text className={classes.chat_indicator_text}>
-                {data?.length} Chats
+                {props?.allWaContacts?.length} Chats
               </Text>
               {/* <div className={classes.dot}></div> */}
               {/* <Text className={classes.chat_indicator_text}>200 unread</Text> */}
@@ -32,7 +31,7 @@ export default function WaInboxChatSelect() {
       </Stack>
       <Divider />
       <div className={classes.chat_cards_wrapper}>
-        {data?.map((contact) => (
+        {props?.allWaContacts?.map((contact) => (
           <WaInboxChatSelectCard key={contact.id} {...contact} />
         ))}
       </div>

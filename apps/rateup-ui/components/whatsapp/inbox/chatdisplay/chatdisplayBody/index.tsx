@@ -20,7 +20,9 @@ export default function WaInboxChatDisplayBody(props: Props) {
   const { scrollIntoView, targetRef, scrollableRef } = useScrollIntoView<
     HTMLDivElement,
     HTMLDivElement
-  >();
+  >({
+    duration: 0,
+  });
   const { ref: targetInViewportRef, entry } = useIntersection({
     root: scrollableRef.current,
     threshold: 1,
@@ -56,7 +58,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
   };
   useEffect(() => {
     scrollIntoView();
-  }, [props]);
+  }, [props, targetRef.current]);
   return (
     <div className={classes.wrapper}>
       <div className={classes.inner} ref={scrollableRef}>
@@ -64,6 +66,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
           <WaInboxSingleMessageLayout
             exchangeProcess={message?.messageBody?.exchangeProcess}
             messageObject={message}
+            key={message?.id}
           >
             {singleMessage(
               message?.messageBody,
@@ -71,8 +74,8 @@ export default function WaInboxChatDisplayBody(props: Props) {
             )}
           </WaInboxSingleMessageLayout>
         ))}
-        <div ref={targetRef}></div>
         <div ref={targetInViewportRef}></div>
+        <div ref={targetRef}></div>
       </div>
       {!entry?.isIntersecting && (
         <div className={classes.affix}>

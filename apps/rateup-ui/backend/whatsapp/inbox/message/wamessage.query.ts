@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getMessagesByWaContactId, sendNewWaMessage } from "./wamessage.api";
 
 export const useGetMessagesByWaContactId = (contactId: string) => {
@@ -10,14 +10,8 @@ export const useGetMessagesByWaContactId = (contactId: string) => {
 };
 
 export const useSendNewWaMessage = (contactId: string) => {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (message: any) => sendNewWaMessage(contactId, message),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-      queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["wa-contact", contactId] });
-    },
     onError: (error) => {
       console.error("Error sending message", error);
     },

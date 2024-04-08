@@ -33,6 +33,7 @@ import RateupLoader from "../../../Loaders/RateupLoader";
 
 function FlowPage() {
   const router = useRouter();
+  const { tab: tabView } = router.query;
   const { dbFlowId } = router.query as { dbFlowId: string };
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
   const { data: surveyData } = useSurvey(flow?.surveyId);
@@ -128,6 +129,12 @@ function FlowPage() {
       setTab(FlowTabEnum.Result);
     }
   }, [survey]);
+
+  useEffect(() => {
+    if (tabView && Object.values(FlowTabEnum).includes(tabView as any)) {
+      setTab(tabView as any);
+    }
+  }, [tabView]);
 
   useEffect(() => {
     teamOptions && setSelectedTeamId(teamOptions[0]?.value);

@@ -12,8 +12,9 @@ interface Props {
 export default function WaInboxTemplate(props: Props) {
   return (
     <Box className={classes.template_wrapper}>
-      {props?.templateBody?.components?.map((component) => (
+      {props?.templateBody?.components?.map((component, i) => (
         <WaInboxTemplateComponents
+          key={i}
           parameterData={props?.parameters?.find(
             (param) => param?.type === component?.type.toLowerCase(),
           )}

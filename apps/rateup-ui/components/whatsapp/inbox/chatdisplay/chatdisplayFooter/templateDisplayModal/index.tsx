@@ -62,8 +62,8 @@ export default function WaInboxTemplateDisplayModal(props: Props) {
                   setTemplateSFData={setSFTemplates}
                 />
                 <RadioGroup onChange={setSelectedTemplateId} h={"100%"}>
-                  {sfTemplates?.map((template) => (
-                    <WaInboxTemplateSelectCard {...template} />
+                  {sfTemplates?.map((template, i) => (
+                    <WaInboxTemplateSelectCard {...template} key={i} />
                   ))}
                 </RadioGroup>
               </Stack>

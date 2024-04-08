@@ -146,6 +146,9 @@ declare global {
       };
       name: string;
     }[];
+    WaFlow?: {
+      dbFlowId?: string;
+    };
   }
 
   type dataError = {
@@ -1009,6 +1012,7 @@ export type WaContact = {
   name: string;
   phone: string;
   source: string;
+  updatedAt: string;
   lastMessage: { messageBody: WaInboxMessageBody; waCreatedAt: string };
   userInitiatedFinalTimeStamp: string;
 };

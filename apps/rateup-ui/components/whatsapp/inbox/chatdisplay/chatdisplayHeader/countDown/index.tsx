@@ -35,7 +35,7 @@ export default function WaInboxCountdownTimer({
       </Badge>
     );
   }
-  if (!percentageDifference) {
+  if (!percentageDifference || !timeStamp) {
     return <Loader size={"xs"} />;
   }
   return (

@@ -13,18 +13,28 @@ import {
   IconStrikethrough,
   IconCode,
   IconArrowBackUp,
+  IconPlus,
 } from "@tabler/icons-react";
 import EmojiPicker from "emoji-picker-react";
+import { useEffect, useState } from "react";
 
 export const TextFormateToolBar = ({
   insertValue,
   applyFormatting,
   undo,
+  dynamicVariables,
 }: {
   insertValue: (value) => void;
   applyFormatting: (value: string) => void;
   undo: () => void;
+  dynamicVariables: any[];
 }) => {
+  const [variableCount, setVariableCount] = useState(1);
+  useEffect(() => {
+    if (dynamicVariables?.length) {
+      setVariableCount(dynamicVariables?.length + 1);
+    }
+  }, [dynamicVariables]);
   return (
     <Box>
       <Group
@@ -72,6 +82,18 @@ export const TextFormateToolBar = ({
             onClick={() => applyFormatting("```")}
           >
             <IconCode color="var(--grey-color)" size={14} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Add Variable">
+          <ActionIcon
+            variant={"transparent"}
+            size={"xs"}
+            onClick={() => {
+              applyFormatting(`{{${variableCount}}}`);
+              setVariableCount((count) => (count += 1));
+            }}
+          >
+            <IconPlus color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Undo the last text formating">

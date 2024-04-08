@@ -9,11 +9,16 @@ import {
   returnMessageContentBasedOnParsedMessage,
 } from "../../../../../utils/whatsapp/inbox";
 import WaInboxSessionBadge from "./sessionBadge";
+import { useQueryClient } from "@tanstack/react-query";
 export default function WaInboxChatSelectCard(props: WaContact) {
   const router = useRouter();
   const params = useSearchParams();
+  const queryClient = useQueryClient();
   function handleChatCardClick() {
     router.push(`?waContactId=${props.id}`);
+    queryClient.invalidateQueries({
+      queryKey: ["wa-messages", props?.id],
+    });
   }
 
   return (
