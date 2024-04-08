@@ -12,6 +12,7 @@ import { updateMonthlyStat } from "../stats/stats.service";
 import { createMenuBanner } from "./banner/banner.service";
 import { createMenuCategory } from "./category/category.service";
 import { createMenuItem } from "./item/item.service";
+import { getTeamById } from "../team/team.service";
 
 export async function createMenu(data: CreateMenuInput) {
   if (data.teamId === undefined) return;
@@ -30,6 +31,15 @@ export async function createMenu(data: CreateMenuInput) {
       shortUrlId: getShortUrlId(),
     },
   });
+
+  if (menu) {
+    let team = await getTeamById(teamId);
+    await prisma.usageStats.update({
+      where: { orgId: team.orgId },
+      data: { menusCount: { increment: 1 } },
+    });
+  }
+
   return menu;
 }
 
@@ -326,6 +336,15 @@ export async function deleteMenu(id: string) {
       id,
     },
   });
+
+  if (menu) {
+    let team = await getTeamById(menu.teamId);
+    await prisma.usageStats.update({
+      where: { orgId: team.orgId },
+      data: { menusCount: { decrement: 1 } },
+    });
+  }
+
   return menu;
 }
 export async function getMenuLanding(id: string) {
