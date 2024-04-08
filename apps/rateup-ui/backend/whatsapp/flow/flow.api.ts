@@ -62,7 +62,11 @@ export type createFlowInput = {
   categories: string[];
 };
 export async function createFlow(data: createFlowInput) {
-  await axiosClient.post(`${BASE}`, data);
+  try {
+    await axiosClient.post(`${BASE}`, data);
+  } catch (error) {
+    throw Error(error?.response?.data);
+  }
 }
 export async function updateFlow(
   dbFlowId: string,
