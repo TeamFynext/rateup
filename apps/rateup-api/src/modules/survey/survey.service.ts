@@ -6,7 +6,7 @@ import {
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
-import { getTeamIdsByUserId } from "../team/team.service";
+import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
 import { log } from "../../utils/logger";
 import { getReviewsBySurveyTeamMapId } from "../reviewSuggestion/reviewSuggestion.service";
@@ -14,7 +14,7 @@ import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
 } from "../../utils/commnUtils";
-import { isShortId } from "./survey.utils";
+import { getSurveysOrgId, isShortId } from "./survey.utils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -60,6 +60,14 @@ export async function createSurvey(data: CreateSurveyInput, req) {
 
     const survey = await shortIdUniqueConstraintErrHandler(createRecord);
     if (survey) {
+      if (data.teamIds.length > 0) {
+        let team = await getTeamById(data.teamIds[0]);
+        await prisma.usageStats.update({
+          where: { orgId: team.orgId },
+          data: { surveysCount: { increment: 1 } },
+        });
+      }
+
       return { ...survey, teamIds: input?.teamIds };
     }
     return null;
@@ -142,6 +150,15 @@ export async function cloneSurvey(
     };
     const newClonedSurvey =
       await shortIdUniqueConstraintErrHandler(createClonedSurvey);
+
+    if (newClonedSurvey && teamIds.length > 0) {
+      let team = await getTeamById(teamIds[0]);
+      await prisma.usageStats.update({
+        where: { orgId: team.orgId },
+        data: { surveysCount: { increment: 1 } },
+      });
+    }
+
     return newClonedSurvey;
   } else {
     return "Survey not found to duplicate";
@@ -561,11 +578,22 @@ export async function getSurveyTemplates(surveyType: string) {
 
 //------------DELETE SURVEY by id --------
 export async function deleteSurveyById(id: string) {
+  let orgId = await getSurveysOrgId(id);
   const survey = await prisma.survey.delete({
     where: {
       id,
     },
+    include: {
+      teams: true,
+    },
   });
+
+  if (survey && orgId) {
+    await prisma.usageStats.update({
+      where: { orgId: orgId },
+      data: { surveysCount: { decrement: 1 } },
+    });
+  }
   return survey;
 }
 
@@ -607,6 +635,13 @@ export async function deleteSurveyFromTeam(
     const deletedSurvey = await prisma.survey.delete({
       where: { id },
     });
+    if (deletedSurvey && surveyTeams.length > 0) {
+      let team = await getTeamById(surveyTeams[0].teamId);
+      await prisma.usageStats.update({
+        where: { orgId: team.orgId },
+        data: { surveysCount: { decrement: 1 } },
+      });
+    }
     return deletedSurvey;
   }
 }
