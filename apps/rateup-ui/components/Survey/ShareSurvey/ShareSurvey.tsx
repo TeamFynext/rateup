@@ -53,6 +53,7 @@ import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import TagManager from "./TagManager";
 import { SurveyType } from "../../../types/enums";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
+import { getContent } from "../../../utils";
 
 const ShareSurvey = ({
   survey,
@@ -312,7 +313,11 @@ const ShareSurvey = ({
                   style={{ marginBottom: "10px" }}
                 >
                   <Title order={4}>
-                    {Object.values(item?.title)[0] as React.ReactNode}
+                    {
+                      getContent(
+                        Object.values(item?.title)[0],
+                      ) as React.ReactNode
+                    }
                   </Title>
                   <ul>
                     {item?.errors?.map((error, index) => (

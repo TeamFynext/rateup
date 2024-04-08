@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Collapse,
+  Flex,
   Group,
   Paper,
   Stack,
@@ -269,8 +270,8 @@ function ScreenListItem({
                 );
               })}
               {provided.placeholder}
-              <Group w={"100%"} mt={"md"}>
-                <Box>
+              <Flex w={"100%"} mt={"md"} gap={"xs"}>
+                <Box w={"100%"}>
                   <Text fz={"xs"}>Next button text</Text>
                   <EditableText
                     text={footerLabel}
@@ -289,15 +290,15 @@ function ScreenListItem({
                     }}
                   />
                 </Box>
-                <RateupButtonBlue
+                <ActionIcon
                   onClick={handleAddElementClick}
-                  title={"Add"}
-                  leftIcon={<IconPlus />}
-                  size="md"
-                  radius={"sm"}
-                  mt="md"
-                />
-              </Group>
+                  w={"min-content"}
+                  p={"lg"}
+                  mt={"lg"}
+                >
+                  <IconPlus size={30} /> Add
+                </ActionIcon>
+              </Flex>
             </Stack>
           )}
         </Droppable>
