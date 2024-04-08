@@ -114,7 +114,7 @@ export async function importFlowsHandler(
       await createSurveyFromFlow({
         flowJson: json,
         flowMap: mapData[waFlowId],
-        userId: req.user.userId,
+        req: req,
         teamIds: req.body.teamIds,
       });
 
@@ -138,33 +138,41 @@ export async function createFlowHandler(
   }>,
   res: FastifyReply,
 ) {
-  const { orgId } = req.user;
-  const { name, categories, teamIds } = req.body;
-  log.trace("creating flow in wa %s", name);
-  const { id: flowId } = await createFlowInWa(orgId, { name, categories });
-  log.trace("creating survey from flow %s", name);
-  const survey = (await createSurvey(
-    {
-      title: name,
-      teamIds,
-      type: SurveyType.WaFlow,
-      languages: ["en"],
-    },
-    req.user.userId,
-  )) as Survey;
-  log.trace("creating flow copy in db %s", name);
-  await createFlowCopyInDb({
-    orgId,
-    flowId,
-    json: {
-      version: "3.1",
-      screens: [],
-    } as WaFlowJson,
-    flowMap: {},
-    surveyId: survey.id,
-    status: WaFlowStatus.DRAFT,
-    name: name,
-  });
+  try {
+    const { orgId } = req.user;
+    const { name, categories, teamIds } = req.body;
+    log.trace("creating flow in wa %s", name);
+    const { id: flowId } = await createFlowInWa(orgId, { name, categories });
+    log.trace("creating survey from flow %s", name);
+    const survey = (await createSurvey(
+      {
+        title: name,
+        teamIds,
+        type: SurveyType.WaFlow,
+        languages: ["en"],
+      },
+      req,
+    )) as Survey;
+    log.trace("creating flow copy in db %s", name);
+    await createFlowCopyInDb({
+      orgId,
+      flowId,
+      json: {
+        version: "3.1",
+        screens: [],
+      } as WaFlowJson,
+      flowMap: {},
+      surveyId: survey.id,
+      status: WaFlowStatus.DRAFT,
+      name: name,
+    });
+  } catch (error) {
+    return res
+      .status(400)
+      .send(
+        error?.message?.split("error_message:")?.[1] ?? "Creating flow Error",
+      );
+  }
 }
 
 export async function updateFlowHandler(

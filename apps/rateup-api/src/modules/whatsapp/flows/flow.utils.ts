@@ -247,18 +247,18 @@ export function findElementNameFromPayloadName(
   }
 }
 
-interface createSurveyFromFlowProps {
+interface CreateSurveyFromFlowProps {
   flowJson: WaFlowJson;
   flowMap: any;
-  userId: string;
+  req: any;
   teamIds: string[];
 }
 export async function createSurveyFromFlow({
   flowJson,
   flowMap,
-  userId,
+  req,
   teamIds,
-}: createSurveyFromFlowProps) {
+}: CreateSurveyFromFlowProps) {
   const lang: string = "en";
   const survey: CreateSurveyInput = {
     title: flowJson.screens[0].title,
@@ -269,7 +269,7 @@ export async function createSurveyFromFlow({
     teamIds: teamIds,
   };
 
-  const surveyRes = (await createSurvey(survey, userId)) as Survey;
+  const surveyRes = (await createSurvey(survey, req)) as Survey;
 
   for (const formElement of waFlowFormElementIterator({
     flowJson,

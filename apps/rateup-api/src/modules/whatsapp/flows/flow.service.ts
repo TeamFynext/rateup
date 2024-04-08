@@ -389,7 +389,6 @@ export async function createFlowInWa(
   createFlowInput: { name: string; categories: string[] },
 ) {
   const { wabaId, accessToken } = await getWaSettings(orgId);
-  console.log(createFlowInput);
 
   const { data } = await callWhatsappApi(
     `/${wabaId}/flows`,
