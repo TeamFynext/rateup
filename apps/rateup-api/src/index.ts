@@ -18,6 +18,8 @@ const server = Fastify({
   // logger: logOptions,
 });
 
+server.register(require("@fastify/websocket"));
+
 supertokens.init(SuperTokensConfig);
 
 server.register(cors, {

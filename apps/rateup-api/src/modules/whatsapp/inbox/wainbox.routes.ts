@@ -4,6 +4,7 @@ import { waContactSchemas } from "./contact/wacontact.schema";
 import { waMessageSchemas } from "./message/wamessage.schema";
 import { waContactRoutes } from "./contact/wacontact.routes";
 import { waMessageRoutes } from "./message/waMessage.routes";
+import { waWSMessageRoutes } from "./message/wamessage.ws.routes";
 
 export async function waInboxRoutes(server: FastifyInstance) {
   const modules = [waContactSchemas, waMessageSchemas];
@@ -12,7 +13,7 @@ export async function waInboxRoutes(server: FastifyInstance) {
       server.addSchema(schema);
     }
   }
-  server.addHook("preHandler", checkSession);
   server.register(waContactRoutes, { prefix: "/contact" });
   server.register(waMessageRoutes, { prefix: "/message" });
+  server.register(waWSMessageRoutes, { prefix: "/ws" });
 }
