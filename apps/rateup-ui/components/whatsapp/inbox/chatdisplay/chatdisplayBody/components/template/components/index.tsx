@@ -5,6 +5,7 @@ import {
   WaTemplateFetchBodyComponent,
 } from "../../../../../../../../types/global";
 import { IconMessageReply } from "@tabler/icons-react";
+import React from "react";
 
 interface Props {
   templateComponent: WaTemplateFetchBodyComponent;
@@ -75,7 +76,7 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
   return (
     <Stack gap={0}>
       {props?.buttons?.map((button, i) => (
-        <>
+        <React.Fragment key={i}>
           {i === 0 && <Divider />}
           <Button
             className={classes.reply_button}
@@ -85,7 +86,7 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
             {button?.text}
           </Button>
           {i !== props?.buttons?.length - 1 && <Divider />}
-        </>
+        </React.Fragment>
       ))}
     </Stack>
   );

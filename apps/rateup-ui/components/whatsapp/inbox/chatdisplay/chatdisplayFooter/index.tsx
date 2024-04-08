@@ -8,9 +8,11 @@ import { WaContact } from "../../../../../types/global";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import WaInboxTemplateDisplayModal from "./templateDisplayModal";
 import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
+import { useRef } from "react";
 
 export default function WaInboxChatDisplayFooter(props: WaContact) {
   const timeStamp = props.userInitiatedFinalTimeStamp;
+  const inputRef = useRef(null);
   const sendnewWaMessage = useSendNewWaMessage(props?.id);
   const form = useForm({
     initialValues: {
@@ -18,14 +20,25 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
       text: { body: "" },
     },
   });
-  function handleSendMessage() {
+  function handleSendMessage(e) {
+    e.preventDefault();
     sendnewWaMessage.mutate(form.values);
     form.reset();
   }
   function insertEmoji(value: string) {
+    const { selectionStart, selectionEnd } = inputRef.current;
+    const text = form.values.text.body;
+    const before = text.substring(0, selectionStart);
+    const after = text.substring(selectionEnd);
+    const updatedText = before + value + after;
     form.setValues({
-      text: { ...form.values.text, body: form.values.text.body + value },
+      text: { ...form.values.text, body: updatedText },
     });
+    setTimeout(() => {
+      const newPosition = before.length + value.length;
+      inputRef.current.selectionStart = newPosition;
+      inputRef.current.selectionEnd = newPosition;
+    }, 0);
   }
   return (
     <div className={classes.wrapper}>
@@ -33,23 +46,26 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
         sessionExpired={isInboxSessionExpired(timeStamp)}
         waContact={props}
       />
-      <ContainedTextField
-        disabled={isInboxSessionExpired(timeStamp)}
-        leftSection={<PopoverEmojiPicker onEmojiClick={insertEmoji} />}
-        flex={1}
-        value={form.values.text.body}
-        onChange={(e) =>
-          form.setValues({
-            text: { ...form.values.text, body: e.target.value },
-          })
-        }
-      />
-      <RateupButtonPrimary
-        disabled={isInboxSessionExpired(timeStamp)}
-        title="Send"
-        rightIcon={<IconSend />}
-        onClick={handleSendMessage}
-      />
+      <form action="" onSubmit={handleSendMessage} className={classes.form}>
+        <ContainedTextField
+          ref={inputRef}
+          disabled={isInboxSessionExpired(timeStamp)}
+          leftSection={<PopoverEmojiPicker onEmojiClick={insertEmoji} />}
+          flex={1}
+          value={form.values.text.body}
+          onChange={(e) =>
+            form.setValues({
+              text: { ...form.values.text, body: e.target.value },
+            })
+          }
+        />
+        <RateupButtonPrimary
+          disabled={isInboxSessionExpired(timeStamp)}
+          type={"submit"}
+          title="Send"
+          rightIcon={<IconSend />}
+        />
+      </form>
     </div>
   );
 }
