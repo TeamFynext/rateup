@@ -12,11 +12,10 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconCheck,
   IconChevronDown,
   IconChevronUp,
-  IconEdit,
   IconGripVertical,
+  IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -42,7 +41,6 @@ import {
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import ConfirmationModal from "../../../../Modal/ConfirmationModal";
 import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
-import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 import { EditableText } from "../../../../input/EditableText";
 import { FlowMaxElementsPerScreen } from "../../../whatsappConfig";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
@@ -64,7 +62,7 @@ function ScreenListItem({
   setExpanded,
 }: Readonly<ScreenListItemProps>) {
   const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
-
+  const [editingItemForFooter, setEditingItemFooter] = useState(null);
   const {
     survey,
     flowJson,
@@ -178,8 +176,8 @@ function ScreenListItem({
       shadow="lg"
       key={screen.id}
       style={{
-        border: ".1px solid rgba(0,0,0,.1)",
-        borderRadius: "8px",
+        border: ".0063rem solid rgba(0,0,0,.1)",
+        borderRadius: ".5rem",
       }}
     >
       <ConfirmationModal
@@ -192,61 +190,44 @@ function ScreenListItem({
         confirmLabel="Delete"
         onConfirm={handleDeleteScreen}
       />
-      <Stack justify="space-between" gap={0}>
+      <Text fz={"xs"}>Screen name</Text>
+      <Group gap={5}>
+        <Tooltip label="Move Screen Up" openDelay={500}>
+          <ActionIcon
+            onClick={() => handleMoveScreen("up")}
+            variant={"outline"}
+            size={20}
+            disabled={currentScreenIndex === 0}
+          >
+            <IconChevronUp size={20} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Move Screen Down" openDelay={500}>
+          <ActionIcon
+            onClick={() => handleMoveScreen("down")}
+            variant={"outline"}
+            size={20}
+            disabled={currentScreenIndex === flowJson.screens.length - 1}
+          >
+            <IconChevronDown size={20} />
+          </ActionIcon>
+        </Tooltip>
         <EditableText
           text={screen.title}
           setText={updateScreenTitle}
           id={screen.title}
-          editMode={editingItem === screen.title}
+          editMode={flowEditable && editingItem === screen.title}
           setEditingItem={setEditingItem}
           placeholder="Section title (Required if more than one section is added)"
           style={{
-            flexGrow: 1,
-          }}
-          textStyle={{
+            flex: 1,
             fontWeight: "bold",
-            fontSize: "1.2rem",
+            fontSize: "19.2px",
+            maxWidth: 180,
           }}
-          textInputRef={textInputRef}
         />
-        <Group justify="space-between">
-          <Group gap={2}>
-            <Tooltip label="Move Screen Up" openDelay={500}>
-              <ActionIcon
-                onClick={() => handleMoveScreen("up")}
-                variant={"outline"}
-                size={20}
-                disabled={currentScreenIndex === 0}
-              >
-                <IconChevronUp size={20} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Move Screen Down" openDelay={500}>
-              <ActionIcon
-                onClick={() => handleMoveScreen("down")}
-                variant={"outline"}
-                size={20}
-                disabled={currentScreenIndex === flowJson.screens.length - 1}
-              >
-                <IconChevronDown size={20} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
+        <Group ml={"auto"}>
           <Group gap={"5"}>
-            {flowEditable && (
-              <Tooltip label="Edit Screen">
-                <ActionIcon
-                  onClick={() => {
-                    textInputRef?.current?.focus();
-                    setEditingItem(screen.title);
-                  }}
-                  variant="subtle"
-                  color="gray"
-                >
-                  <IconEdit size={20} />
-                </ActionIcon>
-              </Tooltip>
-            )}
             {flowEditable && (
               <Tooltip label="Delete Screen">
                 <ActionIcon onClick={toggle} variant="subtle" color="gray">
@@ -263,7 +244,7 @@ function ScreenListItem({
             </ActionIcon>
           </Group>
         </Group>
-      </Stack>
+      </Group>
       <Collapse in={expanded}>
         <Droppable droppableId={screen.id} direction="vertical">
           {(provided) => (
@@ -288,25 +269,35 @@ function ScreenListItem({
                 );
               })}
               {provided.placeholder}
-              <Group w={"100%"}>
-                <ContainedTextField
-                  value={footerLabel}
-                  label={"Next button text"}
-                  mb={"xs"}
-                  placeholder="Enter the next button text"
-                  onChange={(e) => setFooterLabel(e?.target?.value)}
-                  w={"80%"}
+              <Group w={"100%"} mt={"md"}>
+                <Box>
+                  <Text fz={"xs"}>Next button text</Text>
+                  <EditableText
+                    text={footerLabel}
+                    setText={setFooterLabel}
+                    setEditingItem={setEditingItemFooter}
+                    id={screen.title}
+                    editMode={
+                      flowEditable && editingItemForFooter === screen.title
+                    }
+                    placeholder="Next button text"
+                    handleOnFunction={false}
+                    handleButtonTextUpdate={handleButtonTextUpdate}
+                    size="md"
+                    style={{
+                      flex: 1,
+                    }}
+                  />
+                </Box>
+                <RateupButtonBlue
+                  onClick={handleAddElementClick}
+                  title={"Add"}
+                  leftIcon={<IconPlus />}
+                  size="md"
+                  radius={"sm"}
+                  mt="md"
                 />
-                <ActionIcon mt={"xs"} onClick={handleButtonTextUpdate}>
-                  <IconCheck />
-                </ActionIcon>
               </Group>
-              <RateupButtonBlue
-                onClick={handleAddElementClick}
-                title={"Add Element"}
-                size="md"
-                variant="outline"
-              />
             </Stack>
           )}
         </Droppable>
@@ -374,7 +365,7 @@ function FormElementCard({
       >
         <IconGripVertical size={20} stroke={1.5} />
       </div>
-      <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
+      <Badge style={{ minWidth: "1.875rem" }} c={"white"} variant={"filled"}>
         {index + 1}
       </Badge>
       <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
@@ -389,6 +380,7 @@ function FormElementCard({
           }}
           variant="subtle"
           color="gray"
+          me={"xs"}
         >
           <IconTrash />
         </ActionIcon>

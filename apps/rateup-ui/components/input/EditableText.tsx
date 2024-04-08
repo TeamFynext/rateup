@@ -1,16 +1,13 @@
-import { ContainedTextField } from "./ContainedInput/ContainedInput";
 import {
   ActionIcon,
   FocusTrap,
-  Group,
+  Input,
   MantineStyleProp,
-  Text,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
-import inputStyles from "./InputStyles.module.css";
-import { useState } from "react";
 import { getHotkeyHandler } from "@mantine/hooks";
+import { IconCheck, IconPencil } from "@tabler/icons-react";
+import { useState } from "react";
 import { SAVE_HOTKEY } from "../../utils/constants";
 
 interface EditableTextProps {
@@ -18,14 +15,13 @@ interface EditableTextProps {
   setText: (text: string) => void;
   id: string;
   setEditingItem: (id: any) => void;
-  placeholder?: string;
-  label?: string;
-  editMode?: boolean;
   style?: MantineStyleProp;
-  textStyle?: MantineStyleProp;
-  inputStyle?: MantineStyleProp;
+  placeholder?: string;
+  editMode?: boolean;
   saveOnEnter?: boolean;
-  textInputRef?: React.MutableRefObject<any>;
+  handleOnFunction?: boolean;
+  handleButtonTextUpdate?: () => void;
+  size?: string;
 }
 export function EditableText({
   text,
@@ -33,69 +29,71 @@ export function EditableText({
   id,
   setEditingItem,
   placeholder = "",
-  label = "",
-  editMode = false,
   style = {},
-  textStyle = {},
-  inputStyle = {},
+  editMode = false,
   saveOnEnter = true,
-  textInputRef = null,
+  handleOnFunction = true,
+  handleButtonTextUpdate,
+  size = "sm",
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
-
+  const [focusTrapToggle, setfocusTrapToggle] = useState(false);
   function handleSave() {
-    setText(tempText);
+    setfocusTrapToggle(false);
     setEditingItem(null);
+    if (handleOnFunction) setText(tempText);
+    else handleButtonTextUpdate();
   }
-  if (editMode) {
-    return (
-      <FocusTrap active={true}>
-        <Group
-          style={{
-            ...style,
-          }}
-        >
-          <ContainedTextField
-            label={label}
-            value={tempText}
-            ref={textInputRef}
-            onChange={(e) => setTempText(e.target.value)}
-            style={{
-              flexGrow: 1,
-              ...inputStyle,
-            }}
-            placeholder={placeholder}
-            onKeyUp={(event) => {
-              if (event.key === "Enter" && saveOnEnter) {
-                handleSave();
-              }
-            }}
-            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}
-          />
-          <ActionIcon onClick={handleSave}>
-            <IconCheck />
-          </ActionIcon>
-        </Group>
-      </FocusTrap>
-    );
-  } else {
-    const combinedStyles = { ...style, ...textStyle };
-    return (
-      <Tooltip label="Double click to edit" openDelay={500}>
-        <Text
-          className={inputStyles.editableTextDisplay}
-          style={{
-            height: "50px",
-            lineHeight: "40px",
-            ...combinedStyles,
-          }}
+  return (
+    <FocusTrap active={focusTrapToggle}>
+      <Tooltip
+        label={
+          editMode
+            ? handleOnFunction
+              ? "Enter the title"
+              : "Enter the footer label"
+            : "Double click to edit"
+        }
+        openDelay={500}
+      >
+        <Input
+          value={handleOnFunction ? tempText : text}
+          readOnly={!editMode}
+          onChange={(e) =>
+            handleOnFunction
+              ? setTempText(e.target.value)
+              : setText(e.target.value)
+          }
+          size={size}
+          style={style}
           onDoubleClick={() => setEditingItem(id)}
-          c={text ? "black" : "gray"}
-          truncate
-        >
-          {text || placeholder}
-        </Text>
+          rightSectionPointerEvents="all"
+          placeholder={placeholder}
+          onKeyUp={(event) => {
+            if (event.key === "Enter" && saveOnEnter) {
+              handleSave();
+            }
+          }}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}
+          rightSection={
+            editMode ? (
+              <ActionIcon onClick={handleSave}>
+                <IconCheck />
+              </ActionIcon>
+            ) : (
+              <ActionIcon
+                onClick={() => {
+                  setEditingItem(id);
+                  setfocusTrapToggle(true);
+                }}
+                variant="subtle"
+              >
+                <IconPencil size={20} />
+              </ActionIcon>
+            )
+          }
+        />
       </Tooltip>
-    );
-  }
+    </FocusTrap>
+  );
 }

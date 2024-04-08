@@ -1,6 +1,3 @@
-import { useContext, useEffect, useState } from "react";
-import { EditableText } from "../../input/EditableText";
-import { useImmer } from "use-immer";
 import {
   ActionIcon,
   Badge,
@@ -13,9 +10,12 @@ import {
   Stack,
   Tooltip,
 } from "@mantine/core";
-import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
+import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
+import { useImmer } from "use-immer";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { EditableText } from "../../input/EditableText";
 
 export function WaListMessageItemsCreator({ initialSections, saveSections }) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -67,8 +67,6 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
                 placeholder="Section title (Required if more than one section is added)"
                 style={{
                   flexGrow: 1,
-                }}
-                textStyle={{
                   fontWeight: "bold",
                   fontSize: "1.2rem",
                 }}
