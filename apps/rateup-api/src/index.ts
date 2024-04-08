@@ -12,7 +12,6 @@ import { parseArrayString } from "./utils/array";
 import { log } from "./utils/logger";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import { PopulateSavedThemeTable } from "../populate-saved-survey-theme";
 
 const server = Fastify({
   // logger: logOptions,
@@ -40,19 +39,6 @@ server.get("/api/ping", async (req, reply) => {
   } catch (e) {
     log.error(e);
     reply.status(500).send({ message: "error" });
-  }
-});
-
-server.post("/populateSavedThemeTable", async (req, rep) => {
-  try {
-    await PopulateSavedThemeTable();
-    rep.send({
-      success: true,
-      message: "Successfully added required data to savedThemeTable",
-    });
-  } catch (err) {
-    console.log(err);
-    rep.send({ success: false, message: "Something went wrong" });
   }
 });
 
