@@ -20,6 +20,7 @@ import {
   WaSendMessageBody,
   WaTemplateComponent,
 } from "./whatsapp.types";
+import { RouteShorthandOptionsWithHandler } from "fastify";
 
 type GoogleReview = {
   minRating?: number;
@@ -308,4 +309,14 @@ declare module "fastify" {
     };
     subscription: Subscription;
   }
+}
+
+export interface CustomRouteShortHandOptions
+  extends Omit<RouteShorthandOptions, "config"> {
+  config: any;
+}
+
+export interface CustomRouteShortHandOptionsWithHandler
+  extends Omit<RouteShorthandOptionsWithHandler, "config"> {
+  config: any;
 }

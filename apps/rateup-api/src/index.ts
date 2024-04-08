@@ -12,7 +12,6 @@ import { parseArrayString } from "./utils/array";
 import { log } from "./utils/logger";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import { PopulateSavedThemeTable } from "../populate-saved-survey-theme";
 import fastifyCron from "fastify-cron";
 import { resetMonthlyCounts } from "./modules/stats/stats.service";
 
@@ -64,19 +63,6 @@ server.register(fastifyCron, {
       //  cronTime: '* * * * *', // Every minute - for testing purpose
     },
   ],
-});
-
-server.post("/populateSavedThemeTable", async (req, rep) => {
-  try {
-    await PopulateSavedThemeTable();
-    rep.send({
-      success: true,
-      message: "Successfully added required data to savedThemeTable",
-    });
-  } catch (err) {
-    console.log(err);
-    rep.send({ success: false, message: "Something went wrong" });
-  }
 });
 
 server.register(formDataPlugin);

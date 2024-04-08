@@ -8,24 +8,37 @@ import {
   getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
 } from "./surveyTheme.controller";
+import { CustomRouteShortHandOptions } from "../../types/global";
+
+const publicRouteOptions: CustomRouteShortHandOptions = {
+  config: {
+    isPublic: true,
+  },
+};
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
+  server.addHook("onRoute", (routeOptions) => {
+    if (routeOptions.config && routeOptions.config["isPublic"] === true) {
+      routeOptions.preHandler = [];
+      return;
+    } else {
+      routeOptions.preHandler = [checkSession];
+    }
+  });
+
   server.setErrorHandler(errorHandler);
 
-  server.get("/:webSurveyThemeId", getSurveyThemeByIdHandler);
-  server.get("/", { preHandler: checkSession }, getAllThemesOfUserOrg);
-
-  server.post("/", { preHandler: checkSession }, createNewTheme);
-
-  server.put(
+  server.get(
     "/:webSurveyThemeId",
-    { preHandler: checkSession },
-    updateSurveyThemeHandler,
+    publicRouteOptions,
+    getSurveyThemeByIdHandler,
   );
 
-  server.delete(
-    "/:webSurveyThemeId",
-    { preHandler: checkSession },
-    deleteTheme,
-  );
+  server.get("/", getAllThemesOfUserOrg);
+
+  server.post("/", createNewTheme);
+
+  server.put("/:webSurveyThemeId", updateSurveyThemeHandler);
+
+  server.delete("/:webSurveyThemeId", deleteTheme);
 }
