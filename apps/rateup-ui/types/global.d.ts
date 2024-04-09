@@ -258,6 +258,8 @@ declare global {
       [QuestionType.CustomNPS]?: Choice;
       [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };
+      //TODO REMOVE LATER: MYG GIFT VISHU
+      [QuestionType.WinItem]?: string;
     };
   };
 

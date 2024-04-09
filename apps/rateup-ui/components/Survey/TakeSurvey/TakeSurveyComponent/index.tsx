@@ -20,7 +20,7 @@ import QuestionCountContext from "../../../../context/QuestionCountContext";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
-import { LogicAction } from "../../../../types/enums";
+import { LogicAction, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
 import { encryptResponse } from "../../../../utils/encryption";
 import { lexend } from "../../../../utils/fonts";
@@ -38,12 +38,15 @@ import {
   checkRaiseTicketIssueQuestion,
   submitSurvey,
 } from "./util";
+import { generateGift } from "../../../../backend/surveys/survey.api";
+import { showErrorToast } from "../../../../utils/notifications";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const smallScreen = useMediaQuery("(max-width: 30em)");
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
+  const [giftLoading, setGiftLoading] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   const surveyTeamMapId = survey.surveyTeamMapId;
@@ -194,15 +197,48 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     }
   };
 
-  function openConfirmationModal() {
+  async function openConfirmationModal() {
     if (survey.skipPreview) {
-      finishSurvey();
+      //TODO REMOVE LATER: MYG GIFT VISHU
+      try {
+        let image = "";
+        if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
+          setGiftLoading(true);
+          const amountRes = responses?.findLast(
+            (data) => data.type === QuestionType.Number,
+          );
+          const contactRes = responses?.find(
+            (data) => data.type === QuestionType.Contact,
+          );
+          const res = await generateGift({
+            price: amountRes?.response?.[QuestionType.Number],
+            phoneNumber: contactRes?.response?.Contact?.phone,
+            surveyTeamMapId: surveyTeamMapId,
+          });
+          responses.push({
+            questionId: "win_item",
+            response: {
+              Win_item: res?.name,
+            },
+            type: QuestionType.WinItem,
+          });
+          image = res?.image;
+        }
+        finishSurvey(image);
+      } catch (error) {
+        setGiftLoading(false);
+        showErrorToast(error?.toString());
+      } finally {
+        setTimeout(() => {
+          setGiftLoading(false);
+        }, 5000);
+      }
     } else {
       openConfirmationResponsesModal();
     }
   }
 
-  const finishSurvey = async () => {
+  const finishSurvey = async (image = "") => {
     setIsSavingResponses(true);
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
     let shouldShowGoogleReview = checkGoogleReviewForQuestion(
@@ -243,6 +279,17 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         updateCompleted.mutate(surveyTeamMapId);
         let kioskMode = survey?.kioskMode ? "y" : "n";
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
+        //TODO REMOVE LATER: MYG GIFT VISHU
+        if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
+          const giftRes = responses?.findLast(
+            (data) => data.type === QuestionType.WinItem,
+          );
+          const gift = btoa(
+            `?name=${giftRes?.response?.Win_item}&image=${image}`,
+          );
+          router.push(`/ws/${router.query.shortId}/end?gift=${gift}`);
+          return;
+        }
         shouldShowGoogleReview
           ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
             setIsReviewPage(selectedLanguage)
@@ -284,7 +331,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     }
   };
 
-  if (IsLoading) return <RateupLoader h={"100dvh"} />;
+  if (IsLoading || giftLoading) return <RateupLoader h={"100dvh"} />;
 
   return (
     <CurrentResponsesContext.Provider

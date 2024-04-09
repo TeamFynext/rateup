@@ -225,6 +225,7 @@ const Responses = ({
     enableTicket:
       survey?.enableTickets &&
       hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    surveyId: survey?.id,
   });
 
   const handleSyncGoogleSheet = () => {

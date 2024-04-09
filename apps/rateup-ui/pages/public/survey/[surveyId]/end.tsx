@@ -1,4 +1,5 @@
 import {
+  Center,
   Flex,
   Group,
   Image,
@@ -26,6 +27,7 @@ import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyThe
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import { fallbackImage, imagesPath } from "../../../../utils/constants";
 
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
@@ -72,6 +74,10 @@ export default function ThankYou({
   fromShortUrl,
   redirect = null,
   surveyThemeId,
+  gift = {
+    name: "",
+    image: "",
+  },
 }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
@@ -188,7 +194,41 @@ export default function ThankYou({
           {surveyThemeData?.thankyouTheme?.confettiEnabled && (
             <Confetti width={width - 1} height={height - 1} />
           )}
-          {!enableGoogleReview && (
+          {/* TODO REMOVE LATER: MYG GIFT VISHU */}
+          {gift?.image && gift?.name && (
+            <Stack>
+              <Center mt={"lg"}>
+                {surveyThemeData?.thankyouTheme?.logo?.logo && (
+                  <Image
+                    src={getImageUrl(
+                      surveyThemeData?.thankyouTheme?.logo?.logo,
+                    )}
+                    alt="Rateup"
+                    height={"auto"}
+                    style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                  />
+                )}
+              </Center>
+              <Stack align="center" gap={"sm"} mt={"xl"}>
+                <Image
+                  src={`${imagesPath}/offer/${gift?.image}`}
+                  h={200}
+                  w={200}
+                  mih={200}
+                  fit="contain"
+                  alt="offer image"
+                  fallbackSrc={fallbackImage}
+                />
+                <Text fw={"bold"} fz={24} mt={"lg"}>
+                  Woohoo!
+                </Text>
+                <Text w={"70%"} ta={"center"}>
+                  Congratulations you have won {gift?.name}
+                </Text>
+              </Stack>
+            </Stack>
+          )}
+          {!enableGoogleReview && !gift?.image && (
             <Stack
               align="center"
               justify="center"

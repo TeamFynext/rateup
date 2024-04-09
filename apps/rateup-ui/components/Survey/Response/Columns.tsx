@@ -39,9 +39,20 @@ export const useSurveyResponseColumns = ({
   setSelectedResponseId,
   setResponseTeamId,
   enableTicket,
+  surveyId,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-
+  //TODO REMOVE LATER: MYG GIFT VISHU
+  if (surveyId === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
+    questions.push({
+      id: "win_item",
+      title: {
+        [selectedLanguage ? selectedLanguage : defaultLanguage]: "win_item",
+      },
+      type: QuestionType.WinItem,
+      description: "",
+    });
+  }
   const column: ColumnDef<any>[] = [
     {
       header: () => (

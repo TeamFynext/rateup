@@ -222,3 +222,31 @@ export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
   );
   return res.data as STStats;
 }
+//TODO REMOVE LATER: MYG GIFT VISHU
+type generateGiftRes = {
+  name: string;
+  price: string;
+  image: string;
+};
+type generateGiftProps = {
+  price: number;
+  phoneNumber: string;
+  surveyTeamMapId: string;
+};
+export async function generateGift(data: generateGiftProps) {
+  try {
+    const res = await axiosClient.post(
+      `${SURVEY_PUBLIC_URL}/generateGift`,
+      data,
+    );
+    return res.data as generateGiftRes;
+  } catch (error) {
+    if (error?.response?.data?.code === "FST_ERR_VALIDATION") {
+      throw Error("Amount should be greater than or equal to 5000");
+    } else {
+      console.log(error?.response?.data);
+
+      throw Error(error?.response?.data);
+    }
+  }
+}
