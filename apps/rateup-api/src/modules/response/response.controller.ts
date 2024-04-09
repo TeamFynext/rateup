@@ -80,6 +80,7 @@ export async function downloadExcelResponseHandler(
     const allResponse = await getAllResponses(surveyId, teamIds);
     const question = await getQuestionsBySurveyId(surveyId);
     const [title, data] = await downloadExcelResponse(
+      surveyId,
       allResponse,
       question,
       request.body.defaultLanguage,

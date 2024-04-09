@@ -7,6 +7,7 @@ import {
   getActiveSurveysSummmaryByUserId,
   getGiftByPrice,
   getGoogleUrlBySurveyTeamMapId,
+  getIsResponseExist,
   getPhoneBySurveyTeamMapId,
   getPublicSurveyById,
   getSurveyById,
@@ -533,19 +534,25 @@ export async function giftHandler(
 ) {
   try {
     if (!request.body.price || isNaN(request.body.price)) {
-      reply.code(404).send({ message: "Gift failed. invalid params" });
+      reply.code(400).send("Gift failed. invalid params");
+    }
+    const resAlreadyExist = await getIsResponseExist(
+      request.body.surveyTeamMapId,
+      request.body.phoneNumber,
+    );
+    if (resAlreadyExist !== 0) {
+      return reply
+        .code(400)
+        .send("You Have Already generated gift in this phone number");
     }
     const gift = await getGiftByPrice(request.body.price);
     if (!gift) {
-      reply.code(404).send({ message: "Failed to generate gift." });
+      reply.code(404).send("Failed to generate gift.");
     } else {
-      reply.code(200).send({
-        message: "Success",
-        data: gift,
-      });
+      reply.code(200).send(gift);
     }
   } catch (e) {
-    console.log(e);
-    reply.code(500).send({ message: "Failed" });
+    log.error(e);
+    reply.code(500).send("Gift generation Failed");
   }
 }
