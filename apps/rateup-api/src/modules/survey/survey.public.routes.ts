@@ -5,6 +5,7 @@ import {
   fetchGoogleUrlBySurveyIdHandler,
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
+  giftHandler,
   startedSurveyHandler,
   verifySurveyPasswordHandler,
   visitedSurveyHandler,
@@ -71,5 +72,16 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
       },
     },
     fetchGoogleUrlBySurveyIdHandler,
+  );
+
+  //TODO REMOVE LATER: MYG GIFT VISHU
+  server.post(
+    "/generateGift",
+    {
+      schema: {
+        body: $Sref("giftRequestSchema"),
+      },
+    },
+    giftHandler,
   );
 }

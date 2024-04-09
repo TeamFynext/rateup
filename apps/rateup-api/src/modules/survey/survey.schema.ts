@@ -56,6 +56,13 @@ const deleteTeamSurveyRequestSchema = z.object({
   teamId: z.string().uuid(),
 });
 
+//TODO REMOVE LATER: MYG GIFT VISHU
+const giftRequestSchema = z.object({
+  price: z
+    .number()
+    .min(5000, { message: "Price must be at least 5000" })
+    .max(500000, { message: "Price must not exceed 500000" }),
+});
 const idParamsSchema = z.object({
   id: z.string(),
 });
@@ -171,10 +178,12 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     cloneSurveySchema,
     updateGoogleLinkRequestSchema,
     deleteTeamSurveyRequestSchema,
+    giftRequestSchema,
   },
   { $id: "surveySchema" },
 );
 
+export type GiftInput = z.infer<typeof giftRequestSchema>;
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type CreateSurveyLandingInput = z.infer<
   typeof createSurveyLandingRequestSchema
