@@ -5,6 +5,7 @@ import {
   deleteSurveyById,
   deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
+  getGiftByPrice,
   getGoogleUrlBySurveyTeamMapId,
   getPhoneBySurveyTeamMapId,
   getPublicSurveyById,
@@ -32,6 +33,7 @@ import {
   DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   GetSurveyTemplatesParams,
+  GiftInput,
   IdParamInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
@@ -519,4 +521,31 @@ export async function getSurveyLanguagesByTeamIdHandler(
 ) {
   const languages = await getSurveyLanguagesFromTeamId(req.params.teamId);
   reply.send(languages);
+}
+
+//TODO REMOVE LATER: MYG GIFT VISHU
+
+export async function giftHandler(
+  request: FastifyRequest<{
+    Body: GiftInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    if (!request.body.price || isNaN(request.body.price)) {
+      reply.code(404).send({ message: "Gift failed. invalid params" });
+    }
+    const gift = await getGiftByPrice(request.body.price);
+    if (!gift) {
+      reply.code(404).send({ message: "Failed to generate gift." });
+    } else {
+      reply.code(200).send({
+        message: "Success",
+        data: gift,
+      });
+    }
+  } catch (e) {
+    console.log(e);
+    reply.code(500).send({ message: "Failed" });
+  }
 }
