@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconInfoCircle } from "@tabler/icons-react";
+import UsageStats from "./UsageStats";
 
 function loadScript(src) {
   return new Promise((resolve) => {
@@ -149,6 +150,7 @@ const AccountSettings = () => {
 
   return (
     <Flex direction={"column"} h={"100%"}>
+      <UsageStats />
       <Billing
         subscription={subscription}
         toggle={toggle}
