@@ -1013,3 +1013,15 @@ model LoyaltyApiKey {
   apiKey    String
   createdAt DateTime @default(now())
 }
+
+// TODO remove later: FOR myg vishu gift
+model MyGInvoice {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceDate   DateTime
+  invoiceNumber String
+  invoiceValue  Float
+  mobileNumber  String
+  invoiceBranch String
+
+  @@unique([invoiceNumber, mobileNumber])
+}
