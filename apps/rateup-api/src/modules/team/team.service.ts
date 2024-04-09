@@ -88,6 +88,13 @@ export async function createTeam(input: CreateTeamInput) {
 
     // Commit the transaction
     console.log("Transaction committed:", result);
+
+    result &&
+      (await prisma.usageStats.update({
+        where: { orgId: input.orgId },
+        data: { teamsCount: { increment: 1 } },
+      }));
+
     return result;
   } catch (error) {
     // Rollback the transaction
@@ -116,6 +123,12 @@ export async function deleteTeamById(id: string) {
       id,
     },
   });
+
+  team &&
+    (await prisma.usageStats.update({
+      where: { orgId: team.orgId },
+      data: { teamsCount: { decrement: 1 } },
+    }));
   return team;
 }
 
@@ -221,6 +234,13 @@ export async function inviteTeamMember(input: InviteMemberInput) {
     }
 
     console.log("Invite created successfully");
+
+    newInvite &&
+      (await prisma.usageStats.update({
+        where: { orgId: orgId },
+        data: { teamMembersCount: { increment: 1 } },
+      }));
+
     return newInvite;
   } catch (error) {
     console.error(error);
@@ -516,6 +536,13 @@ export async function deleteMemberInvite(id: string) {
       id,
     },
   });
+
+  invitation &&
+    (await prisma.usageStats.update({
+      where: { orgId: invitation.orgId },
+      data: { teamMembersCount: { decrement: 1 } },
+    }));
+
   return invitation;
 }
 

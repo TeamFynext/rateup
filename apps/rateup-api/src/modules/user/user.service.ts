@@ -14,6 +14,8 @@ import { log } from "../../utils/logger";
 import { createTrialSubscription } from "../subscription/subscription.service";
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import { cloneSurvey } from "../survey/survey.service";
+import { cloneMenu } from "../menu/menu.service";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
 
 const prisma = new PrismaClient();
@@ -38,6 +40,7 @@ export async function createUserSignup({
   log.info("Creating user");
   try {
     // Start a transaction
+    let team, teamMember;
     const result = await prisma.$transaction(async (prisma) => {
       const newUser = await prisma.user.create({
         data: {
@@ -69,7 +72,7 @@ export async function createUserSignup({
         },
       });
 
-      const team = await prisma.team.create({
+      team = await prisma.team.create({
         data: {
           name: "Main",
           code: "MAIN",
@@ -77,16 +80,31 @@ export async function createUserSignup({
         },
       });
 
-      const teamMember = await prisma.teamMember.create({
+      teamMember = await prisma.teamMember.create({
         data: {
           teamId: team.id, // Use the teamId from the first action's result
           userId: newUser.id,
         },
       });
-
       // creating 1 week trial subscription
       await createTrialSubscription(org.id, prisma as any);
     });
+
+    if (team.id && teamMember.userId) {
+      //create an initial default survey
+      let teamIds = [team.id];
+      let surveyId = process.env.INITIAL_SAMPLE_SURVEY_ID;
+      let clone;
+      surveyId &&
+        (clone = await cloneSurvey(surveyId, teamMember.userId, teamIds, true));
+
+      //create an initial default menu
+      let menuId = process.env.INITIAL_SAMPLE_MENU_ID;
+      menuId &&
+        clone.teams[0].id &&
+        (await cloneMenu(menuId, team.id, clone.teams[0].id));
+    }
+
     // Commit the transaction
     log.trace(" create user transaction committed..........:", result);
     return result;

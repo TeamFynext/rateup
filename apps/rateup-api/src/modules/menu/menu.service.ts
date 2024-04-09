@@ -8,6 +8,11 @@ import {
   updateMenuLandingInput,
 } from "./menu.schema";
 import { getShortUrlId } from "../../utils/commnUtils";
+import { updateMonthlyStat } from "../stats/stats.service";
+import { createMenuBanner } from "./banner/banner.service";
+import { createMenuCategory } from "./category/category.service";
+import { createMenuItem } from "./item/item.service";
+import { getTeamById } from "../team/team.service";
 
 export async function createMenu(data: CreateMenuInput) {
   if (data.teamId === undefined) return;
@@ -26,7 +31,96 @@ export async function createMenu(data: CreateMenuInput) {
       shortUrlId: getShortUrlId(),
     },
   });
+
+  if (menu) {
+    let team = await getTeamById(teamId);
+    await prisma.usageStats.update({
+      where: { orgId: team.orgId },
+      data: { menusCount: { increment: 1 } },
+    });
+  }
+
   return menu;
+}
+
+//Clone menu -  currently used to create initial sample menu for user signup
+export async function cloneMenu(
+  menuId: string,
+  newTeamId: string,
+  surveyTeamMapId: string,
+) {
+  const menuTemplate = await prisma.menu.findUnique({
+    where: {
+      id: menuId,
+    },
+  });
+
+  let { id, shortUrlId, teamId, createdAt, ...restMenuData } = menuTemplate;
+
+  const cloneMenuData = {
+    ...restMenuData,
+    teamId: newTeamId,
+  };
+  let newMenu = await createMenu(cloneMenuData);
+
+  //clone menu landing - menu id
+  const menuLanding = await prisma.menuLanding.findFirst({
+    where: {
+      menuId: menuId,
+    },
+  });
+
+  let {
+    id: landId,
+    createdAt: landCreatedAt,
+    updatedAt,
+    ...restLandingData
+  } = menuLanding;
+
+  await prisma.menuLanding.create({
+    data: {
+      ...restLandingData,
+      menuId: newMenu.id,
+      surveyTeamMapId: surveyTeamMapId,
+      visited: 0,
+    },
+  });
+
+  //clone menu banner - menu id
+  const menuBanners = await prisma.menuBanner.findMany({
+    where: {
+      menuId: menuId,
+    },
+  });
+
+  for (const banner of menuBanners) {
+    let { id, createdAt, menuId, ...rest } = banner;
+    await createMenuBanner({ ...rest, menuId: newMenu.id });
+  }
+
+  //clone menu categories - menu id
+  const menuCategories = await prisma.menuCategory.findMany({
+    where: {
+      menuId: menuId,
+    },
+  });
+
+  for (const cat of menuCategories) {
+    let { id, createdAt, menuId, ...rest } = cat;
+    let newCat = await createMenuCategory({ ...rest, menuId: newMenu.id });
+
+    //clone menu -items, category id
+    const menuItems = await prisma.menuItem.findMany({
+      where: {
+        categoryId: id,
+      },
+    });
+
+    for (const item of menuItems) {
+      let { id, createdAt, categoryId, ...rest } = item;
+      await createMenuItem({ ...rest, categoryId: newCat.id });
+    }
+  }
 }
 
 export async function getMenu(menuId: string) {
@@ -242,6 +336,15 @@ export async function deleteMenu(id: string) {
       id,
     },
   });
+
+  if (menu) {
+    let team = await getTeamById(menu.teamId);
+    await prisma.usageStats.update({
+      where: { orgId: team.orgId },
+      data: { menusCount: { decrement: 1 } },
+    });
+  }
+
   return menu;
 }
 export async function getMenuLanding(id: string) {
@@ -404,5 +507,21 @@ export async function updateVisitedMenuLanding(id: string) {
     },
     update: { visited: { increment: 1 } },
   });
+
+  const menu = await prisma.menu.findUnique({
+    where: {
+      id: menuLandingVisited.menuId,
+    },
+    include: {
+      team: {
+        select: {
+          orgId: true,
+        },
+      },
+    },
+  });
+
+  menuLandingVisited && menu && updateMonthlyStat("menu", menu?.team.orgId);
+
   return menuLandingVisited;
 }
