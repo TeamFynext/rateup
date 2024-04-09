@@ -315,7 +315,7 @@ const ShareSurvey = ({
                   <Title order={4}>
                     {
                       getContent(
-                        Object.values(item?.title)[0],
+                        Object.values(item?.title)?.[0]?.toString() ?? "",
                       ) as React.ReactNode
                     }
                   </Title>
