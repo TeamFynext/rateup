@@ -1065,3 +1065,80 @@ export async function getSurveyLanguagesFromTeamId(teamId: string) {
   const uniqueLanguages = [...new Set(languages)];
   return uniqueLanguages;
 }
+
+//TODO REMOVE LATER: MYG GIFT VISHU
+const gifts = [
+  {
+    range: [5000, 20000],
+    gifts: [
+      "AA Ear Pods",
+      "AA Bluetooth Speaker",
+      "AA PowerBank",
+      "AA Wireless Charger",
+      "AA Portable Bluetooth Speaker",
+    ],
+  },
+  {
+    range: [20001, 30000],
+    gifts: [
+      "BB Waterproof Bluetooth Speaker",
+      "BB Portable Charger",
+      "BB Wireless Headphones",
+      "BB Bluetooth Headset",
+      "BB Portable PowerBank",
+    ],
+  },
+  {
+    range: [30001, 50000],
+    gifts: [
+      "CC Wireless Bluetooth Speaker",
+      "CC Portable Charger",
+      "CC Wireless Headphones",
+      "CC Bluetooth Headset",
+      "CC Portable PowerBank",
+    ],
+  },
+  {
+    range: [50001, 70000],
+    gifts: [
+      "DD Wireless Bluetooth Speaker",
+      "DD Portable Charger",
+      "DD Wireless Headphones",
+      "DD Bluetooth Headset",
+      "DD Portable PowerBank",
+    ],
+  },
+  {
+    range: [70001, 100000],
+    gifts: [
+      "EE Wireless Bluetooth Speaker",
+      "EE Portable Charger",
+      "EE Wireless Headphones",
+      "EE Bluetooth Headset",
+      "EE Portable PowerBank",
+    ],
+  },
+  {
+    range: [100001, 500000],
+    gifts: [
+      "FF Wireless Bluetooth Speaker",
+      "FF Portable Charger",
+      "FF Wireless Headphones",
+      "FF Bluetooth Headset",
+      "FF Portable PowerBank",
+    ],
+  },
+];
+
+function getRandomGift(price) {
+  const range = gifts.find((r) => price >= r.range[0] && price <= r.range[1]);
+  if (!range) return null; // Price is out of range
+
+  return range.gifts[Math.floor(Math.random() * range.gifts.length)];
+}
+
+export async function getGiftByPrice(price: number) {
+  const gift = getRandomGift(price);
+
+  return { price, gift };
+}
