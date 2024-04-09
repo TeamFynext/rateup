@@ -236,7 +236,6 @@ export default function ThankYou({
                       opacity: { delay: 0.5, duration: 0.4 },
                     }}
                     onLoad={imageLoaded}
-                    width="100%"
                     src={`${imagesPath}/offer/${gift?.image}`}
                   />
                 </div>
