@@ -102,6 +102,35 @@ model Org {
   WaContact         WaContact[]
   LoyaltyApiKey     LoyaltyApiKey?
   surveyThemes      WebSurveyTheme[]
+  UsageStats        UsageStats?
+}
+
+model UsageStats {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org       Org      @relation(fields: [orgId], references: [id])
+  orgId     String   @unique @db.Uuid
+
+  teamsCount           Int @default(0)
+  teamMembersCount     Int @default(0)
+  surveysCount         Int @default(0)
+  surveyResponsesCount Int @default(0)
+  menusCount           Int @default(0)
+  menuViewsCount       Int @default(0)
+
+  monthlySurveyResponses Int @default(0)
+  monthlyMenuViews       Int @default(0)
+
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+
+  allowedTeams           Int @default(0)
+  allowedTeamMembers     Int @default(0)
+  allowedSurveys         Int @default(0)
+  allowedSurveyResponses Int @default(0)
+  allowedMenus           Int @default(0)
+  allowedMenuViews       Int @default(0)
 }
 
 model WhatsappSettings {
@@ -186,41 +215,41 @@ model Invitation {
 }
 
 model Survey {
-  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt               DateTime          @default(now())
-  updatedAt               DateTime?         @updatedAt
+  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime?       @updatedAt
   title                   String
-  description             String?           @default("")
+  description             String?         @default("")
   /// [PQuestion]
-  questions               Json[]            @default([])
+  questions               Json[]          @default([])
   languages               String[]
-  user                    User              @relation(fields: [createdBy], references: [id])
-  createdBy               String            @db.Uuid
+  user                    User            @relation(fields: [createdBy], references: [id])
+  createdBy               String          @db.Uuid
   teams                   SurveyTeamMap[]
-  active                  Boolean           @default(true)
-  isPublished             Boolean           @default(false)
-  isProtected             Boolean           @default(false)
-  kioskMode               Boolean           @default(false)
-  uniqueDeviceResponse    Boolean           @default(false) //avoid duplicate entry from same IP
+  active                  Boolean         @default(true)
+  isPublished             Boolean         @default(false)
+  isProtected             Boolean         @default(false)
+  kioskMode               Boolean         @default(false)
+  uniqueDeviceResponse    Boolean         @default(false) //avoid duplicate entry from same IP
   password                String?
-  type                    String            @default("web")
-  getLocation             Boolean           @default(false)
-  welcomePageEnabled      Boolean           @default(true)
-  tags                    String[]          @default([])
-  skipPreview             Boolean           @default(true)
-  enableNotificationEmail Boolean           @default(false)
-  notificationEmail       String            @default("")
-  enableTickets           Boolean           @default(false)
-  enableTicketEmailAlerts Boolean           @default(false)
+  type                    String          @default("web")
+  getLocation             Boolean         @default(false)
+  welcomePageEnabled      Boolean         @default(true)
+  tags                    String[]        @default([])
+  skipPreview             Boolean         @default(true)
+  enableNotificationEmail Boolean         @default(false)
+  notificationEmail       String          @default("")
+  enableTickets           Boolean         @default(false)
+  enableTicketEmailAlerts Boolean         @default(false)
   shareSettings           Json?
   publicKey               String?
-  isEncrypted             Boolean           @default(false)
+  isEncrypted             Boolean         @default(false)
   surveyTheme             SurveyTheme?
-  webSurveyThemeId      String?           @db.Uuid
-  webSurveyTheme        WebSurveyTheme? @relation(fields: [webSurveyThemeId], references: [id])
+  webSurveyThemeId        String?         @db.Uuid
+  webSurveyTheme          WebSurveyTheme? @relation(fields: [webSurveyThemeId], references: [id])
   WaFlow                  WaFlow?
   spreadSheetId           String?
-  redirect                Json              @default("{\"url\": \"/\",\"time\": \"5\" }")
+  redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
 }
 
 model SurveyTeamMap {

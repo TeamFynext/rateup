@@ -3,6 +3,7 @@ import prisma from "../../utils/prisma";
 import { SampleSubscriptionFeatures } from "./subscription.data";
 import { updateSubscriptionInput } from "./subscription.schema";
 import { PaymentPlanType } from "@prisma/client";
+import { createStats } from "../stats/stats.service";
 
 export async function createTrialSubscription(orgId: string, pClient = prisma) {
   // Check if the RATEUP TRIAL plan exists
@@ -95,6 +96,9 @@ export async function getSubscription(orgId: string) {
 
     return updatedSub;
   }
+
+  //check if usageStats record exists & update
+  const stats = await createStats(orgId);
 
   return sub;
 }
