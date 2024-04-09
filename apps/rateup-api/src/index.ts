@@ -51,7 +51,7 @@ server.register(fastifyCron, {
       onTick: async () => {
         try {
           await resetMonthlyCounts();
-          console.log("Monthly Stats reset successfully");
+          // console.log("Monthly Stats reset successfully");
         } catch (error) {
           console.error("Failed to reset monthly counts:", error);
         }
