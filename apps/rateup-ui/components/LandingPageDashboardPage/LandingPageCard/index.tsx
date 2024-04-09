@@ -6,7 +6,14 @@ import { IconClock } from "@tabler/icons-react";
 import TimeSinceText from "./TimeSinceText";
 import styles from "./LandingPageCard.module.css";
 
-function LandingPageCard({ name, shortUrlId, id, createdAt, isPublished }) {
+function LandingPageCard({
+  name,
+  shortUrlId,
+  id,
+  createdAt,
+  isPublished,
+  initialName,
+}) {
   const router = useRouter();
   const handleCardClick = useCallback(() => {
     router.push({
@@ -18,7 +25,11 @@ function LandingPageCard({ name, shortUrlId, id, createdAt, isPublished }) {
     <Box className={styles["landingPage-card"]} onClick={handleCardClick}>
       <Group className={styles["heading-and-more-options-div"]}>
         <h2>{name}</h2>
-        <MoreOptionsMenu shortUrlId={shortUrlId} id={id} />
+        <MoreOptionsMenu
+          shortUrlId={shortUrlId}
+          id={id}
+          initialName={initialName}
+        />
       </Group>
 
       <Group className={styles["creation-time-text-and-icon-div"]}>

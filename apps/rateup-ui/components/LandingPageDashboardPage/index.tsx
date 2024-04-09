@@ -40,13 +40,13 @@ function LandingPageDashboard() {
   return (
     <Stack className={`${styles["landingPage-dashboard-page-div"]}`}>
       <Group className={styles["heading-and-create-landingPage-btn-container"]}>
-        <h1>LandingPage</h1>
+        <h1>Landing Pages</h1>
         <Button
           className={styles["create-landingPage-btn"]}
           rightSection={<IconPlus />}
           onClick={createLandingPageModalHandlers.open}
         >
-          Create LandingPage
+          Create Landing Page
         </Button>
       </Group>
       <Box className={styles["landingPage-list-container"]}>
@@ -56,6 +56,9 @@ function LandingPageDashboard() {
         <CreateLandingPageModal
           opened={isCreateLandingPageModalOpen}
           onClose={createLandingPageModalHandlers.close}
+          mode="create"
+          shortUrlId={" "}
+          initialName={" "}
         />
       )}
     </Stack>

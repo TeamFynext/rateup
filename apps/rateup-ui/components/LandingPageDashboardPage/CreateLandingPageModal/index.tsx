@@ -2,25 +2,35 @@ import { Box, Button, Modal, TextInput } from "@mantine/core";
 import styles from "./CreateLandingPageModal.module.css";
 import { useForm } from "@mantine/form";
 import { useCallback, useRef } from "react";
-import { useCreateLandingPageMutation } from "../../../backend/landingPage/landingPage.query";
+import {
+  useCreateLandingPageMutation,
+  useUpdateLandingPageMutation,
+} from "../../../backend/landingPage/landingPage.query";
 
-function CreateLandingPageModal({ opened, onClose }) {
+function CreateLandingPageModal({
+  opened,
+  onClose,
+  mode,
+  shortUrlId,
+  initialName,
+}) {
   const form = useForm({
     initialValues: {
-      name: "",
+      name: initialName || "",
     },
     validate: {
       // must start with a letter, can contain underscores, numbers, spaces, length must be 3 or more characters.
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, should start with letter, length sould be greater than 2 characters",
+          : "Name should be alphanumeric, length sould be greater than 2 characters",
     },
   });
 
   const createLandingPageMutation = useCreateLandingPageMutation();
+  const updateLandingPageMutation = useUpdateLandingPageMutation(shortUrlId);
 
-  const createLandingPageFormSubmitBtnRef = useRef(null);
+  const formSubmitBtnRef = useRef(null);
 
   const handleCreateLandingPageFormSubmit = useCallback(async (values) => {
     await createLandingPageMutation.mutateAsync(values);
@@ -28,8 +38,15 @@ function CreateLandingPageModal({ opened, onClose }) {
     onClose();
   }, []);
 
+  const handleUpdateLandingPageFormSubmit = useCallback(async (values) => {
+    const name = values.name;
+    await updateLandingPageMutation.mutateAsync({ shortUrlId, name });
+    form.reset();
+    onClose();
+  }, []);
+
   const handleCreateLinkBtnClick = useCallback(() => {
-    createLandingPageFormSubmitBtnRef?.current.click();
+    formSubmitBtnRef?.current.click();
   }, []);
 
   const handleCancelBtnClick = useCallback(() => {
@@ -41,7 +58,9 @@ function CreateLandingPageModal({ opened, onClose }) {
     <Modal
       opened={opened}
       onClose={onClose}
-      title={"Create LandingPage"}
+      title={
+        mode === "create" ? "Create LandingPage" : "Edit Landing Page Name"
+      }
       centered
       classNames={{
         header: styles["modal-header"],
@@ -51,17 +70,22 @@ function CreateLandingPageModal({ opened, onClose }) {
       <Box className={styles["modal-content-container"]}>
         <form
           className={styles["create-landingPage-form"]}
-          onSubmit={form.onSubmit(handleCreateLandingPageFormSubmit)}
+          onSubmit={
+            mode === "create"
+              ? form.onSubmit(handleCreateLandingPageFormSubmit)
+              : form.onSubmit(handleUpdateLandingPageFormSubmit)
+          }
         >
           <TextInput
             label="Name"
-            placeholder="Name of LandingPage"
+            placeholder="Name of Landing Page"
+            onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
           />
           <Button
             style={{ display: "none" }}
             type="submit"
-            ref={createLandingPageFormSubmitBtnRef}
+            ref={formSubmitBtnRef}
           />
         </form>
       </Box>
@@ -69,7 +93,9 @@ function CreateLandingPageModal({ opened, onClose }) {
         <Button onClick={handleCancelBtnClick} className={styles["cancel-btn"]}>
           Cancel
         </Button>
-        <Button onClick={handleCreateLinkBtnClick}>Create</Button>
+        <Button onClick={handleCreateLinkBtnClick}>
+          {mode === "create" ? "Create" : "Save changes"}
+        </Button>
       </Box>
     </Modal>
   );

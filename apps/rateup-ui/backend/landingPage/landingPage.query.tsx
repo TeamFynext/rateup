@@ -32,16 +32,16 @@ function useCreateLandingPageMutation() {
     mutationFn: createLandingPage,
     onSuccess: () => {
       showSuccessToast(
-        "created landingPage successfully.",
-        "createLandingPage",
+        "Created landingPage successfully.",
+        "CreateLandingPage",
         <IconCheck />,
       );
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
     },
     onError: () => {
       showErrorToast(
-        "unable to create landingPage, please try again later",
-        "createLandingPage",
+        "Unable to create landingPage, please try again later",
+        "CreateLandingPage",
         <IconX />,
       );
     },
@@ -51,11 +51,13 @@ function useCreateLandingPageMutation() {
 function useUpdateLandingPageMutation(shortUrlId) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateLandingPage,
+    mutationFn: (data: any) => {
+      return updateLandingPage(data);
+    },
     onSuccess: () => {
       showSuccessToast(
         "Updated landingPage successfully.",
-        "updateLandingPage",
+        "UpdateLandingPage",
         <IconCheck />,
       );
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
@@ -63,8 +65,8 @@ function useUpdateLandingPageMutation(shortUrlId) {
     },
     onError: () => {
       showErrorToast(
-        "unable to update landingPage, please try again later",
-        "createLandingPage",
+        "Unable to update Landing Page, please try again later",
+        "CreateLandingPage",
         <IconX />,
       );
     },

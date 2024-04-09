@@ -24,7 +24,7 @@ async function createLandingPage(data) {
   return res.data;
 }
 
-async function updateLandingPage(data) {
+async function updateLandingPage(data: any) {
   const res = await axiosClient.put(url, data);
   return res.data;
 }

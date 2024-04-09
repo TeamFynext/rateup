@@ -48,7 +48,7 @@ function SharePage() {
 
       <PaperLayout className={styles["share-options-container"]}>
         <Box className={styles["landingPage-link-container"]}>
-          <h2>Share LandingPage</h2>
+          <h2>Share Landing Page</h2>
           <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
         </Box>
 
