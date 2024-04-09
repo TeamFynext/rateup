@@ -227,7 +227,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         finishSurvey(image);
       } catch (error) {
         setGiftLoading(false);
-        showErrorToast(error?.toString());
+        showErrorToast(error?.message?.toString());
       } finally {
         setTimeout(() => {
           setGiftLoading(false);
