@@ -179,23 +179,27 @@ export async function updateUsageStats(
   const usageStats = await prisma.usageStats.upsert({
     where: { orgId: orgId },
     update: {
-      teamsCount: stats.teamCount,
-      teamMembersCount: stats.teamMemberCount,
-      surveysCount: stats.surveyCount,
-      surveyResponsesCount: stats.surveyResponsesCount,
-      monthlySurveyResponses: stats.surveyResponsesCountCurrentMonth,
-      menusCount: stats.menuCount,
-      menuViewsCount: stats.menuViewsCount,
+      teamsCount: stats?.teamCount || 0,
+      teamMembersCount: stats?.teamMemberCount || 0,
+      surveysCount: stats?.surveyCount || 0,
+      surveyResponsesCount: stats?.surveyResponsesCount || 0,
+      monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
+      menusCount: stats?.menuCount || 0,
+      menuViewsCount: stats?.menuViewsCount || 0,
     },
     create: {
-      orgId: orgId,
-      teamsCount: stats.teamCount,
-      teamMembersCount: stats.teamMemberCount,
-      surveysCount: stats.surveyCount,
-      surveyResponsesCount: stats.surveyResponsesCount,
-      monthlySurveyResponses: stats.surveyResponsesCountCurrentMonth,
-      menusCount: stats.menuCount,
-      menuViewsCount: stats.menuViewsCount,
+      teamsCount: stats?.teamCount || 0,
+      teamMembersCount: stats?.teamMemberCount || 0,
+      surveysCount: stats?.surveyCount || 0,
+      surveyResponsesCount: stats?.surveyResponsesCount || 0,
+      monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
+      menusCount: stats?.menuCount || 0,
+      menuViewsCount: stats?.menuViewsCount || 0,
+      org: {
+        connect: {
+          id: orgId,
+        },
+      },
     },
   });
 
