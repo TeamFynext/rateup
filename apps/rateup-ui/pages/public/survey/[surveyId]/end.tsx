@@ -12,7 +12,7 @@ import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { IconCircleCheck, IconHome } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import {
@@ -27,7 +27,9 @@ import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyThe
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import { fallbackImage, imagesPath } from "../../../../utils/constants";
+import { imagesPath } from "../../../../utils/constants";
+import { motion } from "framer-motion";
+import styles from "./end.module.css";
 
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
@@ -79,6 +81,8 @@ export default function ThankYou({
     image: "",
   },
 }) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [pulsing, setPulsing] = useState(true);
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
@@ -145,6 +149,10 @@ export default function ThankYou({
   };
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
+  const imageLoaded = () => {
+    setImageLoading(false);
+    setTimeout(() => setPulsing(false), 600);
+  };
   if (isLoading) return <RateupLoader h={"100dvh"} />;
   return (
     <CreditsCard
@@ -210,19 +218,36 @@ export default function ThankYou({
                 )}
               </Center>
               <Stack align="center" gap={"sm"} mt={"xl"}>
-                <Image
-                  src={`${imagesPath}/offer/${gift?.image}`}
-                  h={200}
-                  w={200}
-                  mih={200}
-                  fit="contain"
-                  alt="offer image"
-                  fallbackSrc={fallbackImage}
-                />
-                <Text fw={"bold"} fz={24} mt={"lg"}>
+                <div
+                  className={`${styles.loadable} ${pulsing && styles.pulse}`}
+                >
+                  <motion.img
+                    initial={{ height: "50px", opacity: 0 }}
+                    style={{
+                      height: imageLoading ? "6rem" : "auto",
+                      borderRadius: "12px",
+                    }}
+                    animate={{
+                      height: imageLoading ? "50px" : "200px",
+                      opacity: imageLoading ? 0 : 1,
+                    }}
+                    transition={{
+                      height: { delay: 0, duration: 0.4 },
+                      opacity: { delay: 0.5, duration: 0.4 },
+                    }}
+                    onLoad={imageLoaded}
+                    width="100%"
+                    src={`${imagesPath}/offer/${gift?.image}`}
+                  />
+                </div>
+                <Text style={surveyThemeData?.thankyouTheme?.title?.styles}>
                   Woohoo!
                 </Text>
-                <Text w={"70%"} ta={"center"}>
+                <Text
+                  w={"70%"}
+                  ta={"center"}
+                  style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
+                >
                   Congratulations you have won {gift?.name}
                 </Text>
               </Stack>

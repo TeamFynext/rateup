@@ -47,7 +47,7 @@ export const useSurveyResponseColumns = ({
     questions.push({
       id: "win_item",
       title: {
-        [selectedLanguage ? selectedLanguage : defaultLanguage]: "win_item",
+        [selectedLanguage ? selectedLanguage : defaultLanguage]: "Gift won",
       },
       type: QuestionType.WinItem,
       description: "",
