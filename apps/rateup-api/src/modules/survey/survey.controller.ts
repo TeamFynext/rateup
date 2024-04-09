@@ -543,7 +543,9 @@ export async function giftHandler(
     if (resAlreadyExist !== 0) {
       return reply
         .code(400)
-        .send("You Have Already generated gift in this phone number");
+        .send(
+          "You've already entered this lucky draw using this phone number.",
+        );
     }
     const gift = await getGiftByPrice(request.body.price);
     if (!gift) {
