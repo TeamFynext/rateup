@@ -113,6 +113,7 @@ const getContent = (title: string) => {
 };
 
 export async function downloadExcelResponse(
+  surveyId,
   allResponses,
   questions,
   defaultLanguage,
@@ -138,6 +139,11 @@ export async function downloadExcelResponse(
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
+    }
+    //TODO REMOVE LATER: MYG GIFT VISHU
+    if (process.env.VISHU_SURVEY === surveyId) {
+      headerArray.push("Gift won");
+      filteredSecondArray.push({ id: "win_item", type: QuestionType.WinItem });
     }
 
     const bodyArray = [];
@@ -171,6 +177,7 @@ export async function downloadExcelResponse(
               responseValue = responseValue?.value?.value;
               break;
             }
+            case QuestionType.WinItem:
             case QuestionType.TnC: {
               responseValue = responseValue?.toString();
               break;
@@ -503,6 +510,16 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const languages = survey?.languages;
   let questions = survey?.questions as unknown as Array<Question>;
   questions = questions.filter((q) => q.type !== QuestionType.InfoMessage);
+  //TODO REMOVE LATER: MYG GIFT VISHU
+  if (process.env.VISHU_SURVEY === surveyId) {
+    questions.push({
+      id: "win_item",
+      type: QuestionType.WinItem,
+      title: { English: "Gift won" },
+      description: {},
+      required: true,
+    });
+  }
   const allResponses = await getAllResponses(
     surveyId,
     survey.teams.map((t) => t.team.id),
@@ -666,7 +683,7 @@ interface IsheetResponse {
 }
 export async function saveResponseToGoogleSheet(response: IsheetResponse) {
   const {
-    survey: { spreadSheetId, questions },
+    survey: { spreadSheetId, questions, id: surveyId },
     team,
   } = await prisma.surveyTeamMap.findUnique({
     where: {
@@ -677,6 +694,7 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
         select: {
           spreadSheetId: true,
           questions: true,
+          id: true,
         },
       },
       team: {
@@ -687,7 +705,16 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
       },
     },
   });
-
+  //TODO REMOVE LATER: MYG GIFT VISHU
+  if (process.env.VISHU_SURVEY === surveyId) {
+    questions.push({
+      id: "win_item",
+      type: QuestionType.WinItem,
+      title: { English: "Gift won" },
+      description: {},
+      required: true,
+    });
+  }
   if (spreadSheetId) {
     const authClient = await initializeAuthClient();
     const token = await getAccessToken(team.orgId);

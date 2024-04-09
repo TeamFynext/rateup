@@ -58,10 +58,9 @@ const deleteTeamSurveyRequestSchema = z.object({
 
 //TODO REMOVE LATER: MYG GIFT VISHU
 const giftRequestSchema = z.object({
-  price: z
-    .number()
-    .min(5000, { message: "Price must be at least 5000" })
-    .max(500000, { message: "Price must not exceed 500000" }),
+  price: z.number().min(5000, { message: "Price must be at least 5000" }),
+  phoneNumber: z.string(),
+  surveyTeamMapId: z.string(),
 });
 const idParamsSchema = z.object({
   id: z.string(),

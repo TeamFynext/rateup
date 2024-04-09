@@ -15,6 +15,7 @@ import {
   shortIdUniqueConstraintErrHandler,
 } from "../../utils/commnUtils";
 import { getSurveysOrgId, isShortId } from "./survey.utils";
+import { offerArrayWithRange } from "../../utils/survey/offer";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -1067,71 +1068,14 @@ export async function getSurveyLanguagesFromTeamId(teamId: string) {
 }
 
 //TODO REMOVE LATER: MYG GIFT VISHU
-const gifts = [
-  {
-    range: [5000, 20000],
-    gifts: [
-      "AA Ear Pods",
-      "AA Bluetooth Speaker",
-      "AA PowerBank",
-      "AA Wireless Charger",
-      "AA Portable Bluetooth Speaker",
-    ],
-  },
-  {
-    range: [20001, 30000],
-    gifts: [
-      "BB Waterproof Bluetooth Speaker",
-      "BB Portable Charger",
-      "BB Wireless Headphones",
-      "BB Bluetooth Headset",
-      "BB Portable PowerBank",
-    ],
-  },
-  {
-    range: [30001, 50000],
-    gifts: [
-      "CC Wireless Bluetooth Speaker",
-      "CC Portable Charger",
-      "CC Wireless Headphones",
-      "CC Bluetooth Headset",
-      "CC Portable PowerBank",
-    ],
-  },
-  {
-    range: [50001, 70000],
-    gifts: [
-      "DD Wireless Bluetooth Speaker",
-      "DD Portable Charger",
-      "DD Wireless Headphones",
-      "DD Bluetooth Headset",
-      "DD Portable PowerBank",
-    ],
-  },
-  {
-    range: [70001, 100000],
-    gifts: [
-      "EE Wireless Bluetooth Speaker",
-      "EE Portable Charger",
-      "EE Wireless Headphones",
-      "EE Bluetooth Headset",
-      "EE Portable PowerBank",
-    ],
-  },
-  {
-    range: [100001, 500000],
-    gifts: [
-      "FF Wireless Bluetooth Speaker",
-      "FF Portable Charger",
-      "FF Wireless Headphones",
-      "FF Bluetooth Headset",
-      "FF Portable PowerBank",
-    ],
-  },
-];
 
 function getRandomGift(price) {
-  const range = gifts.find((r) => price >= r.range[0] && price <= r.range[1]);
+  if (price > 100000) {
+    price = 100000;
+  }
+  let range = offerArrayWithRange.find(
+    (r) => price >= r.range[0] && price <= r.range[1],
+  );
   if (!range) return null; // Price is out of range
 
   return range.gifts[Math.floor(Math.random() * range.gifts.length)];
@@ -1140,5 +1084,36 @@ function getRandomGift(price) {
 export async function getGiftByPrice(price: number) {
   const gift = getRandomGift(price);
 
-  return { price, gift };
+  return {
+    price,
+    ...gift,
+  };
+}
+export async function getIsResponseExist(
+  surveyTeamMapId: string,
+  phoneNo: string,
+) {
+  const surveyResponse = await prisma.surveyResponse.findMany({
+    where: {
+      surveyTeamMapId,
+    },
+  });
+  const filteredData = surveyResponse
+    ?.map((data) => data?.responses)
+    .filter((subArray) => {
+      const hasContactWithPhoneNumber = subArray.some(
+        (item: { type: string; response: any }) => {
+          return (
+            item.type === QuestionType.Contact &&
+            item.response?.Contact?.phone === phoneNo
+          );
+        },
+      );
+      const hasWinItem = subArray.some((item: { type: string }) => {
+        return item.type === QuestionType.WinItem;
+      });
+
+      return hasContactWithPhoneNumber && hasWinItem;
+    });
+  return filteredData?.length ?? 0;
 }

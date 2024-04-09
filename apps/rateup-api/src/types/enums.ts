@@ -29,6 +29,8 @@ export enum QuestionType {
   TnC = "Terms & Conditions",
   Contact = "Contact",
   Address = "Address",
+  //TODO REMOVE LATER: MYG GIFT VISHU
+  WinItem = "Win_item",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
