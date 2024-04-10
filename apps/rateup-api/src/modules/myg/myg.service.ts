@@ -1,6 +1,13 @@
 import prisma from "../../utils/prisma";
 import { UploadInvoiceSchema } from "./myg.schema";
 
+export async function getInvoiceData() {
+  const invoiceCount = await prisma.myGInvoice.count();
+
+  // Return the invoice count
+  return `Total: ${invoiceCount} Invoices`;
+}
+
 export async function uploadInvoiceData(input: UploadInvoiceSchema) {
   try {
     const successfulInvoices = [];
