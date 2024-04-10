@@ -1098,14 +1098,14 @@ export async function getGiftByPhone(mobileNumber: number) {
   });
 
   if (invoices.length < 1) {
-    throw new Error("No invoices found for this number");
+    throw new Error("NO_INVOICE_ERROR");
   }
 
   let eligibleInvoices = invoices.filter((inv) => inv.giftRedeemed === false);
   let redeemedInvoices = invoices.filter((inv) => inv.giftRedeemed === true);
 
   if (eligibleInvoices.length < 1) {
-    throw new Error("Gift for All invoices claimed already.");
+    throw new Error("GIFT_CLAIMED_ERROR");
   }
 
   const highestRedeemAttempt = redeemedInvoices.reduce(
@@ -1119,7 +1119,7 @@ export async function getGiftByPhone(mobileNumber: number) {
   );
 
   if (sumOfInvoiceValues < 5000) {
-    throw new Error("Total Purchase Amount not eligible for Gift");
+    throw new Error("LESS_AMOUNT_ERROR");
   }
 
   const gift = getRandomGift(sumOfInvoiceValues);
