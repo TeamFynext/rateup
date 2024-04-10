@@ -224,6 +224,13 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         finishSurvey(image, price);
       } catch (error) {
         setGiftLoading(false);
+        responses.push({
+          questionId: "win_item",
+          response: {
+            Win_item: "Not eligible",
+          },
+          type: QuestionType.WinItem,
+        });
         finishSurvey("", 0, error?.message?.toString());
       } finally {
         setTimeout(() => {
