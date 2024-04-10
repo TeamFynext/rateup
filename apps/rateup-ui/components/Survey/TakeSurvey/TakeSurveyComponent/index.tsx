@@ -40,13 +40,19 @@ import {
 } from "./util";
 import { generateGift } from "../../../../backend/surveys/survey.api";
 import NextBtn from "./NextBtn";
+import {
+  INTERNAL_ERROR,
+  INTERNAL_ERROR2,
+  MAX_PHONE_ERROR,
+  MIN_PHONE_ERROR,
+} from "../../../../utils/constants";
+import { showErrorToast } from "../../../../utils/notifications";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const smallScreen = useMediaQuery("(max-width: 30em)");
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
-  const [giftLoading, setGiftLoading] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   const surveyTeamMapId = survey.surveyTeamMapId;
@@ -204,7 +210,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         let image = "";
         let price = 0;
         if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
-          setGiftLoading(true);
           const contactRes = responses?.find(
             (data) => data.type === QuestionType.Contact,
           );
@@ -223,19 +228,23 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         }
         finishSurvey(image, price);
       } catch (error) {
-        setGiftLoading(false);
-        responses.push({
-          questionId: "win_item",
-          response: {
-            Win_item: "Not eligible",
-          },
-          type: QuestionType.WinItem,
-        });
-        finishSurvey("", 0, error?.message?.toString());
-      } finally {
-        setTimeout(() => {
-          setGiftLoading(false);
-        }, 5000);
+        if (
+          error?.message?.toString() === MIN_PHONE_ERROR ||
+          error?.message?.toString() === MAX_PHONE_ERROR ||
+          error?.message?.toString() === INTERNAL_ERROR ||
+          error?.message?.toString() === INTERNAL_ERROR2
+        ) {
+          showErrorToast(error?.message?.toString());
+        } else {
+          responses.push({
+            questionId: "win_item",
+            response: {
+              Win_item: "Not eligible",
+            },
+            type: QuestionType.WinItem,
+          });
+          finishSurvey("", 0, error?.message?.toString());
+        }
       }
     } else {
       openConfirmationResponsesModal();
@@ -336,7 +345,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     }
   };
 
-  if (IsLoading || giftLoading) return <RateupLoader h={"100dvh"} />;
+  if (IsLoading) return <RateupLoader h={"100dvh"} />;
 
   return (
     <CurrentResponsesContext.Provider
