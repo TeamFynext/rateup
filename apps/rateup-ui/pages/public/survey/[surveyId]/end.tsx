@@ -189,21 +189,23 @@ export default function ThankYou({
       >
         <Stack align="center" maw={300} px={"xl"} py={"xl"}>
           <Image
-            src="/images/gift_box.webp"
+            src="/images/gift_box.jpg"
             w={150}
             mih={150}
             mah={150}
             alt="image of gift trophy"
-            style={{
-              borderRadius: "100%",
-            }}
           />
-          <Text ff={lexend500.style.fontFamily} fz={12} c={"#19B06E"}>
-            YOUR GIFT IS ON THE WAY!
+          <Text
+            ff={lexend500.style.fontFamily}
+            fz={12}
+            c={"#19B06E"}
+            tt={"uppercase"}
+          >
+            Congratulations!
           </Text>
           <Text ta={"center"} ff={lexend600.style.fontFamily}>
-            You just won a myG Vishukai Nettam gift, all thanks to your recent
-            purchase totaling {gift.price}.
+            Your recent purchases totalling Rs.{gift.price} earned you a myG
+            vishukaineettam gift
           </Text>
           <Group justify={"flex-end"} mt={"md"}>
             <RateupButtonBlue
