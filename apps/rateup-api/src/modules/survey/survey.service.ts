@@ -1128,7 +1128,6 @@ export async function getGiftByPhone(mobileNumber: number) {
   const gift = getRandomGift(sumOfInvoiceValues);
 
   if (gift) {
-    console.log("redeem:" + highestRedeemAttempt);
     const updatedInvoices = await prisma.myGInvoice.updateMany({
       where: {
         id: {
