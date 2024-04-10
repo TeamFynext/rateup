@@ -226,27 +226,23 @@ export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
 //TODO REMOVE LATER: MYG GIFT VISHU
 type generateGiftRes = {
   name: string;
-  price: string;
+  sumOfInvoiceValues: number;
   image: string;
 };
 type generateGiftProps = {
-  price: number;
   phoneNumber: string;
-  surveyTeamMapId: string;
 };
 export async function generateGift(data: generateGiftProps) {
   try {
     const res = await axiosClient.post(
-      `${SURVEY_PUBLIC_URL}/generateGift`,
+      `${SURVEY_PUBLIC_URL}/generateGiftByPhone`,
       data,
     );
     return res.data as generateGiftRes;
   } catch (error) {
-    if (error?.response?.data?.code === "FST_ERR_VALIDATION") {
-      throw Error("Amount should be greater than or equal to 5000");
+    if (error?.response?.data?.message) {
+      throw Error(error?.response?.data?.message);
     } else {
-      console.log(error?.response?.data);
-
       throw Error(error?.response?.data);
     }
   }

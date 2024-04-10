@@ -166,5 +166,4 @@ export enum WHATSAPP_BUTTON_TYPE {
   VISIT_WEBSITE = "URL",
 }
 
-export const MIN_AMOUNT_ERROR =
-  "Amount should be greater than or equal to 5000";
+export const MIN_AMOUNT_ERROR = "Total Purchase Amount not eligable for Gift";

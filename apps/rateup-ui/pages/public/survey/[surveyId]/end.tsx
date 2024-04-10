@@ -3,12 +3,13 @@ import {
   Flex,
   Group,
   Image,
+  Modal,
   Stack,
   Text,
   Title,
   useMantineTheme,
 } from "@mantine/core";
-import { useMediaQuery, useViewportSize } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { IconCircleCheck, IconHome } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -30,6 +31,7 @@ import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import { imagesPath } from "../../../../utils/constants";
 import { motion } from "framer-motion";
 import styles from "./end.module.css";
+import { lexend500, lexend600 } from "../../../../utils/fonts";
 
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
@@ -79,7 +81,8 @@ export default function ThankYou({
   gift = {
     name: "",
     image: "",
-    error: false,
+    error: "",
+    price: "",
   },
 }) {
   const [imageLoading, setImageLoading] = useState(true);
@@ -87,6 +90,7 @@ export default function ThankYou({
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
+  const [opened, { toggle, close }] = useDisclosure(false);
 
   // const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
   // const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
@@ -141,6 +145,11 @@ export default function ThankYou({
     }
     return () => clearTimeout(timeout);
   }, [redirect, kioskMode, router]);
+  useEffect(() => {
+    if (gift?.name && !gift?.error) {
+      toggle();
+    }
+  }, []);
 
   const { data: surveyThemeData, isLoading } = useSurveyTheme(
     surveyThemeId,
@@ -168,6 +177,46 @@ export default function ThankYou({
           : surveyThemeData?.thankyouTheme?.bg?.desktopbg
       }
     >
+      <Modal
+        opened={opened}
+        onClose={close}
+        closeOnClickOutside={false}
+        closeOnEscape={false}
+        withCloseButton={false}
+        centered
+        radius={"md"}
+        size={"auto"}
+      >
+        <Stack align="center" maw={300} px={"xl"} py={"xl"}>
+          <Image
+            src="/images/gift_box.webp"
+            w={150}
+            mih={150}
+            mah={150}
+            alt="image of gift trophy"
+            style={{
+              borderRadius: "100%",
+            }}
+          />
+          <Text ff={lexend500.style.fontFamily} fz={12} c={"#2a50d5"}>
+            YOUR GIFT IS ON THE WAY!
+          </Text>
+          <Text ta={"center"} ff={lexend600.style.fontFamily}>
+            You just won a myG Vishukai Nettam gift, all thanks to your recent
+            purchase totaling {gift.price}.
+          </Text>
+          <Group justify={"flex-end"} mt={"md"}>
+            <RateupButtonBlue
+              loading={isLoading}
+              type="submit"
+              title={"Reveal"}
+              onClick={toggle}
+              radius={"md"}
+              color="#2a50d5"
+            />
+          </Group>
+        </Stack>
+      </Modal>
       <Flex
         style={{
           ...surveyThemeData?.thankyouTheme?.bg?.styles,
@@ -199,171 +248,181 @@ export default function ThankYou({
         direction={"column"}
         justify={"center"}
       >
-        <Stack h="100%" w="100%">
-          {surveyThemeData?.thankyouTheme?.confettiEnabled && !gift.error && (
-            <Confetti width={width - 1} height={height - 1} />
-          )}
-          {/* TODO REMOVE LATER: MYG GIFT VISHU */}
-          {gift.error && (
-            <>
-              <Center mt={"lg"}>
-                {surveyThemeData?.thankyouTheme?.logo?.logo && (
-                  <Image
-                    src={getImageUrl(
-                      surveyThemeData?.thankyouTheme?.logo?.logo,
-                    )}
-                    alt="Rateup"
-                    height={"auto"}
-                    style={surveyThemeData?.thankyouTheme?.logo?.styles}
-                  />
+        {!opened && (
+          <>
+            <Stack h="100%" w="100%">
+              {surveyThemeData?.thankyouTheme?.confettiEnabled &&
+                !gift.error && (
+                  <Confetti width={width - 1} height={height - 1} />
                 )}
-              </Center>
-              <Stack align="center" gap={"sm"} h={"80%"} justify="center">
-                <Text
-                  w={"70%"}
-                  ta={"center"}
-                  style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
-                >
-                  Gifts are not available for purchases under 5000 Rs.{" "}
-                </Text>
-              </Stack>
-            </>
-          )}
-          {!gift.error && gift?.image && gift?.name && (
-            <Stack>
-              <Center mt={"lg"}>
-                {surveyThemeData?.thankyouTheme?.logo?.logo && (
-                  <Image
-                    src={getImageUrl(
-                      surveyThemeData?.thankyouTheme?.logo?.logo,
+              {/* TODO REMOVE LATER: MYG GIFT VISHU */}
+              {gift.error && (
+                <>
+                  <Center mt={"lg"}>
+                    {surveyThemeData?.thankyouTheme?.logo?.logo && (
+                      <Image
+                        src={getImageUrl(
+                          surveyThemeData?.thankyouTheme?.logo?.logo,
+                        )}
+                        alt="Rateup"
+                        height={"auto"}
+                        style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                      />
                     )}
-                    alt="Rateup"
-                    height={"auto"}
-                    style={surveyThemeData?.thankyouTheme?.logo?.styles}
-                  />
-                )}
-              </Center>
-              <Stack align="center" gap={"sm"} mt={"xl"}>
-                <div
-                  className={`${styles.loadable} ${pulsing && styles.pulse}`}
+                  </Center>
+                  <Stack align="center" gap={"sm"} h={"80%"} justify="center">
+                    <Text
+                      w={"70%"}
+                      ta={"center"}
+                      style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
+                    >
+                      {gift.error?.toString()}
+                    </Text>
+                  </Stack>
+                </>
+              )}
+              {!gift.error && gift?.image && gift?.name && (
+                <Stack>
+                  <Center mt={"lg"}>
+                    {surveyThemeData?.thankyouTheme?.logo?.logo && (
+                      <Image
+                        src={getImageUrl(
+                          surveyThemeData?.thankyouTheme?.logo?.logo,
+                        )}
+                        alt="Rateup"
+                        height={"auto"}
+                        style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                      />
+                    )}
+                  </Center>
+                  <Stack align="center" gap={"sm"} mt={"xl"}>
+                    <div
+                      className={`${styles.loadable} ${pulsing && styles.pulse}`}
+                    >
+                      <motion.img
+                        initial={{ height: "50px", opacity: 0 }}
+                        style={{
+                          height: imageLoading ? "6rem" : "auto",
+                          borderRadius: "12px",
+                        }}
+                        animate={{
+                          height: imageLoading ? "50px" : "200px",
+                          opacity: imageLoading ? 0 : 1,
+                        }}
+                        transition={{
+                          height: { delay: 0, duration: 0.4 },
+                          opacity: { delay: 0.5, duration: 0.4 },
+                        }}
+                        onLoad={imageLoaded}
+                        src={`${imagesPath}/offer/${gift?.image}`}
+                      />
+                    </div>
+                    <Text style={surveyThemeData?.thankyouTheme?.title?.styles}>
+                      Woohoo!
+                    </Text>
+                    <Text
+                      w={"70%"}
+                      ta={"center"}
+                      style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
+                    >
+                      Congratulations you have won {gift?.name}
+                    </Text>
+                  </Stack>
+                </Stack>
+              )}
+              {!enableGoogleReview && !gift?.image && !gift.error && (
+                <Stack
+                  align="center"
+                  justify="center"
+                  p="sm"
+                  m={"auto"}
+                  h={"100%"}
+                  style={{
+                    flex: 0,
+                  }}
                 >
-                  <motion.img
-                    initial={{ height: "50px", opacity: 0 }}
-                    style={{
-                      height: imageLoading ? "6rem" : "auto",
-                      borderRadius: "12px",
-                    }}
-                    animate={{
-                      height: imageLoading ? "50px" : "200px",
-                      opacity: imageLoading ? 0 : 1,
-                    }}
-                    transition={{
-                      height: { delay: 0, duration: 0.4 },
-                      opacity: { delay: 0.5, duration: 0.4 },
-                    }}
-                    onLoad={imageLoaded}
-                    src={`${imagesPath}/offer/${gift?.image}`}
-                  />
-                </div>
-                <Text style={surveyThemeData?.thankyouTheme?.title?.styles}>
-                  Woohoo!
-                </Text>
-                <Text
-                  w={"70%"}
-                  ta={"center"}
-                  style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
-                >
-                  Congratulations you have won {gift?.name}
-                </Text>
-              </Stack>
-            </Stack>
-          )}
-          {!enableGoogleReview && !gift?.image && !gift.error && (
-            <Stack
-              align="center"
-              justify="center"
-              p="sm"
-              m={"auto"}
-              h={"100%"}
-              style={{
-                flex: 0,
-              }}
-            >
-              {surveyThemeData?.thankyouTheme?.logo?.logo ? (
-                <Image
-                  src={getImageUrl(surveyThemeData?.thankyouTheme?.logo?.logo)}
-                  alt="Rateup"
-                  height={"auto"}
-                  style={surveyThemeData?.thankyouTheme?.logo?.styles}
-                />
-              ) : (
-                <IconCircleCheck
-                  size={"3rem"}
-                  style={surveyThemeData?.thankyouTheme?.logo?.styles}
-                  color={
-                    surveyThemeData?.thankyouTheme?.title?.styles?.color ??
-                    "#fff"
-                  }
-                />
-              )}
-              <Title
-                order={1}
-                fw={400}
-                style={{
-                  ...surveyThemeData?.thankyouTheme?.subtitle?.styles,
-                  ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
-                }}
-              >
-                {!!err
-                  ? "Thank You!"
-                  : surveyThemeData?.thankyouTheme?.title?.title}
-              </Title>
-              {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle || err) && (
-                <Text style={surveyThemeData?.thankyouTheme?.subtitle?.styles}>
-                  {!!err
-                    ? "You've already submitted a response earlier."
-                    : surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
-                </Text>
-              )}
-            </Stack>
-          )}
-          {enableBody && (
-            <Stack
-              align="center"
-              justify="center"
-              gap="xl"
-              style={{
-                flex: 1,
-                borderRadius: "28px 28px 0px 0px",
-                backgroundColor: "whitesmoke",
-              }}
-            >
-              {enableGoogleReview && (
-                <GoogleReview
-                  googleLink={googleLink}
-                  reviewSuggestions={reviews}
-                  orgLogoUrl={surveyThemeData?.thankyouTheme?.logo?.logo}
-                  surveyTeamMapId={surveyId}
-                />
-              )}
-
-              {k === "cs" && (
-                <Group m="xl" p="xl">
-                  <Link
-                    href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
-                    target="_blank"
-                  >
-                    <RateupButtonBlue
-                      leftIcon={<IconHome />}
-                      title="Go to Home"
+                  {surveyThemeData?.thankyouTheme?.logo?.logo ? (
+                    <Image
+                      src={getImageUrl(
+                        surveyThemeData?.thankyouTheme?.logo?.logo,
+                      )}
+                      alt="Rateup"
+                      height={"auto"}
+                      style={surveyThemeData?.thankyouTheme?.logo?.styles}
                     />
-                  </Link>
-                </Group>
+                  ) : (
+                    <IconCircleCheck
+                      size={"3rem"}
+                      style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                      color={
+                        surveyThemeData?.thankyouTheme?.title?.styles?.color ??
+                        "#fff"
+                      }
+                    />
+                  )}
+                  <Title
+                    order={1}
+                    fw={400}
+                    style={{
+                      ...surveyThemeData?.thankyouTheme?.subtitle?.styles,
+                      ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
+                    }}
+                  >
+                    {!!err
+                      ? "Thank You!"
+                      : surveyThemeData?.thankyouTheme?.title?.title}
+                  </Title>
+                  {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle ||
+                    err) && (
+                    <Text
+                      style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
+                    >
+                      {!!err
+                        ? "You've already submitted a response earlier."
+                        : surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
+                    </Text>
+                  )}
+                </Stack>
+              )}
+              {enableBody && (
+                <Stack
+                  align="center"
+                  justify="center"
+                  gap="xl"
+                  style={{
+                    flex: 1,
+                    borderRadius: "28px 28px 0px 0px",
+                    backgroundColor: "whitesmoke",
+                  }}
+                >
+                  {enableGoogleReview && (
+                    <GoogleReview
+                      googleLink={googleLink}
+                      reviewSuggestions={reviews}
+                      orgLogoUrl={surveyThemeData?.thankyouTheme?.logo?.logo}
+                      surveyTeamMapId={surveyId}
+                    />
+                  )}
+
+                  {k === "cs" && (
+                    <Group m="xl" p="xl">
+                      <Link
+                        href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
+                        target="_blank"
+                      >
+                        <RateupButtonBlue
+                          leftIcon={<IconHome />}
+                          title="Go to Home"
+                        />
+                      </Link>
+                    </Group>
+                  )}
+                </Stack>
               )}
             </Stack>
-          )}
-        </Stack>
-        {!enableGoogleReview && <RateupRedirectCard />}
+            {!enableGoogleReview && <RateupRedirectCard />}
+          </>
+        )}
       </Flex>
     </CreditsCard>
   );
