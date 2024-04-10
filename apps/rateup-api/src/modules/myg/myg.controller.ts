@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { uploadInvoiceData } from "./myg.service";
+import { getInvoiceData, uploadInvoiceData } from "./myg.service";
 import { UploadInvoiceSchema } from "./myg.schema";
 
 export async function uploadInvoiceDataHandler(
@@ -12,7 +12,18 @@ export async function uploadInvoiceDataHandler(
 
   try {
     const invoices = await uploadInvoiceData(body);
-    console.log(invoices);
+    reply.status(201).send(invoices);
+  } catch (e) {
+    reply.status(500).send({ status: "failed", message: e.message });
+  }
+}
+
+export async function getInvoicesDataHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const invoices = await getInvoiceData();
     reply.status(201).send(invoices);
   } catch (e) {
     reply.status(500).send({ status: "failed", message: e.message });

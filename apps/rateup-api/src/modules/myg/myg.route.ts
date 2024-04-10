@@ -1,5 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { uploadInvoiceDataHandler } from "./myg.controller";
+import {
+  getInvoicesDataHandler,
+  uploadInvoiceDataHandler,
+} from "./myg.controller";
 import { $MYGRef } from "./myg.schema";
 import fastifyJwt from "@fastify/jwt";
 
@@ -31,6 +34,8 @@ export async function mygRoutes(server: FastifyInstance) {
     },
     uploadInvoiceDataHandler,
   );
+
+  server.get("/invoices", getInvoicesDataHandler);
 }
 
 //MYG
