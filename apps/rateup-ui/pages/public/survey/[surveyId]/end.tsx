@@ -327,7 +327,14 @@ export default function ThankYou({
                       ta={"center"}
                       style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
                     >
-                      Congratulations you have won {gift?.name}
+                      Congratulations you have won
+                    </Text>
+                    <Text
+                      w={"70%"}
+                      ta={"center"}
+                      style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
+                    >
+                      {gift?.name}
                     </Text>
                   </Stack>
                 </Stack>
