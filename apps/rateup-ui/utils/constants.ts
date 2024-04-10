@@ -165,3 +165,6 @@ export enum WHATSAPP_BUTTON_TYPE {
   CALL_PHONE_NUMBER = "PHONE_NUMBER",
   VISIT_WEBSITE = "URL",
 }
+
+export const MIN_AMOUNT_ERROR =
+  "Amount should be greater than or equal to 5000";

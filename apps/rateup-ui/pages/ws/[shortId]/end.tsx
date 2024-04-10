@@ -10,13 +10,13 @@ export const getServerSideProps = async (context) => {
     const params = new URLSearchParams(decodedParam);
     const name = params.get("name");
     const image = params.get("image");
+    const error = params.get("error");
 
     const {
       id: surveyId,
       surveyTeamMapId,
       kioskMode,
       redirect,
-      // @ts-ignore
       webSurveyThemeId,
     } = await getPublicSurvey(shortId);
     return {
@@ -29,6 +29,7 @@ export const getServerSideProps = async (context) => {
         gift: {
           name,
           image,
+          error: error?.toLowerCase() === "true",
         },
       },
     };
@@ -44,6 +45,7 @@ export const getServerSideProps = async (context) => {
         gift: {
           name: "",
           image: "",
+          error: false,
         },
       },
     };
