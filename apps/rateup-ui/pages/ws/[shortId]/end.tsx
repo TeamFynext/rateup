@@ -11,6 +11,7 @@ export const getServerSideProps = async (context) => {
     const name = params.get("name");
     const image = params.get("image");
     const error = params.get("error");
+    const price = params.get("price");
 
     const {
       id: surveyId,
@@ -29,7 +30,8 @@ export const getServerSideProps = async (context) => {
         gift: {
           name,
           image,
-          error: error?.toLowerCase() === "true",
+          error,
+          price,
         },
       },
     };
@@ -45,7 +47,8 @@ export const getServerSideProps = async (context) => {
         gift: {
           name: "",
           image: "",
-          error: false,
+          error: "",
+          price: "",
         },
       },
     };

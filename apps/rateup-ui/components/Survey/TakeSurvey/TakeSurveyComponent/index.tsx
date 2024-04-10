@@ -39,9 +39,7 @@ import {
   submitSurvey,
 } from "./util";
 import { generateGift } from "../../../../backend/surveys/survey.api";
-import { showErrorToast } from "../../../../utils/notifications";
 import NextBtn from "./NextBtn";
-import { MIN_AMOUNT_ERROR } from "../../../../utils/constants";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -204,18 +202,14 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       //TODO REMOVE LATER: MYG GIFT VISHU
       try {
         let image = "";
+        let price = 0;
         if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
           setGiftLoading(true);
-          const amountRes = responses?.findLast(
-            (data) => data.type === QuestionType.Number,
-          );
           const contactRes = responses?.find(
             (data) => data.type === QuestionType.Contact,
           );
           const res = await generateGift({
-            price: amountRes?.response?.[QuestionType.Number],
-            phoneNumber: contactRes?.response?.Contact?.phone,
-            surveyTeamMapId: surveyTeamMapId,
+            phoneNumber: contactRes?.response?.Contact?.phone?.substring(3),
           });
           responses.push({
             questionId: "win_item",
@@ -225,15 +219,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
             type: QuestionType.WinItem,
           });
           image = res?.image;
+          price = res?.sumOfInvoiceValues;
         }
-        finishSurvey(image);
+        finishSurvey(image, price);
       } catch (error) {
         setGiftLoading(false);
-        if (error?.message?.toString() === MIN_AMOUNT_ERROR) {
-          finishSurvey("", true);
-        } else {
-          showErrorToast(error?.message?.toString());
-        }
+        finishSurvey("", 0, error?.message?.toString());
       } finally {
         setTimeout(() => {
           setGiftLoading(false);
@@ -244,7 +235,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     }
   }
 
-  const finishSurvey = async (image = "", error = false) => {
+  const finishSurvey = async (image = "", price = 0, error = "") => {
     setIsSavingResponses(true);
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
     let shouldShowGoogleReview = checkGoogleReviewForQuestion(
@@ -291,7 +282,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
             (data) => data.type === QuestionType.WinItem,
           );
           const gift = btoa(
-            `?name=${giftRes?.response?.Win_item}&image=${image}&error=${error}`,
+            `?name=${giftRes?.response?.Win_item}&image=${image}&error=${error}&price=${price}`,
           );
           router.push(`/ws/${router.query.shortId}/end?gift=${gift}`);
           return;
