@@ -40,6 +40,8 @@ import {
 } from "./util";
 import { generateGift } from "../../../../backend/surveys/survey.api";
 import { showErrorToast } from "../../../../utils/notifications";
+import NextBtn from "./NextBtn";
+import { MIN_AMOUNT_ERROR } from "../../../../utils/constants";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -227,7 +229,11 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         finishSurvey(image);
       } catch (error) {
         setGiftLoading(false);
-        showErrorToast(error?.message?.toString());
+        if (error?.message?.toString() === MIN_AMOUNT_ERROR) {
+          finishSurvey("", true);
+        } else {
+          showErrorToast(error?.message?.toString());
+        }
       } finally {
         setTimeout(() => {
           setGiftLoading(false);
@@ -238,7 +244,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     }
   }
 
-  const finishSurvey = async (image = "") => {
+  const finishSurvey = async (image = "", error = false) => {
     setIsSavingResponses(true);
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
     let shouldShowGoogleReview = checkGoogleReviewForQuestion(
@@ -285,7 +291,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
             (data) => data.type === QuestionType.WinItem,
           );
           const gift = btoa(
-            `?name=${giftRes?.response?.Win_item}&image=${image}`,
+            `?name=${giftRes?.response?.Win_item}&image=${image}&error=${error}`,
           );
           router.push(`/ws/${router.query.shortId}/end?gift=${gift}`);
           return;
@@ -407,6 +413,14 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                       </Box>
 
                       <QuestionForm />
+                      <NextBtn
+                        next={handleNext}
+                        survey={survey}
+                        themeStyles={
+                          surveyThemeData?.surveyTheme?.button?.styles
+                        }
+                        isSavingResponses={isSavingResponses}
+                      />
                     </ScrollArea.Autosize>
                   </motion.div>
                 </motion.div>

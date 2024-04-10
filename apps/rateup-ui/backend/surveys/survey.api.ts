@@ -134,6 +134,7 @@ export async function getSurveyByLandingId(landingid: string) {
 type ExtendedSurvey = Survey & {
   googleLink: string;
   reviews: Array<any>;
+  webSurveyThemeId: string;
 };
 
 export async function getPublicSurvey(surveyId: string) {

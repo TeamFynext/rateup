@@ -79,6 +79,7 @@ export default function ThankYou({
   gift = {
     name: "",
     image: "",
+    error: false,
   },
 }) {
   const [imageLoading, setImageLoading] = useState(true);
@@ -199,11 +200,36 @@ export default function ThankYou({
         justify={"center"}
       >
         <Stack h="100%" w="100%">
-          {surveyThemeData?.thankyouTheme?.confettiEnabled && (
+          {surveyThemeData?.thankyouTheme?.confettiEnabled && !gift.error && (
             <Confetti width={width - 1} height={height - 1} />
           )}
           {/* TODO REMOVE LATER: MYG GIFT VISHU */}
-          {gift?.image && gift?.name && (
+          {gift.error && (
+            <>
+              <Center mt={"lg"}>
+                {surveyThemeData?.thankyouTheme?.logo?.logo && (
+                  <Image
+                    src={getImageUrl(
+                      surveyThemeData?.thankyouTheme?.logo?.logo,
+                    )}
+                    alt="Rateup"
+                    height={"auto"}
+                    style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                  />
+                )}
+              </Center>
+              <Stack align="center" gap={"sm"} h={"80%"} justify="center">
+                <Text
+                  w={"70%"}
+                  ta={"center"}
+                  style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
+                >
+                  Gifts are not available for purchases under 5000 Rs.{" "}
+                </Text>
+              </Stack>
+            </>
+          )}
+          {!gift.error && gift?.image && gift?.name && (
             <Stack>
               <Center mt={"lg"}>
                 {surveyThemeData?.thankyouTheme?.logo?.logo && (
@@ -252,7 +278,7 @@ export default function ThankYou({
               </Stack>
             </Stack>
           )}
-          {!enableGoogleReview && !gift?.image && (
+          {!enableGoogleReview && !gift?.image && !gift.error && (
             <Stack
               align="center"
               justify="center"

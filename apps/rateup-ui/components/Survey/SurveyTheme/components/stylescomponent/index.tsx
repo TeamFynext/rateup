@@ -239,6 +239,7 @@ function StylesComponent({
                       (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.title
                     }
                     setCurrentstyles={updateSelectedTabStyle}
+                    selectedTab={selectedTab}
                   />
                 </Tabs.Panel>
               )}
