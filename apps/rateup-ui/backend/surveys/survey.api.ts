@@ -242,8 +242,10 @@ export async function generateGift(data: generateGiftProps) {
   } catch (error) {
     if (error?.response?.data?.message) {
       throw Error(error?.response?.data?.message);
-    } else {
+    } else if (typeof error?.response?.data === "string") {
       throw Error(error?.response?.data);
+    } else {
+      throw Error("There was an error, please try again later");
     }
   }
 }
