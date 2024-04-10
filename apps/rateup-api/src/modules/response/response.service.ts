@@ -142,7 +142,7 @@ export async function downloadExcelResponse(
     }
     //TODO REMOVE LATER: MYG GIFT VISHU
     if (process.env.VISHU_SURVEY === surveyId) {
-      headerArray.push("win_item");
+      headerArray.push("Gift won");
       filteredSecondArray.push({ id: "win_item", type: QuestionType.WinItem });
     }
 
@@ -515,7 +515,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     questions.push({
       id: "win_item",
       type: QuestionType.WinItem,
-      title: { English: "win_item" },
+      title: { English: "Gift won" },
       description: {},
       required: true,
     });
@@ -710,7 +710,7 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
     questions.push({
       id: "win_item",
       type: QuestionType.WinItem,
-      title: { English: "win_item" },
+      title: { English: "Gift won" },
       description: {},
       required: true,
     });
