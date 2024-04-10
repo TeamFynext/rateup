@@ -1089,6 +1089,63 @@ export async function getGiftByPrice(price: number) {
     ...gift,
   };
 }
+
+export async function getGiftByPhone(mobileNumber: number) {
+  const invoices = await prisma.myGInvoice.findMany({
+    where: {
+      mobileNumber: mobileNumber.toString(),
+    },
+  });
+
+  if (invoices.length < 1) {
+    throw new Error("No invoices found for this number");
+  }
+
+  let eligibleInvoices = invoices.filter((inv) => inv.giftRedeemed === false);
+  let redeemedInvoices = invoices.filter((inv) => inv.giftRedeemed === true);
+
+  if (eligibleInvoices.length < 1) {
+    throw new Error("Gift for All invoices claimed already.");
+  }
+
+  const highestRedeemAttempt = redeemedInvoices.reduce(
+    (max, item) => Math.max(max, item.redeemAttempt),
+    -Infinity,
+  );
+
+  const sumOfInvoiceValues = eligibleInvoices.reduce(
+    (acc, invoice) => acc + invoice.invoiceValue,
+    0,
+  );
+
+  if (sumOfInvoiceValues < 5000) {
+    throw new Error("Total Purchase Amount not eligible for Gift");
+  }
+
+  const gift = getRandomGift(sumOfInvoiceValues);
+
+  if (gift) {
+    const updatedInvoices = await prisma.myGInvoice.updateMany({
+      where: {
+        id: {
+          in: eligibleInvoices.map((invoice) => invoice.id),
+        },
+      },
+      data: {
+        giftRedeemed: true,
+        gift: gift.name,
+        redeemAttempt: highestRedeemAttempt + 1,
+      },
+    });
+
+    return {
+      sumOfInvoiceValues,
+      ...gift,
+    };
+  }
+  throw new Error("Unknown");
+}
+
 export async function getIsResponseExist(
   surveyTeamMapId: string,
   phoneNo: string,

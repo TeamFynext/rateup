@@ -5,6 +5,7 @@ import {
   fetchGoogleUrlBySurveyIdHandler,
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
+  giftByPhoneNoHandler,
   giftHandler,
   startedSurveyHandler,
   verifySurveyPasswordHandler,
@@ -83,5 +84,15 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
       },
     },
     giftHandler,
+  );
+
+  server.post(
+    "/generateGiftByPhone",
+    {
+      schema: {
+        body: $Sref("giftByPhoneRequestSchema"),
+      },
+    },
+    giftByPhoneNoHandler,
   );
 }

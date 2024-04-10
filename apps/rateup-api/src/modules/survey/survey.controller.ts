@@ -5,6 +5,7 @@ import {
   deleteSurveyById,
   deleteSurveyFromTeam,
   getActiveSurveysSummmaryByUserId,
+  getGiftByPhone,
   getGiftByPrice,
   getGoogleUrlBySurveyTeamMapId,
   getIsResponseExist,
@@ -34,6 +35,7 @@ import {
   DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   GetSurveyTemplatesParams,
+  GiftByPhoneInput,
   GiftInput,
   IdParamInput,
   UpdateGoogleLinkInput,
@@ -556,5 +558,25 @@ export async function giftHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send("Gift generation Failed");
+  }
+}
+
+export async function giftByPhoneNoHandler(
+  request: FastifyRequest<{
+    Body: GiftByPhoneInput;
+  }>,
+  reply: FastifyReply,
+) {
+  let phoneNumber = request.body.phoneNumber;
+  try {
+    const gift = await getGiftByPhone(Number(phoneNumber));
+    if (!gift) {
+      reply.code(404).send("Failed to generate gift.");
+    } else {
+      reply.code(200).send(gift);
+    }
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send("Error, " + e.message);
   }
 }

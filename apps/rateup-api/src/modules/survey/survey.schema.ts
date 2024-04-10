@@ -62,6 +62,17 @@ const giftRequestSchema = z.object({
   phoneNumber: z.string(),
   surveyTeamMapId: z.string(),
 });
+
+const giftByPhoneRequestSchema = z.object({
+  phoneNumber: z
+    .string()
+    .min(10, { message: "Phone number must be at least 10 digits" })
+    .max(10, { message: "Phone number must not exceed 10 digits" })
+    .refine((value) => /^[+]?[0-9]+$/.test(value), {
+      message: "Must be a valid number",
+    }),
+});
+
 const idParamsSchema = z.object({
   id: z.string(),
 });
@@ -178,11 +189,14 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     updateGoogleLinkRequestSchema,
     deleteTeamSurveyRequestSchema,
     giftRequestSchema,
+    giftByPhoneRequestSchema,
   },
   { $id: "surveySchema" },
 );
 
 export type GiftInput = z.infer<typeof giftRequestSchema>;
+export type GiftByPhoneInput = z.infer<typeof giftByPhoneRequestSchema>;
+
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type CreateSurveyLandingInput = z.infer<
   typeof createSurveyLandingRequestSchema
