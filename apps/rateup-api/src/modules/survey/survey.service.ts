@@ -1108,13 +1108,13 @@ export async function getGiftByPhone(mobileNumber: number) {
     throw new Error("GIFT_CLAIMED_ERROR");
   }
 
-  // const highestRedeemAttempt = redeemedInvoices.reduce(
-  //   (max, item) => Math.max(max, item.redeemAttempt),
-  //   -Infinity,
-  // );
-
-  // let attempt = highestRedeemAttempt ? highestRedeemAttempt : 0;
-  // let attemptVal = attempt +
+  const highestRedeemAttempt =
+    redeemedInvoices.length > 0
+      ? redeemedInvoices.reduce(
+          (max, item) => Math.max(max, item.redeemAttempt),
+          -Infinity,
+        )
+      : 0;
 
   const sumOfInvoiceValues = eligibleInvoices?.reduce(
     (acc, invoice) => acc + invoice.invoiceValue,
@@ -1137,7 +1137,7 @@ export async function getGiftByPhone(mobileNumber: number) {
       data: {
         giftRedeemed: true,
         gift: gift.name,
-        //  redeemAttempt: highestRedeemAttempt + 1,
+        redeemAttempt: highestRedeemAttempt + 1,
       },
     });
 
