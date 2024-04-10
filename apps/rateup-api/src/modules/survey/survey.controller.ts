@@ -577,6 +577,20 @@ export async function giftByPhoneNoHandler(
     }
   } catch (e) {
     log.error(e);
-    reply.code(500).send("Error, " + e.message);
+    if (e.message === "NO_INVOICE_ERROR") {
+      reply
+        .code(404)
+        .send(
+          `We couldn’t find any invoices linked to the phone number ${phoneNumber}. Please check back later or contact myG support.`,
+        );
+    } else if (e.message === "GIFT_CLAIMED_ERROR") {
+      reply.code(400).send("Gift for All invoices claimed already.");
+    } else if (e.message === "LESS_AMOUNT_ERROR") {
+      reply
+        .code(400)
+        .send("Not Eligible..! Your total purchase amount is less that 5000.");
+    } else {
+      reply.code(500).send("Something Went Wrong! Try again.");
+    }
   }
 }
