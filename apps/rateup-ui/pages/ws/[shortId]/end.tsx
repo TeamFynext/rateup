@@ -6,7 +6,8 @@ export const getServerSideProps = async (context) => {
     const { shortId } = context.params;
 
     const { gift } = context.query;
-    const decodedParam = atob(gift ?? "");
+    const decodedString = atob(gift ?? "");
+    const decodedParam = decodeURIComponent(decodedString ?? "");
     const params = new URLSearchParams(decodedParam);
     const name = params.get("name");
     const image = params.get("image");

@@ -198,7 +198,7 @@ export default function ThankYou({
               borderRadius: "100%",
             }}
           />
-          <Text ff={lexend500.style.fontFamily} fz={12} c={"#2a50d5"}>
+          <Text ff={lexend500.style.fontFamily} fz={12} c={"#19B06E"}>
             YOUR GIFT IS ON THE WAY!
           </Text>
           <Text ta={"center"} ff={lexend600.style.fontFamily}>
@@ -212,7 +212,7 @@ export default function ThankYou({
               title={"Reveal"}
               onClick={toggle}
               radius={"md"}
-              color="#2a50d5"
+              color="#19B06E"
             />
           </Group>
         </Stack>

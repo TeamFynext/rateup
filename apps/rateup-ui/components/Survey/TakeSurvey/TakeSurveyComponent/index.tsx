@@ -281,9 +281,10 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
           const giftRes = responses?.findLast(
             (data) => data.type === QuestionType.WinItem,
           );
-          const gift = btoa(
-            `?name=${giftRes?.response?.Win_item}&image=${image}&error=${error}&price=${price}`,
+          const encodedString = encodeURIComponent(
+            `?name=${giftRes?.response?.Win_item ?? ""}&image=${image ?? ""}&error=${error ?? ""}&price=${price ?? 0}`,
           );
+          const gift = btoa(encodedString);
           router.push(`/ws/${router.query.shortId}/end?gift=${gift}`);
           return;
         }
