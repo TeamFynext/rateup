@@ -1022,6 +1022,9 @@ model MyGInvoice {
   invoiceValue  Float
   mobileNumber  String
   invoiceBranch String
+  giftRedeemed  Boolean  @default(false)
+  gift          String?
+  redeemAttempt Int      @default(0)
 
   @@unique([invoiceNumber, mobileNumber])
 }
