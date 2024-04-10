@@ -590,7 +590,7 @@ export async function giftByPhoneNoHandler(
         .code(400)
         .send("Not Eligible..! Your total purchase amount is less that 5000.");
     } else {
-      reply.code(500).send("Sorry...Something Went Wrong! Try again");
+      reply.code(500).send("Something Went Wrong! Try again.");
     }
   }
 }
