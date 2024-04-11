@@ -41,6 +41,7 @@ import {
 import { generateGift } from "../../../../backend/surveys/survey.api";
 import NextBtn from "./NextBtn";
 import {
+  AXIOS_TIMEOUT,
   INTERNAL_ERROR,
   INTERNAL_ERROR2,
   MAX_PHONE_ERROR,
@@ -238,14 +239,20 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         ) {
           showErrorToast(error?.message?.toString());
         } else {
+          let win_item_res = "Not eligible";
+          let error_message = error?.message?.toString();
+          if (error?.message?.toString() === AXIOS_TIMEOUT) {
+            win_item_res = "Axios Timeout";
+            error_message = INTERNAL_ERROR2;
+          }
           responses.push({
             questionId: "win_item",
             response: {
-              Win_item: "Not eligible",
+              Win_item: win_item_res,
             },
             type: QuestionType.WinItem,
           });
-          finishSurvey("", 0, error?.message?.toString());
+          finishSurvey("", 0, error_message);
         }
       } finally {
         setGiftLoading(false);
