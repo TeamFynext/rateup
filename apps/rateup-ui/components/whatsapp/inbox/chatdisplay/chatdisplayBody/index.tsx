@@ -13,6 +13,7 @@ import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useEffect } from "react";
 import WaInboxImage from "./components/image";
 import WaInboxTemplate from "./components/template";
+import WaInboxInteractive from "./components/interactive";
 interface Props {
   data: WaGetMessagesBody[];
 }
@@ -32,7 +33,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
     messageBody: WaInboxMessageBody,
     templateComponentParams: WaTemplateComponent[],
   ) => {
-    const { messageContent, messageType, template } =
+    const { messageContent, messageType, template, interactive } =
       parseWaMessage(messageBody);
     switch (messageType) {
       case "text":
@@ -46,6 +47,13 @@ export default function WaInboxChatDisplayBody(props: Props) {
           <WaInboxTemplate
             templateBody={template}
             parameters={templateComponentParams}
+          />
+        );
+      case "interactive":
+        return (
+          <WaInboxInteractive
+            interactiveBody={interactive}
+            messageContent={messageContent}
           />
         );
       default:

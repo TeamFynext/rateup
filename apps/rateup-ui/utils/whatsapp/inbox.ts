@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import {
   WaInboxMessageBody,
+  WaSendMessageBody,
   WaTemplateComponent,
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
@@ -11,6 +12,7 @@ export type ParsedWaMessageReturn = {
   messageType: string;
   messageContent: string;
   template?: WaTemplateFetchBody;
+  interactive?: WaSendMessageBody["interactive"];
 };
 export function parseWaMessage(
   messageBody: WaInboxMessageBody,
@@ -19,6 +21,8 @@ export function parseWaMessage(
   let messageType: string = "text";
   let messageContent: string = "No messages yet";
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
+  let interactive: WaSendMessageBody["interactive"] =
+    {} as WaSendMessageBody["interactive"];
   if (messageBody?.exchangeProcess === "send") {
     const { send } = messageBody;
     messageType = send.type;
@@ -33,6 +37,9 @@ export function parseWaMessage(
         messageContent = send.template.name;
         template = send.template;
         break;
+      case "interactive":
+        messageContent = "";
+        interactive = send.interactive;
     }
   }
   if (messageBody?.exchangeProcess === "receive") {
@@ -64,7 +71,7 @@ export function parseWaMessage(
         break;
     }
   }
-  return { timeStamp, messageType, messageContent, template };
+  return { timeStamp, messageType, messageContent, template, interactive };
 }
 
 export function returnMessageContentBasedOnParsedMessage(
@@ -94,6 +101,8 @@ export function returnMessageContentBasedOnParsedMessage(
     return "Template";
   } else if (parsedMessage.messageType === "button") {
     return parsedMessage.messageContent;
+  } else if (parsedMessage.messageType === "interactive") {
+    return "Interactive Message";
   } else {
     return "Unsupported message type";
   }

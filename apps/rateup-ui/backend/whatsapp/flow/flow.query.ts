@@ -16,6 +16,7 @@ import {
   cloneFlows,
   cloneAndDeprecateFlows,
   cloneFlowsProps,
+  sendFlow,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
@@ -190,6 +191,19 @@ export const useDeprecateFlowMutation = () => {
     },
     onError: () => {
       showErrorToast("Error deprecating flows");
+    },
+  });
+};
+
+export const useSendFlowToUser = (phone: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dbFlowId: string) => sendFlow(dbFlowId, phone),
+    onSuccess: () => {
+      showSuccessToast("Flow Sent Successfully");
+    },
+    onError: () => {
+      showErrorToast("Error sending flow");
     },
   });
 };
