@@ -8,6 +8,7 @@ import {
   getGiftByPhone,
   getGiftByPrice,
   getGoogleUrlBySurveyTeamMapId,
+  getInvoicesByPhone,
   getIsResponseExist,
   getPhoneBySurveyTeamMapId,
   getPublicSurveyById,
@@ -38,6 +39,7 @@ import {
   GiftByPhoneInput,
   GiftInput,
   IdParamInput,
+  PhoneParamInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
@@ -596,5 +598,27 @@ export async function giftByPhoneNoHandler(
     } else {
       reply.code(500).send("Something Went Wrong! Try again.");
     }
+  }
+}
+
+export async function getInvoicesByPhoneNoHandler(
+  request: FastifyRequest<{
+    Params: PhoneParamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  let phoneNumber = request.params.phoneNumber;
+  try {
+    const invoices = await getInvoicesByPhone(Number(phoneNumber));
+    if (!invoices) {
+      reply.code(400).send(invoices);
+    } else if (invoices.length < 1) {
+      reply.code(404).send("No invoices found");
+    } else {
+      reply.code(200).send(invoices);
+    }
+  } catch (e) {
+    reply.code(500).send("Something Went Wrong! Try again.");
+    log.error(e);
   }
 }
