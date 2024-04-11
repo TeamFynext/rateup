@@ -54,6 +54,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const [giftLoading, setGiftLoading] = useState(false);
 
   const surveyTeamMapId = survey.surveyTeamMapId;
   useBeforeUnload(true, "Your inputs are not submitted yet, are you sure?");
@@ -213,6 +214,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
           const contactRes = responses?.find(
             (data) => data.type === QuestionType.Contact,
           );
+          setGiftLoading(true);
           const res = await generateGift({
             phoneNumber: contactRes?.response?.Contact?.phone?.substring(3),
           });
@@ -245,6 +247,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
           });
           finishSurvey("", 0, error?.message?.toString());
         }
+      } finally {
+        setGiftLoading(false);
       }
     } else {
       openConfirmationResponsesModal();
@@ -427,7 +431,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         themeStyles={
                           surveyThemeData?.surveyTheme?.button?.styles
                         }
-                        isSavingResponses={isSavingResponses}
+                        isSavingResponses={isSavingResponses || giftLoading}
                       />
                     </ScrollArea.Autosize>
                   </motion.div>
@@ -442,7 +446,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               total={questionCount}
               survey={survey}
               themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
-              isSavingResponses={isSavingResponses}
+              isSavingResponses={isSavingResponses || giftLoading}
             />
           </Stack>
         </Container>
