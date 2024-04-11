@@ -1,3 +1,5 @@
+import axios from "axios";
+import { AXIOS_TIMEOUT } from "../../utils/constants";
 import { axiosClient, axiosClientIP } from "../apiClient";
 
 const SURVEYURL = "/survey";
@@ -234,13 +236,15 @@ type generateGiftProps = {
 };
 export async function generateGift(data: generateGiftProps) {
   try {
-    const res = await axiosClient.post(
-      `${SURVEY_PUBLIC_URL}/generateGiftByPhone`,
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api${SURVEY_PUBLIC_URL}/generateGiftByPhone`,
       data,
     );
     return res.data as generateGiftRes;
   } catch (error) {
-    if (error?.response?.data?.message) {
+    if (error?.code === "ECONNABORTED") {
+      throw Error(AXIOS_TIMEOUT);
+    } else if (error?.response?.data?.message) {
       throw Error(error?.response?.data?.message);
     } else if (typeof error?.response?.data === "string") {
       throw Error(error?.response?.data);
