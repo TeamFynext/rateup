@@ -20,7 +20,6 @@ export default function WaInboxChatSelectCard(props: WaContact) {
       queryKey: ["wa-messages", props?.id],
     });
   }
-
   return (
     <Card
       className={`${classes.wrapper} ${params.get("waContactId") === props?.id && classes.highlighted_wrapper}`}

@@ -1,0 +1,10 @@
+.inner {
+  max-height: 400px;
+  overflow: auto;
+  padding: var(--mantine-spacing-xs);
+}
+.send_button_wrapper {
+  padding-top: var(--mantine-spacing-xs);
+  border-top: 1px solid var(--mantine-color-gray-3);
+  justify-content: end;
+}

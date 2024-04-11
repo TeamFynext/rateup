@@ -596,6 +596,7 @@ declare global {
     orgId: string;
     surveyId: string;
     templateMessage: WaFlowTemplateMessage;
+    survey: any;
   };
 
   type LoyaltyCampaign = {

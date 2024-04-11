@@ -9,6 +9,7 @@ import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import WaInboxTemplateDisplayModal from "./templateDisplayModal";
 import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 import { useRef } from "react";
+import WaInboxFlowDisplayModal from "./flowDisplayModel";
 
 export default function WaInboxChatDisplayFooter(props: WaContact) {
   const timeStamp = props.userInitiatedFinalTimeStamp;
@@ -43,6 +44,10 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
   return (
     <div className={classes.wrapper}>
       <WaInboxTemplateDisplayModal
+        sessionExpired={isInboxSessionExpired(timeStamp)}
+        waContact={props}
+      />
+      <WaInboxFlowDisplayModal
         sessionExpired={isInboxSessionExpired(timeStamp)}
         waContact={props}
       />
