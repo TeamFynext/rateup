@@ -1016,15 +1016,17 @@ model LoyaltyApiKey {
 
 // TODO remove later: FOR myg vishu gift
 model MyGInvoice {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   invoiceDate   DateTime
   invoiceNumber String
   invoiceValue  Float
   mobileNumber  String
   invoiceBranch String
-  giftRedeemed  Boolean  @default(false)
+  giftRedeemed  Boolean   @default(false)
   gift          String?
-  redeemAttempt Int      @default(0)
+  redeemAttempt Int       @default(0)
+  createdAt     DateTime? @default(now())
+  updatedAt     DateTime? @default(dbgenerated("NULL")) @updatedAt
 
   @@unique([invoiceNumber, mobileNumber])
 }

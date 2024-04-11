@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "MyGInvoice" ALTER COLUMN "createdAt" DROP NOT NULL,
+ALTER COLUMN "updatedAt" SET DEFAULT NULL;
