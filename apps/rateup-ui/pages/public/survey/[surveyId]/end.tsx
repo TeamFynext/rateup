@@ -3,6 +3,7 @@ import {
   Flex,
   Group,
   Image,
+  List,
   Modal,
   Stack,
   Text,
@@ -272,13 +273,25 @@ export default function ThankYou({
                       />
                     )}
                   </Center>
-                  <Stack align="center" gap={"sm"} h={"80%"} justify="center">
+                  <Stack align="center" gap={"xs"} h={"80%"} justify="center">
                     <Text
-                      w={"70%"}
+                      w={largeScreen ? "70%" : "80%"}
                       ta={"center"}
                       style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
                     >
-                      {gift.error?.toString()}
+                      <List>
+                        {gift.error
+                          ?.toString()
+                          ?.split("#")
+                          .map((err, i) =>
+                            i === 0 ? (
+                              <Text key={err}>{err?.toString()}</Text>
+                            ) : (
+                              <List.Item key={err}>{err?.toString()}</List.Item>
+                            ),
+                          )
+                          .filter(Boolean)}
+                      </List>
                     </Text>
                   </Stack>
                 </>
