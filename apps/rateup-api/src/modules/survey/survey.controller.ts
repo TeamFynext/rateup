@@ -571,12 +571,16 @@ export async function giftByPhoneNoHandler(
   try {
     const gift = await getGiftByPhone(Number(phoneNumber));
     if (!gift) {
+      log.error(".....Gift...Error....404..." + phoneNumber);
       reply.code(404).send("Failed to generate gift.");
     } else {
+      console.log(".....Success......Gift.........");
+      console.log(".....Gift.....:" + phoneNumber + "....." + gift);
       reply.code(200).send(gift);
     }
   } catch (e) {
-    log.error(e);
+    console.log("....Gift Error......." + phoneNumber + "........" + e.message);
+    log.error(e + "....." + phoneNumber);
     if (e.message === "NO_INVOICE_ERROR") {
       reply
         .code(404)
