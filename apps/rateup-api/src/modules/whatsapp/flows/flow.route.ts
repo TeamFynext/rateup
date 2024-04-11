@@ -15,6 +15,7 @@ import {
   getUnsyncedFlowsHandler,
   importFlowsHandler,
   publishFlowHandler,
+  sendFlowHandler,
   updateFlowHandler,
 } from "./flow.controller";
 import { log } from "../../../utils/logger";
@@ -146,5 +147,16 @@ export async function flowRoutes(server: FastifyInstance) {
       },
     },
     publishFlowHandler,
+  );
+
+  server.post(
+    "/:dbFlowId/send",
+    {
+      schema: {
+        body: $waFlow("sendFlowBodySchema"),
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    sendFlowHandler,
   );
 }
