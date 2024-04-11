@@ -35,7 +35,10 @@ import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
 } from "../../../utils/commnUtils";
-import { WaMessageBody } from "../../../types/whatsapp.types";
+import {
+  WaMessageBody,
+  WaSendMessageBody,
+} from "../../../types/whatsapp.types";
 
 /**
  * Get flows from whatsapp
@@ -312,20 +315,13 @@ interface sendFlowProps {
 }
 export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
   try {
-    const waSettings = await getWaSettings(orgId);
     const dbFlow = await getFlowFromDb(dbFlowId);
 
     const messageData = generateFlowMessageData({
       to: phone,
       dbFlow,
     });
-
-    await callWhatsappApi(
-      `/${waSettings.phoneId}/messages`,
-      "POST",
-      waSettings.accessToken,
-      messageData,
-    );
+    await sendMessage(orgId, { ...messageData, to: phone });
     return true;
   } catch (e) {
     log.error(e);

@@ -35,6 +35,10 @@ const updateFlowInput = z.object({
 const cloneFlowSchema = z.object({
   teamId: z.string().uuid(),
 });
+
+const sendFlowBodySchema = z.object({
+  phone: z.string(),
+});
 export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
   {
     sourceQuery,
@@ -44,6 +48,7 @@ export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
     byDbFlowIdParams,
     updateFlowInput,
     cloneFlowSchema,
+    sendFlowBodySchema,
   },
   {
     $id: "waFlow",
@@ -57,3 +62,4 @@ export type CreateFlowInput = z.infer<typeof createFlowInput>;
 export type ByDbFlowIdParams = z.infer<typeof byDbFlowIdParams>;
 export type UpdateFlowInput = z.infer<typeof updateFlowInput>;
 export type CloneFlowBody = z.infer<typeof cloneFlowSchema>;
+export type SendFlowBody = z.infer<typeof sendFlowBodySchema>;

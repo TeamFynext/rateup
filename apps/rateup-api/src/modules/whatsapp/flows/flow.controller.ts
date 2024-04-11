@@ -15,6 +15,7 @@ import {
   getFlowsFromWa,
   getUnsyncedFlows,
   publishFlowInWa,
+  sendFlow,
   updateFlowIdAndStatusInDb,
   updateFlowInDb,
   updateFlowJsonInWa,
@@ -26,6 +27,7 @@ import {
   CloneFlowBody,
   CreateFlowInput,
   ImportFlowsBody,
+  SendFlowBody,
   UpdateFlowInput,
   WaFlowSourceQuery,
 } from "./flow.schema";
@@ -345,4 +347,27 @@ export async function publishFlowHandler(
 
   await publishFlowInWa(orgId, flow.flowId);
   await updateFlowInDb(orgId, dbFlowId, { status: WaFlowStatus.PUBLISHED });
+}
+
+export async function sendFlowHandler(
+  request: FastifyRequest<{
+    Body: SendFlowBody;
+    Params: ByDbFlowIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { dbFlowId } = request.params;
+    const { phone } = request.body;
+    const serviceParam = {
+      orgId,
+      dbFlowId,
+      phone,
+    };
+    await sendFlow(serviceParam);
+    reply.status(201).send();
+  } catch (error) {
+    reply.status(500).send(error.message);
+  }
 }
