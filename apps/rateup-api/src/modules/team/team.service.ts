@@ -172,7 +172,8 @@ export async function inviteTeamMember(input: InviteMemberInput) {
       },
     });
 
-    if (existingOrgMember) {
+    //TODO VERIFY below MYG
+    if (existingOrgMember && existingOrgMember.orgId !== orgId) {
       throw new Error(
         "User with the provided email is already a SUPER_ADMIN member in an organization.",
       );
