@@ -1104,8 +1104,24 @@ export async function getGiftByPhone(mobileNumber: number) {
   let eligibleInvoices = invoices.filter((inv) => inv.giftRedeemed === false);
   let redeemedInvoices = invoices.filter((inv) => inv.giftRedeemed === true);
 
-  if (eligibleInvoices.length < 1) {
-    throw new Error("GIFT_CLAIMED_ERROR");
+  if (redeemedInvoices.length > 0 && eligibleInvoices.length < 1) {
+    redeemedInvoices.sort((a, b) => a.redeemAttempt - b.redeemAttempt);
+
+    const groupedByRedeemAttempt = redeemedInvoices.reduce((acc, item) => {
+      if (!acc[item.redeemAttempt]) {
+        acc[item.redeemAttempt] = [];
+      }
+      acc[item.redeemAttempt].push(item);
+      return acc;
+    }, {});
+
+    const uniqueGifts = Object.values(groupedByRedeemAttempt).map(
+      (group) => group[0],
+    );
+
+    const output = uniqueGifts.map((gift, index) => `#${gift.gift}`).join(", ");
+
+    throw new Error("GIFT CLAIMED ALREADY  :  " + output);
   }
 
   const highestRedeemAttempt =

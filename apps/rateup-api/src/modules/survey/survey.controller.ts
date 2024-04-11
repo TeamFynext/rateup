@@ -583,8 +583,8 @@ export async function giftByPhoneNoHandler(
         .send(
           `We could not find any invoices linked to the phone number ${phoneNumber}. Please check back later or contact myG support.`,
         );
-    } else if (e.message === "GIFT_CLAIMED_ERROR") {
-      reply.code(400).send("Gift for All invoices claimed already.");
+    } else if (e.message.startsWith("GIFT CLAIMED")) {
+      reply.code(400).send(e.message);
     } else if (e.message === "LESS_AMOUNT_ERROR") {
       reply
         .code(400)
