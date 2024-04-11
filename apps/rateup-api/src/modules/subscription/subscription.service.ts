@@ -98,7 +98,7 @@ export async function getSubscription(orgId: string) {
   }
 
   //check if usageStats record exists & update
-  const stats = await createStats(orgId);
+  if (orgId) await createStats(orgId);
 
   return sub;
 }
