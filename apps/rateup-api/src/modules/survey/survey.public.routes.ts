@@ -3,6 +3,7 @@ import { $Sref } from "./survey.schema";
 import {
   completedSurveyHandler,
   fetchGoogleUrlBySurveyIdHandler,
+  getInvoicesByPhoneNoHandler,
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
   giftByPhoneNoHandler,
@@ -95,4 +96,16 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     },
     giftByPhoneNoHandler,
   );
+
+  server.get(
+    "/invoices/:phoneNumber",
+    {
+      schema: {
+        params: $Sref("phoneParamsSchema"),
+      },
+    },
+    getInvoicesByPhoneNoHandler,
+  );
+
+  //MYG
 }

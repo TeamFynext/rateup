@@ -73,6 +73,16 @@ const giftByPhoneRequestSchema = z.object({
     }),
 });
 
+const phoneParamsSchema = z.object({
+  phoneNumber: z
+    .string()
+    .min(10, { message: "Phone number must be at least 10 digits" })
+    .max(10, { message: "Phone number must not exceed 10 digits" })
+    .refine((value) => /^[+]?[0-9]+$/.test(value), {
+      message: "Must be a valid number",
+    }),
+});
+
 const idParamsSchema = z.object({
   id: z.string(),
 });
@@ -190,10 +200,13 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     deleteTeamSurveyRequestSchema,
     giftRequestSchema,
     giftByPhoneRequestSchema,
+    phoneParamsSchema,
   },
   { $id: "surveySchema" },
 );
 
+//MYG
+export type PhoneParamInput = z.infer<typeof phoneParamsSchema>;
 export type GiftInput = z.infer<typeof giftRequestSchema>;
 export type GiftByPhoneInput = z.infer<typeof giftByPhoneRequestSchema>;
 
