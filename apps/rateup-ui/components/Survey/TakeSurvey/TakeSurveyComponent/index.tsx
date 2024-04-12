@@ -26,11 +26,11 @@ import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import { LogicAction, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
-import { INTERNAL_ERROR2, MIN_AMOUNT_ERROR } from "../../../../utils/constants";
+import { INTERNAL_ERROR2 } from "../../../../utils/constants";
 import { encryptResponse } from "../../../../utils/encryption";
 import { lexend } from "../../../../utils/fonts";
 import { showErrorToast } from "../../../../utils/notifications";
-import { getRandomGift } from "../../../../utils/survey/gift";
+import { MIN_GIFT_AMOUNT, getRandomGift } from "../../../../utils/survey/gift";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import RateupLoader from "../../../Loaders/RateupLoader";
 import GiftModal from "../../Gift/GiftModal";
@@ -336,7 +336,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     price: number;
     redeem: boolean;
   }) => {
-    if (!id || redeem) return;
+    if (!id || redeem || price < MIN_GIFT_AMOUNT) return;
     const gift = getRandomGift(price);
     if (gift) {
       responses.push({
@@ -349,7 +349,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       });
       finishSurvey(gift.image, price);
     } else {
-      let error_message = price < 5000 ? MIN_AMOUNT_ERROR : INTERNAL_ERROR2;
       responses.push({
         questionId: "win_item",
         response: {
@@ -358,7 +357,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         },
         type: QuestionType.WinItem,
       });
-      finishSurvey("", 0, error_message);
+      finishSurvey("", 0, INTERNAL_ERROR2);
     }
   };
 
