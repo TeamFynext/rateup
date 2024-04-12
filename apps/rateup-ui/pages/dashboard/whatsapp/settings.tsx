@@ -253,7 +253,11 @@ function MetaLoginButton() {
     });
   }
 
-  return <Button onClick={login}>Link WhatsApp Account</Button>;
+  return (
+    <Button onClick={login} color={"#1877f2"} size={"lg"}>
+      Login with Facebook
+    </Button>
+  );
 }
 
 export default function WhatsAppSettingsPage() {
@@ -274,7 +278,7 @@ export default function WhatsAppSettingsPage() {
   const isManual = waSettings?.type === WaConfigType.Manual;
 
   return (
-    <Stack>
+    <Stack h={"100%"}>
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
         crossOrigin="anonymous"
@@ -379,7 +383,17 @@ function MetaLoginStatus({ waSettings }) {
       </PaperLayout>
     );
   } else {
-    return <MetaLoginButton />;
+    return (
+      <Center
+        h={"100%"}
+        bg={"whitesmoke"}
+        style={{
+          borderRadius: "4px",
+        }}
+      >
+        <MetaLoginButton />
+      </Center>
+    );
   }
 }
 
