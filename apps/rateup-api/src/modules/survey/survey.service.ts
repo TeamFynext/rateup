@@ -1203,3 +1203,19 @@ export async function getInvoicesByPhone(mobileNumber: number) {
 
   return invoices;
 }
+
+export async function updateInvoice(id: string, gift: string) {
+  const invoices = await prisma.myGInvoice.update({
+    where: {
+      id,
+    },
+    data: {
+      giftRedeemed: true,
+      gift: gift,
+      redeemAttempt: {
+        increment: 1,
+      },
+    },
+  });
+  return invoices;
+}
