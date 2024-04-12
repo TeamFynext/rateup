@@ -33,6 +33,7 @@ export enum QuestionType {
   Address = "Address",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",
+  Invoice_Id = "invoice_id",
 
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
