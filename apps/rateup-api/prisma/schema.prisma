@@ -1027,7 +1027,7 @@ model MyGInvoice {
   redeemAttempt   Int       @default(0)
   invoiceDiscount Float?    @default(0)
   createdAt       DateTime? @default(now())
-  updatedAt       DateTime? @default(dbgenerated("NULL")) @updatedAt
+  updatedAt       DateTime? @updatedAt
 
   @@unique([invoiceNumber, mobileNumber])
 }
