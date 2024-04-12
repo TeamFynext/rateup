@@ -19,7 +19,7 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { Invoice } from "../../../backend/surveys/survey.api";
 import { lexend400, lexend500, lexend600 } from "../../../utils/fonts";
 import { MIN_GIFT_AMOUNT, offerList } from "../../../utils/survey/gift";
-import { MIN_AMOUNT_ERROR } from "../../../utils/constants";
+import { DISCOUNT_ERROR, MIN_AMOUNT_ERROR } from "../../../utils/constants";
 import { IconInfoCircle } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
@@ -53,7 +53,16 @@ const GiftModal = ({
 }: GiftModalProps) => {
   const imgLg = 90;
   const imgSm = 80;
-  const claimedAll = !invoiceList?.find((invoice) => !invoice.giftRedeemed);
+  const claimedAll =
+    invoiceList?.filter(
+      (invoice) =>
+        invoice.giftRedeemed ||
+        invoice.invoiceDiscount > 0.0 ||
+        invoice.invoiceValue < MIN_GIFT_AMOUNT,
+    )?.length !== invoiceList.length
+      ? false
+      : true;
+
   const isCombineClaim =
     invoiceList?.filter(
       (invoice) =>
@@ -92,22 +101,26 @@ const GiftModal = ({
               ta={"center"}
               fz={claimedAll ? 16 : "clamp(16px, 10.288px + 0.952vw, 24px)"}
             >
-              {claimedAll ? "your've claimed all invoices" : "CONGRATULATIONS"}
+              {claimedAll ? "you've claimed all invoices" : "CONGRATULATIONS"}
             </Text>
-            <Text
-              ta={"center"}
-              fz={14}
-              c={"var(--gift-grey)"}
-              ff={lexend400.style.fontFamily}
-            >
-              Vishukai Nettam gifts are waiting for you. Select an invoice to
-              claim now.
-            </Text>
+            {!claimedAll && (
+              <Text
+                ta={"center"}
+                fz={14}
+                c={"var(--gift-grey)"}
+                ff={lexend400.style.fontFamily}
+              >
+                Vishukai Nettam gifts are waiting for you. Select an invoice to
+                claim now.
+              </Text>
+            )}
 
             <Stack mt="xs" w={"100%"}>
               {invoiceList?.map((invoice) => {
                 let checkDisable = !invoice.giftRedeemed;
                 if (invoice.invoiceValue < MIN_GIFT_AMOUNT) {
+                  checkDisable = false;
+                } else if (invoice?.invoiceDiscount > 0.0) {
                   checkDisable = false;
                 }
                 return (
@@ -189,6 +202,7 @@ const GiftModal = ({
                                   prefix="Rs "
                                   value={invoice.invoiceValue}
                                   thousandSeparator
+                                  thousandsGroupStyle="lakh"
                                 />
                               </Text>
                             </Box>
@@ -205,11 +219,13 @@ const GiftModal = ({
                         ff={lexend500.style.fontFamily}
                         py={4}
                       >
-                        {invoice.invoiceValue < MIN_GIFT_AMOUNT
-                          ? MIN_AMOUNT_ERROR
-                          : invoice.giftRedeemed
-                            ? "Won as Vishukainettam"
-                            : "Get myG Vishukainettam"}
+                        {invoice.invoiceDiscount > 0.0
+                          ? DISCOUNT_ERROR
+                          : invoice.invoiceValue < MIN_GIFT_AMOUNT
+                            ? MIN_AMOUNT_ERROR
+                            : invoice.giftRedeemed
+                              ? "Won as Vishukainettam"
+                              : "Get myG Vishukainettam"}
                       </Text>
                     </Card>
                   </PaperLayout>
