@@ -15,6 +15,10 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { useBeforeUnload } from "react-use";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
+import {
+  Invoice,
+  getInvoicesByPhNo,
+} from "../../../../backend/surveys/survey.api";
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
 import QuestionCountContext from "../../../../context/QuestionCountContext";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
@@ -22,12 +26,17 @@ import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import { LogicAction, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
+import { INTERNAL_ERROR2, MIN_AMOUNT_ERROR } from "../../../../utils/constants";
 import { encryptResponse } from "../../../../utils/encryption";
 import { lexend } from "../../../../utils/fonts";
+import { showErrorToast } from "../../../../utils/notifications";
+import { getRandomGift } from "../../../../utils/survey/gift";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import RateupLoader from "../../../Loaders/RateupLoader";
+import GiftModal from "../../Gift/GiftModal";
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
+import NextBtn from "./NextBtn";
 import NextPrev from "./NextPrev";
 import QuestionDesc from "./QuestionDesc";
 import QuestionForm from "./QuestionForm";
@@ -38,16 +47,6 @@ import {
   checkRaiseTicketIssueQuestion,
   submitSurvey,
 } from "./util";
-import { generateGift } from "../../../../backend/surveys/survey.api";
-import NextBtn from "./NextBtn";
-import {
-  AXIOS_TIMEOUT,
-  INTERNAL_ERROR,
-  INTERNAL_ERROR2,
-  MAX_PHONE_ERROR,
-  MIN_PHONE_ERROR,
-} from "../../../../utils/constants";
-import { showErrorToast } from "../../../../utils/notifications";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -68,10 +67,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   };
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
+  const [invoiceList, setInvoiceList] = useState<Invoice[]>([]);
   const [
     isConfirmResponsesModalOpen,
     { open: openConfirmationResponsesModal, close: closeConfirmResponsesModal },
   ] = useDisclosure(false);
+  const [opened, { toggle, close }] = useDisclosure(false);
 
   // used for animation of question change in Question AnimationPresence below.
   const [aPDirection, setApDirection] = useState(0);
@@ -95,7 +96,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
   >("bottomSlideIn");
 
-  const formMaxHeight = smallScreen ? "calc(100dvh - 175px)" : `70dvh`;
+  const formMaxHeight = smallScreen ? "calc(100dvh - 10.9375rem)" : `70dvh`;
 
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
@@ -209,51 +210,22 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     if (survey.skipPreview) {
       //TODO REMOVE LATER: MYG GIFT VISHU
       try {
-        let image = "";
-        let price = 0;
         if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
           const contactRes = responses?.find(
             (data) => data.type === QuestionType.Contact,
           );
           setGiftLoading(true);
-          const res = await generateGift({
-            phoneNumber: contactRes?.response?.Contact?.phone?.substring(3),
-          });
-          responses.push({
-            questionId: "win_item",
-            response: {
-              Win_item: res?.name,
-            },
-            type: QuestionType.WinItem,
-          });
-          image = res?.image;
-          price = res?.sumOfInvoiceValues;
-        }
-        finishSurvey(image, price);
-      } catch (error) {
-        if (
-          error?.message?.toString() === MIN_PHONE_ERROR ||
-          error?.message?.toString() === MAX_PHONE_ERROR ||
-          error?.message?.toString() === INTERNAL_ERROR ||
-          error?.message?.toString() === INTERNAL_ERROR2
-        ) {
-          showErrorToast(error?.message?.toString());
+
+          const res = await getInvoicesByPhNo(
+            contactRes?.response?.Contact?.phone?.substring(3),
+          );
+          setInvoiceList(res);
+          toggle();
         } else {
-          let win_item_res = "Not eligible";
-          let error_message = error?.message?.toString();
-          if (error?.message?.toString() === AXIOS_TIMEOUT) {
-            win_item_res = "Axios Timeout";
-            error_message = INTERNAL_ERROR2;
-          }
-          responses.push({
-            questionId: "win_item",
-            response: {
-              Win_item: win_item_res,
-            },
-            type: QuestionType.WinItem,
-          });
-          finishSurvey("", 0, error_message);
+          finishSurvey();
         }
+      } catch (error) {
+        showErrorToast(error?.message?.toString());
       } finally {
         setGiftLoading(false);
       }
@@ -355,6 +327,40 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       handlers.setItem(index, formattedResponse);
     }
   };
+  const handleInvoiceSubmit = ({
+    id,
+    price,
+    redeem,
+  }: {
+    id: string;
+    price: number;
+    redeem: boolean;
+  }) => {
+    if (!id || redeem) return;
+    const gift = getRandomGift(price);
+    if (gift) {
+      responses.push({
+        questionId: "win_item",
+        response: {
+          Win_item: gift.name,
+          invoice_id: id,
+        },
+        type: QuestionType.WinItem,
+      });
+      finishSurvey(gift.image, price);
+    } else {
+      let error_message = price < 5000 ? MIN_AMOUNT_ERROR : INTERNAL_ERROR2;
+      responses.push({
+        questionId: "win_item",
+        response: {
+          Win_item: "Not eligible",
+          invoice_id: id,
+        },
+        type: QuestionType.WinItem,
+      });
+      finishSurvey("", 0, error_message);
+    }
+  };
 
   if (IsLoading) return <RateupLoader h={"100dvh"} />;
 
@@ -376,6 +382,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               finishSurvey={finishSurvey}
               isSavingResponses={isSavingResponses}
               largeScreen={largeScreen}
+            />
+            <GiftModal
+              close={close}
+              invoiceList={invoiceList}
+              opened={opened}
+              handleInvoiceSubmit={handleInvoiceSubmit}
             />
 
             <AnimatePresence initial={false}>

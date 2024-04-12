@@ -260,6 +260,7 @@ declare global {
       [QuestionType.WaList]?: { title: string; description?: string };
       //TODO REMOVE LATER: MYG GIFT VISHU
       [QuestionType.WinItem]?: string;
+      [QuestionType.Invoice_Id]?: string;
     };
   };
 
