@@ -612,8 +612,6 @@ export async function getInvoicesByPhoneNoHandler(
     const invoices = await getInvoicesByPhone(Number(phoneNumber));
     if (!invoices) {
       reply.code(400).send(invoices);
-    } else if (invoices.length < 1) {
-      reply.code(404).send("No invoices found");
     } else {
       reply.code(200).send(invoices);
     }
