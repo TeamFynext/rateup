@@ -22,6 +22,7 @@ export async function uploadInvoiceData(input: UploadInvoiceSchema) {
             invoiceValue: invoice.invoice_value,
             mobileNumber: invoice.mobile_number.toString(),
             invoiceBranch: invoice.invoice_branch,
+            invoiceDiscount: invoice.invoice_discount,
           },
         });
         successfulInvoices.push(createdInvoice);
