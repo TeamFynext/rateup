@@ -28,6 +28,7 @@ import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
 import { getQuestionsBySurveyId } from "../question/question.service";
 import { log } from "../../utils/logger";
+import { updateInvoice } from "../survey/survey.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -143,6 +144,14 @@ export async function createResponseHandler(
       checkUniqueDevice,
       ip,
     );
+    const winItemRes = request?.body?.responses?.find(
+      (data) => data?.type === QuestionType.WinItem,
+    );
+    let invoiceId = winItemRes?.response?.invoice_id;
+    let giftName = winItemRes?.response?.Win_item;
+    if (invoiceId && giftName) {
+      updateInvoice(invoiceId, giftName);
+    }
     reply.code(201).send(response);
     const { surveyTeamMapId, responses, language, createdAt } = response;
     await saveResponseToGoogleSheet({

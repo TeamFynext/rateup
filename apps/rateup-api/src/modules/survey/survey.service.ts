@@ -1193,3 +1193,29 @@ export async function getIsResponseExist(
     });
   return filteredData?.length ?? 0;
 }
+
+export async function getInvoicesByPhone(mobileNumber: number) {
+  const invoices = await prisma.myGInvoice.findMany({
+    where: {
+      mobileNumber: mobileNumber.toString(),
+    },
+  });
+
+  return invoices;
+}
+
+export async function updateInvoice(id: string, gift: string) {
+  const invoices = await prisma.myGInvoice.update({
+    where: {
+      id,
+    },
+    data: {
+      giftRedeemed: true,
+      gift: gift,
+      redeemAttempt: {
+        increment: 1,
+      },
+    },
+  });
+  return invoices;
+}
