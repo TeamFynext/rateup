@@ -1,0 +1,13 @@
+.action_icon {
+  width: 45px;
+  height: 45px;
+  border-radius: var(--mantine-radius-xl);
+  transition: rotate 0.5s;
+}
+.action_icon_rotate {
+  transition: rotate 0.5s;
+  rotate: 135deg;
+}
+.menu_dropdown {
+  border-radius: var(--mantine-radius-md);
+}
