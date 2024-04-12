@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "MyGInvoice" ADD COLUMN     "invoiceDiscount" DOUBLE PRECISION DEFAULT 0,
+ALTER COLUMN "updatedAt" SET DEFAULT NULL;

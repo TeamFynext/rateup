@@ -7,6 +7,7 @@ const invoiceSchema = z.object({
   invoice_value: z.number(),
   mobile_number: z.string(),
   invoice_branch: z.string(),
+  invoice_discount: z.number().optional(),
 });
 
 const uploadInvoiceDataRequestSchema = z.array(invoiceSchema);
