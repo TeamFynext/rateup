@@ -102,3 +102,4 @@ export function getRandomGift(price: number) {
 
   return range.gifts[Math.floor(Math.random() * range.gifts.length)];
 }
+export const MIN_GIFT_AMOUNT = 5000;
