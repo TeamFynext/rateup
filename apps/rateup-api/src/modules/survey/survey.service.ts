@@ -1071,7 +1071,7 @@ export async function getSurveyLanguagesFromTeamId(teamId: string) {
 
 function getRandomGift(price) {
   if (price > 100000) {
-    price = 100000;
+    price = 100001;
   }
   let range = offerArrayWithRange.find(
     (r) => price >= r.range[0] && price <= r.range[1],
