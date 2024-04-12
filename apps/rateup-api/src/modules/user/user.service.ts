@@ -94,15 +94,36 @@ export async function createUserSignup({
       //create an initial default survey
       let teamIds = [team.id];
       let surveyId = process.env.INITIAL_SAMPLE_SURVEY_ID;
-      let clone;
-      surveyId &&
-        (clone = await cloneSurvey(surveyId, teamMember.userId, teamIds, true));
-
-      //create an initial default menu
       let menuId = process.env.INITIAL_SAMPLE_MENU_ID;
-      menuId &&
-        clone.teams[0].id &&
-        (await cloneMenu(menuId, team.id, clone.teams[0].id));
+      let cloneNewSurvey;
+
+      try {
+        if (surveyId) {
+          cloneNewSurvey = await cloneSurvey(
+            surveyId,
+            teamMember.userId,
+            teamIds,
+            true,
+          );
+        } else {
+          log.error("Initial Survey creation failed...surveyId...missing");
+        }
+        //create an initial default menu
+        if (
+          menuId &&
+          typeof cloneNewSurvey === "object" &&
+          cloneNewSurvey?.teams &&
+          cloneNewSurvey?.teams?.length > 0
+        ) {
+          menuId &&
+            cloneNewSurvey.teams[0].id &&
+            (await cloneMenu(menuId, team.id, cloneNewSurvey.teams[0].id));
+        } else {
+          log.error("Initial Menu creation failed..." + cloneNewSurvey);
+        }
+      } catch (e) {
+        log.error("Initial Survey/Menu Creations failed..." + e);
+      }
     }
 
     // Commit the transaction
