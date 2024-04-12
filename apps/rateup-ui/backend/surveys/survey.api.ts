@@ -271,8 +271,6 @@ export async function getInvoicesByPhNo(phoneNumber: string) {
     const res = await axiosClient.get(
       `${SURVEY_PUBLIC_URL}/invoices/${phoneNumber}`,
     );
-    console.log(res.data, "res-data");
-
     return res.data as Invoice[];
   } catch (error) {
     if (error?.code === "ECONNABORTED") {
