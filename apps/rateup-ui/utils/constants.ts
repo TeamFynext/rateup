@@ -166,11 +166,8 @@ export enum WHATSAPP_BUTTON_TYPE {
   VISIT_WEBSITE = "URL",
 }
 
-export const MIN_AMOUNT_ERROR = "Total Purchase Amount not eligable for Gift";
-export const MIN_PHONE_ERROR =
-  "body/phoneNumber must NOT have fewer than 10 characters";
-export const MAX_PHONE_ERROR =
-  "body/phoneNumber must NOT have more than 10 characters";
+export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";
 export const INTERNAL_ERROR = "Something Went Wrong! Try again.";
 export const INTERNAL_ERROR2 = "There was an error, please try again later";
 export const AXIOS_TIMEOUT = "Request timed out";
+export const DISCOUNT_ERROR = "Invoice with discount is ineligible";

@@ -253,3 +253,34 @@ export async function generateGift(data: generateGiftProps) {
     }
   }
 }
+export type Invoice = {
+  gift: string | null;
+  giftRedeemed: boolean;
+  id: string;
+  invoiceBranch: string;
+  invoiceDate: string;
+  invoiceNumber: string;
+  invoiceValue: number;
+  mobileNumber: string;
+  redeemAttempt: number;
+  invoiceDiscount: number;
+};
+
+export async function getInvoicesByPhNo(phoneNumber: string) {
+  try {
+    const res = await axiosClient.get(
+      `${SURVEY_PUBLIC_URL}/invoices/${phoneNumber}`,
+    );
+    return res.data as Invoice[];
+  } catch (error) {
+    if (error?.code === "ECONNABORTED") {
+      throw Error(AXIOS_TIMEOUT);
+    } else if (error?.response?.data?.message) {
+      throw Error(error?.response?.data?.message);
+    } else if (typeof error?.response?.data === "string") {
+      throw Error(error?.response?.data);
+    } else {
+      throw Error("There was an error, please try again later");
+    }
+  }
+}
