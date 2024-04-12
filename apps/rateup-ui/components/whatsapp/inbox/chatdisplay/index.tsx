@@ -24,7 +24,7 @@ export default function WaInboxChatDisplay(props: {
   };
   return (
     <div className={classes.wrapper}>
-      {props?.messages?.length > 0 ? (
+      {props?.messages?.length >= 0 ? (
         <motion.div
           key={props?.waContact?.phone} // Add a unique key for the contact
           variants={variants} // Add the animation variants

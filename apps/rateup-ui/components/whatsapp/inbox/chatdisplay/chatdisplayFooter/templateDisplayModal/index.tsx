@@ -1,6 +1,5 @@
 import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
-import { IconMessage2Code } from "@tabler/icons-react";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
 import { Group, Loader, RadioGroup, Stack } from "@mantine/core";
 import classes from "./styles.module.css";
@@ -89,13 +88,13 @@ export default function WaInboxTemplateDisplayModal(props: Props) {
         )}
       </SimpleModalLayout>
       <RateupButtonPrimary
+        variant="transparent"
         onClick={open}
         title={
           props?.sessionExpired
             ? "Initiate Conversation by Sending a Template"
             : "Send Template"
         }
-        rightIcon={<IconMessage2Code />}
       />
     </>
   );

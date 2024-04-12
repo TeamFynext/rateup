@@ -1,6 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
-import { IconSend, IconWaveSine } from "@tabler/icons-react";
+import { IconSend } from "@tabler/icons-react";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
 import {
   useSendFlowToUser,
@@ -81,9 +81,9 @@ export default function WaInboxFlowDisplayModal(props: Props) {
         )}
       </SimpleModalLayout>
       <RateupButtonPrimary
+        variant="transparent"
         onClick={open}
         title={"Send Flow"}
-        rightIcon={<IconWaveSine />}
       />
     </>
   );
