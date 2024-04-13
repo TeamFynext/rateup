@@ -32,7 +32,6 @@ import styles from "./setting.module.css";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
-import ETESettings from "./EteSettings";
 import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const OrgSettings = () => {
@@ -268,8 +267,6 @@ const OrgSettings = () => {
               />
             </Flex>
           </form>
-          <Divider />
-          <ETESettings />
         </Flex>
       </Flex>
     </Flex>

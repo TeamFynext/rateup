@@ -21,12 +21,15 @@ import { adminNavItems } from "./admin.nav";
 
 export function AdminPanelLayout({ children }) {
   const [opened, { toggle, open, close }] = useDisclosure(true);
-  const { data: userInfo, isLoading, isError } = useUserInfo();
+  const { data, isLoading, isError } = useUserInfo();
   const theme = useMantineTheme();
   const primaryColor = theme.colors[theme.primaryColor][6];
   const router = useRouter();
   function handleBackToDashboard() {
-    router.push("/dashboard");
+    if (typeof window !== "undefined") {
+      // Ensure the code is executed only on the client-side
+      router.push("/dashboard");
+    }
   }
 
   return (
@@ -39,60 +42,70 @@ export function AdminPanelLayout({ children }) {
       }}
       padding="md"
     >
-      <AppShell.Navbar pl="sm" py="0">
-        <Stack
-          h="100%"
-          style={{
-            borderLeft: "1px solid #ebebeb",
-          }}
-        >
-          <AppShell.Section grow my="md" component={ScrollArea}>
-            {adminNavItems.map(({ Icon, label, href }) => {
-              const active = router.pathname.startsWith(href);
+      {data &&
+      "data" in data &&
+      data?.data?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG ? (
+        <>
+          <AppShell.Navbar pl="sm" py="0">
+            <Stack
+              h="100%"
+              style={{
+                borderLeft: "1px solid #ebebeb",
+              }}
+            >
+              <AppShell.Section grow my="md" component={ScrollArea}>
+                {adminNavItems.map(({ Icon, label, href }) => {
+                  const active = router.pathname.startsWith(href);
 
-              return (
-                <NavLink
-                  key={label}
-                  onClick={() => router.push(href)}
-                  label={label}
-                  leftSection={<Icon stroke={1.5} size={28} />}
-                  active={active}
-                  style={{
-                    borderLeft: active ? `2px solid ${primaryColor}` : "none",
-                  }}
-                />
-              );
-            })}
-          </AppShell.Section>
-          <AppShell.Section>
-            <Stack p="sm">
-              {userInfo ? <LoggedInUserCard /> : <Skeleton height={60} />}
-              <Button
-                variant="outline"
-                leftSection={<IconArrowLeft />}
-                onClick={handleBackToDashboard}
-                radius={"xl"}
-              >
-                Dashboard
-              </Button>
+                  return (
+                    <NavLink
+                      key={label}
+                      onClick={() => router.push(href)}
+                      label={label}
+                      leftSection={<Icon stroke={1.5} size={28} />}
+                      active={active}
+                      style={{
+                        borderLeft: active
+                          ? `2px solid ${primaryColor}`
+                          : "none",
+                      }}
+                    />
+                  );
+                })}
+              </AppShell.Section>
+              <AppShell.Section>
+                <Stack p="sm">
+                  {data ? <LoggedInUserCard /> : <Skeleton height={60} />}
+                  <Button
+                    variant="outline"
+                    leftSection={<IconArrowLeft />}
+                    onClick={handleBackToDashboard}
+                    radius={"xl"}
+                  >
+                    Dashboard
+                  </Button>
+                </Stack>
+              </AppShell.Section>
             </Stack>
-          </AppShell.Section>
-        </Stack>
-      </AppShell.Navbar>
-      <AppShell.Header>
-        <Group pl="sm" h="100%" align="center" justify="space-between">
-          <Group>
-            <IconTerminal2 />
-            <Title>Admin Panel</Title>
-          </Group>
-          <Group p="xs">
-            <Tooltip label={"Toggle Navbar"}>
-              <Burger opened={opened} onClick={toggle} />
-            </Tooltip>
-          </Group>
-        </Group>
-      </AppShell.Header>
-      <AppShell.Main>{children}</AppShell.Main>
+          </AppShell.Navbar>
+          <AppShell.Header>
+            <Group pl="sm" h="100%" align="center" justify="space-between">
+              <Group>
+                <IconTerminal2 />
+                <Title>Admin Panel</Title>
+              </Group>
+              <Group p="xs">
+                <Tooltip label={"Toggle Navbar"}>
+                  <Burger opened={opened} onClick={toggle} />
+                </Tooltip>
+              </Group>
+            </Group>
+          </AppShell.Header>
+          <AppShell.Main>{children}</AppShell.Main>
+        </>
+      ) : (
+        (handleBackToDashboard(), null)
+      )}
     </AppShell>
   );
 }
