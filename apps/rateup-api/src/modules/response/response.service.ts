@@ -631,6 +631,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     }
     await sheet.addRows(responseForSheet);
     const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+    await sheet.loadCells();
     for (var i = 0; i <= responseForSheet.length; i++) {
       sheet.getCell(i, dateColumnIndex).numberFormat = {
         type: "DATE",
@@ -753,13 +754,18 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
                 : value),
         );
       else
-        resObj[QIndex + "_" + qstn.title[response.language].trim()] =
-          getFormattedResponse(res.response[res.type], qstn, response.language);
+        resObj[
+          QIndex + "_" + getContent(qstn.title[response.language]).trim()
+        ] = getFormattedResponse(
+          res.response[res.type],
+          qstn,
+          response.language,
+        );
     });
     const newRow = await sheet.addRow(resObj);
     const dateColumnIndex = sheet.headerValues.indexOf("Created At");
     await sheet.loadCells();
-    sheet.getCell(newRow.rowNumber, dateColumnIndex).numberFormat = {
+    sheet.getCell(newRow.rowNumber - 1, dateColumnIndex).numberFormat = {
       type: "DATE",
       pattern: 'dd-mm-yyyy hh:mm A/P"M"',
     };

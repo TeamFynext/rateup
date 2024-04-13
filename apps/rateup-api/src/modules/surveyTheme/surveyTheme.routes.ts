@@ -7,6 +7,7 @@ import {
   getAllThemesOfUserOrg,
   getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
+  renameTheme,
 } from "./surveyTheme.controller";
 import { CustomRouteShortHandOptions } from "../../types/global";
 
@@ -39,6 +40,8 @@ export async function surveyThemeRoutes(server: FastifyInstance) {
   server.post("/", createNewTheme);
 
   server.put("/:webSurveyThemeId", updateSurveyThemeHandler);
+
+  server.patch("/:webSurveyThemeId", renameTheme);
 
   server.delete("/:webSurveyThemeId", deleteTheme);
 }

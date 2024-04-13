@@ -5,6 +5,8 @@ import {
   getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
   updateSurveyThemeActiveSurveyThemeInDB,
+  renameThemeInDB,
+  // getSurveyThemeBySurveyId,
 } from "./surveyTheme.service";
 import { log } from "../../utils/logger";
 
@@ -67,6 +69,21 @@ export async function createNewTheme(
       throw err;
     }
   }
+}
+
+export async function renameTheme(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  if (!request.body["name"]) {
+    reply.code(400).send({
+      success: false,
+      message: "There should be new name of theme in request body.",
+    });
+    return;
+  }
+  const updatedTheme = await renameThemeInDB(request);
+  reply.code(200).send(updatedTheme);
 }
 
 export async function deleteTheme(
