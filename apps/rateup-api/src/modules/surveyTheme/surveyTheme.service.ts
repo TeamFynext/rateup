@@ -56,6 +56,20 @@ export async function createNewThemeInDB(req) {
 //   });
 // }
 
+export async function renameThemeInDB(req) {
+  const { webSurveyThemeId } = req.params;
+  const body = req.body;
+  const updatedTheme = await prisma.webSurveyTheme.update({
+    where: {
+      id: webSurveyThemeId,
+    },
+    data: {
+      ...body,
+    },
+  });
+  return updatedTheme;
+}
+
 export async function updateSurveyThemeActiveSurveyThemeInDB(req) {
   const { webSurveyThemeId } = req.params;
   const { surveyId, theme } = req.body;

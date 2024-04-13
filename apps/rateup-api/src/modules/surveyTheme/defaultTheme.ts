@@ -45,7 +45,6 @@ const button = {
 export const defaultTheme = {
   welcomeTheme: {
     bg: background,
-    logo: logo,
     title: { ...title, title: "Welcome" },
     subtitle: { ...subtitle, subtitle: "Welcome to the survey" },
     button: { ...button, label: "Start Survey" },
@@ -55,20 +54,16 @@ export const defaultTheme = {
     title: {
       ...title,
       styles: { ...title.styles, textAlign: "left", fontSize: 20 },
-    },
-    subtitle: {
-      ...subtitle,
-      styles: { ...subtitle.styles, textAlign: "left" },
+      subtitleFontSize: 16,
     },
     button: button,
     input: {
       primaryColor: "#1C518E",
     },
-    orgLogoEnabled: true,
+    logo: logo,
   },
   thankyouTheme: {
     bg: background,
-    logo: logo,
     title: { ...title, title: "Thank you" },
     subtitle: { ...subtitle, subtitle: "Thank you for taking the survey" },
     confettiEnabled: false,
