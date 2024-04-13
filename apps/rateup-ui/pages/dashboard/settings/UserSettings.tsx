@@ -352,27 +352,21 @@ const ProfileSettings = () => {
                 <Title size="lg" fw={500}>
                   Change Password
                 </Title>
-                <Text c="dark.1">
-                  Enter your current password to change your new password.
-                </Text>
               </Stack>
               <Flex gap={"md"} wrap="wrap" direction={"column"}>
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
                   w={"100%"}
-                  label="Existing Password"
                   placeholder="Enter existing password"
                   {...profileForm.getInputProps("existingPassword")}
                 />
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
-                  label="New Password"
                   placeholder="Enter new password"
                   {...profileForm.getInputProps("newPassword")}
                 />
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
-                  label="Confirm Password"
                   placeholder="Enter new password again"
                   {...profileForm.getInputProps("confirmPassword")}
                 />

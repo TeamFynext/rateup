@@ -76,7 +76,7 @@ const NavbarFooter = (props: UserCardInterface) => {
             </Group>
           </Box>
         </MenuTarget>
-        <Menu.Dropdown style={{ marginTop: "-4rem", marginRight: "-3rem" }}>
+        <Menu.Dropdown style={{ marginTop: "-4rem", marginLeft: "-10px" }}>
           <Menu.Item>
             <Group>
               <Avatar

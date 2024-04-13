@@ -164,7 +164,7 @@ export const useSurveyResponseColumns = ({
       : []),
     {
       header: () => (
-        <Text c="dark.3" truncate="end" fw={600} fz={"lg"}>
+        <Text c="dark.3" truncate="end" fw={600} miw={200} maw={200} fz={"lg"}>
           Action
         </Text>
       ),

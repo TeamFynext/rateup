@@ -168,7 +168,10 @@ const CreateTicketModal = ({
             label={"Name:"}
             withAsterisk
             {...form.getInputProps("title")}
-            style={{ minWidth: "65%" }}
+            style={{
+              minWidth:
+                form.values.title === "Survey Response Ticket" ? "100%" : "65%",
+            }}
           />
           {isCustomTicket && (
             <TeamSelector
@@ -197,6 +200,7 @@ const CreateTicketModal = ({
             data={memberOptions}
             withAsterisk
             label={"Assign to"}
+            style={{ minWidth: "32%" }}
             placeholder="Select a team member to assign ticket to"
             {...form.getInputProps("assignedToId")}
           />
@@ -205,6 +209,7 @@ const CreateTicketModal = ({
             data={["LOW", "MEDIUM", "HIGH", "CRITICAL"]}
             withAsterisk
             label={"Priority"}
+            style={{ minWidth: "30%" }}
             placeholder="Select priority for the ticket"
             {...form.getInputProps("priority")}
           />
@@ -212,6 +217,7 @@ const CreateTicketModal = ({
             minDate={new Date()}
             clearable
             label={"Deadline:"}
+            style={{ minWidth: "32%" }}
             placeholder="Select a deadline for the ticket"
             {...form.getInputProps("deadline")}
           />

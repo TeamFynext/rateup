@@ -24,6 +24,7 @@ import { extractText } from "../../../../utils";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { questionIcons } from "../QuestionTypeSelection";
 import classes from "./DraggableQuestionCard.module.css";
+import { GoogleIcon } from "../../../Button/GoogleIcon";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -129,13 +130,12 @@ export function DraggableQuestionCard({
                   />
                 )}
                 {question.googleReview && (
-                  <IconBrandGoogle
+                  <GoogleIcon
                     color={
                       isWaSurvey == true
                         ? theme.colors["whatsapp-green"][6]
                         : "var(--tertiary-color)"
                     }
-                    stroke={4}
                     style={{ width: "2rem", height: "1rem" }}
                   />
                 )}

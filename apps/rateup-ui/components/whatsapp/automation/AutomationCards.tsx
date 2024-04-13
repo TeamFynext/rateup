@@ -99,8 +99,8 @@ function LCampaignCardMenuItems({ campaignId }) {
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel="Are you sure you want to delete this loyalty campaign?"
-        headerTitle="Delete Loyalty Campaign"
+        headerLabel="Are you sure you want to delete this Automated Reply?"
+        headerTitle="Delete Automated Reply"
         confirmLabel="Delete"
         onConfirm={handleDelete}
       />

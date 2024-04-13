@@ -9,6 +9,8 @@ import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
   ActionIcon,
   Button,
+  Grid,
+  Flex,
   Center,
   Group,
   MultiSelect,
@@ -207,72 +209,74 @@ function ConditionBlock({
     setSelectedAction(currentLogicJump.action);
   }, [currentLogicJump]);
   return (
-    <Group
-      gap="xs"
-      style={{
-        backgroundColor: colors.blue[0],
-        borderRadius: "12px",
-        position: "relative",
-      }}
-      p={"xs"}
-    >
-      <Text>If answer</Text>
-      {/* Condition Selector */}
-      <Select
-        data={getConditions(selectedQ.type)}
-        value={selectedCondition}
-        onChange={setSelectedCondition as any}
-        maw={175}
-        label="Condition"
-      />
-
-      {/* Match Data */}
-      {selectedCondition === LogicCondition.Submitted ? (
-        <></>
-      ) : [
-          LogicCondition.IncludesAllOf,
-          LogicCondition.IncludesAnyOf,
-          LogicCondition.IncludesNoneOf,
-        ].includes(selectedCondition) ||
-        ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
-          selectedCondition === LogicCondition.Equals) ? (
-        // Array Selector
-        <MultiSelect
-          label={"Match Data"}
-          data={getResponses(selectedQ, selectedLanguage)}
-          value={Array.isArray(matchData) ? matchData : []}
-          onChange={setMatchData}
-          placeholder="Select Responses"
-          searchable
-          w={250}
-        />
-      ) : (
+    <Flex>
+      <Group
+        gap="xs"
+        style={{
+          backgroundColor: colors.blue[0],
+          borderRadius: "12px",
+          position: "relative",
+        }}
+        p={"xs"}
+      >
+        <Text>If answer</Text>
+        {/* Condition Selector */}
         <Select
-          label="Match Data"
-          value={Array.isArray(matchData) ? "" : matchData}
-          data={getResponses(selectedQ, selectedLanguage)}
-          onChange={setMatchData}
-          w={250}
+          data={getConditions(selectedQ.type)}
+          value={selectedCondition}
+          onChange={setSelectedCondition as any}
+          maw={175}
+          label="Condition"
         />
-      )}
-      <Text>then</Text>
 
-      {/* Action Selector */}
-      <Select
-        label="Action"
-        data={possibleActions}
-        value={selectedAction}
-        onChange={setSelectedAction as any}
-      />
+        {/* Match Data */}
+        {selectedCondition === LogicCondition.Submitted ? (
+          <></>
+        ) : [
+            LogicCondition.IncludesAllOf,
+            LogicCondition.IncludesAnyOf,
+            LogicCondition.IncludesNoneOf,
+          ].includes(selectedCondition) ||
+          ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
+            selectedCondition === LogicCondition.Equals) ? (
+          // Array Selector
+          <MultiSelect
+            label={"Match Data"}
+            data={getResponses(selectedQ, selectedLanguage)}
+            value={Array.isArray(matchData) ? matchData : []}
+            onChange={setMatchData}
+            placeholder="Select Responses"
+            searchable
+            w={250}
+          />
+        ) : (
+          <Select
+            label="Match Data"
+            value={Array.isArray(matchData) ? "" : matchData}
+            data={getResponses(selectedQ, selectedLanguage)}
+            onChange={setMatchData}
+            w={250}
+          />
+        )}
+        <Text>then</Text>
+
+        {/* Action Selector */}
+        <Select
+          label="Action"
+          data={possibleActions}
+          value={selectedAction}
+          onChange={setSelectedAction as any}
+        />
+      </Group>
       <ActionIcon
-        style={{ position: "absolute", right: "12px" }}
+        style={{ right: "12px", marginLeft: "1rem", marginTop: "2rem" }}
         onClick={handleDelete}
         variant="outline"
         color="red"
       >
         <IconTrash />
       </ActionIcon>
-    </Group>
+    </Flex>
   );
 }
 
