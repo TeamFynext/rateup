@@ -249,6 +249,7 @@ const Responses = ({
           },
           onError: (error: any) => {
             setIsSyncing(false);
+            console.log(error);
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
                 "Your access has been revoked. Please sign out and sign in again in the settings",
