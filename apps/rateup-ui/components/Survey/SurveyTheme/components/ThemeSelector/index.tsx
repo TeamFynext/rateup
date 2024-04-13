@@ -12,7 +12,7 @@ function ThemeSelector({
   className = "",
   themeSelectorState,
   setThemeSelectorState,
-  allThemesArr,
+  allThemesArr = [],
   isAllThemesFetchPending,
   survey,
 }) {
@@ -34,13 +34,18 @@ function ThemeSelector({
     [allThemesArr],
   );
 
-  const handleOpenRenameThemeModal = useCallback((themeId) => {
-    const themeObj = allThemesArr?.find((obj) => obj.id === themeId);
-    const { name = "" } = themeObj;
-    setSelectedThemeIdToBeRename(themeId);
-    setSelectedThemesThemeName(name);
-    openRenameThemeModal();
-  }, []);
+  const handleOpenRenameThemeModal = useCallback(
+    (themeId) => {
+      const themeObj = allThemesArr?.find((obj) => obj.id === themeId);
+      if (themeObj) {
+        const { name = "" } = themeObj;
+        setSelectedThemeIdToBeRename(themeId);
+        setSelectedThemesThemeName(name);
+        openRenameThemeModal();
+      }
+    },
+    [allThemesArr],
+  );
 
   const handleCloseRenameThemeModal = useCallback(() => {
     setSelectedThemeIdToBeRename(null);
